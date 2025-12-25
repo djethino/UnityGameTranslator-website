@@ -1,59 +1,147 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# UnityGameTranslator Website
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Community platform for sharing Unity game translation files.
 
-## About Laravel
+**Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Browse translations** by game, language, and popularity
+- **Upload translation files** from the Unity mod
+- **Fork translations** to improve existing work
+- **Vote system** to highlight quality translations
+- **Report system** for moderation
+- **Automatic fork detection** via file UUID lineage
+- **Multi-language UI** (12 languages supported)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Tech Stack
 
-## Learning Laravel
+- **Framework:** Laravel 12
+- **Database:** SQLite (dev) / MySQL (prod)
+- **Auth:** Laravel Socialite (Steam, Epic Games, Discord, Twitch, GitHub, Google)
+- **Frontend:** Tailwind CSS, Alpine.js
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Requirements
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- SQLite or MySQL
 
-## Laravel Sponsors
+## Installation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+# Clone and install
+git clone https://github.com/djethino/UnityGameTranslator-website.git
+cd UnityGameTranslator-website
 
-### Premium Partners
+# Install dependencies
+composer install
+npm install
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Setup environment
+cp .env.example .env
+php artisan key:generate
 
-## Contributing
+# Create database
+touch database/database.sqlite
+php artisan migrate
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Build assets
+npm run build
+```
 
-## Code of Conduct
+## Configuration
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### OAuth Providers
 
-## Security Vulnerabilities
+Configure in `.env`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+# Steam
+STEAM_CLIENT_SECRET=your_steam_api_key
+
+# Epic Games
+EPICGAMES_CLIENT_ID=your_client_id
+EPICGAMES_CLIENT_SECRET=your_client_secret
+
+# Discord
+DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_SECRET=your_client_secret
+
+# Twitch
+TWITCH_CLIENT_ID=your_client_id
+TWITCH_CLIENT_SECRET=your_client_secret
+
+# GitHub
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+
+# Google
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
+
+### Where to get credentials
+
+| Provider | Console |
+|----------|---------|
+| Steam | [Steam Web API](https://steamcommunity.com/dev/apikey) |
+| Epic Games | [Epic Developer Portal](https://dev.epicgames.com/portal) |
+| Discord | [Discord Developer Portal](https://discord.com/developers/applications) |
+| Twitch | [Twitch Developer Console](https://dev.twitch.tv/console/apps) |
+| GitHub | [GitHub Developer Settings](https://github.com/settings/developers) |
+| Google | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+
+## Development
+
+```bash
+# Start dev server (runs server, queue, logs, and Vite)
+composer dev
+
+# Or start individually
+php artisan serve
+npm run dev
+```
+
+## Commands
+
+```bash
+# Run tests
+composer test
+
+# Clear caches
+php artisan cache:clear
+php artisan view:clear
+php artisan config:clear
+
+# Fresh database
+php artisan migrate:fresh
+```
+
+## Project Structure
+
+```
+app/
+├── Http/Controllers/
+│   ├── GameController.php      # Game listing and search
+│   ├── TranslationController.php # Upload, download, fork
+│   ├── AuthController.php      # OAuth authentication
+│   └── Admin/                  # Admin moderation
+├── Models/
+│   ├── Game.php               # Steam/Epic games
+│   ├── Translation.php        # Translation files
+│   ├── User.php               # Users with OAuth
+│   └── Report.php             # Content reports
+resources/
+├── views/                     # Blade templates
+└── lang/                      # UI translations (12 languages)
+```
+
+## Related
+
+- **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT License - see [LICENSE](LICENSE) for details.
