@@ -39,8 +39,16 @@ class SocialController extends Controller
             return redirect()->route('login')->with('error', $errorMessage);
         }
 
-        // Check for disposable email domains
-        if ($this->isDisposableEmail($socialUser->getEmail())) {
+        // Get email (some providers like Steam don't provide email)
+        $email = $socialUser->getEmail();
+
+        // For providers without email, generate a placeholder
+        if (empty($email)) {
+            $email = $socialUser->getId() . '@' . $provider . '.local';
+        }
+
+        // Check for disposable email domains (skip for generated emails)
+        if (!str_ends_with($email, '.local') && $this->isDisposableEmail($email)) {
             return redirect()->route('login')->with('error', 'Disposable emails are not allowed.');
         }
 
@@ -50,9 +58,11 @@ class SocialController extends Controller
             ->first();
 
         if (!$user) {
-            // Check if email exists with different provider
-            $existingUser = User::where('email', $socialUser->getEmail())->first();
-            
+            // Check if email exists with different provider (skip for generated emails)
+            $existingUser = !str_ends_with($email, '.local')
+                ? User::where('email', $email)->first()
+                : null;
+
             if ($existingUser) {
                 // Link this provider to existing account
                 $existingUser->update([
@@ -63,8 +73,8 @@ class SocialController extends Controller
                 $user = $existingUser;
             } else {
                 $user = User::create([
-                    'name' => $socialUser->getName() ?? $socialUser->getNickname(),
-                    'email' => $socialUser->getEmail(),
+                    'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
+                    'email' => $email,
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
                     'avatar' => $socialUser->getAvatar(),
