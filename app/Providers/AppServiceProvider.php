@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Report;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
@@ -28,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
         // Register Socialite providers
         Event::listen(SocialiteWasCalled::class, DiscordExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, TwitchExtendSocialite::class.'@handle');
