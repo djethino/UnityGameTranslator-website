@@ -76,17 +76,17 @@
                     </div>
 
                     @guest
-                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fab fa-google mr-1"></i> Google
+                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg" title="Google">
+                            <i class="fab fa-google text-lg"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fab fa-discord mr-1"></i> Discord
+                        <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg" title="Discord">
+                            <i class="fab fa-discord text-lg"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                            <i class="fab fa-github mr-1"></i> GitHub
+                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg" title="GitHub">
+                            <i class="fab fa-github text-lg"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fab fa-twitch mr-1"></i> Twitch
+                        <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg" title="Twitch">
+                            <i class="fab fa-twitch text-lg"></i>
                         </a>
                     @else
                         <div class="flex items-center space-x-3">
