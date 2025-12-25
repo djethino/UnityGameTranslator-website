@@ -85,23 +85,23 @@
                     </div>
 
                     @guest
-                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg" title="Google">
-                            <i class="fab fa-google text-lg"></i>
+                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Steam">
+                            <i class="fab fa-steam text-lg w-5 h-5 flex items-center justify-center"></i>
+                        </a>
+                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 flex items-center justify-center" title="Epic Games">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3.537 0C2.165 0 1.66.506 1.66 1.879V18.44a4.262 4.262 0 00.04.576c.02.126.044.25.073.373a2.396 2.396 0 00.21.553 2.01 2.01 0 00.153.247c.06.08.125.158.194.232a1.616 1.616 0 00.293.263c.077.058.158.113.242.165.083.05.17.096.26.139.088.041.18.078.275.111.095.033.192.06.292.083.098.023.199.04.303.052.103.013.209.02.317.02h18.06c.108 0 .214-.007.317-.02.104-.012.205-.029.303-.052.1-.023.197-.05.292-.083.094-.033.186-.07.274-.111.09-.043.177-.089.26-.139.084-.052.165-.107.242-.165a1.616 1.616 0 00.293-.263c.069-.074.134-.152.194-.232a2.01 2.01 0 00.153-.247 2.396 2.396 0 00.21-.553c.029-.123.053-.247.073-.373.02-.126.033-.253.04-.576V1.879C23.34.506 22.835 0 21.463 0H3.537zm13.147 3.508h2.316v10.317h-2.316V3.508zm-9.443.008h5.893v1.962H9.557v2.375h3.207v1.846H9.557v2.376h3.577v1.962H7.241V3.516zM3.757 3.508h2.316v10.317H3.757V3.508z"/></svg>
                         </a>
                         <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg" title="Discord">
-                            <i class="fab fa-discord text-lg"></i>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg" title="GitHub">
-                            <i class="fab fa-github text-lg"></i>
+                            <i class="fab fa-discord text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
                         <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg" title="Twitch">
-                            <i class="fab fa-twitch text-lg"></i>
+                            <i class="fab fa-twitch text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Steam">
-                            <i class="fab fa-steam text-lg"></i>
+                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg" title="GitHub">
+                            <i class="fab fa-github text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Epic Games">
-                            <img src="https://www.epicgames.com/favicon.ico" alt="Epic Games" class="w-5 h-5">
+                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg" title="Google">
+                            <i class="fab fa-google text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
                     @else
                         <div class="flex items-center space-x-3">
