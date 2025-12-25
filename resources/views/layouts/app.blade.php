@@ -92,7 +92,7 @@
                             <i class="fab fa-steam text-lg"></i>
                         </a>
                         <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Epic Games">
-                            <i class="fas fa-gamepad text-lg"></i>
+                            <img src="https://www.epicgames.com/favicon.ico" alt="Epic Games" class="w-5 h-5">
                         </a>
                     @else
                         <div class="flex items-center space-x-3">

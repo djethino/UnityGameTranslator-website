@@ -24,8 +24,8 @@
             <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                 <i class="fab fa-steam mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Steam']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'epicgames') }}" class="block w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
-                <i class="fas fa-gamepad mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Epic Games']) }}
+            <a href="{{ route('auth.redirect', 'epicgames') }}" class="flex items-center justify-center w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
+                <img src="https://www.epicgames.com/favicon.ico" alt="" class="w-5 h-5 mr-2"> {{ __('auth.continue_with', ['provider' => 'Epic Games']) }}
             </a>
         </div>
 
