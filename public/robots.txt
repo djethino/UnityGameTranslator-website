@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://unitygametranslator.com/sitemap.xml
+
+# Disallow admin and auth routes
+Disallow: /admin
+Disallow: /auth
+Disallow: /login
+Disallow: /logout
+Disallow: /profile
+Disallow: /upload
+Disallow: /my-translations
+Disallow: /api/
