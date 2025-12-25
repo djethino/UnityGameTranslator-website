@@ -10,7 +10,11 @@
         "laravel/framework": "^12.0",
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^2.10.1",
+        "lebuhorskiy/socialiteproviders-epicgames": "^1.0",
         "socialiteproviders/discord": "^4.2",
+        "socialiteproviders/microsoft": "^4.7",
+        "socialiteproviders/reddit": "^4.2",
+        "socialiteproviders/steam": "^4.3",
         "socialiteproviders/twitch": "^5.4"
     },
     "require-dev": {

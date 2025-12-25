@@ -88,6 +88,18 @@
                         <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg" title="Twitch">
                             <i class="fab fa-twitch text-lg"></i>
                         </a>
+                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Steam">
+                            <i class="fab fa-steam text-lg"></i>
+                        </a>
+                        <a href="{{ route('auth.redirect', 'microsoft') }}" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg" title="Xbox/Microsoft">
+                            <i class="fab fa-xbox text-lg"></i>
+                        </a>
+                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Epic Games">
+                            <i class="fas fa-gamepad text-lg"></i>
+                        </a>
+                        <a href="{{ route('auth.redirect', 'reddit') }}" class="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg" title="Reddit">
+                            <i class="fab fa-reddit-alien text-lg"></i>
+                        </a>
                     @else
                         <div class="flex items-center space-x-3">
                             <a href="{{ route('profile.edit') }}" class="flex items-center space-x-2 hover:text-purple-400 transition">

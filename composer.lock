@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "abae0544dead3123da3c086473dca926",
+    "content-hash": "d290797419529c51a6c662e47deeb707",
     "packages": [
         {
             "name": "brick/math",
@@ -2231,6 +2231,47 @@
             "time": "2025-12-07T16:03:21+00:00"
         },
         {
+            "name": "lebuhorskiy/socialiteproviders-epicgames",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Talentum-id/socialiteproviders-epicgames.git",
+                "reference": "644b6f07713c8e11b003d832ed5f62fea1dcc8de"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Talentum-id/socialiteproviders-epicgames/zipball/644b6f07713c8e11b003d832ed5f62fea1dcc8de",
+                "reference": "644b6f07713c8e11b003d832ed5f62fea1dcc8de",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^8.3",
+                "socialiteproviders/manager": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Voval\\Socialite\\EpicGames\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Vitalii Lebukhorskyi",
+                    "email": "lebuhorskiy65@gmail.com"
+                }
+            ],
+            "description": "Epic Games OAuth2 Provider for Laravel Socialite",
+            "support": {
+                "source": "https://github.com/Talentum-id/socialiteproviders-epicgames/tree/1.0.1"
+            },
+            "time": "2025-04-07T22:44:35+00:00"
+        },
+        {
             "name": "monolog/monolog",
             "version": "3.9.0",
             "source": {
@@ -3853,6 +3894,158 @@
                 "source": "https://github.com/socialiteproviders/manager"
             },
             "time": "2025-02-24T19:33:30+00:00"
+        },
+        {
+            "name": "socialiteproviders/microsoft",
+            "version": "4.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SocialiteProviders/Microsoft.git",
+                "reference": "824ef97a4f6e3f363c21702b76676d54e8265573"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SocialiteProviders/Microsoft/zipball/824ef97a4f6e3f363c21702b76676d54e8265573",
+                "reference": "824ef97a4f6e3f363c21702b76676d54e8265573",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "firebase/php-jwt": "^6.8",
+                "php": "^8.0",
+                "socialiteproviders/manager": "^4.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SocialiteProviders\\Microsoft\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brian Faust",
+                    "email": "hello@brianfaust.de"
+                }
+            ],
+            "description": "Microsoft OAuth2 Provider for Laravel Socialite",
+            "keywords": [
+                "laravel",
+                "microsoft",
+                "oauth",
+                "provider",
+                "socialite"
+            ],
+            "support": {
+                "docs": "https://socialiteproviders.com/microsoft",
+                "issues": "https://github.com/socialiteproviders/providers/issues",
+                "source": "https://github.com/socialiteproviders/providers"
+            },
+            "time": "2025-07-06T00:25:25+00:00"
+        },
+        {
+            "name": "socialiteproviders/reddit",
+            "version": "4.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SocialiteProviders/Reddit.git",
+                "reference": "4e17d2208d317096d9d33e7c90aa4f84a3e3c613"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SocialiteProviders/Reddit/zipball/4e17d2208d317096d9d33e7c90aa4f84a3e3c613",
+                "reference": "4e17d2208d317096d9d33e7c90aa4f84a3e3c613",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^8.0",
+                "socialiteproviders/manager": "^4.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SocialiteProviders\\Reddit\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brian Faust",
+                    "email": "hello@brianfaust.de"
+                }
+            ],
+            "description": "Reddit OAuth2 Provider for Laravel Socialite",
+            "keywords": [
+                "laravel",
+                "oauth",
+                "provider",
+                "reddit",
+                "socialite"
+            ],
+            "support": {
+                "docs": "https://socialiteproviders.com/reddit",
+                "issues": "https://github.com/socialiteproviders/providers/issues",
+                "source": "https://github.com/socialiteproviders/providers"
+            },
+            "time": "2025-07-12T23:23:14+00:00"
+        },
+        {
+            "name": "socialiteproviders/steam",
+            "version": "4.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SocialiteProviders/Steam.git",
+                "reference": "b92e57db0dc498a2328d98db1ede379528ace211"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SocialiteProviders/Steam/zipball/b92e57db0dc498a2328d98db1ede379528ace211",
+                "reference": "b92e57db0dc498a2328d98db1ede379528ace211",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^8.0",
+                "socialiteproviders/manager": "^4.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SocialiteProviders\\Steam\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Christopher Eklund",
+                    "email": "eklundchristopher@gmail.com"
+                }
+            ],
+            "description": "Steam OpenID Provider for Laravel Socialite",
+            "keywords": [
+                "OpenId",
+                "laravel",
+                "oauth",
+                "provider",
+                "socialite",
+                "steam"
+            ],
+            "support": {
+                "docs": "https://socialiteproviders.com/steam",
+                "issues": "https://github.com/socialiteproviders/providers/issues",
+                "source": "https://github.com/socialiteproviders/providers"
+            },
+            "time": "2025-02-12T21:49:52+00:00"
         },
         {
             "name": "socialiteproviders/twitch",

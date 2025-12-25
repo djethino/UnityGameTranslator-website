@@ -9,7 +9,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
-    protected array $providers = ['google', 'github', 'discord', 'twitch'];
+    protected array $providers = ['google', 'github', 'discord', 'twitch', 'steam', 'microsoft', 'epicgames', 'reddit'];
 
     public function redirect(string $provider)
     {
