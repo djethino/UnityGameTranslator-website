@@ -52,6 +52,10 @@
         <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
             <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
         </a>
+    @else
+        <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
+        </a>
     @endauth
 </div>
 
@@ -103,6 +107,10 @@
         <p class="text-xl">{{ __('games.no_translations') }}</p>
         @auth
             <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="inline-block mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
+                <i class="fas fa-upload mr-2"></i> {{ __('games.be_first') }}
+            </a>
+        @else
+            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="inline-block mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
                 <i class="fas fa-upload mr-2"></i> {{ __('games.be_first') }}
             </a>
         @endauth
@@ -187,7 +195,7 @@
                         <div class="flex flex-col items-end gap-3">
                             <!-- Vote buttons -->
                             <div class="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-2" id="vote-container-{{ $translation->id }}">
-                                @if(Auth::check())
+                                @auth
                                     @php $userVote = $translation->userVote(); @endphp
                                     <button type="button"
                                         onclick="vote({{ $translation->id }}, 1)"
@@ -197,12 +205,12 @@
                                         <i class="fas fa-arrow-up text-lg"></i>
                                     </button>
                                 @else
-                                    <span class="p-1 text-gray-500" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-up text-lg"></i></span>
-                                @endif
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="p-1 text-gray-500 hover:text-green-400 transition" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-up text-lg"></i></a>
+                                @endauth
                                 <span class="text-lg font-bold min-w-[2.5rem] text-center {{ $translation->vote_count > 0 ? 'text-green-400' : ($translation->vote_count < 0 ? 'text-red-400' : 'text-gray-400') }}" id="vote-count-{{ $translation->id }}">
                                     {{ $translation->vote_count >= 0 ? '+' : '' }}{{ $translation->vote_count }}
                                 </span>
-                                @if(Auth::check())
+                                @auth
                                     <button type="button"
                                         onclick="vote({{ $translation->id }}, -1)"
                                         class="vote-btn p-1 rounded hover:bg-gray-600 transition {{ $userVote && $userVote->value === -1 ? 'text-red-400' : 'text-gray-400' }}"
@@ -211,8 +219,8 @@
                                         <i class="fas fa-arrow-down text-lg"></i>
                                     </button>
                                 @else
-                                    <span class="p-1 text-gray-500" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-down text-lg"></i></span>
-                                @endif
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="p-1 text-gray-500 hover:text-red-400 transition" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-down text-lg"></i></a>
+                                @endauth
                             </div>
 
                             <!-- Action buttons -->
@@ -226,6 +234,10 @@
                                     <button type="button" onclick="openReportModal({{ $translation->id }})" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
                                     </button>
+                                @else
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
+                                        <i class="fas fa-flag"></i>
+                                    </a>
                                 @endauth
                                 <a href="{{ route('translations.download', $translation) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium">
                                     <i class="fas fa-download mr-1"></i> {{ __('translation.download') }}
@@ -341,6 +353,10 @@
                                                     id="upvote-{{ $fork->id }}">
                                                     <i class="fas fa-arrow-up"></i>
                                                 </button>
+                                            @else
+                                                <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="text-gray-500 hover:text-green-400 transition">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                </a>
                                             @endauth
                                             <span class="{{ $fork->vote_count > 0 ? 'text-green-400' : ($fork->vote_count < 0 ? 'text-red-400' : 'text-gray-500') }}" id="vote-count-{{ $fork->id }}">
                                                 {{ $fork->vote_count >= 0 ? '+' : '' }}{{ $fork->vote_count }}
@@ -351,6 +367,10 @@
                                                     id="downvote-{{ $fork->id }}">
                                                     <i class="fas fa-arrow-down"></i>
                                                 </button>
+                                            @else
+                                                <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="text-gray-500 hover:text-red-400 transition">
+                                                    <i class="fas fa-arrow-down"></i>
+                                                </a>
                                             @endauth
                                         </div>
                                         @auth
@@ -362,6 +382,10 @@
                                             <button type="button" onclick="openReportModal({{ $fork->id }})" class="text-gray-500 hover:text-gray-300">
                                                 <i class="fas fa-flag"></i>
                                             </button>
+                                        @else
+                                            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="text-gray-500 hover:text-gray-300">
+                                                <i class="fas fa-flag"></i>
+                                            </a>
                                         @endauth
                                         <a href="{{ route('translations.download', $fork) }}" class="text-purple-400 hover:text-purple-300">
                                             <i class="fas fa-download"></i>

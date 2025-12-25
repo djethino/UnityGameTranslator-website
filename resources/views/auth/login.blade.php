@@ -6,6 +6,24 @@
 <div class="max-w-md mx-auto mt-16">
     <div class="bg-gray-800 rounded-lg p-8 border border-gray-700 text-center">
         <h1 class="text-2xl font-bold mb-6">{{ __('auth.sign_in') }}</h1>
+
+        @if(request('action'))
+            <div class="bg-blue-900 border border-blue-700 text-blue-100 px-4 py-3 rounded mb-6 text-left">
+                <i class="fas fa-info-circle mr-2"></i>
+                @switch(request('action'))
+                    @case('vote')
+                        {{ __('auth.login_to_vote') }}
+                        @break
+                    @case('report')
+                        {{ __('auth.login_to_report') }}
+                        @break
+                    @case('upload')
+                        {{ __('auth.login_to_upload') }}
+                        @break
+                @endswitch
+            </div>
+        @endif
+
         <p class="text-gray-400 mb-8">{{ __('auth.choose_method') }}</p>
 
         <div class="space-y-4">

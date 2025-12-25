@@ -58,6 +58,10 @@
                             <i class="fas fa-shield-alt mr-1"></i> {{ __('nav.admin') }}@if($pendingReportsCount > 0) <span class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ $pendingReportsCount }}</span>@endif
                         </a>
                         @endif
+                        @else
+                        <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2">
+                            <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
+                        </a>
                         @endauth
                     </div>
                 </div>
