@@ -112,8 +112,8 @@
             @foreach($latestTranslations as $translation)
             <a href="{{ route('games.show', $translation->game) }}" class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
                 <div class="flex items-start space-x-3">
-                    @if($translation->game->cover_url)
-                    <img src="{{ $translation->game->cover_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">
+                    @if($translation->game->image_url)
+                    <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">
                     @else
                     <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
                         <i class="fas fa-gamepad text-gray-500"></i>
@@ -146,8 +146,8 @@
             @foreach($popularGames as $game)
             <a href="{{ route('games.show', $game) }}" class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
                 <div class="flex items-start space-x-3">
-                    @if($game->cover_url)
-                    <img src="{{ $game->cover_url }}" alt="{{ $game->name }}" class="w-12 h-16 object-cover rounded">
+                    @if($game->image_url)
+                    <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-12 h-16 object-cover rounded">
                     @else
                     <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
                         <i class="fas fa-gamepad text-gray-500"></i>
