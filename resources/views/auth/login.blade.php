@@ -24,14 +24,8 @@
             <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                 <i class="fab fa-steam mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Steam']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'microsoft') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-xbox mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Xbox/Microsoft']) }}
-            </a>
             <a href="{{ route('auth.redirect', 'epicgames') }}" class="block w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                 <i class="fas fa-gamepad mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Epic Games']) }}
-            </a>
-            <a href="{{ route('auth.redirect', 'reddit') }}" class="block w-full bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-reddit-alien mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Reddit']) }}
             </a>
         </div>
 

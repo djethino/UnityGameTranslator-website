@@ -53,22 +53,10 @@ return [
         'redirect' => env('STEAM_REDIRECT_URI'),
     ],
 
-    'microsoft' => [
-        'client_id' => env('MICROSOFT_CLIENT_ID'),
-        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
-        'redirect' => env('MICROSOFT_REDIRECT_URI'),
-    ],
-
     'epicgames' => [
         'client_id' => env('EPICGAMES_CLIENT_ID'),
         'client_secret' => env('EPICGAMES_CLIENT_SECRET'),
         'redirect' => env('EPICGAMES_REDIRECT_URI'),
-    ],
-
-    'reddit' => [
-        'client_id' => env('REDDIT_CLIENT_ID'),
-        'client_secret' => env('REDDIT_CLIENT_SECRET'),
-        'redirect' => env('REDDIT_REDIRECT_URI'),
     ],
 
     'rawg' => [
