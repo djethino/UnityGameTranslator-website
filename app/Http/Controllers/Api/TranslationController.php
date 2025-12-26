@@ -376,8 +376,17 @@ class TranslationController extends Controller
             ], 422);
         }
 
-        // Compute hash
-        $fileHash = hash('sha256', $request->content);
+        // Compute normalized hash (same algorithm as Translation::computeHash())
+        // Filter to only include translations + _uuid, sort keys, then hash
+        $hashData = [];
+        foreach ($json as $key => $value) {
+            if ($key === '_uuid' || !str_starts_with($key, '_')) {
+                $hashData[$key] = $value;
+            }
+        }
+        ksort($hashData);
+        $normalizedContent = json_encode($hashData, JSON_UNESCAPED_UNICODE);
+        $fileHash = hash('sha256', $normalizedContent);
 
         if ($existingTranslation) {
             // Same user with same UUID = UPDATE existing translation
