@@ -47,14 +47,16 @@ class TranslationController extends Controller
             });
         }
 
-        // Filter by target language
+        // Filter by target language (supports both ISO codes and full names)
         if ($request->filled('lang')) {
-            $query->where('target_language', $request->lang);
+            $lang = $this->normalizeLanguage($request->lang);
+            $query->where('target_language', $lang);
         }
 
-        // Filter by source language
+        // Filter by source language (supports both ISO codes and full names)
         if ($request->filled('source_lang')) {
-            $query->where('source_language', $request->source_lang);
+            $sourceLang = $this->normalizeLanguage($request->source_lang);
+            $query->where('source_language', $sourceLang);
         }
 
         // Filter by translation type
@@ -316,6 +318,70 @@ class TranslationController extends Controller
                 'web_url' => url("/games/{$game->slug}"),
             ],
         ], 201);
+    }
+
+    /**
+     * Convert ISO language code to full language name.
+     * Supports common ISO 639-1 codes used by games.
+     */
+    private function normalizeLanguage(string $lang): string
+    {
+        // ISO 639-1 code to full name mapping
+        $isoMap = [
+            'en' => 'English',
+            'fr' => 'French',
+            'de' => 'German',
+            'es' => 'Spanish',
+            'it' => 'Italian',
+            'pt' => 'Portuguese',
+            'ru' => 'Russian',
+            'pl' => 'Polish',
+            'ja' => 'Japanese',
+            'ko' => 'Korean',
+            'zh' => 'Simplified Chinese',
+            'zh-cn' => 'Simplified Chinese',
+            'zh-tw' => 'Traditional Chinese',
+            'ar' => 'Arabic',
+            'tr' => 'Turkish',
+            'nl' => 'Dutch',
+            'sv' => 'Swedish',
+            'da' => 'Danish',
+            'nb' => 'Norwegian Bokmål',
+            'no' => 'Norwegian Bokmål',
+            'fi' => 'Finnish',
+            'cs' => 'Czech',
+            'hu' => 'Hungarian',
+            'ro' => 'Romanian',
+            'el' => 'Greek',
+            'th' => 'Thai',
+            'vi' => 'Vietnamese',
+            'id' => 'Indonesian',
+            'ms' => 'Malay',
+            'uk' => 'Ukrainian',
+            'bg' => 'Bulgarian',
+            'sk' => 'Slovak',
+            'hr' => 'Croatian',
+            'sr' => 'Serbian',
+            'sl' => 'Slovenian',
+            'lt' => 'Lithuanian',
+            'lv' => 'Latvian',
+            'et' => 'Estonian',
+            'he' => 'Hebrew',
+            'hi' => 'Hindi',
+            'bn' => 'Bengali',
+            'ta' => 'Tamil',
+            'ca' => 'Catalan',
+        ];
+
+        $lowerLang = strtolower($lang);
+
+        // If it's an ISO code, convert to full name
+        if (isset($isoMap[$lowerLang])) {
+            return $isoMap[$lowerLang];
+        }
+
+        // Otherwise return as-is (might already be full name)
+        return $lang;
     }
 
     /**
