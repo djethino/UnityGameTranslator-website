@@ -264,30 +264,78 @@ Response 200:
 ```
 Rate limit: 60/min
 
+#### Check UUID
+```http
+POST /api/v1/translations/check-uuid
+Content-Type: application/json
+
+{ "uuid": "abc-123-def" }
+
+Response 200 (not found):
+{ "exists": false }
+
+Response 200 (user owns it):
+{
+  "exists": true,
+  "is_owner": true,
+  "translation": { "id": 123, "type": "ai", ... }
+}
+
+Response 200 (another user owns it):
+{
+  "exists": true,
+  "is_owner": false,
+  "original": { "id": 456, "uploader": "user1", ... }
+}
+```
+Rate limit: 60/min
+
 #### Upload Translation
 ```http
 POST /api/v1/translations
 Content-Type: application/json
 
 {
-  "game_steam_id": "367520",
+  "steam_id": "367520",
   "game_name": "Hollow Knight",
-  "source_lang": "en",
-  "target_lang": "fr",
-  "type": "ai_unreviewed",
+  "source_language": "English",
+  "target_language": "French",
+  "type": "ai",
+  "status": "in_progress",
   "notes": "Complete translation",
-  "uuid": "local-uuid-123",
-  "parent_uuid": "parent-uuid-456",
-  "translations": { "Hello": "Bonjour", ... }
+  "content": "{\"_uuid\":\"abc-123\",\"Hello\":\"Bonjour\",...}"
 }
 
-Response 201:
+Response 201 (new/fork):
 {
-  "id": 456,
-  "uuid": "local-uuid-123",
-  "url": "https://unitygametranslator.asymptomatikgames.com/translations/456"
+  "success": true,
+  "translation": {
+    "id": 456,
+    "file_hash": "sha256:...",
+    "line_count": 1500,
+    "is_fork": false
+  }
+}
+
+Response 200 (update):
+{
+  "success": true,
+  "translation": {
+    "id": 123,
+    "file_hash": "sha256:...",
+    "is_update": true
+  }
 }
 ```
+
+**Upload behavior:**
+- `_uuid` in content determines action (call check-uuid first)
+- NEW: if UUID not found → user becomes owner
+- UPDATE: if user owns the UUID → replaces content
+- FORK: if another user owns UUID → creates new translation with same UUID, `parent_id` set
+
+**Languages:** On UPDATE/FORK, server keeps original languages (ignores request).
+
 Rate limit: 10/min
 
 #### Revoke Token

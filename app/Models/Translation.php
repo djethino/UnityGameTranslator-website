@@ -59,7 +59,8 @@ class Translation extends Model
     }
 
     /**
-     * Compute SHA256 hash of the translation file content
+     * Compute SHA256 hash of the translation content (normalized with sorted keys).
+     * This ensures the hash is deterministic regardless of JSON key order.
      */
     public function computeHash(): ?string
     {
@@ -67,7 +68,22 @@ class Translation extends Model
         if (!$safePath || !file_exists($safePath)) {
             return null;
         }
-        return hash_file('sha256', $safePath);
+
+        $content = file_get_contents($safePath);
+        if ($content === false) {
+            return null;
+        }
+
+        // Parse JSON and sort keys for deterministic hash
+        $data = json_decode($content, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        ksort($data);
+        $normalized = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+        return hash('sha256', $normalized);
     }
 
     /**

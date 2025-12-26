@@ -77,35 +77,64 @@
     <!-- Traffic Chart -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="text-lg font-semibold mb-4"><i class="fas fa-chart-area mr-2 text-purple-400"></i> Traffic</h2>
-        <div class="h-64">
-            <canvas id="trafficChart"></canvas>
-        </div>
+        @if(count($chartLabels) > 0)
+            <div class="h-64">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        @else
+            <div class="h-64 flex items-center justify-center">
+                <p class="text-gray-500 text-sm">No traffic data yet. Data is aggregated daily at 2 AM.</p>
+            </div>
+        @endif
     </div>
 
     <!-- Downloads Chart -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="text-lg font-semibold mb-4"><i class="fas fa-download mr-2 text-green-400"></i> Downloads</h2>
-        <div class="h-64">
-            <canvas id="downloadsChart"></canvas>
-        </div>
+        @if(count($chartLabels) > 0 && array_sum($chartDownloads) > 0)
+            <div class="h-64">
+                <canvas id="downloadsChart"></canvas>
+            </div>
+        @else
+            <div class="h-64 flex items-center justify-center">
+                <p class="text-gray-500 text-sm">No downloads yet for this period.</p>
+            </div>
+        @endif
     </div>
 </div>
+
+@php
+    $hasDeviceData = ($allDevices['desktop'] ?? 0) + ($allDevices['mobile'] ?? 0) + ($allDevices['tablet'] ?? 0) > 0;
+    $hasBrowserData = !empty($allBrowsers) && array_sum($allBrowsers) > 0;
+@endphp
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <!-- Devices -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="text-lg font-semibold mb-4"><i class="fas fa-desktop mr-2 text-blue-400"></i> Devices</h2>
-        <div class="h-48">
-            <canvas id="devicesChart"></canvas>
-        </div>
+        @if($hasDeviceData)
+            <div class="h-48">
+                <canvas id="devicesChart"></canvas>
+            </div>
+        @else
+            <div class="h-48 flex items-center justify-center">
+                <p class="text-gray-500 text-sm">No device data yet</p>
+            </div>
+        @endif
     </div>
 
     <!-- Browsers -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="text-lg font-semibold mb-4"><i class="fas fa-globe mr-2 text-orange-400"></i> Browsers</h2>
-        <div class="h-48">
-            <canvas id="browsersChart"></canvas>
-        </div>
+        @if($hasBrowserData)
+            <div class="h-48">
+                <canvas id="browsersChart"></canvas>
+            </div>
+        @else
+            <div class="h-48 flex items-center justify-center">
+                <p class="text-gray-500 text-sm">No browser data yet</p>
+            </div>
+        @endif
     </div>
 
     <!-- Top Countries -->
@@ -244,6 +273,7 @@
     };
 
     // Traffic Chart
+    @if(count($chartLabels) > 0)
     new Chart(document.getElementById('trafficChart'), {
         type: 'line',
         data: {
@@ -269,8 +299,10 @@
         },
         options: chartOptions
     });
+    @endif
 
     // Downloads Chart
+    @if(count($chartLabels) > 0 && array_sum($chartDownloads) > 0)
     new Chart(document.getElementById('downloadsChart'), {
         type: 'bar',
         data: {
@@ -283,8 +315,10 @@
         },
         options: chartOptions
     });
+    @endif
 
     // Devices Chart
+    @if($hasDeviceData)
     new Chart(document.getElementById('devicesChart'), {
         type: 'doughnut',
         data: {
@@ -309,8 +343,10 @@
             }
         }
     });
+    @endif
 
     // Browsers Chart
+    @if($hasBrowserData)
     new Chart(document.getElementById('browsersChart'), {
         type: 'doughnut',
         data: {
@@ -334,5 +370,6 @@
             }
         }
     });
+    @endif
 </script>
 @endsection
