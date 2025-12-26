@@ -58,7 +58,7 @@
                     Please sign in first to link your device.
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                         <i class="fab fa-steam mr-2"></i> Sign in with Steam
                     </a>
@@ -67,6 +67,12 @@
                     </a>
                     <a href="{{ route('auth.redirect', 'github') }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
                         <i class="fab fa-github mr-2"></i> Sign in with GitHub
+                    </a>
+                    <a href="{{ route('auth.redirect', 'google') }}" class="block w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">
+                        <i class="fab fa-google mr-2"></i> Sign in with Google
+                    </a>
+                    <a href="{{ route('auth.redirect', 'twitch') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
+                        <i class="fab fa-twitch mr-2"></i> Sign in with Twitch
                     </a>
                 </div>
             @endauth
