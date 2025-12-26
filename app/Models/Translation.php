@@ -96,7 +96,8 @@ class Translation extends Model
 
         // Sort keys for deterministic hash
         ksort($hashData);
-        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE);
+        // Use same flags as C# Newtonsoft.Json: no unicode escaping, no slash escaping
+        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return hash('sha256', $normalized);
     }

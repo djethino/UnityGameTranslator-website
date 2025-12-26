@@ -153,7 +153,7 @@ class TranslationController extends Controller
                             }
                         }
                         ksort($hashData);
-                        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE);
+                        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                         $response['debug']['json_preview'] = substr($normalized, 0, 300);
                         $response['debug']['json_length'] = strlen($normalized);
                         $response['debug']['entry_count'] = count($hashData);
@@ -416,7 +416,7 @@ class TranslationController extends Controller
             }
         }
         ksort($hashData);
-        $normalizedContent = json_encode($hashData, JSON_UNESCAPED_UNICODE);
+        $normalizedContent = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $fileHash = hash('sha256', $normalizedContent);
 
         if ($existingTranslation) {
