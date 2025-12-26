@@ -113,7 +113,7 @@ class ProfileController extends Controller
             'email' => 'deleted-' . $user->id . '@deleted.local',
             'avatar' => null,
             'provider_id' => 'deleted-' . $user->id,
-            'is_banned' => true, // Prevent re-login with same OAuth
+            'banned_at' => now(), // Prevent re-login with same OAuth
             'ban_reason' => 'Account deleted by user',
         ]);
 
