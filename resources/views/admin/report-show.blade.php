@@ -49,41 +49,8 @@
 
     <!-- JSON Preview -->
     @if($jsonContent)
-        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold"><i class="fas fa-code mr-2"></i> Translation Content Preview</h2>
-                <button type="button" onclick="toggleJsonPreview()" class="text-gray-400 hover:text-white text-sm">
-                    <i id="toggleIcon" class="fas fa-chevron-down mr-1"></i> <span id="toggleText">Show</span>
-                </button>
-            </div>
-            <div id="jsonPreview" class="hidden">
-                <div class="text-sm text-gray-400 mb-3">
-                    {{ count($jsonContent) }} translation entries
-                </div>
-                <div class="bg-gray-900 rounded-lg p-4 max-h-96 overflow-auto">
-                    <table class="w-full text-sm">
-                        <thead class="text-gray-400 border-b border-gray-700">
-                            <tr>
-                                <th class="text-left py-2 pr-4 w-1/2">Original</th>
-                                <th class="text-left py-2 w-1/2">Translated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach(array_slice($jsonContent, 0, 100) as $original => $translated)
-                                <tr class="border-b border-gray-800">
-                                    <td class="py-2 pr-4 text-gray-300 break-words">{{ Str::limit($original, 100) }}</td>
-                                    <td class="py-2 text-white break-words">{{ Str::limit($translated, 100) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    @if(count($jsonContent) > 100)
-                        <p class="text-gray-500 text-sm mt-4 text-center">
-                            ... and {{ count($jsonContent) - 100 }} more entries (download to see all)
-                        </p>
-                    @endif
-                </div>
-            </div>
+        <div class="mb-6">
+            @include('partials.json-table', ['jsonContent' => $jsonContent, 'limit' => 100, 'collapsible' => true])
         </div>
     @endif
 
@@ -156,24 +123,4 @@
         </div>
     @endif
 </div>
-
-<script nonce="{{ $cspNonce }}">
-function toggleJsonPreview() {
-    const preview = document.getElementById('jsonPreview');
-    const icon = document.getElementById('toggleIcon');
-    const text = document.getElementById('toggleText');
-
-    if (preview.classList.contains('hidden')) {
-        preview.classList.remove('hidden');
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-        text.textContent = 'Hide';
-    } else {
-        preview.classList.add('hidden');
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-        text.textContent = 'Show';
-    }
-}
-</script>
 @endsection

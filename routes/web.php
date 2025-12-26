@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload', [TranslationController::class, 'store'])->name('translations.store');
     Route::get('/api/translations/check-uuid', [TranslationController::class, 'checkUuid'])->name('translations.check-uuid');
     Route::get('/my-translations', [TranslationController::class, 'myTranslations'])->name('translations.mine');
+    Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
+    Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
     Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
 
     // Profile
@@ -103,6 +105,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
+    Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
+    Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
     Route::get('/translations/{translation}/edit', [AdminController::class, 'editTranslation'])->name('translations.edit');
     Route::put('/translations/{translation}', [AdminController::class, 'updateTranslation'])->name('translations.update');
+    Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
 });

@@ -140,6 +140,75 @@ class AdminController extends Controller
         return back()->with('success', "User {$user->name} has been unbanned.");
     }
 
+    public function translations(Request $request)
+    {
+        $query = Translation::with(['game', 'user']);
+
+        // Search by game name or user name
+        if ($request->filled('search')) {
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('game', fn($g) => $g->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Filter by game
+        if ($request->filled('game_id')) {
+            $query->where('game_id', $request->game_id);
+        }
+
+        // Filter by user
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Filter by language
+        if ($request->filled('language')) {
+            $query->where('target_language', $request->language);
+        }
+
+        $translations = $query->orderBy('created_at', 'desc')->paginate(20);
+        $games = Game::orderBy('name')->get();
+        $languages = config('languages');
+
+        return view('admin.translations', compact('translations', 'games', 'languages'));
+    }
+
+    public function showTranslation(Translation $translation)
+    {
+        $translation->load(['game', 'user', 'parent.user', 'forks.user']);
+
+        // Load JSON content
+        $jsonContent = null;
+        if ($translation->file_path) {
+            try {
+                $content = Storage::disk('public')->get($translation->file_path);
+                $jsonContent = json_decode($content, true);
+            } catch (\Exception $e) {
+                $jsonContent = null;
+            }
+        }
+
+        return view('admin.translation-show', compact('translation', 'jsonContent'));
+    }
+
+    public function destroyTranslation(Translation $translation)
+    {
+        $gameName = $translation->game->name;
+
+        // Delete file
+        if ($translation->file_path) {
+            Storage::disk('public')->delete($translation->file_path);
+        }
+
+        // Delete translation
+        $translation->delete();
+
+        return redirect()->route('admin.translations.index')
+            ->with('success', "Translation for {$gameName} deleted.");
+    }
+
     public function editTranslation(Translation $translation)
     {
         $translation->load(['game', 'user']);

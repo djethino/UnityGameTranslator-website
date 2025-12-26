@@ -32,6 +32,9 @@
             </div>
             <i class="fas fa-file-alt text-4xl text-green-400 opacity-50"></i>
         </div>
+        <a href="{{ route('admin.translations.index') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-4 inline-block">
+            {{ __('admin.manage_translations') }} <i class="fas fa-arrow-right ml-1"></i>
+        </a>
     </div>
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">

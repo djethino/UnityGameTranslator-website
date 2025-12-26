@@ -187,6 +187,46 @@ class TranslationController extends Controller
         return view('translations.mine', compact('translations'));
     }
 
+    public function edit(Translation $translation)
+    {
+        if ($translation->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $translation->load(['game', 'user']);
+        $languages = config('languages');
+
+        return view('translations.edit', compact('translation', 'languages'));
+    }
+
+    public function update(Request $request, Translation $translation)
+    {
+        if ($translation->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $languages = config('languages');
+
+        $request->validate([
+            'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
+            'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
+            'status' => 'required|in:in_progress,complete',
+            'type' => 'required|in:ai,human,ai_corrected',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $translation->update([
+            'source_language' => $request->source_language,
+            'target_language' => $request->target_language,
+            'status' => $request->status,
+            'type' => $request->type,
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->route('translations.mine')
+            ->with('success', __('my_translations.updated'));
+    }
+
     public function destroy(Translation $translation)
     {
         if ($translation->user_id !== auth()->id()) {

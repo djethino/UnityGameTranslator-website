@@ -59,6 +59,9 @@
                     <a href="{{ route('translations.download', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>
                     </a>
+                    <a href="{{ route('translations.edit', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('translation.edit') }}">
+                        <i class="fas fa-edit"></i>
+                    </a>
                     <form action="{{ route('translations.destroy', $translation) }}" method="POST"
                         onsubmit="return confirm('{{ __('my_translations.delete_confirm') }}')">
                         @csrf
