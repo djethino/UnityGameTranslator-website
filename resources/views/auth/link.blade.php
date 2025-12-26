@@ -62,6 +62,9 @@
                     <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                         <i class="fab fa-steam mr-2"></i> Sign in with Steam
                     </a>
+                    <a href="{{ route('auth.redirect', 'epicgames') }}" class="block w-full bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-lg border border-gray-600">
+                        <i class="fas fa-gamepad mr-2"></i> Sign in with Epic Games
+                    </a>
                     <a href="{{ route('auth.redirect', 'discord') }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
                         <i class="fab fa-discord mr-2"></i> Sign in with Discord
                     </a>
