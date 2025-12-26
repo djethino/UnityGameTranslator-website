@@ -71,7 +71,7 @@
                             <span class="hidden sm:inline text-sm">{{ config('locales.supported')[app()->getLocale()]['native'] ?? 'Language' }}</span>
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
                             @foreach(config('locales.supported', []) as $code => $locale)
                                 <a href="{{ route('locale.switch', $code) }}"
                                    class="flex items-center px-4 py-2 text-sm hover:bg-gray-700 transition {{ app()->getLocale() === $code ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
