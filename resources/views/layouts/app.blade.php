@@ -157,31 +157,31 @@
                 {{ __('cookies.message') }}
             </p>
             <div class="flex gap-3">
-                <button onclick="acceptCookies()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium">
+                <button id="cookie-accept" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium">
                     {{ __('cookies.accept') }}
                 </button>
-                <button onclick="declineCookies()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+                <button id="cookie-decline" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
                     {{ __('cookies.decline') }}
                 </button>
             </div>
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ $cspNonce }}">
         // Check if user has already made a choice
         if (!localStorage.getItem('cookie-consent')) {
             document.getElementById('cookie-banner').classList.remove('hidden');
         }
 
-        function acceptCookies() {
+        document.getElementById('cookie-accept')?.addEventListener('click', function() {
             localStorage.setItem('cookie-consent', 'accepted');
             document.getElementById('cookie-banner').classList.add('hidden');
-        }
+        });
 
-        function declineCookies() {
+        document.getElementById('cookie-decline')?.addEventListener('click', function() {
             localStorage.setItem('cookie-consent', 'declined');
             document.getElementById('cookie-banner').classList.add('hidden');
-        }
+        });
     </script>
 </body>
 </html>
