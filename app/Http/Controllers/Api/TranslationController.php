@@ -7,6 +7,7 @@ use App\Models\AnalyticsEvent;
 use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Translation;
+use App\Services\GameSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -86,6 +87,7 @@ class TranslationController extends Controller
                     'line_count' => $t->line_count,
                     'status' => $t->status,
                     'type' => $t->type,
+                    'notes' => $t->notes,
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
                     'file_hash' => $t->file_hash,
@@ -214,8 +216,8 @@ class TranslationController extends Controller
         $request->validate([
             'steam_id' => 'required_without:game_name|string',
             'game_name' => 'required_without:steam_id|string|max:255',
-            'source_language' => 'required|string|max:10',
-            'target_language' => 'required|string|max:10',
+            'source_language' => 'required|string|max:50',
+            'target_language' => 'required|string|max:50',
             'type' => 'required|in:ai,human,ai_corrected',
             'status' => 'required|in:in_progress,complete',
             'content' => 'required|string|min:2',
@@ -249,6 +251,50 @@ class TranslationController extends Controller
         // Count lines (exclude metadata keys)
         $lineCount = count(array_filter(array_keys($json), fn($k) => !str_starts_with($k, '_')));
 
+        // Check for existing translation with same UUID (UPDATE case)
+        $existingTranslation = Translation::where('file_uuid', $fileUuid)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        // Check for fork case (different user with same UUID)
+        $originalTranslation = null;
+        if (!$existingTranslation) {
+            $originalTranslation = Translation::where('file_uuid', $fileUuid)
+                ->orderBy('created_at', 'asc')
+                ->first();
+        }
+
+        // Determine final languages:
+        // - UPDATE: Keep existing languages (ignore request)
+        // - FORK: Use parent's languages (ignore request)
+        // - NEW: Validate that languages are not "auto"
+        $sourceLanguage = $request->source_language;
+        $targetLanguage = $request->target_language;
+
+        if ($existingTranslation) {
+            // UPDATE: Use existing languages
+            $sourceLanguage = $existingTranslation->source_language;
+            $targetLanguage = $existingTranslation->target_language;
+        } elseif ($originalTranslation) {
+            // FORK: Use parent's languages
+            $sourceLanguage = $originalTranslation->source_language;
+            $targetLanguage = $originalTranslation->target_language;
+        } else {
+            // NEW: Validate languages are not "auto"
+            if (strtolower($sourceLanguage) === 'auto' || strtolower($targetLanguage) === 'auto') {
+                return response()->json([
+                    'error' => 'Language cannot be "auto" for new translations. Please select specific languages.',
+                ], 422);
+            }
+
+            // Validate languages are different
+            if ($sourceLanguage === $targetLanguage) {
+                return response()->json([
+                    'error' => 'Source and target languages must be different.',
+                ], 422);
+            }
+        }
+
         // Find or create game
         $game = $this->findOrCreateGame($request);
 
@@ -258,34 +304,70 @@ class TranslationController extends Controller
             ], 422);
         }
 
-        // Check for existing translation with same UUID (update vs fork)
-        $parentId = null;
-        $existingTranslation = Translation::where('file_uuid', $fileUuid)
-            ->orderBy('created_at', 'asc')
-            ->first();
+        // Compute hash
+        $fileHash = hash('sha256', $request->content);
 
         if ($existingTranslation) {
-            if ((int) $existingTranslation->user_id !== (int) $request->user()->id) {
-                // Different user = fork
-                $parentId = $existingTranslation->id;
+            // Same user with same UUID = UPDATE existing translation
+            $oldFilePath = $existingTranslation->file_path;
+
+            // Store new file
+            $fileName = 'translations/' . uniqid() . '_' . $fileUuid . '.json';
+            Storage::disk('public')->put($fileName, $request->content);
+
+            // Delete old file
+            if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
+                Storage::disk('public')->delete($oldFilePath);
             }
-            // Same user = update (will create new version)
+
+            // Update translation (keep original languages)
+            $existingTranslation->update([
+                'game_id' => $game->id,
+                'line_count' => $lineCount,
+                'status' => $request->status,
+                'type' => $request->type,
+                'notes' => $request->notes,
+                'file_path' => $fileName,
+                'file_hash' => $fileHash,
+            ]);
+
+            // Log translation update
+            AuditLog::logTranslationUpload($request->user()->id, $existingTranslation->id, [
+                'game_id' => $game->id,
+                'game_name' => $game->name,
+                'source_language' => $sourceLanguage,
+                'target_language' => $targetLanguage,
+                'line_count' => $lineCount,
+                'type' => $request->type,
+                'is_update' => true,
+            ], $request);
+
+            return response()->json([
+                'success' => true,
+                'translation' => [
+                    'id' => $existingTranslation->id,
+                    'file_hash' => $existingTranslation->file_hash,
+                    'line_count' => $existingTranslation->line_count,
+                    'is_update' => true,
+                    'web_url' => url("/games/{$game->slug}"),
+                ],
+            ], 200);
         }
+
+        // NEW or FORK: Create new translation
+        $parentId = $originalTranslation?->id;
 
         // Store file
         $fileName = 'translations/' . uniqid() . '_' . $fileUuid . '.json';
         Storage::disk('public')->put($fileName, $request->content);
 
-        // Compute hash
-        $fileHash = hash('sha256', $request->content);
-
-        // Create translation
+        // Create new translation
         $translation = Translation::create([
             'game_id' => $game->id,
             'user_id' => $request->user()->id,
             'parent_id' => $parentId,
-            'source_language' => $request->source_language,
-            'target_language' => $request->target_language,
+            'source_language' => $sourceLanguage,
+            'target_language' => $targetLanguage,
             'line_count' => $lineCount,
             'status' => $request->status,
             'type' => $request->type,
@@ -299,8 +381,8 @@ class TranslationController extends Controller
         AuditLog::logTranslationUpload($request->user()->id, $translation->id, [
             'game_id' => $game->id,
             'game_name' => $game->name,
-            'source_language' => $request->source_language,
-            'target_language' => $request->target_language,
+            'source_language' => $sourceLanguage,
+            'target_language' => $targetLanguage,
             'line_count' => $lineCount,
             'type' => $request->type,
             'is_fork' => $parentId !== null,
@@ -319,46 +401,55 @@ class TranslationController extends Controller
     }
 
     /**
-     * Find or create a game from API request
+     * Find or create a game from API request.
+     * Uses Steam → IGDB → RAWG to get game details.
      */
     private function findOrCreateGame(Request $request): ?Game
     {
-        // Try by Steam ID first
-        if ($request->filled('steam_id')) {
-            $game = Game::where('steam_id', $request->steam_id)->first();
+        $steamId = $request->filled('steam_id') ? $request->steam_id : null;
+        $gameName = $request->filled('game_name') ? $request->game_name : null;
 
+        // Try by Steam ID first
+        if ($steamId) {
+            $game = Game::where('steam_id', $steamId)->first();
             if ($game) {
                 return $game;
             }
-
-            // Create with Steam ID
-            if ($request->filled('game_name')) {
-                return Game::create([
-                    'name' => $request->game_name,
-                    'steam_id' => $request->steam_id,
-                ]);
-            }
         }
 
-        // Try by name
-        if ($request->filled('game_name')) {
-            $game = Game::where('name', $request->game_name)->first();
-
+        // Try by name (case-insensitive)
+        if ($gameName) {
+            $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
             if ($game) {
                 // Update steam_id if we have it now
-                if ($request->filled('steam_id') && !$game->steam_id) {
-                    $game->update(['steam_id' => $request->steam_id]);
+                if ($steamId && !$game->steam_id) {
+                    $game->update(['steam_id' => $steamId]);
                 }
                 return $game;
             }
+        }
 
-            // Create new game
+        // Game not found - try to get details from external APIs
+        if (!$gameName) {
+            return null;
+        }
+
+        $gameSearchService = app(GameSearchService::class);
+        $externalGame = $gameSearchService->findGame($steamId, $gameName);
+
+        if ($externalGame) {
+            // Create game with external data
             return Game::create([
-                'name' => $request->game_name,
-                'steam_id' => $request->steam_id,
+                'name' => $externalGame['name'] ?? $gameName,
+                'steam_id' => $externalGame['steam_id'] ?? $steamId,
+                'image_url' => $externalGame['image_url'] ?? null,
             ]);
         }
 
-        return null;
+        // Fallback: Create basic game entry without external data
+        return Game::create([
+            'name' => $gameName,
+            'steam_id' => $steamId,
+        ]);
     }
 }

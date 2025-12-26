@@ -181,6 +181,71 @@ class GameSearchService
     }
 
     /**
+     * Get game details from Steam by Steam App ID
+     */
+    public function getGameFromSteam(string $steamId): ?array
+    {
+        try {
+            $response = Http::timeout(5)->get('https://store.steampowered.com/api/appdetails', [
+                'appids' => $steamId,
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('Steam API error', ['status' => $response->status()]);
+                return null;
+            }
+
+            $data = $response->json();
+
+            // Steam returns {steamId: {success: bool, data: {...}}}
+            if (!isset($data[$steamId]['success']) || !$data[$steamId]['success']) {
+                return null;
+            }
+
+            $game = $data[$steamId]['data'];
+
+            return [
+                'name' => $game['name'] ?? null,
+                'steam_id' => $steamId,
+                'image_url' => $game['header_image'] ?? null,
+                'source' => 'steam',
+            ];
+
+        } catch (\Exception $e) {
+            Log::warning('Steam API error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Search for a game by name, trying Steam first (if steam_id provided), then IGDB, then RAWG
+     */
+    public function findGame(?string $steamId, string $gameName): ?array
+    {
+        // Try Steam API first if we have a Steam ID
+        if ($steamId) {
+            $result = $this->getGameFromSteam($steamId);
+            if ($result) {
+                return $result;
+            }
+        }
+
+        // Try IGDB search
+        $results = $this->searchIGDB($gameName, 1);
+        if (!empty($results)) {
+            return $results[0];
+        }
+
+        // Fallback to RAWG
+        $results = $this->searchRAWG($gameName, 1);
+        if (!empty($results)) {
+            return $results[0];
+        }
+
+        return null;
+    }
+
+    /**
      * Get game details by ID from the appropriate source
      */
     public function getGame(int $id, string $source): ?array
