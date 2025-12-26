@@ -16,34 +16,53 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    // Public endpoints (no auth required) - with rate limiting
+    // ===========================================
+    // PUBLIC ENDPOINTS (anonymous users)
+    // Can: browse, download translations
+    // ===========================================
     Route::middleware('throttle:60,1')->group(function () {
+        // Browse translations and games
         Route::get('translations', [TranslationController::class, 'search']);
         Route::get('games', [GameController::class, 'index']);
-        Route::get('games/search', [GameController::class, 'search']); // External API search
         Route::get('games/{game}', [GameController::class, 'show']);
     });
 
-    // Check endpoint - higher limit for polling
+    // Check if translation updated - higher limit for polling
     Route::get('translations/{translation}/check', [TranslationController::class, 'check'])
         ->middleware('throttle:120,1');
 
-    // Download endpoint - lower limit
+    // Download translation file
     Route::get('translations/{translation}/download', [TranslationController::class, 'download'])
         ->middleware('throttle:30,1');
 
-    // Device Flow authentication (public) - polling limit
+    // ===========================================
+    // DEVICE FLOW AUTHENTICATION (public)
+    // ===========================================
     Route::post('auth/device', [DeviceFlowController::class, 'initiate'])
         ->middleware('throttle:10,1');
     Route::post('auth/device/poll', [DeviceFlowController::class, 'poll'])
         ->middleware('throttle:12,1');
 
-    // Authenticated endpoints (require API token + not banned)
+    // ===========================================
+    // AUTHENTICATED ENDPOINTS
+    // Can: upload translations, search external games
+    // ===========================================
     Route::middleware(['auth.api', 'check.banned.api', 'throttle:60,1'])->group(function () {
+        // User info
         Route::get('me', [UserController::class, 'me']);
         Route::get('me/translations', [UserController::class, 'translations']);
+
+        // Game search (uses external APIs - RAWG quota limited)
+        Route::get('games/search', [GameController::class, 'search']);
+
+        // Check if UUID exists before upload (to detect UPDATE/FORK/NEW)
+        Route::get('translations/check-uuid', [TranslationController::class, 'checkUuid']);
+
+        // Upload translation
         Route::post('translations', [TranslationController::class, 'store'])
-            ->middleware('throttle:10,1'); // Stricter limit for uploads
+            ->middleware('throttle:10,1');
+
+        // Revoke token
         Route::delete('auth/token', [DeviceFlowController::class, 'revoke']);
     });
 });

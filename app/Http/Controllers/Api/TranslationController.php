@@ -138,6 +138,78 @@ class TranslationController extends Controller
     }
 
     /**
+     * Check if a UUID exists on the server.
+     * Used by the mod to determine if upload is NEW, UPDATE, or FORK.
+     *
+     * GET /api/v1/translations/check-uuid?uuid={uuid}
+     *
+     * Returns:
+     * - exists: false → NEW (first upload of this UUID)
+     * - exists: true, is_owner: true → UPDATE (user's own translation)
+     * - exists: true, is_owner: false → FORK (someone else's translation)
+     */
+    public function checkUuid(Request $request): JsonResponse
+    {
+        $request->validate([
+            'uuid' => 'required|string|max:36',
+        ]);
+
+        $uuid = $request->uuid;
+        $userId = $request->user()->id;
+
+        // Check if current user owns a translation with this UUID
+        $ownTranslation = Translation::where('file_uuid', $uuid)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($ownTranslation) {
+            // UPDATE case: user's own translation
+            return response()->json([
+                'exists' => true,
+                'is_owner' => true,
+                'translation' => [
+                    'id' => $ownTranslation->id,
+                    'source_language' => $ownTranslation->source_language,
+                    'target_language' => $ownTranslation->target_language,
+                    'type' => $ownTranslation->type,
+                    'notes' => $ownTranslation->notes,
+                    'line_count' => $ownTranslation->line_count,
+                    'file_hash' => $ownTranslation->file_hash,
+                    'updated_at' => $ownTranslation->updated_at->toIso8601String(),
+                ],
+            ]);
+        }
+
+        // Check if anyone else has a translation with this UUID
+        $otherTranslation = Translation::where('file_uuid', $uuid)
+            ->with('user:id,name')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if ($otherTranslation) {
+            // FORK case: someone else's translation
+            return response()->json([
+                'exists' => true,
+                'is_owner' => false,
+                'original' => [
+                    'id' => $otherTranslation->id,
+                    'uploader' => $otherTranslation->user->name,
+                    'source_language' => $otherTranslation->source_language,
+                    'target_language' => $otherTranslation->target_language,
+                    'type' => $otherTranslation->type,
+                    'line_count' => $otherTranslation->line_count,
+                    'updated_at' => $otherTranslation->updated_at->toIso8601String(),
+                ],
+            ]);
+        }
+
+        // NEW case: UUID doesn't exist on server
+        return response()->json([
+            'exists' => false,
+        ]);
+    }
+
+    /**
      * Download a translation file.
      * Returns gzipped JSON with ETag for caching.
      *
