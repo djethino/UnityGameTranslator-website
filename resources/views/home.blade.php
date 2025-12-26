@@ -137,7 +137,7 @@
                             {{ strtoupper($translation->source_language) }} → {{ strtoupper($translation->target_language) }}
                         </div>
                         <div class="text-xs text-gray-500 mt-1">
-                            {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->created_at->diffForHumans() }}
+                            {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}
                         </div>
                     </div>
                 </div>

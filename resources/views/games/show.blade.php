@@ -178,7 +178,7 @@
                                     @endif
                                     <span class="font-medium text-gray-300">{{ $translation->user->name }}</span>
                                 </span>
-                                <span><i class="fas fa-calendar mr-1"></i> {{ $translation->created_at->format('M d, Y') }}</span>
+                                <span><i class="fas fa-calendar mr-1"></i> {{ $translation->updated_at->format('M d, Y') }}</span>
                                 <span><i class="fas fa-file-alt mr-1"></i> {{ number_format($translation->line_count) }} {{ __('translation.lines', ['count' => '']) }}</span>
                                 <span><i class="fas fa-download mr-1"></i> {{ $group['total_downloads'] }}</span>
                             </div>

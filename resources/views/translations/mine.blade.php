@@ -51,7 +51,7 @@
                         {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} •
                         {{ $translation->download_count }} {{ __('my_translations.downloads') }} •
                         {{ $translation->forks->count() }} {{ __('my_translations.forks') }} •
-                        {{ $translation->created_at->format('M d, Y') }}
+                        {{ $translation->updated_at->format('M d, Y') }}
                     </div>
                     </div>
                 </div>
