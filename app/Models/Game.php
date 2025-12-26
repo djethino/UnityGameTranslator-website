@@ -12,6 +12,7 @@ class Game extends Model
         'slug',
         'igdb_id',
         'rawg_id',
+        'steam_id',
         'image_url',
     ];
 

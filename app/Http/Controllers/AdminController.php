@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AnalyticsDaily;
 use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
+use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
@@ -123,12 +124,18 @@ class AdminController extends Controller
 
         $user->ban($request->reason);
 
+        // Log ban action
+        AuditLog::logUserBanned($user->id, auth()->id(), $request->reason);
+
         return back()->with('success', "User {$user->name} has been banned.");
     }
 
-    public function unbanUser(User $user)
+    public function unbanUser(Request $request, User $user)
     {
         $user->unban();
+
+        // Log unban action
+        AuditLog::logUserUnbanned($user->id, auth()->id(), $request);
 
         return back()->with('success', "User {$user->name} has been unbanned.");
     }

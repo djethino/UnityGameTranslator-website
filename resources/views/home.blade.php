@@ -12,7 +12,7 @@
     <!-- Hero Section -->
     <div class="text-center py-12 mb-12">
         <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
-            <i class="fas fa-language text-purple-400 mr-3"></i>UnityGameTranslator
+            <i class="fas fa-language text-purple-400 mr-3"></i>{{ __('home.hero_title') }}
         </h1>
         <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             {{ __('home.hero_description') }}
@@ -56,6 +56,14 @@
                         <i class="fas fa-check text-green-400 mr-2"></i>
                         {{ __('home.mod_feature_3') }}
                     </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-400 mr-2"></i>
+                        {{ __('home.mod_feature_4') }}
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-400 mr-2"></i>
+                        {{ __('home.mod_feature_5') }}
+                    </li>
                 </ul>
             </div>
             <!-- The Website -->
@@ -77,6 +85,10 @@
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-400 mr-2"></i>
                         {{ __('home.website_feature_3') }}
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-400 mr-2"></i>
+                        {{ __('home.website_feature_4') }}
                     </li>
                 </ul>
             </div>

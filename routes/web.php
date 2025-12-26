@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\HomeController;
@@ -24,13 +25,22 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
+// Device Flow link page (for Unity mod authentication)
+Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
+Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware('auth')->name('link.validate');
+
 // OAuth
 Route::get('/auth/{provider}', [SocialController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [SocialController::class, 'callback'])->name('auth.callback');
 Route::post('/logout', function () {
+    $userId = Auth::id();
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+    // Log logout
+    if ($userId) {
+        \App\Models\AuditLog::logLogout($userId);
+    }
     return redirect('/');
 })->name('logout');
 

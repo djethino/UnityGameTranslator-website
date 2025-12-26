@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Translation extends Model
 {
@@ -18,7 +19,65 @@ class Translation extends Model
         'notes',
         'file_path',
         'file_uuid',
+        'file_hash',
     ];
+
+    /**
+     * Get the safe, validated file path.
+     * Prevents path traversal attacks by ensuring the path stays within storage.
+     */
+    public function getSafeFilePath(): ?string
+    {
+        if (empty($this->file_path)) {
+            return null;
+        }
+
+        // Files are stored in the public disk (storage/app/public/)
+        $basePath = storage_path('app/public');
+        $requestedPath = $basePath . '/' . $this->file_path;
+        $fullPath = realpath($requestedPath);
+
+        // Validate that the resolved path is within the storage/app/public directory
+        // realpath() returns false for non-existent files, so also check the parent directory
+        if (!$fullPath) {
+            // File doesn't exist yet, validate the directory
+            $dirPath = realpath(dirname($requestedPath));
+            $realBasePath = realpath($basePath);
+            if (!$dirPath || !$realBasePath || !Str::startsWith($dirPath, $realBasePath)) {
+                return null;
+            }
+            return $requestedPath;
+        }
+
+        $realBasePath = realpath($basePath);
+        if (!$realBasePath || !Str::startsWith($fullPath, $realBasePath)) {
+            // Path traversal detected
+            return null;
+        }
+
+        return $fullPath;
+    }
+
+    /**
+     * Compute SHA256 hash of the translation file content
+     */
+    public function computeHash(): ?string
+    {
+        $safePath = $this->getSafeFilePath();
+        if (!$safePath || !file_exists($safePath)) {
+            return null;
+        }
+        return hash_file('sha256', $safePath);
+    }
+
+    /**
+     * Update the file hash from current file content
+     */
+    public function updateHash(): void
+    {
+        $this->file_hash = $this->computeHash();
+        $this->save();
+    }
 
     public const TYPES = [
         'ai' => 'Full AI Translation',

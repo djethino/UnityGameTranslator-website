@@ -44,6 +44,9 @@
             <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_local') }}</li>
             <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_cache') }}</li>
             <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_share') }}</li>
+            <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_overlay') }}</li>
+            <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_sync') }}</li>
+            <li><i class="fas fa-check text-green-400 mr-2"></i>{{ __('docs.feature_detect') }}</li>
         </ul>
     </section>
 
@@ -105,6 +108,24 @@
             <li>{{ __('docs.download_model') }} <code class="bg-gray-700 px-2 py-1 rounded text-sm">ollama pull qwen3:8b</code></li>
             <li>{{ __('docs.edit_config') }} <code class="bg-gray-700 px-1 rounded">"enable_ollama": true</code></li>
         </ol>
+    </section>
+
+    <!-- First Launch -->
+    <section class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+        <h2 class="text-xl font-bold mb-4"><i class="fas fa-rocket mr-2 text-purple-400"></i>{{ __('docs.first_launch') }}</h2>
+        <p class="text-gray-300 mb-4">{{ __('docs.first_launch_desc') }}</p>
+    </section>
+
+    <!-- Online Sync -->
+    <section class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+        <h2 class="text-xl font-bold mb-4"><i class="fas fa-sync mr-2 text-purple-400"></i>{{ __('docs.online_sync') }}</h2>
+        <p class="text-gray-300 mb-4">{{ __('docs.online_sync_desc') }}</p>
+    </section>
+
+    <!-- Smart Merging -->
+    <section class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+        <h2 class="text-xl font-bold mb-4"><i class="fas fa-code-branch mr-2 text-purple-400"></i>{{ __('docs.merging') }}</h2>
+        <p class="text-gray-300 mb-4">{{ __('docs.merging_desc') }}</p>
     </section>
 
     <!-- Configuration -->
@@ -206,6 +227,14 @@
             <div>
                 <h3 class="font-semibold text-yellow-400">{{ __('docs.ollama_not_translating') }}</h3>
                 <p class="text-gray-300 text-sm">{{ __('docs.ollama_not_translating_desc') }} (<code class="bg-gray-700 px-1 rounded">ollama serve</code>, <code class="bg-gray-700 px-1 rounded">ollama pull qwen3:8b</code>)</p>
+            </div>
+            <div>
+                <h3 class="font-semibold text-yellow-400">{{ __('docs.overlay_not_showing') }}</h3>
+                <p class="text-gray-300 text-sm">{{ __('docs.overlay_not_showing_desc') }}</p>
+            </div>
+            <div>
+                <h3 class="font-semibold text-yellow-400">{{ __('docs.sync_not_working') }}</h3>
+                <p class="text-gray-300 text-sm">{{ __('docs.sync_not_working_desc') }}</p>
             </div>
             <div>
                 <h3 class="font-semibold text-yellow-400">{{ __('docs.queue_stuck') }}</h3>

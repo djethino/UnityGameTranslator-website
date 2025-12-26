@@ -1,11 +1,12 @@
 # UnityGameTranslator Website
 
-Community platform for sharing Unity game translation files.
+Community platform for sharing Unity game translation files with API for mod synchronization.
 
 **Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com)
 
 ## Features
 
+### Web Platform
 - **Browse translations** by game, language, and popularity
 - **Upload translation files** from the Unity mod
 - **Fork translations** to improve existing work
@@ -14,11 +15,19 @@ Community platform for sharing Unity game translation files.
 - **Automatic fork detection** via file UUID lineage
 - **Multi-language UI** (12 languages supported)
 
+### API for Unity Mod
+- **Search translations** by Steam ID, game name, or language
+- **Download translations** with ETag caching
+- **Check for updates** without downloading full file
+- **Upload translations** with authentication
+- **Device Flow authentication** (like Netflix/Spotify)
+- **Rate limiting** per endpoint
+
 ## Tech Stack
 
 - **Framework:** Laravel 12
 - **Database:** SQLite (dev) / MySQL (prod)
-- **Auth:** Laravel Socialite (Steam, Epic Games, Discord, Twitch, GitHub, Google)
+- **Auth:** Laravel Socialite (Google, GitHub, Discord, Twitch)
 - **Frontend:** Tailwind CSS, Alpine.js
 
 ## Requirements
@@ -58,12 +67,13 @@ npm run build
 Configure in `.env`:
 
 ```env
-# Steam
-STEAM_CLIENT_SECRET=your_steam_api_key
+# Google
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
 
-# Epic Games
-EPICGAMES_CLIENT_ID=your_client_id
-EPICGAMES_CLIENT_SECRET=your_client_secret
+# GitHub
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
 
 # Discord
 DISCORD_CLIENT_ID=your_client_id
@@ -72,26 +82,16 @@ DISCORD_CLIENT_SECRET=your_client_secret
 # Twitch
 TWITCH_CLIENT_ID=your_client_id
 TWITCH_CLIENT_SECRET=your_client_secret
-
-# GitHub
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-
-# Google
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
 ```
 
 ### Where to get credentials
 
 | Provider | Console |
 |----------|---------|
-| Steam | [Steam Web API](https://steamcommunity.com/dev/apikey) |
-| Epic Games | [Epic Developer Portal](https://dev.epicgames.com/portal) |
+| Google | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+| GitHub | [GitHub Developer Settings](https://github.com/settings/developers) |
 | Discord | [Discord Developer Portal](https://discord.com/developers/applications) |
 | Twitch | [Twitch Developer Console](https://dev.twitch.tv/console/apps) |
-| GitHub | [GitHub Developer Settings](https://github.com/settings/developers) |
-| Google | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 
 ## Development
 
@@ -119,24 +119,278 @@ php artisan config:clear
 php artisan migrate:fresh
 ```
 
+## API Reference
+
+All endpoints are prefixed with `/api/v1/`.
+
+### Public Endpoints (No Auth)
+
+#### Search Translations
+```http
+GET /api/v1/translations?steam_id=367520&lang=fr
+GET /api/v1/translations?game=hollow-knight&lang=fr
+
+Response 200:
+{
+  "available": true,
+  "translations": [
+    {
+      "id": 123,
+      "uuid": "abc-123",
+      "uploader": "user1",
+      "votes": 42,
+      "entries_count": 1500,
+      "type": "ai_reviewed",
+      "hash": "sha256:abc123",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ],
+  "recommended": 123
+}
+```
+Rate limit: 60/min
+
+#### Check for Updates
+```http
+GET /api/v1/translations/{id}/check
+If-None-Match: "sha256:abc123"
+
+Response 200:
+{
+  "hash": "sha256:def456",
+  "updated_at": "2025-01-15T10:30:00Z",
+  "entries_count": 1687,
+  "has_update": true
+}
+
+Response 304: (no changes)
+```
+Rate limit: 120/min
+
+#### Download Translation
+```http
+GET /api/v1/translations/{id}/download
+Accept-Encoding: gzip
+
+Response 200:
+Content-Type: application/json
+Content-Encoding: gzip
+ETag: "sha256:abc123"
+
+{ ... translations.json ... }
+```
+Rate limit: 30/min
+
+#### List Games
+```http
+GET /api/v1/games?q=hollow
+
+Response 200:
+{
+  "games": [
+    { "id": 1, "name": "Hollow Knight", "steam_id": "367520", ... }
+  ]
+}
+```
+Rate limit: 60/min
+
+### Device Flow Authentication
+
+#### Initiate Login
+```http
+POST /api/v1/auth/device
+Content-Type: application/json
+
+{ "client_id": "unity-mod" }
+
+Response 200:
+{
+  "device_code": "xyz789",
+  "user_code": "ABC-123",
+  "verification_uri": "https://unitygametranslator.asymptomatikgames.com/link",
+  "expires_in": 900,
+  "interval": 5
+}
+```
+Rate limit: 10/min
+
+#### Poll for Completion
+```http
+POST /api/v1/auth/device/poll
+Content-Type: application/json
+
+{ "device_code": "xyz789" }
+
+Response 200 (pending):
+{ "status": "pending" }
+
+Response 200 (complete):
+{
+  "status": "complete",
+  "access_token": "ugt_abc123...",
+  "user": { "id": 42, "name": "MonPseudo" }
+}
+
+Response 400 (expired):
+{ "error": "expired_token" }
+```
+Rate limit: 12/min
+
+### Authenticated Endpoints
+
+All require `Authorization: Bearer ugt_xxx` header.
+
+#### Get Current User
+```http
+GET /api/v1/me
+
+Response 200:
+{
+  "id": 42,
+  "name": "MonPseudo",
+  "email": "user@example.com"
+}
+```
+Rate limit: 60/min
+
+#### Get User's Translations
+```http
+GET /api/v1/me/translations
+
+Response 200:
+{
+  "translations": [ ... ]
+}
+```
+Rate limit: 60/min
+
+#### Upload Translation
+```http
+POST /api/v1/translations
+Content-Type: application/json
+
+{
+  "game_steam_id": "367520",
+  "game_name": "Hollow Knight",
+  "source_lang": "en",
+  "target_lang": "fr",
+  "type": "ai_unreviewed",
+  "notes": "Complete translation",
+  "uuid": "local-uuid-123",
+  "parent_uuid": "parent-uuid-456",
+  "translations": { "Hello": "Bonjour", ... }
+}
+
+Response 201:
+{
+  "id": 456,
+  "uuid": "local-uuid-123",
+  "url": "https://unitygametranslator.asymptomatikgames.com/translations/456"
+}
+```
+Rate limit: 10/min
+
+#### Revoke Token
+```http
+DELETE /api/v1/auth/token
+
+Response 200:
+{ "message": "Token revoked" }
+```
+Rate limit: 60/min
+
+### Rate Limiting
+
+All responses include headers:
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1703505600
+```
+
+When rate limited (429):
+```http
+Retry-After: 60
+```
+
 ## Project Structure
 
 ```
 app/
-├── Http/Controllers/
-│   ├── GameController.php      # Game listing and search
-│   ├── TranslationController.php # Upload, download, fork
-│   ├── AuthController.php      # OAuth authentication
-│   └── Admin/                  # Admin moderation
+├── Http/
+│   ├── Controllers/
+│   │   ├── GameController.php          # Web: game listing
+│   │   ├── TranslationController.php   # Web: upload, download, fork
+│   │   ├── AuthController.php          # Web: OAuth authentication
+│   │   ├── Admin/                      # Admin moderation
+│   │   └── Api/                        # API endpoints
+│   │       ├── TranslationController.php  # search, check, download, store
+│   │       ├── GameController.php         # index, show
+│   │       ├── DeviceFlowController.php   # Device Flow auth
+│   │       └── UserController.php         # me, translations
+│   └── Middleware/
+│       └── AuthenticateApi.php         # Bearer token validation
 ├── Models/
-│   ├── Game.php               # Steam/Epic games
-│   ├── Translation.php        # Translation files
-│   ├── User.php               # Users with OAuth
-│   └── Report.php             # Content reports
+│   ├── Game.php                        # Games with steam_id
+│   ├── Translation.php                 # Translation files with file_hash
+│   ├── User.php                        # Users with OAuth
+│   ├── Report.php                      # Content reports
+│   ├── ApiToken.php                    # Permanent API tokens
+│   └── DeviceCode.php                  # Temporary Device Flow codes
+routes/
+├── web.php                             # Web routes
+└── api.php                             # API v1 routes
 resources/
-├── views/                     # Blade templates
-└── lang/                      # UI translations (12 languages)
+├── views/
+│   └── auth/
+│       └── link.blade.php              # Device Flow code entry page
+└── lang/                               # UI translations (12 languages)
 ```
+
+## Database Schema
+
+### Key Tables
+
+#### games
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint | Primary key |
+| name | string | Game name |
+| slug | string | URL-friendly name |
+| steam_id | string | Steam App ID (nullable) |
+| rawg_id | string | RAWG API ID (nullable) |
+
+#### translations
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint | Primary key |
+| game_id | bigint | Foreign key to games |
+| user_id | bigint | Uploader |
+| parent_id | bigint | Fork source (nullable) |
+| file_uuid | string | Unique file identifier |
+| file_hash | string | SHA256 of content |
+| source_language | string | e.g., "en" |
+| target_language | string | e.g., "fr" |
+| type | enum | ai_unreviewed, ai_reviewed, human |
+| entries_count | int | Number of translations |
+
+#### api_tokens
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint | Primary key |
+| user_id | bigint | Token owner |
+| token | string | Hashed token (prefix: ugt_) |
+| name | string | Token name |
+| last_used_at | timestamp | Last API call |
+
+#### device_codes
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint | Primary key |
+| device_code | string | Secret code for polling |
+| user_code | string | User-facing code (ABC-123) |
+| user_id | bigint | Linked user when validated |
+| expires_at | timestamp | Expiration time |
 
 ## Related
 

@@ -26,24 +26,28 @@
 
         <p class="text-gray-400 mb-8">{{ __('auth.choose_method') }}</p>
 
+        @php
+            // Pass redirect parameter to OAuth links if present
+            $redirectParam = request('redirect') ? '?redirect=' . urlencode(request('redirect')) : '';
+        @endphp
         <div class="space-y-4">
-            <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
+            <a href="{{ route('auth.redirect', 'steam') }}{{ $redirectParam }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                 <i class="fab fa-steam mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Steam']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'epicgames') }}" class="flex items-center justify-center w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
+            <a href="{{ route('auth.redirect', 'epicgames') }}{{ $redirectParam }}" class="flex items-center justify-center w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
                 <img src="https://cdn.simpleicons.org/epicgames/white" alt="" class="w-5 h-5 mr-2">
                 {{ __('auth.continue_with', ['provider' => 'Epic Games']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'discord') }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
+            <a href="{{ route('auth.redirect', 'discord') }}{{ $redirectParam }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
                 <i class="fab fa-discord mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Discord']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'twitch') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
+            <a href="{{ route('auth.redirect', 'twitch') }}{{ $redirectParam }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
                 <i class="fab fa-twitch mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Twitch']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'github') }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
+            <a href="{{ route('auth.redirect', 'github') }}{{ $redirectParam }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
                 <i class="fab fa-github mr-2"></i> {{ __('auth.continue_with', ['provider' => 'GitHub']) }}
             </a>
-            <a href="{{ route('auth.redirect', 'google') }}" class="block w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">
+            <a href="{{ route('auth.redirect', 'google') }}{{ $redirectParam }}" class="block w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">
                 <i class="fab fa-google mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Google']) }}
             </a>
         </div>

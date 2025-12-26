@@ -3,21 +3,62 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
     protected array $providers = ['google', 'github', 'discord', 'twitch', 'steam', 'epicgames'];
 
-    public function redirect(string $provider)
+    public function redirect(Request $request, string $provider)
     {
         if (!in_array($provider, $this->providers)) {
             abort(404);
         }
 
+        // Store validated redirect URL in session for after login
+        // Prevent open redirect by only allowing relative URLs or same-origin
+        $redirect = $request->query('redirect');
+        if ($redirect) {
+            $redirect = $this->validateRedirectUrl($redirect);
+            if ($redirect) {
+                session(['url.intended' => $redirect]);
+            }
+        }
+
         return Socialite::driver($provider)->redirect();
+    }
+
+    /**
+     * Validate redirect URL to prevent open redirect attacks.
+     * Only allows relative URLs or URLs on the same domain.
+     */
+    protected function validateRedirectUrl(?string $url): ?string
+    {
+        if (empty($url)) {
+            return null;
+        }
+
+        // Decode if URL-encoded
+        $url = urldecode($url);
+
+        // Allow relative URLs starting with /
+        if (Str::startsWith($url, '/') && !Str::startsWith($url, '//')) {
+            return $url;
+        }
+
+        // Allow same-origin absolute URLs
+        $appUrl = config('app.url');
+        if ($appUrl && Str::startsWith($url, $appUrl)) {
+            return $url;
+        }
+
+        // Reject all other URLs (potential open redirect)
+        return null;
     }
 
     public function callback(string $provider)
@@ -44,7 +85,9 @@ class SocialController extends Controller
 
         // For providers without email, generate a placeholder
         if (empty($email)) {
-            $email = $socialUser->getId() . '@' . $provider . '.local';
+            // Sanitize ID to prevent email injection (only alphanumeric)
+            $sanitizedId = preg_replace('/[^a-zA-Z0-9]/', '', $socialUser->getId());
+            $email = $sanitizedId . '@' . $provider . '.local';
         }
 
         // Check for disposable email domains (skip for generated emails)
@@ -92,6 +135,9 @@ class SocialController extends Controller
         }
 
         Auth::login($user, true);
+
+        // Log successful login
+        AuditLog::logLogin($user->id, $provider);
 
         return redirect()->intended('/');
     }
