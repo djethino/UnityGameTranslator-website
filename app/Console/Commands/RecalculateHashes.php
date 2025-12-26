@@ -26,11 +26,30 @@ class RecalculateHashes extends Command
 
         foreach ($translations as $translation) {
             $oldHash = $translation->file_hash;
+
+            // Debug info
+            $safePath = $translation->getSafeFilePath();
+            if (!$safePath) {
+                $this->newLine();
+                $this->error("  #{$translation->id}: file_path is empty or invalid: '{$translation->file_path}'");
+                $failed++;
+                $bar->advance();
+                continue;
+            }
+
+            if (!file_exists($safePath)) {
+                $this->newLine();
+                $this->error("  #{$translation->id}: file does not exist: {$safePath}");
+                $failed++;
+                $bar->advance();
+                continue;
+            }
+
             $newHash = $translation->computeHash();
 
             if ($newHash === null) {
                 $this->newLine();
-                $this->warn("  Failed to compute hash for translation #{$translation->id}");
+                $this->warn("  #{$translation->id}: Failed to parse JSON or compute hash");
                 $failed++;
             } else {
                 $translation->file_hash = $newHash;
