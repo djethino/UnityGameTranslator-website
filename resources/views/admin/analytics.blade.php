@@ -240,8 +240,8 @@
     </p>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ $cspNonce }}">
     const chartColors = {
         purple: 'rgb(168, 85, 247)',
         blue: 'rgb(59, 130, 246)',

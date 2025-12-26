@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContentSecurityPolicy
@@ -14,6 +15,12 @@ class ContentSecurityPolicy
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Generate nonce for inline scripts
+        $nonce = base64_encode(random_bytes(16));
+
+        // Share nonce with all views
+        View::share('cspNonce', $nonce);
+
         $response = $next($request);
 
         // Only add CSP to HTML responses
@@ -28,8 +35,8 @@ class ContentSecurityPolicy
             // Default: only allow same-origin
             "default-src 'self'",
 
-            // Scripts: self + unsafe-eval (required for Alpine.js inline expressions)
-            "script-src 'self' 'unsafe-eval'",
+            // Scripts: self + nonce for inline scripts + unsafe-eval (required for Alpine.js) + CDN for Chart.js
+            "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' https://cdn.jsdelivr.net",
 
             // Styles: self + inline (for dynamic styles in Blade templates)
             "style-src 'self' 'unsafe-inline'",
