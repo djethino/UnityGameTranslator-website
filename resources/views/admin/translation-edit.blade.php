@@ -6,8 +6,8 @@
 <div class="max-w-2xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold"><i class="fas fa-edit mr-2"></i> Edit Translation</h1>
-        <a href="{{ route('games.show', $translation->game) }}" class="text-gray-400 hover:text-white">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Game
+        <a href="{{ route('admin.translations.show', $translation) }}" class="text-gray-400 hover:text-white">
+            <i class="fas fa-arrow-left mr-1"></i> {{ __('common.back') }}
         </a>
     </div>
 
@@ -111,8 +111,8 @@
         </div>
 
         <div class="flex gap-4">
-            <a href="{{ route('games.show', $translation->game) }}" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition text-center">
-                Cancel
+            <a href="{{ route('admin.translations.show', $translation) }}" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition text-center">
+                {{ __('common.cancel') }}
             </a>
             <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition">
                 <i class="fas fa-save mr-2"></i> Save Changes

@@ -237,7 +237,7 @@ class AdminController extends Controller
             'notes' => $request->notes,
         ]);
 
-        return redirect()->route('games.show', $translation->game)
+        return redirect()->route('admin.translations.show', $translation)
             ->with('success', 'Translation updated successfully.');
     }
 
