@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('translations', [TranslationController::class, 'search']);
         Route::get('games', [GameController::class, 'index']);
+        Route::get('games/search', [GameController::class, 'search']); // External API search
         Route::get('games/{game}', [GameController::class, 'show']);
     });
 
