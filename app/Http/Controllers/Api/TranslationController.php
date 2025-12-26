@@ -22,8 +22,7 @@ class TranslationController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name'])
-            ->where('status', 'complete'); // Only show complete translations
+        $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name']);
 
         // Filter by Steam ID (exact match)
         if ($request->filled('steam_id')) {
@@ -85,6 +84,7 @@ class TranslationController extends Controller
                     'source_language' => $t->source_language,
                     'target_language' => $t->target_language,
                     'line_count' => $t->line_count,
+                    'status' => $t->status,
                     'type' => $t->type,
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
