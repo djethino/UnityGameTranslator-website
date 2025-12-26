@@ -23,6 +23,11 @@ class AnalyticsDaily extends Model
 
     protected $casts = [
         'date' => 'date',
+        'page_views' => 'integer',
+        'unique_visitors' => 'integer',
+        'downloads' => 'integer',
+        'uploads' => 'integer',
+        'registrations' => 'integer',
         'countries' => 'array',
         'referrers' => 'array',
         'devices' => 'array',

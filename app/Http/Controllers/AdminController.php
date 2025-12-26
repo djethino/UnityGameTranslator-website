@@ -212,13 +212,15 @@ class AdminController extends Controller
         foreach ($dailyStats as $day) {
             if ($day->countries) {
                 foreach ($day->countries as $country => $count) {
-                    $allCountries[$country] = ($allCountries[$country] ?? 0) + $count;
+                    if ($country !== '' && $country !== null) {
+                        $allCountries[$country] = ($allCountries[$country] ?? 0) + $count;
+                    }
                 }
             }
         }
         // Add today's countries
         foreach ($todayEvents->groupBy('country') as $country => $events) {
-            if ($country) {
+            if ($country !== '' && $country !== null) {
                 $allCountries[$country] = ($allCountries[$country] ?? 0) + $events->count();
             }
         }
@@ -230,12 +232,14 @@ class AdminController extends Controller
         foreach ($dailyStats as $day) {
             if ($day->referrers) {
                 foreach ($day->referrers as $ref => $count) {
-                    $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $count;
+                    if ($ref !== '' && $ref !== null) {
+                        $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $count;
+                    }
                 }
             }
         }
         foreach ($todayEvents->groupBy('referrer_domain') as $ref => $events) {
-            if ($ref) {
+            if ($ref !== '' && $ref !== null) {
                 $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $events->count();
             }
         }
