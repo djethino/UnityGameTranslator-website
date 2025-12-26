@@ -185,7 +185,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('file');
 const dropZoneContent = document.getElementById('dropZoneContent');

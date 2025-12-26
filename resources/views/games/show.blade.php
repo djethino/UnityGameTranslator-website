@@ -421,7 +421,7 @@
         </form>
     </div>
 </div>
-<script>
+<script nonce="{{ $cspNonce }}">
 function openReportModal(id) {
     document.getElementById("reportForm").action = "/report/" + id;
     document.getElementById("reportModal").classList.remove("hidden");

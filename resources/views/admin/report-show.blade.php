@@ -157,7 +157,7 @@
     @endif
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 function toggleJsonPreview() {
     const preview = document.getElementById('jsonPreview');
     const icon = document.getElementById('toggleIcon');

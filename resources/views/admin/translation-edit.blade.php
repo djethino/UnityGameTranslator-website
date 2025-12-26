@@ -121,7 +121,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.querySelectorAll('.type-option').forEach(option => {
     option.addEventListener('click', () => {
         document.querySelectorAll('.type-option').forEach(o => {

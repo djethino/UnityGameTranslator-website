@@ -144,7 +144,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 function openBanModal(userId, userName) {
     document.getElementById("banForm").action = "/admin/users/" + userId + "/ban";
     document.getElementById("banUserName").textContent = userName;
