@@ -286,8 +286,8 @@ class TranslationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'steam_id' => 'required_without:game_name|string',
-            'game_name' => 'required_without:steam_id|string|max:255',
+            'steam_id' => 'nullable|required_without:game_name|string',
+            'game_name' => 'nullable|required_without:steam_id|string|max:255',
             'source_language' => 'required|string|max:50',
             'target_language' => 'required|string|max:50',
             'type' => 'required|in:ai,human,ai_corrected',
@@ -297,7 +297,7 @@ class TranslationController extends Controller
         ]);
 
         // Parse and validate JSON content
-        $json = json_decode($request->content, true, 2);
+        $json = json_decode($request->content, true, 512);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
