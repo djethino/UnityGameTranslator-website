@@ -296,8 +296,8 @@ class TranslationController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Parse and validate JSON content
-        $json = json_decode($request->content, true, 512);
+        // Parse and validate JSON content (depth 2 = flat key-value object)
+        $json = json_decode($request->content, true, 2);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
