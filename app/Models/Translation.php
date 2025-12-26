@@ -61,6 +61,10 @@ class Translation extends Model
     /**
      * Compute SHA256 hash of the translation content (normalized with sorted keys).
      * This ensures the hash is deterministic regardless of JSON key order.
+     *
+     * IMPORTANT: Must match C# ComputeContentHash() exactly:
+     * - Include only translations (non-underscore keys) + _uuid
+     * - Exclude other metadata (_game, _local_changes, etc.)
      */
     public function computeHash(): ?string
     {
@@ -74,14 +78,25 @@ class Translation extends Model
             return null;
         }
 
-        // Parse JSON and sort keys for deterministic hash
+        // Parse JSON
         $data = json_decode($content, true);
         if (!is_array($data)) {
             return null;
         }
 
-        ksort($data);
-        $normalized = json_encode($data, JSON_UNESCAPED_UNICODE);
+        // Filter to only include translations + _uuid (same as C# ComputeContentHash)
+        // Exclude other metadata like _game, _local_changes, etc.
+        $hashData = [];
+        foreach ($data as $key => $value) {
+            // Include _uuid and non-metadata keys (translations)
+            if ($key === '_uuid' || !str_starts_with($key, '_')) {
+                $hashData[$key] = $value;
+            }
+        }
+
+        // Sort keys for deterministic hash
+        ksort($hashData);
+        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE);
 
         return hash('sha256', $normalized);
     }
