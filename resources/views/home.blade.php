@@ -3,10 +3,10 @@
 @section('title', 'UnityGameTranslator - ' . __('home.hero_description'))
 
 @section('content')
-    <!-- Beta Banner -->
+    <!-- Alpha Banner -->
     <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg mb-6 flex items-center justify-center">
         <i class="fas fa-flask mr-2"></i>
-        <span>{{ __('home.beta_banner') }}</span>
+        <span>{{ __('home.alpha_banner') }}</span>
     </div>
 
     <!-- Hero Section -->

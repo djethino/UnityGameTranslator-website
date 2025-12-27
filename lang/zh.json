@@ -22,7 +22,7 @@
     "home.search_placeholder": "搜索游戏...",
     "home.no_games": "未找到游戏。",
     "home.translations_count": ":count 个翻译",
-    "home.beta_banner": "本项目正在测试阶段 - 可能存在错误和缺失功能。",
+    "home.alpha_banner": "本项目正处于早期测试阶段 - 可能存在错误和缺失功能。",
     "home.hero_title": "翻译任何Unity游戏",
     "home.hero_description": "Unity游戏的开源翻译Mod。使用本地AI生成翻译，下载社区翻译，或分享您自己的翻译。离线工作，在线同步。",
     "home.view_games": "浏览游戏",

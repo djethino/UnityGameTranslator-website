@@ -22,7 +22,7 @@
     "home.search_placeholder": "Spiele suchen...",
     "home.no_games": "Keine Spiele gefunden.",
     "home.translations_count": ":count Übersetzung|:count Übersetzungen",
-    "home.beta_banner": "Dieses Projekt befindet sich in der Beta-Phase - Fehler und fehlende Funktionen sind möglich.",
+    "home.alpha_banner": "Dieses Projekt befindet sich in der Alpha-Phase - Fehler und fehlende Funktionen sind möglich.",
     "home.hero_title": "Übersetze jedes Unity-Spiel",
     "home.hero_description": "Der Open-Source Übersetzungs-Mod für Unity-Spiele. Generiere Übersetzungen mit lokaler KI, lade Community-Übersetzungen herunter oder teile deine eigenen. Funktioniert offline, synchronisiert online.",
     "home.view_games": "Spiele durchsuchen",

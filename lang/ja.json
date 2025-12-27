@@ -22,7 +22,7 @@
     "home.search_placeholder": "ゲームを検索...",
     "home.no_games": "ゲームが見つかりません。",
     "home.translations_count": ":count件の翻訳",
-    "home.beta_banner": "このプロジェクトはベータ版です - バグや未実装の機能があります。",
+    "home.alpha_banner": "このプロジェクトはアルファ版です - バグや未実装の機能があります。",
     "home.hero_title": "あらゆるUnityゲームを翻訳",
     "home.hero_description": "Unityゲーム向けオープンソース翻訳Mod。ローカルAIで翻訳を生成、コミュニティ翻訳をダウンロード、または自分の翻訳を共有。オフラインで動作、オンラインで同期。",
     "home.view_games": "ゲームを探す",

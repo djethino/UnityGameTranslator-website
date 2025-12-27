@@ -16,7 +16,7 @@
     "home.search_placeholder": "Search games...",
     "home.no_games": "No games found.",
     "home.translations_count": ":count translation|:count translations",
-    "home.beta_banner": "This project is in beta - expect bugs and missing features.",
+    "home.alpha_banner": "This project is in alpha - expect bugs and missing features.",
     "home.hero_title": "Translate Any Unity Game",
     "home.hero_description": "The open-source translation mod for Unity games. Generate translations with local AI, download community translations, or share your own. Works offline, syncs online.",
     "home.view_games": "Browse Games",

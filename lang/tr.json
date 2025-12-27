@@ -22,7 +22,7 @@
     "home.search_placeholder": "Oyun ara...",
     "home.no_games": "Oyun bulunamadı.",
     "home.translations_count": ":count çeviri",
-    "home.beta_banner": "Bu proje beta aşamasında - hatalar ve eksik özellikler olabilir.",
+    "home.alpha_banner": "Bu proje alfa aşamasında - hatalar ve eksik özellikler olabilir.",
     "home.hero_title": "Herhangi bir Unity oyununu çevirin",
     "home.hero_description": "Unity oyunları için açık kaynak çeviri modu. Yerel yapay zeka ile çeviri oluşturun, topluluk çevirilerini indirin veya kendinizinkini paylaşın. Çevrimdışı çalışır, çevrimiçi senkronize eder.",
     "home.view_games": "Oyunlara göz at",
