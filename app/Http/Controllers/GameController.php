@@ -19,7 +19,8 @@ class GameController extends Controller
 
     public function index(Request $request)
     {
-        $query = Game::withCount('translations');
+        $query = Game::withCount('translations')
+            ->withSum('translations', 'download_count');
 
         // Search by game name
         if ($request->filled('q')) {

@@ -65,6 +65,8 @@
     "games.search_game": "게임 검색",
     "games.game_name_placeholder": "게임 이름...",
     "games.upload_first": "첫 번역을 업로드하세요!",
+    "games.new": "신규",
+    "games.popular": "인기",
 
     "translation.type.ai": "AI 전체 번역",
     "translation.type.human": "수동 번역",
@@ -195,6 +197,9 @@
     "admin.resolved": "해결됨",
 
     "footer.share": "UnityGameTranslator 번역 공유",
+    "footer.tagline": "Unity 게임용 오픈소스 번역 모드.",
+    "footer.download_mod": "모드 다운로드",
+    "footer.rights": "All rights reserved.",
 
     "docs.title": "문서",
     "docs.github_repo": "GitHub 저장소",

@@ -34,7 +34,7 @@
                         <p class="text-gray-400 text-sm">{{ __('games.target_language') }}</p>
                         <p class="font-medium">
                             <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
-                                {{ $translation->source_language }} → {{ $translation->target_language }}
+                                @langflag($translation->source_language) {{ $translation->source_language }} → @langflag($translation->target_language) {{ $translation->target_language }}
                             </span>
                         </p>
                     </div>

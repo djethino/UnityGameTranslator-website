@@ -10,7 +10,9 @@
     </div>
 
     <!-- Hero Section -->
-    <div class="text-center py-12 mb-12">
+    <div class="text-center py-12 mb-12 relative">
+        <!-- Gradient Background -->
+        <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-transparent rounded-3xl -z-10"></div>
         <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
             <i class="fas fa-language text-purple-400 mr-3"></i>{{ __('home.hero_title') }}
         </h1>
@@ -18,11 +20,11 @@
             {{ __('home.hero_description') }}
         </p>
         <div class="flex flex-wrap justify-center gap-4">
-            <a href="{{ route('games.index') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition flex items-center">
+            <a href="{{ route('games.index') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
                 <i class="fas fa-gamepad mr-2"></i>
                 {{ __('home.view_games') }}
             </a>
-            <a href="{{ route('docs') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition flex items-center">
+            <a href="{{ route('docs') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
                 <i class="fas fa-book mr-2"></i>
                 {{ __('home.view_docs') }}
             </a>
@@ -95,8 +97,9 @@
         </div>
     </div>
 
-    <!-- Stats -->
-    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-12">
+    <!-- Stats (hidden when numbers are low) -->
+    @if($stats['games'] >= 10 && $stats['translations'] >= 25 && $stats['users'] >= 50)
+    <div class="bg-gray-800/80 backdrop-blur-sm rounded-lg p-6 border border-gray-700 mb-12">
         <div class="grid grid-cols-3 gap-4 text-center">
             <div>
                 <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['games']) }}</div>
@@ -112,6 +115,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Latest Translations -->
     @if($latestTranslations->count() > 0)
@@ -133,8 +137,12 @@
                     @endif
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-white truncate">{{ $translation->game->name }}</h3>
-                        <div class="text-sm text-gray-400">
-                            {{ strtoupper($translation->source_language) }} → {{ strtoupper($translation->target_language) }}
+                        <div class="text-sm text-gray-400 flex items-center gap-1">
+                            <span>@langflag($translation->source_language)</span>
+                            <span>{{ $translation->source_language }}</span>
+                            <span>→</span>
+                            <span>@langflag($translation->target_language)</span>
+                            <span>{{ $translation->target_language }}</span>
                         </div>
                         <div class="text-xs text-gray-500 mt-1">
                             {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}

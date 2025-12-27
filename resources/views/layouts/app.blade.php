@@ -29,41 +29,45 @@
 
     @stack('head')
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
-    <nav class="bg-gray-800 border-b border-gray-700">
+<body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden">
+    <nav class="bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo + Desktop Nav -->
                 <div class="flex items-center">
-                    <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400">
-                        <i class="fas fa-language mr-2"></i>UnityGameTranslator
+                    <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400 flex items-center">
+                        <img src="/logo.svg" alt="UGT" class="w-8 h-8 mr-2"><span class="hidden sm:inline">UnityGameTranslator</span><span class="sm:hidden">UGT</span>
                     </a>
-                    <div class="ml-10 flex space-x-4">
-                        <a href="{{ route('games.index') }}" class="text-gray-300 hover:text-white px-3 py-2">
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex ml-10 space-x-4">
+                        <a href="{{ route('games.index') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-gamepad mr-1"></i> {{ __('nav.games') }}
                         </a>
-                        <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2">
+                        <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
                         @auth
-                        <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2">
+                        <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
                         </a>
-                        <a href="{{ route('translations.mine') }}" class="text-gray-300 hover:text-white px-3 py-2">
+                        <a href="{{ route('translations.mine') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-folder mr-1"></i> {{ __('nav.my_translations') }}
                         </a>
                         @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="text-yellow-400 hover:text-yellow-300 px-3 py-2">
+                        <a href="{{ route('admin.dashboard') }}" class="text-yellow-400 hover:text-yellow-300 px-3 py-2 transition">
                             <i class="fas fa-shield-alt mr-1"></i> {{ __('nav.admin') }}@if($pendingReportsCount > 0) <span class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ $pendingReportsCount }}</span>@endif
                         </a>
                         @endif
                         @else
-                        <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2">
+                        <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
                         </a>
                         @endauth
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
+
+                <!-- Desktop Right Section -->
+                <div class="hidden md:flex items-center space-x-4">
                     <!-- Language Switcher -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white px-2 py-1 rounded transition">
@@ -83,22 +87,22 @@
                     </div>
 
                     @guest
-                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600" title="Steam">
+                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 transition" title="Steam">
                             <i class="fab fa-steam text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 flex items-center justify-center" title="Epic Games">
+                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 flex items-center justify-center transition" title="Epic Games">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.537 0C2.165 0 1.66.506 1.66 1.879V18.44a4.262 4.262 0 00.02.433c.031.3.037.59.316.92.027.033.311.245.311.245.153.075.258.13.43.2l8.335 3.491c.433.199.614.276.928.27h.002c.314.006.495-.071.928-.27l8.335-3.492c.172-.07.277-.124.43-.2 0 0 .284-.211.311-.243.28-.33.285-.621.316-.92a4.261 4.261 0 00.02-.434V1.879c0-1.373-.506-1.88-1.878-1.88zm13.366 3.11h.68c1.138 0 1.688.553 1.688 1.696v1.88h-1.374v-1.8c0-.369-.17-.54-.523-.54h-.235c-.367 0-.537.17-.537.539v5.81c0 .369.17.54.537.54h.262c.353 0 .523-.171.523-.54V8.619h1.373v2.143c0 1.144-.562 1.71-1.7 1.71h-.694c-1.138 0-1.7-.566-1.7-1.71V4.82c0-1.144.562-1.709 1.7-1.709zm-12.186.08h3.114v1.274H6.117v2.603h1.648v1.275H6.117v2.774h1.74v1.275h-3.14zm3.816 0h2.198c1.138 0 1.7.564 1.7 1.708v2.445c0 1.144-.562 1.71-1.7 1.71h-.799v3.338h-1.4zm4.53 0h1.4v9.201h-1.4zm-3.13 1.235v3.392h.575c.354 0 .523-.171.523-.54V4.965c0-.368-.17-.54-.523-.54z"/></svg>
                         </a>
-                        <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg" title="Discord">
+                        <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition" title="Discord">
                             <i class="fab fa-discord text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg" title="Twitch">
+                        <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg transition" title="Twitch">
                             <i class="fab fa-twitch text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg" title="GitHub">
+                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition" title="GitHub">
                             <i class="fab fa-github text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
-                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg" title="Google">
+                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition" title="Google">
                             <i class="fab fa-google text-lg w-5 h-5 flex items-center justify-center"></i>
                         </a>
                     @else
@@ -111,18 +115,116 @@
                             </a>
                             <form action="{{ route('logout') }}" method="POST" class="inline">
                                 @csrf
-                                <button type="submit" class="text-gray-400 hover:text-white" title="{{ __('nav.logout') }}">
+                                <button type="submit" class="text-gray-400 hover:text-white transition" title="{{ __('nav.logout') }}">
                                     <i class="fas fa-sign-out-alt"></i>
                                 </button>
                             </form>
                         </div>
                     @endguest
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center md:hidden">
+                    <!-- Mobile Language Switcher (always visible) -->
+                    <div class="relative mr-2" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white p-2 rounded transition">
+                            <span class="text-lg">{{ config('locales.supported')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
+                        </button>
+                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+                            @foreach(config('locales.supported', []) as $code => $locale)
+                                <a href="{{ route('locale.switch', $code) }}"
+                                   class="flex items-center px-4 py-2 text-sm hover:bg-gray-700 transition {{ app()->getLocale() === $code ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
+                                    <span class="text-lg mr-2">{{ $locale['flag'] }}</span>
+                                    <span>{{ $locale['native'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                    <!-- Hamburger Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white p-2 rounded-lg transition">
+                        <i class="fas fa-bars text-xl" x-show="!mobileMenuOpen"></i>
+                        <i class="fas fa-times text-xl" x-show="mobileMenuOpen" x-cloak></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div x-show="mobileMenuOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="md:hidden bg-gray-800 border-b border-gray-700">
+            <div class="px-4 py-4 space-y-3">
+                <!-- Navigation Links -->
+                <a href="{{ route('games.index') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-gamepad mr-3 w-5 text-center"></i> {{ __('nav.games') }}
+                </a>
+                <a href="{{ route('docs') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-book mr-3 w-5 text-center"></i> {{ __('nav.docs') }}
+                </a>
+                @auth
+                <a href="{{ route('translations.create') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-upload mr-3 w-5 text-center"></i> {{ __('nav.upload') }}
+                </a>
+                <a href="{{ route('translations.mine') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-folder mr-3 w-5 text-center"></i> {{ __('nav.my_translations') }}
+                </a>
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}" class="block text-yellow-400 hover:text-yellow-300 hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-shield-alt mr-3 w-5 text-center"></i> {{ __('nav.admin') }}
+                    @if($pendingReportsCount > 0) <span class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-2">{{ $pendingReportsCount }}</span>@endif
+                </a>
+                @endif
+                @else
+                <a href="{{ route('login') }}?action=upload" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-upload mr-3 w-5 text-center"></i> {{ __('nav.upload') }}
+                </a>
+                @endauth
+
+                <!-- Divider -->
+                <div class="border-t border-gray-700 my-3"></div>
+
+                <!-- Auth Section -->
+                @guest
+                <p class="text-gray-400 text-sm px-4 mb-2">{{ __('nav.login_with') }}</p>
+                <div class="grid grid-cols-3 gap-2 px-4">
+                    <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg flex items-center justify-center transition" title="Steam">
+                        <i class="fab fa-steam text-lg"></i>
+                    </a>
+                    <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Discord">
+                        <i class="fab fa-discord text-lg"></i>
+                    </a>
+                    <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg flex items-center justify-center transition" title="GitHub">
+                        <i class="fab fa-github text-lg"></i>
+                    </a>
+                    <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Google">
+                        <i class="fab fa-google text-lg"></i>
+                    </a>
+                    <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Twitch">
+                        <i class="fab fa-twitch text-lg"></i>
+                    </a>
+                    <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-3 rounded-lg flex items-center justify-center border border-gray-600 transition" title="Epic Games">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.537 0C2.165 0 1.66.506 1.66 1.879V18.44a4.262 4.262 0 00.02.433c.031.3.037.59.316.92.027.033.311.245.311.245.153.075.258.13.43.2l8.335 3.491c.433.199.614.276.928.27h.002c.314.006.495-.071.928-.27l8.335-3.492c.172-.07.277-.124.43-.2 0 0 .284-.211.311-.243.28-.33.285-.621.316-.92a4.261 4.261 0 00.02-.434V1.879c0-1.373-.506-1.88-1.878-1.88zm13.366 3.11h.68c1.138 0 1.688.553 1.688 1.696v1.88h-1.374v-1.8c0-.369-.17-.54-.523-.54h-.235c-.367 0-.537.17-.537.539v5.81c0 .369.17.54.537.54h.262c.353 0 .523-.171.523-.54V8.619h1.373v2.143c0 1.144-.562 1.71-1.7 1.71h-.694c-1.138 0-1.7-.566-1.7-1.71V4.82c0-1.144.562-1.709 1.7-1.709zm-12.186.08h3.114v1.274H6.117v2.603h1.648v1.275H6.117v2.774h1.74v1.275h-3.14zm3.816 0h2.198c1.138 0 1.7.564 1.7 1.708v2.445c0 1.144-.562 1.71-1.7 1.71h-.799v3.338h-1.4zm4.53 0h1.4v9.201h-1.4zm-3.13 1.235v3.392h.575c.354 0 .523-.171.523-.54V4.965c0-.368-.17-.54-.523-.54z"/></svg>
+                    </a>
+                </div>
+                @else
+                <div class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded-lg">
+                    <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 hover:text-purple-400 transition">
+                        @if(auth()->user()->avatar)
+                            <img src="{{ auth()->user()->avatar }}" alt="" class="w-10 h-10 rounded-full">
+                        @endif
+                        <span class="text-white font-medium">{{ auth()->user()->name }}</span>
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="text-gray-400 hover:text-white p-2 transition" title="{{ __('nav.logout') }}">
+                            <i class="fas fa-sign-out-alt text-lg"></i>
+                        </button>
+                    </form>
+                </div>
+                @endguest
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         @if(session('success'))
             <div class="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">
                 {{ session('success') }}
@@ -136,16 +238,43 @@
         @yield('content')
     </main>
 
-    <footer class="bg-gray-800 border-t border-gray-700 mt-auto py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center text-gray-400">
-            <p class="mb-2">{{ __('footer.share') }} - <a href="https://github.com/djethino/UnityGameTranslator" class="text-purple-400 hover:text-purple-300">GitHub</a></p>
-            <p class="text-sm text-gray-500">
-                <a href="{{ route('legal.mentions') }}" class="hover:text-gray-300">{{ __('footer.legal') }}</a>
-                <span class="mx-2">|</span>
-                <a href="{{ route('legal.privacy') }}" class="hover:text-gray-300">{{ __('footer.privacy') }}</a>
-                <span class="mx-2">|</span>
-                <a href="{{ route('legal.terms') }}" class="hover:text-gray-300">{{ __('footer.terms') }}</a>
-            </p>
+    <footer class="bg-gray-800 border-t border-gray-700 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <!-- Logo & Description -->
+                <div class="text-center md:text-left">
+                    <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400 inline-flex items-center">
+                        <img src="/logo.svg" alt="UGT" class="w-8 h-8 mr-2">UnityGameTranslator
+                    </a>
+                    <p class="text-gray-500 text-sm mt-2">{{ __('footer.tagline') }}</p>
+                </div>
+
+                <!-- CTA & Links -->
+                <div class="text-center">
+                    <a href="{{ route('docs') }}" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition mb-4">
+                        <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
+                    </a>
+                    <div class="flex justify-center space-x-4 mt-4">
+                        <a href="https://github.com/djethino/UnityGameTranslator" target="_blank" class="text-gray-400 hover:text-white transition" title="GitHub">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Legal Links -->
+                <div class="text-center md:text-right">
+                    <div class="flex flex-wrap justify-center md:justify-end gap-4 text-sm text-gray-500">
+                        <a href="{{ route('legal.mentions') }}" class="hover:text-gray-300 transition">{{ __('footer.legal') }}</a>
+                        <a href="{{ route('legal.privacy') }}" class="hover:text-gray-300 transition">{{ __('footer.privacy') }}</a>
+                        <a href="{{ route('legal.terms') }}" class="hover:text-gray-300 transition">{{ __('footer.terms') }}</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center">
+                <p class="text-gray-500 text-sm">© {{ date('Y') }} ASymptOmatik Games. {{ __('footer.rights') }}</p>
+            </div>
         </div>
     </footer>
 

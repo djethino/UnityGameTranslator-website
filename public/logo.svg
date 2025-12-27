@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background circle (globe base) -->
+  <circle cx="256" cy="256" r="200" fill="#1F2937" stroke="#A855F7" stroke-width="8"/>
+
+  <!-- Globe lines (latitude) -->
+  <ellipse cx="256" cy="256" rx="180" ry="60" stroke="#A855F7" stroke-width="4" fill="none" opacity="0.4"/>
+  <ellipse cx="256" cy="256" rx="180" ry="120" stroke="#A855F7" stroke-width="4" fill="none" opacity="0.4"/>
+
+  <!-- Globe lines (longitude) -->
+  <line x1="256" y1="56" x2="256" y2="456" stroke="#A855F7" stroke-width="4" opacity="0.4"/>
+  <ellipse cx="256" cy="256" rx="60" ry="180" stroke="#A855F7" stroke-width="4" fill="none" opacity="0.4"/>
+  <ellipse cx="256" cy="256" rx="120" ry="180" stroke="#A855F7" stroke-width="4" fill="none" opacity="0.4"/>
+
+  <!-- Translation symbol (A文) stylized -->
+  <g transform="translate(180, 170)">
+    <!-- Letter A -->
+    <path d="M40 130 L70 50 L100 130 M50 100 L90 100" stroke="#A855F7" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Arrow -->
+    <path d="M110 90 L130 90 M125 80 L135 90 L125 100" stroke="#A855F7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Gamepad icon (simplified) -->
+  <g transform="translate(210, 280)">
+    <rect x="20" y="20" width="80" height="50" rx="15" fill="#A855F7"/>
+    <!-- D-pad left circle -->
+    <circle cx="45" cy="45" r="8" fill="#1F2937"/>
+    <!-- Buttons right -->
+    <circle cx="75" cy="38" r="6" fill="#1F2937"/>
+    <circle cx="88" cy="45" r="6" fill="#1F2937"/>
+  </g>
+</svg>

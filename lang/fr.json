@@ -65,6 +65,8 @@
     "games.search_game": "Rechercher un jeu",
     "games.game_name_placeholder": "Nom du jeu...",
     "games.upload_first": "Envoyez la première traduction !",
+    "games.new": "Nouveau",
+    "games.popular": "Populaire",
 
     "translation.type.ai": "Traduction IA complète",
     "translation.type.human": "Traduction humaine",
@@ -217,6 +219,9 @@
     "admin.delete_confirm": "Êtes-vous sûr de vouloir supprimer cette traduction ?",
 
     "footer.share": "Partagez vos traductions UnityGameTranslator",
+    "footer.tagline": "Le mod de traduction open-source pour les jeux Unity.",
+    "footer.download_mod": "Télécharger le Mod",
+    "footer.rights": "Tous droits réservés.",
 
     "docs.title": "Documentation",
     "docs.github_repo": "Dépôt GitHub",

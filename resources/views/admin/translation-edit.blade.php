@@ -50,7 +50,7 @@
                 <select name="source_language" required
                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                     @foreach($languages as $lang)
-                        <option value="{{ $lang }}" {{ $translation->source_language == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                        <option value="{{ $lang }}" {{ $translation->source_language == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
                     @endforeach
                 </select>
             </div>
@@ -59,7 +59,7 @@
                 <select name="target_language" required
                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                     @foreach($languages as $lang)
-                        <option value="{{ $lang }}" {{ $translation->target_language == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                        <option value="{{ $lang }}" {{ $translation->target_language == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
                     @endforeach
                 </select>
             </div>

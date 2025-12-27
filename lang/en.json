@@ -5,6 +5,7 @@
     "nav.my_translations": "My Translations",
     "nav.admin": "Admin",
     "nav.logout": "Logout",
+    "nav.login_with": "Sign in with:",
 
     "auth.login_with": "Login with :provider",
     "auth.banned": "Your account has been banned. Reason: :reason",
@@ -206,6 +207,9 @@
     "admin.delete_confirm": "Are you sure you want to delete this translation?",
 
     "footer.share": "Share your UnityGameTranslator translations",
+    "footer.tagline": "The open-source translation mod for Unity games.",
+    "footer.download_mod": "Download the Mod",
+    "footer.rights": "All rights reserved.",
 
     "docs.title": "Documentation",
     "docs.github_repo": "GitHub Repository",
@@ -306,6 +310,8 @@
     "games.search_game": "Search Game",
     "games.game_name_placeholder": "Game name...",
     "games.upload_first": "Upload the first translation!",
+    "games.new": "New",
+    "games.popular": "Popular",
 
     "cookies.message": "This site uses essential cookies for authentication and session management. No tracking or advertising cookies.",
     "cookies.accept": "Accept",

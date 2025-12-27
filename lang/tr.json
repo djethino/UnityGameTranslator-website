@@ -65,6 +65,8 @@
     "games.search_game": "Oyun ara",
     "games.game_name_placeholder": "Oyun adı...",
     "games.upload_first": "İlk çeviriyi yükleyin!",
+    "games.new": "Yeni",
+    "games.popular": "Popüler",
 
     "translation.type.ai": "Tam AI Çevirisi",
     "translation.type.human": "İnsan Çevirisi",
@@ -195,6 +197,9 @@
     "admin.resolved": "Çözüldü",
 
     "footer.share": "UnityGameTranslator çevirilerinizi paylaşın",
+    "footer.tagline": "Unity oyunları için açık kaynak çeviri modu.",
+    "footer.download_mod": "Modu İndir",
+    "footer.rights": "Tüm hakları saklıdır.",
 
     "docs.title": "Dokümantasyon",
     "docs.github_repo": "GitHub Deposu",

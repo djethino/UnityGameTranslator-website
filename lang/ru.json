@@ -65,6 +65,8 @@
     "games.search_game": "Поиск игры",
     "games.game_name_placeholder": "Название игры...",
     "games.upload_first": "Загрузите первый перевод!",
+    "games.new": "Новое",
+    "games.popular": "Популярное",
 
     "translation.type.ai": "Полный ИИ-перевод",
     "translation.type.human": "Человеческий перевод",
@@ -195,6 +197,9 @@
     "admin.resolved": "Решено",
 
     "footer.share": "Делитесь переводами UnityGameTranslator",
+    "footer.tagline": "Open-source мод перевода для игр Unity.",
+    "footer.download_mod": "Скачать мод",
+    "footer.rights": "Все права защищены.",
 
     "docs.title": "Документация",
     "docs.github_repo": "Репозиторий GitHub",

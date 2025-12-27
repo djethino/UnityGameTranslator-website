@@ -65,6 +65,8 @@
     "games.search_game": "ゲームを検索",
     "games.game_name_placeholder": "ゲーム名...",
     "games.upload_first": "最初の翻訳をアップロード！",
+    "games.new": "新着",
+    "games.popular": "人気",
 
     "translation.type.ai": "完全AI翻訳",
     "translation.type.human": "人力翻訳",
@@ -195,6 +197,9 @@
     "admin.resolved": "解決済み",
 
     "footer.share": "UnityGameTranslatorの翻訳を共有",
+    "footer.tagline": "Unityゲーム用オープンソース翻訳Mod。",
+    "footer.download_mod": "Modをダウンロード",
+    "footer.rights": "All rights reserved.",
 
     "docs.title": "ドキュメント",
     "docs.github_repo": "GitHubリポジトリ",

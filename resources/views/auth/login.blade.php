@@ -3,9 +3,15 @@
 @section('title', __('auth.sign_in') . ' - UnityGameTranslator')
 
 @section('content')
-<div class="max-w-md mx-auto mt-16">
-    <div class="bg-gray-800 rounded-lg p-8 border border-gray-700 text-center">
-        <h1 class="text-2xl font-bold mb-6">{{ __('auth.sign_in') }}</h1>
+<div class="max-w-md mx-auto mt-16 relative">
+    <div class="glass-card rounded-xl p-8 text-center shadow-2xl">
+        <!-- Logo -->
+        <div class="mb-6">
+            <img src="/logo.svg" alt="UnityGameTranslator" class="w-20 h-20 mx-auto mb-4">
+            <h1 class="text-2xl font-bold">UnityGameTranslator</h1>
+        </div>
+
+        <p class="text-gray-300 text-lg mb-2">{{ __('auth.sign_in') }}</p>
 
         @if(request('action'))
             <div class="bg-blue-900 border border-blue-700 text-blue-100 px-4 py-3 rounded mb-6 text-left">
@@ -24,36 +30,47 @@
             </div>
         @endif
 
-        <p class="text-gray-400 mb-8">{{ __('auth.choose_method') }}</p>
+        <p class="text-gray-400 mb-6">{{ __('auth.choose_method') }}</p>
 
         @php
             // Pass redirect parameter to OAuth links if present
             $redirectParam = request('redirect') ? '?redirect=' . urlencode(request('redirect')) : '';
         @endphp
-        <div class="space-y-4">
-            <a href="{{ route('auth.redirect', 'steam') }}{{ $redirectParam }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
-                <i class="fab fa-steam mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Steam']) }}
+
+        <!-- Gaming platforms -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <a href="{{ route('auth.redirect', 'steam') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-gray-800/80 hover:bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600/50 transition hover:-translate-y-0.5">
+                <i class="fab fa-steam text-lg"></i>
+                <span class="text-sm font-medium">Steam</span>
             </a>
-            <a href="{{ route('auth.redirect', 'epicgames') }}{{ $redirectParam }}" class="flex items-center justify-center w-full bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
-                <img src="https://cdn.simpleicons.org/epicgames/white" alt="" class="w-5 h-5 mr-2">
-                {{ __('auth.continue_with', ['provider' => 'Epic Games']) }}
+            <a href="{{ route('auth.redirect', 'epicgames') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-black/80 hover:bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-600/50 transition hover:-translate-y-0.5">
+                <img src="https://cdn.simpleicons.org/epicgames/white" alt="" class="w-4 h-4">
+                <span class="text-sm font-medium">Epic</span>
             </a>
-            <a href="{{ route('auth.redirect', 'discord') }}{{ $redirectParam }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-discord mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Discord']) }}
+        </div>
+
+        <!-- Other providers -->
+        <div class="grid grid-cols-2 gap-3">
+            <a href="{{ route('auth.redirect', 'discord') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-indigo-600/90 hover:bg-indigo-600 text-white px-4 py-3 rounded-lg transition hover:-translate-y-0.5">
+                <i class="fab fa-discord text-lg"></i>
+                <span class="text-sm font-medium">Discord</span>
             </a>
-            <a href="{{ route('auth.redirect', 'twitch') }}{{ $redirectParam }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-twitch mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Twitch']) }}
+            <a href="{{ route('auth.redirect', 'twitch') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-purple-600/90 hover:bg-purple-600 text-white px-4 py-3 rounded-lg transition hover:-translate-y-0.5">
+                <i class="fab fa-twitch text-lg"></i>
+                <span class="text-sm font-medium">Twitch</span>
             </a>
-            <a href="{{ route('auth.redirect', 'github') }}{{ $redirectParam }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-github mr-2"></i> {{ __('auth.continue_with', ['provider' => 'GitHub']) }}
+            <a href="{{ route('auth.redirect', 'github') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-gray-700/90 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition hover:-translate-y-0.5">
+                <i class="fab fa-github text-lg"></i>
+                <span class="text-sm font-medium">GitHub</span>
             </a>
-            <a href="{{ route('auth.redirect', 'google') }}{{ $redirectParam }}" class="block w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">
-                <i class="fab fa-google mr-2"></i> {{ __('auth.continue_with', ['provider' => 'Google']) }}
+            <a href="{{ route('auth.redirect', 'google') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-red-600/90 hover:bg-red-600 text-white px-4 py-3 rounded-lg transition hover:-translate-y-0.5">
+                <i class="fab fa-google text-lg"></i>
+                <span class="text-sm font-medium">Google</span>
             </a>
         </div>
 
         <p class="text-gray-500 text-sm mt-8">
-            <a href="{{ route('home') }}" class="text-purple-400 hover:text-purple-300">
+            <a href="{{ route('home') }}" class="text-purple-400 hover:text-purple-300 transition">
                 <i class="fas fa-arrow-left mr-1"></i> {{ __('auth.back_to_home') }}
             </a>
         </p>

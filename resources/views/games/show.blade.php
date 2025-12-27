@@ -34,26 +34,26 @@
     </a>
 </div>
 
-<div class="flex justify-between items-start mb-8">
-    <div class="flex items-center gap-6">
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+    <div class="flex items-center gap-4 sm:gap-6">
         @if($game->image_url)
-            <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-24 h-32 object-cover rounded-lg shadow-lg">
+            <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded-lg shadow-lg flex-shrink-0">
         @else
-            <div class="w-24 h-32 bg-gray-700 rounded-lg flex items-center justify-center">
-                <i class="fas fa-gamepad text-3xl text-gray-500"></i>
+            <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-gamepad text-2xl sm:text-3xl text-gray-500"></i>
             </div>
         @endif
-        <div>
-            <h1 class="text-3xl font-bold">{{ $game->name }}</h1>
-            <p class="text-gray-400 mt-1">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold break-words">{{ $game->name }}</h1>
+            <p class="text-gray-400 mt-1 text-sm sm:text-base">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
         </div>
     </div>
     @auth
-        <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+        <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left flex-shrink-0">
             <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
         </a>
     @else
-        <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+        <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left flex-shrink-0">
             <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
         </a>
     @endauth
@@ -135,8 +135,12 @@
                         <div class="flex-1 min-w-0">
                             <!-- Badges row -->
                             <div class="flex items-center gap-2 mb-3 flex-wrap">
-                                <span class="bg-blue-900 text-blue-200 px-3 py-1 rounded text-sm font-medium">
-                                    {{ $translation->source_language }} → {{ $translation->target_language }}
+                                <span class="bg-blue-900 text-blue-200 px-3 py-1 rounded text-sm font-medium inline-flex items-center gap-1">
+                                    <span>@langflag($translation->source_language)</span>
+                                    <span>{{ $translation->source_language }}</span>
+                                    <span class="mx-1">→</span>
+                                    <span>@langflag($translation->target_language)</span>
+                                    <span>{{ $translation->target_language }}</span>
                                 </span>
 
                                 @if($translation->type === 'ai')

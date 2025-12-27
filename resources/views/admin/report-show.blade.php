@@ -22,7 +22,7 @@
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Languages</p>
-                <p class="font-medium">{{ $report->translation->source_language }} → {{ $report->translation->target_language }}</p>
+                <p class="font-medium">@langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}</p>
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Uploaded by</p>

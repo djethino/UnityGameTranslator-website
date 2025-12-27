@@ -36,7 +36,7 @@
                         </a>
                     <div class="flex items-center gap-3 mt-1">
                         <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
-                            {{ $translation->source_language }} → {{ $translation->target_language }}
+                            @langflag($translation->source_language) {{ $translation->source_language }} → @langflag($translation->target_language) {{ $translation->target_language }}
                         </span>
                         @if($translation->isComplete())
                             <span class="text-green-400 text-sm"><i class="fas fa-check"></i> {{ __('translation.complete') }}</span>

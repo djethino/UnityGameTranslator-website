@@ -11,7 +11,54 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Animated gradient background */
+.animated-bg {
+    background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1e1b4b, #1a1a2e);
+    background-size: 400% 400%;
+    animation: gradient-shift 45s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 /* Hide elements until Alpine.js is initialized (prevents FOUC) */
 [x-cloak] {
     display: none !important;
+}
+
+/* Game card hover effects */
+.game-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    border-color: rgb(168, 85, 247);
+}
+
+/* Subtle button hover effect */
+.btn-lift {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+    outline: 2px solid rgb(168, 85, 247);
+    outline-offset: 2px;
+}
+
+/* Glassmorphism card effect */
+.glass-card {
+    background: rgba(31, 41, 55, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(75, 85, 99, 0.5);
 }

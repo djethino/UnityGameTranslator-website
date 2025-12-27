@@ -65,6 +65,8 @@
     "games.search_game": "搜索游戏",
     "games.game_name_placeholder": "游戏名称...",
     "games.upload_first": "上传第一个翻译！",
+    "games.new": "新",
+    "games.popular": "热门",
 
     "translation.type.ai": "完全AI翻译",
     "translation.type.human": "人工翻译",
@@ -195,6 +197,9 @@
     "admin.resolved": "已解决",
 
     "footer.share": "分享您的 UnityGameTranslator 翻译",
+    "footer.tagline": "Unity游戏的开源翻译Mod。",
+    "footer.download_mod": "下载Mod",
+    "footer.rights": "保留所有权利。",
 
     "docs.title": "文档",
     "docs.github_repo": "GitHub 仓库",

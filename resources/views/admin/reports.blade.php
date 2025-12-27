@@ -41,7 +41,7 @@
                         <div class="flex items-center gap-3 mb-2">
                             <span class="font-semibold text-lg">{{ $report->translation->game->name }}</span>
                             <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
-                                {{ $report->translation->source_language }} → {{ $report->translation->target_language }}
+                                @langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}
                             </span>
                         </div>
                         <p class="text-sm text-gray-400 mb-2">

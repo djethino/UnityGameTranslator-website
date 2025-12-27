@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Report;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -47,5 +48,18 @@ class AppServiceProvider extends ServiceProvider
             }
             $view->with('pendingReportsCount', $pendingReportsCount);
         });
+
+        // Register Blade directive for language flags
+        Blade::directive('langflag', function ($expression) {
+            return "<?php echo config('language-flags')[$expression] ?? '🌐'; ?>";
+        });
+    }
+
+    /**
+     * Get flag emoji for a language name
+     */
+    public static function getLanguageFlag(string $language): string
+    {
+        return config('language-flags')[$language] ?? '🌐';
     }
 }

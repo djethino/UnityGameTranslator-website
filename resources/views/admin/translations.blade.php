@@ -33,7 +33,7 @@
             <select name="language" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
                 <option value="">{{ __('common.all') }}</option>
                 @foreach($languages as $lang)
-                    <option value="{{ $lang }}" {{ request('language') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                    <option value="{{ $lang }}" {{ request('language') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
                 @endforeach
             </select>
         </div>
@@ -87,7 +87,7 @@
                         </td>
                         <td class="py-3 px-4">
                             <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
-                                {{ $translation->source_language }} → {{ $translation->target_language }}
+                                @langflag($translation->source_language) {{ $translation->source_language }} → @langflag($translation->target_language) {{ $translation->target_language }}
                             </span>
                         </td>
                         <td class="py-3 px-4">
