@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\AnalyticsEvent;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrackPageView

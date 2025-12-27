@@ -13,7 +13,8 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Vote system** to highlight quality translations
 - **Report system** for moderation
 - **Automatic fork detection** via file UUID lineage
-- **Multi-language UI** (12 languages supported)
+- **Multi-language UI** (12 languages with flag emojis for 112 translation languages)
+- **Modern gamer UI** - organic animated background, glassmorphism cards, responsive design
 
 ### API for Unity Mod
 - **Search translations** by Steam ID, game name, or language
@@ -27,8 +28,9 @@ Community platform for sharing Unity game translation files with API for mod syn
 
 - **Framework:** Laravel 12
 - **Database:** SQLite (dev) / MySQL (prod)
-- **Auth:** Laravel Socialite (Google, GitHub, Discord, Twitch)
-- **Frontend:** Tailwind CSS, Alpine.js
+- **Auth:** Laravel Socialite (Steam, Epic Games, Google, GitHub, Discord, Twitch)
+- **Frontend:** Tailwind CSS 4, Alpine.js
+- **I18n:** 12 languages with language flags (emoji)
 
 ## Requirements
 
@@ -67,6 +69,13 @@ npm run build
 Configure in `.env`:
 
 ```env
+# Steam (Web API key, no client_id)
+STEAM_CLIENT_SECRET=your_web_api_key
+
+# Epic Games
+EPICGAMES_CLIENT_ID=your_client_id
+EPICGAMES_CLIENT_SECRET=your_client_secret
+
 # Google
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
@@ -88,6 +97,8 @@ TWITCH_CLIENT_SECRET=your_client_secret
 
 | Provider | Console |
 |----------|---------|
+| Steam | [Steam Partner Network](https://partner.steamgames.com/) → Web API key |
+| Epic Games | [Epic Games Developer Portal](https://dev.epicgames.com/portal) |
 | Google | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | GitHub | [GitHub Developer Settings](https://github.com/settings/developers) |
 | Discord | [Discord Developer Portal](https://discord.com/developers/applications) |
@@ -443,6 +454,24 @@ resources/
 ## Related
 
 - **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
+
+## Acknowledgments
+
+This project is built with amazing open-source technologies:
+
+### Backend
+- **[Laravel](https://laravel.com/)** - The PHP framework for web artisans
+- **[Laravel Socialite](https://laravel.com/docs/socialite)** - OAuth authentication
+
+### Frontend
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework
+- **[Font Awesome](https://fontawesome.com/)** - Icon library
+
+### OAuth Providers
+- **[SocialiteProviders](https://socialiteproviders.com/)** - Community Socialite providers for Steam, Discord, Twitch, Epic Games
+
+Special thanks to the Laravel and open-source community.
 
 ## License
 
