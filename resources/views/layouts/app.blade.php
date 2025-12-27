@@ -46,11 +46,15 @@
                         <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
-                        @guest
+                        @auth
+                        <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
+                            <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
+                        </a>
+                        @else
                         <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
                         </a>
-                        @endguest
+                        @endauth
                     </div>
                 </div>
 
@@ -81,19 +85,21 @@
                         <!-- User Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" @click.away="open = false" class="flex items-center space-x-2 text-gray-300 hover:text-white px-2 py-1 rounded transition">
-                                @if(auth()->user()->avatar)
-                                    <img src="{{ auth()->user()->avatar }}" alt="" class="w-8 h-8 rounded-full">
-                                @else
-                                    <i class="fas fa-user-circle text-2xl"></i>
-                                @endif
+                                <div class="relative">
+                                    @if(auth()->user()->avatar)
+                                        <img src="{{ auth()->user()->avatar }}" alt="" class="w-8 h-8 rounded-full">
+                                    @else
+                                        <i class="fas fa-user-circle text-2xl"></i>
+                                    @endif
+                                    @if(auth()->user()->isAdmin() && $pendingReportsCount > 0)
+                                        <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">{{ $pendingReportsCount }}</span>
+                                    @endif
+                                </div>
                                 <span class="max-w-[120px] truncate">{{ auth()->user()->name }}</span>
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
                             <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
                                 <!-- User Actions -->
-                                <a href="{{ route('translations.create') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
-                                    <i class="fas fa-upload w-5 mr-3 text-purple-400"></i> {{ __('nav.upload') }}
-                                </a>
                                 <a href="{{ route('translations.mine') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
                                     <i class="fas fa-folder w-5 mr-3 text-purple-400"></i> {{ __('nav.my_translations') }}
                                 </a>
