@@ -406,51 +406,6 @@ resources/
 └── lang/                               # UI translations (12 languages)
 ```
 
-## Database Schema
-
-### Key Tables
-
-#### games
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Primary key |
-| name | string | Game name |
-| slug | string | URL-friendly name |
-| steam_id | string | Steam App ID (nullable) |
-| rawg_id | string | RAWG API ID (nullable) |
-
-#### translations
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Primary key |
-| game_id | bigint | Foreign key to games |
-| user_id | bigint | Uploader |
-| parent_id | bigint | Fork source (nullable) |
-| file_uuid | string | Unique file identifier |
-| file_hash | string | SHA256 of content |
-| source_language | string | e.g., "en" |
-| target_language | string | e.g., "fr" |
-| type | enum | ai_unreviewed, ai_reviewed, human |
-| entries_count | int | Number of translations |
-
-#### api_tokens
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Primary key |
-| user_id | bigint | Token owner |
-| token | string | Hashed token (prefix: ugt_) |
-| name | string | Token name |
-| last_used_at | timestamp | Last API call |
-
-#### device_codes
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Primary key |
-| device_code | string | Secret code for polling |
-| user_code | string | User-facing code (ABC-123) |
-| user_id | bigint | Linked user when validated |
-| expires_at | timestamp | Expiration time |
-
 ## Related
 
 - **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
