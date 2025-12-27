@@ -17,7 +17,6 @@
     --bg-velocity: 0;
     background: #0f0f1a;
     position: relative;
-    overflow: hidden;
 }
 
 .animated-bg::before,
