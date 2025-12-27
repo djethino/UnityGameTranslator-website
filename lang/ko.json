@@ -5,6 +5,8 @@
     "nav.my_translations": "내 번역",
     "nav.admin": "관리자",
     "nav.logout": "로그아웃",
+    "nav.login": "로그인",
+    "nav.profile": "설정",
 
     "auth.login_with": ":provider로 로그인",
     "auth.banned": "계정이 정지되었습니다. 사유: :reason",

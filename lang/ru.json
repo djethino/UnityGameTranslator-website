@@ -5,6 +5,8 @@
     "nav.my_translations": "Мои переводы",
     "nav.admin": "Админ",
     "nav.logout": "Выйти",
+    "nav.login": "Войти",
+    "nav.profile": "Настройки",
 
     "auth.login_with": "Войти через :provider",
     "auth.banned": "Ваш аккаунт заблокирован. Причина: :reason",

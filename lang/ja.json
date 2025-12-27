@@ -5,6 +5,8 @@
     "nav.my_translations": "マイ翻訳",
     "nav.admin": "管理者",
     "nav.logout": "ログアウト",
+    "nav.login": "ログイン",
+    "nav.profile": "設定",
 
     "auth.login_with": ":providerでログイン",
     "auth.banned": "アカウントが停止されました。理由：:reason",

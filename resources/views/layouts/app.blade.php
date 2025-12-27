@@ -46,33 +46,20 @@
                         <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
-                        @auth
-                        <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
-                        </a>
-                        <a href="{{ route('translations.mine') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-folder mr-1"></i> {{ __('nav.my_translations') }}
-                        </a>
-                        @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="text-yellow-400 hover:text-yellow-300 px-3 py-2 transition">
-                            <i class="fas fa-shield-alt mr-1"></i> {{ __('nav.admin') }}@if($pendingReportsCount > 0) <span class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ $pendingReportsCount }}</span>@endif
-                        </a>
-                        @endif
-                        @else
+                        @guest
                         <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
                         </a>
-                        @endauth
+                        @endguest
                     </div>
                 </div>
 
                 <!-- Desktop Right Section -->
-                <div class="hidden md:flex items-center space-x-4">
+                <div class="hidden md:flex items-center space-x-3">
                     <!-- Language Switcher -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white px-2 py-1 rounded transition">
-                            <span class="text-lg mr-1">{{ config('locales.supported')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
-                            <span class="hidden sm:inline text-sm">{{ config('locales.supported')[app()->getLocale()]['native'] ?? 'Language' }}</span>
+                            <span class="text-lg">{{ config('locales.supported')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </button>
                         <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
@@ -87,38 +74,48 @@
                     </div>
 
                     @guest
-                        <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 transition" title="Steam">
-                            <i class="fab fa-steam text-lg w-5 h-5 flex items-center justify-center"></i>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-2 rounded-lg border border-gray-600 flex items-center justify-center transition" title="Epic Games">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.537 0C2.165 0 1.66.506 1.66 1.879V18.44a4.262 4.262 0 00.02.433c.031.3.037.59.316.92.027.033.311.245.311.245.153.075.258.13.43.2l8.335 3.491c.433.199.614.276.928.27h.002c.314.006.495-.071.928-.27l8.335-3.492c.172-.07.277-.124.43-.2 0 0 .284-.211.311-.243.28-.33.285-.621.316-.92a4.261 4.261 0 00.02-.434V1.879c0-1.373-.506-1.88-1.878-1.88zm13.366 3.11h.68c1.138 0 1.688.553 1.688 1.696v1.88h-1.374v-1.8c0-.369-.17-.54-.523-.54h-.235c-.367 0-.537.17-.537.539v5.81c0 .369.17.54.537.54h.262c.353 0 .523-.171.523-.54V8.619h1.373v2.143c0 1.144-.562 1.71-1.7 1.71h-.694c-1.138 0-1.7-.566-1.7-1.71V4.82c0-1.144.562-1.709 1.7-1.709zm-12.186.08h3.114v1.274H6.117v2.603h1.648v1.275H6.117v2.774h1.74v1.275h-3.14zm3.816 0h2.198c1.138 0 1.7.564 1.7 1.708v2.445c0 1.144-.562 1.71-1.7 1.71h-.799v3.338h-1.4zm4.53 0h1.4v9.201h-1.4zm-3.13 1.235v3.392h.575c.354 0 .523-.171.523-.54V4.965c0-.368-.17-.54-.523-.54z"/></svg>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition" title="Discord">
-                            <i class="fab fa-discord text-lg w-5 h-5 flex items-center justify-center"></i>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg transition" title="Twitch">
-                            <i class="fab fa-twitch text-lg w-5 h-5 flex items-center justify-center"></i>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition" title="GitHub">
-                            <i class="fab fa-github text-lg w-5 h-5 flex items-center justify-center"></i>
-                        </a>
-                        <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition" title="Google">
-                            <i class="fab fa-google text-lg w-5 h-5 flex items-center justify-center"></i>
+                        <a href="{{ route('login') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                            <i class="fas fa-sign-in-alt mr-1"></i> {{ __('nav.login') }}
                         </a>
                     @else
-                        <div class="flex items-center space-x-3">
-                            <a href="{{ route('profile.edit') }}" class="flex items-center space-x-2 hover:text-purple-400 transition">
+                        <!-- User Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" class="flex items-center space-x-2 text-gray-300 hover:text-white px-2 py-1 rounded transition">
                                 @if(auth()->user()->avatar)
                                     <img src="{{ auth()->user()->avatar }}" alt="" class="w-8 h-8 rounded-full">
+                                @else
+                                    <i class="fas fa-user-circle text-2xl"></i>
                                 @endif
-                                <span class="text-gray-300">{{ auth()->user()->name }}</span>
-                            </a>
-                            <form action="{{ route('logout') }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="text-gray-400 hover:text-white transition" title="{{ __('nav.logout') }}">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                </button>
-                            </form>
+                                <span class="max-w-[120px] truncate">{{ auth()->user()->name }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                                <!-- User Actions -->
+                                <a href="{{ route('translations.create') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                                    <i class="fas fa-upload w-5 mr-3 text-purple-400"></i> {{ __('nav.upload') }}
+                                </a>
+                                <a href="{{ route('translations.mine') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                                    <i class="fas fa-folder w-5 mr-3 text-purple-400"></i> {{ __('nav.my_translations') }}
+                                </a>
+                                @if(auth()->user()->isAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2.5 text-sm text-yellow-400 hover:bg-gray-700 hover:text-yellow-300 transition">
+                                    <i class="fas fa-shield-alt w-5 mr-3"></i> {{ __('nav.admin') }}
+                                    @if($pendingReportsCount > 0)
+                                        <span class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-auto">{{ $pendingReportsCount }}</span>
+                                    @endif
+                                </a>
+                                @endif
+                                <div class="border-t border-gray-700 my-1"></div>
+                                <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                                    <i class="fas fa-cog w-5 mr-3 text-gray-500"></i> {{ __('nav.profile') }}
+                                </a>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="flex items-center w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                                        <i class="fas fa-sign-out-alt w-5 mr-3 text-gray-500"></i> {{ __('nav.logout') }}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @endguest
                 </div>

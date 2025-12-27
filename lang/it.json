@@ -5,6 +5,8 @@
     "nav.my_translations": "Le mie Traduzioni",
     "nav.admin": "Admin",
     "nav.logout": "Esci",
+    "nav.login": "Accedi",
+    "nav.profile": "Impostazioni",
 
     "auth.login_with": "Accedi con :provider",
     "auth.banned": "Il tuo account è stato sospeso. Motivo: :reason",

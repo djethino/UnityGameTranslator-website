@@ -5,6 +5,8 @@
     "nav.my_translations": "Çevirilerim",
     "nav.admin": "Yönetici",
     "nav.logout": "Çıkış",
+    "nav.login": "Giriş",
+    "nav.profile": "Ayarlar",
 
     "auth.login_with": ":provider ile Giriş",
     "auth.banned": "Hesabınız yasaklandı. Sebep: :reason",

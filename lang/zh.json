@@ -5,6 +5,8 @@
     "nav.my_translations": "我的翻译",
     "nav.admin": "管理",
     "nav.logout": "退出",
+    "nav.login": "登录",
+    "nav.profile": "设置",
 
     "auth.login_with": "使用 :provider 登录",
     "auth.banned": "您的账户已被封禁。原因：:reason",

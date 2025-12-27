@@ -5,6 +5,8 @@
     "nav.my_translations": "Mes Traductions",
     "nav.admin": "Admin",
     "nav.logout": "Déconnexion",
+    "nav.login": "Connexion",
+    "nav.profile": "Paramètres",
 
     "auth.login_with": "Se connecter avec :provider",
     "auth.banned": "Votre compte a été banni. Raison : :reason",

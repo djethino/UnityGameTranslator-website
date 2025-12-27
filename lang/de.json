@@ -5,6 +5,8 @@
     "nav.my_translations": "Meine Übersetzungen",
     "nav.admin": "Admin",
     "nav.logout": "Abmelden",
+    "nav.login": "Anmelden",
+    "nav.profile": "Einstellungen",
 
     "auth.login_with": "Anmelden mit :provider",
     "auth.banned": "Ihr Konto wurde gesperrt. Grund: :reason",

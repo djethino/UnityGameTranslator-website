@@ -5,6 +5,8 @@
     "nav.my_translations": "Moje Tłumaczenia",
     "nav.admin": "Admin",
     "nav.logout": "Wyloguj",
+    "nav.login": "Zaloguj",
+    "nav.profile": "Ustawienia",
 
     "auth.login_with": "Zaloguj przez :provider",
     "auth.banned": "Twoje konto zostało zablokowane. Powód: :reason",

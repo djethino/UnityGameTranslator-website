@@ -5,6 +5,8 @@
     "nav.my_translations": "My Translations",
     "nav.admin": "Admin",
     "nav.logout": "Logout",
+    "nav.login": "Sign in",
+    "nav.profile": "Settings",
     "nav.login_with": "Sign in with:",
 
     "auth.login_with": "Login with :provider",

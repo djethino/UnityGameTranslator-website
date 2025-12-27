@@ -5,6 +5,8 @@
     "nav.my_translations": "Mis Traducciones",
     "nav.admin": "Admin",
     "nav.logout": "Cerrar sesión",
+    "nav.login": "Iniciar sesión",
+    "nav.profile": "Configuración",
 
     "auth.login_with": "Iniciar sesión con :provider",
     "auth.banned": "Tu cuenta ha sido suspendida. Razón: :reason",
