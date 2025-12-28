@@ -14,7 +14,11 @@ class Translation extends Model
         'source_language',
         'target_language',
         'line_count',
+        'human_count',
+        'validated_count',
+        'ai_count',
         'status',
+        'visibility',
         'type',
         'notes',
         'file_path',
@@ -117,9 +121,19 @@ class Translation extends Model
         'ai_corrected' => 'AI + Human Correction',
     ];
 
+    public const VISIBILITY = [
+        'public' => 'Public',
+        'branch' => 'Branch (Private)',
+    ];
+
     public function getTypeLabel(): string
     {
         return self::TYPES[$this->type] ?? $this->type;
+    }
+
+    public function getVisibilityLabel(): string
+    {
+        return self::VISIBILITY[$this->visibility] ?? $this->visibility;
     }
 
     public function game()
@@ -235,5 +249,137 @@ class Translation extends Model
     {
         $root = $this->getLineageRoot();
         return $root && $root->id === $this->id;
+    }
+
+    // =========================================
+    // Main/Branch/Fork System
+    // =========================================
+
+    /**
+     * Check if this translation is a branch (private contributor)
+     */
+    public function isBranch(): bool
+    {
+        return $this->visibility === 'branch';
+    }
+
+    /**
+     * Check if this translation is a Main (public + lineage root)
+     */
+    public function isMain(): bool
+    {
+        return $this->visibility === 'public' && $this->isLineageRoot();
+    }
+
+    /**
+     * Get the Main translation of this lineage
+     */
+    public function getMain(): ?Translation
+    {
+        if (!$this->file_uuid) {
+            return null;
+        }
+
+        return static::where('file_uuid', $this->file_uuid)
+            ->where('visibility', 'public')
+            ->orderBy('created_at', 'asc')
+            ->first();
+    }
+
+    /**
+     * Get all branches of this Main translation
+     */
+    public function getBranches()
+    {
+        if (!$this->file_uuid || !$this->isMain()) {
+            return collect();
+        }
+
+        return static::where('file_uuid', $this->file_uuid)
+            ->where('visibility', 'branch')
+            ->get();
+    }
+
+    // =========================================
+    // Scopes
+    // =========================================
+
+    /**
+     * Scope to filter only public translations (Main/Fork)
+     */
+    public function scopePublic($query)
+    {
+        return $query->where('visibility', 'public');
+    }
+
+    /**
+     * Scope to filter only branch translations
+     */
+    public function scopeBranches($query)
+    {
+        return $query->where('visibility', 'branch');
+    }
+
+    /**
+     * Scope to filter translations visible to a specific user.
+     * A user can see: public translations, their own translations,
+     * or branches of translations they own as Main.
+     */
+    public function scopeVisibleToUser($query, $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->where('visibility', 'public')
+                ->orWhere('user_id', $userId)
+                ->orWhereIn('file_uuid', function ($sub) use ($userId) {
+                    $sub->select('file_uuid')
+                        ->from('translations')
+                        ->where('user_id', $userId)
+                        ->where('visibility', 'public');
+                });
+        });
+    }
+
+    // =========================================
+    // Tag Extraction (HCA System)
+    // =========================================
+
+    /**
+     * Extract HCA tag counts from JSON content.
+     * Supports both old format (string values) and new format (object with v/t).
+     *
+     * @param array $json Parsed translation JSON
+     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int]
+     */
+    public static function extractTagCounts(array $json): array
+    {
+        $human = 0;
+        $validated = 0;
+        $ai = 0;
+
+        foreach ($json as $key => $value) {
+            // Skip metadata keys
+            if (str_starts_with($key, '_')) {
+                continue;
+            }
+
+            // New format: {"v": "translation", "t": "A"}
+            if (is_array($value) && isset($value['t'])) {
+                match ($value['t']) {
+                    'H' => $human++,
+                    'V' => $validated++,
+                    'A' => $ai++,
+                    default => $ai++, // Fallback to AI
+                };
+            } else {
+                // Old format (string value) = AI by default
+                $ai++;
+            }
+        }
+
+        return [
+            'human_count' => $human,
+            'validated_count' => $validated,
+            'ai_count' => $ai,
+        ];
     }
 }

@@ -58,6 +58,9 @@ Route::prefix('v1')->group(function () {
         // Check if UUID exists before upload (to detect UPDATE/FORK/NEW)
         Route::get('translations/check-uuid', [TranslationController::class, 'checkUuid']);
 
+        // List branches for a Main translation (owner only)
+        Route::get('translations/{uuid}/branches', [TranslationController::class, 'branches']);
+
         // Upload translation
         Route::post('translations', [TranslationController::class, 'store'])
             ->middleware('throttle:10,1');

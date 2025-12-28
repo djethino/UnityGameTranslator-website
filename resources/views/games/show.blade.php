@@ -202,7 +202,7 @@
                                 @auth
                                     @php $userVote = $translation->userVote(); @endphp
                                     <button type="button"
-                                        onclick="vote({{ $translation->id }}, 1)"
+                                        data-vote-id="{{ $translation->id }}" data-vote-value="1"
                                         class="vote-btn p-1 rounded hover:bg-gray-600 transition {{ $userVote && $userVote->value === 1 ? 'text-green-400' : 'text-gray-400' }}"
                                         id="upvote-{{ $translation->id }}"
                                         title="{{ __('translation.upvote') }}">
@@ -216,7 +216,7 @@
                                 </span>
                                 @auth
                                     <button type="button"
-                                        onclick="vote({{ $translation->id }}, -1)"
+                                        data-vote-id="{{ $translation->id }}" data-vote-value="-1"
                                         class="vote-btn p-1 rounded hover:bg-gray-600 transition {{ $userVote && $userVote->value === -1 ? 'text-red-400' : 'text-gray-400' }}"
                                         id="downvote-{{ $translation->id }}"
                                         title="{{ __('translation.downvote') }}">
@@ -230,12 +230,17 @@
                             <!-- Action buttons -->
                             <div class="flex gap-2">
                                 @auth
+                                    @if(auth()->id() === $translation->user_id)
+                                        <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.merge') }}">
+                                            <i class="fas fa-code-merge"></i>
+                                        </a>
+                                    @endif
                                     @if(auth()->user()->isAdmin())
                                         <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.edit') }}">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @endif
-                                    <button type="button" onclick="openReportModal({{ $translation->id }})" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
+                                    <button type="button" data-report-id="{{ $translation->id }}" class="report-btn bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
                                     </button>
                                 @else
@@ -352,7 +357,7 @@
                                         <div class="flex items-center gap-1 text-sm" id="vote-container-{{ $fork->id }}">
                                             @auth
                                                 @php $forkUserVote = $fork->userVote(); @endphp
-                                                <button type="button" onclick="vote({{ $fork->id }}, 1)"
+                                                <button type="button" data-vote-id="{{ $fork->id }}" data-vote-value="1"
                                                     class="vote-btn hover:text-green-400 transition {{ $forkUserVote && $forkUserVote->value === 1 ? 'text-green-400' : 'text-gray-500' }}"
                                                     id="upvote-{{ $fork->id }}">
                                                     <i class="fas fa-arrow-up"></i>
@@ -366,7 +371,7 @@
                                                 {{ $fork->vote_count >= 0 ? '+' : '' }}{{ $fork->vote_count }}
                                             </span>
                                             @auth
-                                                <button type="button" onclick="vote({{ $fork->id }}, -1)"
+                                                <button type="button" data-vote-id="{{ $fork->id }}" data-vote-value="-1"
                                                     class="vote-btn hover:text-red-400 transition {{ $forkUserVote && $forkUserVote->value === -1 ? 'text-red-400' : 'text-gray-500' }}"
                                                     id="downvote-{{ $fork->id }}">
                                                     <i class="fas fa-arrow-down"></i>
@@ -383,7 +388,7 @@
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             @endif
-                                            <button type="button" onclick="openReportModal({{ $fork->id }})" class="text-gray-500 hover:text-gray-300">
+                                            <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-gray-500 hover:text-gray-300">
                                                 <i class="fas fa-flag"></i>
                                             </button>
                                         @else
@@ -419,63 +424,90 @@
                 <textarea name="reason" rows="4" required class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white" placeholder="{{ __('report.placeholder') }}"></textarea>
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closeReportModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">{{ __('report.cancel') }}</button>
+                <button type="button" id="closeReportModalBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">{{ __('report.cancel') }}</button>
                 <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">{{ __('report.submit') }}</button>
             </div>
         </form>
     </div>
 </div>
 <script nonce="{{ $cspNonce }}">
-function openReportModal(id) {
-    document.getElementById("reportForm").action = "/report/" + id;
-    document.getElementById("reportModal").classList.remove("hidden");
-    document.getElementById("reportModal").classList.add("flex");
-}
-function closeReportModal() {
-    document.getElementById("reportModal").classList.add("hidden");
-    document.getElementById("reportModal").classList.remove("flex");
-}
-document.getElementById("reportModal").onclick = function(e) { if(e.target===this) closeReportModal(); };
+(function() {
+    var reportModal = document.getElementById('reportModal');
+    var reportForm = document.getElementById('reportForm');
 
-async function vote(translationId, value) {
-    try {
-        const response = await fetch(`/vote/${translationId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ value: value })
-        });
-
-        if (!response.ok) throw new Error('Vote failed');
-
-        const data = await response.json();
-
-        // Update vote count display
-        const countEl = document.getElementById(`vote-count-${translationId}`);
-        const count = data.vote_count;
-        countEl.textContent = (count >= 0 ? '+' : '') + count;
-        countEl.className = countEl.className.replace(/text-(green|red|gray)-\d+/g, '');
-        countEl.classList.add(count > 0 ? 'text-green-400' : (count < 0 ? 'text-red-400' : 'text-gray-400'));
-
-        // Update button states
-        const upvoteBtn = document.getElementById(`upvote-${translationId}`);
-        const downvoteBtn = document.getElementById(`downvote-${translationId}`);
-
-        if (upvoteBtn) {
-            upvoteBtn.className = upvoteBtn.className.replace(/text-(green|gray)-\d+/g, '');
-            upvoteBtn.classList.add(data.user_vote === 1 ? 'text-green-400' : 'text-gray-400');
-        }
-        if (downvoteBtn) {
-            downvoteBtn.className = downvoteBtn.className.replace(/text-(red|gray)-\d+/g, '');
-            downvoteBtn.classList.add(data.user_vote === -1 ? 'text-red-400' : 'text-gray-400');
-        }
-    } catch (error) {
-        console.error('Vote error:', error);
+    function openReportModal(id) {
+        reportForm.action = '/report/' + id;
+        reportModal.classList.remove('hidden');
+        reportModal.classList.add('flex');
     }
-}
+
+    function closeReportModal() {
+        reportModal.classList.add('hidden');
+        reportModal.classList.remove('flex');
+    }
+
+    // Report buttons
+    document.querySelectorAll('.report-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            openReportModal(this.dataset.reportId);
+        });
+    });
+
+    // Close modal on backdrop click
+    reportModal.addEventListener('click', function(e) {
+        if (e.target === reportModal) closeReportModal();
+    });
+
+    // Close modal button
+    document.getElementById('closeReportModalBtn').addEventListener('click', closeReportModal);
+
+    // Vote buttons
+    document.querySelectorAll('.vote-btn[data-vote-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            vote(parseInt(this.dataset.voteId), parseInt(this.dataset.voteValue));
+        });
+    });
+
+    async function vote(translationId, value) {
+        try {
+            var response = await fetch('/vote/' + translationId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ value: value })
+            });
+
+            if (!response.ok) throw new Error('Vote failed');
+
+            var data = await response.json();
+
+            // Update vote count display
+            var countEl = document.getElementById('vote-count-' + translationId);
+            var count = data.vote_count;
+            countEl.textContent = (count >= 0 ? '+' : '') + count;
+            countEl.className = countEl.className.replace(/text-(green|red|gray)-\d+/g, '');
+            countEl.classList.add(count > 0 ? 'text-green-400' : (count < 0 ? 'text-red-400' : 'text-gray-400'));
+
+            // Update button states
+            var upvoteBtn = document.getElementById('upvote-' + translationId);
+            var downvoteBtn = document.getElementById('downvote-' + translationId);
+
+            if (upvoteBtn) {
+                upvoteBtn.className = upvoteBtn.className.replace(/text-(green|gray)-\d+/g, '');
+                upvoteBtn.classList.add(data.user_vote === 1 ? 'text-green-400' : 'text-gray-400');
+            }
+            if (downvoteBtn) {
+                downvoteBtn.className = downvoteBtn.className.replace(/text-(red|gray)-\d+/g, '');
+                downvoteBtn.classList.add(data.user_vote === -1 ? 'text-red-400' : 'text-gray-400');
+            }
+        } catch (error) {
+            console.error('Vote error:', error);
+        }
+    }
+})();
 </script>
 @endauth
 

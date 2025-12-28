@@ -100,8 +100,8 @@
                                     </button>
                                 </form>
                             @else
-                                <button type="button" onclick="openBanModal({{ $user->id }}, '{{ $user->name }}')"
-                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                                <button type="button" class="ban-user-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                                    data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}">
                                     <i class="fas fa-ban mr-1"></i> Ban
                                 </button>
                             @endif
@@ -137,7 +137,7 @@
                 <textarea name="reason" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white" placeholder="Why is this user being banned?"></textarea>
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closeBanModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">Cancel</button>
+                <button type="button" id="closeBanModalBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">Cancel</button>
                 <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">Ban User</button>
             </div>
         </form>
@@ -145,16 +145,31 @@
 </div>
 
 <script nonce="{{ $cspNonce }}">
-function openBanModal(userId, userName) {
-    document.getElementById("banForm").action = "/admin/users/" + userId + "/ban";
-    document.getElementById("banUserName").textContent = userName;
-    document.getElementById("banModal").classList.remove("hidden");
-    document.getElementById("banModal").classList.add("flex");
-}
-function closeBanModal() {
-    document.getElementById("banModal").classList.add("hidden");
-    document.getElementById("banModal").classList.remove("flex");
-}
-document.getElementById("banModal").onclick = function(e) { if(e.target===this) closeBanModal(); };
+(function() {
+    var modal = document.getElementById('banModal');
+    var form = document.getElementById('banForm');
+    var userName = document.getElementById('banUserName');
+
+    function openBanModal(userId, name) {
+        form.action = '/admin/users/' + userId + '/ban';
+        userName.textContent = name;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeBanModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    document.querySelectorAll('.ban-user-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            openBanModal(this.dataset.userId, this.dataset.userName);
+        });
+    });
+
+    document.getElementById('closeBanModalBtn').addEventListener('click', closeBanModal);
+    modal.addEventListener('click', function(e) { if(e.target === modal) closeBanModal(); });
+})();
 </script>
 @endsection

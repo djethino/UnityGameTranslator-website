@@ -229,7 +229,10 @@ class TranslationController extends Controller
 
     public function destroy(Translation $translation)
     {
-        if ($translation->user_id !== auth()->id()) {
+        $user = auth()->user();
+
+        // Allow owner or admin
+        if ($translation->user_id !== $user->id && !$user->isAdmin()) {
             abort(403);
         }
 

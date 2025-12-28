@@ -23,7 +23,8 @@ class TranslationController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name']);
+        $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name'])
+            ->where('visibility', 'public'); // Only public translations (Main/Fork)
 
         // Filter by Steam ID (exact match)
         if ($request->filled('steam_id')) {
@@ -175,9 +176,10 @@ class TranslationController extends Controller
      * GET /api/v1/translations/check-uuid?uuid={uuid}
      *
      * Returns:
-     * - exists: false → NEW (first upload of this UUID)
-     * - exists: true, is_owner: true → UPDATE (user's own translation)
-     * - exists: true, is_owner: false → FORK (someone else's translation)
+     * - exists: false, role: 'none' → NEW (would become new Main)
+     * - exists: true, role: 'main' → UPDATE (user is Main owner)
+     * - exists: true, role: 'branch' → UPDATE (user is Branch contributor)
+     * - exists: true, role: 'none' → Would become BRANCH (Main exists, different user)
      */
     public function checkUuid(Request $request): JsonResponse
     {
@@ -194,10 +196,15 @@ class TranslationController extends Controller
             ->first();
 
         if ($ownTranslation) {
-            // UPDATE case: user's own translation
+            // User has a translation with this UUID
+            $role = $ownTranslation->visibility === 'public' ? 'main' : 'branch';
+            $branchesCount = $role === 'main'
+                ? Translation::where('file_uuid', $uuid)->branches()->count()
+                : null;
+
             return response()->json([
                 'exists' => true,
-                'is_owner' => true,
+                'role' => $role,
                 'translation' => [
                     'id' => $ownTranslation->id,
                     'source_language' => $ownTranslation->source_language,
@@ -208,35 +215,37 @@ class TranslationController extends Controller
                     'file_hash' => $ownTranslation->file_hash,
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
                 ],
+                'branches_count' => $branchesCount,
             ]);
         }
 
-        // Check if anyone else has a translation with this UUID
-        $otherTranslation = Translation::where('file_uuid', $uuid)
+        // Check if a Main exists with this UUID (user would become branch)
+        $mainTranslation = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'public')
             ->with('user:id,name')
             ->orderBy('created_at', 'asc')
             ->first();
 
-        if ($otherTranslation) {
-            // FORK case: someone else's translation
+        if ($mainTranslation) {
+            // Main exists, user would become a branch if they upload
             return response()->json([
                 'exists' => true,
-                'is_owner' => false,
-                'original' => [
-                    'id' => $otherTranslation->id,
-                    'uploader' => $otherTranslation->user->name,
-                    'source_language' => $otherTranslation->source_language,
-                    'target_language' => $otherTranslation->target_language,
-                    'type' => $otherTranslation->type,
-                    'line_count' => $otherTranslation->line_count,
-                    'updated_at' => $otherTranslation->updated_at->toIso8601String(),
+                'role' => 'none', // User has no translation yet
+                'main' => [
+                    'id' => $mainTranslation->id,
+                    'uploader' => $mainTranslation->user->name,
+                    'source_language' => $mainTranslation->source_language,
+                    'target_language' => $mainTranslation->target_language,
+                    'line_count' => $mainTranslation->line_count,
+                    'updated_at' => $mainTranslation->updated_at->toIso8601String(),
                 ],
             ]);
         }
 
-        // NEW case: UUID doesn't exist on server
+        // NEW case: UUID doesn't exist → would become new Main
         return response()->json([
             'exists' => false,
+            'role' => 'none',
         ]);
     }
 
@@ -248,6 +257,20 @@ class TranslationController extends Controller
      */
     public function download(Translation $translation, Request $request): mixed
     {
+        // Visibility check: branches are private to their Main owner
+        if ($translation->visibility === 'branch') {
+            $main = $translation->getMain();
+            $user = $request->user();
+
+            // Must be authenticated AND be the Main owner
+            if (!$user || !$main || $main->user_id !== $user->id) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'message' => 'Branch translations are only visible to the Main owner',
+                ], 403);
+            }
+        }
+
         // Compute hash if not stored
         if (!$translation->file_hash) {
             $translation->updateHash();
@@ -327,8 +350,9 @@ class TranslationController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Parse and validate JSON content (depth 2 = flat key-value object)
-        $json = json_decode($request->content, true, 2);
+        // Parse and validate JSON content
+        // Depth 3: root object → translation key → value object {v, t}
+        $json = json_decode($request->content, true, 3);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
@@ -354,22 +378,33 @@ class TranslationController extends Controller
         // Count lines (exclude metadata keys)
         $lineCount = count(array_filter(array_keys($json), fn($k) => !str_starts_with($k, '_')));
 
+        // Extract HCA tag counts from new format
+        $tagCounts = Translation::extractTagCounts($json);
+
         // Check for existing translation with same UUID (UPDATE case)
         $existingTranslation = Translation::where('file_uuid', $fileUuid)
             ->where('user_id', $request->user()->id)
             ->first();
 
-        // Check for fork case (different user with same UUID)
+        // Check for branch case (different user with same UUID)
         $originalTranslation = null;
         if (!$existingTranslation) {
             $originalTranslation = Translation::where('file_uuid', $fileUuid)
+                ->where('visibility', 'public')
                 ->orderBy('created_at', 'asc')
                 ->first();
         }
 
+        // Determine visibility: branch if contributing to existing Main
+        $visibility = 'public'; // Default for NEW and UPDATE
+        if ($originalTranslation && !$existingTranslation) {
+            // Same UUID, different user = BRANCH (private contributor)
+            $visibility = 'branch';
+        }
+
         // Determine final languages:
         // - UPDATE: Keep existing languages (ignore request)
-        // - FORK: Use parent's languages (ignore request)
+        // - BRANCH: Use Main's languages (ignore request)
         // - NEW: Validate that languages are not "auto"
         $sourceLanguage = $request->source_language;
         $targetLanguage = $request->target_language;
@@ -379,7 +414,7 @@ class TranslationController extends Controller
             $sourceLanguage = $existingTranslation->source_language;
             $targetLanguage = $existingTranslation->target_language;
         } elseif ($originalTranslation) {
-            // FORK: Use parent's languages
+            // BRANCH: Use Main's languages
             $sourceLanguage = $originalTranslation->source_language;
             $targetLanguage = $originalTranslation->target_language;
         } else {
@@ -432,10 +467,13 @@ class TranslationController extends Controller
                 Storage::disk('public')->delete($oldFilePath);
             }
 
-            // Update translation (keep original languages)
+            // Update translation (keep original languages and visibility)
             $existingTranslation->update([
                 'game_id' => $game->id,
                 'line_count' => $lineCount,
+                'human_count' => $tagCounts['human_count'],
+                'validated_count' => $tagCounts['validated_count'],
+                'ai_count' => $tagCounts['ai_count'],
                 'status' => $request->status,
                 'type' => $request->type,
                 'notes' => $request->notes,
@@ -454,13 +492,15 @@ class TranslationController extends Controller
                 'is_update' => true,
             ], $request);
 
+            $role = $existingTranslation->visibility === 'public' ? 'main' : 'branch';
+
             return response()->json([
                 'success' => true,
                 'translation' => [
                     'id' => $existingTranslation->id,
                     'file_hash' => $existingTranslation->file_hash,
                     'line_count' => $existingTranslation->line_count,
-                    'is_update' => true,
+                    'role' => $role,
                     'web_url' => url("/games/{$game->slug}"),
                 ],
             ], 200);
@@ -481,8 +521,12 @@ class TranslationController extends Controller
             'source_language' => $sourceLanguage,
             'target_language' => $targetLanguage,
             'line_count' => $lineCount,
+            'human_count' => $tagCounts['human_count'],
+            'validated_count' => $tagCounts['validated_count'],
+            'ai_count' => $tagCounts['ai_count'],
             'status' => $request->status,
             'type' => $request->type,
+            'visibility' => $visibility,
             'notes' => $request->notes,
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
@@ -500,16 +544,62 @@ class TranslationController extends Controller
             'is_fork' => $parentId !== null,
         ], $request);
 
+        $role = $visibility === 'public' ? 'main' : 'branch';
+
         return response()->json([
             'success' => true,
             'translation' => [
                 'id' => $translation->id,
                 'file_hash' => $translation->file_hash,
                 'line_count' => $translation->line_count,
-                'is_fork' => $parentId !== null,
+                'role' => $role,
                 'web_url' => url("/games/{$game->slug}"),
             ],
         ], 201);
+    }
+
+    /**
+     * List branches for a Main translation (owner only).
+     *
+     * GET /api/v1/translations/{uuid}/branches
+     */
+    public function branches(Request $request, string $uuid): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        // Verify user is the Main owner of this UUID
+        $main = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'public')
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$main) {
+            return response()->json([
+                'error' => 'Forbidden',
+                'message' => 'You are not the Main owner of this translation',
+            ], 403);
+        }
+
+        $branches = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'branch')
+            ->with('user:id,name')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(fn($b) => [
+                'id' => $b->id,
+                'user' => ['id' => $b->user->id, 'name' => $b->user->name],
+                'line_count' => $b->line_count,
+                'human_count' => $b->human_count,
+                'validated_count' => $b->validated_count,
+                'ai_count' => $b->ai_count,
+                'updated_at' => $b->updated_at->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'main_id' => $main->id,
+            'branches_count' => $branches->count(),
+            'branches' => $branches,
+        ]);
     }
 
     /**

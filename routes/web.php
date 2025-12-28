@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MergeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SitemapController;
@@ -93,6 +94,10 @@ Route::middleware('auth')->group(function () {
 
     // Votes
     Route::post('/vote/{translation}', [VoteController::class, 'vote'])->name('votes.store');
+
+    // Merge View (Main owner only)
+    Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
+    Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
 });
 
 // Admin routes

@@ -108,7 +108,7 @@
             </a>
 
             <!-- Delete account -->
-            <button type="button" onclick="openDeleteModal()" class="flex-1 bg-red-900 hover:bg-red-800 text-red-200 py-3 rounded-lg transition">
+            <button type="button" id="openDeleteModalBtn" class="flex-1 bg-red-900 hover:bg-red-800 text-red-200 py-3 rounded-lg transition">
                 <i class="fas fa-trash-alt mr-2"></i> {{ __('profile.delete_account') }}
             </button>
         </div>
@@ -138,7 +138,7 @@
                     placeholder="{{ $user->name }}">
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">
+                <button type="button" id="closeDeleteModalBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">
                     {{ __('common.cancel') }}
                 </button>
                 <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">
@@ -150,14 +150,22 @@
 </div>
 
 <script nonce="{{ $cspNonce }}">
-function openDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('hidden');
-    document.getElementById('deleteModal').classList.add('flex');
-}
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.add('hidden');
-    document.getElementById('deleteModal').classList.remove('flex');
-}
-document.getElementById('deleteModal').onclick = function(e) { if(e.target===this) closeDeleteModal(); };
+(function() {
+    var modal = document.getElementById('deleteModal');
+
+    function openDeleteModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    document.getElementById('openDeleteModalBtn').addEventListener('click', openDeleteModal);
+    document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
+    modal.addEventListener('click', function(e) { if(e.target === modal) closeDeleteModal(); });
+})();
 </script>
 @endsection

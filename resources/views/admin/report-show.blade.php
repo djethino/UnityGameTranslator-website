@@ -93,8 +93,7 @@
                         <i class="fas fa-times mr-2"></i> Dismiss Report
                     </button>
                     <button type="submit" name="action" value="delete_translation"
-                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition"
-                        onclick="return confirm('Are you sure? This will permanently delete the translation.')">
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition delete-translation-btn">
                         <i class="fas fa-trash mr-2"></i> Delete Translation
                     </button>
                 </div>
@@ -123,4 +122,14 @@
         </div>
     @endif
 </div>
+
+<script nonce="{{ $cspNonce }}">
+document.querySelectorAll('.delete-translation-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        if (!confirm('Are you sure? This will permanently delete the translation.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 @endsection

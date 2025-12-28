@@ -116,8 +116,7 @@
             <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-edit mr-1"></i> {{ __('common.edit') }}
             </a>
-            <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline"
-                onsubmit="return confirm('{{ __('admin.delete_confirm') }}')">
+            <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline delete-form">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
@@ -137,4 +136,14 @@
         </div>
     @endif
 </div>
+
+<script nonce="{{ $cspNonce }}">
+document.querySelectorAll('.delete-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('{{ __('admin.delete_confirm') }}')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 @endsection

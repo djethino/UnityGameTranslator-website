@@ -31,7 +31,7 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold"><i class="fas fa-code mr-2"></i> {{ __('admin.translation_content') }}</h2>
         @if($collapsible)
-            <button type="button" onclick="toggleJsonPreview('{{ $uniqueId }}')" class="text-gray-400 hover:text-white text-sm">
+            <button type="button" class="json-toggle-btn text-gray-400 hover:text-white text-sm" data-target="{{ $uniqueId }}">
                 <i id="toggleIcon-{{ $uniqueId }}" class="fas fa-chevron-down mr-1"></i>
                 <span id="toggleText-{{ $uniqueId }}">{{ __('common.show') }}</span>
             </button>
@@ -124,22 +124,28 @@
 
 @if($collapsible)
 <script nonce="{{ $cspNonce ?? '' }}">
-function toggleJsonPreview(id) {
-    const preview = document.getElementById('jsonPreview-' + id);
-    const icon = document.getElementById('toggleIcon-' + id);
-    const text = document.getElementById('toggleText-' + id);
+(function() {
+    var btn = document.querySelector('.json-toggle-btn[data-target="{{ $uniqueId }}"]');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            var id = this.dataset.target;
+            var preview = document.getElementById('jsonPreview-' + id);
+            var icon = document.getElementById('toggleIcon-' + id);
+            var text = document.getElementById('toggleText-' + id);
 
-    if (preview.classList.contains('hidden')) {
-        preview.classList.remove('hidden');
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-        text.textContent = '{{ __('common.hide') }}';
-    } else {
-        preview.classList.add('hidden');
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-        text.textContent = '{{ __('common.show') }}';
+            if (preview.classList.contains('hidden')) {
+                preview.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                text.textContent = '{{ __('common.hide') }}';
+            } else {
+                preview.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                text.textContent = '{{ __('common.show') }}';
+            }
+        });
     }
-}
+})();
 </script>
 @endif
