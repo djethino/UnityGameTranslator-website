@@ -60,9 +60,9 @@ class GameSearchService
             }
         }
 
-        // 3. If we don't have enough results, search external APIs
-        // Only call external APIs if local results are insufficient
-        if (count($results) < 3 && $query && strlen($query) >= 2) {
+        // 3. Only call external APIs if NO local results
+        // This saves API quota when games are already in our database
+        if (empty($results) && $query && strlen($query) >= 2) {
             $externalResults = $this->search($query, 10);
             $results = array_merge($results, $externalResults);
         }
