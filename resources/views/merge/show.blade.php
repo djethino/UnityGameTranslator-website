@@ -104,6 +104,18 @@
             <span class="tag-V">V</span>
         </label>
 
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="mod_ui" value="1" {{ $filters['mod_ui'] ? 'checked' : '' }}
+                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-purple-600">
+            <span class="tag-M">M</span>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="skipped" value="1" {{ $filters['skipped'] ? 'checked' : '' }}
+                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-gray-600">
+            <span class="tag-S">S</span>
+        </label>
+
         @if(array_filter($filters))
         <a href="{{ route('translations.merge', ['uuid' => $uuid, 'branches' => $selectedBranches->pluck('id')->toArray()]) }}"
             class="text-gray-400 hover:text-white text-xs">
@@ -269,7 +281,9 @@
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
         <span><span class="tag-H">H</span> Human - traduction manuelle</span>
         <span><span class="tag-A">A</span> AI - traduction IA</span>
-        <span><span class="tag-V">V</span> Validated - IA valid&eacute;e par humain</span>
+        <span><span class="tag-V">V</span> Validated - IA valid&eacute;e</span>
+        <span><span class="tag-M">M</span> Mod UI - interface du mod</span>
+        <span><span class="tag-S">S</span> Skipped - non traduit</span>
         <span class="text-gray-600">|</span>
         <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> S&eacute;lection Main</span>
         <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> S&eacute;lection Branch</span>
@@ -284,6 +298,8 @@
     .tag-H { @apply bg-green-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
     .tag-A { @apply bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
     .tag-V { @apply bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
+    .tag-M { @apply bg-purple-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
+    .tag-S { @apply bg-gray-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
 
     .merge-cell {
         @apply cursor-pointer transition-all duration-150;

@@ -368,6 +368,7 @@ class Translation extends Model
                     'H' => $human++,
                     'V' => $validated++,
                     'A' => $ai++,
+                    'M', 'S' => null, // Mod UI and Skipped are not counted
                     default => $ai++, // Fallback to AI
                 };
             } else {

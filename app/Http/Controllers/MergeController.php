@@ -56,6 +56,8 @@ class MergeController extends Controller
             'human' => $request->boolean('human'),
             'ai' => $request->boolean('ai'),
             'validated' => $request->boolean('validated'),
+            'mod_ui' => $request->boolean('mod_ui'),
+            'skipped' => $request->boolean('skipped'),
         ];
 
         $filteredKeys = $this->applyFilters($allKeys, $mainContent, $branchContents, $filters);
@@ -102,7 +104,7 @@ class MergeController extends Controller
             'selections' => 'required|array|min:1',
             'selections.*.key' => 'required|string',
             'selections.*.value' => 'present|string',
-            'selections.*.tag' => 'required|in:H,A,V',
+            'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string',
         ]);
 
@@ -125,15 +127,18 @@ class MergeController extends Controller
             $tag = $sel['tag'];
             $source = $sel['source'];
 
-            // HCA rules:
+            // Tag rules:
+            // - M (Mod UI) and S (Skipped) are preserved as-is (never changed)
             // - If selecting from branch and tag is A → becomes V (validated by human)
             // - If manual edit → becomes H
             // - H and V stay the same
-            if (str_starts_with($source, 'branch_') && $tag === 'A') {
-                $tag = 'V';
-            }
-            if ($source === 'manual') {
-                $tag = 'H';
+            if ($tag !== 'M' && $tag !== 'S') {
+                if (str_starts_with($source, 'branch_') && $tag === 'A') {
+                    $tag = 'V';
+                }
+                if ($source === 'manual') {
+                    $tag = 'H';
+                }
             }
 
             $content[$key] = ['v' => $value, 't' => $tag];
@@ -279,6 +284,30 @@ class MergeController extends Controller
                 }
                 foreach ($branchContents as $content) {
                     if (isset($content[$key]) && $this->extractTag($content[$key]) === 'V') {
+                        $matches = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($filters['mod_ui']) {
+                if ($mainTag === 'M') {
+                    $matches = true;
+                }
+                foreach ($branchContents as $content) {
+                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'M') {
+                        $matches = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($filters['skipped']) {
+                if ($mainTag === 'S') {
+                    $matches = true;
+                }
+                foreach ($branchContents as $content) {
+                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'S') {
                         $matches = true;
                         break;
                     }
