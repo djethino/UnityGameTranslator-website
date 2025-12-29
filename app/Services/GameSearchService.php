@@ -60,11 +60,16 @@ class GameSearchService
             }
         }
 
-        // 3. Only call external APIs if NO local results
-        // This saves API quota when games are already in our database
+        // 3. Call IGDB if not enough results (IGDB is free)
+        if (count($results) < 3 && $query && strlen($query) >= 2) {
+            $igdbResults = $this->searchIGDB($query, 10);
+            $results = array_merge($results, $igdbResults);
+        }
+
+        // 4. Call RAWG only if still no results (RAWG has paid quota)
         if (empty($results) && $query && strlen($query) >= 2) {
-            $externalResults = $this->search($query, 10);
-            $results = array_merge($results, $externalResults);
+            $rawgResults = $this->searchRAWG($query, 10);
+            $results = array_merge($results, $rawgResults);
         }
 
         // Deduplicate by name (case-insensitive)
