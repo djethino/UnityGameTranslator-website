@@ -78,6 +78,12 @@ class GameSearchService
         // Deduplicate by name (case-insensitive)
         $results = $this->deduplicateResults($results);
 
+        // Calculate match_score for each result
+        $results = $this->calculateMatchScores($results, $query, $steamId);
+
+        // Sort by match_score descending (best matches first)
+        usort($results, fn($a, $b) => ($b['match_score'] ?? 0) <=> ($a['match_score'] ?? 0));
+
         return array_slice($results, 0, $limit);
     }
 
@@ -123,6 +129,61 @@ class GameSearchService
         }
 
         return $unique;
+    }
+
+    /**
+     * Calculate match_score for each result based on query and steam_id.
+     * Higher score = better match.
+     *
+     * Scoring:
+     * - Steam ID exact match: +50 (very high confidence)
+     * - Local source: +20 (game exists in our DB)
+     * - Has translations: +1 per translation (max +10)
+     * - Exact name match: +20
+     * - Partial name match (contains query): +5
+     */
+    private function calculateMatchScores(array $results, ?string $query, ?string $steamId): array
+    {
+        $normalizedQuery = $query ? strtolower(trim($query)) : null;
+
+        foreach ($results as &$result) {
+            $score = 0;
+            $resultName = strtolower($result['name'] ?? '');
+            $resultSteamId = $result['steam_id'] ?? null;
+
+            // Steam ID exact match = very high confidence
+            if ($steamId && $resultSteamId && $resultSteamId === $steamId) {
+                $score += 50;
+            }
+
+            // Local source = game exists in our database
+            if (($result['source'] ?? '') === 'local') {
+                $score += 20;
+                // Bonus for having translations (max +10)
+                $translationsCount = $result['translations_count'] ?? 0;
+                $score += min(10, $translationsCount);
+            }
+
+            // Steam API source = verified game info
+            if (($result['source'] ?? '') === 'steam') {
+                $score += 10;
+            }
+
+            // Name matching
+            if ($normalizedQuery) {
+                if ($resultName === $normalizedQuery) {
+                    // Exact match
+                    $score += 20;
+                } elseif (str_contains($resultName, $normalizedQuery)) {
+                    // Partial match
+                    $score += 5;
+                }
+            }
+
+            $result['match_score'] = $score;
+        }
+
+        return $results;
     }
 
     /**
