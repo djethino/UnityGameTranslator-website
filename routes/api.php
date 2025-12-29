@@ -24,6 +24,8 @@ Route::prefix('v1')->group(function () {
         // Browse translations and games
         Route::get('translations', [TranslationController::class, 'search']);
         Route::get('games', [GameController::class, 'index']);
+        // IMPORTANT: games/search MUST be before games/{game} to avoid {game} matching "search"
+        Route::get('games/search', [GameController::class, 'search']);
         Route::get('games/{game}', [GameController::class, 'show']);
     });
 
@@ -45,15 +47,12 @@ Route::prefix('v1')->group(function () {
 
     // ===========================================
     // AUTHENTICATED ENDPOINTS
-    // Can: upload translations, search external games
+    // Can: upload translations
     // ===========================================
     Route::middleware(['auth.api', 'check.banned.api', 'throttle:60,1'])->group(function () {
         // User info
         Route::get('me', [UserController::class, 'me']);
         Route::get('me/translations', [UserController::class, 'translations']);
-
-        // Game search (uses external APIs - RAWG quota limited)
-        Route::get('games/search', [GameController::class, 'search']);
 
         // Check if UUID exists before upload (to detect UPDATE/FORK/NEW)
         Route::get('translations/check-uuid', [TranslationController::class, 'checkUuid']);
