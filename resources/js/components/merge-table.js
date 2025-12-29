@@ -6,12 +6,27 @@ export default function mergeTable() {
     return {
         selections: {},
 
+        // Modal state for multiline editing
+        editModal: {
+            open: false,
+            key: '',
+            value: '',
+            originalValue: ''
+        },
+
         init() {
             // Auto-submit filter checkboxes
             document.querySelectorAll('.filter-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', function() {
                     this.form.submit();
                 });
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.editModal.open) {
+                    this.closeEditModal();
+                }
             });
         },
 
@@ -58,21 +73,49 @@ export default function mergeTable() {
 
         editCell(key, currentValue) {
             const existingValue = this.selections[key]?.value ?? currentValue;
-            const newValue = prompt('Modifier la valeur :', existingValue);
+            this.editModal = {
+                open: true,
+                key: key,
+                value: existingValue,
+                originalValue: currentValue
+            };
 
-            if (newValue !== null) {
-                if (newValue === '') {
-                    // Empty value = clear selection for this key
-                    delete this.selections[key];
-                } else {
-                    this.selections[key] = {
-                        source: 'manual',
-                        value: newValue,
-                        tag: 'H'
-                    };
+            // Focus textarea after modal opens
+            this.$nextTick(() => {
+                const textarea = document.getElementById('editModalTextarea');
+                if (textarea) {
+                    textarea.focus();
+                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
                 }
-                this.updateHiddenInputs();
+            });
+        },
+
+        saveEditModal() {
+            const { key, value, originalValue } = this.editModal;
+
+            if (value === '') {
+                // Empty value = clear selection for this key
+                delete this.selections[key];
+            } else if (value !== originalValue) {
+                // Only save if changed
+                this.selections[key] = {
+                    source: 'manual',
+                    value: value,
+                    tag: 'H'
+                };
             }
+
+            this.updateHiddenInputs();
+            this.closeEditModal();
+        },
+
+        closeEditModal() {
+            this.editModal = {
+                open: false,
+                key: '',
+                value: '',
+                originalValue: ''
+            };
         },
 
         clearSelections() {

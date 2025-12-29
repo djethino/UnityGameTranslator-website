@@ -164,7 +164,7 @@
                     @endphp
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                         {{-- Key column --}}
-                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-all">
+                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
                             {{ $key }}
                         </td>
 
@@ -287,10 +287,53 @@
         <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> Diff&eacute;rence</span>
         <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> Nouvelle cl&eacute;</span>
     </div>
+
+    {{-- Edit Modal --}}
+    <div x-show="editModal.open" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        @click.self="closeEditModal()">
+        <div class="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-2xl mx-4"
+            @keydown.ctrl.enter="saveEditModal()">
+            {{-- Modal Header --}}
+            <div class="px-6 py-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">Modifier la traduction</h3>
+                <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
+            </div>
+
+            {{-- Modal Body --}}
+            <div class="px-6 py-4">
+                <textarea
+                    id="editModalTextarea"
+                    x-model="editModal.value"
+                    class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
+                    placeholder="Entrez la traduction..."
+                ></textarea>
+                <p class="mt-2 text-xs text-gray-500">
+                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Entr&eacute;e</kbd> pour sauvegarder &bull;
+                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Echap</kbd> pour annuler
+                </p>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+                <button type="button" @click="closeEditModal()"
+                    class="px-4 py-2 text-gray-400 hover:text-white transition">
+                    Annuler
+                </button>
+                <button type="button" @click="saveEditModal()"
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
+                    <i class="fas fa-check mr-1"></i> Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('head')
 <style>
+    /* Hide elements with x-cloak until Alpine initializes */
+    [x-cloak] { display: none !important; }
+
     /* Tag badges - native CSS (no @apply for runtime styles) */
     .tag-H {
         background-color: rgb(22 163 74); /* green-600 */
