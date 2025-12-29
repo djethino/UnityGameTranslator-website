@@ -134,7 +134,7 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium w-64">Cl&eacute;</th>
+                        <th class="px-4 py-3 text-left text-gray-400 font-medium">Cl&eacute;</th>
                         <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[300px]">
                             <div class="flex items-center gap-2">
                                 <span class="text-green-400 font-medium">Main</span>
@@ -164,7 +164,7 @@
                     @endphp
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                         {{-- Key column --}}
-                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-all max-w-xs">
+                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-all">
                             {{ $key }}
                         </td>
 
