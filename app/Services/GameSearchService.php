@@ -40,7 +40,9 @@ class GameSearchService
         // 2. Search by Steam ID if provided
         if ($steamId) {
             // First check if we have it locally
-            $localBySteam = Game::where('steam_id', $steamId)->first();
+            $localBySteam = Game::where('steam_id', $steamId)
+                ->withCount('translations')
+                ->first();
             if ($localBySteam) {
                 // Add at beginning if not already present
                 $steamResult = [
@@ -49,6 +51,7 @@ class GameSearchService
                     'steam_id' => $localBySteam->steam_id,
                     'image_url' => $localBySteam->image_url,
                     'source' => 'local',
+                    'translations_count' => $localBySteam->translations_count,
                 ];
                 array_unshift($results, $steamResult);
             } else {
@@ -86,6 +89,7 @@ class GameSearchService
         $search = str_replace(['%', '_'], ['\\%', '\\_'], $query);
 
         return Game::where('name', 'like', '%' . $search . '%')
+            ->withCount('translations')
             ->limit($limit)
             ->get()
             ->map(function ($game) {
@@ -95,6 +99,7 @@ class GameSearchService
                     'steam_id' => $game->steam_id,
                     'image_url' => $game->image_url,
                     'source' => 'local',
+                    'translations_count' => $game->translations_count,
                 ];
             })
             ->toArray();
