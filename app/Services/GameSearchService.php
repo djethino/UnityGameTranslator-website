@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Game;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -9,6 +10,110 @@ use Illuminate\Support\Facades\Log;
 class GameSearchService
 {
     private ?string $twitchToken = null;
+
+    /**
+     * Full search: local DB first, then Steam (if ID), then external APIs.
+     * Optimizes API quota by checking local database first.
+     *
+     * Order:
+     * 1. Local database (games we already have)
+     * 2. Steam API (if steam_id provided)
+     * 3. IGDB (Twitch) → RAWG (only if not enough local results)
+     *
+     * @param string|null $query Search query (game name)
+     * @param string|null $steamId Steam App ID for exact match
+     * @param int $limit Maximum results to return
+     * @return array Deduplicated game results
+     */
+    public function searchFull(?string $query, ?string $steamId = null, int $limit = 15): array
+    {
+        $results = [];
+
+        // 1. Check local database FIRST (saves API quota)
+        if ($query && strlen($query) >= 2) {
+            $localGames = $this->searchLocal($query, 5);
+            foreach ($localGames as $game) {
+                $results[] = $game;
+            }
+        }
+
+        // 2. Search by Steam ID if provided
+        if ($steamId) {
+            // First check if we have it locally
+            $localBySteam = Game::where('steam_id', $steamId)->first();
+            if ($localBySteam) {
+                // Add at beginning if not already present
+                $steamResult = [
+                    'id' => $localBySteam->id,
+                    'name' => $localBySteam->name,
+                    'steam_id' => $localBySteam->steam_id,
+                    'image_url' => $localBySteam->image_url,
+                    'source' => 'local',
+                ];
+                array_unshift($results, $steamResult);
+            } else {
+                // Call Steam API
+                $steamResult = $this->getGameFromSteam($steamId);
+                if ($steamResult) {
+                    array_unshift($results, $steamResult);
+                }
+            }
+        }
+
+        // 3. If we don't have enough results, search external APIs
+        // Only call external APIs if local results are insufficient
+        if (count($results) < 3 && $query && strlen($query) >= 2) {
+            $externalResults = $this->search($query, 10);
+            $results = array_merge($results, $externalResults);
+        }
+
+        // Deduplicate by name (case-insensitive)
+        $results = $this->deduplicateResults($results);
+
+        return array_slice($results, 0, $limit);
+    }
+
+    /**
+     * Search local database for games
+     */
+    public function searchLocal(string $query, int $limit = 5): array
+    {
+        $search = str_replace(['%', '_'], ['\\%', '\\_'], $query);
+
+        return Game::where('name', 'like', '%' . $search . '%')
+            ->limit($limit)
+            ->get()
+            ->map(function ($game) {
+                return [
+                    'id' => $game->id,
+                    'name' => $game->name,
+                    'steam_id' => $game->steam_id,
+                    'image_url' => $game->image_url,
+                    'source' => 'local',
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Deduplicate results by name (case-insensitive)
+     * Prioritizes earlier entries (local > steam > external)
+     */
+    private function deduplicateResults(array $results): array
+    {
+        $seen = [];
+        $unique = [];
+
+        foreach ($results as $game) {
+            $key = strtolower($game['name'] ?? '');
+            if ($key && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[] = $game;
+            }
+        }
+
+        return $unique;
+    }
 
     /**
      * Search for games using IGDB first, fallback to RAWG

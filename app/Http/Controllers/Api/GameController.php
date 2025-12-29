@@ -68,63 +68,26 @@ class GameController extends Controller
     }
 
     /**
-     * Search for games using external APIs (Steam, IGDB, RAWG).
+     * Search for games using local DB first, then external APIs.
      * Used when uploading a new translation for a game not yet in the database.
+     *
+     * Order: Local DB → Steam (if ID) → IGDB → RAWG
+     * This optimizes API quota by checking our database first.
      *
      * GET /api/v1/games/search?q=hollow+knight
      * GET /api/v1/games/search?steam_id=367520
      */
     public function search(Request $request, GameSearchService $gameSearchService): JsonResponse
     {
-        $results = [];
-
-        // Search by Steam ID first
-        if ($request->filled('steam_id')) {
-            $steamResult = $gameSearchService->getGameFromSteam($request->steam_id);
-            if ($steamResult) {
-                $results[] = $steamResult;
-            }
-        }
-
-        // Search by name
-        if ($request->filled('q') && strlen($request->q) >= 2) {
-            $externalResults = $gameSearchService->search($request->q, 10);
-            $results = array_merge($results, $externalResults);
-        }
-
-        // Also check our local database
-        if ($request->filled('q')) {
-            $search = $this->escapeLike($request->q);
-            $localGames = Game::where('name', 'like', '%' . $search . '%')
-                ->limit(5)
-                ->get();
-
-            foreach ($localGames as $game) {
-                // Add local games at the beginning, marked as 'local'
-                array_unshift($results, [
-                    'id' => $game->id,
-                    'name' => $game->name,
-                    'steam_id' => $game->steam_id,
-                    'image_url' => $game->image_url,
-                    'source' => 'local',
-                ]);
-            }
-        }
-
-        // Remove duplicates by name (case-insensitive)
-        $seen = [];
-        $unique = [];
-        foreach ($results as $game) {
-            $key = strtolower($game['name'] ?? '');
-            if (!isset($seen[$key])) {
-                $seen[$key] = true;
-                $unique[] = $game;
-            }
-        }
+        $results = $gameSearchService->searchFull(
+            $request->input('q'),
+            $request->input('steam_id'),
+            15
+        );
 
         return response()->json([
-            'count' => count($unique),
-            'games' => array_slice($unique, 0, 15), // Limit to 15 results
+            'count' => count($results),
+            'games' => $results,
         ]);
     }
 
