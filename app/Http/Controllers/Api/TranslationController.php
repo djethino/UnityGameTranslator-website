@@ -378,7 +378,7 @@ class TranslationController extends Controller
         // Count lines (exclude metadata keys)
         $lineCount = count(array_filter(array_keys($json), fn($k) => !str_starts_with($k, '_')));
 
-        // Extract HCA tag counts from new format
+        // Extract HVA tag counts from new format
         $tagCounts = Translation::extractTagCounts($json);
 
         // Check for existing translation with same UUID (UPDATE case)

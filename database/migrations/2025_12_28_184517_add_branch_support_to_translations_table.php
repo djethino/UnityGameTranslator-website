@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * Adds support for Main/Branch/Fork system:
      * - visibility: 'public' for Main/Fork, 'branch' for private branches
-     * - human_count, validated_count, ai_count: HCA tag statistics
+     * - human_count, validated_count, ai_count: HVA tag statistics
      */
     public function up(): void
     {
@@ -19,7 +19,7 @@ return new class extends Migration
             // Visibility: public (Main/Fork) or branch (private contributor)
             $table->enum('visibility', ['public', 'branch'])->default('public')->after('status');
 
-            // HCA tag counters for quality scoring
+            // HVA tag counters for quality scoring
             $table->integer('human_count')->default(0)->after('line_count');
             $table->integer('validated_count')->default(0)->after('human_count');
             $table->integer('ai_count')->default(0)->after('validated_count');

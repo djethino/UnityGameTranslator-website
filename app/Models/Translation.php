@@ -340,11 +340,11 @@ class Translation extends Model
     }
 
     // =========================================
-    // Tag Extraction (HCA System)
+    // Tag Extraction (HVA System: Human/Validated/AI)
     // =========================================
 
     /**
-     * Extract HCA tag counts from JSON content.
+     * Extract HVA tag counts from JSON content.
      * Supports both old format (string values) and new format (object with v/t).
      *
      * @param array $json Parsed translation JSON
