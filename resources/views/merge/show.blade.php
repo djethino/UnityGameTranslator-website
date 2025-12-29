@@ -56,10 +56,11 @@
         </form>
     </div>
     @else
-    <div class="mb-6 bg-gray-800 rounded-lg p-6 border border-gray-700 text-center">
-        <i class="fas fa-code-branch text-4xl text-gray-600 mb-3"></i>
-        <p class="text-gray-400">Aucune branch pour cette traduction.</p>
-        <p class="text-sm text-gray-500 mt-2">Les branches appara&icirc;tront ici quand d'autres utilisateurs contribueront.</p>
+    <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">
+            <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+            Aucune branch pour cette traduction. Vous pouvez quand m&ecirc;me &eacute;diter vos valeurs en double-cliquant.
+        </p>
     </div>
     @endif
 
@@ -163,8 +164,8 @@
                     @endphp
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                         {{-- Key column --}}
-                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-all" title="{{ $key }}">
-                            {{ Str::limit($key, 40) }}
+                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-all max-w-xs">
+                            {{ $key }}
                         </td>
 
                         {{-- Main column --}}
@@ -180,7 +181,7 @@
                                         <span x-text="getEditedValue({{ $keyJson }})"></span>
                                     </template>
                                     <template x-if="!isEdited({{ $keyJson }})">
-                                        <span>{{ Str::limit($mainValue, 80) }}</span>
+                                        <span>{{ $mainValue }}</span>
                                     </template>
                                 </span>
                             </div>
@@ -205,7 +206,7 @@
                             <div class="flex items-start gap-2">
                                 <span class="tag-{{ $branchTag }} shrink-0">{{ $branchTag }}</span>
                                 <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
-                                    {{ Str::limit($branchValue, 80) }}
+                                    {{ $branchValue }}
                                 </span>
                             </div>
                             @else
