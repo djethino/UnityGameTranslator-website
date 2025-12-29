@@ -2,6 +2,11 @@ import './bootstrap';
 
 // Alpine.js
 import Alpine from 'alpinejs';
+
+// Alpine components
+import mergeTable from './components/merge-table.js';
+Alpine.data('mergeTable', mergeTable);
+
 window.Alpine = Alpine;
 Alpine.start();
 
