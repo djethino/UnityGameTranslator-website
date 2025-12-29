@@ -173,21 +173,16 @@
                             :class="getCellClass({{ $keyJson }}, 'main')"
                             @click="select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')"
                             @dblclick="editCell({{ $keyJson }}, {{ json_encode($mainValue) }})">
-                            @if($mainEntry !== null)
                             <div class="flex items-start gap-2">
-                                <span class="tag-{{ $mainTag }} shrink-0">{{ $mainTag }}</span>
+                                {{-- Tag badge: shows edited tag (H) if manually edited --}}
+                                <span x-show="!isEdited({{ $keyJson }})" class="tag-{{ $mainTag }} shrink-0">{{ $mainTag }}</span>
+                                <span x-show="isEdited({{ $keyJson }})" class="tag-H shrink-0">H</span>
+                                {{-- Value: shows edited value if manually edited --}}
                                 <span class="break-words" :class="isEdited({{ $keyJson }}) ? 'text-purple-300' : ''">
-                                    <template x-if="isEdited({{ $keyJson }})">
-                                        <span x-text="getEditedValue({{ $keyJson }})"></span>
-                                    </template>
-                                    <template x-if="!isEdited({{ $keyJson }})">
-                                        <span>{{ $mainValue }}</span>
-                                    </template>
+                                    <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
+                                    <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : '- vide -' }}</span>
                                 </span>
                             </div>
-                            @else
-                            <span class="text-gray-600 italic">- vide -</span>
-                            @endif
                         </td>
 
                         {{-- Branch columns --}}
