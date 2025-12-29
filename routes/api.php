@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     // ===========================================
+    // GAME SEARCH (authenticated - uses external APIs with quota)
+    // MUST be defined before games/{game} to avoid route conflict
+    // ===========================================
+    Route::get('games/search', [GameController::class, 'search'])
+        ->middleware(['auth.api', 'check.banned.api', 'throttle:60,1']);
+
+    // ===========================================
     // PUBLIC ENDPOINTS (anonymous users)
     // Can: browse, download translations
     // ===========================================
@@ -24,8 +31,6 @@ Route::prefix('v1')->group(function () {
         // Browse translations and games
         Route::get('translations', [TranslationController::class, 'search']);
         Route::get('games', [GameController::class, 'index']);
-        // IMPORTANT: games/search MUST be before games/{game} to avoid {game} matching "search"
-        Route::get('games/search', [GameController::class, 'search']);
         Route::get('games/{game}', [GameController::class, 'show']);
     });
 
