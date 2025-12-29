@@ -375,8 +375,56 @@ class TranslationController extends Controller
 
         $fileUuid = $json['_uuid'];
 
-        // Count lines (exclude metadata keys)
-        $lineCount = count(array_filter(array_keys($json), fn($k) => !str_starts_with($k, '_')));
+        // Validate translation entries format: {v: string, t: H|V|A|M|S}
+        $validTags = ['H', 'V', 'A', 'M', 'S'];
+        $invalidEntries = [];
+        $lineCount = 0;
+
+        foreach ($json as $key => $value) {
+            // Skip metadata keys
+            if (str_starts_with($key, '_')) {
+                continue;
+            }
+
+            $lineCount++;
+
+            // Must be array with 'v' and 't' keys
+            if (!is_array($value)) {
+                $invalidEntries[] = "Key '{$key}': expected {v, t} object, got " . gettype($value);
+                continue;
+            }
+
+            if (!array_key_exists('v', $value)) {
+                $invalidEntries[] = "Key '{$key}': missing 'v' (value) field";
+                continue;
+            }
+
+            if (!array_key_exists('t', $value)) {
+                $invalidEntries[] = "Key '{$key}': missing 't' (tag) field";
+                continue;
+            }
+
+            // 'v' can be string (including empty) or null
+            if (!is_string($value['v']) && $value['v'] !== null) {
+                $invalidEntries[] = "Key '{$key}': 'v' must be a string or null, got " . gettype($value['v']);
+            }
+
+            if (!is_string($value['t']) || !in_array($value['t'], $validTags, true)) {
+                $invalidEntries[] = "Key '{$key}': 't' must be one of H, V, A, M, S, got '{$value['t']}'";
+            }
+        }
+
+        // Return validation errors (limit to first 10 for readability)
+        if (!empty($invalidEntries)) {
+            $errorCount = count($invalidEntries);
+            $sample = array_slice($invalidEntries, 0, 10);
+
+            return response()->json([
+                'error' => "Invalid translation format: {$errorCount} entries have errors",
+                'details' => $sample,
+                'hint' => 'Each entry must be: {"key": {"v": "value" or null, "t": "H|V|A|M|S"}}',
+            ], 422);
+        }
 
         // Extract HVA tag counts from new format
         $tagCounts = Translation::extractTagCounts($json);

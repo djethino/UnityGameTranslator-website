@@ -291,33 +291,71 @@
 
 @push('head')
 <style>
-    .tag-H { @apply bg-green-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
-    .tag-A { @apply bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
-    .tag-V { @apply bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
-    .tag-M { @apply bg-purple-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
-    .tag-S { @apply bg-gray-600 text-white px-1.5 py-0.5 rounded text-xs font-bold; }
+    /* Tag badges - native CSS (no @apply for runtime styles) */
+    .tag-H {
+        background-color: rgb(22 163 74); /* green-600 */
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .tag-A {
+        background-color: rgb(234 88 12); /* orange-600 */
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .tag-V {
+        background-color: rgb(37 99 235); /* blue-600 */
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .tag-M {
+        background-color: rgb(147 51 234); /* purple-600 */
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .tag-S {
+        background-color: rgb(75 85 99); /* gray-600 */
+        color: white;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
 
+    /* Merge cell interactivity */
     .merge-cell {
-        @apply cursor-pointer transition-all duration-150;
-    }
-    .merge-cell:hover {
-        @apply bg-gray-700/50;
-    }
-
-    .selected-main {
-        @apply bg-green-900/50 ring-2 ring-green-500 ring-inset;
-    }
-    .selected-branch {
-        @apply bg-blue-900/50 ring-2 ring-blue-500 ring-inset;
-    }
-    .selected-manual {
-        @apply bg-purple-900/50 ring-2 ring-purple-500 ring-inset;
-    }
-
-    /* Prevent text selection when clicking cells */
-    .merge-cell {
+        cursor: pointer;
+        transition: all 150ms;
         user-select: none;
         -webkit-user-select: none;
+    }
+    .merge-cell:hover {
+        background-color: rgba(55, 65, 81, 0.5); /* gray-700/50 */
+    }
+
+    /* Selection states - visible feedback when clicked */
+    .selected-main {
+        background-color: rgba(20, 83, 45, 0.5) !important; /* green-900/50 */
+        box-shadow: inset 0 0 0 2px rgb(34 197 94); /* ring-2 ring-green-500 */
+    }
+    .selected-branch {
+        background-color: rgba(30, 58, 138, 0.5) !important; /* blue-900/50 */
+        box-shadow: inset 0 0 0 2px rgb(59 130 246); /* ring-2 ring-blue-500 */
+    }
+    .selected-manual {
+        background-color: rgba(88, 28, 135, 0.5) !important; /* purple-900/50 */
+        box-shadow: inset 0 0 0 2px rgb(168 85 247); /* ring-2 ring-purple-500 */
     }
 </style>
 @endpush
