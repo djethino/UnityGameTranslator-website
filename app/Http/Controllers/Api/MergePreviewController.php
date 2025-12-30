@@ -28,10 +28,25 @@ class MergePreviewController extends Controller
         $user = $request->user();
         $translation = Translation::findOrFail($request->translation_id);
 
-        // Verify the user owns this translation
-        if ($translation->user_id !== $user->id) {
+        // Debug logging
+        \Log::info('MergePreview init', [
+            'auth_user_id' => $user?->id,
+            'auth_user_name' => $user?->name,
+            'translation_id' => $translation->id,
+            'translation_user_id' => $translation->user_id,
+            'match' => $translation->user_id === $user?->id,
+        ]);
+
+        // Verify the user owns this translation (use == for type coercion, IDs might be string vs int)
+        if ((int) $translation->user_id !== (int) $user->id) {
             return response()->json([
                 'error' => 'You can only merge preview your own translations.',
+                'debug' => [
+                    'your_user_id' => $user?->id,
+                    'your_user_id_type' => gettype($user?->id),
+                    'translation_owner_id' => $translation->user_id,
+                    'translation_owner_id_type' => gettype($translation->user_id),
+                ],
             ], 403);
         }
 

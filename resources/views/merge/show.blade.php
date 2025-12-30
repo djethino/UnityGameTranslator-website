@@ -42,13 +42,31 @@
         <form method="GET" class="flex flex-wrap gap-4 items-center">
             <span class="text-sm text-gray-400 font-medium">Branches :</span>
             @foreach($branches as $branch)
-            <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
-                <input type="checkbox" name="branches[]" value="{{ $branch->id }}"
-                    class="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
-                    {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
-                <span class="text-gray-300">{{ $branch->user->name }}</span>
-                <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
-            </label>
+            <div class="flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600">
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
+                    <input type="checkbox" name="branches[]" value="{{ $branch->id }}"
+                        class="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
+                        {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
+                    <span class="text-gray-300">{{ $branch->user->name }}</span>
+                    <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
+                </label>
+                {{-- Rating Stars --}}
+                <div class="flex items-center gap-1 ml-2 branch-rating" data-branch-id="{{ $branch->id }}">
+                    @for($i = 1; $i <= 5; $i++)
+                    <button type="button"
+                        class="rating-star text-sm {{ $branch->main_rating >= $i ? 'text-yellow-400' : 'text-gray-600' }} hover:text-yellow-300 transition"
+                        data-rating="{{ $i }}"
+                        title="{{ __('rating.rate_branch', ['stars' => $i]) }}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                    @endfor
+                    @if($branch->wasModifiedSinceReview())
+                    <span class="ml-1 text-xs text-orange-400" title="{{ __('rating.modified_since_review') }}">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                    @endif
+                </div>
+            </div>
             @endforeach
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white text-sm transition">
                 <i class="fas fa-filter mr-1"></i> Filtrer

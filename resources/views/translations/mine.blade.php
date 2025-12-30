@@ -53,6 +53,9 @@
                         {{ $translation->forks->count() }} {{ __('my_translations.forks') }} •
                         {{ $translation->updated_at->format('M d, Y') }}
                     </div>
+                    <div class="mt-2 w-48">
+                        <x-progress-bar :translation="$translation" />
+                    </div>
                     </div>
                 </div>
                 <div class="flex gap-2">

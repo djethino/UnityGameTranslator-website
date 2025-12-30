@@ -29,6 +29,86 @@ export default function mergeTable() {
                     this.closeEditModal();
                 }
             });
+
+            // Branch rating stars
+            this.initBranchRating();
+        },
+
+        /**
+         * Initialize branch rating functionality.
+         * Allows Main owner to rate branches with 1-5 stars.
+         */
+        initBranchRating() {
+            document.querySelectorAll('.branch-rating').forEach((container) => {
+                const branchId = container.dataset.branchId;
+                const stars = container.querySelectorAll('.rating-star');
+
+                stars.forEach((star) => {
+                    star.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const rating = parseInt(star.dataset.rating);
+                        const currentRating = this.getCurrentRating(container);
+
+                        // Toggle off if clicking same rating
+                        const newRating = (currentRating === rating) ? null : rating;
+
+                        try {
+                            const response = await fetch(`/translations/${branchId}/rate-branch`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                },
+                                body: JSON.stringify({ rating: newRating }),
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.updateStarsDisplay(container, data.rating);
+                            } else {
+                                console.error('Rating failed:', data.error);
+                            }
+                        } catch (error) {
+                            console.error('Rating error:', error);
+                        }
+                    });
+                });
+            });
+        },
+
+        getCurrentRating(container) {
+            const stars = container.querySelectorAll('.rating-star');
+            let rating = 0;
+            stars.forEach((star, index) => {
+                if (star.classList.contains('text-yellow-400')) {
+                    rating = index + 1;
+                }
+            });
+            return rating;
+        },
+
+        updateStarsDisplay(container, rating) {
+            const stars = container.querySelectorAll('.rating-star');
+            stars.forEach((star, index) => {
+                if (rating && index < rating) {
+                    star.classList.remove('text-gray-600');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-600');
+                }
+            });
+
+            // Remove modified indicator if rating was just set
+            if (rating) {
+                const modifiedIndicator = container.querySelector('.text-orange-400');
+                if (modifiedIndicator) {
+                    modifiedIndicator.remove();
+                }
+            }
         },
 
         get selectionCount() {

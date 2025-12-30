@@ -144,14 +144,16 @@ class GameController extends Controller
         unset($group);
 
         // Sort groups by the specified sort option
-        $sort = $request->get('sort', 'votes');
+        $sort = $request->get('sort', 'score');
         $groupsCollection = collect($translationGroups);
 
         $groupsCollection = match ($sort) {
+            'quality' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->quality_score ?? 0),
+            'votes' => $groupsCollection->sortByDesc(fn($g) => $g['best_vote']),
             'lines' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->line_count ?? 0),
             'downloads' => $groupsCollection->sortByDesc(fn($g) => $g['total_downloads']),
             'date' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->created_at ?? now()),
-            default => $groupsCollection->sortByDesc(fn($g) => $g['best_vote']),
+            default => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->ranking_score ?? 0), // score (default)
         };
 
         $translationGroups = $groupsCollection->values()->all();

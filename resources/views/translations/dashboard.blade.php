@@ -53,7 +53,7 @@
     @endif
 
     {{-- Stats Cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <div class="text-3xl font-bold text-white">{{ number_format($translation->line_count) }}</div>
             <div class="text-sm text-gray-400">{{ __('dashboard.lines') }}</div>
@@ -77,6 +77,38 @@
             <div class="text-sm text-gray-400">{{ __('dashboard.contributions') }}</div>
         </div>
         @endif
+    </div>
+
+    {{-- Quality Progress Bar --}}
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-8">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-white">{{ __('progress.quality_distribution') }}</h3>
+            <span class="text-xs text-gray-400" title="{{ __('progress.quality_tooltip') }}">
+                {{ __('progress.quality_score') }}: {{ number_format($translation->quality_score, 1) }}/3.0
+            </span>
+        </div>
+        <x-progress-bar :translation="$translation" class="mb-2" />
+        <div class="flex items-center justify-between text-xs text-gray-400">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    {{ __('progress.human') }} ({{ $translation->human_count }})
+                </span>
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    {{ __('progress.validated') }} ({{ $translation->validated_count }})
+                </span>
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                    {{ __('progress.ai') }} ({{ $translation->ai_count }})
+                </span>
+            </div>
+            @if(($translation->capture_count ?? 0) > 0)
+            <span class="text-gray-500">
+                {{ __('progress.capture_only') }}: {{ $translation->capture_count }}
+            </span>
+            @endif
+        </div>
     </div>
 
     @if($isMain)

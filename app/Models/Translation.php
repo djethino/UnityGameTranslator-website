@@ -14,9 +14,12 @@ class Translation extends Model
         'source_language',
         'target_language',
         'line_count',
+        'capture_count',
         'human_count',
         'validated_count',
         'ai_count',
+        'main_rating',
+        'reviewed_hash',
         'status',
         'visibility',
         'type',
@@ -25,6 +28,20 @@ class Translation extends Model
         'file_uuid',
         'file_hash',
     ];
+
+    /**
+     * Boot the model and register event listeners.
+     */
+    protected static function booted(): void
+    {
+        // Reset main_rating when a branch's file_hash changes (content was modified)
+        static::updating(function (Translation $translation) {
+            if ($translation->isDirty('file_hash') && $translation->main_rating !== null) {
+                $translation->main_rating = null;
+                $translation->reviewed_hash = null;
+            }
+        });
+    }
 
     /**
      * Get the safe, validated file path.
@@ -347,14 +364,18 @@ class Translation extends Model
      * Extract HVA tag counts from JSON content.
      * Supports both old format (string values) and new format (object with v/t).
      *
+     * H entries with empty/null value are "capture only" and counted separately.
+     * They are excluded from quality scoring as they represent untranslated captures.
+     *
      * @param array $json Parsed translation JSON
-     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int]
+     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int, 'capture_count' => int]
      */
     public static function extractTagCounts(array $json): array
     {
         $human = 0;
         $validated = 0;
         $ai = 0;
+        $capture = 0;
 
         foreach ($json as $key => $value) {
             // Skip metadata keys
@@ -364,13 +385,21 @@ class Translation extends Model
 
             // New format: {"v": "translation", "t": "A"}
             if (is_array($value) && isset($value['t'])) {
-                match ($value['t']) {
-                    'H' => $human++,
-                    'V' => $validated++,
-                    'A' => $ai++,
-                    'M', 'S' => null, // Mod UI and Skipped are not counted
-                    default => $ai++, // Fallback to AI
-                };
+                $tag = $value['t'];
+                $val = $value['v'] ?? '';
+
+                // H with empty value = capture only (excluded from scoring)
+                if ($tag === 'H' && ($val === '' || $val === null)) {
+                    $capture++;
+                } else {
+                    match ($tag) {
+                        'H' => $human++,
+                        'V' => $validated++,
+                        'A' => $ai++,
+                        'M', 'S' => null, // Mod UI and Skipped are not counted
+                        default => $ai++, // Fallback to AI
+                    };
+                }
             } else {
                 // Old format (string value) = AI by default
                 $ai++;
@@ -381,6 +410,108 @@ class Translation extends Model
             'human_count' => $human,
             'validated_count' => $validated,
             'ai_count' => $ai,
+            'capture_count' => $capture,
         ];
+    }
+
+    // =========================================
+    // Computed Attributes for Scoring
+    // =========================================
+
+    /**
+     * Get effective lines count (excludes capture, S, M).
+     * These are the lines that actually have translations.
+     */
+    public function getEffectiveLinesAttribute(): int
+    {
+        return $this->human_count + $this->validated_count + $this->ai_count;
+    }
+
+    /**
+     * Get quality score based on translation source quality.
+     * Formula: (H*3 + V*2 + A*1) / effective_lines
+     * Returns 0-3 scale where 3 = all human translations.
+     */
+    public function getQualityScoreAttribute(): float
+    {
+        $effective = $this->effective_lines;
+        if ($effective === 0) {
+            return 0.0;
+        }
+
+        $weighted = ($this->human_count * 3) + ($this->validated_count * 2) + ($this->ai_count * 1);
+        return $weighted / $effective;
+    }
+
+    /**
+     * Get fork bonus multiplier.
+     * Active forks of abandoned translations get a +20% boost.
+     *
+     * Conditions for bonus:
+     * - This translation has a parent (is a fork)
+     * - Parent hasn't been updated in 180+ days (abandoned)
+     * - This translation was updated within 30 days (active)
+     */
+    public function getForkBonusAttribute(): float
+    {
+        if (!$this->parent_id) {
+            return 1.0;
+        }
+
+        $parent = $this->parent;
+        if (!$parent) {
+            return 1.0;
+        }
+
+        $parentInactive = $parent->updated_at->diffInDays(now()) > 180;
+        $selfActive = $this->updated_at->diffInDays(now()) < 30;
+
+        if ($parentInactive && $selfActive) {
+            return 1.2; // +20% bonus
+        }
+
+        return 1.0;
+    }
+
+    /**
+     * Get full ranking score for sorting translations.
+     * Combines quality, freshness, and engagement metrics.
+     *
+     * Formula: (quality_score * 10 + engagement) * freshness * fork_bonus
+     *
+     * Components:
+     * - quality_score: 0-3 based on H/V/A distribution
+     * - engagement: vote_count + log(download_count + 1)
+     * - freshness: 1.0 for recent, decays over time (90 day half-life)
+     * - fork_bonus: 1.2 for active forks of abandoned translations
+     */
+    public function getRankingScoreAttribute(): float
+    {
+        // Base quality (0-30 range)
+        $quality = $this->quality_score * 10;
+
+        // Engagement: votes + logarithmic downloads
+        $engagement = $this->vote_count + log10($this->download_count + 1);
+
+        // Freshness decay (90-day half-life)
+        $daysSinceUpdate = $this->updated_at->diffInDays(now());
+        $freshness = pow(0.5, $daysSinceUpdate / 90);
+
+        // Fork bonus
+        $bonus = $this->fork_bonus;
+
+        return ($quality + $engagement) * $freshness * $bonus;
+    }
+
+    /**
+     * Check if this branch was modified since the Main owner reviewed it.
+     */
+    public function wasModifiedSinceReview(): bool
+    {
+        if (!$this->reviewed_hash || !$this->file_hash) {
+            return false;
+        }
+
+        return $this->file_hash !== $this->reviewed_hash;
     }
 }

@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
     // Merge View (Main owner only)
     Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
     Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
+    Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
 });
 
 // Admin routes

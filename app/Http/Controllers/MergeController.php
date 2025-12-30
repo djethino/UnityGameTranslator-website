@@ -187,6 +187,7 @@ class MergeController extends Controller
         $main->human_count = $tagCounts['human_count'];
         $main->validated_count = $tagCounts['validated_count'];
         $main->ai_count = $tagCounts['ai_count'];
+        $main->capture_count = $tagCounts['capture_count'];
         $main->line_count = count(array_filter(
             array_keys($content),
             fn($k) => !str_starts_with($k, '_')
@@ -389,5 +390,51 @@ class MergeController extends Controller
             return $entry['t'] ?? 'A';
         }
         return 'A'; // Old format = AI by default
+    }
+
+    /**
+     * Rate a branch translation (Main owner only).
+     * Stores the rating and the hash of the branch at the time of review.
+     */
+    public function rateBranch(Request $request, Translation $translation)
+    {
+        $user = auth()->user();
+
+        // Get the Main translation for this branch
+        $main = $translation->getMain();
+
+        // Verify the current user is the Main owner
+        if (!$main || $main->user_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'error' => __('rating.not_main_owner'),
+            ], 403);
+        }
+
+        // Verify this is actually a branch (not the Main itself)
+        if ($translation->id === $main->id) {
+            return response()->json([
+                'success' => false,
+                'error' => __('rating.cannot_rate_main'),
+            ], 400);
+        }
+
+        // Validate rating (1-5 or null to clear)
+        $validated = $request->validate([
+            'rating' => 'nullable|integer|min:1|max:5',
+        ]);
+
+        $rating = $validated['rating'] ?? null;
+
+        // Update the branch with the rating
+        $translation->main_rating = $rating;
+        $translation->reviewed_hash = $rating !== null ? $translation->file_hash : null;
+        $translation->save();
+
+        return response()->json([
+            'success' => true,
+            'rating' => $translation->main_rating,
+            'reviewed_hash' => $translation->reviewed_hash,
+        ]);
     }
 }

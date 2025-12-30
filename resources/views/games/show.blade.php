@@ -91,7 +91,9 @@
     <div>
         <label class="block text-sm text-gray-400 mb-1">{{ __('games.sort_by') }}</label>
         <select name="sort" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
-            <option value="votes" {{ request('sort', 'votes') == 'votes' ? 'selected' : '' }}>{{ __('games.sort.votes') }}</option>
+            <option value="score" {{ request('sort', 'score') == 'score' ? 'selected' : '' }}>{{ __('games.sort.score') }}</option>
+            <option value="quality" {{ request('sort') == 'quality' ? 'selected' : '' }}>{{ __('games.sort.quality') }}</option>
+            <option value="votes" {{ request('sort') == 'votes' ? 'selected' : '' }}>{{ __('games.sort.votes') }}</option>
             <option value="date" {{ request('sort') == 'date' ? 'selected' : '' }}>{{ __('games.sort.date') }}</option>
             <option value="lines" {{ request('sort') == 'lines' ? 'selected' : '' }}>{{ __('games.sort.lines') }}</option>
             <option value="downloads" {{ request('sort') == 'downloads' ? 'selected' : '' }}>{{ __('games.sort.downloads') }}</option>
@@ -185,6 +187,25 @@
                                 <span><i class="fas fa-calendar mr-1"></i> {{ $translation->updated_at->format('M d, Y') }}</span>
                                 <span><i class="fas fa-file-alt mr-1"></i> {{ number_format($translation->line_count) }} {{ __('translation.lines', ['count' => '']) }}</span>
                                 <span><i class="fas fa-download mr-1"></i> {{ $group['total_downloads'] }}</span>
+                            </div>
+
+                            <!-- Progress bar -->
+                            <div class="mt-2 mb-3">
+                                <x-progress-bar :translation="$translation" />
+                                <div class="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                                    <span class="flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        {{ __('progress.human_short') }} {{ $translation->human_count }}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        {{ __('progress.validated_short') }} {{ $translation->validated_count }}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                        {{ __('progress.ai_short') }} {{ $translation->ai_count }}
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Notes -->

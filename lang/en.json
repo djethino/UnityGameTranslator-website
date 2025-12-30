@@ -11,7 +11,6 @@
 
     "auth.login_with": "Login with :provider",
     "auth.banned": "Your account has been banned. Reason: :reason",
-
     "home.title": "Game Translations",
     "home.search_placeholder": "Search games...",
     "home.no_games": "No games found.",
@@ -52,12 +51,13 @@
     "games.source_language": "Source Language",
     "games.type": "Type",
     "games.sort_by": "Sort by",
+    "games.sort.score": "Best Overall",
+    "games.sort.quality": "Quality Score",
     "games.sort.votes": "Top Voted",
     "games.sort.date": "Newest",
     "games.sort.lines": "Most lines",
     "games.sort.downloads": "Most downloads",
     "games.all": "All",
-
     "translation.type.ai": "Full AI Translation",
     "translation.type.human": "Human Translation",
     "translation.type.ai_corrected": "AI + Human Correction",
@@ -484,5 +484,22 @@
     "dashboard.edit_metadata": "Edit Metadata",
     "dashboard.not_a_branch": "This translation is not a branch.",
     "dashboard.file_not_found": "Translation file not found.",
-    "dashboard.invalid_file": "Invalid translation file format."
+    "dashboard.invalid_file": "Invalid translation file format.",
+
+    "progress.quality_distribution": "Quality Distribution",
+    "progress.quality_score": "Quality",
+    "progress.quality_tooltip": "Quality score based on translation source (Human > Validated > AI)",
+    "progress.human": "Human",
+    "progress.validated": "Validated",
+    "progress.ai": "AI",
+    "progress.human_short": "H",
+    "progress.validated_short": "V",
+    "progress.ai_short": "A",
+    "progress.capture_only": "Capture only",
+    "progress.tooltip": "Human: :human | Validated: :validated | AI: :ai | Capture: :capture | Quality: :quality/3",
+
+    "rating.not_main_owner": "Only the Main owner can rate branches.",
+    "rating.cannot_rate_main": "Cannot rate the Main translation.",
+    "rating.rate_branch": "Rate :stars star(s)",
+    "rating.modified_since_review": "Modified since last review"
 }
