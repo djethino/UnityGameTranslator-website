@@ -450,15 +450,15 @@ function mergePreview() {
             // Calculate stats
             this.calculateStats();
 
-            // Auto-select (prefer local for differences)
+            // Auto-select: prefer online when both exist, local only for local-only keys
             for (const key of this.allKeys) {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
-                if (hasLocal) {
-                    this.selections[key] = 'local';
-                } else {
+                if (hasOnline) {
                     this.selections[key] = 'online';
+                } else {
+                    this.selections[key] = 'local';
                 }
             }
 
@@ -636,12 +636,12 @@ function mergePreview() {
                 this.selections = {};
                 this.editedValues = {};
 
-                // Reset to defaults
+                // Reset to defaults (prefer online when both exist)
                 for (const key of this.allKeys) {
-                    if (key in this.localData) {
-                        this.selections[key] = 'local';
-                    } else {
+                    if (key in this.onlineData) {
                         this.selections[key] = 'online';
+                    } else {
+                        this.selections[key] = 'local';
                     }
                 }
             }
