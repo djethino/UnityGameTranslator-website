@@ -450,15 +450,18 @@ function mergePreview() {
             // Calculate stats
             this.calculateStats();
 
-            // Auto-select: prefer online when both exist, local only for local-only keys
+            // Auto-select: only local-only keys are selected by default (additions)
+            // Common keys default to online (no change), user must explicitly select local
             for (const key of this.allKeys) {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
-                if (hasOnline) {
-                    this.selections[key] = 'online';
-                } else {
+                if (hasLocal && !hasOnline) {
+                    // Local-only: these are additions, select local
                     this.selections[key] = 'local';
+                } else {
+                    // Online-only or common: default to online (keeps server version)
+                    this.selections[key] = 'online';
                 }
             }
 
@@ -514,12 +517,41 @@ function mergePreview() {
         },
 
         get totalChanges() {
-            // Count selections that differ from online + edited values
+            // Count only REAL modifications to the server file
             let count = 0;
-            for (const [key, source] of Object.entries(this.selections)) {
-                if (source === 'local' || this.editedValues[key] !== undefined) {
-                    count++;
+            for (const key of this.allKeys) {
+                const source = this.selections[key];
+                const hasLocal = key in this.localData;
+                const hasOnline = key in this.onlineData;
+                const isEdited = this.editedValues[key] !== undefined;
+
+                // Case 1: Manual edit - check if different from online
+                if (isEdited) {
+                    const editedValue = this.editedValues[key];
+                    const onlineValue = hasOnline ? this.getValue(this.onlineData[key]) : null;
+                    if (editedValue !== onlineValue) {
+                        count++;
+                    }
+                    continue;
                 }
+
+                // Case 2: Local-only key selected as local = addition
+                if (hasLocal && !hasOnline && source === 'local') {
+                    count++;
+                    continue;
+                }
+
+                // Case 3: Common key selected as local - check if value differs
+                if (hasLocal && hasOnline && source === 'local') {
+                    const localValue = this.getValue(this.localData[key]);
+                    const onlineValue = this.getValue(this.onlineData[key]);
+                    if (localValue !== onlineValue) {
+                        count++;
+                    }
+                    continue;
+                }
+
+                // Case 4: Online selection = no change to server (count = 0)
             }
             return count;
         },
@@ -636,12 +668,15 @@ function mergePreview() {
                 this.selections = {};
                 this.editedValues = {};
 
-                // Reset to defaults (prefer online when both exist)
+                // Reset to defaults: only local-only as local, rest as online
                 for (const key of this.allKeys) {
-                    if (key in this.onlineData) {
-                        this.selections[key] = 'online';
-                    } else {
+                    const hasLocal = key in this.localData;
+                    const hasOnline = key in this.onlineData;
+
+                    if (hasLocal && !hasOnline) {
                         this.selections[key] = 'local';
+                    } else {
+                        this.selections[key] = 'online';
                     }
                 }
             }
