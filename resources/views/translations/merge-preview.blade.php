@@ -518,6 +518,8 @@ function mergePreview() {
 
         get totalChanges() {
             // Count only REAL modifications to the server file
+            // A tag becomes V when selected = counts as change
+            // H, V, M, S tags don't change status = only count if value differs
             let count = 0;
             for (const key of this.allKeys) {
                 const source = this.selections[key];
@@ -525,13 +527,9 @@ function mergePreview() {
                 const hasOnline = key in this.onlineData;
                 const isEdited = this.editedValues[key] !== undefined;
 
-                // Case 1: Manual edit - check if different from online
+                // Case 1: Manual edit - always a change (becomes H tag)
                 if (isEdited) {
-                    const editedValue = this.editedValues[key];
-                    const onlineValue = hasOnline ? this.getValue(this.onlineData[key]) : null;
-                    if (editedValue !== onlineValue) {
-                        count++;
-                    }
+                    count++;
                     continue;
                 }
 
@@ -541,17 +539,38 @@ function mergePreview() {
                     continue;
                 }
 
-                // Case 3: Common key selected as local - check if value differs
-                if (hasLocal && hasOnline && source === 'local') {
-                    const localValue = this.getValue(this.localData[key]);
-                    const onlineValue = this.getValue(this.onlineData[key]);
-                    if (localValue !== onlineValue) {
+                // Case 3: Selection from common key - check value AND tag
+                if (hasLocal && hasOnline) {
+                    const selectedData = source === 'local' ? this.localData[key] : this.onlineData[key];
+                    const onlineData = this.onlineData[key];
+
+                    const selectedValue = this.getValue(selectedData);
+                    const onlineValue = this.getValue(onlineData);
+                    const selectedTag = this.getTag(selectedData);
+
+                    // Value differs = change
+                    if (selectedValue !== onlineValue) {
                         count++;
+                        continue;
                     }
-                    continue;
+
+                    // Tag A will become V = change (even if same value)
+                    if (selectedTag === 'A') {
+                        count++;
+                        continue;
+                    }
+
+                    // H, V, M, S with same value = no change
                 }
 
-                // Case 4: Online selection = no change to server (count = 0)
+                // Case 4: Online-only key selected as online
+                if (!hasLocal && hasOnline && source === 'online') {
+                    const onlineTag = this.getTag(this.onlineData[key]);
+                    // Tag A will become V = change
+                    if (onlineTag === 'A') {
+                        count++;
+                    }
+                }
             }
             return count;
         },
