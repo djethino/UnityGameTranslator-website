@@ -165,20 +165,31 @@
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                         {{-- Key column --}}
                         <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
-                            {{ $key }}
+                            <div class="flex items-center gap-2">
+                                @if($mainEntry !== null)
+                                <button type="button"
+                                    @click="toggleDelete({{ $keyJson }})"
+                                    :class="isDeleted({{ $keyJson }}) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
+                                    class="transition shrink-0"
+                                    title="Supprimer cette clé">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                                @endif
+                                <span :class="isDeleted({{ $keyJson }}) ? 'line-through text-red-400' : ''">{{ $key }}</span>
+                            </div>
                         </td>
 
                         {{-- Main column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                            :class="getCellClass({{ $keyJson }}, 'main')"
-                            @click="select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')"
-                            @dblclick="editCell({{ $keyJson }}, {{ json_encode($mainValue) }})">
-                            <div class="flex items-start gap-2">
+                            :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
+                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')"
+                            @dblclick="!isDeleted({{ $keyJson }}) && editCell({{ $keyJson }}, {{ json_encode($mainValue) }})">
+                            <div class="flex items-start gap-2" :class="isDeleted({{ $keyJson }}) ? 'opacity-40' : ''">
                                 {{-- Tag badge: shows edited tag (H) if manually edited --}}
                                 <span x-show="!isEdited({{ $keyJson }})" class="tag-{{ $mainTag }} shrink-0">{{ $mainTag }}</span>
                                 <span x-show="isEdited({{ $keyJson }})" class="tag-H shrink-0">H</span>
                                 {{-- Value: shows edited value if manually edited --}}
-                                <span class="break-words" :class="isEdited({{ $keyJson }}) ? 'text-purple-300' : ''">
+                                <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through' : '']">
                                     <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
                                     <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : '- vide -' }}</span>
                                 </span>
@@ -249,28 +260,35 @@
         {{-- Footer with Save button --}}
         <div class="mt-6 flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700 sticky bottom-4">
             <div class="text-sm text-gray-400">
-                <span x-show="selectionCount > 0">
-                    <span class="text-white font-bold" x-text="selectionCount"></span> modification(s) s&eacute;lectionn&eacute;e(s)
+                <span x-show="totalChanges > 0">
+                    <span x-show="selectionCount > 0">
+                        <span class="text-white font-bold" x-text="selectionCount"></span> modification(s)
+                    </span>
+                    <span x-show="selectionCount > 0 && deleteCount > 0"> &bull; </span>
+                    <span x-show="deleteCount > 0">
+                        <span class="text-red-400 font-bold" x-text="deleteCount"></span> suppression(s)
+                    </span>
                 </span>
-                <span x-show="selectionCount === 0" class="text-gray-500">
-                    Cliquez sur une cellule pour s&eacute;lectionner une valeur. Double-cliquez pour &eacute;diter.
+                <span x-show="totalChanges === 0" class="text-gray-500">
+                    Cliquez sur une cellule pour s&eacute;lectionner. Double-cliquez pour &eacute;diter. <i class="fas fa-trash-alt"></i> pour supprimer.
                 </span>
             </div>
             <div class="flex gap-4 items-center">
-                <button type="button" @click="clearSelections()" x-show="selectionCount > 0"
+                <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
                     <i class="fas fa-times mr-1"></i> Annuler
                 </button>
-                <button type="submit" :disabled="selectionCount === 0"
+                <button type="submit" :disabled="totalChanges === 0"
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
                     <i class="fas fa-save mr-2"></i>
-                    Sauvegarder (<span x-text="selectionCount">0</span>)
+                    Sauvegarder (<span x-text="totalChanges">0</span>)
                 </button>
             </div>
         </div>
 
         {{-- Hidden inputs container --}}
         <div id="selectionsContainer"></div>
+        <div id="deletionsContainer"></div>
     </form>
 
     {{-- Legend --}}
@@ -286,6 +304,7 @@
         <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> &Eacute;dition manuelle</span>
         <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> Diff&eacute;rence</span>
         <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> Nouvelle cl&eacute;</span>
+        <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> Suppression</span>
     </div>
 
     {{-- Edit Modal --}}
@@ -399,6 +418,11 @@
     .selected-manual {
         background-color: rgba(88, 28, 135, 0.5) !important; /* purple-900/50 */
         box-shadow: inset 0 0 0 2px rgb(168 85 247); /* ring-2 ring-purple-500 */
+    }
+    .deleted-cell {
+        background-color: rgba(127, 29, 29, 0.5) !important; /* red-900/50 */
+        box-shadow: inset 0 0 0 2px rgb(239 68 68); /* ring-2 ring-red-500 */
+        cursor: not-allowed;
     }
 </style>
 @endpush

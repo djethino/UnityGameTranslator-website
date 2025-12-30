@@ -1,10 +1,11 @@
 /**
  * Alpine.js component for the merge table view.
- * Handles selection, editing, and tracking of translation modifications.
+ * Handles selection, editing, deletion, and tracking of translation modifications.
  */
 export default function mergeTable() {
     return {
         selections: {},
+        deletions: {},
 
         // Modal state for multiline editing
         editModal: {
@@ -34,12 +35,36 @@ export default function mergeTable() {
             return Object.keys(this.selections).length;
         },
 
+        get deleteCount() {
+            return Object.keys(this.deletions).length;
+        },
+
+        get totalChanges() {
+            return this.selectionCount + this.deleteCount;
+        },
+
         isSelected(key, source) {
             return this.selections[key]?.source === source;
         },
 
         isEdited(key) {
             return this.selections[key]?.source === 'manual';
+        },
+
+        isDeleted(key) {
+            return this.deletions[key] === true;
+        },
+
+        toggleDelete(key) {
+            if (this.deletions[key]) {
+                // Unmark deletion
+                delete this.deletions[key];
+            } else {
+                // Mark for deletion and remove any selection for this key
+                this.deletions[key] = true;
+                delete this.selections[key];
+            }
+            this.updateHiddenInputs();
         },
 
         getEditedValue(key) {
@@ -118,47 +143,65 @@ export default function mergeTable() {
             };
         },
 
-        clearSelections() {
-            if (confirm('Annuler toutes les selections ?')) {
+        clearAll() {
+            if (confirm('Annuler toutes les modifications ?')) {
                 this.selections = {};
+                this.deletions = {};
                 this.updateHiddenInputs();
             }
         },
 
         updateHiddenInputs() {
-            const container = document.getElementById('selectionsContainer');
-            if (!container) return;
+            // Update selections container
+            const selectionsContainer = document.getElementById('selectionsContainer');
+            if (selectionsContainer) {
+                selectionsContainer.innerHTML = '';
 
-            container.innerHTML = '';
+                let i = 0;
+                for (const [key, data] of Object.entries(this.selections)) {
+                    const keyInput = document.createElement('input');
+                    keyInput.type = 'hidden';
+                    keyInput.name = `selections[${i}][key]`;
+                    keyInput.value = key;
 
-            let i = 0;
-            for (const [key, data] of Object.entries(this.selections)) {
-                const keyInput = document.createElement('input');
-                keyInput.type = 'hidden';
-                keyInput.name = `selections[${i}][key]`;
-                keyInput.value = key;
+                    const valueInput = document.createElement('input');
+                    valueInput.type = 'hidden';
+                    valueInput.name = `selections[${i}][value]`;
+                    valueInput.value = data.value;
 
-                const valueInput = document.createElement('input');
-                valueInput.type = 'hidden';
-                valueInput.name = `selections[${i}][value]`;
-                valueInput.value = data.value;
+                    const tagInput = document.createElement('input');
+                    tagInput.type = 'hidden';
+                    tagInput.name = `selections[${i}][tag]`;
+                    tagInput.value = data.tag;
 
-                const tagInput = document.createElement('input');
-                tagInput.type = 'hidden';
-                tagInput.name = `selections[${i}][tag]`;
-                tagInput.value = data.tag;
+                    const sourceInput = document.createElement('input');
+                    sourceInput.type = 'hidden';
+                    sourceInput.name = `selections[${i}][source]`;
+                    sourceInput.value = data.source;
 
-                const sourceInput = document.createElement('input');
-                sourceInput.type = 'hidden';
-                sourceInput.name = `selections[${i}][source]`;
-                sourceInput.value = data.source;
+                    selectionsContainer.appendChild(keyInput);
+                    selectionsContainer.appendChild(valueInput);
+                    selectionsContainer.appendChild(tagInput);
+                    selectionsContainer.appendChild(sourceInput);
 
-                container.appendChild(keyInput);
-                container.appendChild(valueInput);
-                container.appendChild(tagInput);
-                container.appendChild(sourceInput);
+                    i++;
+                }
+            }
 
-                i++;
+            // Update deletions container
+            const deletionsContainer = document.getElementById('deletionsContainer');
+            if (deletionsContainer) {
+                deletionsContainer.innerHTML = '';
+
+                let i = 0;
+                for (const key of Object.keys(this.deletions)) {
+                    const keyInput = document.createElement('input');
+                    keyInput.type = 'hidden';
+                    keyInput.name = `deletions[${i}]`;
+                    keyInput.value = key;
+                    deletionsContainer.appendChild(keyInput);
+                    i++;
+                }
             }
         }
     }

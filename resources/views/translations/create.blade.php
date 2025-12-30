@@ -76,7 +76,7 @@
             <p id="game_error" class="text-red-400 text-sm mt-1 hidden">{{ __('upload.please_select_game') }}</p>
         </div>
 
-        <!-- Game Display (shown when auto-detected) -->
+        <!-- Game Display (shown when UUID exists - read only) -->
         <div id="gameDisplay" class="mb-6 hidden">
             <label class="block text-sm font-medium text-gray-300 mb-2">
                 <span class="text-lg">2.</span> {{ __('upload.game') }}
@@ -85,12 +85,34 @@
                 <img id="display_game_image" src="" class="w-16 h-20 object-cover rounded" onerror="this.style.display='none'">
                 <div>
                     <p id="display_game_name" class="font-semibold text-lg"></p>
-                    <p class="text-sm text-green-400"><i class="fas fa-check mr-1"></i> {{ __('upload.auto_detected') }}</p>
+                    <p id="display_main_owner" class="text-sm text-gray-400"></p>
+                    <p class="text-sm text-green-400 mt-1"><i class="fas fa-check mr-1"></i> {{ __('upload.auto_detected') }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Step 3: Languages -->
+        <!-- Languages Display (shown when UUID exists - read only) -->
+        <div id="languageDisplay" class="mb-6 hidden">
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+                <span class="text-lg">3.</span> {{ __('upload.languages') }}
+            </label>
+            <div class="bg-gray-700 rounded-lg p-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex-1">
+                        <span class="text-xs text-gray-400">{{ __('upload.source_language') }}</span>
+                        <p id="display_source_lang" class="font-medium"></p>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500"></i>
+                    <div class="flex-1">
+                        <span class="text-xs text-gray-400">{{ __('upload.target_language') }}</span>
+                        <p id="display_target_lang" class="font-medium"></p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400 mt-2"><i class="fas fa-lock mr-1"></i> {{ __('upload.inherited_from_original') }}</p>
+            </div>
+        </div>
+
+        <!-- Step 3: Languages (for NEW translations only) -->
         <div id="languageSection" class="mb-6 hidden">
             <label class="block text-sm font-medium text-gray-300 mb-2">
                 <span class="text-lg">3.</span> {{ __('upload.languages') }}
@@ -177,6 +199,15 @@
         <!-- Hidden field for parent_id (fork) -->
         <input type="hidden" name="parent_id" id="parent_id" value="">
 
+        <!-- Review Changes Button (shown for UPDATE only) -->
+        <div id="reviewSection" class="mb-4 hidden">
+            <button type="button" id="reviewBtn"
+                class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fas fa-code-compare"></i> {{ __('upload.review_changes') }}
+            </button>
+            <p class="text-xs text-gray-400 mt-2 text-center">{{ __('upload.review_changes_desc') }}</p>
+        </div>
+
         <!-- Submit -->
         <button type="submit" id="submitBtn" disabled
             class="w-full bg-gray-600 text-gray-400 font-semibold py-3 rounded-lg transition cursor-not-allowed">
@@ -215,6 +246,12 @@ const parentId = document.getElementById('parent_id');
 let fileSelected = false;
 let gameSelected = false;
 let isAutoDetected = false;
+let fileGameMetadata = null; // Store _game from file
+let fileContent = null; // Store raw file content for review
+let fileUuid = null; // Store UUID for review navigation
+let detectedTranslationId = null; // Store user's translation ID (for merge)
+let mainTranslationId = null; // Store main translation ID (for branch comparison)
+let isMainOwner = false; // Is user the main translation owner?
 
 // Drag & Drop
 dropZone.addEventListener('click', () => fileInput.click());
@@ -251,7 +288,7 @@ async function handleFileSelect(file) {
     fileInfo.classList.remove('hidden');
     fileName.textContent = file.name;
 
-    // Parse JSON to get line count and UUID
+    // Parse JSON to get line count, UUID, and game metadata
     try {
         const content = await file.text();
         const json = JSON.parse(content);
@@ -261,7 +298,14 @@ async function handleFileSelect(file) {
             return;
         }
 
-        const lines = Object.keys(json).filter(k => k !== '_uuid').length;
+        // Store content for review feature
+        fileContent = content;
+        fileUuid = json._uuid;
+
+        // Extract _game metadata for auto-detection
+        fileGameMetadata = json._game || null;
+
+        const lines = Object.keys(json).filter(k => !k.startsWith('_')).length;
         lineCount.textContent = `${lines.toLocaleString()} translation lines`;
 
         fileSelected = true;
@@ -303,39 +347,78 @@ function showAutoDetected(data) {
     isAutoDetected = true;
     gameSelected = true;
 
-    const typeLabel = data.type === 'update'
-        ? '<span class="bg-blue-600 px-2 py-1 rounded text-sm"><i class="fas fa-sync mr-1"></i> Update</span> You are updating your existing translation'
-        : '<span class="bg-purple-600 px-2 py-1 rounded text-sm"><i class="fas fa-code-branch mr-1"></i> Fork</span> You are forking ' + data.uploader + "'s translation";
+    // Store translation IDs for review feature
+    detectedTranslationId = data.translation_id || null;
+    mainTranslationId = data.main_translation_id || null;
+    isMainOwner = data.is_main_owner || false;
+
+    // Build detection message based on type
+    let detectionMessage;
+    const reviewSection = document.getElementById('reviewSection');
+
+    if (data.type === 'update') {
+        const updateLabel = isMainOwner
+            ? '{{ __("upload.update_your_translation") }}'
+            : '{{ __("upload.update_your_branch") }}';
+        const updateDesc = isMainOwner
+            ? '{{ __("upload.update_description") }}'
+            : '{{ __("upload.update_branch_description") }}';
+
+        detectionMessage = `
+            <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                <p class="text-blue-300 mb-2">
+                    <span class="bg-blue-600 px-2 py-1 rounded text-sm mr-2"><i class="fas fa-sync mr-1"></i> Update</span>
+                    ${updateLabel}
+                </p>
+                <p class="text-gray-400 text-sm">${updateDesc}</p>
+            </div>
+        `;
+        // Show review button for UPDATE (user can merge their own translation)
+        reviewSection.classList.remove('hidden');
+    } else {
+        detectionMessage = `
+            <div class="bg-purple-900/30 border border-purple-700 rounded-lg p-4">
+                <p class="text-purple-300 mb-2">
+                    <span class="bg-purple-600 px-2 py-1 rounded text-sm mr-2"><i class="fas fa-code-branch mr-1"></i> Branch</span>
+                    {{ __('upload.become_branch') }}
+                </p>
+                <p class="text-gray-400 text-sm">{{ __('upload.branch_description') }}</p>
+            </div>
+        `;
+        // Hide review button for new branches (they have no online version yet)
+        reviewSection.classList.add('hidden');
+    }
 
     detectionResult.classList.remove('hidden');
-    detectionResult.innerHTML = `
-        <div class="bg-green-900/30 border border-green-700 rounded-lg p-4">
-            <p class="text-green-300 mb-2"><i class="fas fa-magic mr-2"></i> Translation detected!</p>
-            <p class="text-gray-300">${typeLabel}</p>
-        </div>
-    `;
+    detectionResult.innerHTML = detectionMessage;
 
     // Set game info
     gameId.value = data.game.id;
     gameName.value = data.game.name;
     document.getElementById('display_game_name').textContent = data.game.name;
+    document.getElementById('display_main_owner').innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> Main by: <strong>${data.uploader}</strong>`;
     if (data.game.image_url) {
         document.getElementById('display_game_image').src = data.game.image_url;
     }
 
-    // Set languages
+    // Set languages (hidden inputs for form submission)
     sourceLang.value = data.source_language;
     targetLang.value = data.target_language;
+
+    // Display languages as read-only
+    document.getElementById('display_source_lang').textContent = data.source_language;
+    document.getElementById('display_target_lang').textContent = data.target_language;
 
     // Set parent_id for forks
     if (data.type === 'fork') {
         parentId.value = data.original_id;
     }
 
-    // Show sections
+    // Show read-only sections (game/language display), hide selection sections
     gameDisplay.classList.remove('hidden');
     gameSection.classList.add('hidden');
-    languageSection.classList.remove('hidden');
+    document.getElementById('languageDisplay').classList.remove('hidden');
+    languageSection.classList.add('hidden');
     document.getElementById('typeSection').classList.remove('hidden');
     statusSection.classList.remove('hidden');
     document.getElementById('notesSection').classList.remove('hidden');
@@ -343,23 +426,96 @@ function showAutoDetected(data) {
     updateSubmitButton();
 }
 
-function showNewTranslation() {
+async function showNewTranslation() {
     isAutoDetected = false;
 
-    detectionResult.classList.remove('hidden');
-    detectionResult.innerHTML = `
-        <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
-            <p class="text-blue-300"><i class="fas fa-plus-circle mr-2"></i> New translation! Please select the game below.</p>
-        </div>
-    `;
-
-    // Show game search
+    // Show game search and language selection (editable for NEW translations)
     gameDisplay.classList.add('hidden');
     gameSection.classList.remove('hidden');
+    document.getElementById('languageDisplay').classList.add('hidden');
     languageSection.classList.remove('hidden');
     document.getElementById('typeSection').classList.remove('hidden');
     statusSection.classList.remove('hidden');
     document.getElementById('notesSection').classList.remove('hidden');
+
+    // If we have _game metadata, try to auto-detect the game
+    if (fileGameMetadata) {
+        detectionResult.classList.remove('hidden');
+        detectionResult.innerHTML = `
+            <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                <p class="text-blue-300"><i class="fas fa-search mr-2"></i> New translation! Searching for game "${fileGameMetadata.name || 'Unknown'}"...</p>
+            </div>
+        `;
+
+        try {
+            // Try steam_id first (more precise), fallback to name
+            let searchUrl = '/api/games/search-external?';
+            if (fileGameMetadata.steam_id) {
+                searchUrl += 'steam_id=' + encodeURIComponent(fileGameMetadata.steam_id);
+            } else if (fileGameMetadata.name) {
+                searchUrl += 'q=' + encodeURIComponent(fileGameMetadata.name);
+            }
+
+            const res = await fetch(searchUrl);
+            const games = await res.json();
+
+            if (games.length > 0) {
+                const game = games[0];
+
+                // Auto-select the game
+                gameSearch.value = game.name;
+                gameName.value = game.name;
+                gameSource.value = game.source || '';
+                gameExternalId.value = game.id || '';
+                gameImageUrl.value = game.image_url || '';
+
+                if (game.local_id) {
+                    gameId.value = game.local_id;
+                }
+
+                if (game.image_url) {
+                    gameImageThumb.src = game.image_url;
+                    gameImagePreview.classList.remove('hidden');
+                    gameSearchIcon.classList.add('hidden');
+                }
+
+                gameSelected = true;
+
+                // Update detection message
+                const autoLabel = game.auto_detected ? ' (auto-detected from file)' : '';
+                detectionResult.innerHTML = `
+                    <div class="bg-green-900/30 border border-green-700 rounded-lg p-4">
+                        <p class="text-green-300"><i class="fas fa-check-circle mr-2"></i> New translation! Game found: <strong>${game.name}</strong>${autoLabel}</p>
+                        <p class="text-gray-400 text-sm mt-1">You can change the game selection below if needed.</p>
+                    </div>
+                `;
+            } else {
+                // No game found - show manual selection
+                if (fileGameMetadata.name) {
+                    gameSearch.value = fileGameMetadata.name;
+                }
+                detectionResult.innerHTML = `
+                    <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4">
+                        <p class="text-yellow-300"><i class="fas fa-exclamation-triangle mr-2"></i> New translation! Game "${fileGameMetadata.name || 'Unknown'}" not found. Please select it manually.</p>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            console.error('Game search error:', e);
+            detectionResult.innerHTML = `
+                <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                    <p class="text-blue-300"><i class="fas fa-plus-circle mr-2"></i> New translation! Please select the game below.</p>
+                </div>
+            `;
+        }
+    } else {
+        detectionResult.classList.remove('hidden');
+        detectionResult.innerHTML = `
+            <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                <p class="text-blue-300"><i class="fas fa-plus-circle mr-2"></i> New translation! Please select the game below.</p>
+            </div>
+        `;
+    }
 
     updateSubmitButton();
 }
@@ -495,6 +651,23 @@ function updateSubmitButton() {
 // Listen for language changes
 sourceLang.addEventListener('change', updateSubmitButton);
 targetLang.addEventListener('change', updateSubmitButton);
+
+// Review button click handler - navigate to merge preview
+document.getElementById('reviewBtn').addEventListener('click', () => {
+    if (!fileContent || !detectedTranslationId) {
+        console.error('Missing file content or translation ID for review');
+        return;
+    }
+
+    // Store local file content in sessionStorage for the merge preview page
+    sessionStorage.setItem('merge_local_content', fileContent);
+    sessionStorage.setItem('merge_translation_id', String(detectedTranslationId));
+    sessionStorage.setItem('merge_main_translation_id', String(mainTranslationId || ''));
+    sessionStorage.setItem('merge_is_main_owner', isMainOwner ? '1' : '0');
+
+    // Navigate to merge preview page
+    window.location.href = '/translations/' + detectedTranslationId + '/merge-preview';
+});
 
 // Form validation
 document.getElementById('uploadForm').addEventListener('submit', (e) => {

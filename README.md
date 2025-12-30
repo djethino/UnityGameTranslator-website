@@ -8,20 +8,21 @@ Community platform for sharing Unity game translation files with API for mod syn
 
 ### Web Platform
 - **Browse translations** by game, language, and popularity
-- **Upload translation files** from the Unity mod
+- **Upload translation files** with automatic game detection
 - **Fork translations** to improve existing work
+- **Merge contributions** for translation owners to consolidate branches
 - **Vote system** to highlight quality translations
 - **Report system** for moderation
-- **Automatic fork detection** via file UUID lineage
-- **Multi-language UI** (12 languages with flag emojis for 112 translation languages)
-- **Modern gamer UI** - organic animated background, glassmorphism cards, responsive design
+- **Profile management** with GDPR data export
+- **Multi-language UI** (12 languages)
+- **Admin dashboard** with analytics and moderation tools
 
 ### API for Unity Mod
 - **Search translations** by Steam ID, game name, or language
 - **Download translations** with ETag caching
 - **Check for updates** without downloading full file
 - **Upload translations** with authentication
-- **Device Flow authentication** (like Netflix/Spotify)
+- **Device Flow authentication** (enter code on website to link mod)
 - **Rate limiting** per endpoint
 
 ## Tech Stack
@@ -29,8 +30,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Framework:** Laravel 12
 - **Database:** SQLite (dev) / MySQL (prod)
 - **Auth:** Laravel Socialite (Steam, Epic Games, Google, GitHub, Discord, Twitch)
-- **Frontend:** Tailwind CSS 4, Alpine.js
-- **I18n:** 12 languages with language flags (emoji)
+- **Frontend:** Tailwind CSS 4, Alpine.js, Font Awesome
 
 ## Requirements
 
@@ -42,23 +42,20 @@ Community platform for sharing Unity game translation files with API for mod syn
 ## Installation
 
 ```bash
-# Clone and install
-git clone https://github.com/djethino/UnityGameTranslator-website.git
-cd UnityGameTranslator-website
+composer setup
+```
 
-# Install dependencies
+The `composer setup` command handles everything: dependencies, environment file, database migration, and asset building.
+
+### Manual installation
+
+```bash
 composer install
 npm install
-
-# Setup environment
 cp .env.example .env
 php artisan key:generate
-
-# Create database
 touch database/database.sqlite
 php artisan migrate
-
-# Build assets
 npm run build
 ```
 
@@ -69,40 +66,40 @@ npm run build
 Configure in `.env`:
 
 ```env
-# Steam (Web API key, no client_id)
-STEAM_CLIENT_SECRET=your_web_api_key
-
-# Epic Games
-EPICGAMES_CLIENT_ID=your_client_id
-EPICGAMES_CLIENT_SECRET=your_client_secret
-
 # Google
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
 # GitHub
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
 
 # Discord
-DISCORD_CLIENT_ID=your_client_id
-DISCORD_CLIENT_SECRET=your_client_secret
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
 
 # Twitch
-TWITCH_CLIENT_ID=your_client_id
-TWITCH_CLIENT_SECRET=your_client_secret
+TWITCH_CLIENT_ID=
+TWITCH_CLIENT_SECRET=
+
+# Steam (Web API key only)
+STEAM_API_KEY=
+
+# Epic Games
+EPICGAMES_CLIENT_ID=
+EPICGAMES_CLIENT_SECRET=
 ```
 
 ### Where to get credentials
 
 | Provider | Console |
 |----------|---------|
-| Steam | [Steam Partner Network](https://partner.steamgames.com/) → Web API key |
-| Epic Games | [Epic Games Developer Portal](https://dev.epicgames.com/portal) |
 | Google | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | GitHub | [GitHub Developer Settings](https://github.com/settings/developers) |
 | Discord | [Discord Developer Portal](https://discord.com/developers/applications) |
 | Twitch | [Twitch Developer Console](https://dev.twitch.tv/console/apps) |
+| Steam | [Steam Web API Key](https://steamcommunity.com/dev/apikey) |
+| Epic Games | [Epic Games Developer Portal](https://dev.epicgames.com/portal) |
 
 ## Development
 
@@ -130,31 +127,21 @@ php artisan config:clear
 php artisan migrate:fresh
 ```
 
-## Contributing
-
-API documentation and project structure details are available in the codebase for contributors.
-
 ## Related
 
-- **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
+- **Unity Mod:** See the `UnityGameTranslator/` directory in this repository
 
 ## Acknowledgments
 
-This project is built with amazing open-source technologies:
-
 ### Backend
-- **[Laravel](https://laravel.com/)** - The PHP framework for web artisans
+- **[Laravel](https://laravel.com/)** - PHP framework
 - **[Laravel Socialite](https://laravel.com/docs/socialite)** - OAuth authentication
+- **[SocialiteProviders](https://socialiteproviders.com/)** - Community OAuth providers
 
 ### Frontend
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework
 - **[Font Awesome](https://fontawesome.com/)** - Icon library
-
-### OAuth Providers
-- **[SocialiteProviders](https://socialiteproviders.com/)** - Community Socialite providers for Steam, Discord, Twitch, Epic Games
-
-Special thanks to the Laravel and open-source community.
 
 ## License
 

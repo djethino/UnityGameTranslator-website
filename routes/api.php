@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Api\GameController;
+use App\Http\Controllers\Api\MergePreviewController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +68,10 @@ Route::prefix('v1')->group(function () {
 
         // Upload translation
         Route::post('translations', [TranslationController::class, 'store'])
+            ->middleware('throttle:10,1');
+
+        // Initialize merge preview (mod sends local content, gets URL to open)
+        Route::post('merge-preview/init', [MergePreviewController::class, 'init'])
             ->middleware('throttle:10,1');
 
         // Revoke token

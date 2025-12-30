@@ -180,40 +180,36 @@ class GameController extends Controller
     }
 
     /**
-     * Search external game APIs (IGDB + RAWG fallback)
+     * Search external game APIs
+     * Full flow: local DB → Steam (if steam_id) → IGDB → RAWG
+     * Supports: ?q=name or ?steam_id=xxx for exact lookup
      */
     public function searchExternal(Request $request, GameSearchService $gameService)
     {
+        // Steam ID exact lookup (from mod's _game metadata)
+        if ($request->filled('steam_id')) {
+            $steamId = $request->get('steam_id');
+
+            // Use findBySteamId: local DB → Steam API
+            $game = $gameService->findBySteamId($steamId);
+            if ($game) {
+                $game['auto_detected'] = true;
+                return response()->json([$game]);
+            }
+
+            // Not found by steam_id
+            return response()->json([]);
+        }
+
+        // Name search: use searchFull for complete flow (local → Steam → IGDB → RAWG)
         $query = $request->get('q', '');
 
         if (strlen($query) < 2) {
             return response()->json([]);
         }
 
-        // First check if we have matching games in our database
-        $search = $this->escapeLike($query);
-        $localGames = Game::where('name', 'like', '%' . $search . '%')
-            ->limit(5)
-            ->get()
-            ->map(fn($game) => [
-                'id' => $game->igdb_id ?? $game->rawg_id ?? $game->id,
-                'name' => $game['name'],
-                'image_url' => $game['image_url'],
-                'source' => $game->igdb_id ? 'igdb' : ($game->rawg_id ? 'rawg' : 'local'),
-                'local_id' => $game->id,
-            ]);
-
-        // Search external APIs
-        $externalGames = collect($gameService->search($query, 10));
-
-        // Merge and deduplicate (prefer local games)
-        $localNames = $localGames->pluck('name')->map(fn($n) => strtolower($n))->toArray();
-
-        $filteredExternal = $externalGames->filter(function ($game) use ($localNames) {
-            return !in_array(strtolower($game['name']), $localNames);
-        });
-
-        $results = $localGames->concat($filteredExternal)->take(10);
+        // searchFull handles: local DB first, then external APIs, with deduplication
+        $results = $gameService->searchFull($query, null, 10);
 
         return response()->json($results);
     }

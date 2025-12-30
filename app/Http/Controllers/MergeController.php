@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Translation;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 
 class MergeController extends Controller
 {
+    public function __construct(
+        private TranslationService $translationService
+    ) {}
+
     /**
      * Show the merge view for a Main translation.
      * Only the Main owner can access this page.
@@ -99,14 +104,21 @@ class MergeController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        // Validate selections
+        // Validate selections and deletions
         $request->validate([
-            'selections' => 'required|array|min:1',
+            'selections' => 'nullable|array',
             'selections.*.key' => 'required|string',
             'selections.*.value' => 'present|string',
             'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string',
+            'deletions' => 'nullable|array',
+            'deletions.*' => 'string',
         ]);
+
+        // Must have at least one change
+        if (empty($request->selections) && empty($request->deletions)) {
+            return back()->withErrors(['error' => 'No changes to apply.']);
+        }
 
         // Load current Main content
         $path = $main->getSafeFilePath();
@@ -114,35 +126,55 @@ class MergeController extends Controller
             return back()->withErrors(['error' => 'Translation file not found.']);
         }
 
-        $content = json_decode(file_get_contents($path), true);
+        $rawContent = file_get_contents($path);
+        // Normalize line endings in file content before parsing
+        $rawContent = $this->translationService->normalizeContent($rawContent);
+        $content = json_decode($rawContent, true);
         if (!is_array($content)) {
             return back()->withErrors(['error' => 'Invalid translation file format.']);
         }
 
         // Apply modifications
         $modifiedCount = 0;
-        foreach ($request->selections as $sel) {
-            $key = $sel['key'];
-            $value = $sel['value'];
-            $tag = $sel['tag'];
-            $source = $sel['source'];
+        if (!empty($request->selections)) {
+            foreach ($request->selections as $sel) {
+                // Normalize line endings: \r\n -> \n (forms may convert line endings)
+                $key = $this->translationService->normalizeContent($sel['key']);
+                $value = $this->translationService->normalizeContent($sel['value']);
+                $tag = $sel['tag'];
+                $source = $sel['source'];
 
-            // Tag rules:
-            // - M (Mod UI) and S (Skipped) are preserved as-is (never changed)
-            // - If selecting from branch and tag is A → becomes V (validated by human)
-            // - If manual edit → becomes H
-            // - H and V stay the same
-            if ($tag !== 'M' && $tag !== 'S') {
-                if (str_starts_with($source, 'branch_') && $tag === 'A') {
-                    $tag = 'V';
+                // Tag rules:
+                // - M (Mod UI) and S (Skipped) are preserved as-is (never changed)
+                // - Manual edit → becomes H
+                // - Tag A (from Main or branch) → becomes V (human validated this AI translation)
+                // - Tag H and V stay the same (already human/validated)
+                if ($tag !== 'M' && $tag !== 'S') {
+                    if ($source === 'manual') {
+                        $tag = 'H';
+                    } elseif ($tag === 'A') {
+                        $tag = 'V';
+                    }
+                    // H and V from branches keep their original tag
                 }
-                if ($source === 'manual') {
-                    $tag = 'H';
+
+                $content[$key] = ['v' => $value, 't' => $tag];
+                $modifiedCount++;
+            }
+        }
+
+        // Apply deletions
+        $deletedCount = 0;
+        if (!empty($request->deletions)) {
+            foreach ($request->deletions as $key) {
+                // Normalize line endings: \r\n -> \n
+                $key = $this->translationService->normalizeContent($key);
+                // Only delete non-metadata keys that exist
+                if (!str_starts_with($key, '_') && isset($content[$key])) {
+                    unset($content[$key]);
+                    $deletedCount++;
                 }
             }
-
-            $content[$key] = ['v' => $value, 't' => $tag];
-            $modifiedCount++;
         }
 
         // Save the file
@@ -161,9 +193,19 @@ class MergeController extends Controller
         ));
         $main->save();
 
+        // Build success message
+        $messages = [];
+        if ($modifiedCount > 0) {
+            $messages[] = "{$modifiedCount} modification(s)";
+        }
+        if ($deletedCount > 0) {
+            $messages[] = "{$deletedCount} suppression(s)";
+        }
+        $successMessage = implode(' et ', $messages) . ' appliquée(s).';
+
         return redirect()
             ->route('translations.merge', ['uuid' => $uuid])
-            ->with('success', "{$modifiedCount} modification(s) appliquée(s).");
+            ->with('success', $successMessage);
     }
 
     /**
@@ -176,7 +218,10 @@ class MergeController extends Controller
             return [];
         }
 
-        $content = json_decode(file_get_contents($path), true);
+        $rawContent = file_get_contents($path);
+        // Normalize line endings to prevent key mismatches
+        $rawContent = $this->translationService->normalizeContent($rawContent);
+        $content = json_decode($rawContent, true);
         if (!is_array($content)) {
             return [];
         }

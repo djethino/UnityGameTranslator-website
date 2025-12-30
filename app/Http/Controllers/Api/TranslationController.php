@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Translation;
 use App\Services\GameSearchService;
+use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -337,210 +338,94 @@ class TranslationController extends Controller
      *
      * POST /api/v1/translations
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, TranslationService $service): JsonResponse
     {
+        $languages = config('languages');
+
         $request->validate([
             'steam_id' => 'nullable|required_without:game_name|string',
             'game_name' => 'nullable|required_without:steam_id|string|max:255',
-            'source_language' => 'required|string|max:50',
-            'target_language' => 'required|string|max:50',
+            'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
+            'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'type' => 'required|in:ai,human,ai_corrected',
             'status' => 'required|in:in_progress,complete',
             'content' => 'required|string|min:2',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Parse and validate JSON content
-        // Depth 3: root object → translation key → value object {v, t}
-        $json = json_decode($request->content, true, 3);
+        // Parse and validate content (includes normalization)
+        try {
+            $parsed = $service->parseAndValidate($request->content);
+        } catch (\InvalidArgumentException $e) {
+            $message = $e->getMessage();
+            // Check if it's a JSON-encoded error with details
+            $decoded = json_decode($message, true);
+            if (is_array($decoded)) {
+                return response()->json($decoded, 422);
+            }
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json([
-                'error' => 'Invalid JSON content: ' . json_last_error_msg(),
-            ], 422);
+            return response()->json(['error' => $message], 422);
         }
 
-        if (!is_array($json)) {
-            return response()->json([
-                'error' => 'Content must be a JSON object',
-            ], 422);
-        }
-
-        // UUID is required
-        if (!isset($json['_uuid']) || !is_string($json['_uuid'])) {
-            return response()->json([
-                'error' => 'Missing _uuid in translation file',
-            ], 422);
-        }
-
-        $fileUuid = $json['_uuid'];
-
-        // Validate translation entries format: {v: string, t: H|V|A|M|S}
-        $validTags = ['H', 'V', 'A', 'M', 'S'];
-        $invalidEntries = [];
-        $lineCount = 0;
-
-        foreach ($json as $key => $value) {
-            // Skip metadata keys
-            if (str_starts_with($key, '_')) {
-                continue;
-            }
-
-            $lineCount++;
-
-            // Must be array with 'v' and 't' keys
-            if (!is_array($value)) {
-                $invalidEntries[] = "Key '{$key}': expected {v, t} object, got " . gettype($value);
-                continue;
-            }
-
-            if (!array_key_exists('v', $value)) {
-                $invalidEntries[] = "Key '{$key}': missing 'v' (value) field";
-                continue;
-            }
-
-            if (!array_key_exists('t', $value)) {
-                $invalidEntries[] = "Key '{$key}': missing 't' (tag) field";
-                continue;
-            }
-
-            // 'v' can be string (including empty) or null
-            if (!is_string($value['v']) && $value['v'] !== null) {
-                $invalidEntries[] = "Key '{$key}': 'v' must be a string or null, got " . gettype($value['v']);
-            }
-
-            if (!is_string($value['t']) || !in_array($value['t'], $validTags, true)) {
-                $invalidEntries[] = "Key '{$key}': 't' must be one of H, V, A, M, S, got '{$value['t']}'";
-            }
-        }
-
-        // Return validation errors (limit to first 10 for readability)
-        if (!empty($invalidEntries)) {
-            $errorCount = count($invalidEntries);
-            $sample = array_slice($invalidEntries, 0, 10);
-
-            return response()->json([
-                'error' => "Invalid translation format: {$errorCount} entries have errors",
-                'details' => $sample,
-                'hint' => 'Each entry must be: {"key": {"v": "value" or null, "t": "H|V|A|M|S"}}',
-            ], 422);
-        }
-
-        // Extract HVA tag counts from new format
-        $tagCounts = Translation::extractTagCounts($json);
+        $fileUuid = $parsed['uuid'];
+        $userId = $request->user()->id;
 
         // Check for existing translation with same UUID (UPDATE case)
-        $existingTranslation = Translation::where('file_uuid', $fileUuid)
-            ->where('user_id', $request->user()->id)
-            ->first();
+        $existingTranslation = $service->findUserTranslation($fileUuid, $userId);
 
-        // Check for branch case (different user with same UUID)
-        $originalTranslation = null;
-        if (!$existingTranslation) {
-            $originalTranslation = Translation::where('file_uuid', $fileUuid)
-                ->where('visibility', 'public')
-                ->orderBy('created_at', 'asc')
-                ->first();
-        }
+        // Determine ownership and visibility
+        $ownership = $service->determineOwnership($fileUuid, $userId);
+        $originalTranslation = $existingTranslation ? null : $ownership['original'];
+        $visibility = $existingTranslation ? $existingTranslation->visibility : $ownership['visibility'];
+        $parentId = $existingTranslation ? $existingTranslation->parent_id : $ownership['parent_id'];
 
-        // Determine visibility: branch if contributing to existing Main
-        $visibility = 'public'; // Default for NEW and UPDATE
-        if ($originalTranslation && !$existingTranslation) {
-            // Same UUID, different user = BRANCH (private contributor)
-            $visibility = 'branch';
-        }
-
-        // Determine final languages:
-        // - UPDATE: Keep existing languages (ignore request)
-        // - BRANCH: Use Main's languages (ignore request)
-        // - NEW: Validate that languages are not "auto"
-        $sourceLanguage = $request->source_language;
-        $targetLanguage = $request->target_language;
-
-        if ($existingTranslation) {
-            // UPDATE: Use existing languages
-            $sourceLanguage = $existingTranslation->source_language;
-            $targetLanguage = $existingTranslation->target_language;
-        } elseif ($originalTranslation) {
-            // BRANCH: Use Main's languages
-            $sourceLanguage = $originalTranslation->source_language;
-            $targetLanguage = $originalTranslation->target_language;
-        } else {
-            // NEW: Validate languages are not "auto"
-            if (strtolower($sourceLanguage) === 'auto' || strtolower($targetLanguage) === 'auto') {
-                return response()->json([
-                    'error' => 'Language cannot be "auto" for new translations. Please select specific languages.',
-                ], 422);
-            }
-
-            // Validate languages are different
-            if ($sourceLanguage === $targetLanguage) {
-                return response()->json([
-                    'error' => 'Source and target languages must be different.',
-                ], 422);
-            }
+        // Resolve languages
+        try {
+            $languages = $service->resolveLanguages(
+                $request->source_language,
+                $request->target_language,
+                $existingTranslation,
+                $originalTranslation
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
         }
 
         // Find or create game
         $game = $this->findOrCreateGame($request);
-
         if (!$game) {
-            return response()->json([
-                'error' => 'Could not find or create game',
-            ], 422);
+            return response()->json(['error' => 'Could not find or create game'], 422);
         }
 
-        // Compute normalized hash (same algorithm as Translation::computeHash())
-        // Filter to only include translations + _uuid, sort keys, then hash
-        $hashData = [];
-        foreach ($json as $key => $value) {
-            if ($key === '_uuid' || !str_starts_with($key, '_')) {
-                $hashData[$key] = $value;
-            }
-        }
-        ksort($hashData);
-        $normalizedContent = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $fileHash = hash('sha256', $normalizedContent);
+        // Store file
+        $fileName = $service->storeFile($parsed['normalized_content'], $fileUuid);
 
         if ($existingTranslation) {
-            // Same user with same UUID = UPDATE existing translation
-            $oldFilePath = $existingTranslation->file_path;
+            // UPDATE: Delete old file and update record
+            $service->deleteFile($existingTranslation->file_path);
 
-            // Store new file
-            $fileName = 'translations/' . uniqid() . '_' . $fileUuid . '.json';
-            Storage::disk('public')->put($fileName, $request->content);
-
-            // Delete old file
-            if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
-                Storage::disk('public')->delete($oldFilePath);
-            }
-
-            // Update translation (keep original languages and visibility)
             $existingTranslation->update([
                 'game_id' => $game->id,
-                'line_count' => $lineCount,
-                'human_count' => $tagCounts['human_count'],
-                'validated_count' => $tagCounts['validated_count'],
-                'ai_count' => $tagCounts['ai_count'],
+                'line_count' => $parsed['line_count'],
+                'human_count' => $parsed['tag_counts']['human_count'],
+                'validated_count' => $parsed['tag_counts']['validated_count'],
+                'ai_count' => $parsed['tag_counts']['ai_count'],
                 'status' => $request->status,
                 'type' => $request->type,
                 'notes' => $request->notes,
                 'file_path' => $fileName,
-                'file_hash' => $fileHash,
+                'file_hash' => $parsed['file_hash'],
             ]);
 
-            // Log translation update
-            AuditLog::logTranslationUpload($request->user()->id, $existingTranslation->id, [
+            AuditLog::logTranslationUpload($userId, $existingTranslation->id, [
                 'game_id' => $game->id,
                 'game_name' => $game->name,
-                'source_language' => $sourceLanguage,
-                'target_language' => $targetLanguage,
-                'line_count' => $lineCount,
+                'source_language' => $languages['source'],
+                'target_language' => $languages['target'],
+                'line_count' => $parsed['line_count'],
                 'type' => $request->type,
                 'is_update' => true,
             ], $request);
-
-            $role = $existingTranslation->visibility === 'public' ? 'main' : 'branch';
 
             return response()->json([
                 'success' => true,
@@ -548,51 +433,41 @@ class TranslationController extends Controller
                     'id' => $existingTranslation->id,
                     'file_hash' => $existingTranslation->file_hash,
                     'line_count' => $existingTranslation->line_count,
-                    'role' => $role,
+                    'role' => $service->getRole($existingTranslation->visibility),
                     'web_url' => url("/games/{$game->slug}"),
                 ],
             ], 200);
         }
 
-        // NEW or FORK: Create new translation
-        $parentId = $originalTranslation?->id;
-
-        // Store file
-        $fileName = 'translations/' . uniqid() . '_' . $fileUuid . '.json';
-        Storage::disk('public')->put($fileName, $request->content);
-
-        // Create new translation
+        // NEW or BRANCH: Create new translation
         $translation = Translation::create([
             'game_id' => $game->id,
-            'user_id' => $request->user()->id,
+            'user_id' => $userId,
             'parent_id' => $parentId,
-            'source_language' => $sourceLanguage,
-            'target_language' => $targetLanguage,
-            'line_count' => $lineCount,
-            'human_count' => $tagCounts['human_count'],
-            'validated_count' => $tagCounts['validated_count'],
-            'ai_count' => $tagCounts['ai_count'],
+            'source_language' => $languages['source'],
+            'target_language' => $languages['target'],
+            'line_count' => $parsed['line_count'],
+            'human_count' => $parsed['tag_counts']['human_count'],
+            'validated_count' => $parsed['tag_counts']['validated_count'],
+            'ai_count' => $parsed['tag_counts']['ai_count'],
             'status' => $request->status,
             'type' => $request->type,
             'visibility' => $visibility,
             'notes' => $request->notes,
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
-            'file_hash' => $fileHash,
+            'file_hash' => $parsed['file_hash'],
         ]);
 
-        // Log translation upload
-        AuditLog::logTranslationUpload($request->user()->id, $translation->id, [
+        AuditLog::logTranslationUpload($userId, $translation->id, [
             'game_id' => $game->id,
             'game_name' => $game->name,
-            'source_language' => $sourceLanguage,
-            'target_language' => $targetLanguage,
-            'line_count' => $lineCount,
+            'source_language' => $languages['source'],
+            'target_language' => $languages['target'],
+            'line_count' => $parsed['line_count'],
             'type' => $request->type,
             'is_fork' => $parentId !== null,
         ], $request);
-
-        $role = $visibility === 'public' ? 'main' : 'branch';
 
         return response()->json([
             'success' => true,
@@ -600,7 +475,7 @@ class TranslationController extends Controller
                 'id' => $translation->id,
                 'file_hash' => $translation->file_hash,
                 'line_count' => $translation->line_count,
-                'role' => $role,
+                'role' => $service->getRole($visibility),
                 'web_url' => url("/games/{$game->slug}"),
             ],
         ], 201);
