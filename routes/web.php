@@ -73,6 +73,9 @@ Route::get('/api/games/search-external', [GameController::class, 'searchExternal
 // Translations - public
 Route::get('/download/{translation}', [TranslationController::class, 'download'])->name('translations.download');
 
+// Merge preview - supports token-based auth from mod (controller handles auth)
+Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
+
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::get('/upload', [TranslationController::class, 'create'])->name('translations.create');
@@ -84,7 +87,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
     Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
     Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
-    Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
     Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
 
     // Profile

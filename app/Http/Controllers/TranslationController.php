@@ -513,11 +513,42 @@ class TranslationController extends Controller
      */
     public function mergePreview(Request $request, Translation $translation)
     {
-        $user = auth()->user();
+        $tokenContent = null;
+        $token = $request->query('token');
 
-        // Verify user owns this translation
-        if ($translation->user_id !== $user->id) {
-            abort(403, 'You can only merge your own translations.');
+        // Mode 1: Token-based auth (from mod)
+        // Token provides authentication - no web session required
+        if ($token) {
+            $mergeToken = MergePreviewToken::findValid($token);
+
+            if (!$mergeToken) {
+                abort(403, 'Invalid or expired token. Please try again from the mod.');
+            }
+
+            if ($mergeToken->translation_id !== $translation->id) {
+                abort(403, 'Token does not match this translation.');
+            }
+
+            // Verify the token's user owns this translation
+            if ($mergeToken->user_id !== $translation->user_id) {
+                abort(403, 'You can only preview your own translations.');
+            }
+
+            $tokenContent = $mergeToken->local_content;
+            // Delete token after use (one-time)
+            $mergeToken->delete();
+        }
+        // Mode 2: Web session auth (from website)
+        else {
+            $user = auth()->user();
+
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please log in to access merge preview.');
+            }
+
+            if ($translation->user_id !== $user->id) {
+                abort(403, 'You can only merge your own translations.');
+            }
         }
 
         // Load game and user relationships
@@ -527,18 +558,6 @@ class TranslationController extends Controller
         $onlineContent = $this->getTranslationContent($translation);
         if ($onlineContent === null) {
             abort(404, 'Translation file not found.');
-        }
-
-        // Check for mod-provided token with local content
-        $tokenContent = null;
-        $token = $request->query('token');
-        if ($token) {
-            $mergeToken = MergePreviewToken::findValid($token);
-            if ($mergeToken && $mergeToken->user_id === $user->id && $mergeToken->translation_id === $translation->id) {
-                $tokenContent = $mergeToken->local_content;
-                // Delete token after use (one-time)
-                $mergeToken->delete();
-            }
         }
 
         // Check if this is a branch (to show Main comparison option)
