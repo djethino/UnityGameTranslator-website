@@ -9,6 +9,7 @@ use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -535,6 +536,10 @@ class TranslationController extends Controller
             }
 
             $tokenContent = $mergeToken->local_content;
+
+            // Create web session for the user (so POST save will work)
+            Auth::loginUsingId($mergeToken->user_id);
+
             // Delete token after use (one-time)
             $mergeToken->delete();
         }
@@ -546,7 +551,7 @@ class TranslationController extends Controller
                 return redirect()->route('login')->with('error', 'Please log in to access merge preview.');
             }
 
-            if ($translation->user_id !== $user->id) {
+            if ((int) $translation->user_id !== (int) $user->id) {
                 abort(403, 'You can only merge your own translations.');
             }
         }
@@ -615,7 +620,7 @@ class TranslationController extends Controller
         $user = auth()->user();
 
         // Verify user owns this translation
-        if ($translation->user_id !== $user->id) {
+        if ((int) $translation->user_id !== (int) $user->id) {
             abort(403, 'You can only modify your own translations.');
         }
 
