@@ -93,6 +93,7 @@ class TranslationController extends Controller
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
                     'file_hash' => $t->file_hash,
+                    'file_uuid' => $t->file_uuid,
                     'updated_at' => $t->updated_at->toIso8601String(),
                 ];
             }),
