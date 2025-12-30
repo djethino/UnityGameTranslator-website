@@ -31,7 +31,7 @@
                         </div>
                     @endif
                     <div>
-                        <a href="{{ route('games.show', $translation->game) }}" class="text-lg font-semibold hover:text-purple-400">
+                        <a href="{{ route('translations.dashboard', $translation) }}" class="text-lg font-semibold hover:text-purple-400">
                             {{ $translation->game->name }}
                         </a>
                     <div class="flex items-center gap-3 mt-1">
@@ -56,6 +56,11 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
+                    @if($translation->isMain())
+                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('translation.merge') }}">
+                        <i class="fas fa-code-merge"></i>
+                    </a>
+                    @endif
                     <a href="{{ route('translations.download', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>
                     </a>

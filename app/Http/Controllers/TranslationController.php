@@ -303,6 +303,203 @@ class TranslationController extends Controller
     }
 
     /**
+     * Show dashboard for a translation (Main or Branch view).
+     * Main: sees branches stats, lines to merge
+     * Branch: sees Main info, comparison, convert to fork option
+     */
+    public function dashboard(Translation $translation, TranslationService $service)
+    {
+        $user = auth()->user();
+
+        // Verify user owns this translation
+        if ($translation->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $translation->load(['game', 'user']);
+
+        $isMain = $translation->visibility === 'public';
+
+        if ($isMain) {
+            // Main view: show branches and merge stats
+            $branches = Translation::where('file_uuid', $translation->file_uuid)
+                ->where('visibility', 'branch')
+                ->with('user:id,name')
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            // Load Main content for comparison
+            $mainContent = $this->getTranslationContent($translation);
+
+            // Calculate diff stats for each branch
+            $branchStats = [];
+            foreach ($branches as $branch) {
+                $branchContent = $this->getTranslationContent($branch);
+                $stats = $this->calculateDiffStats($mainContent, $branchContent);
+                $branchStats[$branch->id] = $stats;
+            }
+
+            // Total lines to merge (union of all branch differences)
+            $totalLinesToMerge = 0;
+            foreach ($branchStats as $stats) {
+                $totalLinesToMerge += $stats['different'] + $stats['branch_only'];
+            }
+
+            return view('translations.dashboard', compact(
+                'translation',
+                'isMain',
+                'branches',
+                'branchStats',
+                'totalLinesToMerge'
+            ));
+        } else {
+            // Branch view: show Main info and comparison
+            $mainTranslation = Translation::where('file_uuid', $translation->file_uuid)
+                ->where('visibility', 'public')
+                ->with(['user:id,name', 'game'])
+                ->first();
+
+            $diffStats = null;
+            if ($mainTranslation) {
+                $mainContent = $this->getTranslationContent($mainTranslation);
+                $branchContent = $this->getTranslationContent($translation);
+                $diffStats = $this->calculateDiffStats($mainContent, $branchContent);
+            }
+
+            return view('translations.dashboard', compact(
+                'translation',
+                'isMain',
+                'mainTranslation',
+                'diffStats'
+            ));
+        }
+    }
+
+    /**
+     * Convert a branch to a fork (new UUID, becomes independent Main).
+     * User must download the new file and replace their local copy.
+     */
+    public function convertToFork(Translation $translation, TranslationService $service)
+    {
+        $user = auth()->user();
+
+        // Verify user owns this translation
+        if ($translation->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // Must be a branch to convert
+        if ($translation->visibility !== 'branch') {
+            return back()->withErrors(['error' => __('dashboard.not_a_branch')]);
+        }
+
+        // Generate new UUID
+        $newUuid = \Illuminate\Support\Str::uuid()->toString();
+
+        // Load and update file content
+        $path = $translation->getSafeFilePath();
+        if (!$path || !file_exists($path)) {
+            return back()->withErrors(['error' => __('dashboard.file_not_found')]);
+        }
+
+        $rawContent = file_get_contents($path);
+        $rawContent = $service->normalizeContent($rawContent);
+        $content = json_decode($rawContent, true);
+
+        if (!is_array($content)) {
+            return back()->withErrors(['error' => __('dashboard.invalid_file')]);
+        }
+
+        // Update UUID in content
+        $oldUuid = $content['_uuid'] ?? null;
+        $content['_uuid'] = $newUuid;
+
+        // Save file with new UUID
+        $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+        file_put_contents($path, json_encode($content, $jsonFlags));
+
+        // Update database record
+        $translation->update([
+            'file_uuid' => $newUuid,
+            'visibility' => 'public',
+            // Keep parent_id for reference/traceability
+        ]);
+
+        // Recalculate hash
+        $translation->file_hash = $translation->computeHash();
+        $translation->save();
+
+        // Return the file for download
+        return Storage::disk('public')->download(
+            $translation->file_path,
+            'translations.json',
+            ['Content-Type' => 'application/json']
+        );
+    }
+
+    /**
+     * Calculate diff stats between main and branch content.
+     */
+    private function calculateDiffStats(?array $mainContent, ?array $branchContent): array
+    {
+        if (!$mainContent || !$branchContent) {
+            return ['same' => 0, 'different' => 0, 'main_only' => 0, 'branch_only' => 0];
+        }
+
+        // Filter out metadata keys
+        $mainKeys = array_filter(array_keys($mainContent), fn($k) => !str_starts_with($k, '_'));
+        $branchKeys = array_filter(array_keys($branchContent), fn($k) => !str_starts_with($k, '_'));
+
+        $allKeys = array_unique(array_merge($mainKeys, $branchKeys));
+
+        $same = 0;
+        $different = 0;
+        $mainOnly = 0;
+        $branchOnly = 0;
+
+        foreach ($allKeys as $key) {
+            $inMain = in_array($key, $mainKeys);
+            $inBranch = in_array($key, $branchKeys);
+
+            if ($inMain && $inBranch) {
+                $mainValue = $this->extractValue($mainContent[$key]);
+                $branchValue = $this->extractValue($branchContent[$key]);
+
+                if ($mainValue === $branchValue) {
+                    $same++;
+                } else {
+                    $different++;
+                }
+            } elseif ($inMain) {
+                $mainOnly++;
+            } else {
+                $branchOnly++;
+            }
+        }
+
+        return [
+            'same' => $same,
+            'different' => $different,
+            'main_only' => $mainOnly,
+            'branch_only' => $branchOnly,
+        ];
+    }
+
+    /**
+     * Extract value from entry (supports both old string format and new object format).
+     */
+    private function extractValue($entry): string
+    {
+        if ($entry === null) {
+            return '';
+        }
+        if (is_array($entry)) {
+            return $entry['v'] ?? '';
+        }
+        return (string) $entry;
+    }
+
+    /**
      * Show merge preview for comparing local file with online version.
      * User must own the translation.
      *

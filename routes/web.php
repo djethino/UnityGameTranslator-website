@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload', [TranslationController::class, 'store'])->name('translations.store');
     Route::get('/api/translations/check-uuid', [TranslationController::class, 'checkUuid'])->name('translations.check-uuid');
     Route::get('/my-translations', [TranslationController::class, 'myTranslations'])->name('translations.mine');
+    Route::get('/my-translations/{translation}/dashboard', [TranslationController::class, 'dashboard'])->name('translations.dashboard');
+    Route::post('/my-translations/{translation}/convert-to-fork', [TranslationController::class, 'convertToFork'])->name('translations.convert-to-fork');
     Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
     Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
     Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');

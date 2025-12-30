@@ -230,11 +230,6 @@
                             <!-- Action buttons -->
                             <div class="flex gap-2">
                                 @auth
-                                    @if(auth()->id() === $translation->user_id)
-                                        <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.merge') }}">
-                                            <i class="fas fa-code-merge"></i>
-                                        </a>
-                                    @endif
                                     @if(auth()->user()->isAdmin())
                                         <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.edit') }}">
                                             <i class="fas fa-edit"></i>
