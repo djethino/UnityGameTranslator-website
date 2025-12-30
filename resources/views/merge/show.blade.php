@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Merge - ' . $main->game->name)
+@section('title', __('merge.title') . ' - ' . $main->game->name)
 
 @section('content')
 <div class="container mx-auto px-4 py-8" x-data="mergeTable()">
@@ -11,10 +11,10 @@
                 <i class="fas fa-arrow-left"></i> {{ $main->game->name }}
             </a>
         </div>
-        <h1 class="text-2xl font-bold text-white">Merge View</h1>
+        <h1 class="text-2xl font-bold text-white">{{ __('merge.heading') }}</h1>
         <p class="text-gray-400">
             {{ $main->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $main->target_language }}
-            &bull; {{ $totalKeys }} cl&eacute;s
+            &bull; {{ __('merge.keys_count', ['count' => $totalKeys]) }}
         </p>
     </div>
 
@@ -40,7 +40,7 @@
     @if($branches->isNotEmpty())
     <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
         <form method="GET" class="flex flex-wrap gap-4 items-center">
-            <span class="text-sm text-gray-400 font-medium">Branches :</span>
+            <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
             @foreach($branches as $branch)
             <div class="flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600">
                 <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
@@ -69,7 +69,7 @@
             </div>
             @endforeach
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white text-sm transition">
-                <i class="fas fa-filter mr-1"></i> Filtrer
+                <i class="fas fa-filter mr-1"></i> {{ __('merge.filter') }}
             </button>
         </form>
     </div>
@@ -77,7 +77,7 @@
     <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">
             <i class="fas fa-info-circle mr-2 text-blue-400"></i>
-            Aucune branch pour cette traduction. Vous pouvez quand m&ecirc;me &eacute;diter vos valeurs en double-cliquant.
+            {{ __('merge.no_branches') }}
         </p>
     </div>
     @endif
@@ -89,18 +89,18 @@
         <input type="hidden" name="branches[]" value="{{ $branch->id }}">
         @endforeach
 
-        <span class="text-gray-500">Filtres :</span>
+        <span class="text-gray-500">{{ __('merge.filters') }}</span>
 
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="new_keys" value="1" {{ $filters['new_keys'] ? 'checked' : '' }}
                 class="filter-checkbox rounded bg-gray-700 border-gray-600 text-green-600">
-            <span class="text-gray-300">Nouvelles cl&eacute;s</span>
+            <span class="text-gray-300">{{ __('merge.filter_new_keys') }}</span>
         </label>
 
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="difference" value="1" {{ $filters['difference'] ? 'checked' : '' }}
                 class="filter-checkbox rounded bg-gray-700 border-gray-600 text-yellow-600">
-            <span class="text-gray-300">Diff&eacute;rences</span>
+            <span class="text-gray-300">{{ __('merge.filter_differences') }}</span>
         </label>
 
         <span class="text-gray-600">|</span>
@@ -138,7 +138,7 @@
         @if(array_filter($filters))
         <a href="{{ route('translations.merge', ['uuid' => $uuid, 'branches' => $selectedBranches->pluck('id')->toArray()]) }}"
             class="text-gray-400 hover:text-white text-xs">
-            <i class="fas fa-times"></i> R&eacute;initialiser
+            <i class="fas fa-times"></i> {{ __('merge.reset_filters') }}
         </a>
         @endif
     </form>
@@ -152,11 +152,11 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium">Cl&eacute;</th>
+                        <th class="px-4 py-3 text-left text-gray-400 font-medium">{{ __('merge.key') }}</th>
                         <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[300px]">
                             <div class="flex items-center gap-2">
                                 <span class="text-green-400 font-medium">Main</span>
-                                <span class="text-xs text-gray-500">({{ $main->user->name ?? 'Vous' }})</span>
+                                <span class="text-xs text-gray-500">({{ $main->user->name ?? __('common.you') }})</span>
                             </div>
                         </th>
                         @foreach($selectedBranches as $branch)
@@ -189,7 +189,7 @@
                                     @click="toggleDelete({{ $keyJson }})"
                                     :class="isDeleted({{ $keyJson }}) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
                                     class="transition shrink-0"
-                                    title="Supprimer cette clé">
+                                    title="{{ __('merge.delete_key') }}">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                                 @endif
@@ -209,7 +209,7 @@
                                 {{-- Value: shows edited value if manually edited --}}
                                 <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through' : '']">
                                     <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
-                                    <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : '- vide -' }}</span>
+                                    <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
                                 </span>
                             </div>
                         </td>
@@ -243,7 +243,7 @@
                     <tr>
                         <td colspan="{{ 2 + $selectedBranches->count() }}" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
-                            <p>Aucune cl&eacute; trouv&eacute;e avec ces filtres.</p>
+                            <p>{{ __('merge.no_keys_found') }}</p>
                         </td>
                     </tr>
                     @endforelse
@@ -255,20 +255,19 @@
         @if($totalPages > 1)
         <div class="mt-4 flex justify-between items-center">
             <span class="text-gray-400 text-sm">
-                Page {{ $page }} / {{ $totalPages }}
-                ({{ $totalKeys }} cl&eacute;s)
+                {{ __('merge.page_info', ['page' => $page, 'total' => $totalPages, 'keys' => $totalKeys]) }}
             </span>
             <div class="flex gap-2">
                 @if($page > 1)
                 <a href="?page={{ $page - 1 }}{{ $selectedBranches->isNotEmpty() ? '&branches[]=' . $selectedBranches->pluck('id')->implode('&branches[]=') : '' }}{{ array_filter($filters) ? '&' . http_build_query(array_filter($filters)) : '' }}"
                     class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
-                    <i class="fas fa-chevron-left mr-1"></i> Pr&eacute;c&eacute;dent
+                    <i class="fas fa-chevron-left mr-1"></i> {{ __('common.previous') }}
                 </a>
                 @endif
                 @if($page < $totalPages)
                 <a href="?page={{ $page + 1 }}{{ $selectedBranches->isNotEmpty() ? '&branches[]=' . $selectedBranches->pluck('id')->implode('&branches[]=') : '' }}{{ array_filter($filters) ? '&' . http_build_query(array_filter($filters)) : '' }}"
                     class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
-                    Suivant <i class="fas fa-chevron-right ml-1"></i>
+                    {{ __('common.next') }} <i class="fas fa-chevron-right ml-1"></i>
                 </a>
                 @endif
             </div>
@@ -280,26 +279,26 @@
             <div class="text-sm text-gray-400">
                 <span x-show="totalChanges > 0">
                     <span x-show="selectionCount > 0">
-                        <span class="text-white font-bold" x-text="selectionCount"></span> modification(s)
+                        <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
                     </span>
                     <span x-show="selectionCount > 0 && deleteCount > 0"> &bull; </span>
                     <span x-show="deleteCount > 0">
-                        <span class="text-red-400 font-bold" x-text="deleteCount"></span> suppression(s)
+                        <span class="text-red-400 font-bold" x-text="deleteCount"></span> {{ __('merge.deletions') }}
                     </span>
                 </span>
                 <span x-show="totalChanges === 0" class="text-gray-500">
-                    Cliquez sur une cellule pour s&eacute;lectionner. Double-cliquez pour &eacute;diter. <i class="fas fa-trash-alt"></i> pour supprimer.
+                    {{ __('merge.instructions') }}
                 </span>
             </div>
             <div class="flex gap-4 items-center">
                 <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
-                    <i class="fas fa-times mr-1"></i> Annuler
+                    <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
                 </button>
                 <button type="submit" :disabled="totalChanges === 0"
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
                     <i class="fas fa-save mr-2"></i>
-                    Sauvegarder (<span x-text="totalChanges">0</span>)
+                    {{ __('common.save') }} (<span x-text="totalChanges">0</span>)
                 </button>
             </div>
         </div>
@@ -311,18 +310,18 @@
 
     {{-- Legend --}}
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
-        <span><span class="tag-H">H</span> Human - traduction manuelle</span>
-        <span><span class="tag-A">A</span> AI - traduction IA</span>
-        <span><span class="tag-V">V</span> Validated - IA valid&eacute;e</span>
-        <span><span class="tag-M">M</span> Mod UI - interface du mod</span>
-        <span><span class="tag-S">S</span> Skipped - non traduit</span>
+        <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
+        <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
+        <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
+        <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
+        <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
         <span class="text-gray-600">|</span>
-        <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> S&eacute;lection Main</span>
-        <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> S&eacute;lection Branch</span>
-        <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> &Eacute;dition manuelle</span>
-        <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> Diff&eacute;rence</span>
-        <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> Nouvelle cl&eacute;</span>
-        <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> Suppression</span>
+        <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_main') }}</span>
+        <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_branch') }}</span>
+        <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge.legend_manual_edit') }}</span>
+        <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> {{ __('merge.legend_difference') }}</span>
+        <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> {{ __('merge.legend_new_key') }}</span>
+        <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> {{ __('merge.legend_deletion') }}</span>
     </div>
 
     {{-- Edit Modal --}}
@@ -333,7 +332,7 @@
             @keydown.ctrl.enter="saveEditModal()">
             {{-- Modal Header --}}
             <div class="px-6 py-4 border-b border-gray-700">
-                <h3 class="text-lg font-semibold text-white">Modifier la traduction</h3>
+                <h3 class="text-lg font-semibold text-white">{{ __('merge.edit_translation') }}</h3>
                 <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
             </div>
 
@@ -343,11 +342,11 @@
                     id="editModalTextarea"
                     x-model="editModal.value"
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
-                    placeholder="Entrez la traduction..."
+                    placeholder="{{ __('merge.enter_translation') }}"
                 ></textarea>
                 <p class="mt-2 text-xs text-gray-500">
-                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Entr&eacute;e</kbd> pour sauvegarder &bull;
-                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Echap</kbd> pour annuler
+                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge.save_shortcut') }} &bull;
+                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge.cancel_shortcut') }}
                 </p>
             </div>
 
@@ -355,11 +354,11 @@
             <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
                 <button type="button" @click="closeEditModal()"
                     class="px-4 py-2 text-gray-400 hover:text-white transition">
-                    Annuler
+                    {{ __('common.cancel') }}
                 </button>
                 <button type="button" @click="saveEditModal()"
                     class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
-                    <i class="fas fa-check mr-1"></i> Sauvegarder
+                    <i class="fas fa-check mr-1"></i> {{ __('common.save') }}
                 </button>
             </div>
         </div>

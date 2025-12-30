@@ -67,9 +67,11 @@
                     <a href="{{ route('translations.download', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>
                     </a>
+                    @if($translation->isMain())
                     <a href="{{ route('translations.edit', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('translation.edit') }}">
                         <i class="fas fa-edit"></i>
                     </a>
+                    @endif
                     <form action="{{ route('translations.destroy', $translation) }}" method="POST" class="delete-form">
                         @csrf
                         @method('DELETE')

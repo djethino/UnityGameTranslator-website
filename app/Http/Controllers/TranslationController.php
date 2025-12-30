@@ -247,7 +247,8 @@ class TranslationController extends Controller
 
     public function edit(Translation $translation)
     {
-        if ($translation->user_id !== auth()->id()) {
+        // Only Main owners can edit metadata (branches inherit from Main)
+        if ($translation->user_id !== auth()->id() || !$translation->isMain()) {
             abort(403);
         }
 
@@ -259,7 +260,8 @@ class TranslationController extends Controller
 
     public function update(Request $request, Translation $translation)
     {
-        if ($translation->user_id !== auth()->id()) {
+        // Only Main owners can edit metadata (branches inherit from Main)
+        if ($translation->user_id !== auth()->id() || !$translation->isMain()) {
             abort(403);
         }
 

@@ -282,10 +282,12 @@
            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-download mr-2"></i>{{ __('dashboard.download_file') }}
         </a>
+        @if($isMain)
         <a href="{{ route('translations.edit', $translation) }}"
            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-edit mr-2"></i>{{ __('dashboard.edit_metadata') }}
         </a>
+        @endif
         <a href="{{ route('games.show', $translation->game) }}"
            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-gamepad mr-2"></i>{{ __('dashboard.view_game_page') }}
