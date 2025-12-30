@@ -356,6 +356,18 @@
 @endpush
 
 <script nonce="{{ $cspNonce }}">
+/**
+ * Normalize line endings to Unix format (\n).
+ * Converts \r\n (Windows) and \r (old Mac) to \n.
+ * This ensures consistent keys across platforms.
+ */
+function normalizeLineEndings(text) {
+    if (typeof text !== 'string') return text;
+    // Order is important: first \r\n, then \r
+    // Otherwise \r\n would become \n\n
+    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 function mergePreview() {
     return {
         loaded: false,
@@ -424,19 +436,37 @@ function mergePreview() {
         },
 
         loadContent(content) {
-            // Filter out metadata keys from local
+            // Filter out metadata keys from local and normalize line endings
             this.localData = {};
             for (const [key, value] of Object.entries(content)) {
                 if (!key.startsWith('_')) {
-                    this.localData[key] = value;
+                    // Normalize key line endings for cross-platform consistency
+                    const normalizedKey = normalizeLineEndings(key);
+                    // Normalize value if it's a string or {v, t} object
+                    let normalizedValue = value;
+                    if (typeof value === 'object' && value !== null && 'v' in value) {
+                        normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
+                    } else if (typeof value === 'string') {
+                        normalizedValue = normalizeLineEndings(value);
+                    }
+                    this.localData[normalizedKey] = normalizedValue;
                 }
             }
 
-            // Filter online data too
+            // Filter online data too and normalize
             const filteredOnline = {};
             for (const [key, value] of Object.entries(this.onlineData)) {
                 if (!key.startsWith('_')) {
-                    filteredOnline[key] = value;
+                    // Normalize key line endings for cross-platform consistency
+                    const normalizedKey = normalizeLineEndings(key);
+                    // Normalize value if it's a string or {v, t} object
+                    let normalizedValue = value;
+                    if (typeof value === 'object' && value !== null && 'v' in value) {
+                        normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
+                    } else if (typeof value === 'string') {
+                        normalizedValue = normalizeLineEndings(value);
+                    }
+                    filteredOnline[normalizedKey] = normalizedValue;
                 }
             }
             this.onlineData = filteredOnline;

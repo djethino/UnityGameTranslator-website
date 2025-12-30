@@ -10,12 +10,24 @@ class TranslationService
     private const VALID_TAGS = ['H', 'V', 'A', 'M', 'S'];
 
     /**
-     * Normalize content by converting Windows line endings to Unix.
-     * Prevents key mismatches across platforms.
+     * Normalize line endings to Unix format (\n).
+     * Converts \r\n (Windows) and \r (old Mac) to \n.
+     * This ensures consistent keys across platforms.
+     */
+    public function normalizeLineEndings(string $text): string
+    {
+        // Order is important: first \r\n, then \r
+        // Otherwise \r\n would become \n\n
+        return str_replace(["\r\n", "\r"], "\n", $text);
+    }
+
+    /**
+     * Normalize content by converting line endings to Unix format.
+     * Alias for normalizeLineEndings for backward compatibility.
      */
     public function normalizeContent(string $content): string
     {
-        return str_replace("\r\n", "\n", $content);
+        return $this->normalizeLineEndings($content);
     }
 
     /**
@@ -126,6 +138,7 @@ class TranslationService
     /**
      * Compute normalized SHA256 hash for a translation file.
      * Used to detect changes between versions.
+     * Keys and values are normalized for cross-platform consistency.
      */
     public function computeHash(array $json): string
     {
@@ -133,7 +146,17 @@ class TranslationService
         foreach ($json as $key => $value) {
             // Include _uuid and all translation keys, exclude other metadata
             if ($key === '_uuid' || !str_starts_with($key, '_')) {
-                $hashData[$key] = $value;
+                // Normalize keys for cross-platform consistency
+                $normalizedKey = $this->normalizeLineEndings($key);
+
+                // Normalize values (for translation entries with {v, t} format)
+                if (is_array($value) && isset($value['v']) && is_string($value['v'])) {
+                    $value['v'] = $this->normalizeLineEndings($value['v']);
+                } elseif (is_string($value)) {
+                    $value = $this->normalizeLineEndings($value);
+                }
+
+                $hashData[$normalizedKey] = $value;
             }
         }
         ksort($hashData);
