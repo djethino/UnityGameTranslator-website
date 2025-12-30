@@ -525,12 +525,12 @@ class TranslationController extends Controller
                 abort(403, 'Invalid or expired token. Please try again from the mod.');
             }
 
-            if ($mergeToken->translation_id !== $translation->id) {
+            if ((int) $mergeToken->translation_id !== (int) $translation->id) {
                 abort(403, 'Token does not match this translation.');
             }
 
             // Verify the token's user owns this translation
-            if ($mergeToken->user_id !== $translation->user_id) {
+            if ((int) $mergeToken->user_id !== (int) $translation->user_id) {
                 abort(403, 'You can only preview your own translations.');
             }
 
