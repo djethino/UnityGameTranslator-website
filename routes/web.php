@@ -28,7 +28,7 @@ Route::get('/login', function () {
 
 // Device Flow link page (for Unity mod authentication)
 Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
-Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware('auth')->name('link.validate');
+Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
 
 // OAuth
 Route::get('/auth/{provider}', [SocialController::class, 'redirect'])->name('auth.redirect');
