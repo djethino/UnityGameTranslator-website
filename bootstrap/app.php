@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TrackPageView::class,
             \App\Http\Middleware\ContentSecurityPolicy::class,
         ]);
+
+        // Decode gzip-compressed API requests from Unity mod
+        $middleware->prependToGroup('api', [
+            \App\Http\Middleware\DecodeGzipRequest::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
