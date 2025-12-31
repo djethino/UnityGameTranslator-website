@@ -11,14 +11,14 @@
 @push('head')
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "VideoGame",
+    "@@context": "https://schema.org",
+    "@@type": "VideoGame",
     "name": "{{ $game->name }}",
     "image": "{{ $game->image_url ?? '' }}",
     "description": "Community translations for {{ $game->name }}",
     "url": "{{ route('games.show', $game) }}",
     "offers": {
-        "@type": "Offer",
+        "@@type": "Offer",
         "price": "0",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock"
@@ -27,23 +27,23 @@
 </script>
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
+    "@@context": "https://schema.org",
+    "@@type": "BreadcrumbList",
     "itemListElement": [
         {
-            "@type": "ListItem",
+            "@@type": "ListItem",
             "position": 1,
             "name": "{{ __('nav.home') }}",
             "item": "{{ url('/') }}"
         },
         {
-            "@type": "ListItem",
+            "@@type": "ListItem",
             "position": 2,
             "name": "{{ __('nav.games') }}",
             "item": "{{ route('games.index') }}"
         },
         {
-            "@type": "ListItem",
+            "@@type": "ListItem",
             "position": 3,
             "name": "{{ $game->name }}",
             "item": "{{ route('games.show', $game) }}"

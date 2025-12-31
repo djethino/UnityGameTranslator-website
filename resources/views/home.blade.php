@@ -5,14 +5,14 @@
 @push('head')
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@@context": "https://schema.org",
+    "@@type": "WebSite",
     "name": "UnityGameTranslator",
     "url": "{{ url('/') }}",
     "description": "{{ __('home.hero_description') }}",
     "inLanguage": "{{ app()->getLocale() }}",
     "potentialAction": {
-        "@type": "SearchAction",
+        "@@type": "SearchAction",
         "target": "{{ route('games.index') }}?q={search_term_string}",
         "query-input": "required name=search_term_string"
     }
@@ -20,8 +20,8 @@
 </script>
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+    "@@context": "https://schema.org",
+    "@@type": "Organization",
     "name": "UnityGameTranslator",
     "url": "{{ url('/') }}",
     "logo": "{{ asset('logo.svg') }}",
