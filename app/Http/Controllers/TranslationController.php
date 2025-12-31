@@ -258,7 +258,10 @@ class TranslationController extends Controller
 
         $translation->load(['game', 'user']);
 
-        return view('translations.edit', compact('translation', 'isAdmin'));
+        // Detect if accessed via admin route (for back button navigation)
+        $fromAdmin = request()->routeIs('admin.*');
+
+        return view('translations.edit', compact('translation', 'fromAdmin'));
     }
 
     public function update(Request $request, Translation $translation)
@@ -281,8 +284,8 @@ class TranslationController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Redirect admin back to admin panel, owner to their translations
-        if ($isAdmin && $translation->user_id !== $user->id) {
+        // Redirect based on access route, not user role
+        if (request()->routeIs('admin.*')) {
             return redirect()->route('admin.translations.show', $translation)
                 ->with('success', __('my_translations.updated'));
         }
