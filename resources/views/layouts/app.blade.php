@@ -14,6 +14,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="128x128" href="/icon-128.png">
 
+    <!-- Preconnect to external CDNs -->
+    <link rel="preconnect" href="https://steamcdn-a.akamaihd.net" crossorigin>
+    <link rel="dns-prefetch" href="https://steamcdn-a.akamaihd.net">
+
     <!-- Hreflang for multilingual SEO -->
     @foreach(config('locales.supported', []) as $code => $locale)
     <link rel="alternate" hreflang="{{ $code }}" href="{{ url()->current() }}{{ str_contains(url()->current(), '?') ? '&' : '?' }}lang={{ $code }}">
