@@ -251,11 +251,6 @@
                             <!-- Action buttons -->
                             <div class="flex gap-2">
                                 @auth
-                                    @if(auth()->user()->isAdmin())
-                                        <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.edit') }}">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endif
                                     <button type="button" data-report-id="{{ $translation->id }}" class="report-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
                                     </button>
@@ -399,11 +394,6 @@
                                             @endauth
                                         </div>
                                         @auth
-                                            @if(auth()->user()->isAdmin())
-                                                <a href="{{ route('admin.translations.edit', $fork) }}" class="text-orange-400 hover:text-orange-300">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            @endif
                                             <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>
                                             </button>

@@ -248,20 +248,26 @@ class TranslationController extends Controller
 
     public function edit(Translation $translation)
     {
-        // Only Main owners can edit metadata (branches inherit from Main)
-        if ($translation->user_id !== auth()->id() || !$translation->isMain()) {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+
+        // Main owners or admins can edit
+        if (!$isAdmin && ($translation->user_id !== $user->id || !$translation->isMain())) {
             abort(403);
         }
 
         $translation->load(['game', 'user']);
 
-        return view('translations.edit', compact('translation'));
+        return view('translations.edit', compact('translation', 'isAdmin'));
     }
 
     public function update(Request $request, Translation $translation)
     {
-        // Only Main owners can edit metadata (branches inherit from Main)
-        if ($translation->user_id !== auth()->id() || !$translation->isMain()) {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+
+        // Main owners or admins can edit
+        if (!$isAdmin && ($translation->user_id !== $user->id || !$translation->isMain())) {
             abort(403);
         }
 
@@ -274,6 +280,12 @@ class TranslationController extends Controller
             'status' => $request->status,
             'notes' => $request->notes,
         ]);
+
+        // Redirect admin back to admin panel, owner to their translations
+        if ($isAdmin && $translation->user_id !== $user->id) {
+            return redirect()->route('admin.translations.show', $translation)
+                ->with('success', __('my_translations.updated'));
+        }
 
         return redirect()->route('translations.mine')
             ->with('success', __('my_translations.updated'));

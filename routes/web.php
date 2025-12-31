@@ -119,7 +119,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
     Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
     Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
-    Route::get('/translations/{translation}/edit', [AdminController::class, 'editTranslation'])->name('translations.edit');
-    Route::put('/translations/{translation}', [AdminController::class, 'updateTranslation'])->name('translations.update');
+    Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
+    Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
     Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
 });

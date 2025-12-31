@@ -209,38 +209,6 @@ class AdminController extends Controller
             ->with('success', "Translation for {$gameName} deleted.");
     }
 
-    public function editTranslation(Translation $translation)
-    {
-        $translation->load(['game', 'user']);
-        $languages = config('languages');
-
-        return view('admin.translation-edit', compact('translation', 'languages'));
-    }
-
-    public function updateTranslation(Request $request, Translation $translation)
-    {
-        $languages = config('languages');
-
-        $request->validate([
-            'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
-            'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
-            'status' => 'required|in:in_progress,complete',
-            'type' => 'required|in:ai,human,ai_corrected',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $translation->update([
-            'source_language' => $request->source_language,
-            'target_language' => $request->target_language,
-            'status' => $request->status,
-            'type' => $request->type,
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('admin.translations.show', $translation)
-            ->with('success', 'Translation updated successfully.');
-    }
-
     /**
      * Analytics dashboard
      */
