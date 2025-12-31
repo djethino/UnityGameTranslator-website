@@ -29,6 +29,21 @@ class Translation extends Model
         'file_hash',
     ];
 
+    protected $casts = [
+        'id' => 'integer',
+        'game_id' => 'integer',
+        'user_id' => 'integer',
+        'parent_id' => 'integer',
+        'line_count' => 'integer',
+        'capture_count' => 'integer',
+        'human_count' => 'integer',
+        'validated_count' => 'integer',
+        'ai_count' => 'integer',
+        'main_rating' => 'integer',
+        'download_count' => 'integer',
+        'vote_count' => 'integer',
+    ];
+
     /**
      * Boot the model and register event listeners.
      */
