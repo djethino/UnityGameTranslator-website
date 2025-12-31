@@ -58,6 +58,13 @@ Each translation entry has a quality tag stored in the JSON:
 
 > **Note:** Entries with tag `H` but empty value are displayed as "C" (Capture) and count as 0 pts until translated.
 
+**Additional tags (excluded from quality score):**
+
+| Tag | Name | Description |
+|-----|------|-------------|
+| **S** | Skip | Text intentionally not translated (alien language, Klingon, etc.). AI decides. *Experimental.* |
+| **M** | Mod | Mod UI translations. *Internal use.* |
+
 **Quality Score** (0-3): `(H×3 + V×2 + A×1) / (H + V + A)`
 
 | Score | Label |
