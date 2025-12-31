@@ -39,6 +39,36 @@ The website uses a Main/Branch model for collaborative translation:
 - Languages locked after first upload (source/target immutable)
 - UUID links all translations in a "lineage" (Main + all Branches)
 
+### Translation Quality System (H/V/A/C Tags)
+
+Each translation entry has a quality tag stored in the JSON:
+
+```json
+{
+  "Hello": { "v": "Bonjour", "t": "H" },
+  "Play": { "v": "Jouer", "t": "A" }
+}
+```
+
+| Tag | Name | Score | Description |
+|-----|------|-------|-------------|
+| **H** | Human | 3 pts | Written by a human |
+| **V** | Validated | 2 pts | AI translation approved by human |
+| **A** | AI | 1 pt | Translated by Ollama |
+| **C** | Capture | 0 pts | Captured but not translated |
+
+**Quality Score** (0-3): `(H×3 + V×2 + A×1) / (H + V + A)`
+
+| Score | Label |
+|-------|-------|
+| 2.5+ | Excellent |
+| 2.0+ | Good |
+| 1.5+ | Fair |
+| 1.0+ | Basic |
+| <1.0 | Raw AI |
+
+The website displays H/V/A counts and quality score on each translation card.
+
 ### API for Unity Mod
 - **Search translations** by Steam ID, game name, or language
 - **Download translations** with ETag caching
