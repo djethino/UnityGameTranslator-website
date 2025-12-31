@@ -254,9 +254,8 @@ class TranslationController extends Controller
         }
 
         $translation->load(['game', 'user']);
-        $languages = config('languages');
 
-        return view('translations.edit', compact('translation', 'languages'));
+        return view('translations.edit', compact('translation'));
     }
 
     public function update(Request $request, Translation $translation)
@@ -266,21 +265,13 @@ class TranslationController extends Controller
             abort(403);
         }
 
-        $languages = config('languages');
-
         $request->validate([
-            'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
-            'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'status' => 'required|in:in_progress,complete',
-            'type' => 'required|in:ai,human,ai_corrected',
             'notes' => 'nullable|string|max:1000',
         ]);
 
         $translation->update([
-            'source_language' => $request->source_language,
-            'target_language' => $request->target_language,
             'status' => $request->status,
-            'type' => $request->type,
             'notes' => $request->notes,
         ]);
 

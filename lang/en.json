@@ -123,6 +123,8 @@
     "upload.update_branch_description": "Your branch version will be replaced with this new file.",
     "upload.review_changes": "Review changes before uploading",
     "upload.review_changes_desc": "Compare your local file with the online version and merge manually",
+    "upload.translation_composition": "Translation Composition",
+    "upload.composition_auto": "Automatically calculated from file content",
 
     "profile.title": "Profile Settings",
     "profile.display_name": "Display Name",

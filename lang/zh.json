@@ -123,6 +123,8 @@
     "upload.update_branch_description": "您的分支版本将被此新文件替换。",
     "upload.review_changes": "上传前查看更改",
     "upload.review_changes_desc": "将本地文件与在线版本进行比较并手动合并",
+    "upload.translation_composition": "翻译构成",
+    "upload.composition_auto": "根据文件内容自动计算",
 
     "profile.title": "个人设置",
     "profile.display_name": "显示名称",

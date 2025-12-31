@@ -123,6 +123,8 @@
     "upload.update_branch_description": "Dal sürümünüz bu yeni dosyayla değiştirilecektir.",
     "upload.review_changes": "Yüklemeden önce değişiklikleri gözden geçirin",
     "upload.review_changes_desc": "Yerel dosyanızı çevrimiçi sürümle karşılaştırın ve el ile birleştirin",
+    "upload.translation_composition": "Çeviri Bileşimi",
+    "upload.composition_auto": "Dosya içeriğinden otomatik olarak hesaplanır",
 
     "profile.title": "Profil Ayarları",
     "profile.display_name": "Görünen ad",

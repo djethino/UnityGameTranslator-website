@@ -123,6 +123,8 @@
     "upload.update_branch_description": "Ваша версия branch будет заменена этим новым файлом.",
     "upload.review_changes": "Проверьте изменения перед загрузкой",
     "upload.review_changes_desc": "Сравните локальный файл с онлайн-версией и объедините вручную",
+    "upload.translation_composition": "Состав перевода",
+    "upload.composition_auto": "Рассчитывается автоматически из содержимого файла",
 
     "profile.title": "Настройки профиля",
     "profile.display_name": "Отображаемое имя",

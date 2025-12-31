@@ -123,6 +123,8 @@
     "upload.update_branch_description": "Ihre Branch-Version wird durch diese neue Datei ersetzt.",
     "upload.review_changes": "Änderungen vor dem Hochladen überprüfen",
     "upload.review_changes_desc": "Vergleichen Sie Ihre lokale Datei mit der Online-Version und führen Sie manuell zusammen",
+    "upload.translation_composition": "Übersetzungszusammensetzung",
+    "upload.composition_auto": "Automatisch aus dem Dateiinhalt berechnet",
 
     "profile.title": "Profileinstellungen",
     "profile.display_name": "Anzeigename",

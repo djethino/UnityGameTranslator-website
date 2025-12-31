@@ -123,6 +123,8 @@
     "upload.update_branch_description": "ブランチバージョンはこの新しいファイルに置き換えられます。",
     "upload.review_changes": "アップロードする前に変更を確認",
     "upload.review_changes_desc": "ローカルファイルをオンライン版と比較して手動でマージしてください",
+    "upload.translation_composition": "翻訳の構成",
+    "upload.composition_auto": "ファイル内容から自動計算",
 
     "profile.title": "プロフィール設定",
     "profile.display_name": "表示名",

@@ -43,48 +43,52 @@
         @csrf
         @method('PUT')
 
-        <!-- Languages -->
+        <!-- Languages (read-only, set at upload time) -->
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.source_language') }}</label>
-                <select name="source_language" required
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
-                    @foreach($languages as $lang)
-                        <option value="{{ $lang }}" {{ $translation->source_language == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
-                    @endforeach
-                </select>
+                <div class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white opacity-75">
+                    @langflag($translation->source_language) {{ $translation->source_language }}
+                </div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.target_language') }}</label>
-                <select name="target_language" required
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
-                    @foreach($languages as $lang)
-                        <option value="{{ $lang }}" {{ $translation->target_language == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
-                    @endforeach
-                </select>
+                <div class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white opacity-75">
+                    @langflag($translation->target_language) {{ $translation->target_language }}
+                </div>
             </div>
         </div>
 
-        <!-- Translation Type -->
+        <!-- Translation Composition (read-only, computed from file content) -->
+        @php
+            $total = $translation->human_count + $translation->validated_count + $translation->ai_count;
+            $humanPct = $total > 0 ? round($translation->human_count / $total * 100) : 0;
+            $validatedPct = $total > 0 ? round($translation->validated_count / $total * 100) : 0;
+            $aiPct = $total > 0 ? round($translation->ai_count / $total * 100) : 0;
+        @endphp
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.translation_type') }}</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.translation_composition') }}</label>
             <div class="grid grid-cols-3 gap-3">
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 {{ $translation->type == 'ai' ? 'border-purple-500 bg-gray-600' : 'border-transparent' }} hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="ai" {{ $translation->type == 'ai' ? 'checked' : '' }} class="hidden">
-                    <i class="fas fa-robot text-2xl text-blue-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_ai') }}</span>
-                </label>
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 {{ $translation->type == 'ai_corrected' ? 'border-purple-500 bg-gray-600' : 'border-transparent' }} hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="ai_corrected" {{ $translation->type == 'ai_corrected' ? 'checked' : '' }} class="hidden">
-                    <i class="fas fa-user-edit text-2xl text-purple-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_ai_human') }}</span>
-                </label>
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 {{ $translation->type == 'human' ? 'border-purple-500 bg-gray-600' : 'border-transparent' }} hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="human" {{ $translation->type == 'human' ? 'checked' : '' }} class="hidden">
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $humanPct > 0 ? 'border-green-500/50' : 'border-transparent' }} opacity-90">
                     <i class="fas fa-user text-2xl text-green-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_human') }}</span>
-                </label>
+                    <span class="text-sm font-medium">{{ __('progress.human') }}</span>
+                    <span class="text-lg font-bold text-green-400 mt-1">{{ $humanPct }}%</span>
+                    <span class="text-xs text-gray-500">({{ number_format($translation->human_count) }})</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $validatedPct > 0 ? 'border-blue-500/50' : 'border-transparent' }} opacity-90">
+                    <i class="fas fa-check-circle text-2xl text-blue-400 mb-2"></i>
+                    <span class="text-sm font-medium">{{ __('progress.validated') }}</span>
+                    <span class="text-lg font-bold text-blue-400 mt-1">{{ $validatedPct }}%</span>
+                    <span class="text-xs text-gray-500">({{ number_format($translation->validated_count) }})</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $aiPct > 0 ? 'border-orange-500/50' : 'border-transparent' }} opacity-90">
+                    <i class="fas fa-robot text-2xl text-orange-400 mb-2"></i>
+                    <span class="text-sm font-medium">{{ __('progress.ai') }}</span>
+                    <span class="text-lg font-bold text-orange-400 mt-1">{{ $aiPct }}%</span>
+                    <span class="text-xs text-gray-500">({{ number_format($translation->ai_count) }})</span>
+                </div>
             </div>
+            <p class="text-xs text-gray-500 mt-2 text-center">{{ __('upload.composition_auto') }}</p>
         </div>
 
         <!-- Status -->
@@ -121,16 +125,4 @@
     </form>
 </div>
 
-<script nonce="{{ $cspNonce }}">
-document.querySelectorAll('.type-option').forEach(option => {
-    option.addEventListener('click', () => {
-        document.querySelectorAll('.type-option').forEach(o => {
-            o.classList.remove('border-purple-500', 'bg-gray-600');
-            o.classList.add('border-transparent');
-        });
-        option.classList.remove('border-transparent');
-        option.classList.add('border-purple-500', 'bg-gray-600');
-    });
-});
-</script>
 @endsection
