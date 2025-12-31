@@ -4,6 +4,34 @@
 
 @section('description', 'Browse and download free translations for Unity games. Automatic AI translation available. Community-powered game localization with no API costs.')
 
+@push('head')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Unity Games with Translations",
+    "description": "Browse and download free translations for Unity games",
+    "numberOfItems": {{ $games->total() }},
+    "itemListElement": [
+        @foreach($games->take(10) as $index => $game)
+        {
+            "@type": "ListItem",
+            "position": {{ $index + 1 }},
+            "item": {
+                "@type": "VideoGame",
+                "name": "{{ $game->name }}",
+                "url": "{{ route('games.show', $game) }}"
+                @if($game->image_url)
+                ,"image": "{{ $game->image_url }}"
+                @endif
+            }
+        }{{ !$loop->last ? ',' : '' }}
+        @endforeach
+    ]
+}
+</script>
+@endpush
+
 @section('content')
 <div class="mb-8">
     <h1 class="text-3xl font-bold mb-6">{{ __('games.browse') }}</h1>

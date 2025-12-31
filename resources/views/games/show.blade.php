@@ -11,28 +11,65 @@
 @push('head')
 <script type="application/ld+json">
 {
-    "@@context": "https://schema.org",
-    "@@type": "VideoGame",
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
     "name": "{{ $game->name }}",
     "image": "{{ $game->image_url ?? '' }}",
     "description": "Community translations for {{ $game->name }}",
     "url": "{{ route('games.show', $game) }}",
     "offers": {
-        "@@type": "Offer",
+        "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock"
     }
 }
 </script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "{{ __('nav.home') }}",
+            "item": "{{ url('/') }}"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "{{ __('nav.games') }}",
+            "item": "{{ route('games.index') }}"
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "{{ $game->name }}",
+            "item": "{{ route('games.show', $game) }}"
+        }
+    ]
+}
+</script>
 @endpush
 
 @section('content')
-<div class="mb-6">
-    <a href="{{ route('games.index') }}" class="text-purple-400 hover:text-purple-300">
-        <i class="fas fa-arrow-left mr-2"></i> {{ __('games.back') }}
-    </a>
-</div>
+{{-- Breadcrumbs --}}
+<nav aria-label="Breadcrumb" class="mb-6">
+    <ol class="flex items-center text-sm text-gray-400 flex-wrap gap-1">
+        <li>
+            <a href="{{ url('/') }}" class="hover:text-purple-400 transition">
+                <i class="fas fa-home"></i>
+            </a>
+        </li>
+        <li class="mx-2 text-gray-600">/</li>
+        <li>
+            <a href="{{ route('games.index') }}" class="hover:text-purple-400 transition">{{ __('nav.games') }}</a>
+        </li>
+        <li class="mx-2 text-gray-600">/</li>
+        <li class="text-white truncate max-w-[200px] sm:max-w-none" title="{{ $game->name }}">{{ $game->name }}</li>
+    </ol>
+</nav>
 
 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
     <div class="flex items-center gap-4 sm:gap-6">

@@ -2,6 +2,36 @@
 
 @section('title', 'UnityGameTranslator - ' . __('home.hero_description'))
 
+@push('head')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "UnityGameTranslator",
+    "url": "{{ url('/') }}",
+    "description": "{{ __('home.hero_description') }}",
+    "inLanguage": "{{ app()->getLocale() }}",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ route('games.index') }}?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+    }
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "UnityGameTranslator",
+    "url": "{{ url('/') }}",
+    "logo": "{{ asset('logo.svg') }}",
+    "sameAs": [
+        "https://github.com/djethino/UnityGameTranslator"
+    ]
+}
+</script>
+@endpush
+
 @section('content')
     <!-- Alpha Banner -->
     <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg mb-6 flex items-center justify-center">

@@ -14,6 +14,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="128x128" href="/icon-128.png">
 
+    <!-- Hreflang for multilingual SEO -->
+    @foreach(config('locales.supported', []) as $code => $locale)
+    <link rel="alternate" hreflang="{{ $code }}" href="{{ url()->current() }}{{ str_contains(url()->current(), '?') ? '&' : '?' }}lang={{ $code }}">
+    @endforeach
+    <link rel="alternate" hreflang="x-default" href="{{ url()->current() }}">
+
     <!-- Open Graph -->
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:title" content="@yield('title', 'UnityGameTranslator - Community Game Translations')">
@@ -23,6 +29,18 @@
     <meta property="og:locale" content="{{ app()->getLocale() }}">
     @hasSection('og_image')
     <meta property="og:image" content="@yield('og_image')">
+    @else
+    <meta property="og:image" content="{{ asset('images/og-default.png') }}">
+    @endif
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'UnityGameTranslator - Community Game Translations')">
+    <meta name="twitter:description" content="@yield('description', 'Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.')">
+    @hasSection('og_image')
+    <meta name="twitter:image" content="@yield('og_image')">
+    @else
+    <meta name="twitter:image" content="{{ asset('images/og-default.png') }}">
     @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
