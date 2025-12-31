@@ -1,9 +1,11 @@
 /**
  * Alpine.js component for the merge table view.
  * Handles selection, editing, deletion, and tracking of translation modifications.
+ * Persists state to sessionStorage to survive page navigation (pagination, search, sort).
  */
-export default function mergeTable() {
+export default function mergeTable(uuid) {
     return {
+        uuid: uuid,
         selections: {},
         deletions: {},
 
@@ -15,13 +17,45 @@ export default function mergeTable() {
             originalValue: ''
         },
 
+        // Storage key for this merge session
+        get storageKey() {
+            return `merge_state_${this.uuid}`;
+        },
+
         init() {
-            // Auto-submit filter checkboxes
+            // Restore state from sessionStorage
+            this.restoreState();
+
+            // Auto-submit filter checkboxes (save state before submit)
             document.querySelectorAll('.filter-checkbox').forEach((checkbox) => {
-                checkbox.addEventListener('change', function() {
-                    this.form.submit();
+                checkbox.addEventListener('change', () => {
+                    this.saveState();
+                    checkbox.form.submit();
                 });
             });
+
+            // Save state before any link navigation (pagination, sort)
+            document.querySelectorAll('a[href*="page="], a[href*="sort="]').forEach((link) => {
+                link.addEventListener('click', () => {
+                    this.saveState();
+                });
+            });
+
+            // Save state before search form submit
+            const searchForm = document.querySelector('form[method="GET"]:has(input[name="search"])');
+            if (searchForm) {
+                searchForm.addEventListener('submit', () => {
+                    this.saveState();
+                });
+            }
+
+            // Clear state on successful form submit (merge applied)
+            const mergeForm = document.getElementById('mergeForm');
+            if (mergeForm) {
+                mergeForm.addEventListener('submit', () => {
+                    this.clearState();
+                });
+            }
 
             // Close modal on Escape key
             document.addEventListener('keydown', (e) => {
@@ -32,6 +66,42 @@ export default function mergeTable() {
 
             // Branch rating stars
             this.initBranchRating();
+        },
+
+        /**
+         * Save current state to sessionStorage.
+         */
+        saveState() {
+            const state = {
+                selections: this.selections,
+                deletions: this.deletions
+            };
+            sessionStorage.setItem(this.storageKey, JSON.stringify(state));
+        },
+
+        /**
+         * Restore state from sessionStorage.
+         */
+        restoreState() {
+            const stored = sessionStorage.getItem(this.storageKey);
+            if (stored) {
+                try {
+                    const state = JSON.parse(stored);
+                    this.selections = state.selections || {};
+                    this.deletions = state.deletions || {};
+                    // Update hidden inputs to reflect restored state
+                    this.updateHiddenInputs();
+                } catch (e) {
+                    console.error('Failed to restore merge state:', e);
+                }
+            }
+        },
+
+        /**
+         * Clear state from sessionStorage (after successful submit).
+         */
+        clearState() {
+            sessionStorage.removeItem(this.storageKey);
         },
 
         /**
@@ -145,6 +215,7 @@ export default function mergeTable() {
                 delete this.selections[key];
             }
             this.updateHiddenInputs();
+            this.saveState();
         },
 
         getEditedValue(key) {
@@ -174,6 +245,7 @@ export default function mergeTable() {
                 this.selections[key] = { source, value, tag };
             }
             this.updateHiddenInputs();
+            this.saveState();
         },
 
         editCell(key, currentValue) {
@@ -211,6 +283,7 @@ export default function mergeTable() {
             }
 
             this.updateHiddenInputs();
+            this.saveState();
             this.closeEditModal();
         },
 
@@ -228,6 +301,7 @@ export default function mergeTable() {
                 this.selections = {};
                 this.deletions = {};
                 this.updateHiddenInputs();
+                this.clearState();
             }
         },
 

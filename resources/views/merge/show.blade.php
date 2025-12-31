@@ -3,7 +3,7 @@
 @section('title', __('merge.title') . ' - ' . $main->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergeTable()">
+<div class="container mx-auto px-4 py-8" x-data="mergeTable('{{ $uuid }}')">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
