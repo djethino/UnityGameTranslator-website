@@ -39,7 +39,7 @@ The website uses a Main/Branch model for collaborative translation:
 - Languages locked after first upload (source/target immutable)
 - UUID links all translations in a "lineage" (Main + all Branches)
 
-### Translation Quality System (H/V/A/C Tags)
+### Translation Quality System (H/V/A Tags)
 
 Each translation entry has a quality tag stored in the JSON:
 
@@ -55,7 +55,8 @@ Each translation entry has a quality tag stored in the JSON:
 | **H** | Human | 3 pts | Written by a human |
 | **V** | Validated | 2 pts | AI translation approved by human |
 | **A** | AI | 1 pt | Translated by Ollama |
-| **C** | Capture | 0 pts | Captured but not translated |
+
+> **Note:** Entries with tag `H` but empty value are displayed as "C" (Capture) and count as 0 pts until translated.
 
 **Quality Score** (0-3): `(H×3 + V×2 + A×1) / (H + V + A)`
 
