@@ -308,13 +308,13 @@
         <div id="deletionsContainer"></div>
     </form>
 
-    {{-- Legend --}}
+    {{-- Legend (HVASM order) --}}
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
         <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
-        <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
         <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
-        <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
+        <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
         <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
+        <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
         <span class="text-gray-600">|</span>
         <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_main') }}</span>
         <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_branch') }}</span>

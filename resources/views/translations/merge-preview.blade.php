@@ -271,13 +271,13 @@
         </div>
     </div>
 
-    {{-- Legend --}}
+    {{-- Legend (HVASM order) --}}
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
         <span><span class="tag-H">H</span> Human</span>
-        <span><span class="tag-A">A</span> AI</span>
         <span><span class="tag-V">V</span> Validated</span>
-        <span><span class="tag-M">M</span> Mod UI</span>
+        <span><span class="tag-A">A</span> AI</span>
         <span><span class="tag-S">S</span> Skipped</span>
+        <span><span class="tag-M">M</span> Mod UI</span>
         <span class="text-gray-600">|</span>
         <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge_preview.selection_local') }}</span>
         <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge_preview.selection_online') }}</span>
