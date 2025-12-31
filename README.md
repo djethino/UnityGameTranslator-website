@@ -17,6 +17,27 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Multi-language UI** (12 languages)
 - **Admin dashboard** with analytics and moderation tools
 
+### Collaboration Model (Main/Branch)
+
+The website uses a Main/Branch model for collaborative translation:
+
+| Role | Description |
+|------|-------------|
+| **Main** | Original uploader. Owns the translation and can merge branches. |
+| **Branch** | Contributor who forked the Main to add improvements. |
+
+**Workflow:**
+1. User A uploads → becomes **Main** owner
+2. User B downloads, improves, uploads → creates a **Branch**
+3. User A sees branches on their translation page
+4. User A can review and merge contributions from branches
+
+**Constraints:**
+- One Main per UUID (first uploader wins)
+- One Branch per user per UUID (updating replaces your branch)
+- Languages locked after first upload (source/target immutable)
+- UUID links all translations in a "lineage" (Main + all Branches)
+
 ### API for Unity Mod
 - **Search translations** by Steam ID, game name, or language
 - **Download translations** with ETag caching
