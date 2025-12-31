@@ -74,6 +74,10 @@ Route::prefix('v1')->group(function () {
         Route::post('merge-preview/init', [MergePreviewController::class, 'init'])
             ->middleware('throttle:10,1');
 
+        // Vote on translation
+        Route::post('translations/{translation}/vote', [TranslationController::class, 'vote'])
+            ->middleware('throttle:30,1');
+
         // Revoke token
         Route::delete('auth/token', [DeviceFlowController::class, 'revoke']);
     });

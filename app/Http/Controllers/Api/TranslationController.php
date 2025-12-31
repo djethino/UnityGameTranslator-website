@@ -92,6 +92,11 @@ class TranslationController extends Controller
                     'notes' => $t->notes,
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
+                    'human_count' => $t->human_count,
+                    'validated_count' => $t->validated_count,
+                    'ai_count' => $t->ai_count,
+                    'capture_count' => $t->capture_count,
+                    'quality_score' => $t->quality_score,
                     'file_hash' => $t->file_hash,
                     'file_uuid' => $t->file_uuid,
                     'updated_at' => $t->updated_at->toIso8601String(),
@@ -578,6 +583,26 @@ class TranslationController extends Controller
         return Game::create([
             'name' => $gameName,
             'steam_id' => $steamId,
+        ]);
+    }
+
+    /**
+     * Vote on a translation.
+     * Requires authentication.
+     *
+     * POST /api/v1/translations/{translation}/vote
+     */
+    public function vote(Request $request, Translation $translation): JsonResponse
+    {
+        $request->validate([
+            'value' => 'required|integer|in:-1,1',
+        ]);
+
+        $translation->vote((int) $request->value);
+
+        return response()->json([
+            'vote_count' => $translation->fresh()->vote_count,
+            'user_vote' => $translation->userVote()?->value,
         ]);
     }
 }
