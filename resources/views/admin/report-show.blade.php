@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <a href="{{ route('translations.download', $report->translation) }}" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+        <a href="{{ route('translations.download', $report->translation) }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
             <i class="fas fa-download mr-1"></i> Download Translation
         </a>
     </div>

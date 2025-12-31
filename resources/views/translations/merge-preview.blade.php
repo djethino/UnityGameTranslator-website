@@ -211,7 +211,7 @@
                 </button>
 
                 <button type="button" @click="downloadMerged()"
-                    class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg text-white transition">
+                    class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition">
                     <i class="fas fa-download mr-2"></i> {{ __('merge_preview.download_merged') }}
                 </button>
 

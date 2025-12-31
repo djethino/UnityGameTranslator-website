@@ -110,10 +110,10 @@
 
         <!-- Actions -->
         <div class="flex gap-3 mt-6 pt-6 border-t border-gray-700">
-            <a href="{{ route('translations.download', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+            <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-download mr-1"></i> {{ __('translation.download') }}
             </a>
-            <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+            <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-edit mr-1"></i> {{ __('common.edit') }}
             </a>
             <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline delete-form">

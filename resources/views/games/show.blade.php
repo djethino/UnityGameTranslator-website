@@ -252,19 +252,19 @@
                             <div class="flex gap-2">
                                 @auth
                                     @if(auth()->user()->isAdmin())
-                                        <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.edit') }}">
+                                        <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.edit') }}">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @endif
-                                    <button type="button" data-report-id="{{ $translation->id }}" class="report-btn bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
+                                    <button type="button" data-report-id="{{ $translation->id }}" class="report-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
                                     </button>
                                 @else
-                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
                                     </a>
                                 @endauth
-                                <a href="{{ route('translations.download', $translation) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium">
+                                <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium">
                                     <i class="fas fa-download mr-1"></i> {{ __('translation.download') }}
                                 </a>
                             </div>
@@ -325,7 +325,7 @@
                                         <span class="text-sm {{ $version->vote_count > 0 ? 'text-green-400' : ($version->vote_count < 0 ? 'text-red-400' : 'text-gray-500') }}">
                                             {{ $version->vote_count >= 0 ? '+' : '' }}{{ $version->vote_count }}
                                         </span>
-                                        <a href="{{ route('translations.download', $version) }}" class="text-purple-400 hover:text-purple-300">
+                                        <a href="{{ route('translations.download', $version) }}" class="text-blue-400 hover:text-blue-300">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </div>
@@ -400,19 +400,19 @@
                                         </div>
                                         @auth
                                             @if(auth()->user()->isAdmin())
-                                                <a href="{{ route('admin.translations.edit', $fork) }}" class="text-yellow-400 hover:text-yellow-300">
+                                                <a href="{{ route('admin.translations.edit', $fork) }}" class="text-orange-400 hover:text-orange-300">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             @endif
-                                            <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-gray-500 hover:text-gray-300">
+                                            <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>
                                             </button>
                                         @else
-                                            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="text-gray-500 hover:text-gray-300">
+                                            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>
                                             </a>
                                         @endauth
-                                        <a href="{{ route('translations.download', $fork) }}" class="text-purple-400 hover:text-purple-300">
+                                        <a href="{{ route('translations.download', $fork) }}" class="text-blue-400 hover:text-blue-300">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </div>

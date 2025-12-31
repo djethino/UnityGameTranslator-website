@@ -107,7 +107,7 @@
                                 <a href="{{ route('admin.translations.show', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm" title="{{ __('admin.view_json') }}">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm" title="{{ __('common.edit') }}">
+                                <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm" title="{{ __('common.edit') }}">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline delete-form">

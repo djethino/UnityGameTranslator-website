@@ -178,7 +178,7 @@
             <p class="text-gray-400">{{ __('dashboard.no_branches') }}</p>
             <p class="text-sm text-gray-500 mt-1">{{ __('dashboard.no_branches_desc') }}</p>
             <a href="{{ route('translations.merge', $translation->file_uuid) }}"
-               class="inline-block mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+               class="inline-block mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
                 <i class="fas fa-edit mr-2"></i>{{ __('dashboard.edit_translations') }}
             </a>
         </div>
@@ -279,12 +279,12 @@
     {{-- Quick Actions --}}
     <div class="mt-6 flex flex-wrap gap-3">
         <a href="{{ route('translations.download', $translation) }}"
-           class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-download mr-2"></i>{{ __('dashboard.download_file') }}
         </a>
         @if($isMain)
         <a href="{{ route('translations.edit', $translation) }}"
-           class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+           class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-edit mr-2"></i>{{ __('dashboard.edit_metadata') }}
         </a>
         @endif
