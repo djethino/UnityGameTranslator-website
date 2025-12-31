@@ -380,7 +380,7 @@ function mergePreview() {
         editedValues: {},
         filters: {
             localOnly: true,
-            onlineOnly: true,
+            onlineOnly: false,  // Already on server, nothing to merge
             different: true,
             same: false
         },
@@ -480,18 +480,46 @@ function mergePreview() {
             // Calculate stats
             this.calculateStats();
 
-            // Auto-select: only local-only keys are selected by default (additions)
-            // Common keys default to online (no change), user must explicitly select local
+            // Auto-select based on smart defaulting:
+            // - Local-only: select LOCAL (additions to server)
+            // - Online-only: select ONLINE (already on server)
+            // - Different: smart default based on tag quality (H > V > A, online wins ties)
+            // - Same: select ONLINE (no change needed)
+            const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
+
             for (const key of this.allKeys) {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
                 if (hasLocal && !hasOnline) {
-                    // Local-only: these are additions, select local
+                    // Local-only: addition, select local
                     this.selections[key] = 'local';
-                } else {
-                    // Online-only or common: default to online (keeps server version)
+                } else if (!hasLocal && hasOnline) {
+                    // Online-only: already on server, keep online
                     this.selections[key] = 'online';
+                } else if (hasLocal && hasOnline) {
+                    // Both exist: check if values differ (conflict)
+                    const localVal = this.getValue(this.localData[key]);
+                    const onlineVal = this.getValue(this.onlineData[key]);
+
+                    if (localVal !== onlineVal) {
+                        // Conflict: smart default based on tag quality
+                        const localTag = this.getTag(this.localData[key]);
+                        const onlineTag = this.getTag(this.onlineData[key]);
+                        const localPriority = tagPriority[localTag] || 0;
+                        const onlinePriority = tagPriority[onlineTag] || 0;
+
+                        if (localPriority > onlinePriority) {
+                            // Local is better quality
+                            this.selections[key] = 'local';
+                        } else {
+                            // Online is better or equal (server wins ties)
+                            this.selections[key] = 'online';
+                        }
+                    } else {
+                        // Same value: keep online (no change)
+                        this.selections[key] = 'online';
+                    }
                 }
             }
 
@@ -717,15 +745,31 @@ function mergePreview() {
                 this.selections = {};
                 this.editedValues = {};
 
-                // Reset to defaults: only local-only as local, rest as online
+                // Reset to smart defaults (same logic as loadContent)
+                const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
+
                 for (const key of this.allKeys) {
                     const hasLocal = key in this.localData;
                     const hasOnline = key in this.onlineData;
 
                     if (hasLocal && !hasOnline) {
                         this.selections[key] = 'local';
-                    } else {
+                    } else if (!hasLocal && hasOnline) {
                         this.selections[key] = 'online';
+                    } else if (hasLocal && hasOnline) {
+                        const localVal = this.getValue(this.localData[key]);
+                        const onlineVal = this.getValue(this.onlineData[key]);
+
+                        if (localVal !== onlineVal) {
+                            const localTag = this.getTag(this.localData[key]);
+                            const onlineTag = this.getTag(this.onlineData[key]);
+                            const localPriority = tagPriority[localTag] || 0;
+                            const onlinePriority = tagPriority[onlineTag] || 0;
+
+                            this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
+                        } else {
+                            this.selections[key] = 'online';
+                        }
                     }
                 }
             }
