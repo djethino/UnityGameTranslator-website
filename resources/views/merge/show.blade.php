@@ -105,16 +105,11 @@
 
         <span class="text-gray-600">|</span>
 
+        {{-- Tag filters in HVASM order --}}
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="human" value="1" {{ $filters['human'] ? 'checked' : '' }}
                 class="filter-checkbox rounded bg-gray-700 border-gray-600 text-green-600">
             <span class="tag-H">H</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="ai" value="1" {{ $filters['ai'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-orange-600">
-            <span class="tag-A">A</span>
         </label>
 
         <label class="flex items-center gap-2 cursor-pointer">
@@ -124,15 +119,21 @@
         </label>
 
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="mod_ui" value="1" {{ $filters['mod_ui'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-purple-600">
-            <span class="tag-M">M</span>
+            <input type="checkbox" name="ai" value="1" {{ $filters['ai'] ? 'checked' : '' }}
+                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-orange-600">
+            <span class="tag-A">A</span>
         </label>
 
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="skipped" value="1" {{ $filters['skipped'] ? 'checked' : '' }}
                 class="filter-checkbox rounded bg-gray-700 border-gray-600 text-gray-600">
             <span class="tag-S">S</span>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="mod_ui" value="1" {{ $filters['mod_ui'] ? 'checked' : '' }}
+                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-purple-600">
+            <span class="tag-M">M</span>
         </label>
 
         @if(array_filter($filters))
