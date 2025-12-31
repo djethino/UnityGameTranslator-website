@@ -45,7 +45,7 @@
         </div>
     @endif
 
-    <form action="{{ route('translations.update', $translation) }}" method="POST" class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <form action="{{ ($fromAdmin ?? false) ? route('admin.translations.update', $translation) : route('translations.update', $translation) }}" method="POST" class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         @csrf
         @method('PUT')
 
