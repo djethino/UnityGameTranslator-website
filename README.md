@@ -67,6 +67,11 @@ Each translation entry has a quality tag stored in the JSON:
 | 1.0+ | Basic |
 | <1.0 | Raw AI |
 
+**Editing on the website:**
+- Translation owners can **edit** entries online → tag becomes `H`
+- Owners can **validate** AI translations → tag becomes `V`
+- Bulk validation available for reviewing multiple entries
+
 The website displays H/V/A counts and quality score on each translation card.
 
 ### API for Unity Mod
