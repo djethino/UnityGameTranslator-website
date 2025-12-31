@@ -107,6 +107,39 @@
 
             <span class="text-gray-600">|</span>
 
+            {{-- Tag filters in HVASM order --}}
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" x-model="filters.tagH"
+                    class="rounded bg-gray-700 border-gray-600 text-green-600">
+                <span class="tag-H">H</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" x-model="filters.tagV"
+                    class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                <span class="tag-V">V</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" x-model="filters.tagA"
+                    class="rounded bg-gray-700 border-gray-600 text-orange-600">
+                <span class="tag-A">A</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" x-model="filters.tagS"
+                    class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                <span class="tag-S">S</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" x-model="filters.tagM"
+                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                <span class="tag-M">M</span>
+            </label>
+
+            <span class="text-gray-600">|</span>
+
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_local') }}
             </button>
@@ -116,21 +149,63 @@
             </button>
         </div>
 
+        {{-- Search --}}
+        <div class="mb-4">
+            <div class="relative">
+                <input type="text" x-model="searchQuery" placeholder="{{ __('merge_preview.search_placeholder') }}"
+                    class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <button x-show="searchQuery" @click="searchQuery = ''" type="button"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
         {{-- Table --}}
         <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6">
             <table class="w-full text-sm">
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium w-1/4">{{ __('merge_preview.key') }}</th>
-                        <th class="px-4 py-3 text-left border-l border-gray-700 w-1/3">
+                        {{-- Key column with sort --}}
+                        <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
+                            @click="toggleSort('key')">
                             <div class="flex items-center gap-2">
-                                <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
+                                {{ __('merge_preview.key') }}
+                                <i class="fas" :class="getSortIcon('key')"></i>
                             </div>
                         </th>
-                        <th class="px-4 py-3 text-left border-l border-gray-700 w-1/3">
+                        {{-- Local Tag --}}
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('localTag')">
+                            <div class="flex items-center justify-center gap-1">
+                                <span class="text-green-400 font-medium text-xs">Tag</span>
+                                <i class="fas text-xs" :class="getSortIcon('localTag')"></i>
+                            </div>
+                        </th>
+                        {{-- Local Value --}}
+                        <th class="px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('localValue')">
+                            <div class="flex items-center gap-2">
+                                <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
+                                <i class="fas" :class="getSortIcon('localValue')"></i>
+                            </div>
+                        </th>
+                        {{-- Online Tag --}}
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('onlineTag')">
+                            <div class="flex items-center justify-center gap-1">
+                                <span class="text-blue-400 font-medium text-xs">Tag</span>
+                                <i class="fas text-xs" :class="getSortIcon('onlineTag')"></i>
+                            </div>
+                        </th>
+                        {{-- Online Value --}}
+                        <th class="px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('onlineValue')">
                             <div class="flex items-center gap-2">
                                 <span class="text-blue-400 font-medium">{{ __('merge_preview.online_version') }}</span>
                                 <span class="text-xs text-gray-500">({{ $translation->user->name }})</span>
+                                <i class="fas" :class="getSortIcon('onlineValue')"></i>
                             </div>
                         </th>
                     </tr>
@@ -141,37 +216,53 @@
                             {{-- Key column --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-text="key"></td>
 
-                            {{-- Local column --}}
+                            {{-- Local Tag column --}}
+                            <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
+                                :class="getCellClass(key, 'local')"
+                                @click="select(key, 'local')">
+                                <template x-if="localData[key] !== undefined">
+                                    <span x-show="!isEdited(key)" :class="'tag-' + getTag(localData[key])" x-text="getTag(localData[key])"></span>
+                                    <span x-show="isEdited(key)" class="tag-H">H</span>
+                                </template>
+                                <template x-if="localData[key] === undefined">
+                                    <span class="text-gray-600">—</span>
+                                </template>
+                            </td>
+
+                            {{-- Local Value column --}}
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="getCellClass(key, 'local')"
                                 @click="select(key, 'local')"
                                 @dblclick="editCell(key, getValue(localData[key]))">
                                 <template x-if="localData[key] !== undefined">
-                                    <div class="flex items-start gap-2">
-                                        {{-- Show edited tag (H) if manually edited, otherwise original tag --}}
-                                        <span x-show="!isEdited(key)" :class="'tag-' + getTag(localData[key])" x-text="getTag(localData[key])"></span>
-                                        <span x-show="isEdited(key)" class="tag-H">H</span>
-                                        {{-- Show edited value if edited, otherwise original --}}
-                                        <span class="break-words" :class="isEdited(key) ? 'text-purple-300' : ''">
-                                            <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
-                                            <span x-show="!isEdited(key)" x-text="getValue(localData[key])"></span>
-                                        </span>
-                                    </div>
+                                    <span class="break-words" :class="isEdited(key) ? 'text-purple-300' : ''">
+                                        <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
+                                        <span x-show="!isEdited(key)" x-text="getValue(localData[key])"></span>
+                                    </span>
                                 </template>
                                 <template x-if="localData[key] === undefined">
                                     <span class="text-gray-600 italic">—</span>
                                 </template>
                             </td>
 
-                            {{-- Online column --}}
+                            {{-- Online Tag column --}}
+                            <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
+                                :class="getCellClass(key, 'online')"
+                                @click="select(key, 'online')">
+                                <template x-if="onlineData[key] !== undefined">
+                                    <span :class="'tag-' + getTag(onlineData[key])" x-text="getTag(onlineData[key])"></span>
+                                </template>
+                                <template x-if="onlineData[key] === undefined">
+                                    <span class="text-gray-600">—</span>
+                                </template>
+                            </td>
+
+                            {{-- Online Value column --}}
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <div class="flex items-start gap-2">
-                                        <span :class="'tag-' + getTag(onlineData[key])" x-text="getTag(onlineData[key])"></span>
-                                        <span class="break-words" x-text="getValue(onlineData[key])"></span>
-                                    </div>
+                                    <span class="break-words" x-text="getValue(onlineData[key])"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
                                     <span class="text-gray-600 italic">—</span>
@@ -181,7 +272,7 @@
                     </template>
 
                     <tr x-show="filteredKeys.length === 0">
-                        <td colspan="3" class="px-4 py-12 text-center text-gray-500">
+                        <td colspan="5" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
                             <p>{{ __('merge_preview.no_differences') }}</p>
                         </td>
@@ -382,8 +473,17 @@ function mergePreview() {
             localOnly: true,
             onlineOnly: false,  // Already on server, nothing to merge
             different: true,
-            same: false
+            same: false,
+            // Tag filters (HVASM) - all enabled by default
+            tagH: true,
+            tagV: true,
+            tagA: true,
+            tagS: true,
+            tagM: true
         },
+        searchQuery: '',
+        sortColumn: 'key',
+        sortDirection: 'asc',
         stats: {
             total: 0,
             localOnly: 0,
@@ -552,26 +652,86 @@ function mergePreview() {
         },
 
         get filteredKeys() {
-            return this.allKeys.filter(key => {
+            let keys = this.allKeys.filter(key => {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
+                // Category filter
+                let passesCategory = false;
                 if (hasLocal && !hasOnline) {
-                    return this.filters.localOnly;
-                }
-                if (!hasLocal && hasOnline) {
-                    return this.filters.onlineOnly;
-                }
-                if (hasLocal && hasOnline) {
+                    passesCategory = this.filters.localOnly;
+                } else if (!hasLocal && hasOnline) {
+                    passesCategory = this.filters.onlineOnly;
+                } else if (hasLocal && hasOnline) {
                     const localVal = this.getValue(this.localData[key]);
                     const onlineVal = this.getValue(this.onlineData[key]);
-                    if (localVal !== onlineVal) {
-                        return this.filters.different;
-                    }
-                    return this.filters.same;
+                    passesCategory = (localVal !== onlineVal) ? this.filters.different : this.filters.same;
                 }
-                return false;
+
+                if (!passesCategory) return false;
+
+                // Tag filter (check both local and online tags)
+                const localTag = hasLocal ? this.getTag(this.localData[key]) : null;
+                const onlineTag = hasOnline ? this.getTag(this.onlineData[key]) : null;
+                const tagFilters = {
+                    'H': this.filters.tagH,
+                    'V': this.filters.tagV,
+                    'A': this.filters.tagA,
+                    'S': this.filters.tagS,
+                    'M': this.filters.tagM
+                };
+                // Pass if either tag matches an enabled filter
+                const localTagPass = localTag && tagFilters[localTag];
+                const onlineTagPass = onlineTag && tagFilters[onlineTag];
+                if (!localTagPass && !onlineTagPass) return false;
+
+                // Search filter
+                if (this.searchQuery.trim()) {
+                    const query = this.searchQuery.toLowerCase().trim();
+                    const localVal = hasLocal ? this.getValue(this.localData[key]).toLowerCase() : '';
+                    const onlineVal = hasOnline ? this.getValue(this.onlineData[key]).toLowerCase() : '';
+                    if (!key.toLowerCase().includes(query) &&
+                        !localVal.includes(query) &&
+                        !onlineVal.includes(query)) {
+                        return false;
+                    }
+                }
+
+                return true;
             });
+
+            // Sorting
+            const col = this.sortColumn;
+            const dir = this.sortDirection === 'asc' ? 1 : -1;
+
+            keys.sort((a, b) => {
+                let valA, valB;
+
+                if (col === 'key') {
+                    valA = a.toLowerCase();
+                    valB = b.toLowerCase();
+                } else if (col === 'localTag') {
+                    valA = a in this.localData ? this.getTag(this.localData[a]) : '';
+                    valB = b in this.localData ? this.getTag(this.localData[b]) : '';
+                } else if (col === 'localValue') {
+                    valA = a in this.localData ? this.getValue(this.localData[a]).toLowerCase() : '';
+                    valB = b in this.localData ? this.getValue(this.localData[b]).toLowerCase() : '';
+                } else if (col === 'onlineTag') {
+                    valA = a in this.onlineData ? this.getTag(this.onlineData[a]) : '';
+                    valB = b in this.onlineData ? this.getTag(this.onlineData[b]) : '';
+                } else if (col === 'onlineValue') {
+                    valA = a in this.onlineData ? this.getValue(this.onlineData[a]).toLowerCase() : '';
+                    valB = b in this.onlineData ? this.getValue(this.onlineData[b]).toLowerCase() : '';
+                } else {
+                    return 0;
+                }
+
+                if (valA < valB) return -1 * dir;
+                if (valA > valB) return 1 * dir;
+                return 0;
+            });
+
+            return keys;
         },
 
         get totalChanges() {
@@ -643,6 +803,22 @@ function mergePreview() {
             if (entry === null || entry === undefined) return 'A';
             if (typeof entry === 'object') return entry.t || 'A';
             return 'A';
+        },
+
+        toggleSort(column) {
+            if (this.sortColumn === column) {
+                this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortColumn = column;
+                this.sortDirection = 'asc';
+            }
+        },
+
+        getSortIcon(column) {
+            if (this.sortColumn !== column) {
+                return 'fa-sort text-gray-600';
+            }
+            return this.sortDirection === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400';
         },
 
         isEdited(key) {

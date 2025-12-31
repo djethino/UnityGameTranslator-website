@@ -338,6 +338,7 @@
     "merge.enter_translation": "Enter the translation...",
     "merge.save_shortcut": "to save",
     "merge.cancel_shortcut": "to cancel",
+    "merge.search_placeholder": "Search by key or value...",
 
     "auth.sign_in": "Sign in to continue",
     "auth.choose_method": "Choose your login method:",
@@ -487,6 +488,7 @@
     "merge_preview.selection_local": "Local selection",
     "merge_preview.selection_online": "Online selection",
     "merge_preview.manual_edit": "Manual edit",
+    "merge_preview.search_placeholder": "Search by key or value...",
 
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Back to My Translations",

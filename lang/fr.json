@@ -338,6 +338,7 @@
     "merge.enter_translation": "Entrez la traduction...",
     "merge.save_shortcut": "pour sauvegarder",
     "merge.cancel_shortcut": "pour annuler",
+    "merge.search_placeholder": "Rechercher par clé ou valeur...",
 
     "auth.sign_in": "Connectez-vous pour continuer",
     "auth.choose_method": "Choisissez votre méthode de connexion :",
@@ -487,6 +488,7 @@
     "merge_preview.selection_local": "Sélection locale",
     "merge_preview.selection_online": "Sélection en ligne",
     "merge_preview.manual_edit": "Édition manuelle",
+    "merge_preview.search_placeholder": "Rechercher par clé ou valeur...",
 
     "dashboard.title": "Tableau de bord",
     "dashboard.back_to_translations": "Retour à mes traductions",

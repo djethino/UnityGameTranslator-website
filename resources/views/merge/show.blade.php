@@ -144,6 +144,40 @@
         @endif
     </form>
 
+    {{-- Search --}}
+    <div class="mb-4">
+        <form method="GET" class="relative">
+            {{-- Preserve existing params --}}
+            @foreach($selectedBranches as $branch)
+            <input type="hidden" name="branches[]" value="{{ $branch->id }}">
+            @endforeach
+            @foreach(array_filter($filters) as $filterKey => $filterValue)
+            <input type="hidden" name="{{ $filterKey }}" value="{{ $filterValue }}">
+            @endforeach
+            @if(request('sort'))
+            <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('dir'))
+            <input type="hidden" name="dir" value="{{ request('dir') }}">
+            @endif
+
+            <input type="text" name="search" value="{{ request('search') }}"
+                placeholder="{{ __('merge.search_placeholder') }}"
+                class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            @if(request('search'))
+            <a href="{{ route('translations.merge', array_merge(
+                ['uuid' => $uuid],
+                $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->toArray()] : [],
+                array_filter($filters),
+                request('sort') ? ['sort' => request('sort'), 'dir' => request('dir')] : []
+            )) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                <i class="fas fa-times"></i>
+            </a>
+            @endif
+        </form>
+    </div>
+
     {{-- Merge Form --}}
     <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
         @csrf
@@ -151,17 +185,50 @@
         {{-- Table --}}
         <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
             <table class="w-full text-sm">
+                @php
+                    $currentSort = request('sort', 'key');
+                    $currentDir = request('dir', 'asc');
+                    $sortParams = array_merge(
+                        ['uuid' => $uuid],
+                        $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->toArray()] : [],
+                        array_filter($filters),
+                        request('search') ? ['search' => request('search')] : []
+                    );
+                @endphp
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium">{{ __('merge.key') }}</th>
-                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[300px]">
-                            <div class="flex items-center gap-2">
+                        {{-- Key column with sort --}}
+                        <th class="px-4 py-3 text-left text-gray-400 font-medium">
+                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'key', 'dir' => ($currentSort === 'key' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
+                                class="flex items-center gap-2 hover:text-white transition">
+                                {{ __('merge.key') }}
+                                <i class="fas {{ $currentSort === 'key' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
+                            </a>
+                        </th>
+                        {{-- Main Tag column --}}
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12">
+                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'mainTag', 'dir' => ($currentSort === 'mainTag' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
+                                class="flex items-center justify-center gap-1 hover:text-white transition">
+                                <span class="text-green-400 font-medium text-xs">Tag</span>
+                                <i class="fas text-xs {{ $currentSort === 'mainTag' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
+                            </a>
+                        </th>
+                        {{-- Main Value column --}}
+                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'mainValue', 'dir' => ($currentSort === 'mainValue' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
+                                class="flex items-center gap-2 hover:text-white transition">
                                 <span class="text-green-400 font-medium">Main</span>
                                 <span class="text-xs text-gray-500">({{ $main->user->name ?? __('common.you') }})</span>
-                            </div>
+                                <i class="fas {{ $currentSort === 'mainValue' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
+                            </a>
                         </th>
                         @foreach($selectedBranches as $branch)
-                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[300px]">
+                        {{-- Branch Tag column --}}
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12">
+                            <span class="text-blue-400 font-medium text-xs">Tag</span>
+                        </th>
+                        {{-- Branch Value column --}}
+                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
                             <div class="flex items-center gap-2">
                                 <span class="text-blue-400 font-medium">{{ $branch->user->name }}</span>
                                 <span class="text-xs text-gray-500">
@@ -198,21 +265,25 @@
                             </div>
                         </td>
 
-                        {{-- Main column --}}
+                        {{-- Main Tag column --}}
+                        <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
+                            :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
+                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')">
+                            <span :class="isDeleted({{ $keyJson }}) ? 'opacity-40' : ''">
+                                <span x-show="!isEdited({{ $keyJson }})" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
+                                <span x-show="isEdited({{ $keyJson }})" class="tag-H">H</span>
+                            </span>
+                        </td>
+
+                        {{-- Main Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell"
                             :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
                             @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')"
                             @dblclick="!isDeleted({{ $keyJson }}) && editCell({{ $keyJson }}, {{ json_encode($mainValue) }})">
-                            <div class="flex items-start gap-2" :class="isDeleted({{ $keyJson }}) ? 'opacity-40' : ''">
-                                {{-- Tag badge: shows edited tag (H) if manually edited --}}
-                                <span x-show="!isEdited({{ $keyJson }})" class="tag-{{ $mainTag }} shrink-0">{{ $mainTag }}</span>
-                                <span x-show="isEdited({{ $keyJson }})" class="tag-H shrink-0">H</span>
-                                {{-- Value: shows edited value if manually edited --}}
-                                <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through' : '']">
-                                    <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
-                                    <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
-                                </span>
-                            </div>
+                            <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through opacity-40' : '']">
+                                <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
+                                <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
+                            </span>
                         </td>
 
                         {{-- Branch columns --}}
@@ -224,25 +295,33 @@
                             $isDiff = $branchValue !== $mainValue && $branchEntry !== null;
                             $isNew = $mainEntry === null && $branchEntry !== null;
                         @endphp
+                        {{-- Branch Tag column --}}
+                        <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
+                            :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
+                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue) }}, '{{ $branchTag }}')">
+                            @if($branchEntry !== null)
+                            <span class="tag-{{ $branchTag }}">{{ $branchTag }}</span>
+                            @else
+                            <span class="text-gray-600">—</span>
+                            @endif
+                        </td>
+                        {{-- Branch Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
                             :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
                             @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue) }}, '{{ $branchTag }}')">
                             @if($branchEntry !== null)
-                            <div class="flex items-start gap-2">
-                                <span class="tag-{{ $branchTag }} shrink-0">{{ $branchTag }}</span>
-                                <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
-                                    {{ $branchValue }}
-                                </span>
-                            </div>
+                            <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
+                                {{ $branchValue }}
+                            </span>
                             @else
-                            <span class="text-gray-600 italic">-</span>
+                            <span class="text-gray-600 italic">—</span>
                             @endif
                         </td>
                         @endforeach
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ 2 + $selectedBranches->count() }}" class="px-4 py-12 text-center text-gray-500">
+                        <td colspan="{{ 3 + ($selectedBranches->count() * 2) }}" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
                             <p>{{ __('merge.no_keys_found') }}</p>
                         </td>

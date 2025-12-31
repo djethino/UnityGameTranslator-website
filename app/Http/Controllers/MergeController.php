@@ -67,6 +67,40 @@ class MergeController extends Controller
 
         $filteredKeys = $this->applyFilters($allKeys, $mainContent, $branchContents, $filters);
 
+        // Apply search
+        $search = $request->input('search');
+        if ($search) {
+            $searchLower = mb_strtolower($search);
+            $filteredKeys = array_values(array_filter($filteredKeys, function ($key) use ($searchLower, $mainContent, $branchContents) {
+                // Check key
+                if (mb_stripos($key, $searchLower) !== false) {
+                    return true;
+                }
+                // Check main value
+                if (isset($mainContent[$key])) {
+                    $mainValue = $this->extractValue($mainContent[$key]);
+                    if (mb_stripos($mainValue, $searchLower) !== false) {
+                        return true;
+                    }
+                }
+                // Check branch values
+                foreach ($branchContents as $content) {
+                    if (isset($content[$key])) {
+                        $branchValue = $this->extractValue($content[$key]);
+                        if (mb_stripos($branchValue, $searchLower) !== false) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }));
+        }
+
+        // Apply sorting
+        $sortColumn = $request->input('sort', 'key');
+        $sortDir = $request->input('dir', 'asc');
+        $filteredKeys = $this->applySorting($filteredKeys, $mainContent, $sortColumn, $sortDir);
+
         // Pagination
         $page = max(1, (int) $request->input('page', 1));
         $perPage = 100;
@@ -362,6 +396,36 @@ class MergeController extends Controller
 
             return $matches;
         }));
+    }
+
+    /**
+     * Apply sorting to the key list.
+     */
+    private function applySorting(array $keys, array $mainContent, string $column, string $direction): array
+    {
+        $multiplier = ($direction === 'desc') ? -1 : 1;
+
+        usort($keys, function ($a, $b) use ($mainContent, $column, $multiplier) {
+            switch ($column) {
+                case 'mainTag':
+                    $valA = isset($mainContent[$a]) ? $this->extractTag($mainContent[$a]) : '';
+                    $valB = isset($mainContent[$b]) ? $this->extractTag($mainContent[$b]) : '';
+                    break;
+                case 'mainValue':
+                    $valA = isset($mainContent[$a]) ? mb_strtolower($this->extractValue($mainContent[$a])) : '';
+                    $valB = isset($mainContent[$b]) ? mb_strtolower($this->extractValue($mainContent[$b])) : '';
+                    break;
+                case 'key':
+                default:
+                    $valA = mb_strtolower($a);
+                    $valB = mb_strtolower($b);
+                    break;
+            }
+
+            return strcmp($valA, $valB) * $multiplier;
+        });
+
+        return $keys;
     }
 
     /**
