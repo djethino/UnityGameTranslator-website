@@ -17,24 +17,25 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Multi-language UI** (12 languages)
 - **Admin dashboard** with analytics and moderation tools
 
-### Collaboration Model (Main/Branch)
+### Collaboration Model (Main/Branch/Fork)
 
 The website uses a Main/Branch model for collaborative translation:
 
-| Role | Description |
+| Term | Description |
 |------|-------------|
-| **Main** | Original uploader. Owns the translation and can merge branches. |
-| **Branch** | Contributor who forked the Main to add improvements. |
+| **Main** | The original translation. First uploader becomes the Main owner. |
+| **Branch** | A contributor's version, linked to the Main. |
+| **Fork** | The action of copying a translation to create your own Branch. |
 
 **Workflow:**
 1. User A uploads → becomes **Main** owner
-2. User B downloads, improves, uploads → creates a **Branch**
-3. User A sees branches on their translation page
-4. User A can review and merge contributions from branches
+2. User B downloads, improves, uploads → **forks** and creates a **Branch**
+3. User A sees all Branches on their translation page
+4. User A can review and merge contributions from Branches into Main
 
 **Constraints:**
 - One Main per UUID (first uploader wins)
-- One Branch per user per UUID (updating replaces your branch)
+- One Branch per user per UUID (updating replaces your Branch)
 - Languages locked after first upload (source/target immutable)
 - UUID links all translations in a "lineage" (Main + all Branches)
 
