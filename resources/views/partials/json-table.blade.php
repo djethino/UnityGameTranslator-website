@@ -95,12 +95,26 @@
                 </thead>
                 <tbody>
                     @forelse($displayTranslations as $original => $translated)
+                        @php
+                            // Handle both old string format and new object format {"v": "value", "t": "tag"}
+                            $value = is_array($translated) ? ($translated['v'] ?? '') : $translated;
+                            $tag = is_array($translated) ? ($translated['t'] ?? 'A') : null;
+                        @endphp
                         <tr class="border-b border-gray-800 hover:bg-gray-800/50">
                             <td class="py-2 px-4 text-gray-300 break-words align-top">
                                 <span class="font-mono text-xs">{{ Str::limit($original, 150) }}</span>
                             </td>
                             <td class="py-2 px-4 text-white break-words align-top">
-                                {{ Str::limit($translated, 150) }}
+                                @if($tag)
+                                    <span class="inline-block w-5 h-5 text-center text-xs font-bold rounded mr-1
+                                        @if($tag === 'H') bg-green-600
+                                        @elseif($tag === 'V') bg-blue-600
+                                        @elseif($tag === 'A') bg-orange-600
+                                        @elseif($tag === 'M') bg-purple-600
+                                        @else bg-gray-600
+                                        @endif">{{ $tag }}</span>
+                                @endif
+                                {{ Str::limit($value, 150) }}
                             </td>
                         </tr>
                     @empty
