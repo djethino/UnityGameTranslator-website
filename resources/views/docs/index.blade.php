@@ -338,10 +338,10 @@
                 <p class="text-gray-300 mb-6">{{ __('docs.first_launch_intro') }}</p>
 
                 <!-- Wizard Screenshot -->
-                <figure class="mb-6 text-center">
+                <figure class="mb-6 flex flex-col items-center">
                     <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
                          alt="{{ __('docs.wizard_screenshot_alt') }}"
-                         class="doc-img doc-img-mod"
+                         class="doc-img doc-img-mod mx-auto"
                          onclick="openLightbox(this.src)">
                     <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
