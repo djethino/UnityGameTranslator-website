@@ -353,8 +353,8 @@ class TranslationController extends Controller
             'game_name' => 'nullable|required_without:steam_id|string|max:255',
             'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
-            'type' => 'required|in:ai,human,ai_corrected',
-            'status' => 'required|in:in_progress,complete',
+            // 'type' is now auto-calculated from HVASM stats
+            'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
             'content' => 'required|string|min:2',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -406,6 +406,29 @@ class TranslationController extends Controller
         // Store file
         $fileName = $service->storeFile($parsed['normalized_content'], $fileUuid);
 
+        // Calculate type automatically from HVASM stats
+        $tagCounts = $parsed['tag_counts'];
+        $type = $this->calculateTypeFromStats($tagCounts);
+
+        // Determine status: branches inherit from Main, only Main owners can set status
+        $isBranch = $visibility === 'branch' || ($existingTranslation && $existingTranslation->visibility === 'branch');
+        if ($isBranch) {
+            // Branches inherit status from their existing value or from the Main translation
+            if ($existingTranslation) {
+                $status = $existingTranslation->status;
+            } else {
+                // New branch - find Main translation to inherit status
+                $main = Translation::where('file_uuid', $fileUuid)
+                    ->where('visibility', 'public')
+                    ->whereNull('parent_id')
+                    ->first();
+                $status = $main ? $main->status : 'in_progress';
+            }
+        } else {
+            // Main owners can set status, default to existing or 'in_progress'
+            $status = $request->status ?? ($existingTranslation ? $existingTranslation->status : 'in_progress');
+        }
+
         if ($existingTranslation) {
             // UPDATE: Delete old file and update record
             $service->deleteFile($existingTranslation->file_path);
@@ -417,8 +440,8 @@ class TranslationController extends Controller
                 'validated_count' => $parsed['tag_counts']['validated_count'],
                 'ai_count' => $parsed['tag_counts']['ai_count'],
                 'capture_count' => $parsed['tag_counts']['capture_count'],
-                'status' => $request->status,
-                'type' => $request->type,
+                'status' => $status,
+                'type' => $type,
                 'notes' => $request->notes,
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
@@ -430,7 +453,7 @@ class TranslationController extends Controller
                 'source_language' => $languages['source'],
                 'target_language' => $languages['target'],
                 'line_count' => $parsed['line_count'],
-                'type' => $request->type,
+                'type' => $type,
                 'is_update' => true,
             ], $request);
 
@@ -458,8 +481,8 @@ class TranslationController extends Controller
             'validated_count' => $parsed['tag_counts']['validated_count'],
             'ai_count' => $parsed['tag_counts']['ai_count'],
             'capture_count' => $parsed['tag_counts']['capture_count'],
-            'status' => $request->status,
-            'type' => $request->type,
+            'status' => $status,
+            'type' => $type,
             'visibility' => $visibility,
             'notes' => $request->notes,
             'file_path' => $fileName,
@@ -473,7 +496,7 @@ class TranslationController extends Controller
             'source_language' => $languages['source'],
             'target_language' => $languages['target'],
             'line_count' => $parsed['line_count'],
-            'type' => $request->type,
+            'type' => $type,
             'is_fork' => $parentId !== null,
         ], $request);
 
@@ -604,5 +627,37 @@ class TranslationController extends Controller
             'vote_count' => $translation->fresh()->vote_count,
             'user_vote' => $translation->userVote()?->value,
         ]);
+    }
+
+    /**
+     * Calculate the legacy 'type' field from HVASM tag counts.
+     * This is for backwards compatibility - the type is now derived from stats.
+     *
+     * @param array $tagCounts ['human_count' => int, 'validated_count' => int, 'ai_count' => int]
+     * @return string 'human', 'ai_corrected', or 'ai'
+     */
+    private function calculateTypeFromStats(array $tagCounts): string
+    {
+        $human = $tagCounts['human_count'] ?? 0;
+        $validated = $tagCounts['validated_count'] ?? 0;
+        $ai = $tagCounts['ai_count'] ?? 0;
+        $total = $human + $validated + $ai;
+
+        if ($total === 0) {
+            return 'ai'; // Default for empty/capture-only files
+        }
+
+        // If more than 50% is human-translated, it's a human translation
+        if ($human > $total * 0.5) {
+            return 'human';
+        }
+
+        // If there are validated entries, it's been human-reviewed
+        if ($validated > 0 || $human > 0) {
+            return 'ai_corrected';
+        }
+
+        // Otherwise it's pure AI
+        return 'ai';
     }
 }
