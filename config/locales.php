@@ -24,6 +24,8 @@ return [
         'zh' => ['name' => 'Chinese', 'native' => '简体中文', 'flag' => '🇨🇳'],
         'pl' => ['name' => 'Polish', 'native' => 'Polski', 'flag' => '🇵🇱'],
         'tr' => ['name' => 'Turkish', 'native' => 'Türkçe', 'flag' => '🇹🇷'],
+        'ar' => ['name' => 'Arabic', 'native' => 'العربية', 'flag' => '🇸🇦'],
+        'he' => ['name' => 'Hebrew', 'native' => 'עברית', 'flag' => '🇮🇱'],
     ],
 
     /*
