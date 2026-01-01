@@ -19,10 +19,22 @@
     <link rel="dns-prefetch" href="https://steamcdn-a.akamaihd.net">
 
     <!-- Hreflang for multilingual SEO -->
+    @php
+        $currentPath = request()->path();
+        $supportedLocales = array_keys(config('locales.supported', []));
+        // Remove existing locale prefix if present
+        $pathWithoutLocale = $currentPath;
+        foreach ($supportedLocales as $loc) {
+            if ($currentPath === $loc || str_starts_with($currentPath, $loc . '/')) {
+                $pathWithoutLocale = substr($currentPath, strlen($loc) + 1) ?: '';
+                break;
+            }
+        }
+    @endphp
     @foreach(config('locales.supported', []) as $code => $locale)
-    <link rel="alternate" hreflang="{{ $code }}" href="{{ url()->current() }}{{ str_contains(url()->current(), '?') ? '&' : '?' }}lang={{ $code }}">
+    <link rel="alternate" hreflang="{{ $code }}" href="{{ url('/' . $code . ($pathWithoutLocale ? '/' . $pathWithoutLocale : '')) }}">
     @endforeach
-    <link rel="alternate" hreflang="x-default" href="{{ url()->current() }}">
+    <link rel="alternate" hreflang="x-default" href="{{ url('/' . $pathWithoutLocale) }}">
 
     <!-- Open Graph -->
     <meta property="og:type" content="@yield('og_type', 'website')">
