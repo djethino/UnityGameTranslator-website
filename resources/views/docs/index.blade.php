@@ -138,7 +138,7 @@
     <div id="docs-overlay" class="docs-overlay"></div>
 
     <!-- Sidebar -->
-    <aside id="docs-sidebar" class="docs-sidebar w-64 flex-shrink-0 hidden lg:block">
+    <aside id="docs-sidebar" class="docs-sidebar w-64 flex-shrink-0 hidden lg:block self-start">
         <nav class="space-y-1">
             <a href="#quick-start" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-rocket mr-2 w-4"></i>{{ __('docs.nav.quick_start') }}
