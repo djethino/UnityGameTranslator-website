@@ -15,22 +15,13 @@ use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Sitemap
+// Sitemap (no locale prefix)
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
-// Home
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// Language switcher
+Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
-// Login page
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
-
-// Device Flow link page (for Unity mod authentication)
-Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
-Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
-
-// OAuth
+// OAuth (no locale prefix - callbacks must be predictable)
 Route::get('/auth/{provider}', [SocialController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [SocialController::class, 'callback'])->name('auth.callback');
 Route::post('/logout', function () {
@@ -38,45 +29,77 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    // Log logout
     if ($userId) {
         \App\Models\AuditLog::logLogout($userId);
     }
     return redirect('/');
 })->name('logout');
 
-// Documentation
-Route::get('/docs', function () {
-    return view('docs.index');
-})->name('docs');
+// Device Flow link page (no locale prefix - mod uses fixed URL)
+Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
+Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
 
-// Legal pages
-Route::get('/legal', function () {
-    return view('legal.mentions');
-})->name('legal.mentions');
-Route::get('/privacy', function () {
-    return view('legal.privacy');
-})->name('legal.privacy');
-Route::get('/terms', function () {
-    return view('legal.terms');
-})->name('legal.terms');
-
-// Language switcher
-Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
-
-// Games
-Route::get('/games', [GameController::class, 'index'])->name('games.index');
-Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+// API routes (no locale prefix)
 Route::get('/api/games/search', [GameController::class, 'search'])->name('games.search');
 Route::get('/api/games/search-external', [GameController::class, 'searchExternal'])->name('games.search.external');
 
-// Translations - public
+// Download (no locale prefix - direct file access)
 Route::get('/download/{translation}', [TranslationController::class, 'download'])->name('translations.download');
 
-// Merge preview - supports token-based auth from mod (controller handles auth)
+// Merge preview - supports token-based auth from mod
 Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
 
-// Authenticated routes
+/*
+|--------------------------------------------------------------------------
+| Localized Public Routes
+|--------------------------------------------------------------------------
+| These routes support optional locale prefix: /, /en/, /fr/, etc.
+| The SetLocale middleware handles locale detection from URL prefix.
+*/
+$localizableRoutes = function () {
+    // Home
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    // Login
+    Route::get('/login', function () {
+        return view('auth.login');
+    })->name('login');
+
+    // Documentation
+    Route::get('/docs', function () {
+        return view('docs.index');
+    })->name('docs');
+
+    // Legal pages
+    Route::get('/legal', function () {
+        return view('legal.mentions');
+    })->name('legal.mentions');
+    Route::get('/privacy', function () {
+        return view('legal.privacy');
+    })->name('legal.privacy');
+    Route::get('/terms', function () {
+        return view('legal.terms');
+    })->name('legal.terms');
+
+    // Games
+    Route::get('/games', [GameController::class, 'index'])->name('games.index');
+    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+};
+
+// Routes without locale prefix (default locale detection)
+Route::group([], $localizableRoutes);
+
+// Routes with locale prefix (/en/, /fr/, /de/, etc.)
+Route::group([
+    'prefix' => '{locale}',
+    'where' => ['locale' => implode('|', array_keys(config('locales.supported', ['en' => []])))]
+], $localizableRoutes);
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes (no locale prefix for simplicity)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
     Route::get('/upload', [TranslationController::class, 'create'])->name('translations.create');
     Route::post('/upload', [TranslationController::class, 'store'])->name('translations.store');

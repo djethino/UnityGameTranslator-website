@@ -14,28 +14,53 @@ class SetLocale
      * Handle an incoming request.
      *
      * Locale priority:
-     * 1. User preference (if authenticated)
-     * 2. Session (if previously set)
-     * 3. Browser Accept-Language header
-     * 4. Default locale (English)
+     * 1. URL prefix (e.g., /en/, /fr/) - explicit, always respected
+     * 2. User preference (if authenticated)
+     * 3. Session (if previously set)
+     * 4. Browser Accept-Language header
+     * 5. Default locale (English)
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $this->detectLocale($request);
+        $supportedLocales = array_keys(config('locales.supported', []));
 
-        App::setLocale($locale);
+        // Check if locale is in URL prefix (highest priority - explicit choice)
+        $urlLocale = $this->getLocaleFromUrl($request, $supportedLocales);
 
-        // Store in session for guests
-        if (!Auth::check()) {
-            session(['locale' => $locale]);
+        if ($urlLocale) {
+            // URL has explicit locale - use it and update session
+            App::setLocale($urlLocale);
+            session(['locale' => $urlLocale]);
+        } else {
+            // No URL prefix - detect from other sources
+            $locale = $this->detectLocale($request, $supportedLocales);
+            App::setLocale($locale);
+
+            // Store in session for guests
+            if (!Auth::check()) {
+                session(['locale' => $locale]);
+            }
         }
 
         return $next($request);
     }
 
-    protected function detectLocale(Request $request): string
+    /**
+     * Get locale from URL prefix (e.g., /en/games, /fr/docs)
+     */
+    protected function getLocaleFromUrl(Request $request, array $supportedLocales): ?string
     {
-        $supportedLocales = array_keys(config('locales.supported', []));
+        $segment = $request->segment(1);
+
+        if ($segment && in_array($segment, $supportedLocales)) {
+            return $segment;
+        }
+
+        return null;
+    }
+
+    protected function detectLocale(Request $request, array $supportedLocales): string
+    {
         $defaultLocale = config('locales.default', 'en');
 
         // 1. Check authenticated user preference
