@@ -18,8 +18,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class DecodeGzipRequest
 {
-    // Maximum decompressed size (10MB) to prevent zip bomb attacks
-    private const MAX_DECOMPRESSED_SIZE = 10 * 1024 * 1024;
+    // Maximum decompressed size (100MB) to prevent zip bomb attacks
+    // Matches upload_max_filesize for large RPG translations
+    private const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
 
     /**
      * Handle an incoming request.
