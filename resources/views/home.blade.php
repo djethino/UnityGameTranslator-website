@@ -348,6 +348,9 @@
                         <div class="text-xs text-gray-500 mt-1">
                             {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}
                         </div>
+                        <div class="mt-2">
+                            <x-progress-bar :translation="$translation" />
+                        </div>
                     </div>
                 </div>
             </a>
