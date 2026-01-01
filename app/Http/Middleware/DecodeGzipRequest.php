@@ -25,12 +25,9 @@ class DecodeGzipRequest
     {
         $contentEncoding = $request->header('Content-Encoding');
 
-        \Log::info('[DecodeGzip] Content-Encoding: ' . ($contentEncoding ?? 'none'));
-
         // Only process if Content-Encoding is gzip
         if ($contentEncoding === 'gzip') {
             $compressedContent = $request->getContent();
-            \Log::info('[DecodeGzip] Compressed content length: ' . strlen($compressedContent));
 
             if (!empty($compressedContent)) {
                 // Decompress the gzip content
@@ -75,27 +72,18 @@ class DecodeGzipRequest
                 // Parse JSON if content type is JSON
                 if (str_contains($request->header('Content-Type', ''), 'application/json')) {
                     $decoded = json_decode($decompressed, true);
-                    \Log::info('[DecodeGzip] JSON decode result: ' . (json_last_error() === JSON_ERROR_NONE ? 'OK' : json_last_error_msg()));
-                    \Log::info('[DecodeGzip] Decoded keys: ' . (is_array($decoded) ? implode(', ', array_keys($decoded)) : 'not array'));
 
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                        try {
-                            // For JSON requests, Laravel uses json() which creates an InputBag
-                            // We need to set this directly for validation to work
-                            $jsonBag = new \Symfony\Component\HttpFoundation\InputBag($decoded);
+                        // For JSON requests, Laravel uses json() which creates an InputBag
+                        // We need to set this directly for validation to work
+                        $jsonBag = new \Symfony\Component\HttpFoundation\InputBag($decoded);
 
-                            // Use reflection to set the json property on the NEW request
-                            $requestReflection = new \ReflectionClass($newRequest);
-                            if ($requestReflection->hasProperty('json')) {
-                                $jsonProperty = $requestReflection->getProperty('json');
-                                $jsonProperty->setAccessible(true);
-                                $jsonProperty->setValue($newRequest, $jsonBag);
-                                \Log::info('[DecodeGzip] JSON property set via reflection');
-                            } else {
-                                \Log::warning('[DecodeGzip] json property not found in Request class');
-                            }
-                        } catch (\ReflectionException $e) {
-                            \Log::warning('[DecodeGzip] Reflection failed: ' . $e->getMessage());
+                        // Use reflection to set the json property on the NEW request
+                        $requestReflection = new \ReflectionClass($newRequest);
+                        if ($requestReflection->hasProperty('json')) {
+                            $jsonProperty = $requestReflection->getProperty('json');
+                            $jsonProperty->setAccessible(true);
+                            $jsonProperty->setValue($newRequest, $jsonBag);
                         }
 
                         // Set request bag - this is what Laravel's input() uses for POST data
@@ -103,8 +91,6 @@ class DecodeGzipRequest
 
                         // Merge into the request - this populates getInputSource()
                         $newRequest->merge($decoded);
-
-                        \Log::info('[DecodeGzip] Request data set, all() keys: ' . implode(', ', array_keys($newRequest->all())));
                     }
                 }
 

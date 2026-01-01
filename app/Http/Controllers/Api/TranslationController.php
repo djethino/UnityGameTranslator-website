@@ -346,13 +346,6 @@ class TranslationController extends Controller
      */
     public function store(Request $request, TranslationService $service): JsonResponse
     {
-        // Debug: Log what the request contains
-        \Log::info('[Store] Request all() keys: ' . implode(', ', array_keys($request->all())));
-        \Log::info('[Store] Request input() steam_id: ' . ($request->input('steam_id') ?? 'NULL'));
-        \Log::info('[Store] Request json() keys: ' . (is_array($request->json()->all()) ? implode(', ', array_keys($request->json()->all())) : 'NOT ARRAY'));
-        \Log::info('[Store] isJson: ' . ($request->isJson() ? 'true' : 'false'));
-        \Log::info('[Store] Content-Type: ' . $request->header('Content-Type'));
-
         $languages = config('languages');
 
         $request->validate([
