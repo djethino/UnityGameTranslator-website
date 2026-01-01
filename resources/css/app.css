@@ -83,3 +83,56 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(75, 85, 99, 0.5);
 }
+
+/* RTL Support for Arabic and Hebrew */
+[dir="rtl"] {
+    /* Reverse flex rows in navigation */
+    & nav .flex-row,
+    & .nav-links {
+        flex-direction: row-reverse;
+    }
+
+    /* Adjust icon margins (mr-* becomes ml-*) */
+    & .fa-mr,
+    & [class*="mr-"] > i.fas,
+    & [class*="mr-"] > i.fab,
+    & [class*="mr-"] > i.far {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+
+    /* Text alignment adjustments */
+    & .text-left {
+        text-align: right;
+    }
+
+    & .text-right {
+        text-align: left;
+    }
+
+    /* Flex item order for specific layouts */
+    & .rtl-reverse {
+        flex-direction: row-reverse;
+    }
+
+    /* Border radius adjustments */
+    & .rounded-l-lg {
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    & .rounded-r-lg {
+        border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    /* Dropdown positioning */
+    & .dropdown-menu {
+        left: auto;
+        right: 0;
+    }
+
+    /* List markers */
+    & ul, & ol {
+        padding-right: 1.5rem;
+        padding-left: 0;
+    }
+}
