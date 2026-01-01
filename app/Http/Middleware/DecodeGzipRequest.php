@@ -72,13 +72,6 @@ class DecodeGzipRequest
                 $contentProperty->setAccessible(true);
                 $contentProperty->setValue($newRequest, $decompressed);
 
-                // Also reset Laravel's JSON cache (it caches parsed JSON internally)
-                if ($reflection->hasProperty('json')) {
-                    $jsonProperty = $reflection->getProperty('json');
-                    $jsonProperty->setAccessible(true);
-                    $jsonProperty->setValue($newRequest, null);
-                }
-
                 // Parse JSON if content type is JSON
                 if (str_contains($request->header('Content-Type', ''), 'application/json')) {
                     $decoded = json_decode($decompressed, true);
@@ -86,10 +79,20 @@ class DecodeGzipRequest
                     \Log::info('[DecodeGzip] Decoded keys: ' . (is_array($decoded) ? implode(', ', array_keys($decoded)) : 'not array'));
 
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                        // Replace request bag AND merge into input for Laravel's validation
+                        // For JSON requests, Laravel uses json() which creates a ParameterBag
+                        // We need to set this directly for validation to work
+                        $jsonBag = new \Symfony\Component\HttpFoundation\InputBag($decoded);
+
+                        // Use reflection to set the json property
+                        $jsonProperty = $reflection->getProperty('json');
+                        $jsonProperty->setAccessible(true);
+                        $jsonProperty->setValue($newRequest, $jsonBag);
+
+                        // Also set request bag and merge for good measure
                         $newRequest->request->replace($decoded);
                         $newRequest->merge($decoded);
-                        \Log::info('[DecodeGzip] Data merged into request');
+
+                        \Log::info('[DecodeGzip] JSON bag and request data set');
                     }
                 }
 
