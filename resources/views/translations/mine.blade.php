@@ -44,7 +44,9 @@
                             <span class="text-yellow-400 text-sm"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                         @endif
                         @if($translation->isFork())
-                            <span class="text-gray-400 text-sm"><i class="fas fa-code-branch"></i> Fork</span>
+                            <span class="text-purple-400 text-sm"><i class="fas fa-code-fork"></i> Fork</span>
+                        @elseif($translation->isBranch())
+                            <span class="text-gray-400 text-sm"><i class="fas fa-code-branch"></i> Branch</span>
                         @endif
                     </div>
                     <div class="text-sm text-gray-400 mt-1">

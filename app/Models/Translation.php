@@ -264,9 +264,13 @@ class Translation extends Model
         return $this->status === 'complete';
     }
 
+    /**
+     * A Fork is a Main translation that was derived from another Main.
+     * (Not a branch - branches are contributions to someone else's Main)
+     */
     public function isFork(): bool
     {
-        return $this->parent_id !== null;
+        return $this->parent_id !== null && $this->isMain();
     }
 
     public function incrementDownloads()
