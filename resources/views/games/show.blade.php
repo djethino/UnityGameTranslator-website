@@ -221,18 +221,18 @@
                             <!-- Progress bar -->
                             <div class="mt-2 mb-3">
                                 <x-progress-bar :translation="$translation" />
-                                <div class="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                                <div class="flex items-center gap-4 text-xs text-gray-400 mt-1 flex-wrap">
                                     <span class="flex items-center gap-1">
                                         <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        {{ __('progress.human_short') }} {{ $translation->human_count }}
+                                        {{ __('progress.human') }}: {{ $translation->human_count }}
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                        {{ __('progress.validated_short') }} {{ $translation->validated_count }}
+                                        {{ __('progress.validated') }}: {{ $translation->validated_count }}
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                        {{ __('progress.ai_short') }} {{ $translation->ai_count }}
+                                        {{ __('progress.ai') }}: {{ $translation->ai_count }}
                                     </span>
                                 </div>
                             </div>
