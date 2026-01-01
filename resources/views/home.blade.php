@@ -193,8 +193,8 @@
                         {{ __('home.quality_title') }}
                     </h4>
                     <div class="flex justify-center gap-2 mb-3">
-                        <span class="px-2 py-1 rounded text-xs font-bold bg-cyan-600 text-white" title="Human">H</span>
-                        <span class="px-2 py-1 rounded text-xs font-bold bg-green-600 text-white" title="Validated">V</span>
+                        <span class="px-2 py-1 rounded text-xs font-bold bg-green-600 text-white" title="Human">H</span>
+                        <span class="px-2 py-1 rounded text-xs font-bold bg-blue-600 text-white" title="Validated">V</span>
                         <span class="px-2 py-1 rounded text-xs font-bold bg-orange-600 text-white" title="AI">A</span>
                         <span class="px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white" title="Skip">S</span>
                     </div>
