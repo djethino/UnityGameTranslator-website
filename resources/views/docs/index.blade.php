@@ -338,12 +338,13 @@
                 <p class="text-gray-300 mb-6">{{ __('docs.first_launch_intro') }}</p>
 
                 <!-- Wizard Screenshot -->
-                <figure class="mb-6 flex flex-col items-center">
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
                     <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
                          alt="{{ __('docs.wizard_screenshot_alt') }}"
-                         class="doc-img doc-img-mod mx-auto"
+                         class="doc-img doc-img-mod block mx-auto"
+                         style="max-width: 500px;"
                          onclick="openLightbox(this.src)">
-                    <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.wizard_caption') }}</figcaption>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
 
                 <h3 class="font-semibold mb-3 text-lg">{{ __('docs.wizard_steps_title') }}</h3>
