@@ -363,6 +363,8 @@
                                     <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
                                     {{ $translation->ai_count }}
                                 </span>
+                                <span class="text-gray-600">•</span>
+                                <span>{{ number_format($translation->line_count) }} {{ __('my_translations.lines') }}</span>
                             </div>
                         </div>
                     </div>
