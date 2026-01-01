@@ -66,10 +66,8 @@ class GameController extends Controller
             $query->where('source_language', $request->source);
         }
 
-        // Filter by type
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        // Note: type filter removed - type is now a computed accessor from HVASM stats
+        // and cannot be filtered at the database level
 
         $allTranslations = $query->orderBy('created_at', 'desc')->get();
 

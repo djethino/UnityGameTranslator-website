@@ -116,15 +116,7 @@
             @endforeach
         </select>
     </div>
-    <div>
-        <label class="block text-sm text-gray-400 mb-1">{{ __('games.type') }}</label>
-        <select name="type" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
-            <option value="">{{ __('games.all') }}</option>
-            <option value="ai" {{ request('type') == 'ai' ? 'selected' : '' }}>{{ __('translation.type.ai_short') }}</option>
-            <option value="human" {{ request('type') == 'human' ? 'selected' : '' }}>{{ __('translation.type.human_short') }}</option>
-            <option value="ai_corrected" {{ request('type') == 'ai_corrected' ? 'selected' : '' }}>{{ __('translation.type.ai_corrected_short') }}</option>
-        </select>
-    </div>
+    {{-- Note: type filter removed - type is now computed from HVASM stats --}}
     <div>
         <label class="block text-sm text-gray-400 mb-1">{{ __('games.sort_by') }}</label>
         <select name="sort" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
