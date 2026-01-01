@@ -108,6 +108,11 @@ class DecodeGzipRequest
                     }
                 }
 
+                // CRITICAL: Replace the request in Laravel's service container
+                // Without this, dependency injection in controllers gets the original request
+                app()->instance('request', $newRequest);
+                \Illuminate\Support\Facades\Facade::clearResolvedInstance('request');
+
                 return $next($newRequest);
             }
         }
