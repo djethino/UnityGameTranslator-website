@@ -97,7 +97,8 @@
             <p class="text-xs text-gray-500 mt-2 text-center">{{ __('upload.composition_auto') }}</p>
         </div>
 
-        <!-- Status -->
+        <!-- Status (only for Main translations - branches inherit from Main) -->
+        @if($translation->visibility !== 'branch')
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.status') }}</label>
             <div class="flex gap-4">
@@ -111,6 +112,20 @@
                 </label>
             </div>
         </div>
+        @else
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.status') }}</label>
+            <div class="bg-gray-700 rounded-lg px-4 py-3 text-gray-400">
+                <i class="fas fa-lock mr-2"></i>
+                @if($translation->status == 'complete')
+                    <i class="fas fa-check text-green-400 mr-1"></i> {{ __('translation.complete') }}
+                @else
+                    <i class="fas fa-clock text-yellow-400 mr-1"></i> {{ __('translation.in_progress') }}
+                @endif
+                <span class="text-xs ml-2">({{ __('upload.inherited_from_main') }})</span>
+            </div>
+        </div>
+        @endif
 
         <!-- Notes -->
         <div class="mb-6">

@@ -141,31 +141,32 @@
             </div>
         </div>
 
-        <!-- Step 4: Translation Type -->
-        <div id="typeSection" class="mb-6 hidden">
+        <!-- Step 4: Translation Composition (read-only, computed from file) -->
+        <div id="compositionSection" class="mb-6 hidden">
             <label class="block text-sm font-medium text-gray-300 mb-2">
-                <span class="text-lg">4.</span> {{ __('upload.translation_type') }}
+                <span class="text-lg">4.</span> {{ __('upload.translation_composition') }}
             </label>
             <div class="grid grid-cols-3 gap-3">
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="ai" checked class="hidden">
-                    <i class="fas fa-robot text-2xl text-blue-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_ai') }}</span>
-                    <span class="text-xs text-gray-400">{{ __('upload.type_ai_desc') }}</span>
-                </label>
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="ai_corrected" class="hidden">
-                    <i class="fas fa-user-edit text-2xl text-purple-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_ai_human') }}</span>
-                    <span class="text-xs text-gray-400">{{ __('upload.type_ai_human_desc') }}</span>
-                </label>
-                <label class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-purple-500 transition type-option">
-                    <input type="radio" name="type" value="human" class="hidden">
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 border-transparent opacity-90" id="compositionHuman">
                     <i class="fas fa-user text-2xl text-green-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('upload.type_human') }}</span>
-                    <span class="text-xs text-gray-400">{{ __('upload.type_human_desc') }}</span>
-                </label>
+                    <span class="text-sm font-medium">{{ __('progress.human') }}</span>
+                    <span class="text-lg font-bold text-green-400 mt-1" id="humanPct">0%</span>
+                    <span class="text-xs text-gray-500" id="humanCount">(0)</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 border-transparent opacity-90" id="compositionValidated">
+                    <i class="fas fa-check-circle text-2xl text-blue-400 mb-2"></i>
+                    <span class="text-sm font-medium">{{ __('progress.validated') }}</span>
+                    <span class="text-lg font-bold text-blue-400 mt-1" id="validatedPct">0%</span>
+                    <span class="text-xs text-gray-500" id="validatedCount">(0)</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 border-transparent opacity-90" id="compositionAi">
+                    <i class="fas fa-robot text-2xl text-orange-400 mb-2"></i>
+                    <span class="text-sm font-medium">{{ __('progress.ai') }}</span>
+                    <span class="text-lg font-bold text-orange-400 mt-1" id="aiPct">0%</span>
+                    <span class="text-xs text-gray-500" id="aiCount">(0)</span>
+                </div>
             </div>
+            <p class="text-xs text-gray-500 mt-2 text-center">{{ __('upload.composition_auto') }}</p>
         </div>
 
         <!-- Step 5: Status -->
@@ -308,6 +309,9 @@ async function handleFileSelect(file) {
         const lines = Object.keys(json).filter(k => !k.startsWith('_')).length;
         lineCount.textContent = `${lines.toLocaleString()} translation lines`;
 
+        // Calculate HVASM composition stats from file
+        calculateFileStats(json);
+
         fileSelected = true;
 
         // Check UUID
@@ -419,8 +423,13 @@ function showAutoDetected(data) {
     gameSection.classList.add('hidden');
     document.getElementById('languageDisplay').classList.remove('hidden');
     languageSection.classList.add('hidden');
-    document.getElementById('typeSection').classList.remove('hidden');
-    statusSection.classList.remove('hidden');
+    document.getElementById('compositionSection').classList.remove('hidden');
+    // Branches cannot modify status - only show for Main owners (update type)
+    if (data.type === 'update' && isMainOwner) {
+        statusSection.classList.remove('hidden');
+    } else {
+        statusSection.classList.add('hidden');
+    }
     document.getElementById('notesSection').classList.remove('hidden');
 
     updateSubmitButton();
@@ -434,7 +443,8 @@ async function showNewTranslation() {
     gameSection.classList.remove('hidden');
     document.getElementById('languageDisplay').classList.add('hidden');
     languageSection.classList.remove('hidden');
-    document.getElementById('typeSection').classList.remove('hidden');
+    document.getElementById('compositionSection').classList.remove('hidden');
+    // New translations can set status (they become Main owner)
     statusSection.classList.remove('hidden');
     document.getElementById('notesSection').classList.remove('hidden');
 
@@ -520,19 +530,55 @@ async function showNewTranslation() {
     updateSubmitButton();
 }
 
-// Type selection styling
-document.querySelectorAll('.type-option').forEach(option => {
-    option.addEventListener('click', () => {
-        document.querySelectorAll('.type-option').forEach(o => {
-            o.classList.remove('border-purple-500', 'bg-gray-600');
-            o.classList.add('border-transparent');
-        });
-        option.classList.remove('border-transparent');
-        option.classList.add('border-purple-500', 'bg-gray-600');
-    });
-});
-// Set initial selection
-document.querySelector('.type-option').classList.add('border-purple-500', 'bg-gray-600');
+// HVASM composition stats (calculated from file)
+let fileStats = { human: 0, validated: 0, ai: 0, total: 0 };
+
+function calculateFileStats(json) {
+    let human = 0, validated = 0, ai = 0;
+
+    for (const [key, value] of Object.entries(json)) {
+        if (key.startsWith('_')) continue; // Skip metadata
+
+        // Entry can be string (old format) or object with tag
+        let tag = null;
+        if (typeof value === 'object' && value !== null && value.tag) {
+            tag = value.tag.toUpperCase();
+        }
+
+        if (tag === 'H') human++;
+        else if (tag === 'V') validated++;
+        else if (tag === 'A') ai++;
+        // No tag = likely AI (fallback)
+        else ai++;
+    }
+
+    fileStats = { human, validated, ai, total: human + validated + ai };
+    updateCompositionDisplay();
+}
+
+function updateCompositionDisplay() {
+    const { human, validated, ai, total } = fileStats;
+
+    const humanPct = total > 0 ? Math.round(human / total * 100) : 0;
+    const validatedPct = total > 0 ? Math.round(validated / total * 100) : 0;
+    const aiPct = total > 0 ? Math.round(ai / total * 100) : 0;
+
+    document.getElementById('humanPct').textContent = humanPct + '%';
+    document.getElementById('humanCount').textContent = '(' + human.toLocaleString() + ')';
+    document.getElementById('validatedPct').textContent = validatedPct + '%';
+    document.getElementById('validatedCount').textContent = '(' + validated.toLocaleString() + ')';
+    document.getElementById('aiPct').textContent = aiPct + '%';
+    document.getElementById('aiCount').textContent = '(' + ai.toLocaleString() + ')';
+
+    // Highlight boxes with values
+    const humanBox = document.getElementById('compositionHuman');
+    const validatedBox = document.getElementById('compositionValidated');
+    const aiBox = document.getElementById('compositionAi');
+
+    humanBox.classList.toggle('border-green-500/50', humanPct > 0);
+    validatedBox.classList.toggle('border-blue-500/50', validatedPct > 0);
+    aiBox.classList.toggle('border-orange-500/50', aiPct > 0);
+}
 
 // Game search
 let searchTimeout = null;

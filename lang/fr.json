@@ -116,6 +116,7 @@
     "upload.auto_detected": "Détecté automatiquement depuis le fichier",
     "upload.please_select_game": "Veuillez sélectionner un jeu dans les résultats",
     "upload.inherited_from_original": "Hérité de la traduction originale",
+    "upload.inherited_from_main": "Hérité de la traduction Main",
     "upload.update_your_translation": "Vous mettez à jour votre traduction existante",
     "upload.update_description": "Votre version précédente sera remplacée par ce nouveau fichier.",
     "upload.become_branch": "Vous allez devenir contributeur (branche)",

@@ -116,6 +116,7 @@
     "upload.auto_detected": "Auto-detected from file",
     "upload.please_select_game": "Please select a game from the search results",
     "upload.inherited_from_original": "Inherited from original translation",
+    "upload.inherited_from_main": "Inherited from Main translation",
     "upload.update_your_translation": "You are updating your existing translation",
     "upload.update_description": "Your previous version will be replaced with this new file.",
     "upload.become_branch": "You will become a contributor (branch)",
