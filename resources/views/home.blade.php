@@ -341,8 +341,9 @@
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-white truncate">{{ $translation->game->name }}</h3>
                         <div class="text-sm text-gray-400 flex items-center gap-1">
+                            <span>@langflag($translation->source_language)</span>
+                            <i class="fas fa-arrow-right text-xs text-gray-600"></i>
                             <span>@langflag($translation->target_language)</span>
-                            <span>{{ $translation->target_language }}</span>
                         </div>
                         <div class="text-xs text-gray-500 mt-1">
                             {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}
