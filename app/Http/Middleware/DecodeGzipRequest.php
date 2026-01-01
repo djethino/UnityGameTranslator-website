@@ -18,6 +18,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class DecodeGzipRequest
 {
+    // Maximum decompressed size (10MB) to prevent zip bomb attacks
+    private const MAX_DECOMPRESSED_SIZE = 10 * 1024 * 1024;
+
     /**
      * Handle an incoming request.
      */
@@ -38,6 +41,14 @@ class DecodeGzipRequest
                         'error' => 'Invalid gzip content',
                         'message' => 'Failed to decompress request body',
                     ], 400);
+                }
+
+                // Prevent zip bomb attacks
+                if (strlen($decompressed) > self::MAX_DECOMPRESSED_SIZE) {
+                    return response()->json([
+                        'error' => 'Payload too large',
+                        'message' => 'Decompressed content exceeds maximum allowed size',
+                    ], 413);
                 }
 
                 // Replace the request content with decompressed data
