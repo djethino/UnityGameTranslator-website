@@ -25,9 +25,12 @@ class DecodeGzipRequest
     {
         $contentEncoding = $request->header('Content-Encoding');
 
+        \Log::info('[DecodeGzip] Content-Encoding: ' . ($contentEncoding ?? 'none'));
+
         // Only process if Content-Encoding is gzip
         if ($contentEncoding === 'gzip') {
             $compressedContent = $request->getContent();
+            \Log::info('[DecodeGzip] Compressed content length: ' . strlen($compressedContent));
 
             if (!empty($compressedContent)) {
                 // Decompress the gzip content
@@ -79,10 +82,14 @@ class DecodeGzipRequest
                 // Parse JSON if content type is JSON
                 if (str_contains($request->header('Content-Type', ''), 'application/json')) {
                     $decoded = json_decode($decompressed, true);
+                    \Log::info('[DecodeGzip] JSON decode result: ' . (json_last_error() === JSON_ERROR_NONE ? 'OK' : json_last_error_msg()));
+                    \Log::info('[DecodeGzip] Decoded keys: ' . (is_array($decoded) ? implode(', ', array_keys($decoded)) : 'not array'));
+
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                         // Replace request bag AND merge into input for Laravel's validation
                         $newRequest->request->replace($decoded);
                         $newRequest->merge($decoded);
+                        \Log::info('[DecodeGzip] Data merged into request');
                     }
                 }
 
