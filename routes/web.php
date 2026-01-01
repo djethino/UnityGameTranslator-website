@@ -15,8 +15,10 @@ use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Sitemap (no locale prefix)
+// Sitemaps (no locale prefix)
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
+Route::get('/sitemap-games-{page}.xml', [SitemapController::class, 'games'])->where('page', '[0-9]+')->name('sitemap.games');
 
 // Language switcher
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');

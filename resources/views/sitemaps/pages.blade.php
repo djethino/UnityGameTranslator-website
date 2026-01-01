@@ -67,18 +67,4 @@
 <priority>0.3</priority>
 </url>
 @endforeach
-@foreach($games as $game)
-@foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/games/' . $game->slug) }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/games/' . $game->slug) }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('games.show', $game) }}"/>
-<lastmod>{{ $game->updated_at->toAtomString() }}</lastmod>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-@endforeach
-@endforeach
 </urlset>
