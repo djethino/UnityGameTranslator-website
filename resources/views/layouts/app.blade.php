@@ -49,6 +49,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    @stack('styles')
     @stack('head')
 </head>
 <body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden">
