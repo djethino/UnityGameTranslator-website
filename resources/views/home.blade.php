@@ -350,6 +350,20 @@
                         </div>
                         <div class="mt-2">
                             <x-progress-bar :translation="$translation" />
+                            <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                    {{ $translation->human_count }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                    {{ $translation->validated_count }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                                    {{ $translation->ai_count }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
