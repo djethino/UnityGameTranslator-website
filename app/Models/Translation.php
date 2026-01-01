@@ -22,7 +22,7 @@ class Translation extends Model
         'reviewed_hash',
         'status',
         'visibility',
-        'type',
+        // 'type' is now a computed attribute from HVASM stats
         'notes',
         'file_path',
         'file_uuid',
@@ -157,6 +157,34 @@ class Translation extends Model
         'public' => 'Public',
         'branch' => 'Branch (Private)',
     ];
+
+    /**
+     * Compute type from HVASM stats.
+     * This replaces the stored 'type' column with a derived value.
+     *
+     * @return string 'human', 'ai_corrected', or 'ai'
+     */
+    public function getTypeAttribute(): string
+    {
+        $total = $this->human_count + $this->validated_count + $this->ai_count;
+
+        if ($total === 0) {
+            return 'ai'; // Default for empty/capture-only files
+        }
+
+        // If more than 50% is human-translated, it's a human translation
+        if ($this->human_count > $total * 0.5) {
+            return 'human';
+        }
+
+        // If there are validated or human entries, it's been human-reviewed
+        if ($this->validated_count > 0 || $this->human_count > 0) {
+            return 'ai_corrected';
+        }
+
+        // Otherwise it's pure AI
+        return 'ai';
+    }
 
     public function getTypeLabel(): string
     {
