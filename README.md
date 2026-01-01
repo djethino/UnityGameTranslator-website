@@ -194,7 +194,7 @@ php artisan migrate:fresh
 
 ## Related
 
-- **Unity Mod:** See the `UnityGameTranslator/` directory in this repository
+- **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
 
 ## Acknowledgments
 
