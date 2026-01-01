@@ -31,7 +31,7 @@ class TranslationController extends Controller
             'status' => 'required|in:in_progress,complete',
             'type' => 'required|in:ai,human,ai_corrected',
             'notes' => 'nullable|string|max:1000',
-            'file' => 'required|file|mimes:json|max:10240', // 10MB max
+            'file' => 'required|file|mimes:json|max:102400', // 100MB max
             'game_source' => 'required_without:game_id|string|in:igdb,rawg',
             'game_external_id' => 'required_without:game_id|integer',
             'game_image_url' => 'nullable|url|max:500',

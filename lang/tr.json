@@ -101,7 +101,7 @@
     "upload.new_info": "Yeni: Bu dosya için ilk çeviri",
     "upload.file_json": "Çeviri Dosyası (JSON)",
     "upload.drag_drop": "translations.json dosyasını buraya sürükleyip bırakın",
-    "upload.max_size": "Maks. 10MB",
+    "upload.max_size": "Maks. 100MB",
     "upload.source_language": "Kaynak dil",
     "upload.target_language": "Hedef dil",
     "upload.select": "Seçin...",

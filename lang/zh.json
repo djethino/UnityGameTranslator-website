@@ -101,7 +101,7 @@
     "upload.new_info": "新建：此文件的首个翻译",
     "upload.file_json": "翻译文件（JSON）",
     "upload.drag_drop": "将 translations.json 拖放到此处",
-    "upload.max_size": "最大 10MB",
+    "upload.max_size": "最大 100MB",
     "upload.source_language": "源语言",
     "upload.target_language": "目标语言",
     "upload.select": "选择...",

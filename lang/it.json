@@ -101,7 +101,7 @@
     "upload.new_info": "Nuovo: Prima traduzione per questo file",
     "upload.file_json": "File di traduzione (JSON)",
     "upload.drag_drop": "Trascina il tuo translations.json qui",
-    "upload.max_size": "Max 10MB",
+    "upload.max_size": "Max 100MB",
     "upload.source_language": "Lingua di origine",
     "upload.target_language": "Lingua di destinazione",
     "upload.select": "Seleziona...",

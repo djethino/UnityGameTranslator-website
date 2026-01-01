@@ -101,7 +101,7 @@
     "upload.new_info": "新規：このファイルの最初の翻訳",
     "upload.file_json": "翻訳ファイル（JSON）",
     "upload.drag_drop": "translations.jsonをここにドラッグ＆ドロップ",
-    "upload.max_size": "最大10MB",
+    "upload.max_size": "最大100MB",
     "upload.source_language": "翻訳元言語",
     "upload.target_language": "翻訳先言語",
     "upload.select": "選択...",

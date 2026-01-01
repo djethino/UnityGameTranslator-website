@@ -101,7 +101,7 @@
     "upload.new_info": "Новый: Первый перевод для этого файла",
     "upload.file_json": "Файл перевода (JSON)",
     "upload.drag_drop": "Перетащите translations.json сюда",
-    "upload.max_size": "Макс. 10МБ",
+    "upload.max_size": "Макс. 100МБ",
     "upload.source_language": "Исходный язык",
     "upload.target_language": "Целевой язык",
     "upload.select": "Выбрать...",

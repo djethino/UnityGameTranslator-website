@@ -101,7 +101,7 @@
     "upload.new_info": "신규: 이 파일의 첫 번째 번역",
     "upload.file_json": "번역 파일 (JSON)",
     "upload.drag_drop": "translations.json을 여기에 드래그 앤 드롭",
-    "upload.max_size": "최대 10MB",
+    "upload.max_size": "최대 100MB",
     "upload.source_language": "원본 언어",
     "upload.target_language": "번역 언어",
     "upload.select": "선택...",
