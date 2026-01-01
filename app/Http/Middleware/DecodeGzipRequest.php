@@ -65,15 +65,24 @@ class DecodeGzipRequest
 
                 // Use reflection to set the content (it's protected)
                 $reflection = new \ReflectionClass($newRequest);
-                $property = $reflection->getProperty('content');
-                $property->setAccessible(true);
-                $property->setValue($newRequest, $decompressed);
+                $contentProperty = $reflection->getProperty('content');
+                $contentProperty->setAccessible(true);
+                $contentProperty->setValue($newRequest, $decompressed);
+
+                // Also reset Laravel's JSON cache (it caches parsed JSON internally)
+                if ($reflection->hasProperty('json')) {
+                    $jsonProperty = $reflection->getProperty('json');
+                    $jsonProperty->setAccessible(true);
+                    $jsonProperty->setValue($newRequest, null);
+                }
 
                 // Parse JSON if content type is JSON
                 if (str_contains($request->header('Content-Type', ''), 'application/json')) {
                     $decoded = json_decode($decompressed, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        // Replace request bag AND merge into input for Laravel's validation
                         $newRequest->request->replace($decoded);
+                        $newRequest->merge($decoded);
                     }
                 }
 
