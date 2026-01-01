@@ -12,7 +12,7 @@ class SitemapController extends Controller
     {
         $content = Cache::remember('sitemap', 3600, function () {
             $games = Game::withCount('translations')
-                ->having('translations_count', '>', 0)
+                ->has('translations')
                 ->orderBy('updated_at', 'desc')
                 ->get();
 
