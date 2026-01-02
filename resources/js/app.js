@@ -21,15 +21,16 @@ Alpine.start();
     let targetVelocity = 0;
     let lastScrollY = window.scrollY;
     let lastScrollTime = performance.now();
+    let lastFrameTime = performance.now();
     let isScrolling = false;
     let scrollTimeout = null;
     let isPaused = false;
 
-    // Config
-    const baseSpeed = 0.00032; // Normal animation speed (~30s cycle)
-    const scrollMultiplier = 0.015; // How much scroll affects time
-    const velocityDecay = 0.92; // How fast velocity returns to normal (0.9-0.99)
-    const velocitySmoothness = 0.08; // How smooth the velocity change is
+    // Config (values are per-second rates, scaled by delta time)
+    const baseSpeed = 0.02; // Animation speed per second (~30s cycle)
+    const scrollMultiplier = 0.8; // How much scroll affects time (per second)
+    const velocityDecay = 5; // Velocity decay rate (higher = faster return to base speed)
+    const velocitySmoothness = 8; // Interpolation speed per second (higher = faster response)
 
     // Create style element for pseudo-element transforms
     const style = document.createElement('style');
@@ -91,23 +92,28 @@ Alpine.start();
         }, 100);
     }
 
-    function animate() {
-        // Skip if paused (tab not visible)
+    function animate(currentTime) {
+        // Calculate delta time in seconds
+        const deltaTime = Math.min((currentTime - lastFrameTime) / 1000, 0.1); // Cap at 100ms to prevent jumps
+        lastFrameTime = currentTime;
+
+        // Skip updates if paused (tab not visible)
         if (isPaused) {
             requestAnimationFrame(animate);
             return;
         }
 
-        // Smooth velocity interpolation
-        velocity += (targetVelocity - velocity) * velocitySmoothness;
+        // Smooth velocity interpolation (frame-rate independent)
+        const lerpFactor = 1 - Math.exp(-velocitySmoothness * deltaTime);
+        velocity += (targetVelocity - velocity) * lerpFactor;
 
-        // Decay velocity when not scrolling
+        // Decay velocity when not scrolling (frame-rate independent)
         if (!isScrolling) {
-            velocity *= velocityDecay;
+            velocity *= Math.exp(-velocityDecay * deltaTime);
         }
 
-        // Update time: base speed + scroll velocity
-        time += baseSpeed + velocity;
+        // Update time: base speed + scroll velocity (scaled by delta)
+        time += (baseSpeed + velocity) * deltaTime;
 
         updateTransforms();
         requestAnimationFrame(animate);
@@ -116,8 +122,9 @@ Alpine.start();
     // Pause when tab not visible (save resources)
     document.addEventListener('visibilitychange', () => {
         isPaused = document.hidden;
-        // Reset velocity when returning to avoid jumps
+        // Reset timing when returning to avoid jumps
         if (!isPaused) {
+            lastFrameTime = performance.now();
             velocity = 0;
             targetVelocity = 0;
         }
@@ -125,5 +132,5 @@ Alpine.start();
 
     // Start
     window.addEventListener('scroll', onScroll, { passive: true });
-    animate();
+    requestAnimationFrame(animate);
 })();
