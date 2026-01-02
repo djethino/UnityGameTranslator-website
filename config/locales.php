@@ -20,6 +20,7 @@ return [
         'es' => ['name' => 'Spanish', 'native' => 'Español', 'flag' => '🇪🇸', 'rtl' => false],
         'fr' => ['name' => 'French', 'native' => 'Français', 'flag' => '🇫🇷', 'rtl' => false],
         'he' => ['name' => 'Hebrew', 'native' => 'עברית', 'flag' => '🇮🇱', 'rtl' => true],
+        'hi' => ['name' => 'Hindi', 'native' => 'हिन्दी', 'flag' => '🇮🇳', 'rtl' => false],
         'it' => ['name' => 'Italian', 'native' => 'Italiano', 'flag' => '🇮🇹', 'rtl' => false],
         'ja' => ['name' => 'Japanese', 'native' => '日本語', 'flag' => '🇯🇵', 'rtl' => false],
         'ko' => ['name' => 'Korean', 'native' => '한국어', 'flag' => '🇰🇷', 'rtl' => false],
