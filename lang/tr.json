@@ -15,7 +15,7 @@
     "home.search_placeholder": "Oyun ara...",
     "home.no_games": "Oyun bulunamadi.",
     "home.translations_count": ":count ceviri",
-    "home.alpha_banner": "Bu proje alfa asamasinda - hatalar ve eksik ozellikler olabilir.",
+    "home.beta_banner": "Beta - Geri bildiriminiz projeyi sekillendiriyor",
     "home.hero_title": "Herhangi bir Unity oyununu cevirin",
     "home.hero_description": "Unity oyunlari icin acik kaynak ceviri modu. Yerel yapay zeka ile ceviri olusturun, topluluk cevirilerini indirin veya kendinizinkini paylasin. Cevrimdisi calisir, cevrimici senkronize eder.",
     "home.view_games": "Oyunlara goz at",

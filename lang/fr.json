@@ -15,7 +15,7 @@
     "home.search_placeholder": "Rechercher un jeu...",
     "home.no_games": "Aucun jeu trouve.",
     "home.translations_count": ":count traduction|:count traductions",
-    "home.alpha_banner": "Ce projet est en alpha - des bugs et fonctionnalites manquantes sont possibles.",
+    "home.beta_banner": "Beta - Vos retours façonnent le projet",
     "home.hero_title": "Traduisez n'importe quel jeu Unity",
     "home.hero_description": "Le mod de traduction open-source pour les jeux Unity. Generez des traductions avec l'IA locale, telechargez les traductions communautaires ou partagez les votres. Fonctionne hors-ligne, synchronise en ligne.",
     "home.view_games": "Parcourir les jeux",

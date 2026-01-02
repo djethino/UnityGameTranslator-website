@@ -15,7 +15,7 @@
     "home.search_placeholder": "Szukaj gier...",
     "home.no_games": "Nie znaleziono gier.",
     "home.translations_count": ":count tlumaczenie|:count tlumaczen",
-    "home.alpha_banner": "Ten projekt jest w fazie alfa - moga wystepowac bledy i brakujace funkcje.",
+    "home.beta_banner": "Beta - Twoja opinia kształtuje projekt",
     "home.hero_title": "Przetlumacz dowolna gre Unity",
     "home.hero_description": "Open-source mod tlumaczen dla gier Unity. Generuj tlumaczenia lokalnym AI, pobieraj tlumaczenia spolecznosci lub udostepniaj wlasne. Dziala offline, synchronizuje online.",
     "home.view_games": "Przegladaj gry",

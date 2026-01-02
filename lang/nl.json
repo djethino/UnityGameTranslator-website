@@ -15,7 +15,7 @@
     "home.search_placeholder": "Zoek games...",
     "home.no_games": "Geen games gevonden.",
     "home.translations_count": ":count vertaling|:count vertalingen",
-    "home.alpha_banner": "Dit project is in alpha - verwacht bugs en ontbrekende functies.",
+    "home.beta_banner": "Beta - Jouw feedback vormt het project",
     "home.hero_title": "Vertaal elke Unity-game",
     "home.hero_description": "De open-source vertaalmod voor Unity-games. Genereer vertalingen met lokale AI, download community-vertalingen of deel je eigen werk. Werkt offline, synchroniseert online.",
     "home.view_games": "Bekijk games",

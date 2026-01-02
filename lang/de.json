@@ -15,7 +15,7 @@
     "home.search_placeholder": "Spiele suchen...",
     "home.no_games": "Keine Spiele gefunden.",
     "home.translations_count": ":count Ubersetzung|:count Ubersetzungen",
-    "home.alpha_banner": "Dieses Projekt befindet sich in der Alpha-Phase - Fehler und fehlende Funktionen sind moglich.",
+    "home.beta_banner": "Beta - Ihr Feedback formt das Projekt",
     "home.hero_title": "Ubersetze jedes Unity-Spiel",
     "home.hero_description": "Der Open-Source Ubersetzungs-Mod fur Unity-Spiele. Generiere Ubersetzungen mit lokaler KI, lade Community-Ubersetzungen herunter oder teile deine eigenen. Funktioniert offline, synchronisiert online.",
     "home.view_games": "Spiele durchsuchen",
