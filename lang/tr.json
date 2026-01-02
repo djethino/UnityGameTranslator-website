@@ -9,7 +9,6 @@
     "nav.login": "Giris",
     "nav.profile": "Ayarlar",
     "nav.login_with": "Sununla giris yap:",
-
     "auth.login_with": ":provider ile Giris",
     "auth.banned": "Hesabiniz yasaklandi. Sebep: :reason",
     "home.title": "Oyun Cevirileri",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "Guvenli hesap baglantisi (oyun icinde sifre yok)",
     "home.mod_feature_numbers": "Onbellek yeniden kullanimi icin akilli sayi isleme",
     "home.mod_screenshot_alt": "UnityGameTranslator oyun ici kurulum sihirbazi",
-
     "home.community_title": "Topluluk",
     "home.community_subtitle": "Birlikte daha iyi",
     "home.community_download": "Topluluk cevirilerini indir",
@@ -48,11 +46,9 @@
     "home.community_branch": "Main/Branch isbirligi",
     "home.community_notify": "Guncelleme bildirimleri",
     "home.community_opensource": "Acik kaynak (AGPL)",
-
     "home.quality_title": "Kalite Etiketleri",
     "home.quality_desc": "Cevirilerin insan yapimi, dogrulanmis veya yapay zeka tarafindan olusturulmus olup olmadigini bir bakista gorun.",
     "home.quality_capture": "+ %100 insan cevirileri icin yakalama modu",
-
     "home.the_website": "Web Sitesi",
     "home.website_subtitle": "Paylas ve gelistir",
     "home.website_feature_browse": "Oyuna gore cevirilere goz at",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "Oy ver ve kaliteyi degerlendir",
     "home.website_feature_fork": "Mevcut calismalari forkla ve gelistir",
     "home.website_feature_merge": "Katkilari birlestir",
-    "home.website_feature_languages": "15 dil arayüzü",
+    "home.website_feature_languages": "19 dil arayüzü",
     "home.website_screenshot_alt": "Dogrulama ile UnityGameTranslator web editoru",
     "home.stats_games": "Oyunlar",
     "home.stats_translations": "Ceviriler",
@@ -70,7 +66,6 @@
     "home.popular_games": "Populer Oyunlar",
     "home.search_games": "Oyun ara...",
     "home.search_redirect": "Ara",
-
     "games.back": "Oyunlara don",
     "games.upload_translation": "Ceviri yukle",
     "games.no_translations": "Bu oyun icin henuz ceviri yok.",
@@ -106,7 +101,6 @@
     "translation.upvote": "Olumlu oy",
     "translation.downvote": "Olumsuz oy",
     "translation.login_to_vote": "Oy vermek icin giris yapin",
-
     "upload.title": "Ceviri Yukle",
     "upload.drop_file": "Ceviri dosyanizi buraya birakin",
     "upload.or_click": "veya goz atmak icin tiklayin",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "Yerel dosyanizi cevrimici surumle karsilastirin ve el ile birlestirin",
     "upload.translation_composition": "Ceviri Bilesimi",
     "upload.composition_auto": "Dosya iceriginden otomatik olarak hesaplanir",
-
     "profile.title": "Profil Ayarlari",
     "profile.display_name": "Gorunen ad",
     "profile.email": "E-posta",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "Onaylamak icin :name yazin",
     "profile.delete_name_mismatch": "Girdiginiz ad hesap adinizla eslesmiyor.",
     "profile.account_deleted": "Hesabiniz silindi.",
-
     "report.title": "Ceviriyi Bildir",
     "report.reason": "Bildirim sebebi",
     "report.placeholder": "Bu ceviriyi neden bildiriyorsunuz?",
     "report.cancel": "Iptal",
     "report.submit": "Gonder",
     "report.success": "Bildirim basariyla gonderildi.",
-
     "admin.dashboard": "Yonetici Paneli",
     "admin.reports": "Bildirimler",
     "admin.users": "Kullanicilar",
@@ -249,17 +240,14 @@
     "admin.translation_details": "Ceviri Detaylari",
     "admin.back_to_translations": "Cevirilere Don",
     "admin.delete_confirm": "Bu ceviriyi silmek istediginizden emin misiniz?",
-
     "footer.share": "UnityGameTranslator cevirilerinizi paylasin",
     "footer.tagline": "Unity oyunlari icin acik kaynak ceviri modu.",
     "footer.download_mod": "Modu Indir",
     "footer.rights": "Tum haklari saklidir.",
-
     "docs.title": "Dokumantasyon",
     "docs.subtitle": "UnityGameTranslator mod ve web sitesi icin tam kilavuz",
     "docs.meta_description": "UnityGameTranslator icin eksiksiz dokumantasyon - kurulum, yapilandirma, kalite sistemi ve isbirligi ozellikleri.",
     "docs.download_mod": "Modu Indir",
-
     "docs.nav.quick_start": "Hizli Baslangic",
     "docs.nav.installation": "Kurulum",
     "docs.nav.first_launch": "Ilk Baslatma",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "Senkronizasyon ve Cevrimici",
     "docs.nav.configuration": "Yapilandirma",
     "docs.nav.troubleshooting": "Sorun Giderme",
-
     "docs.quick_start.title": "Hizli Baslangic",
     "docs.quick_start.intro": "3 basit adimda calistirmaya baslayin:",
     "docs.quick_start.step1": "Bir mod yukleyici kurun (BepInEx veya MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "Oyunu baslatin ve F10'a basin",
     "docs.quick_start.tip_title": "Ipucu",
     "docs.quick_start.tip_content": "Yapay zeka gerekmez! Mod, indirilen topluluk cevirileriyle mukemmel calisir. Ollama'yi yalnizca cevrilmemis metinleri cevirmek istiyorsaniz etkinlestirin.",
-
     "docs.installation": "Kurulum",
     "docs.install_modloader": "Mod yukleyici kurun",
     "docs.modloader": "Mod Yukleyici",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "Kurulum sihirbazinda veya ayarlarda Ollama'yi etkinlestirin",
     "docs.ollama_tip_title": "Onerilen model",
     "docs.ollama_tip_content": "qwen3:8b, oyun cevirisi icin kalite ve hiz arasinda en iyi dengeyi sunar. qwen3:14b gibi buyuk modeller daha iyi kalite saglar ancak daha fazla VRAM gerektirir.",
-
     "docs.first_launch": "Ilk Baslatma",
     "docs.first_launch_intro": "Ilk baslatmada, bir kurulum sihirbazi ilk yapilandirmada size rehberlik eder:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator kurulum sihirbazi",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "Ollama kuruluysa istege bagli olarak yerel yapay zeka cevirisini etkinlestirin.",
     "docs.hotkey_tip_title": "Kisayol tusu cakismalari",
     "docs.hotkey_tip_content": "Varsayilan kisayol tusu oyunla cakisiyorsa, sihirbazda veya daha sonra config.json'da degistirin.",
-
     "docs.quality_system.title": "Kalite Sistemi (HVAS)",
     "docs.quality_system.intro": "Her ceviri girisinin kaynagini belirten bir kalite etiketi vardir. Bu, ceviri kalitesini bir bakista anlamaniza yardimci olur.",
     "docs.quality_system.human": "Insan",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "Ham Yapay Zeka - Incelenmemis",
     "docs.quality_system.capture_mode": "Yakalama Modu",
     "docs.quality_system.capture_desc": "Yakalama modunda, mod orijinal metni cevirmeden kaydeder. Sifirdan %100 insan cevirileri olusturmak icin mukemmeldir. Yakalanan metin 'I' etiketiyle ve bos degerle gorunur.",
-
     "docs.collaboration.title": "Isbirligi",
     "docs.collaboration.model_title": "Main / Branch / Fork Modeli",
     "docs.collaboration.model_intro": "UnityGameTranslator, Git'ten esinlenmis bir isbirligi modeli kullanir:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "Birlestirme gorunumu arayuzu",
     "docs.merge_caption": "Birlestirme gorunumu cevirileri karsilastirmanizi ve secmenizi saglar",
     "docs.collaboration.merge_rules": "O surumu secmek icin herhangi bir hucreye tiklayin. Elle duzenlemek icin cift tiklayin. Degisiklikler kaydedene kadar vurgulanir ve izlenir.",
-
     "docs.sync.title": "Senkronizasyon ve Cevrimici Mod",
     "docs.sync.online_mode_title": "Cevrimici Mod Ozellikleri",
     "docs.sync.online_mode_desc": "Cevrimici mod etkinlestirildiginde, mod UnityGameTranslator web sitesine baglanir:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "Indirme istegi",
     "docs.sync.both_changed": "Her ikisi de degismis",
     "docs.sync.merge_prompt": "3 yonlu birlestirme",
-
     "docs.configuration": "Yapilandirma",
     "docs.config_location": "Oyun ici arayuzden (Ctrl+F10) yapilandirin veya mod klasorundeki config.json'u duzenleyin:",
     "docs.option": "Secenek",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "Arayuzu acmak icin tus kombinasyonu",
     "docs.config_online_mode": "Web sitesi senkronizasyon ozelliklerini etkinlestir",
     "docs.config_auto_download": "Guncellemeleri otomatik indir",
-
     "docs.troubleshooting": "Sorun Giderme",
     "docs.mod_not_loading": "Mod yuklenmiyor mu?",
     "docs.mod_not_loading_desc": "Oyununuz icin dogru surumu yuklediginizi dogrulayin:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "Ayarlarda 'Cevrimici mod'un etkin oldugundan emin olun ve internet baglantinizi kontrol edin.",
     "docs.need_help": "Daha fazla yardim mi gerekiyor?",
     "docs.open_issue": "GitHub'da sorun acin",
-
     "common.all": "Tumu",
     "common.search": "Ara",
     "common.loading": "Yukleniyor...",
@@ -440,7 +419,6 @@
     "common.previous": "Onceki",
     "common.next": "Sonraki",
     "common.you": "Sen",
-
     "merge.title": "Birlestir",
     "merge.heading": "Birlestirme Gorunumu",
     "merge.keys_count": ":count anahtar",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "kaydetmek icin",
     "merge.cancel_shortcut": "iptal etmek icin",
     "merge.search_placeholder": "Anahtar veya degere gore ara...",
-
     "auth.sign_in": "Devam etmek icin giris yapin",
     "auth.choose_method": "Giris yonteminizi secin:",
     "auth.continue_with": ":provider ile devam et",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "Cevirilere oy vermek icin giris yapin.",
     "auth.login_to_report": "Uygunsuz icerigi bildirmek icin giris yapin.",
     "auth.login_to_upload": "Ceviri yuklemek icin giris yapin.",
-
     "my_translations.title": "Cevirilerim",
     "my_translations.new_upload": "Yeni yukleme",
     "my_translations.empty": "Henuz ceviri yuklemediniz.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "Ceviri basariyla guncellendi!",
     "my_translations.edit_title": "Ceviriyi Duzenle",
     "my_translations.back_to_mine": "Cevirilerime Don",
-
     "games.browse": "Cevirilere goz at",
     "games.search_game": "Oyun ara",
     "games.game_name_placeholder": "Oyun adi...",
     "games.upload_first": "Ilk ceviriyi yukleyin!",
     "games.new": "Yeni",
     "games.popular": "Populer",
-
     "cookies.message": "Bu site kimlik dogrulama ve oturum yonetimi icin gerekli cerezleri kullanir. Izleme veya reklam cerezi yok.",
     "cookies.accept": "Kabul Et",
     "cookies.decline": "Sadece gerekli",
-
     "legal.mentions_title": "Yasal Bildirim",
     "legal.privacy_title": "Gizlilik Politikasi",
     "legal.terms_title": "Kullanim Kosullari",
@@ -587,7 +560,6 @@
     "footer.legal": "Yasal Bilgiler",
     "footer.privacy": "Gizlilik",
     "footer.terms": "Sartlar",
-
     "merge_preview.title": "Birlestirme Onizlemesi",
     "merge_preview.back_to_upload": "Yuklemeye Don",
     "merge_preview.back_to_translations": "Cevirilerime Don",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "Cevrimici secim",
     "merge_preview.manual_edit": "Elle duzenleme",
     "merge_preview.search_placeholder": "Anahtar veya degere gore ara...",
-
     "dashboard.title": "Kontrol Paneli",
     "dashboard.back_to_translations": "Cevirilerime Don",
     "dashboard.main_owner": "Main",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "Bu ceviri bir branch degil.",
     "dashboard.file_not_found": "Ceviri dosyasi bulunamadi.",
     "dashboard.invalid_file": "Gecersiz ceviri dosyasi formati.",
-
     "progress.quality_distribution": "Kalite Dagilimi",
     "progress.quality_score": "Kalite",
     "progress.quality_tooltip": "Ceviri kaynagina gore kalite puani (Insan > Dogrulanmis > Yapay Zeka)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "YZ",
     "progress.capture_only": "Sadece yakalama",
     "progress.tooltip": "Insan: :human | Dogrulanmis: :validated | Yapay Zeka: :ai | Yakalama: :capture | Kalite: :quality/3",
-
     "rating.not_main_owner": "Yalnizca Main sahibi branch'leri derecelendirebilir.",
     "rating.cannot_rate_main": "Main ceviri derecelendirilemez.",
     "rating.rate_branch": ":stars yildiz ver",

@@ -9,7 +9,6 @@
     "nav.login": "התחברות",
     "nav.profile": "הגדרות",
     "nav.login_with": "התחברות עם:",
-
     "auth.login_with": "התחברות עם :provider",
     "auth.banned": "החשבון שלך הורחק. סיבה: :reason",
     "home.title": "תרגומי משחקים",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "קישור חשבון מאובטח (ללא סיסמה במשחק)",
     "home.mod_feature_numbers": "טיפול חכם במספרים לשימוש חוזר במטמון",
     "home.mod_screenshot_alt": "אשף ההתקנה של UnityGameTranslator במשחק",
-
     "home.community_title": "קהילה",
     "home.community_subtitle": "ביחד יותר טוב",
     "home.community_download": "הורדת תרגומים קהילתיים",
@@ -48,11 +46,9 @@
     "home.community_branch": "שיתוף פעולה Main/Branch",
     "home.community_notify": "התראות עדכון",
     "home.community_opensource": "קוד פתוח (AGPL)",
-
     "home.quality_title": "תגיות איכות",
     "home.quality_desc": "ראו במבט אם תרגומים נעשו בידי אדם, אומתו, או נוצרו על ידי AI.",
     "home.quality_capture": "+ מצב לכידה לתרגומים 100% אנושיים",
-
     "home.the_website": "האתר",
     "home.website_subtitle": "שתפו ושפרו",
     "home.website_feature_browse": "עיון בתרגומים לפי משחק",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "הצבעה ודירוג איכות",
     "home.website_feature_fork": "Fork ושיפור עבודה קיימת",
     "home.website_feature_merge": "מיזוג תרומות",
-    "home.website_feature_languages": "ממשק ב-15 שפות",
+    "home.website_feature_languages": "ממשק ב-19 שפות",
     "home.website_screenshot_alt": "עורך האתר של UnityGameTranslator עם אימות",
     "home.stats_games": "משחקים",
     "home.stats_translations": "תרגומים",
@@ -70,7 +66,6 @@
     "home.popular_games": "משחקים פופולריים",
     "home.search_games": "חפשו משחק...",
     "home.search_redirect": "חיפוש",
-
     "games.back": "חזרה למשחקים",
     "games.upload_translation": "העלאת תרגום",
     "games.no_translations": "אין עדיין תרגומים למשחק הזה.",
@@ -106,7 +101,6 @@
     "translation.upvote": "הצבעה חיובית",
     "translation.downvote": "הצבעה שלילית",
     "translation.login_to_vote": "התחברו כדי להצביע",
-
     "upload.title": "העלאת תרגום",
     "upload.drop_file": "גררו את קובץ התרגום לכאן",
     "upload.or_click": "או לחצו לעיון",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "השוו את הקובץ המקומי שלכם עם הגרסה המקוונת ומזגו ידנית",
     "upload.translation_composition": "הרכב התרגום",
     "upload.composition_auto": "מחושב אוטומטית מתוכן הקובץ",
-
     "profile.title": "הגדרות פרופיל",
     "profile.display_name": "שם תצוגה",
     "profile.email": "דוא\"ל",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "הקלידו :name לאישור",
     "profile.delete_name_mismatch": "השם שהזנתם אינו תואם לשם החשבון שלכם.",
     "profile.account_deleted": "החשבון שלכם נמחק.",
-
     "report.title": "דיווח על תרגום",
     "report.reason": "סיבת הדיווח",
     "report.placeholder": "למה אתם מדווחים על זה?",
     "report.cancel": "ביטול",
     "report.submit": "שליחה",
     "report.success": "הדיווח נשלח בהצלחה.",
-
     "admin.dashboard": "לוח בקרה לניהול",
     "admin.reports": "דיווחים",
     "admin.users": "משתמשים",
@@ -249,17 +240,14 @@
     "admin.translation_details": "פרטי תרגום",
     "admin.back_to_translations": "חזרה לתרגומים",
     "admin.delete_confirm": "האם אתם בטוחים שברצונכם למחוק תרגום זה?",
-
     "footer.share": "שתפו את התרגומים שלכם מ-UnityGameTranslator",
     "footer.tagline": "מוד התרגום הפתוח למשחקי Unity.",
     "footer.download_mod": "הורדת המוד",
     "footer.rights": "כל הזכויות שמורות.",
-
     "docs.title": "תיעוד",
     "docs.subtitle": "מדריך מלא למוד ולאתר של UnityGameTranslator",
     "docs.meta_description": "תיעוד מלא ל-UnityGameTranslator - התקנה, הגדרות, מערכת איכות ותכונות שיתוף פעולה.",
     "docs.download_mod": "הורדת המוד",
-
     "docs.nav.quick_start": "התחלה מהירה",
     "docs.nav.installation": "התקנה",
     "docs.nav.first_launch": "הפעלה ראשונה",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "סנכרון ואונליין",
     "docs.nav.configuration": "הגדרות",
     "docs.nav.troubleshooting": "פתרון בעיות",
-
     "docs.quick_start.title": "התחלה מהירה",
     "docs.quick_start.intro": "התחילו לעבוד ב-3 צעדים פשוטים:",
     "docs.quick_start.step1": "התקינו טוען מודים (BepInEx או MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "הפעילו את המשחק ולחצו F10",
     "docs.quick_start.tip_title": "טיפ",
     "docs.quick_start.tip_content": "לא נדרש AI! המוד עובד מצוין עם תרגומים קהילתיים שהורדתם. הפעילו Ollama רק אם ברצונכם לתרגם טקסט לא מתורגם.",
-
     "docs.installation": "התקנה",
     "docs.install_modloader": "התקינו טוען מודים",
     "docs.modloader": "טוען מודים",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "הפעילו Ollama באשף ההגדרות או בהגדרות",
     "docs.ollama_tip_title": "מודל מומלץ",
     "docs.ollama_tip_content": "qwen3:8b מציע את האיזון הטוב ביותר בין איכות למהירות לתרגום משחקים. מודלים גדולים יותר כמו qwen3:14b מספקים איכות טובה יותר אך דורשים יותר VRAM.",
-
     "docs.first_launch": "הפעלה ראשונה",
     "docs.first_launch_intro": "בהפעלה הראשונה, אשף הגדרה מנחה אתכם דרך ההגדרות הראשוניות:",
     "docs.wizard_screenshot_alt": "אשף ההגדרה של UnityGameTranslator",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "הפעילו אופציונלית תרגום AI מקומי אם Ollama מותקן.",
     "docs.hotkey_tip_title": "התנגשויות מקשי קיצור",
     "docs.hotkey_tip_content": "אם מקש הקיצור הברירת מחדל מתנגש עם המשחק, שנו אותו באשף או מאוחר יותר ב-config.json.",
-
     "docs.quality_system.title": "מערכת איכות (HVAS)",
     "docs.quality_system.intro": "לכל ערך תרגום יש תגית איכות המציינת את מקורו. זה עוזר לכם להבין את איכות התרגום במבט.",
     "docs.quality_system.human": "אנושי",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "AI גולמי - לא נבדק",
     "docs.quality_system.capture_mode": "מצב לכידה",
     "docs.quality_system.capture_desc": "במצב לכידה, המוד מקליט טקסט מקורי ללא תרגום. מושלם ליצירת תרגומים 100% אנושיים מאפס. טקסט שנלכד מופיע עם תגית 'H' וערך ריק.",
-
     "docs.collaboration.title": "שיתוף פעולה",
     "docs.collaboration.model_title": "מודל Main / Branch / Fork",
     "docs.collaboration.model_intro": "UnityGameTranslator משתמש במודל שיתופי בהשראת Git:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "ממשק תצוגת המיזוג",
     "docs.merge_caption": "תצוגת המיזוג מאפשרת לכם להשוות ולבחור תרגומים",
     "docs.collaboration.merge_rules": "לחצו על כל תא לבחירת אותה גרסה. לחיצה כפולה לעריכה ידנית. שינויים מודגשים ומעוקבים עד שתשמרו.",
-
     "docs.sync.title": "סנכרון ומצב אונליין",
     "docs.sync.online_mode_title": "תכונות מצב אונליין",
     "docs.sync.online_mode_desc": "כשמצב אונליין מופעל, המוד מתחבר לאתר UnityGameTranslator:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "הצעה להורדה",
     "docs.sync.both_changed": "שניהם השתנו",
     "docs.sync.merge_prompt": "מיזוג 3-כיווני",
-
     "docs.configuration": "הגדרות",
     "docs.config_location": "הגדירו דרך ממשק המשחק (Ctrl+F10) או ערכו את config.json בתיקיית המוד:",
     "docs.option": "אפשרות",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "צירוף מקשים לפתיחת הממשק",
     "docs.config_online_mode": "הפעלת תכונות סנכרון עם האתר",
     "docs.config_auto_download": "הורדת עדכונים אוטומטית",
-
     "docs.troubleshooting": "פתרון בעיות",
     "docs.mod_not_loading": "המוד לא נטען?",
     "docs.mod_not_loading_desc": "ודאו שהתקנתם את הגרסה הנכונה למשחק שלכם:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "ודאו ש'מצב אונליין' מופעל בהגדרות ובדקו את חיבור האינטרנט שלכם.",
     "docs.need_help": "צריכים עזרה נוספת?",
     "docs.open_issue": "פתחו Issue ב-GitHub",
-
     "common.all": "הכל",
     "common.search": "חיפוש",
     "common.loading": "טוען...",
@@ -440,7 +419,6 @@
     "common.previous": "הקודם",
     "common.next": "הבא",
     "common.you": "אתם",
-
     "merge.title": "מיזוג",
     "merge.heading": "תצוגת מיזוג",
     "merge.keys_count": ":count מפתחות",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "לשמירה",
     "merge.cancel_shortcut": "לביטול",
     "merge.search_placeholder": "חיפוש לפי מפתח או ערך...",
-
     "auth.sign_in": "התחברו להמשך",
     "auth.choose_method": "בחרו את שיטת ההתחברות שלכם:",
     "auth.continue_with": "המשך עם :provider",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "אנא התחברו כדי להצביע על תרגומים.",
     "auth.login_to_report": "אנא התחברו כדי לדווח על תוכן לא הולם.",
     "auth.login_to_upload": "אנא התחברו כדי להעלות תרגומים.",
-
     "my_translations.title": "התרגומים שלי",
     "my_translations.new_upload": "העלאה חדשה",
     "my_translations.empty": "עדיין לא העליתם תרגומים.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "התרגום עודכן בהצלחה!",
     "my_translations.edit_title": "עריכת תרגום",
     "my_translations.back_to_mine": "חזרה לתרגומים שלי",
-
     "games.browse": "עיון בתרגומים",
     "games.search_game": "חיפוש משחק",
     "games.game_name_placeholder": "שם משחק...",
     "games.upload_first": "העלו את התרגום הראשון!",
     "games.new": "חדש",
     "games.popular": "פופולרי",
-
     "cookies.message": "אתר זה משתמש בעוגיות חיוניות לאימות וניהול הפעלה. אין עוגיות מעקב או פרסום.",
     "cookies.accept": "קבלה",
     "cookies.decline": "חיוניות בלבד",
-
     "legal.mentions_title": "הודעה משפטית",
     "legal.privacy_title": "מדיניות פרטיות",
     "legal.terms_title": "תנאי שירות",
@@ -587,7 +560,6 @@
     "footer.legal": "משפטי",
     "footer.privacy": "פרטיות",
     "footer.terms": "תנאים",
-
     "merge_preview.title": "תצוגה מקדימה למיזוג",
     "merge_preview.back_to_upload": "חזרה להעלאה",
     "merge_preview.back_to_translations": "חזרה לתרגומים שלי",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "בחירה מקוונת",
     "merge_preview.manual_edit": "עריכה ידנית",
     "merge_preview.search_placeholder": "חיפוש לפי מפתח או ערך...",
-
     "dashboard.title": "לוח בקרה",
     "dashboard.back_to_translations": "חזרה לתרגומים שלי",
     "dashboard.main_owner": "Main",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "תרגום זה אינו Branch.",
     "dashboard.file_not_found": "קובץ התרגום לא נמצא.",
     "dashboard.invalid_file": "פורמט קובץ תרגום לא תקין.",
-
     "progress.quality_distribution": "התפלגות איכות",
     "progress.quality_score": "איכות",
     "progress.quality_tooltip": "ציון איכות המבוסס על מקור התרגום (אנושי > מאומת > AI)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "A",
     "progress.capture_only": "לכידה בלבד",
     "progress.tooltip": "אנושי: :human | מאומת: :validated | AI: :ai | לכידה: :capture | איכות: :quality/3",
-
     "rating.not_main_owner": "רק בעל ה-Main יכול לדרג branches.",
     "rating.cannot_rate_main": "לא ניתן לדרג את תרגום ה-Main.",
     "rating.rate_branch": "דרגו :stars כוכב(ים)",

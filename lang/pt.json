@@ -9,7 +9,6 @@
     "nav.login": "Entrar",
     "nav.profile": "Configuracoes",
     "nav.login_with": "Entrar com:",
-
     "auth.login_with": "Entrar com :provider",
     "auth.banned": "Sua conta foi banida. Motivo: :reason",
     "home.title": "Traducoes de Jogos",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "Vinculo de conta seguro (sem senha no jogo)",
     "home.mod_feature_numbers": "Tratamento inteligente de numeros para reutilizacao de cache",
     "home.mod_screenshot_alt": "Assistente de configuracao do UnityGameTranslator no jogo",
-
     "home.community_title": "Comunidade",
     "home.community_subtitle": "Melhor juntos",
     "home.community_download": "Baixe traducoes da comunidade",
@@ -48,11 +46,9 @@
     "home.community_branch": "Colaboracao Main/Branch",
     "home.community_notify": "Notificacoes de atualizacao",
     "home.community_opensource": "Open-source (AGPL)",
-
     "home.quality_title": "Tags de Qualidade",
     "home.quality_desc": "Veja rapidamente se as traducoes sao feitas por humanos, validadas ou geradas por IA.",
     "home.quality_capture": "+ Modo captura para traducoes 100% humanas",
-
     "home.the_website": "Website",
     "home.website_subtitle": "Compartilhe e melhore",
     "home.website_feature_browse": "Navegue traducoes por jogo",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "Vote e avalie qualidade",
     "home.website_feature_fork": "Fork e melhore trabalhos existentes",
     "home.website_feature_merge": "Mescle contribuicoes",
-    "home.website_feature_languages": "Interface em 15 idiomas",
+    "home.website_feature_languages": "Interface em 19 idiomas",
     "home.website_screenshot_alt": "Editor web do UnityGameTranslator com validacao",
     "home.stats_games": "Jogos",
     "home.stats_translations": "Traducoes",
@@ -70,7 +66,6 @@
     "home.popular_games": "Jogos Populares",
     "home.search_games": "Buscar um jogo...",
     "home.search_redirect": "Buscar",
-
     "games.back": "Voltar para jogos",
     "games.upload_translation": "Enviar traducao",
     "games.no_translations": "Ainda nao ha traducoes para este jogo.",
@@ -106,7 +101,6 @@
     "translation.upvote": "Votar a favor",
     "translation.downvote": "Votar contra",
     "translation.login_to_vote": "Entre para votar",
-
     "upload.title": "Enviar traducao",
     "upload.drop_file": "Arraste seu arquivo de traducao aqui",
     "upload.or_click": "ou clique para procurar",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "Compare seu arquivo local com a versao online e mescle manualmente",
     "upload.translation_composition": "Composicao da traducao",
     "upload.composition_auto": "Calculado automaticamente a partir do conteudo do arquivo",
-
     "profile.title": "Configuracoes do Perfil",
     "profile.display_name": "Nome de exibicao",
     "profile.email": "Email",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "Digite :name para confirmar",
     "profile.delete_name_mismatch": "O nome digitado nao corresponde ao nome da sua conta.",
     "profile.account_deleted": "Sua conta foi excluida.",
-
     "report.title": "Denunciar traducao",
     "report.reason": "Motivo da denuncia",
     "report.placeholder": "Por que voce esta denunciando esta traducao?",
     "report.cancel": "Cancelar",
     "report.submit": "Enviar",
     "report.success": "Denuncia enviada com sucesso.",
-
     "admin.dashboard": "Painel Admin",
     "admin.reports": "Denuncias",
     "admin.users": "Usuarios",
@@ -249,17 +240,14 @@
     "admin.translation_details": "Detalhes da Traducao",
     "admin.back_to_translations": "Voltar para Traducoes",
     "admin.delete_confirm": "Tem certeza que deseja excluir esta traducao?",
-
     "footer.share": "Compartilhe suas traducoes do UnityGameTranslator",
     "footer.tagline": "O mod de traducao open-source para jogos Unity.",
     "footer.download_mod": "Baixar o Mod",
     "footer.rights": "Todos os direitos reservados.",
-
     "docs.title": "Documentacao",
     "docs.subtitle": "Guia completo do mod e website UnityGameTranslator",
     "docs.meta_description": "Documentacao completa para UnityGameTranslator - instalacao, configuracao, sistema de qualidade e recursos de colaboracao.",
     "docs.download_mod": "Baixar Mod",
-
     "docs.nav.quick_start": "Inicio Rapido",
     "docs.nav.installation": "Instalacao",
     "docs.nav.first_launch": "Primeira Execucao",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "Sincronizacao e Online",
     "docs.nav.configuration": "Configuracao",
     "docs.nav.troubleshooting": "Solucao de Problemas",
-
     "docs.quick_start.title": "Inicio Rapido",
     "docs.quick_start.intro": "Comece em 3 passos simples:",
     "docs.quick_start.step1": "Instale um mod loader (BepInEx ou MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "Inicie o jogo e pressione F10",
     "docs.quick_start.tip_title": "Dica",
     "docs.quick_start.tip_content": "IA nao e necessaria! O mod funciona perfeitamente com traducoes da comunidade baixadas. Ative Ollama apenas se quiser traduzir texto ainda nao traduzido.",
-
     "docs.installation": "Instalacao",
     "docs.install_modloader": "Instalar um mod loader",
     "docs.modloader": "Mod Loader",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "Ative Ollama no assistente de configuracao ou nas configuracoes",
     "docs.ollama_tip_title": "Modelo recomendado",
     "docs.ollama_tip_content": "qwen3:8b oferece o melhor equilibrio entre qualidade e velocidade para traducao de jogos. Modelos maiores como qwen3:14b oferecem melhor qualidade mas requerem mais VRAM.",
-
     "docs.first_launch": "Primeira Execucao",
     "docs.first_launch_intro": "Na primeira execucao, um assistente de configuracao guia voce pela configuracao inicial:",
     "docs.wizard_screenshot_alt": "Assistente de configuracao do UnityGameTranslator",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "Opcionalmente ative a traducao IA local se Ollama estiver instalado.",
     "docs.hotkey_tip_title": "Conflitos de tecla de atalho",
     "docs.hotkey_tip_content": "Se a tecla de atalho padrao conflitar com o jogo, altere-a no assistente ou depois no config.json.",
-
     "docs.quality_system.title": "Sistema de Qualidade (HVAS)",
     "docs.quality_system.intro": "Cada entrada de traducao tem uma tag de qualidade indicando sua origem. Isso ajuda a entender a qualidade da traducao rapidamente.",
     "docs.quality_system.human": "Human",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "IA Bruta - Nao revisado",
     "docs.quality_system.capture_mode": "Modo Captura",
     "docs.quality_system.capture_desc": "No modo captura, o mod registra o texto original sem traduzir. Perfeito para criar traducoes 100% humanas do zero. Texto capturado aparece com tag 'H' e valor vazio.",
-
     "docs.collaboration.title": "Colaboracao",
     "docs.collaboration.model_title": "Modelo Main / Branch / Fork",
     "docs.collaboration.model_intro": "UnityGameTranslator usa um modelo colaborativo inspirado no Git:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "Interface de visualizacao de mesclagem",
     "docs.merge_caption": "A visualizacao de mesclagem permite comparar e selecionar traducoes",
     "docs.collaboration.merge_rules": "Clique em qualquer celula para selecionar essa versao. Duplo clique para editar manualmente. Alteracoes sao destacadas e rastreadas ate voce salvar.",
-
     "docs.sync.title": "Sincronizacao e Modo Online",
     "docs.sync.online_mode_title": "Recursos do Modo Online",
     "docs.sync.online_mode_desc": "Quando o modo online esta ativado, o mod conecta ao website UnityGameTranslator:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "Solicita download",
     "docs.sync.both_changed": "Ambos tem alteracoes",
     "docs.sync.merge_prompt": "Mesclagem 3-way",
-
     "docs.configuration": "Configuracao",
     "docs.config_location": "Configure pelo overlay no jogo (Ctrl+F10) ou edite config.json na pasta do mod:",
     "docs.option": "Opcao",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "Combinacao de teclas para abrir overlay",
     "docs.config_online_mode": "Ativar recursos de sincronizacao com website",
     "docs.config_auto_download": "Baixar atualizacoes automaticamente",
-
     "docs.troubleshooting": "Solucao de Problemas",
     "docs.mod_not_loading": "Mod nao carrega?",
     "docs.mod_not_loading_desc": "Verifique se voce instalou a versao correta para seu jogo:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "Verifique se 'Modo online' esta ativado nas configuracoes e verifique sua conexao com a internet.",
     "docs.need_help": "Precisa de mais ajuda?",
     "docs.open_issue": "Abrir uma issue no GitHub",
-
     "common.all": "Todos",
     "common.search": "Buscar",
     "common.loading": "Carregando...",
@@ -440,7 +419,6 @@
     "common.previous": "Anterior",
     "common.next": "Seguinte",
     "common.you": "Voce",
-
     "merge.title": "Mesclar",
     "merge.heading": "Vista de Mesclagem",
     "merge.keys_count": ":count chaves",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "para guardar",
     "merge.cancel_shortcut": "para cancelar",
     "merge.search_placeholder": "Buscar por chave ou valor...",
-
     "auth.sign_in": "Entre para continuar",
     "auth.choose_method": "Escolha seu metodo de login:",
     "auth.continue_with": "Continuar com :provider",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "Entre para votar nas traducoes.",
     "auth.login_to_report": "Entre para denunciar conteudo inadequado.",
     "auth.login_to_upload": "Entre para enviar traducoes.",
-
     "my_translations.title": "Minhas Traducoes",
     "my_translations.new_upload": "Novo envio",
     "my_translations.empty": "Voce ainda nao enviou nenhuma traducao.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "Traducao atualizada com sucesso!",
     "my_translations.edit_title": "Editar Traducao",
     "my_translations.back_to_mine": "Voltar para Minhas Traducoes",
-
     "games.browse": "Explorar traducoes",
     "games.search_game": "Buscar jogo",
     "games.game_name_placeholder": "Nome do jogo...",
     "games.upload_first": "Envie a primeira traducao!",
     "games.new": "Novo",
     "games.popular": "Popular",
-
     "cookies.message": "Este site usa cookies essenciais para autenticacao e gerenciamento de sessao. Sem cookies de rastreamento ou publicidade.",
     "cookies.accept": "Aceitar",
     "cookies.decline": "Apenas essenciais",
-
     "legal.mentions_title": "Avisos Legais",
     "legal.privacy_title": "Politica de Privacidade",
     "legal.terms_title": "Termos de Servico",
@@ -587,7 +560,6 @@
     "footer.legal": "Avisos legais",
     "footer.privacy": "Privacidade",
     "footer.terms": "Termos",
-
     "merge_preview.title": "Previa de mesclagem",
     "merge_preview.back_to_upload": "Voltar para envio",
     "merge_preview.back_to_translations": "Voltar para Minhas Traducoes",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "Selecao online",
     "merge_preview.manual_edit": "Edicao manual",
     "merge_preview.search_placeholder": "Buscar por chave ou valor...",
-
     "dashboard.title": "Painel",
     "dashboard.back_to_translations": "Voltar para Minhas Traducoes",
     "dashboard.main_owner": "Main",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "Esta traducao nao e um Branch.",
     "dashboard.file_not_found": "Arquivo de traducao nao encontrado.",
     "dashboard.invalid_file": "Formato de arquivo de traducao invalido.",
-
     "progress.quality_distribution": "Distribuicao de Qualidade",
     "progress.quality_score": "Qualidade",
     "progress.quality_tooltip": "Pontuacao de qualidade baseada na fonte de traducao (Human > Validated > AI)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "A",
     "progress.capture_only": "Apenas captura",
     "progress.tooltip": "Human: :human | Validated: :validated | AI: :ai | Captura: :capture | Qualidade: :quality/3",
-
     "rating.not_main_owner": "Apenas o proprietario Main pode avaliar branches.",
     "rating.cannot_rate_main": "Nao e possivel avaliar a traducao Main.",
     "rating.rate_branch": "Avaliar :stars estrela(s)",

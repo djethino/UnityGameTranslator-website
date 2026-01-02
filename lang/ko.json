@@ -9,7 +9,6 @@
     "nav.login": "로그인",
     "nav.profile": "설정",
     "nav.login_with": "다음으로 로그인:",
-
     "auth.login_with": ":provider로 로그인",
     "auth.banned": "계정이 정지되었습니다. 사유: :reason",
     "home.title": "게임 번역",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "보안 계정 연결 (게임 내 비밀번호 불필요)",
     "home.mod_feature_numbers": "캐시 재사용을 위한 스마트 숫자 처리",
     "home.mod_screenshot_alt": "UnityGameTranslator 게임 내 설정 마법사",
-
     "home.community_title": "커뮤니티",
     "home.community_subtitle": "함께하면 더 좋은",
     "home.community_download": "커뮤니티 번역 다운로드",
@@ -48,11 +46,9 @@
     "home.community_branch": "메인/브랜치 협업",
     "home.community_notify": "업데이트 알림",
     "home.community_opensource": "오픈소스 (AGPL)",
-
     "home.quality_title": "품질 태그",
     "home.quality_desc": "번역이 사람이 만든 것인지, 검증된 것인지, AI 생성인지 한눈에 확인하세요.",
     "home.quality_capture": "+ 100% 수동 번역을 위한 캡처 모드",
-
     "home.the_website": "웹사이트",
     "home.website_subtitle": "공유하고 개선하기",
     "home.website_feature_browse": "게임별 번역 찾아보기",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "품질 투표 및 평가",
     "home.website_feature_fork": "기존 작업 포크 및 개선",
     "home.website_feature_merge": "기여 병합",
-    "home.website_feature_languages": "15개 언어 UI",
+    "home.website_feature_languages": "19개 언어 UI",
     "home.website_screenshot_alt": "검증 기능이 있는 UnityGameTranslator 웹 에디터",
     "home.stats_games": "게임",
     "home.stats_translations": "번역",
@@ -70,7 +66,6 @@
     "home.popular_games": "인기 게임",
     "home.search_games": "게임 검색...",
     "home.search_redirect": "검색",
-
     "games.back": "게임 목록으로",
     "games.upload_translation": "번역 업로드",
     "games.no_translations": "이 게임의 번역이 아직 없습니다.",
@@ -106,7 +101,6 @@
     "translation.upvote": "추천",
     "translation.downvote": "비추천",
     "translation.login_to_vote": "투표하려면 로그인",
-
     "upload.title": "번역 업로드",
     "upload.drop_file": "번역 파일을 여기에 드롭",
     "upload.or_click": "또는 클릭하여 선택",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "로컬 파일을 온라인 버전과 비교하여 수동으로 병합하세요",
     "upload.translation_composition": "번역 구성",
     "upload.composition_auto": "파일 내용에서 자동으로 계산됨",
-
     "profile.title": "프로필 설정",
     "profile.display_name": "표시 이름",
     "profile.email": "이메일",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "확인을 위해 :name을(를) 입력하세요",
     "profile.delete_name_mismatch": "입력한 이름이 계정 이름과 일치하지 않습니다.",
     "profile.account_deleted": "계정이 삭제되었습니다.",
-
     "report.title": "번역 신고",
     "report.reason": "신고 사유",
     "report.placeholder": "왜 이 번역을 신고하시나요?",
     "report.cancel": "취소",
     "report.submit": "제출",
     "report.success": "신고가 제출되었습니다.",
-
     "admin.dashboard": "관리자 대시보드",
     "admin.reports": "신고",
     "admin.users": "사용자",
@@ -249,17 +240,14 @@
     "admin.translation_details": "번역 상세",
     "admin.back_to_translations": "번역 목록으로",
     "admin.delete_confirm": "이 번역을 삭제하시겠습니까?",
-
     "footer.share": "UnityGameTranslator 번역 공유",
     "footer.tagline": "Unity 게임용 오픈소스 번역 모드.",
     "footer.download_mod": "모드 다운로드",
     "footer.rights": "All rights reserved.",
-
     "docs.title": "문서",
     "docs.subtitle": "UnityGameTranslator 모드 및 웹사이트 완벽 가이드",
     "docs.meta_description": "UnityGameTranslator 완벽 문서 - 설치, 설정, 품질 시스템 및 협업 기능.",
     "docs.download_mod": "모드 다운로드",
-
     "docs.nav.quick_start": "빠른 시작",
     "docs.nav.installation": "설치",
     "docs.nav.first_launch": "첫 실행",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "동기화 및 온라인",
     "docs.nav.configuration": "설정",
     "docs.nav.troubleshooting": "문제 해결",
-
     "docs.quick_start.title": "빠른 시작",
     "docs.quick_start.intro": "3단계로 간단하게 시작하세요:",
     "docs.quick_start.step1": "모드 로더 설치 (BepInEx 또는 MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "게임을 실행하고 F10 키를 누르세요",
     "docs.quick_start.tip_title": "팁",
     "docs.quick_start.tip_content": "AI가 필요 없습니다! 모드는 다운로드한 커뮤니티 번역으로 완벽하게 작동합니다. 번역되지 않은 텍스트를 번역하려는 경우에만 Ollama를 활성화하세요.",
-
     "docs.installation": "설치",
     "docs.install_modloader": "모드 로더 설치",
     "docs.modloader": "모드 로더",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "설정 마법사 또는 설정에서 Ollama 활성화",
     "docs.ollama_tip_title": "권장 모델",
     "docs.ollama_tip_content": "qwen3:8b는 게임 번역에 품질과 속도의 최적 균형을 제공합니다. qwen3:14b와 같은 큰 모델은 더 나은 품질을 제공하지만 더 많은 VRAM이 필요합니다.",
-
     "docs.first_launch": "첫 실행",
     "docs.first_launch_intro": "첫 실행 시 설정 마법사가 초기 구성을 안내합니다:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator 설정 마법사",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "Ollama가 설치되어 있으면 선택적으로 로컬 AI 번역을 활성화합니다.",
     "docs.hotkey_tip_title": "단축키 충돌",
     "docs.hotkey_tip_content": "기본 단축키가 게임과 충돌하면 마법사에서 변경하거나 나중에 config.json에서 변경하세요.",
-
     "docs.quality_system.title": "품질 시스템 (HVAS)",
     "docs.quality_system.intro": "모든 번역 항목에는 출처를 나타내는 품질 태그가 있습니다. 한눈에 번역 품질을 파악할 수 있습니다.",
     "docs.quality_system.human": "Human",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "원시 AI - 검토되지 않음",
     "docs.quality_system.capture_mode": "캡처 모드",
     "docs.quality_system.capture_desc": "캡처 모드에서는 모드가 번역 없이 원본 텍스트를 기록합니다. 처음부터 100% 수동 번역을 만들기에 적합합니다. 캡처된 텍스트는 'H' 태그와 빈 값으로 표시됩니다.",
-
     "docs.collaboration.title": "협업",
     "docs.collaboration.model_title": "Main / Branch / Fork 모델",
     "docs.collaboration.model_intro": "UnityGameTranslator는 Git에서 영감을 받은 협업 모델을 사용합니다:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "병합 뷰 인터페이스",
     "docs.merge_caption": "병합 뷰에서 번역을 비교하고 선택할 수 있습니다",
     "docs.collaboration.merge_rules": "셀을 클릭하여 해당 버전을 선택하세요. 더블클릭하여 수동 편집하세요. 변경 사항은 저장할 때까지 강조 표시되고 추적됩니다.",
-
     "docs.sync.title": "동기화 및 온라인 모드",
     "docs.sync.online_mode_title": "온라인 모드 기능",
     "docs.sync.online_mode_desc": "온라인 모드가 활성화되면 모드가 UnityGameTranslator 웹사이트에 연결됩니다:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "다운로드 제안",
     "docs.sync.both_changed": "둘 다 변경됨",
     "docs.sync.merge_prompt": "3-way 병합",
-
     "docs.configuration": "설정",
     "docs.config_location": "게임 내 오버레이(Ctrl+F10)로 설정하거나 모드 폴더의 config.json을 편집하세요:",
     "docs.option": "옵션",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "오버레이를 열기 위한 키 조합",
     "docs.config_online_mode": "웹사이트 동기화 기능 활성화",
     "docs.config_auto_download": "자동으로 업데이트 다운로드",
-
     "docs.troubleshooting": "문제 해결",
     "docs.mod_not_loading": "모드가 로드되지 않나요?",
     "docs.mod_not_loading_desc": "게임에 맞는 올바른 버전을 설치했는지 확인하세요:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "설정에서 '온라인 모드'가 활성화되어 있는지 확인하고 인터넷 연결을 확인하세요.",
     "docs.need_help": "더 도움이 필요하신가요?",
     "docs.open_issue": "GitHub에서 이슈 열기",
-
     "common.all": "전체",
     "common.search": "검색",
     "common.loading": "로딩 중...",
@@ -440,7 +419,6 @@
     "common.previous": "이전",
     "common.next": "다음",
     "common.you": "나",
-
     "merge.title": "병합",
     "merge.heading": "병합 보기",
     "merge.keys_count": ":count개 키",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "저장",
     "merge.cancel_shortcut": "취소",
     "merge.search_placeholder": "키 또는 값으로 검색...",
-
     "auth.sign_in": "계속하려면 로그인하세요",
     "auth.choose_method": "로그인 방법 선택:",
     "auth.continue_with": ":provider로 계속",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "번역에 투표하려면 로그인하세요.",
     "auth.login_to_report": "부적절한 콘텐츠를 신고하려면 로그인하세요.",
     "auth.login_to_upload": "번역을 업로드하려면 로그인하세요.",
-
     "my_translations.title": "내 번역",
     "my_translations.new_upload": "새 업로드",
     "my_translations.empty": "아직 업로드한 번역이 없습니다.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "번역이 업데이트되었습니다!",
     "my_translations.edit_title": "번역 수정",
     "my_translations.back_to_mine": "내 번역으로 돌아가기",
-
     "games.browse": "번역 둘러보기",
     "games.search_game": "게임 검색",
     "games.game_name_placeholder": "게임 이름...",
     "games.upload_first": "첫 번역을 업로드하세요!",
     "games.new": "신규",
     "games.popular": "인기",
-
     "cookies.message": "이 사이트는 인증 및 세션 관리를 위한 필수 쿠키를 사용합니다. 추적 또는 광고 쿠키는 없습니다.",
     "cookies.accept": "동의",
     "cookies.decline": "필수만",
-
     "legal.mentions_title": "법적 고지",
     "legal.privacy_title": "개인정보 처리방침",
     "legal.terms_title": "이용약관",
@@ -587,7 +560,6 @@
     "footer.legal": "법적 고지",
     "footer.privacy": "개인정보",
     "footer.terms": "이용약관",
-
     "merge_preview.title": "병합 미리보기",
     "merge_preview.back_to_upload": "업로드로 돌아가기",
     "merge_preview.back_to_translations": "내 번역으로 돌아가기",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "온라인 선택",
     "merge_preview.manual_edit": "수동 편집",
     "merge_preview.search_placeholder": "키 또는 값으로 검색...",
-
     "dashboard.title": "대시보드",
     "dashboard.back_to_translations": "내 번역으로 돌아가기",
     "dashboard.main_owner": "메인",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "이 번역은 브랜치가 아닙니다.",
     "dashboard.file_not_found": "번역 파일을 찾을 수 없습니다.",
     "dashboard.invalid_file": "번역 파일 형식이 잘못되었습니다.",
-
     "progress.quality_distribution": "품질 분포",
     "progress.quality_score": "품질",
     "progress.quality_tooltip": "번역 소스 기반 품질 점수 (사람 > 검증됨 > AI)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "AI",
     "progress.capture_only": "캡처만",
     "progress.tooltip": "사람: :human | 검증됨: :validated | AI: :ai | 캡처: :capture | 품질: :quality/3",
-
     "rating.not_main_owner": "메인 소유자만 브랜치를 평가할 수 있습니다.",
     "rating.cannot_rate_main": "메인 번역은 평가할 수 없습니다.",
     "rating.rate_branch": ":stars 별 평가",

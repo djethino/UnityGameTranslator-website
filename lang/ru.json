@@ -9,7 +9,6 @@
     "nav.login": "Войти",
     "nav.profile": "Настройки",
     "nav.login_with": "Войти через:",
-
     "auth.login_with": "Войти через :provider",
     "auth.banned": "Ваш аккаунт заблокирован. Причина: :reason",
     "home.title": "Переводы игр",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "Безопасная привязка аккаунта (без пароля в игре)",
     "home.mod_feature_numbers": "Умная обработка чисел для повторного использования кэша",
     "home.mod_screenshot_alt": "Мастер настройки UnityGameTranslator в игре",
-
     "home.community_title": "Сообщество",
     "home.community_subtitle": "Вместе лучше",
     "home.community_download": "Скачивайте переводы сообщества",
@@ -48,11 +46,9 @@
     "home.community_branch": "Совместная работа Main/Branch",
     "home.community_notify": "Уведомления об обновлениях",
     "home.community_opensource": "Open-source (AGPL)",
-
     "home.quality_title": "Метки качества",
     "home.quality_desc": "Сразу видно, сделан перевод человеком, проверен или создан ИИ.",
     "home.quality_capture": "+ Режим захвата для 100% человеческих переводов",
-
     "home.the_website": "Сайт",
     "home.website_subtitle": "Делитесь и улучшайте",
     "home.website_feature_browse": "Просматривайте переводы по играм",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "Голосуйте и оценивайте качество",
     "home.website_feature_fork": "Форкайте и улучшайте существующие работы",
     "home.website_feature_merge": "Объединяйте вклады",
-    "home.website_feature_languages": "Интерфейс на 15 языках",
+    "home.website_feature_languages": "Интерфейс на 19 языках",
     "home.website_screenshot_alt": "Веб-редактор UnityGameTranslator с проверкой",
     "home.stats_games": "Игры",
     "home.stats_translations": "Переводы",
@@ -70,7 +66,6 @@
     "home.popular_games": "Популярные игры",
     "home.search_games": "Поиск игры...",
     "home.search_redirect": "Поиск",
-
     "games.back": "Назад к играм",
     "games.upload_translation": "Загрузить перевод",
     "games.no_translations": "Переводов для этой игры пока нет.",
@@ -106,7 +101,6 @@
     "translation.upvote": "За",
     "translation.downvote": "Против",
     "translation.login_to_vote": "Войдите для голосования",
-
     "upload.title": "Загрузить перевод",
     "upload.drop_file": "Перетащите файл перевода сюда",
     "upload.or_click": "или нажмите для выбора",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "Сравните локальный файл с онлайн-версией и объедините вручную",
     "upload.translation_composition": "Состав перевода",
     "upload.composition_auto": "Рассчитывается автоматически из содержимого файла",
-
     "profile.title": "Настройки профиля",
     "profile.display_name": "Отображаемое имя",
     "profile.email": "Email",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "Введите :name для подтверждения",
     "profile.delete_name_mismatch": "Введённое имя не совпадает с именем вашего аккаунта.",
     "profile.account_deleted": "Ваш аккаунт был удалён.",
-
     "report.title": "Пожаловаться на перевод",
     "report.reason": "Причина жалобы",
     "report.placeholder": "Почему вы жалуетесь на этот перевод?",
     "report.cancel": "Отмена",
     "report.submit": "Отправить",
     "report.success": "Жалоба успешно отправлена.",
-
     "admin.dashboard": "Панель администратора",
     "admin.reports": "Жалобы",
     "admin.users": "Пользователи",
@@ -249,17 +240,14 @@
     "admin.translation_details": "Детали перевода",
     "admin.back_to_translations": "Назад к переводам",
     "admin.delete_confirm": "Вы уверены, что хотите удалить этот перевод?",
-
     "footer.share": "Делитесь переводами UnityGameTranslator",
     "footer.tagline": "Open-source мод перевода для игр Unity.",
     "footer.download_mod": "Скачать мод",
     "footer.rights": "Все права защищены.",
-
     "docs.title": "Документация",
     "docs.subtitle": "Полное руководство по моду и сайту UnityGameTranslator",
     "docs.meta_description": "Полная документация UnityGameTranslator — установка, настройка, система качества и функции совместной работы.",
     "docs.download_mod": "Скачать мод",
-
     "docs.nav.quick_start": "Быстрый старт",
     "docs.nav.installation": "Установка",
     "docs.nav.first_launch": "Первый запуск",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "Синхронизация",
     "docs.nav.configuration": "Настройка",
     "docs.nav.troubleshooting": "Неполадки",
-
     "docs.quick_start.title": "Быстрый старт",
     "docs.quick_start.intro": "Начните работу за 3 простых шага:",
     "docs.quick_start.step1": "Установите мод-загрузчик (BepInEx или MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "Запустите игру и нажмите F10",
     "docs.quick_start.tip_title": "Совет",
     "docs.quick_start.tip_content": "ИИ не требуется! Мод отлично работает со скачанными переводами сообщества. Включите Ollama только если хотите переводить непереведённый текст.",
-
     "docs.installation": "Установка",
     "docs.install_modloader": "Установите мод-загрузчик",
     "docs.modloader": "Мод-загрузчик",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "Включите Ollama в мастере настройки или настройках",
     "docs.ollama_tip_title": "Рекомендуемая модель",
     "docs.ollama_tip_content": "qwen3:8b предлагает лучший баланс качества и скорости для перевода игр. Более крупные модели, такие как qwen3:14b, дают лучшее качество, но требуют больше видеопамяти.",
-
     "docs.first_launch": "Первый запуск",
     "docs.first_launch_intro": "При первом запуске мастер настройки проведёт вас через начальную конфигурацию:",
     "docs.wizard_screenshot_alt": "Мастер настройки UnityGameTranslator",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "Опционально включите локальный ИИ-перевод, если Ollama установлен.",
     "docs.hotkey_tip_title": "Конфликты горячих клавиш",
     "docs.hotkey_tip_content": "Если горячая клавиша по умолчанию конфликтует с игрой, измените её в мастере или позже в config.json.",
-
     "docs.quality_system.title": "Система качества (HVAS)",
     "docs.quality_system.intro": "Каждая запись перевода имеет метку качества, указывающую на её источник. Это помогает сразу понять качество перевода.",
     "docs.quality_system.human": "Человек",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "Сырой ИИ — без проверки",
     "docs.quality_system.capture_mode": "Режим захвата",
     "docs.quality_system.capture_desc": "В режиме захвата мод записывает оригинальный текст без перевода. Идеально для создания 100% человеческих переводов с нуля. Захваченный текст отображается с меткой 'H' и пустым значением.",
-
     "docs.collaboration.title": "Совместная работа",
     "docs.collaboration.model_title": "Модель Main / Branch / Fork",
     "docs.collaboration.model_intro": "UnityGameTranslator использует модель совместной работы, вдохновлённую Git:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "Интерфейс просмотра слияния",
     "docs.merge_caption": "Просмотр слияния позволяет сравнивать и выбирать переводы",
     "docs.collaboration.merge_rules": "Щёлкните по любой ячейке, чтобы выбрать эту версию. Двойной щелчок для ручного редактирования. Изменения подсвечиваются и отслеживаются до сохранения.",
-
     "docs.sync.title": "Синхронизация и онлайн-режим",
     "docs.sync.online_mode_title": "Функции онлайн-режима",
     "docs.sync.online_mode_desc": "При включённом онлайн-режиме мод подключается к сайту UnityGameTranslator:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "Предложение скачать",
     "docs.sync.both_changed": "Изменения с обеих сторон",
     "docs.sync.merge_prompt": "3-way merge",
-
     "docs.configuration": "Настройка",
     "docs.config_location": "Настройте через оверлей в игре (Ctrl+F10) или отредактируйте config.json в папке мода:",
     "docs.option": "Опция",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "Комбинация клавиш для открытия оверлея",
     "docs.config_online_mode": "Включить функции синхронизации с сайтом",
     "docs.config_auto_download": "Автоматически скачивать обновления",
-
     "docs.troubleshooting": "Устранение неполадок",
     "docs.mod_not_loading": "Мод не загружается?",
     "docs.mod_not_loading_desc": "Убедитесь, что установили правильную версию для вашей игры:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "Убедитесь, что 'Онлайн режим' включён в настройках. Проверьте интернет-соединение.",
     "docs.need_help": "Нужна дополнительная помощь?",
     "docs.open_issue": "Создать issue на GitHub",
-
     "common.all": "Все",
     "common.search": "Поиск",
     "common.loading": "Загрузка...",
@@ -440,7 +419,6 @@
     "common.previous": "Назад",
     "common.next": "Далее",
     "common.you": "Вы",
-
     "merge.title": "Слияние",
     "merge.heading": "Просмотр слияния",
     "merge.keys_count": ":count ключей",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "для сохранения",
     "merge.cancel_shortcut": "для отмены",
     "merge.search_placeholder": "Поиск по ключу или значению...",
-
     "auth.sign_in": "Войдите для продолжения",
     "auth.choose_method": "Выберите способ входа:",
     "auth.continue_with": "Продолжить через :provider",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "Войдите, чтобы голосовать за переводы.",
     "auth.login_to_report": "Войдите, чтобы пожаловаться на неподобающий контент.",
     "auth.login_to_upload": "Войдите, чтобы загрузить переводы.",
-
     "my_translations.title": "Мои переводы",
     "my_translations.new_upload": "Новая загрузка",
     "my_translations.empty": "Вы ещё не загрузили ни одного перевода.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "Перевод успешно обновлён!",
     "my_translations.edit_title": "Редактировать перевод",
     "my_translations.back_to_mine": "Назад к моим переводам",
-
     "games.browse": "Обзор переводов",
     "games.search_game": "Поиск игры",
     "games.game_name_placeholder": "Название игры...",
     "games.upload_first": "Загрузите первый перевод!",
     "games.new": "Новое",
     "games.popular": "Популярное",
-
     "cookies.message": "Этот сайт использует необходимые файлы cookie для аутентификации и управления сессией. Без отслеживающих или рекламных cookie.",
     "cookies.accept": "Принять",
     "cookies.decline": "Только необходимые",
-
     "legal.mentions_title": "Правовая информация",
     "legal.privacy_title": "Политика конфиденциальности",
     "legal.terms_title": "Условия использования",
@@ -587,7 +560,6 @@
     "footer.legal": "Правовая информация",
     "footer.privacy": "Конфиденциальность",
     "footer.terms": "Условия",
-
     "merge_preview.title": "Предпросмотр слияния",
     "merge_preview.back_to_upload": "Вернуться к загрузке",
     "merge_preview.back_to_translations": "Назад к моим переводам",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "Выбор онлайн",
     "merge_preview.manual_edit": "Ручное редактирование",
     "merge_preview.search_placeholder": "Поиск по ключу или значению...",
-
     "dashboard.title": "Панель управления",
     "dashboard.back_to_translations": "Назад к моим переводам",
     "dashboard.main_owner": "Основной",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "Этот перевод не является веткой.",
     "dashboard.file_not_found": "Файл перевода не найден.",
     "dashboard.invalid_file": "Недопустимый формат файла перевода.",
-
     "progress.quality_distribution": "Распределение качества",
     "progress.quality_score": "Качество",
     "progress.quality_tooltip": "Оценка качества на основе источника перевода (Человек > Проверено > ИИ)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "ИИ",
     "progress.capture_only": "Только захват",
     "progress.tooltip": "Человек: :human | Проверено: :validated | ИИ: :ai | Захват: :capture | Качество: :quality/3",
-
     "rating.not_main_owner": "Только владелец основной версии может оценивать ветки.",
     "rating.cannot_rate_main": "Невозможно оценить основной перевод.",
     "rating.rate_branch": "Оценить :stars звезд(ы)",

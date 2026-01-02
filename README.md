@@ -14,7 +14,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Vote system** to highlight quality translations
 - **Report system** for moderation
 - **Profile management** with GDPR data export
-- **Multi-language UI** (15 languages)
+- **Multi-language UI** (19 languages)
 - **Admin dashboard** with analytics and moderation tools
 
 ### Collaboration Model (Main/Branch/Fork)

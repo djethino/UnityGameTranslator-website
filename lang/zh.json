@@ -9,7 +9,6 @@
     "nav.login": "登录",
     "nav.profile": "设置",
     "nav.login_with": "登录方式：",
-
     "auth.login_with": "使用 :provider 登录",
     "auth.banned": "您的账户已被封禁。原因：:reason",
     "home.title": "游戏翻译",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "安全账户绑定（游戏内无需密码）",
     "home.mod_feature_numbers": "智能数字处理，提高缓存复用",
     "home.mod_screenshot_alt": "UnityGameTranslator游戏内设置向导",
-
     "home.community_title": "社区协作",
     "home.community_subtitle": "众人拾柴火焰高",
     "home.community_download": "下载社区翻译",
@@ -48,11 +46,9 @@
     "home.community_branch": "主版本/分支协作",
     "home.community_notify": "更新通知",
     "home.community_opensource": "开源（AGPL）",
-
     "home.quality_title": "质量标签",
     "home.quality_desc": "一目了然查看翻译来源：人工翻译、已验证或AI生成。",
     "home.quality_capture": "+ 捕获模式，实现100%人工翻译",
-
     "home.the_website": "社区",
     "home.website_subtitle": "分享与改进",
     "home.website_feature_browse": "按游戏浏览翻译",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "投票和评价质量",
     "home.website_feature_fork": "分叉并改进现有作品",
     "home.website_feature_merge": "合并贡献",
-    "home.website_feature_languages": "15种语言界面",
+    "home.website_feature_languages": "19种语言界面",
     "home.website_screenshot_alt": "UnityGameTranslator带验证功能的网页编辑器",
     "home.stats_games": "游戏",
     "home.stats_translations": "翻译",
@@ -70,7 +66,6 @@
     "home.popular_games": "热门游戏",
     "home.search_games": "搜索游戏...",
     "home.search_redirect": "搜索",
-
     "games.back": "返回游戏列表",
     "games.upload_translation": "上传翻译",
     "games.no_translations": "该游戏暂无翻译。",
@@ -106,7 +101,6 @@
     "translation.upvote": "点赞",
     "translation.downvote": "点踩",
     "translation.login_to_vote": "登录后投票",
-
     "upload.title": "上传翻译",
     "upload.drop_file": "将翻译文件拖放到此处",
     "upload.or_click": "或点击浏览",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "将本地文件与在线版本进行比较并手动合并",
     "upload.translation_composition": "翻译构成",
     "upload.composition_auto": "根据文件内容自动计算",
-
     "profile.title": "个人设置",
     "profile.display_name": "显示名称",
     "profile.email": "邮箱",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "输入 :name 以确认",
     "profile.delete_name_mismatch": "您输入的名称与账户名称不匹配。",
     "profile.account_deleted": "您的账户已被删除。",
-
     "report.title": "举报翻译",
     "report.reason": "举报原因",
     "report.placeholder": "您为什么要举报此翻译？",
     "report.cancel": "取消",
     "report.submit": "提交",
     "report.success": "举报提交成功。",
-
     "admin.dashboard": "管理员面板",
     "admin.reports": "举报",
     "admin.users": "用户",
@@ -249,17 +240,14 @@
     "admin.translation_details": "翻译详情",
     "admin.back_to_translations": "返回翻译列表",
     "admin.delete_confirm": "确定要删除此翻译吗？",
-
     "footer.share": "分享您的 UnityGameTranslator 翻译",
     "footer.tagline": "Unity游戏的开源翻译Mod。",
     "footer.download_mod": "下载Mod",
     "footer.rights": "保留所有权利。",
-
     "docs.title": "文档",
     "docs.subtitle": "UnityGameTranslator模组和网站完整指南",
     "docs.meta_description": "UnityGameTranslator完整文档 - 安装、配置、质量系统和协作功能。",
     "docs.download_mod": "下载模组",
-
     "docs.nav.quick_start": "快速入门",
     "docs.nav.installation": "安装",
     "docs.nav.first_launch": "首次启动",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "同步与在线",
     "docs.nav.configuration": "配置",
     "docs.nav.troubleshooting": "故障排除",
-
     "docs.quick_start.title": "快速入门",
     "docs.quick_start.intro": "只需3个简单步骤即可开始使用：",
     "docs.quick_start.step1": "安装模组加载器（BepInEx 或 MelonLoader）",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "启动游戏并按 F10 键",
     "docs.quick_start.tip_title": "提示",
     "docs.quick_start.tip_content": "无需AI！该模组可以完美使用下载的社区翻译。仅当您想翻译未翻译的文本时才需要启用 Ollama。",
-
     "docs.installation": "安装",
     "docs.install_modloader": "安装模组加载器",
     "docs.modloader": "模组加载器",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "在设置向导或设置中启用 Ollama",
     "docs.ollama_tip_title": "推荐模型",
     "docs.ollama_tip_content": "qwen3:8b 在游戏翻译方面提供最佳的质量和速度平衡。更大的模型如 qwen3:14b 质量更好，但需要更多显存。",
-
     "docs.first_launch": "首次启动",
     "docs.first_launch_intro": "首次启动时，设置向导将引导您完成初始配置：",
     "docs.wizard_screenshot_alt": "UnityGameTranslator 设置向导",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "如果已安装 Ollama，可选择启用本地AI翻译。",
     "docs.hotkey_tip_title": "快捷键冲突",
     "docs.hotkey_tip_content": "如果默认快捷键与游戏冲突，请在向导中更改或稍后编辑 config.json。",
-
     "docs.quality_system.title": "质量系统（HVAS）",
     "docs.quality_system.intro": "每个翻译条目都有一个质量标签，表明其来源。这可以帮助您一目了然地了解翻译质量。",
     "docs.quality_system.human": "人工",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "原始AI - 未审核",
     "docs.quality_system.capture_mode": "捕获模式",
     "docs.quality_system.capture_desc": "在捕获模式下，模组记录原始文本而不进行翻译。非常适合从零开始创建100%人工翻译。捕获的文本显示为'H'标签且值为空。",
-
     "docs.collaboration.title": "协作",
     "docs.collaboration.model_title": "Main / Branch / Fork 模型",
     "docs.collaboration.model_intro": "UnityGameTranslator使用受Git启发的协作模型：",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "合并视图界面",
     "docs.merge_caption": "合并视图让您可以比较和选择翻译",
     "docs.collaboration.merge_rules": "点击任意单元格选择该版本。双击手动编辑。更改会被高亮显示并跟踪，直到您保存。",
-
     "docs.sync.title": "同步与在线模式",
     "docs.sync.online_mode_title": "在线模式功能",
     "docs.sync.online_mode_desc": "启用在线模式后，模组将连接到 UnityGameTranslator 网站：",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "提示下载",
     "docs.sync.both_changed": "双方都有更改",
     "docs.sync.merge_prompt": "三方合并",
-
     "docs.configuration": "配置",
     "docs.config_location": "通过游戏内覆盖层（Ctrl+F10）配置，或编辑模组文件夹中的 config.json：",
     "docs.option": "选项",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "打开覆盖层的组合键",
     "docs.config_online_mode": "启用网站同步功能",
     "docs.config_auto_download": "自动下载更新",
-
     "docs.troubleshooting": "故障排除",
     "docs.mod_not_loading": "模组无法加载？",
     "docs.mod_not_loading_desc": "确保您为游戏安装了正确的版本：",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "确认设置中启用了'在线模式'并检查您的网络连接。",
     "docs.need_help": "需要更多帮助？",
     "docs.open_issue": "在 GitHub 上提交问题",
-
     "common.all": "全部",
     "common.search": "搜索",
     "common.loading": "加载中...",
@@ -440,7 +419,6 @@
     "common.previous": "上一页",
     "common.next": "下一页",
     "common.you": "你",
-
     "merge.title": "合并",
     "merge.heading": "合并视图",
     "merge.keys_count": ":count 个键",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "保存",
     "merge.cancel_shortcut": "取消",
     "merge.search_placeholder": "按键或值搜索...",
-
     "auth.sign_in": "登录以继续",
     "auth.choose_method": "选择登录方式：",
     "auth.continue_with": "使用 :provider 继续",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "请登录以对翻译进行投票。",
     "auth.login_to_report": "请登录以举报不当内容。",
     "auth.login_to_upload": "请登录以上传翻译。",
-
     "my_translations.title": "我的翻译",
     "my_translations.new_upload": "新建上传",
     "my_translations.empty": "您还没有上传任何翻译。",
@@ -497,18 +473,15 @@
     "my_translations.updated": "翻译更新成功！",
     "my_translations.edit_title": "编辑翻译",
     "my_translations.back_to_mine": "返回我的翻译",
-
     "games.browse": "浏览翻译",
     "games.search_game": "搜索游戏",
     "games.game_name_placeholder": "游戏名称...",
     "games.upload_first": "上传第一个翻译！",
     "games.new": "新",
     "games.popular": "热门",
-
     "cookies.message": "本站使用必要的身份验证和会话管理Cookie。无跟踪或广告Cookie。",
     "cookies.accept": "接受",
     "cookies.decline": "仅必要",
-
     "legal.mentions_title": "法律声明",
     "legal.privacy_title": "隐私政策",
     "legal.terms_title": "使用条款",
@@ -587,7 +560,6 @@
     "footer.legal": "法律声明",
     "footer.privacy": "隐私政策",
     "footer.terms": "使用条款",
-
     "merge_preview.title": "合并预览",
     "merge_preview.back_to_upload": "返回上传",
     "merge_preview.back_to_translations": "返回我的翻译",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "选择在线",
     "merge_preview.manual_edit": "手动编辑",
     "merge_preview.search_placeholder": "按键或值搜索...",
-
     "dashboard.title": "控制面板",
     "dashboard.back_to_translations": "返回我的翻译",
     "dashboard.main_owner": "主版本",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "此翻译不是分支。",
     "dashboard.file_not_found": "未找到翻译文件。",
     "dashboard.invalid_file": "翻译文件格式无效。",
-
     "progress.quality_distribution": "质量分布",
     "progress.quality_score": "质量",
     "progress.quality_tooltip": "基于翻译来源的质量评分（人工 > 已验证 > AI）",
@@ -678,7 +648,6 @@
     "progress.ai_short": "AI",
     "progress.capture_only": "仅捕获",
     "progress.tooltip": "人工: :human | 已验证: :validated | AI: :ai | 捕获: :capture | 质量: :quality/3",
-
     "rating.not_main_owner": "只有主翻译所有者可以评价分支。",
     "rating.cannot_rate_main": "无法评价主翻译。",
     "rating.rate_branch": "评价 :stars 星",

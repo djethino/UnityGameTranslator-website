@@ -9,7 +9,6 @@
     "nav.login": "साइन इन",
     "nav.profile": "सेटिंग्स",
     "nav.login_with": "इससे साइन इन करें:",
-
     "auth.login_with": ":provider से लॉगिन करें",
     "auth.banned": "आपका खाता प्रतिबंधित कर दिया गया है। कारण: :reason",
     "home.title": "गेम अनुवाद",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "सुरक्षित अकाउंट लिंक (इन-गेम पासवर्ड नहीं)",
     "home.mod_feature_numbers": "कैश रीयूज के लिए स्मार्ट नंबर हैंडलिंग",
     "home.mod_screenshot_alt": "इन-गेम UnityGameTranslator सेटअप विज़ार्ड",
-
     "home.community_title": "कम्युनिटी",
     "home.community_subtitle": "साथ मिलकर बेहतर",
     "home.community_download": "कम्युनिटी अनुवाद डाउनलोड करें",
@@ -48,11 +46,9 @@
     "home.community_branch": "मेन/ब्रांच सहयोग",
     "home.community_notify": "अपडेट नोटिफिकेशन",
     "home.community_opensource": "ओपन-सोर्स (AGPL)",
-
     "home.quality_title": "क्वालिटी टैग्स",
     "home.quality_desc": "एक नज़र में देखें कि अनुवाद मानव-निर्मित, मान्य, या AI-जनित है।",
     "home.quality_capture": "+ 100% मानव अनुवाद के लिए कैप्चर मोड",
-
     "home.the_website": "वेबसाइट",
     "home.website_subtitle": "साझा करें और सुधारें",
     "home.website_feature_browse": "गेम के अनुसार अनुवाद ब्राउज़ करें",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "वोट करें और क्वालिटी रेट करें",
     "home.website_feature_fork": "मौजूदा काम को फ़ोर्क और सुधारें",
     "home.website_feature_merge": "योगदान मर्ज करें",
-    "home.website_feature_languages": "15 भाषाओं में UI",
+    "home.website_feature_languages": "19 भाषाओं में UI",
     "home.website_screenshot_alt": "वैलिडेशन के साथ UnityGameTranslator वेब एडिटर",
     "home.stats_games": "गेम्स",
     "home.stats_translations": "अनुवाद",
@@ -70,7 +66,6 @@
     "home.popular_games": "लोकप्रिय गेम्स",
     "home.search_games": "गेम खोजें...",
     "home.search_redirect": "खोजें",
-
     "games.back": "गेम्स पर वापस",
     "games.upload_translation": "अनुवाद अपलोड करें",
     "games.no_translations": "इस गेम के लिए अभी तक कोई अनुवाद नहीं।",
@@ -106,7 +101,6 @@
     "translation.upvote": "अपवोट",
     "translation.downvote": "डाउनवोट",
     "translation.login_to_vote": "वोट करने के लिए लॉगिन करें",
-
     "upload.title": "अनुवाद अपलोड करें",
     "upload.drop_file": "अपनी अनुवाद फ़ाइल यहां ड्रॉप करें",
     "upload.or_click": "या ब्राउज़ करने के लिए क्लिक करें",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "अपनी लोकल फ़ाइल की ऑनलाइन वर्शन से तुलना करें और मैन्युअली मर्ज करें",
     "upload.translation_composition": "अनुवाद संरचना",
     "upload.composition_auto": "फ़ाइल सामग्री से स्वचालित रूप से गणना की गई",
-
     "profile.title": "प्रोफ़ाइल सेटिंग्स",
     "profile.display_name": "प्रदर्शन नाम",
     "profile.email": "ईमेल",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "पुष्टि करने के लिए :name टाइप करें",
     "profile.delete_name_mismatch": "आपने जो नाम दर्ज किया वह आपके खाते के नाम से मेल नहीं खाता।",
     "profile.account_deleted": "आपका खाता हटा दिया गया है।",
-
     "report.title": "अनुवाद रिपोर्ट करें",
     "report.reason": "रिपोर्ट करने का कारण",
     "report.placeholder": "आप इसे क्यों रिपोर्ट कर रहे हैं?",
     "report.cancel": "रद्द करें",
     "report.submit": "जमा करें",
     "report.success": "रिपोर्ट सफलतापूर्वक जमा हो गई।",
-
     "admin.dashboard": "एडमिन डैशबोर्ड",
     "admin.reports": "रिपोर्ट्स",
     "admin.users": "यूज़र्स",
@@ -249,17 +240,14 @@
     "admin.translation_details": "अनुवाद विवरण",
     "admin.back_to_translations": "अनुवादों पर वापस",
     "admin.delete_confirm": "क्या आप वाकई इस अनुवाद को हटाना चाहते हैं?",
-
     "footer.share": "अपने UnityGameTranslator अनुवाद साझा करें",
     "footer.tagline": "Unity गेम्स के लिए ओपन-सोर्स अनुवाद मॉड।",
     "footer.download_mod": "मॉड डाउनलोड करें",
     "footer.rights": "सर्वाधिकार सुरक्षित।",
-
     "docs.title": "डॉक्यूमेंटेशन",
     "docs.subtitle": "UnityGameTranslator मॉड और वेबसाइट के लिए संपूर्ण गाइड",
     "docs.meta_description": "UnityGameTranslator के लिए संपूर्ण डॉक्यूमेंटेशन - इंस्टॉलेशन, कॉन्फ़िगरेशन, क्वालिटी सिस्टम, और सहयोग सुविधाएं।",
     "docs.download_mod": "मॉड डाउनलोड करें",
-
     "docs.nav.quick_start": "क्विक स्टार्ट",
     "docs.nav.installation": "इंस्टॉलेशन",
     "docs.nav.first_launch": "पहला लॉन्च",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "सिंक और ऑनलाइन",
     "docs.nav.configuration": "कॉन्फ़िगरेशन",
     "docs.nav.troubleshooting": "समस्या निवारण",
-
     "docs.quick_start.title": "क्विक स्टार्ट",
     "docs.quick_start.intro": "3 सरल चरणों में शुरू करें:",
     "docs.quick_start.step1": "मॉड लोडर इंस्टॉल करें (BepInEx या MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "गेम लॉन्च करें और F10 दबाएं",
     "docs.quick_start.tip_title": "टिप",
     "docs.quick_start.tip_content": "AI की जरूरत नहीं! मॉड डाउनलोड किए गए कम्युनिटी अनुवादों के साथ पूरी तरह से काम करता है। Ollama तभी सक्षम करें जब आप अनुवादित नहीं किए गए टेक्स्ट का अनुवाद करना चाहते हैं।",
-
     "docs.installation": "इंस्टॉलेशन",
     "docs.install_modloader": "मॉड लोडर इंस्टॉल करें",
     "docs.modloader": "मॉड लोडर",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "सेटअप विज़ार्ड या सेटिंग्स में Ollama सक्षम करें",
     "docs.ollama_tip_title": "अनुशंसित मॉडल",
     "docs.ollama_tip_content": "qwen3:8b गेम अनुवाद के लिए क्वालिटी और स्पीड का सबसे अच्छा संतुलन प्रदान करता है। qwen3:14b जैसे बड़े मॉडल बेहतर क्वालिटी देते हैं लेकिन अधिक VRAM की आवश्यकता होती है।",
-
     "docs.first_launch": "पहला लॉन्च",
     "docs.first_launch_intro": "पहले लॉन्च पर, एक सेटअप विज़ार्ड आपको प्रारंभिक कॉन्फ़िगरेशन के माध्यम से गाइड करता है:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator सेटअप विज़ार्ड",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "यदि Ollama इंस्टॉल है तो वैकल्पिक रूप से लोकल AI अनुवाद सक्षम करें।",
     "docs.hotkey_tip_title": "हॉटकी कॉन्फ्लिक्ट",
     "docs.hotkey_tip_content": "यदि डिफ़ॉल्ट हॉटकी गेम के साथ कॉन्फ्लिक्ट करती है, तो इसे विज़ार्ड में या बाद में config.json में बदलें।",
-
     "docs.quality_system.title": "क्वालिटी सिस्टम (HVAS)",
     "docs.quality_system.intro": "प्रत्येक अनुवाद एंट्री में एक क्वालिटी टैग होता है जो उसके स्रोत को दर्शाता है। यह आपको एक नज़र में अनुवाद की क्वालिटी समझने में मदद करता है।",
     "docs.quality_system.human": "मानव",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "रॉ AI - असमीक्षित",
     "docs.quality_system.capture_mode": "कैप्चर मोड",
     "docs.quality_system.capture_desc": "कैप्चर मोड में, मॉड बिना अनुवाद किए मूल टेक्स्ट रिकॉर्ड करता है। शुरू से 100% मानव अनुवाद बनाने के लिए बिल्कुल सही। कैप्चर किया गया टेक्स्ट 'H' टैग और खाली वैल्यू के साथ दिखाई देता है।",
-
     "docs.collaboration.title": "सहयोग",
     "docs.collaboration.model_title": "मेन / ब्रांच / फ़ोर्क मॉडल",
     "docs.collaboration.model_intro": "UnityGameTranslator Git से प्रेरित एक सहयोगी मॉडल का उपयोग करता है:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "मर्ज व्यू इंटरफ़ेस",
     "docs.merge_caption": "मर्ज व्यू आपको अनुवादों की तुलना और चयन करने देता है",
     "docs.collaboration.merge_rules": "उस वर्शन को चुनने के लिए किसी भी सेल पर क्लिक करें। मैन्युअली एडिट करने के लिए डबल-क्लिक करें। बदलाव सेव होने तक हाइलाइट और ट्रैक किए जाते हैं।",
-
     "docs.sync.title": "सिंक और ऑनलाइन मोड",
     "docs.sync.online_mode_title": "ऑनलाइन मोड सुविधाएं",
     "docs.sync.online_mode_desc": "जब ऑनलाइन मोड सक्षम होता है, मॉड UnityGameTranslator वेबसाइट से कनेक्ट होता है:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "डाउनलोड करने का संकेत",
     "docs.sync.both_changed": "दोनों में बदलाव",
     "docs.sync.merge_prompt": "3-वे मर्ज",
-
     "docs.configuration": "कॉन्फ़िगरेशन",
     "docs.config_location": "इन-गेम ओवरले (Ctrl+F10) के माध्यम से कॉन्फ़िगर करें या मॉड फ़ोल्डर में config.json एडिट करें:",
     "docs.option": "विकल्प",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "ओवरले खोलने के लिए की कॉम्बिनेशन",
     "docs.config_online_mode": "वेबसाइट सिंक सुविधाएं सक्षम करें",
     "docs.config_auto_download": "स्वचालित रूप से अपडेट डाउनलोड करें",
-
     "docs.troubleshooting": "समस्या निवारण",
     "docs.mod_not_loading": "मॉड लोड नहीं हो रहा?",
     "docs.mod_not_loading_desc": "सत्यापित करें कि आपने अपने गेम के लिए सही वर्शन इंस्टॉल किया है:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "सत्यापित करें कि सेटिंग्स में 'ऑनलाइन मोड' सक्षम है और अपना इंटरनेट कनेक्शन जांचें।",
     "docs.need_help": "अधिक मदद चाहिए?",
     "docs.open_issue": "GitHub पर इश्यू खोलें",
-
     "common.all": "सभी",
     "common.search": "खोजें",
     "common.loading": "लोड हो रहा है...",
@@ -440,7 +419,6 @@
     "common.previous": "पिछला",
     "common.next": "अगला",
     "common.you": "आप",
-
     "merge.title": "मर्ज",
     "merge.heading": "मर्ज व्यू",
     "merge.keys_count": ":count कीज़",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "सेव करने के लिए",
     "merge.cancel_shortcut": "रद्द करने के लिए",
     "merge.search_placeholder": "की या वैल्यू से खोजें...",
-
     "auth.sign_in": "जारी रखने के लिए साइन इन करें",
     "auth.choose_method": "अपनी लॉगिन विधि चुनें:",
     "auth.continue_with": ":provider के साथ जारी रखें",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "अनुवादों पर वोट करने के लिए कृपया लॉगिन करें।",
     "auth.login_to_report": "अनुचित सामग्री की रिपोर्ट करने के लिए कृपया लॉगिन करें।",
     "auth.login_to_upload": "अनुवाद अपलोड करने के लिए कृपया लॉगिन करें।",
-
     "my_translations.title": "मेरे अनुवाद",
     "my_translations.new_upload": "नया अपलोड",
     "my_translations.empty": "आपने अभी तक कोई अनुवाद अपलोड नहीं किया है।",
@@ -497,18 +473,15 @@
     "my_translations.updated": "अनुवाद सफलतापूर्वक अपडेट हो गया!",
     "my_translations.edit_title": "अनुवाद एडिट करें",
     "my_translations.back_to_mine": "मेरे अनुवादों पर वापस",
-
     "games.browse": "अनुवाद ब्राउज़ करें",
     "games.search_game": "गेम खोजें",
     "games.game_name_placeholder": "गेम का नाम...",
     "games.upload_first": "पहला अनुवाद अपलोड करें!",
     "games.new": "नया",
     "games.popular": "लोकप्रिय",
-
     "cookies.message": "यह साइट प्रमाणीकरण और सत्र प्रबंधन के लिए आवश्यक कुकीज़ का उपयोग करती है। कोई ट्रैकिंग या विज्ञापन कुकीज़ नहीं।",
     "cookies.accept": "स्वीकार करें",
     "cookies.decline": "केवल आवश्यक",
-
     "legal.mentions_title": "कानूनी नोटिस",
     "legal.privacy_title": "गोपनीयता नीति",
     "legal.terms_title": "सेवा की शर्तें",
@@ -587,7 +560,6 @@
     "footer.legal": "कानूनी",
     "footer.privacy": "गोपनीयता",
     "footer.terms": "शर्तें",
-
     "merge_preview.title": "मर्ज प्रीव्यू",
     "merge_preview.back_to_upload": "अपलोड पर वापस",
     "merge_preview.back_to_translations": "मेरे अनुवादों पर वापस",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "ऑनलाइन चयन",
     "merge_preview.manual_edit": "मैनुअल एडिट",
     "merge_preview.search_placeholder": "की या वैल्यू से खोजें...",
-
     "dashboard.title": "डैशबोर्ड",
     "dashboard.back_to_translations": "मेरे अनुवादों पर वापस",
     "dashboard.main_owner": "मेन",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "यह अनुवाद ब्रांच नहीं है।",
     "dashboard.file_not_found": "अनुवाद फ़ाइल नहीं मिली।",
     "dashboard.invalid_file": "अमान्य अनुवाद फ़ाइल फॉर्मेट।",
-
     "progress.quality_distribution": "क्वालिटी वितरण",
     "progress.quality_score": "क्वालिटी",
     "progress.quality_tooltip": "अनुवाद स्रोत पर आधारित क्वालिटी स्कोर (मानव > मान्य > AI)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "A",
     "progress.capture_only": "केवल कैप्चर",
     "progress.tooltip": "मानव: :human | मान्य: :validated | AI: :ai | कैप्चर: :capture | क्वालिटी: :quality/3",
-
     "rating.not_main_owner": "केवल मेन मालिक ब्रांचों को रेट कर सकता है।",
     "rating.cannot_rate_main": "मेन अनुवाद को रेट नहीं किया जा सकता।",
     "rating.rate_branch": ":stars स्टार रेट करें",

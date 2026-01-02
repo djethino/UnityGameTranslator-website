@@ -9,7 +9,6 @@
     "nav.login": "تسجيل الدخول",
     "nav.profile": "الإعدادات",
     "nav.login_with": "تسجيل الدخول عبر:",
-
     "auth.login_with": "تسجيل الدخول عبر :provider",
     "auth.banned": "تم حظر حسابك. السبب: :reason",
     "home.title": "ترجمات الألعاب",
@@ -38,7 +37,6 @@
     "home.mod_feature_login": "ربط آمن للحساب (بدون كلمة مرور داخل اللعبة)",
     "home.mod_feature_numbers": "معالجة ذكية للأرقام لإعادة استخدام الذاكرة المؤقتة",
     "home.mod_screenshot_alt": "معالج إعداد UnityGameTranslator داخل اللعبة",
-
     "home.community_title": "المجتمع",
     "home.community_subtitle": "أفضل معاً",
     "home.community_download": "حمّل ترجمات المجتمع",
@@ -48,11 +46,9 @@
     "home.community_branch": "تعاون Main/Branch",
     "home.community_notify": "إشعارات التحديثات",
     "home.community_opensource": "مفتوح المصدر (AGPL)",
-
     "home.quality_title": "علامات الجودة",
     "home.quality_desc": "انظر بنظرة سريعة إذا كانت الترجمات بشرية، أو معتمدة، أو مولدة بالذكاء الاصطناعي.",
     "home.quality_capture": "+ وضع الالتقاط لترجمات بشرية 100%",
-
     "home.the_website": "الموقع",
     "home.website_subtitle": "شارك وحسّن",
     "home.website_feature_browse": "تصفح الترجمات حسب اللعبة",
@@ -61,7 +57,7 @@
     "home.website_feature_vote": "صوّت وقيّم الجودة",
     "home.website_feature_fork": "انسخ وحسّن الأعمال الموجودة",
     "home.website_feature_merge": "ادمج المساهمات",
-    "home.website_feature_languages": "واجهة بـ15 لغة",
+    "home.website_feature_languages": "واجهة بـ19 لغة",
     "home.website_screenshot_alt": "محرر UnityGameTranslator على الويب مع التحقق",
     "home.stats_games": "الألعاب",
     "home.stats_translations": "الترجمات",
@@ -70,7 +66,6 @@
     "home.popular_games": "الألعاب الشائعة",
     "home.search_games": "ابحث عن لعبة...",
     "home.search_redirect": "بحث",
-
     "games.back": "العودة للألعاب",
     "games.upload_translation": "رفع ترجمة",
     "games.no_translations": "لا توجد ترجمات لهذه اللعبة بعد.",
@@ -106,7 +101,6 @@
     "translation.upvote": "تصويت إيجابي",
     "translation.downvote": "تصويت سلبي",
     "translation.login_to_vote": "سجّل الدخول للتصويت",
-
     "upload.title": "رفع ترجمة",
     "upload.drop_file": "أفلت ملف الترجمة هنا",
     "upload.or_click": "أو انقر للتصفح",
@@ -155,7 +149,6 @@
     "upload.review_changes_desc": "قارن ملفك المحلي مع النسخة المتصلة وادمج يدوياً",
     "upload.translation_composition": "تركيبة الترجمة",
     "upload.composition_auto": "محسوبة تلقائياً من محتوى الملف",
-
     "profile.title": "إعدادات الملف الشخصي",
     "profile.display_name": "الاسم المعروض",
     "profile.email": "البريد الإلكتروني",
@@ -181,14 +174,12 @@
     "profile.delete_confirm_input": "اكتب :name للتأكيد",
     "profile.delete_name_mismatch": "الاسم الذي أدخلته لا يتطابق مع اسم حسابك.",
     "profile.account_deleted": "تم حذف حسابك.",
-
     "report.title": "الإبلاغ عن ترجمة",
     "report.reason": "سبب الإبلاغ",
     "report.placeholder": "لماذا تقوم بالإبلاغ عن هذا؟",
     "report.cancel": "إلغاء",
     "report.submit": "إرسال",
     "report.success": "تم إرسال البلاغ بنجاح.",
-
     "admin.dashboard": "لوحة تحكم الإدارة",
     "admin.reports": "البلاغات",
     "admin.users": "المستخدمون",
@@ -249,17 +240,14 @@
     "admin.translation_details": "تفاصيل الترجمة",
     "admin.back_to_translations": "العودة للترجمات",
     "admin.delete_confirm": "هل أنت متأكد من رغبتك في حذف هذه الترجمة؟",
-
     "footer.share": "شارك ترجمات UnityGameTranslator الخاصة بك",
     "footer.tagline": "إضافة الترجمة مفتوحة المصدر لألعاب Unity.",
     "footer.download_mod": "تحميل الإضافة",
     "footer.rights": "جميع الحقوق محفوظة.",
-
     "docs.title": "المستندات",
     "docs.subtitle": "الدليل الكامل لإضافة وموقع UnityGameTranslator",
     "docs.meta_description": "المستندات الكاملة لـ UnityGameTranslator - التثبيت، الإعداد، نظام الجودة، وميزات التعاون.",
     "docs.download_mod": "تحميل الإضافة",
-
     "docs.nav.quick_start": "البدء السريع",
     "docs.nav.installation": "التثبيت",
     "docs.nav.first_launch": "التشغيل الأول",
@@ -268,7 +256,6 @@
     "docs.nav.sync": "المزامنة والاتصال",
     "docs.nav.configuration": "الإعداد",
     "docs.nav.troubleshooting": "استكشاف الأخطاء",
-
     "docs.quick_start.title": "البدء السريع",
     "docs.quick_start.intro": "ابدأ في 3 خطوات بسيطة:",
     "docs.quick_start.step1": "ثبّت محمّل الإضافات (BepInEx أو MelonLoader)",
@@ -276,7 +263,6 @@
     "docs.quick_start.step3": "شغّل اللعبة واضغط F10",
     "docs.quick_start.tip_title": "نصيحة",
     "docs.quick_start.tip_content": "لا حاجة للذكاء الاصطناعي! تعمل الإضافة بشكل مثالي مع ترجمات المجتمع المحملة. فعّل Ollama فقط إذا أردت ترجمة النصوص غير المترجمة.",
-
     "docs.installation": "التثبيت",
     "docs.install_modloader": "ثبّت محمّل الإضافات",
     "docs.modloader": "محمّل الإضافات",
@@ -295,7 +281,6 @@
     "docs.enable_in_wizard": "فعّل Ollama في معالج الإعداد أو الإعدادات",
     "docs.ollama_tip_title": "النموذج الموصى به",
     "docs.ollama_tip_content": "يوفر qwen3:8b أفضل توازن بين الجودة والسرعة لترجمة الألعاب. النماذج الأكبر مثل qwen3:14b توفر جودة أفضل لكنها تتطلب ذاكرة رسومات أكثر.",
-
     "docs.first_launch": "التشغيل الأول",
     "docs.first_launch_intro": "عند التشغيل الأول، يرشدك معالج الإعداد خلال التكوين الأولي:",
     "docs.wizard_screenshot_alt": "معالج إعداد UnityGameTranslator",
@@ -311,7 +296,6 @@
     "docs.wizard_step4_desc": "فعّل اختيارياً ترجمة الذكاء الاصطناعي المحلية إذا كان Ollama مثبتاً.",
     "docs.hotkey_tip_title": "تعارضات الاختصارات",
     "docs.hotkey_tip_content": "إذا تعارض الاختصار الافتراضي مع اللعبة، غيّره في المعالج أو لاحقاً في config.json.",
-
     "docs.quality_system.title": "نظام الجودة (HVAS)",
     "docs.quality_system.intro": "كل مدخل ترجمة له علامة جودة تشير إلى مصدره. هذا يساعدك على فهم جودة الترجمة بنظرة سريعة.",
     "docs.quality_system.human": "بشري",
@@ -336,7 +320,6 @@
     "docs.quality_system.raw_ai": "ذكاء اصطناعي خام - غير مراجع",
     "docs.quality_system.capture_mode": "وضع الالتقاط",
     "docs.quality_system.capture_desc": "في وضع الالتقاط، تسجل الإضافة النص الأصلي دون ترجمته. مثالي لإنشاء ترجمات بشرية 100% من الصفر. يظهر النص الملتقط بعلامة 'H' وقيمة فارغة.",
-
     "docs.collaboration.title": "التعاون",
     "docs.collaboration.model_title": "نموذج Main / Branch / Fork",
     "docs.collaboration.model_intro": "يستخدم UnityGameTranslator نموذجاً تعاونياً مستوحى من Git:",
@@ -363,7 +346,6 @@
     "docs.merge_screenshot_alt": "واجهة عرض الدمج",
     "docs.merge_caption": "يتيح لك عرض الدمج المقارنة واختيار الترجمات",
     "docs.collaboration.merge_rules": "انقر على أي خلية لاختيار تلك النسخة. انقر نقراً مزدوجاً للتعديل يدوياً. تتم تمييز التغييرات وتتبعها حتى الحفظ.",
-
     "docs.sync.title": "المزامنة ووضع الاتصال",
     "docs.sync.online_mode_title": "ميزات وضع الاتصال",
     "docs.sync.online_mode_desc": "عند تفعيل وضع الاتصال، تتصل الإضافة بموقع UnityGameTranslator:",
@@ -393,7 +375,6 @@
     "docs.sync.download_prompt": "طلب التحميل",
     "docs.sync.both_changed": "كلاهما تغير",
     "docs.sync.merge_prompt": "دمج ثلاثي",
-
     "docs.configuration": "الإعداد",
     "docs.config_location": "اضبط عبر واجهة داخل اللعبة (Ctrl+F10) أو عدّل config.json في مجلد الإضافة:",
     "docs.option": "الخيار",
@@ -405,7 +386,6 @@
     "docs.config_hotkey": "مجموعة المفاتيح لفتح الواجهة",
     "docs.config_online_mode": "تفعيل ميزات مزامنة الموقع",
     "docs.config_auto_download": "تحميل التحديثات تلقائياً",
-
     "docs.troubleshooting": "استكشاف الأخطاء",
     "docs.mod_not_loading": "الإضافة لا تُحمَّل؟",
     "docs.mod_not_loading_desc": "تحقق من تثبيت النسخة الصحيحة للعبتك:",
@@ -423,7 +403,6 @@
     "docs.sync_not_working_desc": "تحقق من تفعيل 'وضع الاتصال' في الإعدادات وتحقق من اتصالك بالإنترنت.",
     "docs.need_help": "تحتاج المزيد من المساعدة؟",
     "docs.open_issue": "افتح مشكلة على GitHub",
-
     "common.all": "الكل",
     "common.search": "بحث",
     "common.loading": "جارٍ التحميل...",
@@ -440,7 +419,6 @@
     "common.previous": "السابق",
     "common.next": "التالي",
     "common.you": "أنت",
-
     "merge.title": "دمج",
     "merge.heading": "عرض الدمج",
     "merge.keys_count": ":count مفتاح",
@@ -477,7 +455,6 @@
     "merge.save_shortcut": "للحفظ",
     "merge.cancel_shortcut": "للإلغاء",
     "merge.search_placeholder": "ابحث بالمفتاح أو القيمة...",
-
     "auth.sign_in": "سجّل الدخول للمتابعة",
     "auth.choose_method": "اختر طريقة تسجيل الدخول:",
     "auth.continue_with": "المتابعة مع :provider",
@@ -485,7 +462,6 @@
     "auth.login_to_vote": "يرجى تسجيل الدخول للتصويت على الترجمات.",
     "auth.login_to_report": "يرجى تسجيل الدخول للإبلاغ عن محتوى غير مناسب.",
     "auth.login_to_upload": "يرجى تسجيل الدخول لرفع الترجمات.",
-
     "my_translations.title": "ترجماتي",
     "my_translations.new_upload": "رفع جديد",
     "my_translations.empty": "لم ترفع أي ترجمات بعد.",
@@ -497,18 +473,15 @@
     "my_translations.updated": "تم تحديث الترجمة بنجاح!",
     "my_translations.edit_title": "تعديل الترجمة",
     "my_translations.back_to_mine": "العودة لترجماتي",
-
     "games.browse": "تصفح الترجمات",
     "games.search_game": "ابحث عن لعبة",
     "games.game_name_placeholder": "اسم اللعبة...",
     "games.upload_first": "ارفع أول ترجمة!",
     "games.new": "جديد",
     "games.popular": "شائع",
-
     "cookies.message": "يستخدم هذا الموقع ملفات تعريف ارتباط ضرورية للمصادقة وإدارة الجلسات. لا توجد ملفات تتبع أو إعلانات.",
     "cookies.accept": "قبول",
     "cookies.decline": "الضروري فقط",
-
     "legal.mentions_title": "الإشعار القانوني",
     "legal.privacy_title": "سياسة الخصوصية",
     "legal.terms_title": "شروط الخدمة",
@@ -587,7 +560,6 @@
     "footer.legal": "قانوني",
     "footer.privacy": "الخصوصية",
     "footer.terms": "الشروط",
-
     "merge_preview.title": "معاينة الدمج",
     "merge_preview.back_to_upload": "العودة للرفع",
     "merge_preview.back_to_translations": "العودة لترجماتي",
@@ -627,7 +599,6 @@
     "merge_preview.selection_online": "اختيار متصل",
     "merge_preview.manual_edit": "تعديل يدوي",
     "merge_preview.search_placeholder": "ابحث بالمفتاح أو القيمة...",
-
     "dashboard.title": "لوحة التحكم",
     "dashboard.back_to_translations": "العودة لترجماتي",
     "dashboard.main_owner": "Main",
@@ -666,7 +637,6 @@
     "dashboard.not_a_branch": "هذه الترجمة ليست Branch.",
     "dashboard.file_not_found": "ملف الترجمة غير موجود.",
     "dashboard.invalid_file": "صيغة ملف الترجمة غير صالحة.",
-
     "progress.quality_distribution": "توزيع الجودة",
     "progress.quality_score": "الجودة",
     "progress.quality_tooltip": "درجة الجودة بناءً على مصدر الترجمة (بشري > معتمد > آلي)",
@@ -678,7 +648,6 @@
     "progress.ai_short": "A",
     "progress.capture_only": "التقاط فقط",
     "progress.tooltip": "بشري: :human | معتمد: :validated | آلي: :ai | التقاط: :capture | الجودة: :quality/3",
-
     "rating.not_main_owner": "فقط مالك Main يمكنه تقييم الفروع.",
     "rating.cannot_rate_main": "لا يمكن تقييم ترجمة Main.",
     "rating.rate_branch": "تقييم :stars نجمة(نجمات)",
