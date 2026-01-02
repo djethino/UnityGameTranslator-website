@@ -23,9 +23,10 @@ Alpine.start();
     let lastScrollTime = performance.now();
     let isScrolling = false;
     let scrollTimeout = null;
+    let isPaused = false;
 
     // Config
-    const baseSpeed = 0.00008; // Normal animation speed (very slow)
+    const baseSpeed = 0.00032; // Normal animation speed (~30s cycle)
     const scrollMultiplier = 0.015; // How much scroll affects time
     const velocityDecay = 0.92; // How fast velocity returns to normal (0.9-0.99)
     const velocitySmoothness = 0.08; // How smooth the velocity change is
@@ -91,6 +92,12 @@ Alpine.start();
     }
 
     function animate() {
+        // Skip if paused (tab not visible)
+        if (isPaused) {
+            requestAnimationFrame(animate);
+            return;
+        }
+
         // Smooth velocity interpolation
         velocity += (targetVelocity - velocity) * velocitySmoothness;
 
@@ -105,6 +112,16 @@ Alpine.start();
         updateTransforms();
         requestAnimationFrame(animate);
     }
+
+    // Pause when tab not visible (save resources)
+    document.addEventListener('visibilitychange', () => {
+        isPaused = document.hidden;
+        // Reset velocity when returning to avoid jumps
+        if (!isPaused) {
+            velocity = 0;
+            targetVelocity = 0;
+        }
+    });
 
     // Start
     window.addEventListener('scroll', onScroll, { passive: true });
