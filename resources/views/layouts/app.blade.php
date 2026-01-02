@@ -292,9 +292,16 @@
                     <a href="{{ route('docs') }}" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition mb-4">
                         <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
                     </a>
-                    <div class="flex justify-center space-x-4 mt-4">
+                    <div class="flex justify-center items-center space-x-4 mt-4 text-sm">
                         <a href="https://github.com/djethino/UnityGameTranslator" target="_blank" class="text-gray-400 hover:text-white transition" title="GitHub">
                             <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <span class="text-gray-600">|</span>
+                        <a href="https://github.com/djethino/UnityGameTranslator/issues" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                            <i class="fas fa-bug mr-1"></i>{{ __('footer.report_mod_bug') }}
+                        </a>
+                        <a href="https://github.com/djethino/UnityGameTranslator-website/issues" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                            <i class="fas fa-bug mr-1"></i>{{ __('footer.report_site_bug') }}
                         </a>
                     </div>
                 </div>

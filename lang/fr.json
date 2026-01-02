@@ -567,6 +567,8 @@
     "footer.legal": "Mentions legales",
     "footer.privacy": "Confidentialite",
     "footer.terms": "CGU",
+    "footer.report_mod_bug": "Bug (Mod)",
+    "footer.report_site_bug": "Bug (Site)",
     "merge_preview.title": "Apercu de fusion",
     "merge_preview.back_to_upload": "Retour a l'envoi",
     "merge_preview.back_to_translations": "Retour a mes traductions",

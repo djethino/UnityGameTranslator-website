@@ -567,6 +567,8 @@
     "footer.legal": "Legal",
     "footer.privacy": "Privacy",
     "footer.terms": "Terms",
+    "footer.report_mod_bug": "Bug (Mod)",
+    "footer.report_site_bug": "Bug (Site)",
     "merge_preview.title": "Merge Preview",
     "merge_preview.back_to_upload": "Back to Upload",
     "merge_preview.back_to_translations": "Back to My Translations",
