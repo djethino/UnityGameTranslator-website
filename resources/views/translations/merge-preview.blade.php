@@ -216,13 +216,23 @@
                             {{-- Key column --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-text="key"></td>
 
-                            {{-- Local Tag column --}}
-                            <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
-                                :class="getCellClass(key, 'local')"
-                                @click="select(key, 'local')">
+                            {{-- Local Tag column (clickable for tag change) --}}
+                            <td class="px-2 py-2 text-center border-l border-gray-700"
+                                :class="hasTagChange(key) ? 'tag-changed-cell' : ''">
                                 <template x-if="localData[key] !== undefined">
-                                    <span x-show="!isEdited(key)" :class="'tag-' + getTag(localData[key])" x-text="getTag(localData[key])"></span>
-                                    <span x-show="isEdited(key)" class="tag-H">H</span>
+                                    <button type="button"
+                                        @click.stop="openTagDropdown($event, key, getTag(localData[key]), getValue(localData[key]))"
+                                        class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
+                                        title="{{ __('merge.click_to_change_tag') }}">
+                                        {{-- Show H if edited --}}
+                                        <span x-show="isEdited(key)" class="tag-H">H</span>
+                                        {{-- Show changed tag if tag was changed --}}
+                                        <template x-if="!isEdited(key) && hasTagChange(key)">
+                                            <span :class="'tag-' + getDisplayTag(key, getTag(localData[key]))" x-text="getDisplayTag(key, getTag(localData[key]))"></span>
+                                        </template>
+                                        {{-- Show original tag --}}
+                                        <span x-show="!isEdited(key) && !hasTagChange(key)" :class="'tag-' + getTag(localData[key])" x-text="getTag(localData[key])"></span>
+                                    </button>
                                 </template>
                                 <template x-if="localData[key] === undefined">
                                     <span class="text-gray-600">—</span>
@@ -362,6 +372,42 @@
         </div>
     </div>
 
+    {{-- Tag Dropdown Menu (branches can only Skip) --}}
+    <div x-show="tagDropdown.open" x-cloak
+        class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
+        :style="`left: ${tagDropdown.x}px; top: ${tagDropdown.y}px;`"
+        @click.outside="closeTagDropdown()"
+        @keydown.escape="closeTagDropdown()">
+
+        <div class="px-3 py-2 border-b border-gray-700">
+            <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
+        </div>
+
+        {{-- Skip option --}}
+        <button type="button"
+            @click="setTagSkip()"
+            :class="tagDropdown.currentTag === 'S' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+            <span class="tag-S">S</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_skip') }}</span>
+            <span x-show="tagDropdown.currentTag === 'S'" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
+
+        {{-- Cancel change (if tag was changed) --}}
+        <template x-if="hasTagChange(tagDropdown.key)">
+            <div class="border-t border-gray-700 mt-1 pt-1">
+                <button type="button"
+                    @click="cancelTagChange(tagDropdown.key); closeTagDropdown()"
+                    class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+                    <i class="fas fa-undo text-xs"></i>
+                    <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
+                </button>
+            </div>
+        </template>
+    </div>
+
     {{-- Legend (HVASM order) --}}
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
         <span><span class="tag-H">H</span> Human</span>
@@ -443,6 +489,9 @@
         background-color: rgba(88, 28, 135, 0.5) !important;
         box-shadow: inset 0 0 0 2px rgb(168 85 247);
     }
+    .tag-changed-cell {
+        background-color: rgba(88, 28, 135, 0.3) !important;
+    }
 </style>
 @endpush
 
@@ -498,6 +547,18 @@ function mergePreview() {
             key: '',
             value: '',
             originalValue: ''
+        },
+
+        // Tag change state (branches can only skip, not invalidate)
+        tagChanges: {},  // { key: { newTag: 'S', originalTag: 'A', value: '...' } }
+        tagDropdown: {
+            open: false,
+            key: '',
+            currentTag: '',
+            originalTag: '',
+            value: '',
+            x: 0,
+            y: 0
         },
 
         init() {
@@ -916,10 +977,73 @@ function mergePreview() {
             }, { once: true });
         },
 
+        // Tag change methods (branches can only set Skip)
+        hasTagChange(key) {
+            return key in this.tagChanges;
+        },
+
+        getDisplayTag(key, originalTag) {
+            if (this.tagChanges[key]) {
+                return this.tagChanges[key].newTag;
+            }
+            return originalTag;
+        },
+
+        openTagDropdown(event, key, currentTag, value) {
+            event.stopPropagation();
+            const rect = event.target.getBoundingClientRect();
+            this.tagDropdown = {
+                open: true,
+                key: key,
+                currentTag: this.getDisplayTag(key, currentTag),
+                originalTag: currentTag,
+                value: value,
+                x: rect.left,
+                y: rect.bottom + window.scrollY
+            };
+        },
+
+        closeTagDropdown() {
+            this.tagDropdown = {
+                open: false,
+                key: '',
+                currentTag: '',
+                originalTag: '',
+                value: '',
+                x: 0,
+                y: 0
+            };
+        },
+
+        setTagSkip() {
+            const { key, originalTag, value } = this.tagDropdown;
+            const newTag = 'S';
+
+            if (newTag === originalTag) {
+                delete this.tagChanges[key];
+            } else {
+                this.tagChanges[key] = {
+                    newTag: newTag,
+                    originalTag: originalTag,
+                    value: value
+                };
+            }
+            this.closeTagDropdown();
+        },
+
+        cancelTagChange(key) {
+            delete this.tagChanges[key];
+        },
+
+        get tagChangeCount() {
+            return Object.keys(this.tagChanges).length;
+        },
+
         clearAll() {
             if (confirm('{{ __("merge_preview.confirm_cancel") }}')) {
                 this.selections = {};
                 this.editedValues = {};
+                this.tagChanges = {};
 
                 // Reset to smart defaults (same logic as loadContent)
                 const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
@@ -979,19 +1103,21 @@ function mergePreview() {
             for (const key of this.allKeys) {
                 const source = this.selections[key];
                 const isEdited = this.editedValues[key] !== undefined;
+                const hasTagChange = key in this.tagChanges;
 
                 if (isEdited) {
-                    // Manual edit -> becomes H tag
-                    let tag = this.getTag(this.localData[key]);
-                    // M and S are preserved, otherwise manual = H
-                    if (tag !== 'M' && tag !== 'S') {
+                    // Manual edit -> becomes H tag (unless tag was explicitly changed)
+                    let tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
+                    // M and S are preserved, otherwise manual = H (if no explicit tag change)
+                    if (!hasTagChange && tag !== 'M' && tag !== 'S') {
                         tag = 'H';
                     }
                     merged[key] = { v: this.editedValues[key], t: tag };
                 } else if (source === 'local' && key in this.localData) {
-                    // Apply same tag rules as server: A → V when selected by human
-                    let tag = this.getTag(this.localData[key]);
-                    if (tag !== 'M' && tag !== 'S' && tag === 'A') {
+                    // Check if tag was explicitly changed
+                    let tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
+                    // Apply same tag rules as server: A → V when selected by human (unless tag explicitly changed)
+                    if (!hasTagChange && tag !== 'M' && tag !== 'S' && tag === 'A') {
                         tag = 'V';
                     }
                     merged[key] = { v: this.getValue(this.localData[key]), t: tag };
@@ -1013,22 +1139,27 @@ function mergePreview() {
 
             // Build selections array for the form
             const container = document.getElementById('selectionsContainer');
-            container.innerHTML = '';
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
 
             let i = 0;
             for (const key of this.allKeys) {
                 const source = this.selections[key];
                 const isEdited = this.editedValues[key] !== undefined;
+                const hasTagChange = key in this.tagChanges;
 
                 let value, tag, sourceType;
 
                 if (isEdited) {
                     value = this.editedValues[key];
-                    tag = this.getTag(this.localData[key]);
+                    // Apply explicit tag change, or use original tag
+                    tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
                     sourceType = 'manual';
                 } else if (source === 'local' && key in this.localData) {
                     value = this.getValue(this.localData[key]);
-                    tag = this.getTag(this.localData[key]);
+                    // Apply explicit tag change, or use original tag
+                    tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
                     sourceType = 'local';
                 } else if (source === 'online' && key in this.onlineData) {
                     value = this.getValue(this.onlineData[key]);

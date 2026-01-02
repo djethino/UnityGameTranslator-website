@@ -3,7 +3,7 @@
 @section('title', __('merge.title') . ' - ' . $main->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergeTable('{{ $uuid }}')">
+<div class="container mx-auto px-4 py-8" x-data="mergeTable('{{ $uuid }}', true)" @click.away="closeTagDropdown()">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -265,14 +265,24 @@
                             </div>
                         </td>
 
-                        {{-- Main Tag column --}}
-                        <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
-                            :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
-                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')">
-                            <span :class="isDeleted({{ $keyJson }}) ? 'opacity-40' : ''">
-                                <span x-show="!isEdited({{ $keyJson }})" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
+                        {{-- Main Tag column (clickable for tag change) --}}
+                        <td class="px-2 py-2 text-center border-l border-gray-700"
+                            :class="[hasTagChange({{ $keyJson }}) ? 'tag-changed-cell' : '', isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']">
+                            <button type="button"
+                                @click.stop="!isDeleted({{ $keyJson }}) && openTagDropdown($event, {{ $keyJson }}, '{{ $mainTag }}', {{ json_encode($mainValue) }})"
+                                :class="isDeleted({{ $keyJson }}) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
+                                class="transition rounded"
+                                :disabled="isDeleted({{ $keyJson }})"
+                                title="{{ __('merge.click_to_change_tag') }}">
+                                {{-- Show edited tag (H) if manually edited --}}
                                 <span x-show="isEdited({{ $keyJson }})" class="tag-H">H</span>
-                            </span>
+                                {{-- Show changed tag if tag was explicitly changed --}}
+                                <template x-if="!isEdited({{ $keyJson }}) && hasTagChange({{ $keyJson }})">
+                                    <span :class="'tag-' + getDisplayTag({{ $keyJson }}, '{{ $mainTag }}')" x-text="getDisplayTag({{ $keyJson }}, '{{ $mainTag }}')"></span>
+                                </template>
+                                {{-- Show original tag if not edited and not changed --}}
+                                <span x-show="!isEdited({{ $keyJson }}) && !hasTagChange({{ $keyJson }})" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
+                            </button>
                         </td>
 
                         {{-- Main Value column --}}
@@ -361,9 +371,13 @@
                     <span x-show="selectionCount > 0">
                         <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
                     </span>
-                    <span x-show="selectionCount > 0 && deleteCount > 0"> &bull; </span>
+                    <span x-show="selectionCount > 0 && (deleteCount > 0 || tagChangeCount > 0)"> &bull; </span>
                     <span x-show="deleteCount > 0">
                         <span class="text-red-400 font-bold" x-text="deleteCount"></span> {{ __('merge.deletions') }}
+                    </span>
+                    <span x-show="deleteCount > 0 && tagChangeCount > 0"> &bull; </span>
+                    <span x-show="tagChangeCount > 0">
+                        <span class="text-purple-400 font-bold" x-text="tagChangeCount"></span> {{ __('merge.tag_changes') }}
                     </span>
                 </span>
                 <span x-show="totalChanges === 0" class="text-gray-500">
@@ -386,6 +400,7 @@
         {{-- Hidden inputs container --}}
         <div id="selectionsContainer"></div>
         <div id="deletionsContainer"></div>
+        <div id="tagChangesContainer"></div>
     </form>
 
     {{-- Legend (HVASM order) --}}
@@ -442,6 +457,62 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    {{-- Tag Dropdown Menu --}}
+    <div x-show="tagDropdown.open" x-cloak
+        class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
+        :style="`left: ${tagDropdown.x}px; top: ${tagDropdown.y}px;`"
+        @click.outside="closeTagDropdown()"
+        @keydown.escape="closeTagDropdown()">
+
+        <div class="px-3 py-2 border-b border-gray-700">
+            <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
+        </div>
+
+        {{-- Skip option (available to everyone) --}}
+        <button type="button"
+            @click="setTag('S')"
+            :class="tagDropdown.currentTag === 'S' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+            <span class="tag-S">S</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_skip') }}</span>
+            <span x-show="tagDropdown.currentTag === 'S'" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
+
+        {{-- Invalidate option (Main only) --}}
+        <button type="button"
+            @click="setTag('A')"
+            :class="[
+                tagDropdown.currentTag === 'A' ? 'bg-gray-700' : 'hover:bg-gray-700',
+                !isMain ? 'opacity-50 cursor-not-allowed' : ''
+            ]"
+            :disabled="!isMain"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition"
+            :title="!isMain ? '{{ __('merge.main_only') }}' : ''">
+            <span class="tag-A">A</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_invalidate') }}</span>
+            <span x-show="!isMain" class="ml-auto text-gray-500 text-xs">
+                <i class="fas fa-lock"></i>
+            </span>
+            <span x-show="tagDropdown.currentTag === 'A' && isMain" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
+
+        {{-- Cancel change (if tag was changed) --}}
+        <template x-if="hasTagChange(tagDropdown.key)">
+            <div class="border-t border-gray-700 mt-1 pt-1">
+                <button type="button"
+                    @click="cancelTagChange(tagDropdown.key); closeTagDropdown()"
+                    class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+                    <i class="fas fa-undo text-xs"></i>
+                    <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
+                </button>
+            </div>
+        </template>
     </div>
 </div>
 
@@ -520,6 +591,9 @@
         background-color: rgba(127, 29, 29, 0.5) !important; /* red-900/50 */
         box-shadow: inset 0 0 0 2px rgb(239 68 68); /* ring-2 ring-red-500 */
         cursor: not-allowed;
+    }
+    .tag-changed-cell {
+        background-color: rgba(88, 28, 135, 0.3) !important; /* purple-900/30 */
     }
 </style>
 @endpush

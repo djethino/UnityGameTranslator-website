@@ -1,13 +1,25 @@
 /**
  * Alpine.js component for the merge table view.
- * Handles selection, editing, deletion, and tracking of translation modifications.
+ * Handles selection, editing, deletion, tag changes, and tracking of translation modifications.
  * Persists state to sessionStorage to survive page navigation (pagination, search, sort).
  */
-export default function mergeTable(uuid) {
+export default function mergeTable(uuid, isMain = true) {
     return {
         uuid: uuid,
+        isMain: isMain, // true if user is Main owner, false for branches
         selections: {},
         deletions: {},
+        tagChanges: {}, // { key: { newTag: 'S', originalTag: 'A', value: '...' } }
+
+        // Dropdown state for tag editing
+        tagDropdown: {
+            open: false,
+            key: '',
+            currentTag: '',
+            value: '',
+            x: 0,
+            y: 0
+        },
 
         // Modal state for multiline editing
         editModal: {
@@ -74,7 +86,8 @@ export default function mergeTable(uuid) {
         saveState() {
             const state = {
                 selections: this.selections,
-                deletions: this.deletions
+                deletions: this.deletions,
+                tagChanges: this.tagChanges
             };
             sessionStorage.setItem(this.storageKey, JSON.stringify(state));
         },
@@ -89,6 +102,7 @@ export default function mergeTable(uuid) {
                     const state = JSON.parse(stored);
                     this.selections = state.selections || {};
                     this.deletions = state.deletions || {};
+                    this.tagChanges = state.tagChanges || {};
                     // Update hidden inputs to reflect restored state
                     this.updateHiddenInputs();
                 } catch (e) {
@@ -189,8 +203,12 @@ export default function mergeTable(uuid) {
             return Object.keys(this.deletions).length;
         },
 
+        get tagChangeCount() {
+            return Object.keys(this.tagChanges).length;
+        },
+
         get totalChanges() {
-            return this.selectionCount + this.deleteCount;
+            return this.selectionCount + this.deleteCount + this.tagChangeCount;
         },
 
         isSelected(key, source) {
@@ -300,16 +318,128 @@ export default function mergeTable(uuid) {
             if (confirm('Annuler toutes les modifications ?')) {
                 this.selections = {};
                 this.deletions = {};
+                this.tagChanges = {};
                 this.updateHiddenInputs();
                 this.clearState();
             }
+        },
+
+        // ========================================
+        // Tag Change Methods
+        // ========================================
+
+        /**
+         * Check if a key has a pending tag change.
+         */
+        hasTagChange(key) {
+            return key in this.tagChanges;
+        },
+
+        /**
+         * Get the new tag for a key (if changed), or the original tag.
+         */
+        getDisplayTag(key, originalTag) {
+            if (this.tagChanges[key]) {
+                return this.tagChanges[key].newTag;
+            }
+            return originalTag;
+        },
+
+        /**
+         * Open the tag dropdown menu for a key.
+         */
+        openTagDropdown(event, key, currentTag, value) {
+            event.stopPropagation();
+
+            // Position dropdown near the click
+            const rect = event.target.getBoundingClientRect();
+            this.tagDropdown = {
+                open: true,
+                key: key,
+                currentTag: this.getDisplayTag(key, currentTag),
+                originalTag: currentTag,
+                value: value,
+                x: rect.left,
+                y: rect.bottom + window.scrollY
+            };
+        },
+
+        /**
+         * Close the tag dropdown.
+         */
+        closeTagDropdown() {
+            this.tagDropdown = {
+                open: false,
+                key: '',
+                currentTag: '',
+                originalTag: '',
+                value: '',
+                x: 0,
+                y: 0
+            };
+        },
+
+        /**
+         * Change the tag for a key.
+         * - Both Main and Branch can set tag to 'S' (Skip)
+         * - Only Main can set tag to 'A' (Invalidate)
+         */
+        setTag(newTag) {
+            const { key, originalTag, value } = this.tagDropdown;
+
+            // Permission check: only Main can set 'A'
+            if (newTag === 'A' && !this.isMain) {
+                console.warn('Only Main owner can invalidate translations');
+                this.closeTagDropdown();
+                return;
+            }
+
+            // If setting back to original tag, remove the change
+            if (newTag === originalTag) {
+                delete this.tagChanges[key];
+            } else {
+                // Store the tag change
+                this.tagChanges[key] = {
+                    newTag: newTag,
+                    originalTag: originalTag,
+                    value: value
+                };
+
+                // Remove any selection for this key (tag change takes precedence)
+                delete this.selections[key];
+            }
+
+            this.updateHiddenInputs();
+            this.saveState();
+            this.closeTagDropdown();
+        },
+
+        /**
+         * Cancel a pending tag change for a key.
+         */
+        cancelTagChange(key) {
+            delete this.tagChanges[key];
+            this.updateHiddenInputs();
+            this.saveState();
+        },
+
+        /**
+         * Check if the tag can be changed to the specified value.
+         */
+        canSetTag(newTag) {
+            // Main can set any tag
+            if (this.isMain) {
+                return true;
+            }
+            // Branch can only set 'S' (skip)
+            return newTag === 'S';
         },
 
         updateHiddenInputs() {
             // Update selections container
             const selectionsContainer = document.getElementById('selectionsContainer');
             if (selectionsContainer) {
-                selectionsContainer.innerHTML = '';
+                selectionsContainer.replaceChildren();
 
                 let i = 0;
                 for (const [key, data] of Object.entries(this.selections)) {
@@ -345,7 +475,7 @@ export default function mergeTable(uuid) {
             // Update deletions container
             const deletionsContainer = document.getElementById('deletionsContainer');
             if (deletionsContainer) {
-                deletionsContainer.innerHTML = '';
+                deletionsContainer.replaceChildren();
 
                 let i = 0;
                 for (const key of Object.keys(this.deletions)) {
@@ -354,6 +484,36 @@ export default function mergeTable(uuid) {
                     keyInput.name = `deletions[${i}]`;
                     keyInput.value = key;
                     deletionsContainer.appendChild(keyInput);
+                    i++;
+                }
+            }
+
+            // Update tag changes container
+            const tagChangesContainer = document.getElementById('tagChangesContainer');
+            if (tagChangesContainer) {
+                tagChangesContainer.replaceChildren();
+
+                let i = 0;
+                for (const [key, data] of Object.entries(this.tagChanges)) {
+                    const keyInput = document.createElement('input');
+                    keyInput.type = 'hidden';
+                    keyInput.name = `tagChanges[${i}][key]`;
+                    keyInput.value = key;
+
+                    const tagInput = document.createElement('input');
+                    tagInput.type = 'hidden';
+                    tagInput.name = `tagChanges[${i}][tag]`;
+                    tagInput.value = data.newTag;
+
+                    const valueInput = document.createElement('input');
+                    valueInput.type = 'hidden';
+                    valueInput.name = `tagChanges[${i}][value]`;
+                    valueInput.value = data.value;
+
+                    tagChangesContainer.appendChild(keyInput);
+                    tagChangesContainer.appendChild(tagInput);
+                    tagChangesContainer.appendChild(valueInput);
+
                     i++;
                 }
             }

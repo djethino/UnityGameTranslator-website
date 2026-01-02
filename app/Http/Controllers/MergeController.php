@@ -138,7 +138,7 @@ class MergeController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        // Validate selections and deletions
+        // Validate selections, deletions, and tag changes
         $request->validate([
             'selections' => 'nullable|array',
             'selections.*.key' => 'required|string',
@@ -147,10 +147,14 @@ class MergeController extends Controller
             'selections.*.source' => 'required|string',
             'deletions' => 'nullable|array',
             'deletions.*' => 'string',
+            'tagChanges' => 'nullable|array',
+            'tagChanges.*.key' => 'required|string',
+            'tagChanges.*.tag' => 'required|in:A,S', // Only A (invalidate) and S (skip) are allowed
+            'tagChanges.*.value' => 'present|string',
         ]);
 
         // Must have at least one change
-        if (empty($request->selections) && empty($request->deletions)) {
+        if (empty($request->selections) && empty($request->deletions) && empty($request->tagChanges)) {
             return back()->withErrors(['error' => 'No changes to apply.']);
         }
 
@@ -211,6 +215,29 @@ class MergeController extends Controller
             }
         }
 
+        // Apply tag changes (skip/invalidate)
+        // Tag changes are explicit tag modifications without changing the value
+        $tagChangedCount = 0;
+        if (!empty($request->tagChanges)) {
+            foreach ($request->tagChanges as $change) {
+                $key = $this->translationService->normalizeContent($change['key']);
+                $newTag = $change['tag'];
+                $value = $this->translationService->normalizeContent($change['value']);
+
+                // Only process non-metadata keys that exist
+                if (!str_starts_with($key, '_') && isset($content[$key])) {
+                    // Get current value
+                    $currentValue = is_array($content[$key])
+                        ? ($content[$key]['v'] ?? '')
+                        : $content[$key];
+
+                    // Update with new tag, keep the value
+                    $content[$key] = ['v' => $currentValue, 't' => $newTag];
+                    $tagChangedCount++;
+                }
+            }
+        }
+
         // Save the file
         $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         file_put_contents($path, json_encode($content, $jsonFlags));
@@ -235,6 +262,9 @@ class MergeController extends Controller
         }
         if ($deletedCount > 0) {
             $messages[] = "{$deletedCount} suppression(s)";
+        }
+        if ($tagChangedCount > 0) {
+            $messages[] = "{$tagChangedCount} changement(s) de tag";
         }
         $successMessage = implode(' et ', $messages) . ' appliquée(s).';
 
