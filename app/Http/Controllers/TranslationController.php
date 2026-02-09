@@ -10,6 +10,7 @@ use App\Models\Translation;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -709,6 +710,19 @@ class TranslationController extends Controller
             fn($k) => !str_starts_with($k, '_')
         ));
         $translation->save();
+
+        // Signal SSE streams: merge preview completed + translation updated
+        $activeTokens = MergePreviewToken::where('translation_id', $translation->id)
+            ->where('expires_at', '>', now())
+            ->get();
+        foreach ($activeTokens as $mergeToken) {
+            Cache::put("sse:merge:{$mergeToken->token}:completed", [
+                'translation_id' => $translation->id,
+                'file_hash' => $translation->file_hash,
+                'line_count' => $translation->line_count,
+            ], 900);
+        }
+        Cache::increment("sse:translation:{$translation->id}:version");
 
         return redirect()
             ->route('translations.mine')

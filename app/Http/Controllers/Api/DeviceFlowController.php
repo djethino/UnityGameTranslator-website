@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\DeviceCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DeviceFlowController extends Controller
 {
@@ -27,53 +28,6 @@ class DeviceFlowController extends Controller
             'verification_uri' => url('/link'),
             'expires_in' => 900, // 15 minutes
             'interval' => 5, // Poll every 5 seconds
-        ]);
-    }
-
-    /**
-     * Poll for authorization status.
-     * The mod calls this repeatedly until authorized or expired.
-     *
-     * POST /api/v1/auth/device/poll
-     */
-    public function poll(Request $request): JsonResponse
-    {
-        $request->validate([
-            'device_code' => 'required|string',
-        ]);
-
-        $deviceCode = DeviceCode::findByDeviceCode($request->device_code);
-
-        if (!$deviceCode) {
-            return response()->json([
-                'error' => 'expired_token',
-                'error_description' => 'The device code has expired. Please restart the login process.',
-            ], 400);
-        }
-
-        if (!$deviceCode->isAuthorized()) {
-            return response()->json([
-                'error' => 'authorization_pending',
-                'error_description' => 'The user has not yet authorized. Continue polling.',
-            ], 400);
-        }
-
-        // Create API token for the user
-        $apiToken = ApiToken::createForUser($deviceCode->user);
-
-        // Log token creation
-        AuditLog::logTokenCreated($deviceCode->user->id, 'Unity Mod (Device Flow)', $request);
-
-        // Clean up the device code
-        $deviceCode->delete();
-
-        return response()->json([
-            'access_token' => $apiToken->plain_token, // Return plain token (shown only once)
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $deviceCode->user->id,
-                'name' => $deviceCode->user->name,
-            ],
         ]);
     }
 
@@ -134,6 +88,9 @@ class DeviceFlowController extends Controller
 
         // Authorize the device code with the current user
         $deviceCode->authorize(auth()->user());
+
+        // Signal SSE stream that device code was authorized
+        Cache::increment("sse:device:{$deviceCode->device_code}:version");
 
         // Log device linking
         AuditLog::logDeviceLinked(auth()->id(), $request->code, $request);

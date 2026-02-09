@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MergePreviewController;
+use App\Http\Controllers\Api\SseController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -35,7 +36,7 @@ Route::prefix('v1')->group(function () {
         Route::get('games/{game}', [GameController::class, 'show']);
     });
 
-    // Check if translation updated - higher limit for polling
+    // Check if translation updated (used for ETag-based cache validation)
     Route::get('translations/{translation}/check', [TranslationController::class, 'check'])
         ->middleware('throttle:120,1');
 
@@ -48,14 +49,27 @@ Route::prefix('v1')->group(function () {
     // ===========================================
     Route::post('auth/device', [DeviceFlowController::class, 'initiate'])
         ->middleware('throttle:10,1');
-    Route::post('auth/device/poll', [DeviceFlowController::class, 'poll'])
-        ->middleware('throttle:12,1');
+
+    // ===========================================
+    // SSE STREAMS (Server-Sent Events)
+    // ===========================================
+    // Device flow SSE — public, replaces polling
+    Route::get('auth/device/{device_code}/stream', [SseController::class, 'deviceFlowStream'])
+        ->middleware('throttle:5,1');
+
+    // Merge completion SSE — token-based auth
+    Route::get('merge-preview/{token}/stream', [SseController::class, 'mergeStream'])
+        ->middleware('throttle:5,1');
 
     // ===========================================
     // AUTHENTICATED ENDPOINTS
     // Can: upload translations
     // ===========================================
     Route::middleware(['auth.api', 'check.banned.api', 'throttle:60,1'])->group(function () {
+        // Translation sync SSE — replaces startup check-uuid + check-update, provides live updates
+        Route::get('sync/stream', [SseController::class, 'syncStream'])
+            ->middleware('throttle:5,1');
+
         // User info
         Route::get('me', [UserController::class, 'me']);
         Route::get('me/translations', [UserController::class, 'translations']);

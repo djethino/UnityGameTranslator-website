@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class MergeController extends Controller
 {
@@ -254,6 +256,19 @@ class MergeController extends Controller
             fn($k) => !str_starts_with($k, '_')
         ));
         $main->save();
+
+        // Signal SSE streams: merge completed + translation updated
+        $activeTokens = MergePreviewToken::where('translation_id', $main->id)
+            ->where('expires_at', '>', now())
+            ->get();
+        foreach ($activeTokens as $mergeToken) {
+            Cache::put("sse:merge:{$mergeToken->token}:completed", [
+                'translation_id' => $main->id,
+                'file_hash' => $main->file_hash,
+                'line_count' => $main->line_count,
+            ], 900);
+        }
+        Cache::increment("sse:translation:{$main->id}:version");
 
         // Build success message
         $messages = [];

@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\AnalyticsEvent;
 use App\Models\AuditLog;
 use App\Models\Game;
+use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\GameSearchService;
 use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -449,6 +451,10 @@ class TranslationController extends Controller
                 'is_update' => true,
             ], $request);
 
+            // Signal SSE streams that this translation was updated
+            Cache::increment("sse:translation:{$existingTranslation->id}:version");
+            Cache::increment("sse:uuid:{$fileUuid}:version");
+
             return response()->json([
                 'success' => true,
                 'translation' => [
@@ -489,6 +495,10 @@ class TranslationController extends Controller
             'line_count' => $parsed['line_count'],
             'is_fork' => $parentId !== null,
         ], $request);
+
+        // Signal SSE streams that a new translation was created for this UUID
+        Cache::increment("sse:translation:{$translation->id}:version");
+        Cache::increment("sse:uuid:{$fileUuid}:version");
 
         return response()->json([
             'success' => true,
