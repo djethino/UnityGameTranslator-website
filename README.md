@@ -88,20 +88,52 @@ The website displays H/V/A counts and quality score on each translation card.
 - **Check for updates** without downloading full file
 - **Upload translations** with authentication
 - **Device Flow authentication** (enter code on website to link mod)
+- **Real-time sync** via Server-Sent Events (SSE)
 - **Rate limiting** per endpoint
 
 ## Tech Stack
 
 - **Framework:** Laravel 12
+- **Real-time:** Node.js SSE micro-server + Redis pub/sub
 - **Database:** SQLite (dev) / MySQL (prod)
 - **Auth:** Laravel Socialite (Steam, Epic Games, Google, GitHub, Discord, Twitch)
-- **Frontend:** Tailwind CSS 4, Alpine.js, Font Awesome
+- **Frontend:** Tailwind CSS 4, Alpine.js (CSP build), Font Awesome
+
+## Architecture
+
+The website consists of two processes communicating via Redis:
+
+```
+Unity Mod ──► Laravel API (PHP)  ◄──► Redis pub/sub ◄──► SSE Server (Node.js) ◄── Unity Mod
+              (business logic,           (signaling)      (real-time streaming)
+               auth, DB, uploads)
+```
+
+- **Laravel** handles all business logic: authentication, database, uploads, merges, API responses
+- **Node.js SSE server** is a lightweight transport layer that streams real-time events to connected clients
+- **Redis pub/sub** bridges the two: when Laravel processes an action (upload, merge, auth), it publishes an event that the SSE server forwards to connected clients
+
+This separation is necessary because PHP workers are blocked during SSE connections, making it impractical for long-lived connections. Node.js handles thousands of concurrent SSE connections efficiently via its event loop.
+
+### SSE Endpoints
+
+The Node.js server exposes three SSE streams:
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `GET /auth/device/:code/stream` | None | Device Flow: streams auth result when user enters code |
+| `GET /sync/stream?uuid=xxx&hash=yyy` | Bearer | Multi-device sync: streams translation updates |
+| `GET /merge-preview/:token/stream` | None | Merge: streams completion when user finishes merging in browser |
+| `GET /health` | None | Health check |
+
+The SSE server validates Bearer tokens by forwarding them to the Laravel API (one HTTP call per SSE connection).
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.2+ with `phpredis` extension
 - Composer
 - Node.js 18+
+- Redis 6+
 - SQLite or MySQL
 
 ## Installation
@@ -115,6 +147,7 @@ The `composer setup` command handles everything: dependencies, environment file,
 ### Manual installation
 
 ```bash
+# Laravel
 composer install
 npm install
 cp .env.example .env
@@ -122,6 +155,10 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
 npm run build
+
+# SSE Server
+cd sse-server
+npm install
 ```
 
 ## Configuration
@@ -155,6 +192,40 @@ EPICGAMES_CLIENT_ID=
 EPICGAMES_CLIENT_SECRET=
 ```
 
+### Redis
+
+Both Laravel and the SSE server need access to the same Redis instance. Configure in `.env`:
+
+```env
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+For Unix socket connections (instead of TCP):
+
+```env
+REDIS_SOCKET=/path/to/redis.sock
+```
+
+> When `REDIS_SOCKET` is set, `REDIS_HOST` and `REDIS_PORT` are ignored.
+
+### SSE Server
+
+The SSE server is configured via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Listening port |
+| `REDIS_URL` | `redis://127.0.0.1:6379` | Redis connection URL (TCP mode) |
+| `REDIS_SOCKET` | *none* | Redis Unix socket path (overrides `REDIS_URL`) |
+| `REDIS_PASSWORD` | *none* | Redis password if required |
+| `LARAVEL_API_URL` | `http://localhost:8000/api/v1` | Laravel API base URL (used for auth validation) |
+| `ALLOWED_ORIGIN` | *(see code)* | CORS origin for the main website |
+
+In production, the SSE server should be accessible on a separate subdomain or port from the main website, with a reverse proxy (Nginx, Apache, Caddy) or a Node.js process manager (PM2, systemd, Passenger).
+
 ### Where to get credentials
 
 | Provider | Console |
@@ -169,13 +240,15 @@ EPICGAMES_CLIENT_SECRET=
 ## Development
 
 ```bash
-# Start dev server (runs server, queue, logs, and Vite)
+# Start Laravel dev server (runs server, queue, logs, and Vite)
 composer dev
 
-# Or start individually
-php artisan serve
-npm run dev
+# Start SSE server (in a separate terminal)
+cd sse-server
+PORT=3001 REDIS_URL=redis://127.0.0.1:6379 LARAVEL_API_URL=http://localhost:8000/api/v1 node server.js
 ```
+
+> The SSE server must run alongside Laravel for real-time features (Device Flow auth, multi-device sync, merge completion).
 
 ## Commands
 
@@ -202,10 +275,11 @@ php artisan migrate:fresh
 - **[Laravel](https://laravel.com/)** - PHP framework
 - **[Laravel Socialite](https://laravel.com/docs/socialite)** - OAuth authentication
 - **[SocialiteProviders](https://socialiteproviders.com/)** - Community OAuth providers
+- **[ioredis](https://github.com/redis/ioredis)** - Redis client for Node.js SSE server
 
 ### Frontend
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework
+- **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework (CSP build)
 - **[Font Awesome](https://fontawesome.com/)** - Icon library
 
 ## License
