@@ -9,10 +9,10 @@ use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\GameSearchService;
+use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -451,9 +451,14 @@ class TranslationController extends Controller
                 'is_update' => true,
             ], $request);
 
-            // Signal SSE streams that this translation was updated
-            Cache::increment("sse:translation:{$existingTranslation->id}:version");
-            Cache::increment("sse:uuid:{$fileUuid}:version");
+            // Signal SSE via Redis pub/sub — Node.js relays to connected mods
+            SsePublisher::translationUpdated($existingTranslation->id, [
+                'file_hash' => $existingTranslation->file_hash,
+                'line_count' => $existingTranslation->line_count,
+                'vote_count' => $existingTranslation->vote_count,
+                'updated_at' => $existingTranslation->updated_at->toIso8601String(),
+            ]);
+            SsePublisher::uuidChanged($fileUuid);
 
             return response()->json([
                 'success' => true,
@@ -496,9 +501,14 @@ class TranslationController extends Controller
             'is_fork' => $parentId !== null,
         ], $request);
 
-        // Signal SSE streams that a new translation was created for this UUID
-        Cache::increment("sse:translation:{$translation->id}:version");
-        Cache::increment("sse:uuid:{$fileUuid}:version");
+        // Signal SSE via Redis pub/sub — Node.js relays to connected mods
+        SsePublisher::translationUpdated($translation->id, [
+            'file_hash' => $translation->file_hash,
+            'line_count' => $translation->line_count,
+            'vote_count' => $translation->vote_count ?? 0,
+            'updated_at' => $translation->updated_at->toIso8601String(),
+        ]);
+        SsePublisher::uuidChanged($fileUuid);
 
         return response()->json([
             'success' => true,

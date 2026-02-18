@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class MergeController extends Controller
 {
@@ -257,18 +257,23 @@ class MergeController extends Controller
         ));
         $main->save();
 
-        // Signal SSE streams: merge completed + translation updated
+        // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         $activeTokens = MergePreviewToken::where('translation_id', $main->id)
             ->where('expires_at', '>', now())
             ->get();
         foreach ($activeTokens as $mergeToken) {
-            Cache::put("sse:merge:{$mergeToken->token}:completed", [
+            SsePublisher::mergeCompleted($mergeToken->token, [
                 'translation_id' => $main->id,
                 'file_hash' => $main->file_hash,
                 'line_count' => $main->line_count,
-            ], 900);
+            ]);
         }
-        Cache::increment("sse:translation:{$main->id}:version");
+        SsePublisher::translationUpdated($main->id, [
+            'file_hash' => $main->file_hash,
+            'line_count' => $main->line_count,
+            'vote_count' => $main->vote_count,
+            'updated_at' => $main->updated_at->toIso8601String(),
+        ]);
 
         // Build success message
         $messages = [];

@@ -1,0 +1,17 @@
+{
+  "name": "unitygametranslator-sse",
+  "version": "1.0.0",
+  "description": "SSE micro-server for UnityGameTranslator real-time events",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true
+}

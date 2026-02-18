@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MergePreviewController;
-use App\Http\Controllers\Api\SseController;
+use App\Http\Controllers\Api\SyncStateController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Public and authenticated API endpoints for the Unity mod.
+| SSE streams are served by the Node.js micro-server (sse-server/).
 |
 */
 
@@ -51,24 +52,12 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:10,1');
 
     // ===========================================
-    // SSE STREAMS (Server-Sent Events)
-    // ===========================================
-    // Device flow SSE — public, replaces polling
-    Route::get('auth/device/{device_code}/stream', [SseController::class, 'deviceFlowStream'])
-        ->middleware('throttle:5,1');
-
-    // Merge completion SSE — token-based auth
-    Route::get('merge-preview/{token}/stream', [SseController::class, 'mergeStream'])
-        ->middleware('throttle:5,1');
-
-    // ===========================================
     // AUTHENTICATED ENDPOINTS
-    // Can: upload translations
+    // Can: upload translations, check sync state
     // ===========================================
     Route::middleware(['auth.api', 'check.banned.api', 'throttle:60,1'])->group(function () {
-        // Translation sync SSE — replaces startup check-uuid + check-update, provides live updates
-        Route::get('sync/stream', [SseController::class, 'syncStream'])
-            ->middleware('throttle:5,1');
+        // Sync state — called by Node.js SSE server on each client connection
+        Route::get('sync/state', [SyncStateController::class, 'show']);
 
         // User info
         Route::get('me', [UserController::class, 'me']);

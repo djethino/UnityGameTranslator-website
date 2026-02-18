@@ -7,10 +7,10 @@ use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -711,18 +711,23 @@ class TranslationController extends Controller
         ));
         $translation->save();
 
-        // Signal SSE streams: merge preview completed + translation updated
+        // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         $activeTokens = MergePreviewToken::where('translation_id', $translation->id)
             ->where('expires_at', '>', now())
             ->get();
         foreach ($activeTokens as $mergeToken) {
-            Cache::put("sse:merge:{$mergeToken->token}:completed", [
+            SsePublisher::mergeCompleted($mergeToken->token, [
                 'translation_id' => $translation->id,
                 'file_hash' => $translation->file_hash,
                 'line_count' => $translation->line_count,
-            ], 900);
+            ]);
         }
-        Cache::increment("sse:translation:{$translation->id}:version");
+        SsePublisher::translationUpdated($translation->id, [
+            'file_hash' => $translation->file_hash,
+            'line_count' => $translation->line_count,
+            'vote_count' => $translation->vote_count,
+            'updated_at' => $translation->updated_at->toIso8601String(),
+        ]);
 
         return redirect()
             ->route('translations.mine')

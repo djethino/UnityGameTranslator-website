@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ApiToken;
 use App\Models\AuditLog;
 use App\Models\DeviceCode;
+use App\Services\SsePublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class DeviceFlowController extends Controller
 {
@@ -86,14 +86,30 @@ class DeviceFlowController extends Controller
             return back()->withErrors(['code' => 'Invalid or expired code. Please check the code displayed in your game.']);
         }
 
-        // Authorize the device code with the current user
-        $deviceCode->authorize(auth()->user());
+        $user = auth()->user();
 
-        // Signal SSE stream that device code was authorized
-        Cache::increment("sse:device:{$deviceCode->device_code}:version");
+        // Authorize the device code with the current user
+        $deviceCode->authorize($user);
+
+        // Create API token for the mod (previously done inside SseController::emitAuthorized)
+        $apiToken = ApiToken::createForUser($user);
+        AuditLog::logTokenCreated($user->id, 'Unity Mod (Device Flow)', $request);
+
+        // Signal SSE via Redis pub/sub — Node.js relays to the mod
+        SsePublisher::deviceAuthorized($deviceCode->device_code, [
+            'access_token' => $apiToken->plain_token,
+            'token_type' => 'Bearer',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ],
+        ]);
+
+        // Delete device code — no longer needed
+        $deviceCode->delete();
 
         // Log device linking
-        AuditLog::logDeviceLinked(auth()->id(), $request->code, $request);
+        AuditLog::logDeviceLinked($user->id, $request->code, $request);
 
         return redirect()->route('link')->with('success', 'Device linked successfully! You can now return to your game.');
     }
