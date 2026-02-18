@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://unitygametranslator.com/sitemap.xml
+Sitemap: https://unitygametranslator.asymptomatikgames.com/sitemap.xml
 
 # Disallow admin and auth routes
 Disallow: /admin
