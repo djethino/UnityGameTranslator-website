@@ -360,8 +360,8 @@ const server = http.createServer(async (req, res) => {
     const pathname = parsedUrl.pathname;
     const method = req.method;
 
-    // Health check
-    if (method === 'GET' && pathname === '/health') {
+    // Health check (also serves as root for cPanel Passenger availability check)
+    if (method === 'GET' && (pathname === '/health' || pathname === '/')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', connections: activeConnections }));
         return;
