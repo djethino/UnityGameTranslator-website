@@ -1,8 +1,25 @@
 'use strict';
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const { URL } = require('url');
 const Redis = require('ioredis');
+
+// ─── File Logging ────────────────────────────────────────────────────────────
+const LOG_FILE = path.join(__dirname, 'sse-server.log');
+const MAX_LOG_SIZE = 5 * 1024 * 1024; // 5 MB
+
+function log(level, message) {
+    const line = `[${new Date().toISOString()}] [${level}] ${message}\n`;
+    try {
+        const stats = fs.statSync(LOG_FILE);
+        if (stats.size > MAX_LOG_SIZE) {
+            fs.renameSync(LOG_FILE, LOG_FILE + '.old');
+        }
+    } catch (_) { /* file doesn't exist yet */ }
+    fs.appendFileSync(LOG_FILE, line);
+}
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
@@ -38,11 +55,11 @@ let activeConnections = 0;
 const redis = createRedisClient({ lazyConnect: true });
 
 redis.on('error', (err) => {
-    console.error('[Redis] Connection error:', err.message);
+    log('ERROR', `[Redis] Connection error: ${err.message}`);
 });
 
 redis.on('connect', () => {
-    console.log('[Redis] Connected');
+    log('INFO', '[Redis] Connected');
 });
 
 // ─── SSE Helpers ─────────────────────────────────────────────────────────────
@@ -93,9 +110,9 @@ async function fetchFromLaravel(path, bearerToken) {
         headers['Authorization'] = `Bearer ${bearerToken}`;
     }
 
-    console.log(`[Laravel] Fetching ${url}`);
+    log('INFO', `[Laravel] Fetching ${url}`);
     const response = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
-    console.log(`[Laravel] Response: ${response.status} ${response.statusText}`);
+    log('INFO', `[Laravel] Response: ${response.status} ${response.statusText}`);
     const body = await response.json();
     return { status: response.status, body };
 }
@@ -103,6 +120,8 @@ async function fetchFromLaravel(path, bearerToken) {
 // ─── Route: Device Flow SSE ─────────────────────────────────────────────────
 
 async function handleDeviceFlow(req, res, deviceCode) {
+    log('INFO', `[DeviceFlow] New connection for code: ${deviceCode}`);
+
     // Check if already authorized (late-connecting client)
     try {
         const stored = await redis.get(`sse:device:${deviceCode}:result`);
@@ -111,10 +130,11 @@ async function handleDeviceFlow(req, res, deviceCode) {
             setupSSE(res);
             emitEvent(res, 1, parsed.event, parsed.data);
             res.end();
+            log('INFO', `[DeviceFlow] Served stored result for code: ${deviceCode}`);
             return;
         }
     } catch (e) {
-        console.error('[DeviceFlow] Redis GET error:', e.message);
+        log('ERROR', `[DeviceFlow] Redis GET error: ${e.message}`);
     }
 
     // Subscribe to Redis channel
@@ -137,7 +157,7 @@ async function handleDeviceFlow(req, res, deviceCode) {
 
     sub.subscribe(`sse:device:${deviceCode}`, (err) => {
         if (err) {
-            console.error('[DeviceFlow] Subscribe error:', err.message);
+            log('ERROR', `[DeviceFlow] Subscribe error: ${err.message}`);
             emitEvent(res, ++eventId, 'error', { error: 'Internal error' });
             res.end();
             cleanup();
@@ -147,11 +167,12 @@ async function handleDeviceFlow(req, res, deviceCode) {
     sub.on('message', (channel, message) => {
         try {
             const parsed = JSON.parse(message);
+            log('INFO', `[DeviceFlow] Received event: ${parsed.event} for code: ${deviceCode}`);
             emitEvent(res, ++eventId, parsed.event, parsed.data);
             res.end();
             cleanup();
         } catch (e) {
-            console.error('[DeviceFlow] Message parse error:', e.message);
+            log('ERROR', `[DeviceFlow] Message parse error: ${e.message}`);
         }
     });
 
@@ -171,10 +192,13 @@ async function handleDeviceFlow(req, res, deviceCode) {
 // ─── Route: Sync SSE ─────────────────────────────────────────────────────────
 
 async function handleSync(req, res, uuid, clientHash) {
+    log('INFO', `[Sync] New connection for UUID: ${uuid}`);
+
     // Extract Bearer token
     const authHeader = req.headers['authorization'] || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!bearerToken) {
+        log('WARN', '[Sync] Missing Authorization header');
         emitError(res, 401, 'Authorization required');
         return;
     }
@@ -184,16 +208,19 @@ async function handleSync(req, res, uuid, clientHash) {
     try {
         const authResult = await fetchFromLaravel('/me', bearerToken);
         if (authResult.status === 401 || authResult.status === 403) {
+            log('WARN', `[Sync] Auth rejected: ${authResult.status}`);
             emitError(res, 401, 'Invalid or expired token');
             return;
         }
         if (authResult.status !== 200) {
+            log('ERROR', `[Sync] Auth unexpected status: ${authResult.status} body=${JSON.stringify(authResult.body)}`);
             emitError(res, 502, 'Auth service unavailable');
             return;
         }
         userId = authResult.body.id;
+        log('INFO', `[Sync] Auth OK, userId=${userId}`);
     } catch (e) {
-        console.error('[Sync] Auth validation error:', e.message);
+        log('ERROR', `[Sync] Auth validation error: ${e.message}`);
         emitError(res, 502, 'Auth service unavailable');
         return;
     }
@@ -207,12 +234,14 @@ async function handleSync(req, res, uuid, clientHash) {
             bearerToken
         );
         if (stateResult.status !== 200) {
+            log('ERROR', `[Sync] State unexpected status: ${stateResult.status} body=${JSON.stringify(stateResult.body)}`);
             emitError(res, 502, 'State service unavailable');
             return;
         }
         state = stateResult.body;
+        log('INFO', `[Sync] State fetched: exists=${state.exists}, role=${state.role}`);
     } catch (e) {
-        console.error('[Sync] State fetch error:', e.message);
+        log('ERROR', `[Sync] State fetch error: ${e.message}`);
         emitError(res, 502, 'State service unavailable');
         return;
     }
@@ -245,7 +274,7 @@ async function handleSync(req, res, uuid, clientHash) {
 
     sub.subscribe(...channels, (err) => {
         if (err) {
-            console.error('[Sync] Subscribe error:', err.message);
+            log('ERROR', `[Sync] Subscribe error: ${err.message}`);
             emitEvent(res, ++eventId, 'error', { error: 'Internal error' });
             res.end();
             cleanup();
@@ -272,7 +301,7 @@ async function handleSync(req, res, uuid, clientHash) {
                 emitEvent(res, ++eventId, 'translation_updated', parsed.data);
             }
         } catch (e) {
-            console.error('[Sync] Message handler error:', e.message);
+            log('ERROR', `[Sync] Message handler error: ${e.message}`);
         }
     });
 
@@ -291,6 +320,8 @@ async function handleSync(req, res, uuid, clientHash) {
 // ─── Route: Merge SSE ────────────────────────────────────────────────────────
 
 async function handleMerge(req, res, token) {
+    log('INFO', `[Merge] New connection for token: ${token.substring(0, 8)}...`);
+
     // Check if already completed (late-connecting client)
     try {
         const stored = await redis.get(`sse:merge:${token}:result`);
@@ -302,7 +333,7 @@ async function handleMerge(req, res, token) {
             return;
         }
     } catch (e) {
-        console.error('[Merge] Redis GET error:', e.message);
+        log('ERROR', `[Merge] Redis GET error: ${e.message}`);
     }
 
     // Subscribe to Redis channel
@@ -325,7 +356,7 @@ async function handleMerge(req, res, token) {
 
     sub.subscribe(`sse:merge:${token}`, (err) => {
         if (err) {
-            console.error('[Merge] Subscribe error:', err.message);
+            log('ERROR', `[Merge] Subscribe error: ${err.message}`);
             emitEvent(res, ++eventId, 'error', { error: 'Internal error' });
             res.end();
             cleanup();
@@ -339,7 +370,7 @@ async function handleMerge(req, res, token) {
             res.end();
             cleanup();
         } catch (e) {
-            console.error('[Merge] Message parse error:', e.message);
+            log('ERROR', `[Merge] Message parse error: ${e.message}`);
         }
     });
 
@@ -366,6 +397,21 @@ const server = http.createServer(async (req, res) => {
     if (method === 'GET' && (pathname === '/health' || pathname === '/')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', connections: activeConnections }));
+        return;
+    }
+
+    // Logs endpoint — view recent logs for debugging
+    if (method === 'GET' && pathname === '/logs') {
+        try {
+            const content = fs.readFileSync(LOG_FILE, 'utf8');
+            const lines = content.split('\n').filter(Boolean);
+            const last100 = lines.slice(-100).join('\n');
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end(last100);
+        } catch (e) {
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('No logs yet');
+        }
         return;
     }
 
@@ -405,27 +451,27 @@ const server = http.createServer(async (req, res) => {
 async function start() {
     await redis.connect();
     server.listen(PORT, () => {
-        console.log(`[SSE Server] Listening on port ${PORT}`);
-        console.log(`[SSE Server] Redis: ${REDIS_SOCKET ? `socket ${REDIS_SOCKET}` : REDIS_URL}`);
-        console.log(`[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
+        log('INFO', `[SSE Server] Listening on port ${PORT}`);
+        log('INFO', `[SSE Server] Redis: ${REDIS_SOCKET ? `socket ${REDIS_SOCKET}` : REDIS_URL}`);
+        log('INFO', `[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
     });
 }
 
 start().catch((err) => {
-    console.error('[SSE Server] Fatal startup error:', err);
+    log('ERROR', `[SSE Server] Fatal startup error: ${err}`);
     process.exit(1);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('[SSE Server] SIGTERM received, shutting down...');
+    log('INFO', '[SSE Server] SIGTERM received, shutting down...');
     server.close(() => {
         redis.quit().then(() => process.exit(0));
     });
 });
 
 process.on('SIGINT', () => {
-    console.log('[SSE Server] SIGINT received, shutting down...');
+    log('INFO', '[SSE Server] SIGINT received, shutting down...');
     server.close(() => {
         redis.quit().then(() => process.exit(0));
     });
