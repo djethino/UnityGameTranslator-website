@@ -6,6 +6,9 @@ const Redis = require('ioredis');
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
+const REDIS_SOCKET = process.env.REDIS_SOCKET || null;
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD && process.env.REDIS_PASSWORD !== 'null'
+    ? process.env.REDIS_PASSWORD : null;
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const LARAVEL_API_URL = (process.env.LARAVEL_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 15000;
@@ -14,11 +17,25 @@ const DEVICE_FLOW_TIMEOUT_MS = 15 * 60 * 1000;  // 15 min
 const SYNC_TIMEOUT_MS = 60 * 60 * 1000;          // 1 hour
 const MERGE_TIMEOUT_MS = 15 * 60 * 1000;         // 15 min
 
+/**
+ * Build ioredis client with Unix socket or TCP URL.
+ * When REDIS_SOCKET is set, uses { path, password } (ignores REDIS_URL).
+ */
+function createRedisClient(extraOpts = {}) {
+    const opts = { maxRetriesPerRequest: 3, ...extraOpts };
+    if (REDIS_SOCKET) {
+        opts.path = REDIS_SOCKET;
+        if (REDIS_PASSWORD) opts.password = REDIS_PASSWORD;
+        return new Redis(opts);
+    }
+    return new Redis(REDIS_URL, opts);
+}
+
 // ─── State ───────────────────────────────────────────────────────────────────
 let activeConnections = 0;
 
 // Redis client for GET/SET operations (checking stored results)
-const redis = new Redis(REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 3 });
+const redis = createRedisClient({ lazyConnect: true });
 
 redis.on('error', (err) => {
     console.error('[Redis] Connection error:', err.message);
@@ -59,7 +76,7 @@ function emitError(res, statusCode, message) {
  * so each SSE connection gets its own subscriber.
  */
 function createSubscriber() {
-    return new Redis(REDIS_URL, { lazyConnect: false, maxRetriesPerRequest: 3 });
+    return createRedisClient({ lazyConnect: false });
 }
 
 /**
@@ -387,7 +404,7 @@ async function start() {
     await redis.connect();
     server.listen(PORT, () => {
         console.log(`[SSE Server] Listening on port ${PORT}`);
-        console.log(`[SSE Server] Redis: ${REDIS_URL}`);
+        console.log(`[SSE Server] Redis: ${REDIS_SOCKET ? `socket ${REDIS_SOCKET}` : REDIS_URL}`);
         console.log(`[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
     });
 }
