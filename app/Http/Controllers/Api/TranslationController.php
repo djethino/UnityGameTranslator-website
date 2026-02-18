@@ -137,37 +137,6 @@ class TranslationController extends Controller
         // If client sent their current hash, indicate if update is available
         if ($request->filled('hash')) {
             $response['has_update'] = $translation->file_hash !== $request->hash;
-
-            // Debug info: show computed hash and JSON preview
-            if ($request->boolean('debug')) {
-                $computedHash = $translation->computeHash();
-                $response['debug'] = [
-                    'stored_hash' => $translation->file_hash,
-                    'computed_hash' => $computedHash,
-                    'client_hash' => $request->hash,
-                    'stored_matches_computed' => $translation->file_hash === $computedHash,
-                ];
-
-                // Show JSON preview
-                $safePath = $translation->getSafeFilePath();
-                if ($safePath && file_exists($safePath)) {
-                    $content = file_get_contents($safePath);
-                    $data = json_decode($content, true);
-                    if (is_array($data)) {
-                        $hashData = [];
-                        foreach ($data as $key => $value) {
-                            if ($key === '_uuid' || !str_starts_with($key, '_')) {
-                                $hashData[$key] = $value;
-                            }
-                        }
-                        ksort($hashData);
-                        $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                        $response['debug']['json_preview'] = substr($normalized, 0, 300);
-                        $response['debug']['json_length'] = strlen($normalized);
-                        $response['debug']['entry_count'] = count($hashData);
-                    }
-                }
-            }
         }
 
         return response()

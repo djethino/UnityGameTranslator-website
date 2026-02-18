@@ -212,9 +212,9 @@ class GameSearchService
      */
     private function escapeIGDBQuery(string $query): string
     {
-        // Remove characters that could break out of the search string or inject commands
-        // IGDB uses a custom query language where ; ends statements and " ends strings
-        return str_replace(['"', ';', '\\', '/'], ['', '', '', ''], $query);
+        // Allowlist approach: only keep safe characters for IGDB search
+        // IGDB query language uses ; for statement end, " for strings, | for OR, etc.
+        return preg_replace('/[^a-zA-Z0-9\s\-\'\.,:!?]/', '', $query);
     }
 
     /**
@@ -466,11 +466,13 @@ class GameSearchService
 
             $clientId = config('services.twitch.client_id');
 
+            // Use intval() for defense-in-depth even though $id is type-hinted int
+            $safeId = intval($id);
             $response = Http::withHeaders([
                 'Client-ID' => $clientId,
                 'Authorization' => 'Bearer ' . $token,
             ])->withBody(
-                "where id = {$id}; fields id,name,cover.url;",
+                "where id = {$safeId}; fields id,name,cover.url;",
                 'text/plain'
             )->post('https://api.igdb.com/v4/games');
 

@@ -107,13 +107,13 @@ class SocialController extends Controller
                 : null;
 
             if ($existingUser) {
-                // Link this provider to existing account
-                $existingUser->update([
-                    'provider' => $provider,
-                    'provider_id' => $socialUser->getId(),
-                    'avatar' => $socialUser->getAvatar(),
-                ]);
-                $user = $existingUser;
+                // Security: do NOT silently overwrite provider — this would allow
+                // account takeover by creating a new OAuth account with the victim's email.
+                // Instead, reject the login and inform the user.
+                return redirect()->route('login')->with('error',
+                    'An account with this email already exists (via ' . ucfirst($existingUser->provider) . '). '
+                    . 'Please log in with your original provider to access your account.'
+                );
             } else {
                 $user = User::create([
                     'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
@@ -144,13 +144,25 @@ class SocialController extends Controller
 
     protected function isDisposableEmail(string $email): bool
     {
+        // Note: OAuth providers already verify emails in most cases.
+        // This is a defense-in-depth measure, not a primary protection.
         $disposableDomains = [
             'tempmail.com', 'throwaway.email', 'guerrillamail.com',
             'mailinator.com', 'tempmail.net', 'fakeinbox.com',
             '10minutemail.com', 'trashmail.com', 'yopmail.com',
+            'sharklasers.com', 'guerrillamailblock.com', 'grr.la',
+            'dispostable.com', 'mailnesia.com', 'maildrop.cc',
+            'discard.email', 'temp-mail.org', 'mohmal.com',
+            'getnada.com', 'emailondeck.com', 'tempail.com',
+            'crazymailing.com', 'mytemp.email', 'throwme.away',
+            'tempinbox.com', 'filzmail.com', 'inboxbear.com',
+            'jetable.org', 'mintemail.com', 'spamgourmet.com',
+            'harakirimail.com', 'mailcatch.com', 'meltmail.com',
+            'throwam.com', 'tempr.email', 'burnermail.io',
+            'mailsac.com', 'moakt.co', 'tempmailo.com',
         ];
 
         $domain = strtolower(substr(strrchr($email, '@'), 1));
-        return in_array($domain, $disposableDomains);
+        return in_array($domain, $disposableDomains, true);
     }
 }

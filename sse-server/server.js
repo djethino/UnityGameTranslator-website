@@ -13,6 +13,13 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const LARAVEL_API_URL = (process.env.LARAVEL_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 15000;
 
+// Security: connection limits
+const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 1000;
+const PER_IP_LIMIT = parseInt(process.env.PER_IP_LIMIT, 10) || 10;
+
+// Security: CORS — restrict to the main website origin
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://unitygametranslator.asymptomatikgames.com';
+
 const DEVICE_FLOW_TIMEOUT_MS = 15 * 60 * 1000;  // 15 min
 const SYNC_TIMEOUT_MS = 60 * 60 * 1000;          // 1 hour
 const MERGE_TIMEOUT_MS = 15 * 60 * 1000;         // 15 min
@@ -33,6 +40,7 @@ function createRedisClient(extraOpts = {}) {
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let activeConnections = 0;
+const ipConnections = new Map(); // Track connections per IP
 
 // Redis client for GET/SET operations (checking stored results)
 const redis = createRedisClient({ lazyConnect: true });
@@ -45,6 +53,62 @@ redis.on('connect', () => {
     console.log('[Redis] Connected');
 });
 
+// ─── Security Helpers ───────────────────────────────────────────────────────
+
+/**
+ * Extract client IP from request (supports X-Forwarded-For behind proxy).
+ */
+function getClientIp(req) {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+        return forwarded.split(',')[0].trim();
+    }
+    return req.socket.remoteAddress || '0.0.0.0';
+}
+
+/**
+ * Check rate limits (global + per-IP). Returns error message or null if OK.
+ */
+function checkRateLimit(req) {
+    if (activeConnections >= MAX_CONNECTIONS) {
+        return 'Server at capacity';
+    }
+    const ip = getClientIp(req);
+    const count = ipConnections.get(ip) || 0;
+    if (count >= PER_IP_LIMIT) {
+        return 'Too many connections from this IP';
+    }
+    return null;
+}
+
+/**
+ * Track a new connection for rate limiting.
+ * Returns a cleanup function to call when the connection closes.
+ */
+function trackConnection(req) {
+    const ip = getClientIp(req);
+    activeConnections++;
+    ipConnections.set(ip, (ipConnections.get(ip) || 0) + 1);
+
+    return () => {
+        activeConnections--;
+        const count = (ipConnections.get(ip) || 1) - 1;
+        if (count <= 0) {
+            ipConnections.delete(ip);
+        } else {
+            ipConnections.set(ip, count);
+        }
+    };
+}
+
+/**
+ * Add CORS headers to a response.
+ */
+function setCorsHeaders(res) {
+    res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+    res.setHeader('Access-Control-Allow-Credentials', 'false');
+}
+
 // ─── SSE Helpers ─────────────────────────────────────────────────────────────
 
 function setupSSE(res) {
@@ -53,6 +117,8 @@ function setupSSE(res) {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+        'Access-Control-Allow-Credentials': 'false',
     });
     res.write('retry: 3000\n\n');
 }
@@ -65,7 +131,11 @@ function emitEvent(res, id, event, data) {
 }
 
 function emitError(res, statusCode, message) {
-    res.writeHead(statusCode, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(statusCode, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    });
     res.write(`event: error\ndata: ${JSON.stringify({ error: message })}\n\n`);
     res.end();
 }
@@ -119,6 +189,7 @@ async function handleDeviceFlow(req, res, deviceCode) {
     const sub = createSubscriber();
     let eventId = 0;
     let closed = false;
+    const releaseConnection = trackConnection(req);
 
     const cleanup = () => {
         if (closed) return;
@@ -127,10 +198,9 @@ async function handleDeviceFlow(req, res, deviceCode) {
         clearInterval(heartbeatId);
         sub.unsubscribe().catch(() => {});
         sub.quit().catch(() => {});
-        activeConnections--;
+        releaseConnection();
     };
 
-    activeConnections++;
     setupSSE(res);
 
     sub.subscribe(`sse:device:${deviceCode}`, (err) => {
@@ -219,6 +289,7 @@ async function handleSync(req, res, uuid, clientHash) {
     const sub = createSubscriber();
     let eventId = 0;
     let closed = false;
+    const releaseConnection = trackConnection(req);
 
     const cleanup = () => {
         if (closed) return;
@@ -227,10 +298,9 @@ async function handleSync(req, res, uuid, clientHash) {
         clearInterval(heartbeatId);
         sub.unsubscribe().catch(() => {});
         sub.quit().catch(() => {});
-        activeConnections--;
+        releaseConnection();
     };
 
-    activeConnections++;
     setupSSE(res);
     emitEvent(res, ++eventId, 'state', state);
 
@@ -307,6 +377,7 @@ async function handleMerge(req, res, token) {
     const sub = createSubscriber();
     let eventId = 0;
     let closed = false;
+    const releaseConnection = trackConnection(req);
 
     const cleanup = () => {
         if (closed) return;
@@ -315,10 +386,9 @@ async function handleMerge(req, res, token) {
         clearInterval(heartbeatId);
         sub.unsubscribe().catch(() => {});
         sub.quit().catch(() => {});
-        activeConnections--;
+        releaseConnection();
     };
 
-    activeConnections++;
     setupSSE(res);
 
     sub.subscribe(`sse:merge:${token}`, (err) => {
@@ -360,36 +430,63 @@ const server = http.createServer(async (req, res) => {
     const pathname = parsedUrl.pathname;
     const method = req.method;
 
+    // CORS preflight
+    if (method === 'OPTIONS') {
+        res.writeHead(204, {
+            'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Headers': 'Authorization',
+            'Access-Control-Max-Age': '86400',
+        });
+        res.end();
+        return;
+    }
+
     // Health check (also serves as root for cPanel Passenger availability check)
     if (method === 'GET' && (pathname === '/health' || pathname === '/')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok', connections: activeConnections }));
+        res.end(JSON.stringify({ status: 'ok' }));
+        return;
+    }
+
+    // Rate limiting check for SSE endpoints
+    const rateLimitError = checkRateLimit(req);
+    if (rateLimitError) {
+        const statusCode = rateLimitError.includes('capacity') ? 503 : 429;
+        setCorsHeaders(res);
+        emitError(res, statusCode, rateLimitError);
         return;
     }
 
     // Device Flow SSE: GET /auth/device/:code/stream
-    const deviceMatch = pathname.match(/^\/auth\/device\/([^/]+)\/stream$/);
+    // Input validation: device codes are alphanumeric with hyphens, max 128 chars
+    const deviceMatch = pathname.match(/^\/auth\/device\/([A-Za-z0-9_-]{1,128})\/stream$/);
     if (method === 'GET' && deviceMatch) {
-        await handleDeviceFlow(req, res, decodeURIComponent(deviceMatch[1]));
+        await handleDeviceFlow(req, res, deviceMatch[1]);
         return;
     }
 
     // Sync SSE: GET /sync/stream?uuid=xxx&hash=yyy
     if (method === 'GET' && pathname === '/sync/stream') {
         const uuid = parsedUrl.searchParams.get('uuid');
-        if (!uuid) {
+        if (!uuid || uuid.length > 256) {
             emitError(res, 400, 'uuid parameter required');
             return;
         }
         const hash = parsedUrl.searchParams.get('hash');
+        if (hash && hash.length > 256) {
+            emitError(res, 400, 'Invalid hash parameter');
+            return;
+        }
         await handleSync(req, res, uuid, hash);
         return;
     }
 
     // Merge SSE: GET /merge-preview/:token/stream
-    const mergeMatch = pathname.match(/^\/merge-preview\/([^/]+)\/stream$/);
+    // Input validation: merge tokens are alphanumeric, max 128 chars
+    const mergeMatch = pathname.match(/^\/merge-preview\/([A-Za-z0-9_-]{1,128})\/stream$/);
     if (method === 'GET' && mergeMatch) {
-        await handleMerge(req, res, decodeURIComponent(mergeMatch[1]));
+        await handleMerge(req, res, mergeMatch[1]);
         return;
     }
 
@@ -406,6 +503,8 @@ async function start() {
         console.log(`[SSE Server] Listening on port ${PORT}`);
         console.log(`[SSE Server] Redis: ${REDIS_SOCKET ? `socket ${REDIS_SOCKET}` : REDIS_URL}`);
         console.log(`[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
+        console.log(`[SSE Server] CORS origin: ${ALLOWED_ORIGIN}`);
+        console.log(`[SSE Server] Max connections: ${MAX_CONNECTIONS} (${PER_IP_LIMIT}/IP)`);
     });
 }
 

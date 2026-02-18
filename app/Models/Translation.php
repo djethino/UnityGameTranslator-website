@@ -68,8 +68,8 @@ class Translation extends Model
             return null;
         }
 
-        // Files are stored in the public disk (storage/app/public/)
-        $basePath = storage_path('app/public');
+        // Files are stored in the private disk (storage/app/private/)
+        $basePath = storage_path('app/private');
         $requestedPath = $basePath . '/' . $this->file_path;
         $fullPath = realpath($requestedPath);
 
@@ -237,26 +237,31 @@ class Translation extends Model
      */
     public function vote(int $value): void
     {
-        $existingVote = $this->userVote();
+        \DB::transaction(function () use ($value) {
+            $existingVote = $this->votes()
+                ->where('user_id', auth()->id())
+                ->lockForUpdate()
+                ->first();
 
-        if ($existingVote) {
-            if ($existingVote->value === $value) {
-                // Same vote = remove it
-                $existingVote->delete();
-                $this->decrement('vote_count', $value);
+            if ($existingVote) {
+                if ($existingVote->value === $value) {
+                    // Same vote = remove it
+                    $existingVote->delete();
+                    $this->decrement('vote_count', $value);
+                } else {
+                    // Different vote = change it
+                    $existingVote->update(['value' => $value]);
+                    $this->increment('vote_count', $value * 2); // -1 to 1 = +2, 1 to -1 = -2
+                }
             } else {
-                // Different vote = change it
-                $existingVote->update(['value' => $value]);
-                $this->increment('vote_count', $value * 2); // -1 to 1 = +2, 1 to -1 = -2
+                // New vote
+                $this->votes()->create([
+                    'user_id' => auth()->id(),
+                    'value' => $value,
+                ]);
+                $this->increment('vote_count', $value);
             }
-        } else {
-            // New vote
-            $this->votes()->create([
-                'user_id' => auth()->id(),
-                'value' => $value,
-            ]);
-            $this->increment('vote_count', $value);
-        }
+        });
     }
 
     public function isComplete(): bool

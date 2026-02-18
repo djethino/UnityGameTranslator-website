@@ -90,9 +90,9 @@ class ProfileController extends Controller
 
         $filename = 'unitygametranslator-data-' . $user->id . '-' . now()->format('Y-m-d') . '.json';
 
-        return response()->json($data, 200, [
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        return response()->streamDownload(function () use ($data) {
+            echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, $filename, ['Content-Type' => 'application/json']);
     }
 
     /**

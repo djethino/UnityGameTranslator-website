@@ -12,10 +12,12 @@ class ApiToken extends Model
         'token',
         'name',
         'last_used_at',
+        'expires_at',
     ];
 
     protected $casts = [
         'last_used_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     protected $hidden = [
@@ -42,6 +44,7 @@ class ApiToken extends Model
      * Create a new API token for a user.
      * Returns the model with a 'plain_token' attribute containing the unhashed token.
      * The plain token is shown only once and cannot be retrieved later.
+     * Token expires after 1 year by default.
      */
     public static function createForUser(User $user, string $name = 'Unity Mod'): self
     {
@@ -51,6 +54,7 @@ class ApiToken extends Model
             'user_id' => $user->id,
             'token' => self::hashToken($plainToken), // Store hash, not plain text
             'name' => $name,
+            'expires_at' => now()->addYear(),
         ]);
 
         // Attach plain token for one-time retrieval (not persisted)
@@ -61,18 +65,31 @@ class ApiToken extends Model
 
     /**
      * Find a token by its plain text value and mark it as used.
-     * Hashes the input before searching.
+     * Hashes the input before searching. Excludes expired tokens.
      */
     public static function findAndMarkUsed(string $plainToken): ?self
     {
         $hashedToken = self::hashToken($plainToken);
-        $apiToken = self::where('token', $hashedToken)->first();
+        $apiToken = self::where('token', $hashedToken)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->first();
 
         if ($apiToken) {
             $apiToken->update(['last_used_at' => now()]);
         }
 
         return $apiToken;
+    }
+
+    /**
+     * Check if this token has expired.
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
     /**

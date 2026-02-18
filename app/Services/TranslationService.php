@@ -174,7 +174,7 @@ class TranslationService
     {
         $normalized = $this->normalizeContent($content);
         $fileName = 'translations/' . uniqid() . '_' . $uuid . '.json';
-        Storage::disk('public')->put($fileName, $normalized);
+        Storage::disk('local')->put($fileName, $normalized);
 
         return $fileName;
     }
@@ -184,8 +184,8 @@ class TranslationService
      */
     public function deleteFile(?string $filePath): bool
     {
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            return Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('local')->exists($filePath)) {
+            return Storage::disk('local')->delete($filePath);
         }
 
         return false;

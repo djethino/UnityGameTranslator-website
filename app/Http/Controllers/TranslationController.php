@@ -168,6 +168,16 @@ class TranslationController extends Controller
 
     public function download(Translation $translation)
     {
+        // Security: branches are private to the Main owner
+        if ($translation->visibility === 'branch') {
+            $user = auth()->user();
+            $main = $translation->getMain();
+
+            if (!$user || !$main || (int) $main->user_id !== (int) $user->id) {
+                abort(403, 'Branch translations are only visible to the Main owner.');
+            }
+        }
+
         $translation->incrementDownloads();
 
         // Track download for analytics
@@ -191,7 +201,7 @@ class TranslationController extends Controller
             report($e);
         }
 
-        return Storage::disk('public')->download(
+        return Storage::disk('local')->download(
             $translation->file_path,
             'translations.json'
         );
@@ -321,7 +331,7 @@ class TranslationController extends Controller
         }
 
         // Delete file
-        Storage::disk('public')->delete($translation->file_path);
+        Storage::disk('local')->delete($translation->file_path);
 
         // Delete translation (forks will have parent_id set to null via onDelete)
         $translation->delete();
@@ -458,7 +468,7 @@ class TranslationController extends Controller
         $translation->save();
 
         // Return the file for download
-        return Storage::disk('public')->download(
+        return Storage::disk('local')->download(
             $translation->file_path,
             'translations.json',
             ['Content-Type' => 'application/json']
@@ -560,8 +570,10 @@ class TranslationController extends Controller
 
             $tokenContent = $mergeToken->local_content;
 
-            // Create web session for the user (so POST save will work)
+            // Create a scoped web session (needed for CSRF + POST save)
+            // Mark it so we can invalidate after merge is applied
             Auth::loginUsingId($mergeToken->user_id);
+            session(['merge_preview_only' => true, 'merge_preview_translation_id' => $translation->id]);
 
             // Delete token after use (one-time)
             $mergeToken->delete();
@@ -728,6 +740,19 @@ class TranslationController extends Controller
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),
         ]);
+
+        // If this was a token-based merge preview session, invalidate it
+        // to prevent the scoped session from being used for other actions
+        if (session('merge_preview_only')) {
+            session()->forget(['merge_preview_only', 'merge_preview_translation_id']);
+            Auth::logout();
+            session()->invalidate();
+            session()->regenerateToken();
+
+            return redirect()
+                ->route('home')
+                ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount]));
+        }
 
         return redirect()
             ->route('translations.mine')

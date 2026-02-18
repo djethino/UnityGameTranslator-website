@@ -54,7 +54,7 @@ class AdminController extends Controller
         $jsonContent = null;
         if ($report->translation && $report->translation->file_path) {
             try {
-                $content = Storage::disk('public')->get($report->translation->file_path);
+                $content = Storage::disk('local')->get($report->translation->file_path);
                 $jsonContent = json_decode($content, true);
             } catch (\Exception $e) {
                 $jsonContent = null;
@@ -186,7 +186,7 @@ class AdminController extends Controller
 
         if ($translation->file_path) {
             try {
-                $content = Storage::disk('public')->get($translation->file_path);
+                $content = Storage::disk('local')->get($translation->file_path);
                 $jsonContent = json_decode($content, true);
 
                 if (is_array($jsonContent)) {
@@ -296,7 +296,7 @@ class AdminController extends Controller
 
         // Delete file
         if ($translation->file_path) {
-            Storage::disk('public')->delete($translation->file_path);
+            Storage::disk('local')->delete($translation->file_path);
         }
 
         // Delete translation

@@ -23,6 +23,8 @@ class LocaleController extends Controller
             Auth::user()->update(['locale' => $locale]);
         }
 
-        return redirect()->back();
+        return redirect()->back()->setTargetUrl(
+            url()->previous(config('app.url'))
+        );
     }
 }

@@ -18,12 +18,12 @@ class User extends Authenticatable
         'provider_id',
         'avatar',
         'locale',
-        'banned_at',
-        'ban_reason',
     ];
 
     protected $guarded = [
         'is_admin',
+        'banned_at',
+        'ban_reason',
     ];
 
     protected $hidden = [
@@ -68,17 +68,15 @@ class User extends Authenticatable
 
     public function ban(string $reason = null): void
     {
-        $this->update([
-            'banned_at' => now(),
-            'ban_reason' => $reason,
-        ]);
+        $this->banned_at = now();
+        $this->ban_reason = $reason;
+        $this->save();
     }
 
     public function unban(): void
     {
-        $this->update([
-            'banned_at' => null,
-            'ban_reason' => null,
-        ]);
+        $this->banned_at = null;
+        $this->ban_reason = null;
+        $this->save();
     }
 }
