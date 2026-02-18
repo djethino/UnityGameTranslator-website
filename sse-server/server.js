@@ -93,7 +93,9 @@ async function fetchFromLaravel(path, bearerToken) {
         headers['Authorization'] = `Bearer ${bearerToken}`;
     }
 
+    console.log(`[Laravel] Fetching ${url}`);
     const response = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
+    console.log(`[Laravel] Response: ${response.status} ${response.statusText}`);
     const body = await response.json();
     return { status: response.status, body };
 }
