@@ -1,7 +1,7 @@
 import './bootstrap';
 
-// Alpine.js
-import Alpine from 'alpinejs';
+// Alpine.js (CSP build — no eval/Function, compatible with strict CSP)
+import Alpine from '@alpinejs/csp';
 
 // Alpine components
 import mergeTable from './components/merge-table.js';

@@ -3,10 +3,10 @@
  * Handles selection, editing, deletion, tag changes, and tracking of translation modifications.
  * Persists state to sessionStorage to survive page navigation (pagination, search, sort).
  */
-export default function mergeTable(uuid, isMain = true) {
+export default function mergeTable() {
     return {
-        uuid: uuid,
-        isMain: isMain, // true if user is Main owner, false for branches
+        uuid: '',
+        isMain: true, // true if user is Main owner, false for branches
         selections: {},
         deletions: {},
         tagChanges: {}, // { key: { newTag: 'S', originalTag: 'A', value: '...' } }
@@ -35,6 +35,10 @@ export default function mergeTable(uuid, isMain = true) {
         },
 
         init() {
+            // Read parameters from data attributes (CSP-safe, no eval)
+            this.uuid = this.$el.dataset.uuid || '';
+            this.isMain = this.$el.dataset.isMain !== 'false';
+
             // Restore state from sessionStorage
             this.restoreState();
 
@@ -421,6 +425,14 @@ export default function mergeTable(uuid, isMain = true) {
             delete this.tagChanges[key];
             this.updateHiddenInputs();
             this.saveState();
+        },
+
+        /**
+         * Cancel a tag change and close the dropdown (CSP-safe single method call).
+         */
+        cancelAndCloseTagDropdown(key) {
+            this.cancelTagChange(key);
+            this.closeTagDropdown();
         },
 
         /**

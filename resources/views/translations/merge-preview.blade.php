@@ -3,7 +3,7 @@
 @section('title', __('merge_preview.title') . ' - ' . $translation->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergePreview()">
+<div class="container mx-auto px-4 py-8" x-data="mergePreview">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -72,7 +72,7 @@
                 <p class="text-sm text-gray-400">{{ __('merge_preview.different') }}</p>
             </div>
             <div class="bg-gray-800 rounded-lg p-4 border border-purple-700 text-center">
-                <p class="text-2xl font-bold text-purple-400" x-text="Object.keys(editedValues).length"></p>
+                <p class="text-2xl font-bold text-purple-400" x-text="editedCount"></p>
                 <p class="text-sm text-gray-400">{{ __('merge_preview.edited') }}</p>
             </div>
         </div>
@@ -296,8 +296,8 @@
             <div class="text-sm text-gray-400">
                 <span x-show="totalChanges > 0">
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
-                    <span x-show="Object.keys(editedValues).length > 0" class="ml-2 text-purple-400">
-                        (<span x-text="Object.keys(editedValues).length"></span> {{ __('merge_preview.edited_manually') }})
+                    <span x-show="editedCount > 0" class="ml-2 text-purple-400">
+                        (<span x-text="editedCount"></span> {{ __('merge_preview.edited_manually') }})
                     </span>
                 </span>
                 <span x-show="totalChanges === 0" class="text-gray-500">
@@ -375,7 +375,7 @@
     {{-- Tag Dropdown Menu (branches can only Skip) --}}
     <div x-show="tagDropdown.open" x-cloak
         class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
-        :style="`left: ${tagDropdown.x}px; top: ${tagDropdown.y}px;`"
+        :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
         @click.outside="closeTagDropdown()"
         @keydown.escape="closeTagDropdown()">
 
@@ -399,7 +399,7 @@
         <template x-if="hasTagChange(tagDropdown.key)">
             <div class="border-t border-gray-700 mt-1 pt-1">
                 <button type="button"
-                    @click="cancelTagChange(tagDropdown.key); closeTagDropdown()"
+                    @click="cancelAndCloseTagDropdown(tagDropdown.key)"
                     class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
                     <i class="fas fa-undo text-xs"></i>
                     <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
@@ -508,8 +508,8 @@ function normalizeLineEndings(text) {
     return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
-function mergePreview() {
-    return {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('mergePreview', () => ({
         loaded: false,
         error: null,
         saving: false,
@@ -1035,6 +1035,15 @@ function mergePreview() {
             delete this.tagChanges[key];
         },
 
+        cancelAndCloseTagDropdown(key) {
+            this.cancelTagChange(key);
+            this.closeTagDropdown();
+        },
+
+        get editedCount() {
+            return Object.keys(this.editedValues).length;
+        },
+
         get tagChangeCount() {
             return Object.keys(this.tagChanges).length;
         },
@@ -1191,7 +1200,7 @@ function mergePreview() {
             // Submit the form
             document.getElementById('saveForm').submit();
         }
-    };
-}
+    }));
+});
 </script>
 @endsection

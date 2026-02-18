@@ -35,8 +35,8 @@ class ContentSecurityPolicy
             // Default: only allow same-origin
             "default-src 'self'",
 
-            // Scripts: self + nonce for inline scripts + unsafe-eval (required for Alpine.js) + CDN for Chart.js
-            "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' https://cdn.jsdelivr.net",
+            // Scripts: self + nonce for inline scripts + CDN for Chart.js (no unsafe-eval: Alpine.js CSP build)
+            "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net",
 
             // Styles: self + inline (for dynamic styles in Blade templates)
             "style-src 'self' 'unsafe-inline'",

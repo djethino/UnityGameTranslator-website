@@ -3,7 +3,7 @@
 @section('title', __('merge.title') . ' - ' . $main->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergeTable('{{ $uuid }}', true)" @click.away="closeTagDropdown()">
+<div class="container mx-auto px-4 py-8" x-data="mergeTable" data-uuid="{{ $uuid }}" data-is-main="true" @click.away="closeTagDropdown()">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -462,7 +462,7 @@
     {{-- Tag Dropdown Menu --}}
     <div x-show="tagDropdown.open" x-cloak
         class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
-        :style="`left: ${tagDropdown.x}px; top: ${tagDropdown.y}px;`"
+        :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
         @click.outside="closeTagDropdown()"
         @keydown.escape="closeTagDropdown()">
 
@@ -506,7 +506,7 @@
         <template x-if="hasTagChange(tagDropdown.key)">
             <div class="border-t border-gray-700 mt-1 pt-1">
                 <button type="button"
-                    @click="cancelTagChange(tagDropdown.key); closeTagDropdown()"
+                    @click="cancelAndCloseTagDropdown(tagDropdown.key)"
                     class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
                     <i class="fas fa-undo text-xs"></i>
                     <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
