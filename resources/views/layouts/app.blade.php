@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'UnityGameTranslator - Community Game Translations')</title>
     <meta name="description" content="@yield('description', 'Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.')">
-    <meta name="keywords" content="Unity game translation, automatic game translation, AI game localization, free game translation, Unity mod, Ollama translation">
+    <meta name="keywords" content="Unity game translation, automatic game translation, AI game localization, free game translation, Unity mod, OpenAI compatible, local AI translation">
     <link rel="canonical" href="{{ url()->current() }}">
 
     <!-- Favicon -->

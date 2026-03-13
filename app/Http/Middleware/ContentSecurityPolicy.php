@@ -47,7 +47,7 @@ class ContentSecurityPolicy
             // Fonts: self only (FontAwesome bundled locally)
             "font-src 'self'",
 
-            // Connect: self + local Ollama (for future mod integration)
+            // Connect: self only (mod connects to user's own AI server, not through website)
             "connect-src 'self'",
 
             // Forms: only submit to self

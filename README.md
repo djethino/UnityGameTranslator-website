@@ -54,7 +54,7 @@ Each translation entry has a quality tag stored in the JSON:
 |-----|------|-------|-------------|
 | **H** | Human | 3 pts | Written by a human |
 | **V** | Validated | 2 pts | AI translation approved by human |
-| **A** | AI | 1 pt | Translated by Ollama |
+| **A** | AI | 1 pt | Translated by AI |
 
 > **Note:** Entries with tag `H` but empty value are displayed as "C" (Capture) and count as 0 pts until translated.
 

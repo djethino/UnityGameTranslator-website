@@ -302,7 +302,7 @@
                 </div>
             </div>
 
-            <!-- Step 3: Ollama (Optional) -->
+            <!-- Step 3: AI Translation (Optional) -->
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 class="text-lg font-semibold mb-4">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">3</span>
@@ -312,17 +312,32 @@
 
                 <p class="text-gray-300 mb-4">{{ __('docs.enable_ai_desc') }}</p>
 
-                <ol class="text-gray-300 space-y-3 list-decimal list-inside mb-4">
-                    <li>{{ __('docs.install_ollama') }}: <a href="https://ollama.ai" target="_blank" class="text-purple-400 hover:underline">ollama.ai</a></li>
-                    <li>{{ __('docs.download_model') }}: <code class="bg-gray-700 px-2 py-1 rounded text-sm">ollama pull qwen3:8b</code></li>
-                    <li>{{ __('docs.enable_in_wizard') }}</li>
-                </ol>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-400 mb-2"><i class="fas fa-desktop mr-2"></i>{{ __('docs.ai_local_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_local_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://ollama.ai" target="_blank" class="text-purple-400 hover:underline">ollama.ai</a>
+                            <a href="https://lmstudio.ai" target="_blank" class="text-purple-400 hover:underline">lmstudio.ai</a>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-400 mb-2"><i class="fas fa-cloud mr-2"></i>{{ __('docs.ai_cloud_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_cloud_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://groq.com" target="_blank" class="text-purple-400 hover:underline">groq.com</a>
+                            <a href="https://openrouter.ai" target="_blank" class="text-purple-400 hover:underline">openrouter.ai</a>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-gray-300 text-sm mb-4">{{ __('docs.ai_setup_steps') }}</p>
 
                 <div class="callout callout-tip">
                     <p class="text-sm text-gray-300">
                         <i class="fas fa-lightbulb text-blue-400 mr-2"></i>
-                        <strong>{{ __('docs.ollama_tip_title') }}</strong><br>
-                        {{ __('docs.ollama_tip_content') }}
+                        <strong>{{ __('docs.ai_tip_title') }}</strong><br>
+                        {{ __('docs.ai_tip_content') }}
                     </p>
                 </div>
             </div>
@@ -641,10 +656,11 @@
                 <p class="text-gray-300 mb-4">{{ __('docs.config_location') }}</p>
 
                 <pre class="bg-gray-900 rounded p-4 overflow-x-auto text-sm mb-6"><code class="text-gray-300">{
-  "ollama_url": "http://localhost:11434",
-  "model": "qwen3:8b",
+  "ai_url": "http://localhost:11434",
+  "ai_model": "",
+  "ai_api_key": null,
+  "enable_ai": false,
   "target_language": "auto",
-  "enable_ollama": false,
   "settings_hotkey": "Ctrl+F10",
   "online_mode": true,
   "sync": {
@@ -670,14 +686,24 @@
                                 <td class="px-4 py-2">{{ __('docs.config_target_lang') }}</td>
                             </tr>
                             <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2"><code class="text-purple-300">enable_ollama</code></td>
+                                <td class="px-4 py-2"><code class="text-purple-300">enable_ai</code></td>
                                 <td class="px-4 py-2"><code>false</code></td>
-                                <td class="px-4 py-2">{{ __('docs.config_enable_ollama') }}</td>
+                                <td class="px-4 py-2">{{ __('docs.config_enable_ai') }}</td>
                             </tr>
                             <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2"><code class="text-purple-300">model</code></td>
-                                <td class="px-4 py-2"><code>"qwen3:8b"</code></td>
-                                <td class="px-4 py-2">{{ __('docs.config_model') }}</td>
+                                <td class="px-4 py-2"><code class="text-purple-300">ai_url</code></td>
+                                <td class="px-4 py-2"><code>"http://localhost:11434"</code></td>
+                                <td class="px-4 py-2">{{ __('docs.config_ai_url') }}</td>
+                            </tr>
+                            <tr class="border-t border-gray-700">
+                                <td class="px-4 py-2"><code class="text-purple-300">ai_model</code></td>
+                                <td class="px-4 py-2"><code>""</code></td>
+                                <td class="px-4 py-2">{{ __('docs.config_ai_model') }}</td>
+                            </tr>
+                            <tr class="border-t border-gray-700">
+                                <td class="px-4 py-2"><code class="text-purple-300">ai_api_key</code></td>
+                                <td class="px-4 py-2"><code>null</code></td>
+                                <td class="px-4 py-2">{{ __('docs.config_ai_api_key') }}</td>
                             </tr>
                             <tr class="border-t border-gray-700">
                                 <td class="px-4 py-2"><code class="text-purple-300">settings_hotkey</code></td>
@@ -722,13 +748,13 @@
 
                     <div>
                         <h3 class="font-semibold text-yellow-400 mb-2">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>{{ __('docs.ollama_not_translating') }}
+                            <i class="fas fa-exclamation-triangle mr-2"></i>{{ __('docs.ai_not_translating') }}
                         </h3>
-                        <p class="text-gray-300 text-sm mb-2">{{ __('docs.ollama_not_translating_desc') }}</p>
+                        <p class="text-gray-300 text-sm mb-2">{{ __('docs.ai_not_translating_desc') }}</p>
                         <ul class="text-sm text-gray-400 list-disc list-inside">
-                            <li>{{ __('docs.ollama_tip1') }}: <code class="bg-gray-700 px-1 rounded">ollama serve</code></li>
-                            <li>{{ __('docs.ollama_tip2') }}: <code class="bg-gray-700 px-1 rounded">ollama pull qwen3:8b</code></li>
-                            <li>{{ __('docs.ollama_tip3') }}</li>
+                            <li>{{ __('docs.ai_tip1') }}</li>
+                            <li>{{ __('docs.ai_tip2') }}</li>
+                            <li>{{ __('docs.ai_tip3') }}</li>
                         </ul>
                     </div>
 
