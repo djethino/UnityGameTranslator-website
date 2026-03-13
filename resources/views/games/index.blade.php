@@ -89,7 +89,7 @@
                             <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
-                                <i class="fas fa-gamepad text-4xl text-gray-500"></i>
+                                <i class="fas fa-gamepad text-4xl text-gray-400"></i>
                             </div>
                         @endif
                         <!-- Badges top -->

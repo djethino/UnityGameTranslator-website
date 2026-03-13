@@ -140,11 +140,14 @@
                 </ul>
                 <!-- Screenshot -->
                 <div class="mt-4 rounded-lg overflow-hidden border border-gray-700">
-                    <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
-                         alt="{{ __('home.mod_screenshot_alt') }}"
-                         class="w-full h-auto"
-                         width="551" height="434"
-                         loading="lazy">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/ModWizard1.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
+                             alt="{{ __('home.mod_screenshot_alt') }}"
+                             class="w-full h-auto"
+                             width="551" height="434"
+                             loading="lazy">
+                    </picture>
                 </div>
             </div>
 
@@ -200,7 +203,7 @@
                         <span class="px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white" title="Skip">S</span>
                     </div>
                     <p class="text-xs text-gray-400 text-center">{{ __('home.quality_desc') }}</p>
-                    <p class="text-xs text-gray-500 text-center mt-2">{{ __('home.quality_capture') }}</p>
+                    <p class="text-xs text-gray-400 text-center mt-2">{{ __('home.quality_capture') }}</p>
                 </div>
             </div>
 
@@ -245,11 +248,14 @@
                 </ul>
                 <!-- Screenshot -->
                 <div class="mt-4 rounded-lg overflow-hidden border border-gray-700">
-                    <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
-                         alt="{{ __('home.website_screenshot_alt') }}"
-                         class="w-full h-auto"
-                         width="1421" height="1276"
-                         loading="lazy">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
+                             alt="{{ __('home.website_screenshot_alt') }}"
+                             class="w-full h-auto"
+                             width="1421" height="1276"
+                             loading="lazy">
+                    </picture>
                 </div>
             </div>
         </div>
@@ -290,7 +296,7 @@
                     <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-12 h-16 object-cover rounded">
                     @else
                     <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                        <i class="fas fa-gamepad text-gray-500"></i>
+                        <i class="fas fa-gamepad text-gray-400"></i>
                     </div>
                     @endif
                     <div class="flex-1 min-w-0">
@@ -310,7 +316,7 @@
                                 <span class="text-base" title="{{ $lang }}">@langflag($lang)</span>
                             @endforeach
                             @if($remaining > 0)
-                                <span class="text-xs text-gray-500 ml-1">+{{ $remaining }}</span>
+                                <span class="text-xs text-gray-400 ml-1">+{{ $remaining }}</span>
                             @endif
                         </div>
                         @endif
@@ -337,7 +343,7 @@
                     <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">
                     @else
                     <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                        <i class="fas fa-gamepad text-gray-500"></i>
+                        <i class="fas fa-gamepad text-gray-400"></i>
                     </div>
                     @endif
                     <div class="flex-1 min-w-0">
@@ -347,12 +353,12 @@
                             <i class="fas fa-arrow-right text-xs text-gray-600"></i>
                             <span>@langflag($translation->target_language)</span>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1">
+                        <div class="text-xs text-gray-400 mt-1">
                             {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}
                         </div>
                         <div class="mt-2">
                             <x-progress-bar :translation="$translation" />
-                            <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                            <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
                                 <span class="flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                                     {{ $translation->human_count }}

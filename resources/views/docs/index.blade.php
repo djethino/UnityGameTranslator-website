@@ -354,12 +354,15 @@
 
                 <!-- Wizard Screenshot -->
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
-                         alt="{{ __('docs.wizard_screenshot_alt') }}"
-                         class="doc-img doc-img-mod block mx-auto"
-                         style="max-width: 500px;"
-                         width="551" height="434"
-                         onclick="openLightbox(this.src)">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/ModWizard1.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
+                             alt="{{ __('docs.wizard_screenshot_alt') }}"
+                             class="doc-img doc-img-mod block mx-auto"
+                             style="max-width: 500px;"
+                             width="551" height="434"
+                             onclick="openLightbox(this.src)">
+                    </picture>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
 
@@ -543,11 +546,14 @@
 
                 <!-- Merge Screenshot -->
                 <figure class="mb-4">
-                    <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
-                         alt="{{ __('docs.merge_screenshot_alt') }}"
-                         class="doc-img doc-img-web"
-                         width="1421" height="1276"
-                         onclick="openLightbox(this.src)">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
+                             alt="{{ __('docs.merge_screenshot_alt') }}"
+                             class="doc-img doc-img-web"
+                             width="1421" height="1276"
+                             onclick="openLightbox(this.src)">
+                    </picture>
                     <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.merge_caption') }}</figcaption>
                 </figure>
 
@@ -583,19 +589,25 @@
                 <!-- Screenshots side by side -->
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <figure class="text-center">
-                        <img src="{{ asset('images/screenshots/ModConnect.png') }}"
-                             alt="{{ __('docs.sync.mod_connect_alt') }}"
-                             class="doc-img doc-img-mod mx-auto"
-                             width="823" height="734"
-                             onclick="openLightbox(this.src)">
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/ModConnect.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/ModConnect.png') }}"
+                                 alt="{{ __('docs.sync.mod_connect_alt') }}"
+                                 class="doc-img doc-img-mod mx-auto"
+                                 width="823" height="734"
+                                 onclick="openLightbox(this.src)">
+                        </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
                     </figure>
                     <figure class="text-center">
-                        <img src="{{ asset('images/screenshots/WebConnect.png') }}"
-                             alt="{{ __('docs.sync.web_connect_alt') }}"
-                             class="doc-img doc-img-web"
-                             width="617" height="583"
-                             onclick="openLightbox(this.src)">
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/WebConnect.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/WebConnect.png') }}"
+                                 alt="{{ __('docs.sync.web_connect_alt') }}"
+                                 class="doc-img doc-img-web"
+                                 width="617" height="583"
+                                 onclick="openLightbox(this.src)">
+                        </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.web_connect_caption') }}</figcaption>
                     </figure>
                 </div>

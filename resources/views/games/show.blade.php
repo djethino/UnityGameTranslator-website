@@ -77,7 +77,7 @@
             <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded-lg shadow-lg flex-shrink-0">
         @else
             <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-gamepad text-2xl sm:text-3xl text-gray-500"></i>
+                <i class="fas fa-gamepad text-2xl sm:text-3xl text-gray-400"></i>
             </div>
         @endif
         <div class="min-w-0">
@@ -329,9 +329,9 @@
                                     <div class="flex items-center gap-4 text-sm">
                                         <span class="bg-gray-700 text-gray-400 px-2 py-1 rounded text-xs">v{{ $versions->count() - $vIndex - 1 }}</span>
                                         <span class="text-gray-400">{{ $version->created_at->format('M d, Y') }}</span>
-                                        <span class="text-gray-500">{{ number_format($version->line_count) }} lines</span>
+                                        <span class="text-gray-400">{{ number_format($version->line_count) }} lines</span>
                                         @if($version->type)
-                                            <span class="text-gray-500">
+                                            <span class="text-gray-400">
                                                 @if($version->type === 'ai')
                                                     <i class="fas fa-robot"></i>
                                                 @elseif($version->type === 'human')
@@ -342,7 +342,7 @@
                                             </span>
                                         @endif
                                         @if($version->notes)
-                                            <span class="text-gray-500 truncate max-w-xs" title="{{ $version->notes }}">{{ Str::limit($version->notes, 50) }}</span>
+                                            <span class="text-gray-400 truncate max-w-xs" title="{{ $version->notes }}">{{ Str::limit($version->notes, 50) }}</span>
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-3">
@@ -377,8 +377,8 @@
                                             @endif
                                             <span class="text-gray-300">{{ $fork->user->name }}</span>
                                         </span>
-                                        <span class="text-gray-500">{{ $fork->created_at->format('M d, Y') }}</span>
-                                        <span class="text-gray-500">{{ number_format($fork->line_count) }} lines</span>
+                                        <span class="text-gray-400">{{ $fork->created_at->format('M d, Y') }}</span>
+                                        <span class="text-gray-400">{{ number_format($fork->line_count) }} lines</span>
                                         @if($fork->type)
                                             @if($fork->type === 'ai')
                                                 <span class="bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded text-xs"><i class="fas fa-robot"></i></span>
@@ -389,7 +389,7 @@
                                             @endif
                                         @endif
                                         @if($fork->notes)
-                                            <span class="text-gray-500 truncate max-w-xs" title="{{ $fork->notes }}">{{ Str::limit($fork->notes, 50) }}</span>
+                                            <span class="text-gray-400 truncate max-w-xs" title="{{ $fork->notes }}">{{ Str::limit($fork->notes, 50) }}</span>
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-3">

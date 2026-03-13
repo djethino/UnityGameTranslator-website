@@ -148,12 +148,12 @@
                                 @endif
                                 <div class="border-t border-gray-700 my-1"></div>
                                 <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
-                                    <i class="fas fa-cog w-5 mr-3 text-gray-500"></i> {{ __('nav.profile') }}
+                                    <i class="fas fa-cog w-5 mr-3 text-gray-400"></i> {{ __('nav.profile') }}
                                 </a>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button type="submit" class="flex items-center w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
-                                        <i class="fas fa-sign-out-alt w-5 mr-3 text-gray-500"></i> {{ __('nav.logout') }}
+                                        <i class="fas fa-sign-out-alt w-5 mr-3 text-gray-400"></i> {{ __('nav.logout') }}
                                     </button>
                                 </form>
                             </div>

@@ -36,7 +36,8 @@ class ContentSecurityPolicy
             "default-src 'self'",
 
             // Scripts: self + nonce for inline scripts (no unsafe-eval: Alpine.js CSP build, Chart.js bundled via Vite)
-            "script-src 'self' 'nonce-{$nonce}'",
+            // 'unsafe-inline' is ignored by browsers that support nonce, but provides fallback for older browsers
+            "script-src 'self' 'unsafe-inline' 'nonce-{$nonce}'",
 
             // Styles: self + inline (for dynamic styles in Blade templates)
             "style-src 'self' 'unsafe-inline'",
