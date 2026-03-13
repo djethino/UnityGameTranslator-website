@@ -20,7 +20,7 @@
 
     <!-- Hreflang for multilingual SEO -->
     @php
-        $currentPath = request()->path();
+        $currentPath = trim(request()->path(), '/');
         $supportedLocales = array_keys(config('locales.supported', []));
         // Remove existing locale prefix if present
         $pathWithoutLocale = $currentPath;
@@ -71,7 +71,7 @@
                 <!-- Logo + Desktop Nav -->
                 <div class="flex items-center">
                     <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400 flex items-center">
-                        <img src="/logo.svg" alt="UGT" class="w-8 h-8 mr-2"><span class="hidden sm:inline">UnityGameTranslator</span><span class="sm:hidden">UGT</span>
+                        <img src="/logo.svg" alt="" class="w-8 h-8 mr-2"><span class="hidden sm:inline">UnityGameTranslator</span><span class="sm:hidden">UGT</span>
                     </a>
                     <!-- Desktop Navigation -->
                     <div class="hidden md:flex ml-10 space-x-4">
@@ -179,7 +179,7 @@
                         </div>
                     </div>
                     <!-- Hamburger Button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white p-2 rounded-lg transition">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white p-2 rounded-lg transition" aria-label="Menu">
                         <i class="fas fa-bars text-xl" x-show="!mobileMenuOpen"></i>
                         <i class="fas fa-times text-xl" x-show="mobileMenuOpen" x-cloak></i>
                     </button>
@@ -282,9 +282,9 @@
                 <!-- Logo & Description -->
                 <div class="text-center md:text-left">
                     <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400 inline-flex items-center">
-                        <img src="/logo.svg" alt="UGT" class="w-8 h-8 mr-2">UnityGameTranslator
+                        <img src="/logo.svg" alt="" class="w-8 h-8 mr-2">UnityGameTranslator
                     </a>
-                    <p class="text-gray-500 text-sm mt-2">{{ __('footer.tagline') }}</p>
+                    <p class="text-gray-400 text-sm mt-2">{{ __('footer.tagline') }}</p>
                 </div>
 
                 <!-- CTA & Links -->
@@ -308,7 +308,7 @@
 
                 <!-- Legal Links -->
                 <div class="text-center md:text-right">
-                    <div class="flex flex-wrap justify-center md:justify-end gap-4 text-sm text-gray-500">
+                    <div class="flex flex-wrap justify-center md:justify-end gap-4 text-sm text-gray-400">
                         <a href="{{ route('legal.mentions') }}" class="hover:text-gray-300 transition">{{ __('footer.legal') }}</a>
                         <a href="{{ route('legal.privacy') }}" class="hover:text-gray-300 transition">{{ __('footer.privacy') }}</a>
                         <a href="{{ route('legal.terms') }}" class="hover:text-gray-300 transition">{{ __('footer.terms') }}</a>
@@ -318,7 +318,7 @@
 
             <!-- Copyright -->
             <div class="border-t border-gray-700 mt-8 pt-6 text-center">
-                <p class="text-gray-500 text-sm">© {{ date('Y') }} ASymptOmatik Games. {{ __('footer.rights') }}</p>
+                <p class="text-gray-400 text-sm">© {{ date('Y') }} ASymptOmatik Games. {{ __('footer.rights') }}</p>
             </div>
         </div>
     </footer>

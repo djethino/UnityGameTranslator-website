@@ -358,6 +358,7 @@
                          alt="{{ __('docs.wizard_screenshot_alt') }}"
                          class="doc-img doc-img-mod block mx-auto"
                          style="max-width: 500px;"
+                         width="551" height="434"
                          onclick="openLightbox(this.src)">
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
@@ -545,6 +546,7 @@
                     <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
                          alt="{{ __('docs.merge_screenshot_alt') }}"
                          class="doc-img doc-img-web"
+                         width="1421" height="1276"
                          onclick="openLightbox(this.src)">
                     <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.merge_caption') }}</figcaption>
                 </figure>
@@ -584,6 +586,7 @@
                         <img src="{{ asset('images/screenshots/ModConnect.png') }}"
                              alt="{{ __('docs.sync.mod_connect_alt') }}"
                              class="doc-img doc-img-mod mx-auto"
+                             width="823" height="734"
                              onclick="openLightbox(this.src)">
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
                     </figure>
@@ -591,6 +594,7 @@
                         <img src="{{ asset('images/screenshots/WebConnect.png') }}"
                              alt="{{ __('docs.sync.web_connect_alt') }}"
                              class="doc-img doc-img-web"
+                             width="617" height="583"
                              onclick="openLightbox(this.src)">
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.web_connect_caption') }}</figcaption>
                     </figure>

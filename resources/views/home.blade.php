@@ -143,6 +143,7 @@
                     <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
                          alt="{{ __('home.mod_screenshot_alt') }}"
                          class="w-full h-auto"
+                         width="551" height="434"
                          loading="lazy">
                 </div>
             </div>
@@ -247,6 +248,7 @@
                     <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
                          alt="{{ __('home.website_screenshot_alt') }}"
                          class="w-full h-auto"
+                         width="1421" height="1276"
                          loading="lazy">
                 </div>
             </div>
