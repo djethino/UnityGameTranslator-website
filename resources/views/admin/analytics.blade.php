@@ -240,7 +240,7 @@
     </p>
 </div>
 
-<script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite('resources/js/admin-charts.js')
 <script nonce="{{ $cspNonce }}">
     const chartColors = {
         purple: 'rgb(168, 85, 247)',

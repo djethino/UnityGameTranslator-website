@@ -35,8 +35,8 @@ class ContentSecurityPolicy
             // Default: only allow same-origin
             "default-src 'self'",
 
-            // Scripts: self + nonce for inline scripts + CDN for Chart.js (no unsafe-eval: Alpine.js CSP build)
-            "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net",
+            // Scripts: self + nonce for inline scripts (no unsafe-eval: Alpine.js CSP build, Chart.js bundled via Vite)
+            "script-src 'self' 'nonce-{$nonce}'",
 
             // Styles: self + inline (for dynamic styles in Blade templates)
             "style-src 'self' 'unsafe-inline'",
@@ -71,6 +71,7 @@ class ContentSecurityPolicy
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
 
         return $response;
     }

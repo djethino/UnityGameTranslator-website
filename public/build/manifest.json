@@ -16,13 +16,19 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Cb_S0w81.css",
+    "file": "assets/app-DjhTxkoD.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
     "names": [
       "app.css"
     ]
+  },
+  "resources/js/admin-charts.js": {
+    "file": "assets/admin-charts-Ct78DFbm.js",
+    "name": "admin-charts",
+    "src": "resources/js/admin-charts.js",
+    "isEntry": true
   },
   "resources/js/app.js": {
     "file": "assets/app-BsrLlGIM.js",
