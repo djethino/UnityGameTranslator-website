@@ -318,7 +318,7 @@
 
             <!-- Copyright -->
             <div class="border-t border-gray-700 mt-8 pt-6 text-center">
-                <p class="text-gray-400 text-sm">© {{ date('Y') }} ASymptOmatik Games. {{ __('footer.rights') }}</p>
+                <p class="text-gray-400 text-sm">© {{ date('Y') }} <a href="https://asymptomatikgames.com" class="text-gray-400 hover:text-purple-400 transition-colors">ASymptOmatik Games</a>. {{ __('footer.rights') }}</p>
             </div>
         </div>
     </footer>
