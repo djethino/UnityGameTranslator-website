@@ -27,6 +27,7 @@ class Translation extends Model
         'file_path',
         'file_uuid',
         'file_hash',
+        'font_config',
     ];
 
     protected $casts = [
@@ -42,6 +43,7 @@ class Translation extends Model
         'main_rating' => 'integer',
         'download_count' => 'integer',
         'vote_count' => 'integer',
+        'font_config' => 'array',
     ];
 
     /**

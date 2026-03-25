@@ -42,8 +42,8 @@ class TranslationService
         // Normalize line endings first
         $content = $this->normalizeContent($content);
 
-        // Parse JSON (depth 3: root → key → {v, t})
-        $json = json_decode($content, true, 3);
+        // Parse JSON (depth 5: root → _fonts → fontName → {enabled, fallback, type, scale})
+        $json = json_decode($content, true, 5);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \InvalidArgumentException('Invalid JSON content: ' . json_last_error_msg());
@@ -76,6 +76,7 @@ class TranslationService
             'line_count' => $this->countLines($json),
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
+            'font_config' => $this->extractFontConfig($json),
             'normalized_content' => $content,
         ];
     }
@@ -133,6 +134,32 @@ class TranslationService
             array_keys($json),
             fn($k) => !str_starts_with($k, '_')
         ));
+    }
+
+    /**
+     * Extract font configuration from _fonts metadata.
+     * Returns null if no font config present, or an associative array of font settings.
+     */
+    public function extractFontConfig(array $json): ?array
+    {
+        if (!isset($json['_fonts']) || !is_array($json['_fonts'])) {
+            return null;
+        }
+
+        $config = [];
+        foreach ($json['_fonts'] as $fontName => $settings) {
+            if (!is_array($settings)) {
+                continue;
+            }
+            $config[$fontName] = [
+                'enabled' => $settings['enabled'] ?? true,
+                'fallback' => $settings['fallback'] ?? null,
+                'type' => $settings['type'] ?? null,
+                'scale' => $settings['scale'] ?? 1.0,
+            ];
+        }
+
+        return !empty($config) ? $config : null;
     }
 
     /**

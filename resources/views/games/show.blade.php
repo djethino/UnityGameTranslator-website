@@ -158,7 +158,8 @@
             @endphp
 
             @if($translation)
-            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden" x-data="{ showVersions: false, showForks: false }">
+            @php $hasFontConfig = !empty($translation->font_config); @endphp
+            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden" x-data="{ showVersions: false, showForks: false, showFonts: false }">
                 <!-- Main Translation Card -->
                 <div class="p-6">
                     <div class="flex justify-between items-start gap-4">
@@ -174,7 +175,11 @@
                                     <span>{{ $translation->target_language }}</span>
                                 </span>
 
-                                @if($translation->type === 'ai')
+                                @if($translation->effective_lines === 0 && ($translation->capture_count ?? 0) > 0)
+                                    <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" title="{{ __('progress.capture_only_desc') }}">
+                                        <i class="fas fa-camera"></i> {{ __('progress.capture_only') }}
+                                    </span>
+                                @elseif($translation->type === 'ai')
                                     <span class="bg-blue-800 text-blue-200 px-2 py-1 rounded text-xs" title="{{ __('translation.type.ai') }}">
                                         <i class="fas fa-robot"></i> {{ __('translation.type.ai_short') }}
                                     </span>
@@ -234,6 +239,12 @@
                                         <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
                                         {{ __('progress.ai') }}: {{ $translation->ai_count }}
                                     </span>
+                                    @if(($translation->capture_count ?? 0) > 0)
+                                        <span class="flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                                            {{ __('progress.capture') }}: {{ $translation->capture_count }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
@@ -297,8 +308,15 @@
                 </div>
 
                 <!-- Expandable Sections Toggle -->
-                @if($hasVersionHistory || $hasForks)
-                <div class="border-t border-gray-700 px-6 py-3 bg-gray-750 flex gap-4">
+                @if($hasVersionHistory || $hasForks || $hasFontConfig)
+                <div class="border-t border-gray-700 px-6 py-3 bg-gray-750 flex gap-4 flex-wrap">
+                    @if($hasFontConfig)
+                        <button @click="showFonts = !showFonts" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition" title="{{ __('fonts.tooltip') }}">
+                            <i class="fas fa-font"></i>
+                            <span>{{ trans_choice('fonts.configured', count($translation->font_config)) }}</span>
+                            <i class="fas fa-chevron-down text-xs transition-transform" :class="showFonts && 'rotate-180'"></i>
+                        </button>
+                    @endif
                     @if($hasVersionHistory)
                         <button @click="showVersions = !showVersions" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
                             <i class="fas fa-history"></i>
@@ -313,6 +331,56 @@
                             <i class="fas fa-chevron-down text-xs transition-transform" :class="showForks && 'rotate-180'"></i>
                         </button>
                     @endif
+                </div>
+                @endif
+
+                <!-- Font Configuration (Expandable) -->
+                @if($hasFontConfig)
+                <div x-show="showFonts" x-collapse class="border-t border-gray-700">
+                    <div class="px-6 py-4 bg-gray-850">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h4 class="text-sm font-medium text-gray-400">
+                                <i class="fas fa-font mr-2"></i>{{ trans_choice('fonts.configured', count($translation->font_config)) }}
+                            </h4>
+                            <span class="text-xs text-gray-500 italic" title="{{ __('fonts.tooltip') }}">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+                        <div class="space-y-1.5">
+                            @foreach($translation->font_config as $fontName => $settings)
+                                <div class="flex items-center gap-3 p-2 bg-gray-800 rounded-lg border border-gray-700 text-sm {{ !($settings['enabled'] ?? true) ? 'opacity-50' : '' }}">
+                                    {{-- Font name --}}
+                                    <span class="font-medium text-gray-200 min-w-0 truncate" title="{{ $fontName }}">{{ $fontName }}</span>
+
+                                    {{-- Type badge --}}
+                                    @if(!empty($settings['type']))
+                                        <span class="bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded text-xs flex-shrink-0">{{ $settings['type'] }}</span>
+                                    @endif
+
+                                    {{-- Fallback arrow + name --}}
+                                    @if(!empty($settings['fallback']))
+                                        <span class="text-gray-500 flex-shrink-0"><i class="fas fa-arrow-right text-xs"></i></span>
+                                        <span class="text-cyan-400 truncate" title="{{ $settings['fallback'] }}">{{ $settings['fallback'] }}</span>
+                                    @endif
+
+                                    {{-- Scale if non-default --}}
+                                    @if(isset($settings['scale']) && abs($settings['scale'] - 1.0) > 0.001)
+                                        <span class="bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
+                                            {{ __('fonts.scale') }} &times;{{ number_format($settings['scale'], 1) }}
+                                        </span>
+                                    @endif
+
+                                    {{-- Disabled indicator --}}
+                                    @if(!($settings['enabled'] ?? true))
+                                        <span class="bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
+                                            <i class="fas fa-ban mr-1"></i>{{ __('fonts.disabled') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500 italic">{{ __('fonts.tooltip') }}</p>
+                    </div>
                 </div>
                 @endif
 

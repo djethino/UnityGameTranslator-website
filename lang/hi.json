@@ -659,10 +659,18 @@
     "progress.human_short": "म",
     "progress.validated_short": "मा",
     "progress.ai_short": "A",
+    "progress.capture": "कैप्चर किया गया",
     "progress.capture_only": "केवल कैप्चर",
+    "progress.capture_only_desc": "इस फ़ाइल में केवल कैप्चर किया गया टेक्स्ट है, अभी तक कोई अनुवाद नहीं",
     "progress.tooltip": "मानव: :human | मान्य: :validated | AI: :ai | कैप्चर: :capture | क्वालिटी: :quality/3",
     "rating.not_main_owner": "केवल मेन मालिक ब्रांचों को रेट कर सकता है।",
     "rating.cannot_rate_main": "मेन अनुवाद को रेट नहीं किया जा सकता।",
     "rating.rate_branch": ":stars स्टार रेट करें",
-    "rating.modified_since_review": "पिछली समीक्षा के बाद संशोधित"
+    "rating.modified_since_review": "पिछली समीक्षा के बाद संशोधित",
+    "fonts.configured": ":count फ़ॉन्ट कॉन्फ़िगर किया गया|:count फ़ॉन्ट कॉन्फ़िगर किए गए",
+    "fonts.fallback": "फ़ॉलबैक",
+    "fonts.scale": "स्केल",
+    "fonts.disabled": "अक्षम",
+    "fonts.no_fallback": "कोई फ़ॉलबैक नहीं",
+    "fonts.tooltip": "इस अनुवाद के साथ फ़ॉन्ट कॉन्फ़िगरेशन शामिल है। मॉड स्वचालित रूप से इन फ़ॉन्ट्स का उपयोग करेगा यदि वे आपके सिस्टम पर उपलब्ध हैं, अन्यथा मूल गेम फ़ॉन्ट्स का उपयोग किया जाएगा।"
 }

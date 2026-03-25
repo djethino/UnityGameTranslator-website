@@ -659,10 +659,18 @@
     "progress.human_short": "H",
     "progress.validated_short": "V",
     "progress.ai_short": "A",
+    "progress.capture": "Captures",
     "progress.capture_only": "Capture seul.",
+    "progress.capture_only_desc": "Ce fichier contient uniquement des textes capturés, pas encore de traductions",
     "progress.tooltip": "Humain: :human | Valide: :validated | IA: :ai | Capture: :capture | Qualite: :quality/3",
     "rating.not_main_owner": "Seul le proprietaire principal peut noter les branches.",
     "rating.cannot_rate_main": "Impossible de noter la traduction principale.",
     "rating.rate_branch": "Noter :stars etoile(s)",
-    "rating.modified_since_review": "Modifie depuis la derniere revue"
+    "rating.modified_since_review": "Modifie depuis la derniere revue",
+    "fonts.configured": ":count police configuree|:count polices configurees",
+    "fonts.fallback": "Substitution",
+    "fonts.scale": "Echelle",
+    "fonts.disabled": "Desactivee",
+    "fonts.no_fallback": "Pas de substitution",
+    "fonts.tooltip": "Configuration des polices incluse avec cette traduction. Le mod utilisera automatiquement ces polices si elles sont disponibles sur votre systeme, sinon les polices originales du jeu seront utilisees."
 }

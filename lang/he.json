@@ -280,7 +280,7 @@
     "docs.ai_local_desc": "התקינו Ollama או LM Studio — ללא מפתח API, ללא אינטרנט, ללא עלות",
     "docs.ai_cloud_title": "ענן (ללא צורך ב-GPU)",
     "docs.ai_cloud_desc": "השתמשו ב-Groq, OpenRouter, או OpenAI — דורש מפתח API",
-    "docs.ai_setup_steps": "במוד: פתחו הגדרות \u2192 תרגום AI, הזינו כתובת שרת, הוסיפו מפתח API במידת הצורך, בדקו חיבור, בחרו מודל, והפעילו.",
+    "docs.ai_setup_steps": "במוד: פתחו הגדרות → תרגום AI, הזינו כתובת שרת, הוסיפו מפתח API במידת הצורך, בדקו חיבור, בחרו מודל, והפעילו.",
     "docs.ai_tip_title": "מודל מקומי מומלץ",
     "docs.ai_tip_content": "qwen3:8b מציע את האיזון הטוב ביותר בין איכות למהירות לתרגום משחקים. מודלים גדולים יותר כמו qwen3:14b מספקים איכות טובה יותר אך דורשים יותר VRAM.",
     "docs.first_launch": "הפעלה ראשונה",
@@ -659,10 +659,18 @@
     "progress.human_short": "H",
     "progress.validated_short": "V",
     "progress.ai_short": "A",
+    "progress.capture": "נלכד",
     "progress.capture_only": "לכידה בלבד",
+    "progress.capture_only_desc": "קובץ זה מכיל רק טקסט שנלכד, ללא תרגומים עדיין",
     "progress.tooltip": "אנושי: :human | מאומת: :validated | AI: :ai | לכידה: :capture | איכות: :quality/3",
     "rating.not_main_owner": "רק בעל ה-Main יכול לדרג branches.",
     "rating.cannot_rate_main": "לא ניתן לדרג את תרגום ה-Main.",
     "rating.rate_branch": "דרגו :stars כוכב(ים)",
-    "rating.modified_since_review": "שונה מאז הסקירה האחרונה"
+    "rating.modified_since_review": "שונה מאז הסקירה האחרונה",
+    "fonts.configured": "גופן :count מוגדר|:count גופנים מוגדרים",
+    "fonts.fallback": "חלופי",
+    "fonts.scale": "קנה מידה",
+    "fonts.disabled": "מושבת",
+    "fonts.no_fallback": "ללא חלופי",
+    "fonts.tooltip": "הגדרות גופנים כלולות בתרגום זה. המוד ישתמש אוטומטית בגופנים אלה אם הם זמינים במערכת שלכם, אחרת ייעשה שימוש בגופני המשחק המקוריים."
 }

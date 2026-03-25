@@ -659,10 +659,18 @@
     "progress.human_short": "H",
     "progress.validated_short": "V",
     "progress.ai_short": "A",
+    "progress.capture": "キャプチャ済み",
     "progress.capture_only": "キャプチャのみ",
+    "progress.capture_only_desc": "このファイルにはキャプチャされたテキストのみが含まれており、翻訳はまだありません",
     "progress.tooltip": "Human: :human | Validated: :validated | AI: :ai | キャプチャ: :capture | 品質: :quality/3",
     "rating.not_main_owner": "Mainの所有者のみがBranchを評価できます。",
     "rating.cannot_rate_main": "Main翻訳は評価できません。",
     "rating.rate_branch": ":stars つ星で評価",
-    "rating.modified_since_review": "前回のレビュー以降に変更されました"
+    "rating.modified_since_review": "前回のレビュー以降に変更されました",
+    "fonts.configured": ":count件のフォント設定済み",
+    "fonts.fallback": "フォールバック",
+    "fonts.scale": "スケール",
+    "fonts.disabled": "無効",
+    "fonts.no_fallback": "フォールバックなし",
+    "fonts.tooltip": "この翻訳にはフォント設定が含まれています。お使いのシステムにフォントがインストールされていれば、Modが自動的にそれらのフォントを使用します。インストールされていない場合は、ゲームの元のフォントが使用されます。"
 }

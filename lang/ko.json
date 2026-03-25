@@ -659,10 +659,18 @@
     "progress.human_short": "인",
     "progress.validated_short": "검",
     "progress.ai_short": "AI",
+    "progress.capture": "캡처됨",
     "progress.capture_only": "캡처만",
+    "progress.capture_only_desc": "이 파일은 캡처된 텍스트만 포함하고 있으며, 아직 번역이 없습니다",
     "progress.tooltip": "사람: :human | 검증됨: :validated | AI: :ai | 캡처: :capture | 품질: :quality/3",
     "rating.not_main_owner": "메인 소유자만 브랜치를 평가할 수 있습니다.",
     "rating.cannot_rate_main": "메인 번역은 평가할 수 없습니다.",
     "rating.rate_branch": ":stars 별 평가",
-    "rating.modified_since_review": "마지막 검토 이후 수정됨"
+    "rating.modified_since_review": "마지막 검토 이후 수정됨",
+    "fonts.configured": ":count개의 글꼴 설정됨",
+    "fonts.fallback": "대체 글꼴",
+    "fonts.scale": "크기",
+    "fonts.disabled": "비활성화됨",
+    "fonts.no_fallback": "대체 글꼴 없음",
+    "fonts.tooltip": "이 번역에 포함된 글꼴 설정입니다. 시스템에 해당 글꼴이 있으면 모드가 자동으로 사용하며, 없으면 게임 기본 글꼴이 사용됩니다."
 }

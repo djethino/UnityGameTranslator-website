@@ -659,10 +659,18 @@
     "progress.human_short": "H",
     "progress.validated_short": "V",
     "progress.ai_short": "A",
+    "progress.capture": "Captured",
     "progress.capture_only": "Capture only",
+    "progress.capture_only_desc": "This file only contains captured text, no translations yet",
     "progress.tooltip": "Human: :human | Validated: :validated | AI: :ai | Capture: :capture | Quality: :quality/3",
     "rating.not_main_owner": "Only the Main owner can rate branches.",
     "rating.cannot_rate_main": "Cannot rate the Main translation.",
     "rating.rate_branch": "Rate :stars star(s)",
-    "rating.modified_since_review": "Modified since last review"
+    "rating.modified_since_review": "Modified since last review",
+    "fonts.configured": ":count font configured|:count fonts configured",
+    "fonts.fallback": "Fallback",
+    "fonts.scale": "Scale",
+    "fonts.disabled": "Disabled",
+    "fonts.no_fallback": "No fallback",
+    "fonts.tooltip": "Font configuration included with this translation. The mod will automatically use these fonts if available on your system, otherwise original game fonts are used."
 }
