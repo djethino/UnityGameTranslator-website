@@ -29,25 +29,29 @@ class MergeController extends Controller
             ->with(['game', 'user'])
             ->firstOrFail();
 
-        // Mode: 'edit' = focus on Main (branches deselected), 'merge' = branches selected
+        // Mode: 'edit' = focus on Main only, 'merge' = show branches
         $mode = $request->input('mode', 'merge');
 
-        // Load all branches for this UUID
-        $branches = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'branch')
-            ->with('user:id,name')
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        if ($mode === 'edit') {
+            // Edit mode: no branches loaded
+            $branches = collect();
+            $selectedBranches = collect();
+        } else {
+            // Merge mode: load all branches
+            $branches = Translation::where('file_uuid', $uuid)
+                ->where('visibility', 'branch')
+                ->with('user:id,name')
+                ->orderBy('updated_at', 'desc')
+                ->get();
 
-        // Get selected branch IDs from query params
-        // In edit mode: default to none selected. In merge mode: default to all selected.
-        $defaultIds = $mode === 'edit' ? [] : $branches->pluck('id')->toArray();
-        $selectedIds = $request->input('branches', $defaultIds);
-        if (is_string($selectedIds)) {
-            $selectedIds = explode(',', $selectedIds);
+            // Get selected branch IDs from query params (default: all)
+            $selectedIds = $request->input('branches', $branches->pluck('id')->toArray());
+            if (is_string($selectedIds)) {
+                $selectedIds = explode(',', $selectedIds);
+            }
+            $selectedIds = array_map('intval', array_filter($selectedIds));
+            $selectedBranches = $branches->whereIn('id', $selectedIds);
         }
-        $selectedIds = array_map('intval', array_filter($selectedIds));
-        $selectedBranches = $branches->whereIn('id', $selectedIds);
 
         // Load Main content
         $mainContent = $this->loadTranslationContent($main);
