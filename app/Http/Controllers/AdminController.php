@@ -321,18 +321,24 @@ class AdminController extends Controller
         // Get today's live stats from events (not yet aggregated)
         $today = now()->toDateString();
         $todayEvents = AnalyticsEvent::whereDate('created_at', $today)->get();
+        $todayDownloads = $todayEvents->filter(fn($e) => str_ends_with($e->route, 'translations.download'))->count();
+        $todayUploads = Translation::whereDate('created_at', $today)->count();
+        $todayRegistrations = User::whereDate('created_at', $today)->count();
         $todayStats = [
             'page_views' => $todayEvents->count(),
             'unique_visitors' => $todayEvents->pluck('visitor_hash')->unique()->count(),
+            'downloads' => $todayDownloads,
+            'uploads' => $todayUploads,
+            'registrations' => $todayRegistrations,
         ];
 
-        // Calculate totals
+        // Calculate totals (aggregated days + today's live stats)
         $totals = [
             'page_views' => $dailyStats->sum('page_views') + $todayStats['page_views'],
             'unique_visitors' => $dailyStats->sum('unique_visitors') + $todayStats['unique_visitors'],
-            'downloads' => $dailyStats->sum('downloads'),
-            'uploads' => $dailyStats->sum('uploads'),
-            'registrations' => $dailyStats->sum('registrations'),
+            'downloads' => $dailyStats->sum('downloads') + $todayStats['downloads'],
+            'uploads' => $dailyStats->sum('uploads') + $todayStats['uploads'],
+            'registrations' => $dailyStats->sum('registrations') + $todayStats['registrations'],
         ];
 
         // Prepare chart data

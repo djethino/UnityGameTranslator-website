@@ -90,9 +90,9 @@ class AggregateAnalytics extends Command
             ->take(10)
             ->toArray();
 
-        // Count downloads from events
+        // Count downloads from events (web + API/mod)
         $downloads = AnalyticsEvent::whereDate('created_at', $date)
-            ->where('route', 'translations.download')
+            ->where('route', 'like', '%translations.download')
             ->count();
 
         // Count uploads
@@ -130,17 +130,20 @@ class AggregateAnalytics extends Command
             ->groupBy('game_id')
             ->get();
 
-        foreach ($gameEvents as $event) {
-            // Count downloads for this game's translations on this date
-            $downloads = Translation::where('game_id', $event->game_id)
-                ->whereDate('updated_at', $date)
-                ->sum('download_count');
+        // Count downloads per game from analytics events
+        $gameDownloads = AnalyticsEvent::whereDate('created_at', $date)
+            ->where('route', 'like', '%translations.download')
+            ->whereNotNull('game_id')
+            ->select('game_id', DB::raw('COUNT(*) as downloads'))
+            ->groupBy('game_id')
+            ->pluck('downloads', 'game_id');
 
+        foreach ($gameEvents as $event) {
             AnalyticsGame::updateOrCreate(
                 ['date' => $date, 'game_id' => $event->game_id],
                 [
                     'page_views' => $event->views,
-                    'downloads' => $downloads,
+                    'downloads' => $gameDownloads[$event->game_id] ?? 0,
                 ]
             );
         }
