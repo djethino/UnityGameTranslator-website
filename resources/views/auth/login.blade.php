@@ -43,10 +43,11 @@
                 <i class="fab fa-steam text-lg"></i>
                 <span class="text-sm font-medium">Steam</span>
             </a>
-            <a href="{{ route('auth.redirect', 'epicgames') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-black/80 hover:bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-600/50 transition hover:-translate-y-0.5">
+            {{-- Epic Games: hidden until app approval --}}
+            {{-- <a href="{{ route('auth.redirect', 'epicgames') }}{{ $redirectParam }}" class="flex items-center justify-center gap-2 bg-black/80 hover:bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-600/50 transition hover:-translate-y-0.5">
                 <img src="https://cdn.simpleicons.org/epicgames/white" alt="" class="w-4 h-4">
                 <span class="text-sm font-medium">Epic</span>
-            </a>
+            </a> --}}
         </div>
 
         <!-- Other providers -->
