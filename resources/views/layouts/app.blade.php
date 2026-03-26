@@ -98,14 +98,15 @@
                     <!-- Language Switcher -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white px-2 py-1 rounded transition">
-                            <span class="text-lg">{{ config('locales.supported')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
+                            @php $__flag = config('locales.supported')[app()->getLocale()]['flag'] ?? null; @endphp
+                            @if($__flag)<span class="fi fi-{{ $__flag }}"></span>@else 🌐 @endif
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </button>
                         <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
                             @foreach(config('locales.supported', []) as $code => $locale)
                                 <a href="{{ route('locale.switch', $code) }}"
                                    class="flex items-center px-4 py-2 text-sm hover:bg-gray-700 transition {{ app()->getLocale() === $code ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
-                                    <span class="text-lg mr-2">{{ $locale['flag'] }}</span>
+                                    <span class="fi fi-{{ $locale['flag'] }} mr-2"></span>
                                     <span>{{ $locale['native'] }}</span>
                                 </a>
                             @endforeach
@@ -166,13 +167,14 @@
                     <!-- Mobile Language Switcher (always visible) -->
                     <div class="relative mr-2" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white p-2 rounded transition">
-                            <span class="text-lg">{{ config('locales.supported')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
+                            @php $__flag = config('locales.supported')[app()->getLocale()]['flag'] ?? null; @endphp
+                            @if($__flag)<span class="fi fi-{{ $__flag }}"></span>@else 🌐 @endif
                         </button>
                         <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
                             @foreach(config('locales.supported', []) as $code => $locale)
                                 <a href="{{ route('locale.switch', $code) }}"
                                    class="flex items-center px-4 py-2 text-sm hover:bg-gray-700 transition {{ app()->getLocale() === $code ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
-                                    <span class="text-lg mr-2">{{ $locale['flag'] }}</span>
+                                    <span class="fi fi-{{ $locale['flag'] }} mr-2"></span>
                                     <span>{{ $locale['native'] }}</span>
                                 </a>
                             @endforeach

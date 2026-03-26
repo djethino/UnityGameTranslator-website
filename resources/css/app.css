@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@fortawesome/fontawesome-free/css/all.css';
+@import 'flag-icons/css/flag-icons.min.css';
 
 /* Override FontAwesome font-display: block → swap (avoid render-blocking) */
 @font-face { font-family: "Font Awesome 7 Free"; font-style: normal; font-weight: 400; font-display: swap; src: url("@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2") format("woff2"); }

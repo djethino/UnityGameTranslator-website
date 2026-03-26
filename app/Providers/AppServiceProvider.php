@@ -49,9 +49,9 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingReportsCount', $pendingReportsCount);
         });
 
-        // Register Blade directive for language flags
+        // Register Blade directive for language flags (SVG via flag-icons CSS)
         Blade::directive('langflag', function ($expression) {
-            return "<?php echo config('language-flags')[$expression] ?? '🌐'; ?>";
+            return "<?php \$__code = config('language-flags')[$expression] ?? null; echo \$__code ? '<span class=\"fi fi-' . e(\$__code) . '\"></span>' : '🌐'; ?>";
         });
     }
 
