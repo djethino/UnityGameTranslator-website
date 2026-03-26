@@ -83,9 +83,9 @@
                     </a>
                     {{-- Merge branches (highlighted when branches exist) --}}
                     @if($branchCount > 0)
-                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="relative bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.merge_branches', ['count' => $branchCount]) }}">
+                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded inline-flex items-center gap-1.5" title="{{ __('my_translations.merge_branches', ['count' => $branchCount]) }}">
                         <i class="fas fa-code-merge"></i>
-                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{{ $branchCount }}</span>
+                        <span class="bg-red-500 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1">{{ $branchCount }}</span>
                     </a>
                     @else
                     <span class="bg-gray-700 text-gray-500 px-3 py-2 rounded cursor-not-allowed" title="{{ __('my_translations.no_branches') }}">
