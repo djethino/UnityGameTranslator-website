@@ -82,6 +82,43 @@ export default function mergeTable() {
 
             // Branch rating stars
             this.initBranchRating();
+
+            // Branch checkboxes: auto-submit on change (save state first)
+            document.querySelectorAll('.branch-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    // Prevent unchecking if this branch has pending selections
+                    if (!checkbox.checked) {
+                        const branchId = checkbox.value;
+                        const branchSource = `branch_${branchId}`;
+                        const hasPending = Object.values(this.selections).some(s => s.source === branchSource);
+                        if (hasPending) {
+                            checkbox.checked = true;
+                            return;
+                        }
+                    }
+                    this.saveState();
+                    document.getElementById('branchForm')?.submit();
+                });
+            });
+
+            // Quick filter buttons for branches
+            document.querySelectorAll('.branch-quick-filter').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const ids = btn.dataset.ids ? btn.dataset.ids.split(',') : [];
+                    document.querySelectorAll('.branch-checkbox').forEach((cb) => {
+                        const wantChecked = ids.includes(cb.value);
+                        // Prevent unchecking branches with pending selections
+                        if (!wantChecked && cb.checked) {
+                            const branchSource = `branch_${cb.value}`;
+                            const hasPending = Object.values(this.selections).some(s => s.source === branchSource);
+                            if (hasPending) return; // keep checked
+                        }
+                        cb.checked = wantChecked;
+                    });
+                    this.saveState();
+                    document.getElementById('branchForm')?.submit();
+                });
+            });
         },
 
         /**

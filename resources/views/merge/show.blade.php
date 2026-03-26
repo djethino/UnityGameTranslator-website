@@ -59,14 +59,39 @@
     @if($mode === 'merge')
         @if($branches->isNotEmpty())
         <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <form method="GET" class="flex flex-wrap gap-4 items-center">
+            <form method="GET" id="branchForm" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="mode" value="merge">
                 <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
+
+                {{-- Quick filters --}}
+                @php
+                    $unreviewedIds = $branches->filter(fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)->pluck('id');
+                @endphp
+                <div class="flex gap-1 text-xs">
+                    <button type="button" class="branch-quick-filter px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition"
+                        data-ids="{{ $branches->pluck('id')->join(',') }}" title="{{ __('merge.select_all') }}">
+                        {{ __('merge.all') }}
+                    </button>
+                    @if($unreviewedIds->count() < $branches->count())
+                    <button type="button" class="branch-quick-filter px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-orange-300 transition"
+                        data-ids="{{ $unreviewedIds->join(',') }}" title="{{ __('merge.select_unreviewed') }}">
+                        <i class="fas fa-exclamation-circle mr-1"></i>{{ __('merge.unreviewed') }}
+                    </button>
+                    @endif
+                    <button type="button" class="branch-quick-filter px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-400 transition"
+                        data-ids="" title="{{ __('merge.select_none') }}">
+                        {{ __('merge.none') }}
+                    </button>
+                </div>
+
+                <span class="text-gray-600">|</span>
+
+                {{-- Individual branch checkboxes --}}
                 @foreach($branches as $branch)
                 <div class="flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600">
                     <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
                         <input type="checkbox" name="branches[]" value="{{ $branch->id }}"
-                            class="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
+                            class="branch-checkbox rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
                             {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
                         <span class="text-gray-300">{{ $branch->user->name }}</span>
                         <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
@@ -89,9 +114,6 @@
                     </div>
                 </div>
                 @endforeach
-                <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white text-sm transition">
-                    <i class="fas fa-filter mr-1"></i> {{ __('merge.filter') }}
-                </button>
             </form>
         </div>
         @else
