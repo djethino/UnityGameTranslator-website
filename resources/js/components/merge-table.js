@@ -422,8 +422,14 @@ export default function mergeTable() {
         openTagDropdown(event, key, currentTag, value) {
             event.stopPropagation();
 
-            // Position dropdown near the click
+            // Position dropdown near the click (viewport coords for fixed positioning)
             const rect = event.target.getBoundingClientRect();
+            // If dropdown would go below viewport, show above the element instead
+            const dropdownHeight = 140; // approximate height of dropdown
+            let y = rect.bottom + 4;
+            if (y + dropdownHeight > window.innerHeight) {
+                y = rect.top - dropdownHeight - 4;
+            }
             this.tagDropdown = {
                 open: true,
                 key: key,
@@ -431,7 +437,7 @@ export default function mergeTable() {
                 originalTag: currentTag,
                 value: value,
                 x: rect.left,
-                y: rect.bottom + window.scrollY
+                y: y
             };
         },
 
