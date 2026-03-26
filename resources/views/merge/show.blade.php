@@ -259,51 +259,55 @@
                         $keyEscaped = e($key);
                         $keyJson = json_encode($key, JSON_UNESCAPED_UNICODE);
                     @endphp
-                    <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                    @php $rowIdx = $loop->index; @endphp
+                    <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors merge-row"
+                        data-key="{{ $keyEscaped }}"
+                        data-main-value="{{ e($mainValue) }}"
+                        data-main-tag="{{ $mainTag }}">
                         {{-- Key column --}}
                         <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
                             <div class="flex items-center gap-2">
                                 @if($mainEntry !== null)
                                 <button type="button"
-                                    @click="toggleDelete({{ $keyJson }})"
-                                    :class="isDeleted({{ $keyJson }}) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
+                                    @click="toggleDeleteFromRow($event)"
+                                    :class="isDeleted(rowKey($el)) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
                                     class="transition shrink-0"
                                     title="{{ __('merge.delete_key') }}">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                                 @endif
-                                <span :class="isDeleted({{ $keyJson }}) ? 'line-through text-red-400' : ''">{{ $key }}</span>
+                                <span :class="isDeleted(rowKey($el)) ? 'line-through text-red-400' : ''">{{ $key }}</span>
                             </div>
                         </td>
 
                         {{-- Main Tag column (clickable for tag change) --}}
                         <td class="px-2 py-2 text-center border-l border-gray-700"
-                            :class="[hasTagChange({{ $keyJson }}) ? 'tag-changed-cell' : '', isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']">
+                            :class="[hasTagChange(rowKey($el)) ? 'tag-changed-cell' : '', isDeleted(rowKey($el)) ? 'deleted-cell' : '']">
                             <button type="button"
-                                @click.stop="!isDeleted({{ $keyJson }}) && openTagDropdown($event, {{ $keyJson }}, '{{ $mainTag }}', {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }})"
-                                :class="isDeleted({{ $keyJson }}) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
+                                @click.stop="openTagDropdownFromRow($event)"
+                                :class="isDeleted(rowKey($el)) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
                                 class="transition rounded"
-                                :disabled="isDeleted({{ $keyJson }})"
+                                :disabled="isDeleted(rowKey($el))"
                                 title="{{ __('merge.click_to_change_tag') }}">
                                 {{-- Show edited tag (H) if manually edited --}}
-                                <span x-show="isEdited({{ $keyJson }})" class="tag-H">H</span>
+                                <span x-show="isEdited(rowKey($el))" class="tag-H">H</span>
                                 {{-- Show changed tag if tag was explicitly changed --}}
-                                <template x-if="!isEdited({{ $keyJson }}) && hasTagChange({{ $keyJson }})">
-                                    <span :class="'tag-' + getDisplayTag({{ $keyJson }}, '{{ $mainTag }}')" x-text="getDisplayTag({{ $keyJson }}, '{{ $mainTag }}')"></span>
+                                <template x-if="!isEdited(rowKey($el)) && hasTagChange(rowKey($el))">
+                                    <span :class="'tag-' + getDisplayTag(rowKey($el), rowMainTag($el))" x-text="getDisplayTag(rowKey($el), rowMainTag($el))"></span>
                                 </template>
                                 {{-- Show original tag if not edited and not changed --}}
-                                <span x-show="!isEdited({{ $keyJson }}) && !hasTagChange({{ $keyJson }})" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
+                                <span x-show="!isEdited(rowKey($el)) && !hasTagChange(rowKey($el))" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
                             </button>
                         </td>
 
                         {{-- Main Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                            :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
-                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }}, '{{ $mainTag }}')"
-                            @dblclick="!isDeleted({{ $keyJson }}) && editCell({{ $keyJson }}, {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }})">
-                            <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through opacity-40' : '']">
-                                <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
-                                <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
+                            :class="[getCellClass(rowKey($el), 'main'), isDeleted(rowKey($el)) ? 'deleted-cell' : '']"
+                            @click="selectFromRow($event, 'main')"
+                            @dblclick="editCellFromRow($event)">
+                            <span class="break-words" :class="[isEdited(rowKey($el)) ? 'text-purple-300' : '', isDeleted(rowKey($el)) ? 'line-through opacity-40' : '']">
+                                <span x-show="isEdited(rowKey($el))" x-text="getEditedValue(rowKey($el))"></span>
+                                <span x-show="!isEdited(rowKey($el))">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
                             </span>
                         </td>
 
@@ -318,8 +322,11 @@
                         @endphp
                         {{-- Branch Tag column --}}
                         <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
-                            :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
-                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue, JSON_UNESCAPED_UNICODE) }}, '{{ $branchTag }}')">
+                            :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
+                            data-branch-value="{{ e($branchValue) }}"
+                            data-branch-tag="{{ $branchTag }}"
+                            data-branch-source="branch_{{ $branch->id }}"
+                            @click="selectFromBranch($event)">
                             @if($branchEntry !== null)
                             <span class="tag-{{ $branchTag }}">{{ $branchTag }}</span>
                             @else
@@ -328,8 +335,11 @@
                         </td>
                         {{-- Branch Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
-                            :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
-                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue, JSON_UNESCAPED_UNICODE) }}, '{{ $branchTag }}')">
+                            :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
+                            data-branch-value="{{ e($branchValue) }}"
+                            data-branch-tag="{{ $branchTag }}"
+                            data-branch-source="branch_{{ $branch->id }}"
+                            @click="selectFromBranch($event)">
                             @if($branchEntry !== null)
                             <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
                                 {{ $branchValue }}

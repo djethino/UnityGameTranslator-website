@@ -259,6 +259,68 @@ export default function mergeTable() {
             return '';
         },
 
+        // ========================================
+        // DOM helpers — read data from data-* attributes (CSP-safe)
+        // ========================================
+
+        /**
+         * Get the closest <tr> from any element inside a row.
+         */
+        getRow(el) {
+            return el.closest('tr.merge-row');
+        },
+
+        /**
+         * Get the key from a row's data attribute (for use in :class, x-show, etc).
+         * Called as rowKey($el) from template.
+         */
+        rowKey(el) {
+            const row = this.getRow(el);
+            return row ? row.dataset.key : '';
+        },
+
+        /**
+         * Get the main tag from a row's data attribute.
+         */
+        rowMainTag(el) {
+            const row = this.getRow(el);
+            return row ? row.dataset.mainTag : 'A';
+        },
+
+        /**
+         * Event-based handlers that read data from DOM instead of Alpine expressions.
+         */
+        toggleDeleteFromRow(event) {
+            const row = this.getRow(event.target);
+            if (row) this.toggleDelete(row.dataset.key);
+        },
+
+        selectFromRow(event, source) {
+            const row = this.getRow(event.target);
+            if (!row || this.isDeleted(row.dataset.key)) return;
+            this.select(row.dataset.key, source, row.dataset.mainValue, row.dataset.mainTag);
+        },
+
+        selectFromBranch(event) {
+            const row = this.getRow(event.target);
+            const cell = event.target.closest('td');
+            if (!row || !cell) return;
+            this.select(row.dataset.key, cell.dataset.branchSource, cell.dataset.branchValue, cell.dataset.branchTag);
+        },
+
+        editCellFromRow(event) {
+            const row = this.getRow(event.target);
+            if (!row || this.isDeleted(row.dataset.key)) return;
+            this.editCell(row.dataset.key, row.dataset.mainValue);
+        },
+
+        openTagDropdownFromRow(event) {
+            const row = this.getRow(event.target);
+            if (!row || this.isDeleted(row.dataset.key)) return;
+            event.stopPropagation();
+            this.openTagDropdown(event, row.dataset.key, row.dataset.mainTag, row.dataset.mainValue);
+        },
+
         select(key, source, value, tag) {
             // Toggle if same selection
             if (this.selections[key]?.source === source && this.selections[key]?.source !== 'manual') {
