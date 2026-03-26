@@ -181,6 +181,17 @@
     {{-- Merge Form --}}
     <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
         @csrf
+        {{-- Preserve current view state for redirect after save --}}
+        @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+        @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
+        @if(request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
+        @if(request('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
+        @foreach($selectedBranches as $branch)
+        <input type="hidden" name="branches[]" value="{{ $branch->id }}">
+        @endforeach
+        @foreach(array_filter($filters) as $filterKey => $filterValue)
+        <input type="hidden" name="{{ $filterKey }}" value="{{ $filterValue }}">
+        @endforeach
 
         {{-- Table --}}
         <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">

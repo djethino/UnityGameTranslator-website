@@ -288,8 +288,15 @@ class MergeController extends Controller
         }
         $successMessage = implode(' et ', $messages) . ' appliquée(s).';
 
+        // Preserve query parameters (sort, search, page, filters, branches)
+        $queryParams = $request->only([
+            'sort', 'dir', 'search', 'page',
+            'branches', 'new_keys', 'difference',
+            'human', 'validated', 'ai', 'skipped', 'mod_ui',
+        ]);
+
         return redirect()
-            ->route('translations.merge', ['uuid' => $uuid])
+            ->route('translations.merge', array_merge(['uuid' => $uuid], array_filter($queryParams, fn($v) => $v !== null)))
             ->with('success', $successMessage);
     }
 
