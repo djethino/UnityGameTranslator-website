@@ -418,10 +418,10 @@
             </div>
         </div>
 
-        {{-- Hidden inputs container --}}
-        <div id="selectionsContainer"></div>
-        <div id="deletionsContainer"></div>
-        <div id="tagChangesContainer"></div>
+        {{-- JSON-encoded data (avoids Laravel TrimStrings corrupting keys with whitespace) --}}
+        <input type="hidden" id="selectionsJson" name="selections_json" value="">
+        <input type="hidden" id="deletionsJson" name="deletions_json" value="">
+        <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
     </form>
 
     {{-- Legend (HVASM order) --}}

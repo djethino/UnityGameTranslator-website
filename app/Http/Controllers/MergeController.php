@@ -140,23 +140,51 @@ class MergeController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        // Validate selections, deletions, and tag changes
-        $request->validate([
-            'selections' => 'nullable|array',
-            'selections.*.key' => 'required|string',
-            'selections.*.value' => 'present|string',
-            'selections.*.tag' => 'required|in:H,A,V,M,S',
-            'selections.*.source' => 'required|string',
-            'deletions' => 'nullable|array',
-            'deletions.*' => 'string',
-            'tagChanges' => 'nullable|array',
-            'tagChanges.*.key' => 'required|string',
-            'tagChanges.*.tag' => 'required|in:A,S', // Only A (invalidate) and S (skip) are allowed
-            'tagChanges.*.value' => 'present|string',
-        ]);
+        // Decode JSON-encoded data (sent as JSON strings to avoid Laravel TrimStrings
+        // corrupting translation keys that contain leading/trailing whitespace)
+        $selections = [];
+        $deletions = [];
+        $tagChanges = [];
+
+        if ($request->filled('selections_json')) {
+            $selections = json_decode($request->input('selections_json'), true);
+            if (!is_array($selections)) {
+                return back()->withErrors(['error' => 'Invalid selections data.']);
+            }
+        }
+        if ($request->filled('deletions_json')) {
+            $deletions = json_decode($request->input('deletions_json'), true);
+            if (!is_array($deletions)) {
+                return back()->withErrors(['error' => 'Invalid deletions data.']);
+            }
+        }
+        if ($request->filled('tag_changes_json')) {
+            $tagChanges = json_decode($request->input('tag_changes_json'), true);
+            if (!is_array($tagChanges)) {
+                return back()->withErrors(['error' => 'Invalid tag changes data.']);
+            }
+        }
+
+        // Validate structure
+        foreach ($selections as $sel) {
+            if (!isset($sel['key'], $sel['tag'], $sel['source']) || !array_key_exists('value', $sel)) {
+                return back()->withErrors(['error' => 'Invalid selection entry.']);
+            }
+            if (!in_array($sel['tag'], ['H', 'A', 'V', 'M', 'S'], true)) {
+                return back()->withErrors(['error' => 'Invalid tag value.']);
+            }
+        }
+        foreach ($tagChanges as $change) {
+            if (!isset($change['key'], $change['tag']) || !array_key_exists('value', $change)) {
+                return back()->withErrors(['error' => 'Invalid tag change entry.']);
+            }
+            if (!in_array($change['tag'], ['A', 'S'], true)) {
+                return back()->withErrors(['error' => 'Invalid tag change value.']);
+            }
+        }
 
         // Must have at least one change
-        if (empty($request->selections) && empty($request->deletions) && empty($request->tagChanges)) {
+        if (empty($selections) && empty($deletions) && empty($tagChanges)) {
             return back()->withErrors(['error' => 'No changes to apply.']);
         }
 
@@ -176,8 +204,8 @@ class MergeController extends Controller
 
         // Apply modifications
         $modifiedCount = 0;
-        if (!empty($request->selections)) {
-            foreach ($request->selections as $sel) {
+        if (!empty($selections)) {
+            foreach ($selections as $sel) {
                 // Normalize line endings: \r\n -> \n (forms may convert line endings)
                 $key = $this->translationService->normalizeContent($sel['key']);
                 $value = $this->translationService->normalizeContent($sel['value']);
@@ -205,8 +233,8 @@ class MergeController extends Controller
 
         // Apply deletions
         $deletedCount = 0;
-        if (!empty($request->deletions)) {
-            foreach ($request->deletions as $key) {
+        if (!empty($deletions)) {
+            foreach ($deletions as $key) {
                 // Normalize line endings: \r\n -> \n
                 $key = $this->translationService->normalizeContent($key);
                 // Only delete non-metadata keys that exist
@@ -220,8 +248,8 @@ class MergeController extends Controller
         // Apply tag changes (skip/invalidate)
         // Tag changes are explicit tag modifications without changing the value
         $tagChangedCount = 0;
-        if (!empty($request->tagChanges)) {
-            foreach ($request->tagChanges as $change) {
+        if (!empty($tagChanges)) {
+            foreach ($tagChanges as $change) {
                 $key = $this->translationService->normalizeContent($change['key']);
                 $newTag = $change['tag'];
                 $value = $this->translationService->normalizeContent($change['value']);

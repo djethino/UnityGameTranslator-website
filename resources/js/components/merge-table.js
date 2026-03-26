@@ -515,86 +515,29 @@ export default function mergeTable() {
         },
 
         updateHiddenInputs() {
-            // Update selections container
-            const selectionsContainer = document.getElementById('selectionsContainer');
-            if (selectionsContainer) {
-                selectionsContainer.replaceChildren();
-
-                let i = 0;
-                for (const [key, data] of Object.entries(this.selections)) {
-                    const keyInput = document.createElement('input');
-                    keyInput.type = 'hidden';
-                    keyInput.name = `selections[${i}][key]`;
-                    keyInput.value = key;
-
-                    const valueInput = document.createElement('input');
-                    valueInput.type = 'hidden';
-                    valueInput.name = `selections[${i}][value]`;
-                    valueInput.value = data.value;
-
-                    const tagInput = document.createElement('input');
-                    tagInput.type = 'hidden';
-                    tagInput.name = `selections[${i}][tag]`;
-                    tagInput.value = data.tag;
-
-                    const sourceInput = document.createElement('input');
-                    sourceInput.type = 'hidden';
-                    sourceInput.name = `selections[${i}][source]`;
-                    sourceInput.value = data.source;
-
-                    selectionsContainer.appendChild(keyInput);
-                    selectionsContainer.appendChild(valueInput);
-                    selectionsContainer.appendChild(tagInput);
-                    selectionsContainer.appendChild(sourceInput);
-
-                    i++;
-                }
+            // Pack all data as JSON strings in single hidden inputs.
+            // This avoids Laravel's TrimStrings middleware corrupting keys
+            // that have leading/trailing whitespace (which game translations often have).
+            const selectionsInput = document.getElementById('selectionsJson');
+            if (selectionsInput) {
+                const arr = Object.entries(this.selections).map(([key, data]) => ({
+                    key, value: data.value, tag: data.tag, source: data.source
+                }));
+                selectionsInput.value = arr.length > 0 ? JSON.stringify(arr) : '';
             }
 
-            // Update deletions container
-            const deletionsContainer = document.getElementById('deletionsContainer');
-            if (deletionsContainer) {
-                deletionsContainer.replaceChildren();
-
-                let i = 0;
-                for (const key of Object.keys(this.deletions)) {
-                    const keyInput = document.createElement('input');
-                    keyInput.type = 'hidden';
-                    keyInput.name = `deletions[${i}]`;
-                    keyInput.value = key;
-                    deletionsContainer.appendChild(keyInput);
-                    i++;
-                }
+            const deletionsInput = document.getElementById('deletionsJson');
+            if (deletionsInput) {
+                const arr = Object.keys(this.deletions);
+                deletionsInput.value = arr.length > 0 ? JSON.stringify(arr) : '';
             }
 
-            // Update tag changes container
-            const tagChangesContainer = document.getElementById('tagChangesContainer');
-            if (tagChangesContainer) {
-                tagChangesContainer.replaceChildren();
-
-                let i = 0;
-                for (const [key, data] of Object.entries(this.tagChanges)) {
-                    const keyInput = document.createElement('input');
-                    keyInput.type = 'hidden';
-                    keyInput.name = `tagChanges[${i}][key]`;
-                    keyInput.value = key;
-
-                    const tagInput = document.createElement('input');
-                    tagInput.type = 'hidden';
-                    tagInput.name = `tagChanges[${i}][tag]`;
-                    tagInput.value = data.newTag;
-
-                    const valueInput = document.createElement('input');
-                    valueInput.type = 'hidden';
-                    valueInput.name = `tagChanges[${i}][value]`;
-                    valueInput.value = data.value;
-
-                    tagChangesContainer.appendChild(keyInput);
-                    tagChangesContainer.appendChild(tagInput);
-                    tagChangesContainer.appendChild(valueInput);
-
-                    i++;
-                }
+            const tagChangesInput = document.getElementById('tagChangesJson');
+            if (tagChangesInput) {
+                const arr = Object.entries(this.tagChanges).map(([key, data]) => ({
+                    key, tag: data.newTag, value: data.value
+                }));
+                tagChangesInput.value = arr.length > 0 ? JSON.stringify(arr) : '';
             }
         }
     }
