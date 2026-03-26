@@ -42,10 +42,12 @@ class MergeController extends Controller
             $branches = collect();
             $selectedBranches = collect();
         } else {
-            // Merge mode: load all branches
+            // Merge mode: load all branches (best rated first, unreviewed before reviewed)
             $branches = Translation::where('file_uuid', $uuid)
                 ->where('visibility', 'branch')
                 ->with('user:id,name')
+                ->orderByRaw('CASE WHEN reviewed_hash IS NULL OR file_hash != reviewed_hash THEN 0 ELSE 1 END')
+                ->orderByDesc('main_rating')
                 ->orderBy('updated_at', 'desc')
                 ->get();
 
