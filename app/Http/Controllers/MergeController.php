@@ -32,6 +32,11 @@ class MergeController extends Controller
         // Mode: 'edit' = focus on Main only, 'merge' = show branches
         $mode = $request->input('mode', 'merge');
 
+        // Check if branches exist (lightweight count for switcher visibility)
+        $hasBranches = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'branch')
+            ->exists();
+
         if ($mode === 'edit') {
             // Edit mode: no branches loaded
             $branches = collect();
@@ -44,8 +49,12 @@ class MergeController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->get();
 
-            // Get selected branch IDs from query params (default: all)
-            $selectedIds = $request->input('branches', $branches->pluck('id')->toArray());
+            // Default: select only unreviewed branches (never reviewed or modified since)
+            $defaultIds = $branches->filter(function ($b) {
+                return !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash;
+            })->pluck('id')->toArray();
+
+            $selectedIds = $request->input('branches', $defaultIds);
             if (is_string($selectedIds)) {
                 $selectedIds = explode(',', $selectedIds);
             }
@@ -133,7 +142,8 @@ class MergeController extends Controller
             'totalPages',
             'filters',
             'uuid',
-            'mode'
+            'mode',
+            'hasBranches'
         ));
     }
 

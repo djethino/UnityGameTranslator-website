@@ -10,7 +10,7 @@
             <a href="{{ route('translations.mine') }}" class="text-purple-400 hover:text-purple-300">
                 <i class="fas fa-arrow-left"></i> {{ $main->game->name }}
             </a>
-            @if($mode === 'edit' && $branches->count() > 0 || ($mode === 'merge' && true))
+            @if($hasBranches)
             {{-- Mode switcher --}}
             <div class="ml-auto flex gap-2 text-sm">
                 <a href="{{ route('translations.merge', ['uuid' => $uuid, 'mode' => 'edit']) }}"
