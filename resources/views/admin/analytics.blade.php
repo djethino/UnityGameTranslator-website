@@ -240,136 +240,24 @@
     </p>
 </div>
 
-@vite('resources/js/admin-charts.js')
 <script nonce="{{ $cspNonce }}">
-    const chartColors = {
-        purple: 'rgb(168, 85, 247)',
-        blue: 'rgb(59, 130, 246)',
-        green: 'rgb(34, 197, 94)',
-        yellow: 'rgb(234, 179, 8)',
-        red: 'rgb(239, 68, 68)',
-        orange: 'rgb(249, 115, 22)',
-        cyan: 'rgb(6, 182, 212)',
+    window.__analyticsData = {
+        chartLabels: @json($chartLabels),
+        chartPageViews: @json($chartPageViews),
+        chartVisitors: @json($chartVisitors),
+        chartDownloads: @json($chartDownloads),
+        hasTrafficData: {{ count($chartLabels) > 0 ? 'true' : 'false' }},
+        hasDownloadData: {{ (count($chartLabels) > 0 && array_sum($chartDownloads) > 0) ? 'true' : 'false' }},
+        hasDeviceData: {{ $hasDeviceData ? 'true' : 'false' }},
+        devices: {
+            desktop: {{ $allDevices['desktop'] ?? 0 }},
+            mobile: {{ $allDevices['mobile'] ?? 0 }},
+            tablet: {{ $allDevices['tablet'] ?? 0 }}
+        },
+        hasBrowserData: {{ $hasBrowserData ? 'true' : 'false' }},
+        browserLabels: @json(array_keys($allBrowsers)),
+        browserValues: @json(array_values($allBrowsers)),
     };
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: { color: '#9ca3af' }
-            }
-        },
-        scales: {
-            x: {
-                ticks: { color: '#9ca3af' },
-                grid: { color: 'rgba(75, 85, 99, 0.3)' }
-            },
-            y: {
-                ticks: { color: '#9ca3af' },
-                grid: { color: 'rgba(75, 85, 99, 0.3)' }
-            }
-        }
-    };
-
-    // Traffic Chart
-    @if(count($chartLabels) > 0)
-    new Chart(document.getElementById('trafficChart'), {
-        type: 'line',
-        data: {
-            labels: @json($chartLabels),
-            datasets: [
-                {
-                    label: 'Page Views',
-                    data: @json($chartPageViews),
-                    borderColor: chartColors.purple,
-                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                },
-                {
-                    label: 'Unique Visitors',
-                    data: @json($chartVisitors),
-                    borderColor: chartColors.blue,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }
-            ]
-        },
-        options: chartOptions
-    });
-    @endif
-
-    // Downloads Chart
-    @if(count($chartLabels) > 0 && array_sum($chartDownloads) > 0)
-    new Chart(document.getElementById('downloadsChart'), {
-        type: 'bar',
-        data: {
-            labels: @json($chartLabels),
-            datasets: [{
-                label: 'Downloads',
-                data: @json($chartDownloads),
-                backgroundColor: chartColors.green,
-            }]
-        },
-        options: chartOptions
-    });
-    @endif
-
-    // Devices Chart
-    @if($hasDeviceData)
-    new Chart(document.getElementById('devicesChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Desktop', 'Mobile', 'Tablet'],
-            datasets: [{
-                data: [
-                    {{ $allDevices['desktop'] ?? 0 }},
-                    {{ $allDevices['mobile'] ?? 0 }},
-                    {{ $allDevices['tablet'] ?? 0 }}
-                ],
-                backgroundColor: [chartColors.blue, chartColors.green, chartColors.orange]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#9ca3af' }
-                }
-            }
-        }
-    });
-    @endif
-
-    // Browsers Chart
-    @if($hasBrowserData)
-    new Chart(document.getElementById('browsersChart'), {
-        type: 'doughnut',
-        data: {
-            labels: @json(array_keys($allBrowsers)),
-            datasets: [{
-                data: @json(array_values($allBrowsers)),
-                backgroundColor: [
-                    chartColors.blue, chartColors.orange, chartColors.green,
-                    chartColors.red, chartColors.purple, chartColors.cyan
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#9ca3af' }
-                }
-            }
-        }
-    });
-    @endif
 </script>
+@vite('resources/js/admin-charts.js')
 @endsection

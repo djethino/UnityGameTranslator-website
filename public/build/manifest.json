@@ -16,7 +16,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CVd9vOvv.css",
+    "file": "assets/app-qE_uga9F.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -25,7 +25,7 @@
     ]
   },
   "resources/js/admin-charts.js": {
-    "file": "assets/admin-charts-Ct78DFbm.js",
+    "file": "assets/admin-charts-kiFuEkk2.js",
     "name": "admin-charts",
     "src": "resources/js/admin-charts.js",
     "isEntry": true
