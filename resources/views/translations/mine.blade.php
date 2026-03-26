@@ -49,10 +49,19 @@
                             <span class="text-gray-400 text-sm"><i class="fas fa-code-branch"></i> Branch</span>
                         @endif
                     </div>
+                    @php
+                        $forkCount = $translation->forks->where('visibility', 'public')->count();
+                        $branchTotal = $translation->forks->where('visibility', 'branch')->count();
+                    @endphp
                     <div class="text-sm text-gray-400 mt-1">
                         {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} •
                         {{ $translation->download_count }} {{ __('my_translations.downloads') }} •
-                        {{ $translation->forks->count() }} {{ __('my_translations.forks') }} •
+                        @if($translation->isMain() && $branchTotal > 0)
+                            {{ $branchTotal }} {{ __('my_translations.branches') }} •
+                        @endif
+                        @if($forkCount > 0)
+                            {{ $forkCount }} {{ __('my_translations.forks') }} •
+                        @endif
                         {{ $translation->updated_at->format('M d, Y') }}
                     </div>
                     <div class="mt-2">
@@ -78,7 +87,7 @@
                 <div class="flex gap-2">
                     @if($translation->isMain())
                     {{-- Edit translations (always available for Main) --}}
-                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_translations') }}">
+                    <a href="{{ route('translations.merge', ['uuid' => $translation->file_uuid, 'mode' => 'edit']) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_translations') }}">
                         <i class="fas fa-pen"></i>
                     </a>
                     {{-- Merge branches (highlighted when branches exist) --}}

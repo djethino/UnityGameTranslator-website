@@ -1,17 +1,36 @@
 @extends('layouts.app')
 
-@section('title', __('merge.title') . ' - ' . $main->game->name)
+@section('title', ($mode === 'edit' ? __('merge.edit_heading') : __('merge.title')) . ' - ' . $main->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergeTable" data-uuid="{{ $uuid }}" data-is-main="true" @click.away="closeTagDropdown()">
+<div class="container mx-auto px-4 py-8" x-data="mergeTable" data-uuid="{{ $uuid }}" data-is-main="true">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
-            <a href="{{ route('games.show', $main->game) }}" class="text-purple-400 hover:text-purple-300">
+            <a href="{{ route('translations.mine') }}" class="text-purple-400 hover:text-purple-300">
                 <i class="fas fa-arrow-left"></i> {{ $main->game->name }}
             </a>
+            @if($mode === 'edit' && $branches->count() > 0 || ($mode === 'merge' && true))
+            {{-- Mode switcher --}}
+            <div class="ml-auto flex gap-2 text-sm">
+                <a href="{{ route('translations.merge', ['uuid' => $uuid, 'mode' => 'edit']) }}"
+                   class="px-3 py-1 rounded {{ $mode === 'edit' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white' }}">
+                    <i class="fas fa-pen mr-1"></i> {{ __('merge.mode_edit') }}
+                </a>
+                <a href="{{ route('translations.merge', ['uuid' => $uuid, 'mode' => 'merge']) }}"
+                   class="px-3 py-1 rounded {{ $mode === 'merge' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white' }}">
+                    <i class="fas fa-code-merge mr-1"></i> {{ __('merge.mode_merge') }}
+                </a>
+            </div>
+            @endif
         </div>
-        <h1 class="text-2xl font-bold text-white">{{ __('merge.heading') }}</h1>
+        <h1 class="text-2xl font-bold text-white">
+            @if($mode === 'edit')
+                <i class="fas fa-pen mr-2 text-purple-400"></i>{{ __('merge.edit_heading') }}
+            @else
+                <i class="fas fa-code-merge mr-2 text-green-400"></i>{{ __('merge.heading') }}
+            @endif
+        </h1>
         <p class="text-gray-400">
             {{ $main->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $main->target_language }}
             &bull; {{ __('merge.keys_count', ['count' => $totalKeys]) }}
@@ -182,6 +201,7 @@
     <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
         @csrf
         {{-- Preserve current view state for redirect after save --}}
+        <input type="hidden" name="mode" value="{{ $mode }}">
         @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
         @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
         @if(request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif

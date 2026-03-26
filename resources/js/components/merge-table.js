@@ -422,8 +422,11 @@ export default function mergeTable() {
         openTagDropdown(event, key, currentTag, value) {
             event.stopPropagation();
 
-            // Position dropdown near the click (viewport coords for fixed positioning)
-            const rect = event.target.getBoundingClientRect();
+            // Use currentTarget (the button with @click) not target (could be inner icon/span)
+            const el = event.currentTarget || event.target;
+            const rect = el.getBoundingClientRect();
+            // Guard: don't open if rect is invalid (element not visible)
+            if (rect.width === 0 && rect.height === 0) return;
             // If dropdown would go below viewport, show above the element instead
             const dropdownHeight = 140; // approximate height of dropdown
             let y = rect.bottom + 4;
