@@ -39,7 +39,7 @@ class SitemapController extends Controller
      */
     public function games(int $page = 1): Response
     {
-        $perPage = 1000; // 1000 games × 14 locales = 14,000 URLs max per file
+        $perPage = 5000; // One URL per game with hreflang annotations
 
         $cacheKey = "sitemap-games-{$page}";
         $content = Cache::remember($cacheKey, 3600, function () use ($page, $perPage) {
@@ -69,7 +69,7 @@ class SitemapController extends Controller
      */
     public static function getGameSitemapPages(): int
     {
-        $perPage = 1000;
+        $perPage = 5000;
         $totalGames = Cache::remember('sitemap-games-count', 3600, function () {
             return Game::has('translations')->count();
         });

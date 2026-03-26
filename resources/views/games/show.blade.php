@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $game->name . ' Translation - Download ' . $game->name . ' in ' . implode(', ', $targetLanguages->take(3)->toArray()) . (count($targetLanguages) > 3 ? '...' : ''))
+@section('title', $game->name . ' Translation - UnityGameTranslator')
 
 @section('description')Free {{ $game->name }} translation download. AI automatic translation available in {{ implode(', ', $targetLanguages->toArray()) }}. {{ count($translationGroups) }} community translations - play {{ $game->name }} in your language!@endsection
 

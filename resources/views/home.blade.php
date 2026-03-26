@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'UnityGameTranslator - ' . __('home.hero_description'))
+@section('title', 'UnityGameTranslator - ' . __('home.hero_title'))
 
 @push('head')
 <script type="application/ld+json">

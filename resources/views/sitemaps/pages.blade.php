@@ -1,70 +1,25 @@
 {!! '<?xml version="1.0" encoding="UTF-8"?>' !!}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-@php $locales = config('locales.supported', []); @endphp
-@foreach($locales as $code => $locale)
+@php
+$locales = config('locales.supported', []);
+$pages = [
+    ['path' => '', 'changefreq' => 'daily', 'priority' => '1.0'],
+    ['path' => 'games', 'changefreq' => 'daily', 'priority' => '0.9'],
+    ['path' => 'docs', 'changefreq' => 'weekly', 'priority' => '0.7'],
+    ['path' => 'legal', 'changefreq' => 'monthly', 'priority' => '0.3'],
+    ['path' => 'privacy', 'changefreq' => 'monthly', 'priority' => '0.3'],
+    ['path' => 'terms', 'changefreq' => 'monthly', 'priority' => '0.3'],
+];
+@endphp
+@foreach($pages as $page)
 <url>
-<loc>{{ url('/' . $code) }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode) }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ url('/') }}"/>
-<changefreq>daily</changefreq>
-<priority>1.0</priority>
-</url>
-@endforeach
+<loc>{{ url('/' . $page['path']) }}</loc>
 @foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/games') }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/games') }}"/>
+<xhtml:link rel="alternate" hreflang="{{ $code }}" href="{{ url('/' . $code . ($page['path'] ? '/' . $page['path'] : '')) }}"/>
 @endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('games.index') }}"/>
-<changefreq>daily</changefreq>
-<priority>0.9</priority>
-</url>
-@endforeach
-@foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/docs') }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/docs') }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('docs') }}"/>
-<changefreq>weekly</changefreq>
-<priority>0.7</priority>
-</url>
-@endforeach
-@foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/legal') }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/legal') }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('legal.mentions') }}"/>
-<changefreq>monthly</changefreq>
-<priority>0.3</priority>
-</url>
-@endforeach
-@foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/privacy') }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/privacy') }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('legal.privacy') }}"/>
-<changefreq>monthly</changefreq>
-<priority>0.3</priority>
-</url>
-@endforeach
-@foreach($locales as $code => $locale)
-<url>
-<loc>{{ url('/' . $code . '/terms') }}</loc>
-@foreach($locales as $altCode => $altLocale)
-<xhtml:link rel="alternate" hreflang="{{ $altCode }}" href="{{ url('/' . $altCode . '/terms') }}"/>
-@endforeach
-<xhtml:link rel="alternate" hreflang="x-default" href="{{ route('legal.terms') }}"/>
-<changefreq>monthly</changefreq>
-<priority>0.3</priority>
+<xhtml:link rel="alternate" hreflang="x-default" href="{{ url('/' . $page['path']) }}"/>
+<changefreq>{{ $page['changefreq'] }}</changefreq>
+<priority>{{ $page['priority'] }}</priority>
 </url>
 @endforeach
 </urlset>

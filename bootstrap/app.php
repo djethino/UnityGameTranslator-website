@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TrackPageView::class,
             \App\Http\Middleware\ContentSecurityPolicy::class,
+            \App\Http\Middleware\PublicCacheHeaders::class,
         ]);
 
         // Decode gzip-compressed API requests from Unity mod
