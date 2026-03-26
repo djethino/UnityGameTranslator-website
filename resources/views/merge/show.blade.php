@@ -246,7 +246,7 @@
                         $mainValue = is_array($mainEntry) ? ($mainEntry['v'] ?? '') : ($mainEntry ?? '');
                         $mainTag = is_array($mainEntry) ? ($mainEntry['t'] ?? 'A') : 'A';
                         $keyEscaped = e($key);
-                        $keyJson = json_encode($key);
+                        $keyJson = json_encode($key, JSON_UNESCAPED_UNICODE);
                     @endphp
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                         {{-- Key column --}}
@@ -269,7 +269,7 @@
                         <td class="px-2 py-2 text-center border-l border-gray-700"
                             :class="[hasTagChange({{ $keyJson }}) ? 'tag-changed-cell' : '', isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']">
                             <button type="button"
-                                @click.stop="!isDeleted({{ $keyJson }}) && openTagDropdown($event, {{ $keyJson }}, '{{ $mainTag }}', {{ json_encode($mainValue) }})"
+                                @click.stop="!isDeleted({{ $keyJson }}) && openTagDropdown($event, {{ $keyJson }}, '{{ $mainTag }}', {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }})"
                                 :class="isDeleted({{ $keyJson }}) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
                                 class="transition rounded"
                                 :disabled="isDeleted({{ $keyJson }})"
@@ -288,8 +288,8 @@
                         {{-- Main Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell"
                             :class="[getCellClass({{ $keyJson }}, 'main'), isDeleted({{ $keyJson }}) ? 'deleted-cell' : '']"
-                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue) }}, '{{ $mainTag }}')"
-                            @dblclick="!isDeleted({{ $keyJson }}) && editCell({{ $keyJson }}, {{ json_encode($mainValue) }})">
+                            @click="!isDeleted({{ $keyJson }}) && select({{ $keyJson }}, 'main', {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }}, '{{ $mainTag }}')"
+                            @dblclick="!isDeleted({{ $keyJson }}) && editCell({{ $keyJson }}, {{ json_encode($mainValue, JSON_UNESCAPED_UNICODE) }})">
                             <span class="break-words" :class="[isEdited({{ $keyJson }}) ? 'text-purple-300' : '', isDeleted({{ $keyJson }}) ? 'line-through opacity-40' : '']">
                                 <span x-show="isEdited({{ $keyJson }})" x-text="getEditedValue({{ $keyJson }})"></span>
                                 <span x-show="!isEdited({{ $keyJson }})">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
@@ -308,7 +308,7 @@
                         {{-- Branch Tag column --}}
                         <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
                             :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
-                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue) }}, '{{ $branchTag }}')">
+                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue, JSON_UNESCAPED_UNICODE) }}, '{{ $branchTag }}')">
                             @if($branchEntry !== null)
                             <span class="tag-{{ $branchTag }}">{{ $branchTag }}</span>
                             @else
@@ -318,7 +318,7 @@
                         {{-- Branch Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
                             :class="getCellClass({{ $keyJson }}, 'branch_{{ $branch->id }}')"
-                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue) }}, '{{ $branchTag }}')">
+                            @click="select({{ $keyJson }}, 'branch_{{ $branch->id }}', {{ json_encode($branchValue, JSON_UNESCAPED_UNICODE) }}, '{{ $branchTag }}')">
                             @if($branchEntry !== null)
                             <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
                                 {{ $branchValue }}

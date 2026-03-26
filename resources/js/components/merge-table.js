@@ -279,10 +279,11 @@ export default function mergeTable() {
                 originalValue: currentValue
             };
 
-            // Focus textarea after modal opens
+            // Set textarea value via DOM (x-model unreliable with Alpine CSP build)
             this.$nextTick(() => {
                 const textarea = document.getElementById('editModalTextarea');
                 if (textarea) {
+                    textarea.value = existingValue;
                     textarea.focus();
                     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
                 }
@@ -290,13 +291,17 @@ export default function mergeTable() {
         },
 
         saveEditModal() {
-            const { key, value, originalValue } = this.editModal;
+            const key = this.editModal.key;
+            const originalValue = this.editModal.originalValue;
+            // Read value directly from DOM (x-model doesn't sync with Alpine CSP build)
+            const textarea = document.getElementById('editModalTextarea');
+            const value = textarea ? textarea.value : this.editModal.value;
 
             if (value === '') {
                 // Empty value = clear selection for this key
                 delete this.selections[key];
             } else if (value !== originalValue) {
-                // Only save if changed
+                // Value changed — mark as human edit
                 this.selections[key] = {
                     source: 'manual',
                     value: value,

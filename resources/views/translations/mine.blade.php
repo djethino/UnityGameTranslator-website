@@ -76,16 +76,16 @@
                 </div>
                 <div class="flex gap-2">
                     @if($translation->isMain())
-                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('translation.merge') }}">
-                        <i class="fas fa-code-merge"></i>
+                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_translations') }}">
+                        <i class="fas fa-language"></i>
                     </a>
                     @endif
                     <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>
                     </a>
                     @if($translation->isMain())
-                    <a href="{{ route('translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded" title="{{ __('translation.edit') }}">
-                        <i class="fas fa-edit"></i>
+                    <a href="{{ route('translations.edit', $translation) }}" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_metadata') }}">
+                        <i class="fas fa-sliders-h"></i>
                     </a>
                     @endif
                     <form action="{{ route('translations.destroy', $translation) }}" method="POST" class="delete-form">

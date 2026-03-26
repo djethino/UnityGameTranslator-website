@@ -483,6 +483,8 @@
     "my_translations.delete_confirm": "Delete this translation?",
     "my_translations.updated": "Translation updated successfully!",
     "my_translations.edit_title": "Edit Translation",
+    "my_translations.edit_translations": "Edit translations",
+    "my_translations.edit_metadata": "Settings",
     "my_translations.back_to_mine": "Back to My Translations",
     "games.browse": "Browse Translations",
     "games.search_game": "Search Game",
