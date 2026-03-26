@@ -74,11 +74,24 @@
                     </div>
                     </div>
                 </div>
+                @php $branchCount = $branchCounts[$translation->file_uuid] ?? 0; @endphp
                 <div class="flex gap-2">
                     @if($translation->isMain())
+                    {{-- Edit translations (always available for Main) --}}
                     <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_translations') }}">
-                        <i class="fas fa-language"></i>
+                        <i class="fas fa-pen"></i>
                     </a>
+                    {{-- Merge branches (highlighted when branches exist) --}}
+                    @if($branchCount > 0)
+                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="relative bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.merge_branches', ['count' => $branchCount]) }}">
+                        <i class="fas fa-code-merge"></i>
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{{ $branchCount }}</span>
+                    </a>
+                    @else
+                    <span class="bg-gray-700 text-gray-500 px-3 py-2 rounded cursor-not-allowed" title="{{ __('my_translations.no_branches') }}">
+                        <i class="fas fa-code-merge"></i>
+                    </span>
+                    @endif
                     @endif
                     <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>

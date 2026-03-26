@@ -485,6 +485,8 @@
     "my_translations.edit_title": "Modifier la traduction",
     "my_translations.edit_translations": "Editer les traductions",
     "my_translations.edit_metadata": "Parametres",
+    "my_translations.merge_branches": "Fusionner les branches (:count disponible(s))",
+    "my_translations.no_branches": "Aucune branche a fusionner",
     "my_translations.back_to_mine": "Retour a mes traductions",
     "games.browse": "Parcourir les traductions",
     "games.search_game": "Rechercher un jeu",

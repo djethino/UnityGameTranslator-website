@@ -272,7 +272,19 @@ class TranslationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('translations.mine', compact('translations'));
+        // Load branch counts for Main translations (single query)
+        $branchCounts = [];
+        $mainUuids = $translations->filter(fn($t) => $t->isMain())->pluck('file_uuid')->unique();
+        if ($mainUuids->isNotEmpty()) {
+            $branchCounts = Translation::whereIn('file_uuid', $mainUuids)
+                ->where('visibility', 'branch')
+                ->selectRaw('file_uuid, COUNT(*) as count')
+                ->groupBy('file_uuid')
+                ->pluck('count', 'file_uuid')
+                ->toArray();
+        }
+
+        return view('translations.mine', compact('translations', 'branchCounts'));
     }
 
     public function edit(Translation $translation)
