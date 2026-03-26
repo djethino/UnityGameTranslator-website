@@ -22,7 +22,16 @@ class Game extends Model
 
         static::creating(function ($game) {
             if (empty($game->slug)) {
-                $game->slug = Str::slug($game->name);
+                $slug = Str::slug($game->name);
+                // Str::slug returns empty for CJK/non-Latin names — fall back to steam_id or raw name
+                if (empty($slug)) {
+                    $slug = !empty($game->steam_id) ? 'game-' . $game->steam_id : Str::slug($game->name, '-', 'zh');
+                }
+                // Final fallback: use a unique ID-based slug
+                if (empty($slug)) {
+                    $slug = 'game-' . uniqid();
+                }
+                $game->slug = $slug;
             }
         });
     }
