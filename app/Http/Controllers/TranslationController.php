@@ -272,12 +272,17 @@ class TranslationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Load branch counts for Main translations (single query)
+        // Load unreviewed branch counts for Main translations (single query)
+        // A branch needs merging if: never reviewed OR modified since last review
         $branchCounts = [];
         $mainUuids = $translations->filter(fn($t) => $t->isMain())->pluck('file_uuid')->unique();
         if ($mainUuids->isNotEmpty()) {
             $branchCounts = Translation::whereIn('file_uuid', $mainUuids)
                 ->where('visibility', 'branch')
+                ->where(function ($q) {
+                    $q->whereNull('reviewed_hash')
+                      ->orWhereColumn('file_hash', '!=', 'reviewed_hash');
+                })
                 ->selectRaw('file_uuid, COUNT(*) as count')
                 ->groupBy('file_uuid')
                 ->pluck('count', 'file_uuid')
