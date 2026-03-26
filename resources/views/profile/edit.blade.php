@@ -64,7 +64,7 @@
                 <select name="locale" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                     @foreach(config('locales.supported', []) as $code => $locale)
                         <option value="{{ $code }}" {{ (old('locale', $user->locale) ?? app()->getLocale()) === $code ? 'selected' : '' }}>
-                            {{ $locale['flag'] }} {{ $locale['native'] }} ({{ $locale['name'] }})
+                            {{ strtoupper($code) }} — {{ $locale['native'] }} ({{ $locale['name'] }})
                         </option>
                     @endforeach
                 </select>
