@@ -79,6 +79,25 @@
         @endif
     </div>
 
+    {{-- Resources URL --}}
+    @php $effectiveUrl = $translation->getEffectiveResourcesUrl(); @endphp
+    @if($effectiveUrl)
+    <div class="bg-gray-800 rounded-lg p-4 border border-amber-700/50 mb-6">
+        <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-external-link-alt text-amber-400"></i>
+            <h3 class="text-sm font-semibold text-amber-400">{{ __('dashboard.external_resources') }}</h3>
+        </div>
+        <a href="{{ $effectiveUrl }}" target="_blank" rel="nofollow noopener noreferrer"
+            class="text-blue-400 hover:text-blue-300 break-all text-sm">
+            {{ Str::limit($effectiveUrl, 100) }}
+        </a>
+        <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            {{ __('dashboard.external_resources_disclaimer') }}
+        </p>
+    </div>
+    @endif
+
     {{-- Quality Progress Bar --}}
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-8">
         <div class="flex items-center justify-between mb-2">

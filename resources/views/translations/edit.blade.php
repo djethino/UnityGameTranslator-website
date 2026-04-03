@@ -135,6 +135,16 @@
                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">{{ $translation->notes }}</textarea>
         </div>
 
+        <!-- Resources URL -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.resources_url') }}</label>
+            <input type="url" name="resources_url" maxlength="2048"
+                value="{{ $translation->resources_url }}"
+                placeholder="{{ __('upload.resources_url_placeholder') }}"
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
+            <p class="text-xs text-gray-500 mt-1">{{ __('upload.resources_url_hint') }}</p>
+        </div>
+
         <div class="flex gap-4">
             <a href="{{ ($fromAdmin ?? false) ? route('admin.translations.show', $translation) : route('translations.mine') }}" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition text-center">
                 {{ __('common.cancel') }}

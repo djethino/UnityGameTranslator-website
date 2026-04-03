@@ -323,11 +323,13 @@ class TranslationController extends Controller
         $request->validate([
             'status' => 'required|in:in_progress,complete',
             'notes' => 'nullable|string|max:1000',
+            'resources_url' => 'nullable|string|max:2048|url',
         ]);
 
         $translation->update([
             'status' => $request->status,
             'notes' => $request->notes,
+            'resources_url' => $request->resources_url,
         ]);
 
         // Redirect based on access route, not user role

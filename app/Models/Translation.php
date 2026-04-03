@@ -24,6 +24,7 @@ class Translation extends Model
         'visibility',
         // 'type' is now a computed attribute from HVASM stats
         'notes',
+        'resources_url',
         'file_path',
         'file_uuid',
         'file_hash',
@@ -221,6 +222,21 @@ class Translation extends Model
     public function votes()
     {
         return $this->hasMany(Vote::class);
+    }
+
+    /**
+     * Get the effective resources URL: own URL if set, otherwise parent's URL.
+     * Forks inherit the parent's resources URL.
+     */
+    public function getEffectiveResourcesUrl(): ?string
+    {
+        if (!empty($this->resources_url)) {
+            return $this->resources_url;
+        }
+        if ($this->parent_id && $this->parent) {
+            return $this->parent->resources_url;
+        }
+        return null;
     }
 
     /**

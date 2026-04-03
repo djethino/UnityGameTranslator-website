@@ -77,6 +77,7 @@ class SyncStateController extends Controller
                 'target_language' => $ownTranslation->target_language,
                 'type' => $ownTranslation->type,
                 'notes' => $ownTranslation->notes,
+                'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
                 'line_count' => $ownTranslation->line_count,
                 'file_hash' => $ownTranslation->file_hash,
                 'vote_count' => $ownTranslation->vote_count,

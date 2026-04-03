@@ -90,6 +90,7 @@ class TranslationController extends Controller
                     'status' => $t->status,
                     'type' => $t->type,
                     'notes' => $t->notes,
+                    'resources_url' => $t->getEffectiveResourcesUrl(),
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
                     'human_count' => $t->human_count,
@@ -187,6 +188,7 @@ class TranslationController extends Controller
                     'target_language' => $ownTranslation->target_language,
                     'type' => $ownTranslation->type,
                     'notes' => $ownTranslation->notes,
+                    'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
                     'line_count' => $ownTranslation->line_count,
                     'file_hash' => $ownTranslation->file_hash,
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
@@ -326,6 +328,7 @@ class TranslationController extends Controller
             'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
             'content' => 'required|string|min:2',
             'notes' => 'nullable|string|max:1000',
+            'resources_url' => 'nullable|string|max:2048|url',
         ]);
 
         // Parse and validate content (includes normalization)
@@ -407,6 +410,7 @@ class TranslationController extends Controller
                 'capture_count' => $parsed['tag_counts']['capture_count'],
                 'status' => $status,
                 'notes' => $request->notes,
+                'resources_url' => $request->resources_url,
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'font_config' => $parsed['font_config'],
@@ -457,6 +461,7 @@ class TranslationController extends Controller
             'status' => $status,
             'visibility' => $visibility,
             'notes' => $request->notes,
+            'resources_url' => $request->resources_url,
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
