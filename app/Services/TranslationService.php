@@ -42,8 +42,8 @@ class TranslationService
         // Normalize line endings first
         $content = $this->normalizeContent($content);
 
-        // Parse JSON (depth 5: root → _fonts → fontName → {enabled, fallback, type, scale})
-        $json = json_decode($content, true, 5);
+        // Parse JSON (depth 6: max actual depth is 4, +2 margin for future nested structures)
+        $json = json_decode($content, true, 6);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \InvalidArgumentException('Invalid JSON content: ' . json_last_error_msg());
