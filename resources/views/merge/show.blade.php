@@ -301,13 +301,12 @@
                         $mainEntry = $mainContent[$key] ?? null;
                         $mainValue = is_array($mainEntry) ? ($mainEntry['v'] ?? '') : ($mainEntry ?? '');
                         $mainTag = is_array($mainEntry) ? ($mainEntry['t'] ?? 'A') : 'A';
-                        $keyEscaped = e($key);
                         $keyJson = json_encode($key, JSON_UNESCAPED_UNICODE);
                     @endphp
                     @php $rowIdx = $loop->index; @endphp
                     <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors merge-row"
-                        data-key="{{ $keyEscaped }}"
-                        data-main-value="{{ e($mainValue) }}"
+                        data-key="{{ $key }}"
+                        data-main-value="{{ $mainValue }}"
                         data-main-tag="{{ $mainTag }}">
                         {{-- Key column --}}
                         <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
@@ -368,7 +367,7 @@
                         {{-- Branch Tag column --}}
                         <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
                             :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
-                            data-branch-value="{{ e($branchValue) }}"
+                            data-branch-value="{{ $branchValue }}"
                             data-branch-tag="{{ $branchTag }}"
                             data-branch-source="branch_{{ $branch->id }}"
                             @click="selectFromBranch($event)">
@@ -381,7 +380,7 @@
                         {{-- Branch Value column --}}
                         <td class="px-4 py-2 border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
                             :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
-                            data-branch-value="{{ e($branchValue) }}"
+                            data-branch-value="{{ $branchValue }}"
                             data-branch-tag="{{ $branchTag }}"
                             data-branch-source="branch_{{ $branch->id }}"
                             @click="selectFromBranch($event)">
