@@ -591,11 +591,17 @@ class TranslationController extends Controller
 
             $tokenContent = $mergeToken->local_content;
 
-            // Create a scoped web session (needed for CSRF + POST save)
-            // Mark it so we can invalidate after merge is applied
-            Auth::loginUsingId($mergeToken->user_id);
+            // Check if user was already authenticated before token login
+            $wasAlreadyLoggedIn = auth()->check() && (int) auth()->id() === (int) $mergeToken->user_id;
+
+            // Create a web session (needed for CSRF + POST save)
+            if (!$wasAlreadyLoggedIn) {
+                Auth::loginUsingId($mergeToken->user_id);
+            }
             session([
-                'merge_preview_only' => true,
+                // Only mark as scoped if user wasn't already logged in
+                // This prevents destroying their existing web session after save
+                'merge_preview_only' => !$wasAlreadyLoggedIn,
                 'merge_preview_translation_id' => $translation->id,
                 'merge_preview_local_content' => $tokenContent,
             ]);
