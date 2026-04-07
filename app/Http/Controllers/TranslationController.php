@@ -594,12 +594,20 @@ class TranslationController extends Controller
             // Create a scoped web session (needed for CSRF + POST save)
             // Mark it so we can invalidate after merge is applied
             Auth::loginUsingId($mergeToken->user_id);
-            session(['merge_preview_only' => true, 'merge_preview_translation_id' => $translation->id]);
+            session([
+                'merge_preview_only' => true,
+                'merge_preview_translation_id' => $translation->id,
+                'merge_preview_local_content' => $tokenContent,
+            ]);
 
             // Delete token after use (one-time)
             $mergeToken->delete();
         }
-        // Mode 2: Web session auth (from website)
+        // Mode 2: Session recovery (page reload after token was consumed)
+        elseif (session('merge_preview_only') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
+            $tokenContent = session('merge_preview_local_content');
+        }
+        // Mode 3: Web session auth (from website)
         else {
             $user = auth()->user();
 
@@ -765,7 +773,7 @@ class TranslationController extends Controller
         // If this was a token-based merge preview session, invalidate it
         // to prevent the scoped session from being used for other actions
         if (session('merge_preview_only')) {
-            session()->forget(['merge_preview_only', 'merge_preview_translation_id']);
+            session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_local_content']);
             Auth::logout();
             session()->invalidate();
             session()->regenerateToken();

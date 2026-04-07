@@ -796,15 +796,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         get totalChanges() {
-            // Count only REAL modifications to the server file
-            // A tag becomes V when selected = counts as change
-            // H, V, M, S tags don't change status = only count if value differs
+            // Count only user-meaningful modifications to the server file:
+            // - Manual edits (value changed by user)
+            // - Local-only keys added to server
+            // - Keys where selected value differs from online value
+            // - Explicit tag changes (user chose to skip/change a tag)
+            // Note: automatic A→V promotion is NOT counted (it's implicit, not a user choice)
             let count = 0;
             for (const key of this.allKeys) {
                 const source = this.selections[key];
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
                 const isEdited = this.editedValues[key] !== undefined;
+                const hasTagChange = key in this.tagChanges;
 
                 // Case 1: Manual edit - always a change (becomes H tag)
                 if (isEdited) {
@@ -812,41 +816,24 @@ document.addEventListener('alpine:init', () => {
                     continue;
                 }
 
-                // Case 2: Local-only key selected as local = addition
+                // Case 2: Explicit tag change by user
+                if (hasTagChange) {
+                    count++;
+                    continue;
+                }
+
+                // Case 3: Local-only key selected as local = addition
                 if (hasLocal && !hasOnline && source === 'local') {
                     count++;
                     continue;
                 }
 
-                // Case 3: Selection from common key - check value AND tag
-                if (hasLocal && hasOnline) {
-                    const selectedData = source === 'local' ? this.localData[key] : this.onlineData[key];
-                    const onlineData = this.onlineData[key];
+                // Case 4: Selection from common key - only count if VALUE differs
+                if (hasLocal && hasOnline && source === 'local') {
+                    const localValue = this.getValue(this.localData[key]);
+                    const onlineValue = this.getValue(this.onlineData[key]);
 
-                    const selectedValue = this.getValue(selectedData);
-                    const onlineValue = this.getValue(onlineData);
-                    const selectedTag = this.getTag(selectedData);
-
-                    // Value differs = change
-                    if (selectedValue !== onlineValue) {
-                        count++;
-                        continue;
-                    }
-
-                    // Tag A will become V = change (even if same value)
-                    if (selectedTag === 'A') {
-                        count++;
-                        continue;
-                    }
-
-                    // H, V, M, S with same value = no change
-                }
-
-                // Case 4: Online-only key selected as online
-                if (!hasLocal && hasOnline && source === 'online') {
-                    const onlineTag = this.getTag(this.onlineData[key]);
-                    // Tag A will become V = change
-                    if (onlineTag === 'A') {
+                    if (localValue !== onlineValue) {
                         count++;
                     }
                 }
@@ -1146,7 +1133,7 @@ document.addEventListener('alpine:init', () => {
         saveToServer() {
             this.saving = true;
 
-            // Build selections array for the form
+            // Build selections array for the form - only include REAL changes
             const container = document.getElementById('selectionsContainer');
             while (container.firstChild) {
                 container.removeChild(container.firstChild);
@@ -1157,26 +1144,44 @@ document.addEventListener('alpine:init', () => {
                 const source = this.selections[key];
                 const isEdited = this.editedValues[key] !== undefined;
                 const hasTagChange = key in this.tagChanges;
+                const hasLocal = key in this.localData;
+                const hasOnline = key in this.onlineData;
 
                 let value, tag, sourceType;
+                let isRealChange = false;
 
                 if (isEdited) {
+                    // Manual edit = always a change
                     value = this.editedValues[key];
-                    // Apply explicit tag change, or use original tag
                     tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
                     sourceType = 'manual';
-                } else if (source === 'local' && key in this.localData) {
-                    value = this.getValue(this.localData[key]);
-                    // Apply explicit tag change, or use original tag
-                    tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
+                    isRealChange = true;
+                } else if (hasTagChange) {
+                    // Explicit tag change by user
+                    value = this.tagChanges[key].value;
+                    tag = this.tagChanges[key].newTag;
                     sourceType = 'local';
-                } else if (source === 'online' && key in this.onlineData) {
-                    value = this.getValue(this.onlineData[key]);
-                    tag = this.getTag(this.onlineData[key]);
-                    sourceType = 'online';
-                } else {
-                    continue;
+                    isRealChange = true;
+                } else if (hasLocal && !hasOnline && source === 'local') {
+                    // Local-only key = addition
+                    value = this.getValue(this.localData[key]);
+                    tag = this.getTag(this.localData[key]);
+                    sourceType = 'local';
+                    isRealChange = true;
+                } else if (hasLocal && hasOnline && source === 'local') {
+                    // Both exist, local selected - only send if value differs
+                    const localValue = this.getValue(this.localData[key]);
+                    const onlineValue = this.getValue(this.onlineData[key]);
+                    if (localValue !== onlineValue) {
+                        value = localValue;
+                        tag = this.getTag(this.localData[key]);
+                        sourceType = 'local';
+                        isRealChange = true;
+                    }
                 }
+                // Online-only or same value with online selected = no change to send
+
+                if (!isRealChange) continue;
 
                 // Create hidden inputs
                 const inputs = [
@@ -1195,6 +1200,11 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 i++;
+            }
+
+            if (i === 0) {
+                this.saving = false;
+                return;
             }
 
             // Submit the form
