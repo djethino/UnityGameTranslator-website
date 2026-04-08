@@ -294,7 +294,7 @@
     "docs.ai_url_example_lmstudio": "http:\/\/localhost:1234",
     "docs.ai_url_example_groq": "https:\/\/api.groq.com\/openai",
     "docs.ai_url_example_openai": "https:\/\/api.openai.com",
-    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai",
+    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai\/chat\/completions",
     "docs.ai_tip_title": "권장 로컬 모델",
     "docs.ai_tip_content": "qwen3:8b는 게임 번역에 품질과 속도의 최적 균형을 제공합니다. qwen3:14b와 같은 큰 모델은 더 나은 품질을 제공하지만 더 많은 VRAM이 필요합니다.",
     "docs.first_launch": "첫 실행",

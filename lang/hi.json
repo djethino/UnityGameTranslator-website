@@ -294,7 +294,7 @@
     "docs.ai_url_example_lmstudio": "http:\/\/localhost:1234",
     "docs.ai_url_example_groq": "https:\/\/api.groq.com\/openai",
     "docs.ai_url_example_openai": "https:\/\/api.openai.com",
-    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai",
+    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai\/chat\/completions",
     "docs.ai_tip_title": "अनुशंसित लोकल मॉडल",
     "docs.ai_tip_content": "qwen3:8b गेम अनुवाद के लिए क्वालिटी और स्पीड का सबसे अच्छा संतुलन प्रदान करता है। qwen3:14b जैसे बड़े मॉडल बेहतर क्वालिटी देते हैं लेकिन अधिक VRAM की आवश्यकता होती है।",
     "docs.first_launch": "पहला लॉन्च",

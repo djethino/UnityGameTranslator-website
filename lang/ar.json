@@ -294,7 +294,7 @@
     "docs.ai_url_example_lmstudio": "http:\/\/localhost:1234",
     "docs.ai_url_example_groq": "https:\/\/api.groq.com\/openai",
     "docs.ai_url_example_openai": "https:\/\/api.openai.com",
-    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai",
+    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai\/chat\/completions",
     "docs.ai_tip_title": "النموذج المحلي الموصى به",
     "docs.ai_tip_content": "يوفر qwen3:8b أفضل توازن بين الجودة والسرعة لترجمة الألعاب. النماذج الأكبر مثل qwen3:14b توفر جودة أفضل لكنها تتطلب ذاكرة رسومات أكثر.",
     "docs.first_launch": "التشغيل الأول",

@@ -294,7 +294,7 @@
     "docs.ai_url_example_lmstudio": "http:\/\/localhost:1234",
     "docs.ai_url_example_groq": "https:\/\/api.groq.com\/openai",
     "docs.ai_url_example_openai": "https:\/\/api.openai.com",
-    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai",
+    "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai\/chat\/completions",
     "docs.ai_tip_title": "Model lokal yang direkomendasikan",
     "docs.ai_tip_content": "qwen3:8b menawarkan keseimbangan terbaik antara kualitas dan kecepatan untuk terjemahan game. Model yang lebih besar seperti qwen3:14b memberikan kualitas lebih baik tapi memerlukan lebih banyak VRAM.",
     "docs.first_launch": "Peluncuran Pertama",
