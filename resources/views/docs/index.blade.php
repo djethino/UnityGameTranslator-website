@@ -312,7 +312,7 @@
 
                 <p class="text-gray-300 mb-4">{{ __('docs.enable_ai_desc') }}</p>
 
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div class="grid md:grid-cols-3 gap-4 mb-4">
                     <div class="bg-gray-700/50 rounded-lg p-4">
                         <h4 class="font-semibold text-green-400 mb-2"><i class="fas fa-desktop mr-2"></i>{{ __('docs.ai_local_title') }}</h4>
                         <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_local_desc') }}</p>
@@ -329,9 +329,40 @@
                             <a href="https://openrouter.ai" target="_blank" class="text-purple-400 hover:underline">openrouter.ai</a>
                         </div>
                     </div>
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-orange-400 mb-2"><i class="fas fa-language mr-2"></i>{{ __('docs.ai_commercial_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_commercial_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://cloud.google.com/translate" target="_blank" class="text-purple-400 hover:underline">Google Translate</a>
+                            <a href="https://www.deepl.com/pro-api" target="_blank" class="text-purple-400 hover:underline">DeepL</a>
+                        </div>
+                    </div>
                 </div>
 
                 <p class="text-gray-300 text-sm mb-4">{{ __('docs.ai_setup_steps') }}</p>
+
+                {{-- URL format guide --}}
+                <div class="bg-gray-700/50 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-white mb-2"><i class="fas fa-link mr-2 text-purple-400"></i>{{ __('docs.ai_url_title') }}</h4>
+                    <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_url_desc') }}</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-400 border-b border-gray-600">
+                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_provider') }}</th>
+                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_url') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Ollama</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_ollama') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">LM Studio</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_lmstudio') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Groq</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_groq') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">OpenAI</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_openai') }}</code></td></tr>
+                                <tr><td class="py-2 px-3">Google Gemini</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_gemini') }}</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <div class="callout callout-tip">
                     <p class="text-sm text-gray-300">

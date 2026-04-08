@@ -52,13 +52,13 @@
         <!-- Key features tags -->
         <div class="flex flex-wrap justify-center gap-2 mb-8">
             <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fas fa-robot text-purple-400 mr-1"></i>{{ __('home.tag_local_ai') }}
+                <i class="fas fa-language text-purple-400 mr-1"></i>{{ __('home.tag_local_ai') }}
             </span>
             <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
                 <i class="fas fa-users text-purple-400 mr-1"></i>{{ __('home.tag_community') }}
             </span>
             <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fas fa-shield-alt text-purple-400 mr-1"></i>{{ __('home.tag_privacy') }}
+                <i class="fas fa-wifi-slash text-purple-400 mr-1"></i>{{ __('home.tag_privacy') }}
             </span>
             <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
                 <i class="fab fa-github text-purple-400 mr-1"></i>{{ __('home.tag_opensource') }}
