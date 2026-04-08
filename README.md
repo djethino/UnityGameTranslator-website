@@ -73,15 +73,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 
 ### Authentication
 
-**OAuth providers:**
-- Google
-- GitHub
-- Discord
-- Twitch
-- Steam
-- Epic Games
-- Microsoft
-- Reddit
+**OAuth providers:** Google, GitHub, Discord, Twitch, Steam
 
 **Device Flow** for Unity mod: mod displays a code, user enters it at `/link`, mod receives API token via SSE stream.
 
@@ -90,7 +82,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Framework:** Laravel 12 (PHP 8.2+)
 - **Real-time:** Node.js SSE micro-server + Redis pub/sub
 - **Database:** SQLite (dev) / MySQL (prod)
-- **Auth:** Laravel Socialite (8 OAuth providers)
+- **Auth:** Laravel Socialite (5 OAuth providers)
 - **Frontend:** Tailwind CSS 4, Alpine.js (CSP build), Chart.js, Font Awesome, Flag-icons
 - **Analytics:** Built-in event tracking with daily aggregation
 
@@ -170,15 +162,6 @@ TWITCH_CLIENT_ID=
 TWITCH_CLIENT_SECRET=
 
 STEAM_API_KEY=
-
-EPICGAMES_CLIENT_ID=
-EPICGAMES_CLIENT_SECRET=
-
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
-
-REDDIT_CLIENT_ID=
-REDDIT_CLIENT_SECRET=
 ```
 
 | Provider | Console |
@@ -188,9 +171,6 @@ REDDIT_CLIENT_SECRET=
 | Discord | [Discord Developer Portal](https://discord.com/developers/applications) |
 | Twitch | [Twitch Developer Console](https://dev.twitch.tv/console/apps) |
 | Steam | [Steam Web API Key](https://steamcommunity.com/dev/apikey) |
-| Epic Games | [Epic Games Developer Portal](https://dev.epicgames.com/portal) |
-| Microsoft | [Azure App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps) |
-| Reddit | [Reddit App Preferences](https://www.reddit.com/prefs/apps) |
 
 ### Redis
 
@@ -248,7 +228,6 @@ Arabic, Chinese, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Ital
 ### Backend
 - **[Laravel](https://laravel.com/)** — PHP framework
 - **[Laravel Socialite](https://laravel.com/docs/socialite)** — OAuth authentication
-- **[SocialiteProviders](https://socialiteproviders.com/)** — Community OAuth providers (Microsoft, Reddit)
 - **[ioredis](https://github.com/redis/ioredis)** — Redis client for Node.js
 
 ### Frontend
