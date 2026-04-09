@@ -81,6 +81,9 @@
                         <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions" target="_blank" class="text-gray-300 hover:text-white px-3 py-2 transition">
+                            <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}
+                        </a>
                         @auth
                         <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
@@ -199,6 +202,9 @@
                 <a href="{{ route('docs') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
                     <i class="fas fa-book mr-3 w-5 text-center"></i> {{ __('nav.docs') }}
                 </a>
+                <a href="https://github.com/djethino/UnityGameTranslator/discussions" target="_blank" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-comments mr-3 w-5 text-center"></i> {{ __('nav.community') }}
+                </a>
                 @auth
                 <a href="{{ route('translations.create') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
                     <i class="fas fa-upload mr-3 w-5 text-center"></i> {{ __('nav.upload') }}
@@ -305,6 +311,10 @@
                         </a>
                         <a href="https://github.com/djethino/UnityGameTranslator-website/issues" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
                             <i class="fas fa-bug mr-1"></i>{{ __('footer.report_site_bug') }}
+                        </a>
+                        <span class="text-gray-600">|</span>
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                            <i class="fas fa-comments mr-1"></i>{{ __('footer.community') }}
                         </a>
                     </div>
                 </div>

@@ -37,7 +37,9 @@ class PublicCacheHeaders
         }
 
         // Public pages: allow shared caches (CDN, proxies, crawlers)
+        // Vary by Cookie so the browser invalidates cache after login/logout
         $response->headers->set('Cache-Control', 'public, max-age=60, s-maxage=300');
+        $response->headers->set('Vary', 'Cookie, Accept-Language');
 
         return $response;
     }

@@ -23,8 +23,37 @@ class LocaleController extends Controller
             Auth::user()->update(['locale' => $locale]);
         }
 
-        return redirect()->back()->setTargetUrl(
-            url()->previous(config('app.url'))
-        );
+        // Redirect back with the new locale prefix replacing the old one
+        // Without this, redirect()->back() keeps the old locale prefix in the URL,
+        // and SetLocale gives URL prefix highest priority, ignoring the session change.
+        $previousUrl = url()->previous(config('app.url'));
+        $redirectUrl = $this->replaceLocaleInUrl($previousUrl, $locale, $supportedLocales);
+
+        return redirect($redirectUrl);
+    }
+
+    /**
+     * Replace or add the locale prefix in a URL.
+     */
+    protected function replaceLocaleInUrl(string $url, string $newLocale, array $supportedLocales): string
+    {
+        $parsed = parse_url($url);
+        $path = $parsed['path'] ?? '/';
+
+        // Strip existing locale prefix if present
+        $segments = explode('/', ltrim($path, '/'));
+        if (!empty($segments[0]) && in_array($segments[0], $supportedLocales)) {
+            array_shift($segments);
+        }
+
+        // Rebuild path with new locale prefix
+        $newPath = '/' . $newLocale . '/' . implode('/', $segments);
+        $newPath = rtrim($newPath, '/');
+
+        // Rebuild URL preserving query string
+        $baseUrl = rtrim(config('app.url'), '/');
+        $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+
+        return $baseUrl . $newPath . $query;
     }
 }
