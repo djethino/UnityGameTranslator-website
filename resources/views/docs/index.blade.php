@@ -161,6 +161,9 @@
             <a href="#configuration" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-cog mr-2 w-4"></i>{{ __('docs.nav.configuration') }}
             </a>
+            <a href="#external-resources" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-folder-open mr-2 w-4"></i>{{ __('docs.nav.external_resources') }}
+            </a>
             <a href="#troubleshooting" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-question-circle mr-2 w-4"></i>{{ __('docs.nav.troubleshooting') }}
             </a>
@@ -296,9 +299,22 @@
                     </a>
                 </div>
 
-                <div class="space-y-2 text-gray-300">
-                    <p><strong>BepInEx:</strong> <code class="bg-gray-700 px-2 py-1 rounded text-sm">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/</code></p>
-                    <p><strong>MelonLoader:</strong> <code class="bg-gray-700 px-2 py-1 rounded text-sm">&lt;Game&gt;/Mods/UnityGameTranslator/</code></p>
+                <div class="space-y-3 text-gray-300">
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">BepInEx</p>
+                        <p class="text-sm mb-1">{{ __('docs.install_bepinex_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/</code>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">MelonLoader</p>
+                        <p class="text-sm mb-1">{{ __('docs.install_melon_dll_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/Mods/</code>
+                        <p class="text-sm mt-2 mb-1">{{ __('docs.install_melon_data_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/UserData/UnityGameTranslator/</code>
+                    </div>
+                    <div class="bg-yellow-900/30 border border-yellow-700/50 rounded p-3 text-sm">
+                        <p><i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>{{ __('docs.install_melon_warning') }}</p>
+                    </div>
                 </div>
             </div>
 
@@ -769,6 +785,56 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- External Resources -->
+        <section id="external-resources" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-folder-open mr-3 text-purple-400"></i>{{ __('docs.external_resources.title') }}
+            </h2>
+
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <p class="text-gray-300 mb-4">{{ __('docs.external_resources.intro') }}</p>
+
+                <div class="bg-blue-900/30 border border-blue-700/50 rounded p-3 text-sm mb-4">
+                    <p><i class="fas fa-info-circle text-blue-400 mr-2"></i>{{ __('docs.external_resources.optional_note') }}</p>
+                </div>
+
+                <h3 class="font-semibold text-purple-300 mb-2">{{ __('docs.external_resources.where_title') }}</h3>
+                <p class="text-gray-300 mb-3">{{ __('docs.external_resources.where_desc') }}</p>
+
+                <div class="space-y-3 mb-4">
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">BepInEx</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/fonts/</code>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block mt-1">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/images/</code>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">MelonLoader</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/UserData/UnityGameTranslator/fonts/</code>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block mt-1">&lt;Game&gt;/UserData/UnityGameTranslator/images/</code>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold text-purple-300 mb-2">{{ __('docs.external_resources.fonts_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.external_resources.fonts_desc') }}</p>
+                <ul class="list-disc list-inside text-gray-300 text-sm mb-4 space-y-1">
+                    <li>{{ __('docs.external_resources.fonts_formats') }}</li>
+                    <li>{{ __('docs.external_resources.fonts_naming') }}</li>
+                    <li>{{ __('docs.external_resources.fonts_usage') }}</li>
+                </ul>
+
+                <h3 class="font-semibold text-purple-300 mb-2">{{ __('docs.external_resources.images_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.external_resources.images_desc') }}</p>
+                <ul class="list-disc list-inside text-gray-300 text-sm mb-4 space-y-1">
+                    <li>{{ __('docs.external_resources.images_formats') }}</li>
+                    <li>{{ __('docs.external_resources.images_workflow') }}</li>
+                </ul>
+
+                <div class="bg-yellow-900/30 border border-yellow-700/50 rounded p-3 text-sm">
+                    <p><i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>{{ __('docs.external_resources.disclaimer') }}</p>
                 </div>
             </div>
         </section>
