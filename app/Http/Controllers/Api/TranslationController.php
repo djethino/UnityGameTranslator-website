@@ -607,11 +607,12 @@ class TranslationController extends Controller
             'value' => 'required|integer|in:-1,1',
         ]);
 
-        $translation->vote((int) $request->value);
+        $user = $request->user();
+        $translation->vote((int) $request->value, $user);
 
         return response()->json([
             'vote_count' => $translation->fresh()->vote_count,
-            'user_vote' => $translation->userVote()?->value,
+            'user_vote' => $translation->userVoteFor($user)?->value,
         ]);
     }
 }

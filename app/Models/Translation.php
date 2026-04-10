@@ -242,6 +242,10 @@ class Translation extends Model
     /**
      * Get the current user's vote for this translation
      */
+    /**
+     * Get the current user's vote for this translation.
+     * Works with both web (auth()) and API (explicit user) contexts.
+     */
     public function userVote()
     {
         if (!auth()->check()) {
@@ -251,13 +255,25 @@ class Translation extends Model
     }
 
     /**
-     * Vote on this translation
+     * Get a specific user's vote for this translation.
+     * Used by API controllers where auth() may not be set.
      */
-    public function vote(int $value): void
+    public function userVoteFor(\App\Models\User $user)
     {
-        \DB::transaction(function () use ($value) {
+        return $this->votes()->where('user_id', $user->id)->first();
+    }
+
+    /**
+     * Vote on this translation.
+     * Accepts an optional user parameter for API context where auth() is not available.
+     */
+    public function vote(int $value, ?\App\Models\User $user = null): void
+    {
+        $userId = $user ? $user->id : auth()->id();
+
+        \DB::transaction(function () use ($value, $userId) {
             $existingVote = $this->votes()
-                ->where('user_id', auth()->id())
+                ->where('user_id', $userId)
                 ->lockForUpdate()
                 ->first();
 
@@ -274,7 +290,7 @@ class Translation extends Model
             } else {
                 // New vote
                 $this->votes()->create([
-                    'user_id' => auth()->id(),
+                    'user_id' => $userId,
                     'value' => $value,
                 ]);
                 $this->increment('vote_count', $value);
