@@ -60,6 +60,7 @@
                     <th class="text-left py-3 px-4">{{ __('my_translations.lines') }}</th>
                     <th class="text-left py-3 px-4">{{ __('my_translations.downloads') }}</th>
                     <th class="text-left py-3 px-4">{{ __('admin.created_at') }}</th>
+                    <th class="text-left py-3 px-4">{{ __('admin.updated_at') }}</th>
                     <th class="text-right py-3 px-4">{{ __('admin.actions') }}</th>
                 </tr>
             </thead>
@@ -102,6 +103,9 @@
                         <td class="py-3 px-4 text-gray-400 text-sm">
                             {{ $translation->created_at->format('M d, Y') }}
                         </td>
+                        <td class="py-3 px-4 text-gray-400 text-sm">
+                            {{ $translation->updated_at->format('M d, Y') }}
+                        </td>
                         <td class="py-3 px-4 text-right">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ route('admin.translations.show', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm" title="{{ __('admin.view_json') }}">
@@ -122,7 +126,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-gray-500">
+                        <td colspan="8" class="py-8 text-center text-gray-500">
                             {{ __('admin.no_translations') }}
                         </td>
                     </tr>
