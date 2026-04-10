@@ -87,17 +87,8 @@
    rx="120"
    ry="180"
    id="ellipse4" />
-<text
-   transform="scale(1.0714082,0.93335111)"
-   class="st2 st3 st4"
-   id="text4"
-   x="52.300861"
-   y="192.40994"
-   style="stroke-width:1.07074">A</text>
-<text
-   transform="matrix(1 0 0 1 300.2126 424.0629)"
-   class="st2 st5 st6"
-   id="text5">文</text>
+
+
 <g
    transform="translate(208.6838,281.75493)"
    id="g7">

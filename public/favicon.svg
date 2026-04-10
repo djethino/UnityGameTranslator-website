@@ -98,19 +98,10 @@
    x2="114.8"
    y2="64"
    id="line4" />
-<text
-   class="st2 st3 st4"
-   id="text4"
-   x="21.172701"
-   y="43.411201">A</text>
-<text
-   class="st2 st5 st6"
-   id="text5"
-   x="73.155411"
-   y="104.15662"
-   style="stroke-width:1.13934">文</text>
+
+
 <g
-   transform="translate(210.76778,282.74208)"
+   transform="matrix(1.2452421,0,0,1.2452421,247.7636,338.5815)"
    id="g10">
 	<path
    class="st2"
