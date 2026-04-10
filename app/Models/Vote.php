@@ -12,6 +12,10 @@ class Vote extends Model
         'value',
     ];
 
+    protected $casts = [
+        'value' => 'integer',
+    ];
+
     public function translation()
     {
         return $this->belongsTo(Translation::class);

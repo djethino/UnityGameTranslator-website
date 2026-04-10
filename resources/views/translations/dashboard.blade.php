@@ -63,7 +63,7 @@
             <div class="text-sm text-gray-400">{{ __('dashboard.downloads') }}</div>
         </div>
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <div class="text-3xl font-bold text-white">{{ $translation->vote_score }}</div>
+            <div class="text-3xl font-bold text-white">{{ $translation->vote_count }}</div>
             <div class="text-sm text-gray-400">{{ __('dashboard.votes') }}</div>
         </div>
         @if($isMain)
