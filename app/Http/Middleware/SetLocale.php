@@ -31,6 +31,14 @@ class SetLocale
             // URL has explicit locale - use it and update session
             App::setLocale($urlLocale);
             session(['locale' => $urlLocale]);
+
+            // Remove {locale} from route parameters so it's not passed positionally
+            // to controllers that don't expect it. Without this, Laravel would pass
+            // the locale string as the first controller argument, causing a TypeError
+            // when the controller expects a route-bound model like Game.
+            if ($request->route()) {
+                $request->route()->forgetParameter('locale');
+            }
         } else {
             // No URL prefix - detect from other sources
             $locale = $this->detectLocale($request, $supportedLocales);
