@@ -1,31 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- Background circle with gradient -->
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#a855f7"/>
-      <stop offset="100%" style="stop-color:#7c3aed"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Main circle background -->
-  <circle cx="64" cy="64" r="60" fill="url(#bgGrad)"/>
-
-  <!-- Globe lines (translation/international) -->
-  <ellipse cx="64" cy="64" rx="35" ry="35" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.3"/>
-  <ellipse cx="64" cy="64" rx="35" ry="18" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.3"/>
-  <line x1="64" y1="29" x2="64" y2="99" stroke="#ffffff" stroke-width="3" opacity="0.3"/>
-  <line x1="29" y1="64" x2="99" y2="64" stroke="#ffffff" stroke-width="3" opacity="0.3"/>
-
-  <!-- Translation arrows (A -> あ style) -->
-  <text x="38" y="58" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">A</text>
-  <text x="70" y="85" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#ffffff">文</text>
-
-  <!-- Arrow -->
-  <path d="M58 52 L72 66" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <path d="M72 66 L65 63 M72 66 L69 59" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Small gamepad hint at bottom -->
-  <rect x="52" y="98" width="24" height="12" rx="3" fill="#ffffff" opacity="0.8"/>
-  <circle cx="58" cy="104" r="2" fill="#a855f7"/>
-  <circle cx="70" cy="104" r="2" fill="#a855f7"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 26.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 128 128" style="enable-background:new 0 0 128 128;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);}
+	.st1{opacity:0.3;fill:none;stroke:#FFFFFF;stroke-width:3;enable-background:new    ;}
+	.st2{fill:#FFFFFF;}
+	.st3{font-family:'Arial-BoldMT';}
+	.st4{font-size:40.6092px;}
+	.st5{font-family:'KozGoPr6N-Regular-90ms-RKSJ-H';}
+	.st6{font-size:34.8078px;}
+	.st7{stroke:#FFFFFF;stroke-width:3;stroke-linecap:round;}
+	.st8{stroke:#FFFFFF;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+	.st9{opacity:0.8;fill:#FFFFFF;enable-background:new    ;}
+	.st10{fill:#A855F7;}
+</style>
+<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="-231.0583" y1="481.915" x2="-230.0583" y2="480.915" gradientTransform="matrix(120 0 0 -120 27731 57833.8008)">
+	<stop  offset="0" style="stop-color:#A855F7"/>
+	<stop  offset="1" style="stop-color:#7C3AED"/>
+</linearGradient>
+<circle class="st0" cx="64" cy="64" r="60"/>
+<ellipse class="st1" cx="64" cy="64" rx="50.8" ry="50.8"/>
+<ellipse class="st1" cx="64" cy="64" rx="50.8" ry="26.1"/>
+<line class="st1" x1="64" y1="13.2" x2="64" y2="114.8"/>
+<line class="st1" x1="13.2" y1="64" x2="114.8" y2="64"/>
+<text transform="matrix(1 0 0 1 26.292 55.2987)" class="st2 st3 st4">A</text>
+<text transform="matrix(1 0 0 1 72.7017 94.4579)" class="st2 st5 st6">文</text>
+<path class="st7" d="M55.3,46.6l20.3,20.3"/>
+<path class="st8" d="M75.6,66.9l-10.2-4.4 M75.6,66.9l-4.4-10.2"/>
+<path class="st9" d="M40.8,72.5h26.1c2.4,0,4.4,1.9,4.4,4.4v8.7c0,2.4-1.9,4.4-4.4,4.4H40.8c-2.4,0-4.4-1.9-4.4-4.4v-8.7
+	C36.4,74.5,38.4,72.5,40.8,72.5z"/>
+<circle class="st10" cx="45.1" cy="81.2" r="2.9"/>
+<circle class="st10" cx="62.5" cy="81.2" r="2.9"/>
 </svg>
