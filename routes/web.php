@@ -48,14 +48,14 @@ Route::get('/api/games/search-external', [GameController::class, 'searchExternal
 // Download (no locale prefix - direct file access)
 Route::get('/download/{translation}', [TranslationController::class, 'download'])->name('translations.download');
 
-// Merge preview - supports token-based auth from mod
+// Merge preview - supports token-based auth from mod (no locale prefix)
 Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
 
 /*
 |--------------------------------------------------------------------------
-| Localized Public Routes
+| Localizable Routes
 |--------------------------------------------------------------------------
-| These routes support optional locale prefix: /, /en/, /fr/, etc.
+| All user-facing routes support optional locale prefix: /, /en/, /fr/, etc.
 | The SetLocale middleware handles locale detection from URL prefix.
 */
 $localizableRoutes = function () {
@@ -86,6 +86,54 @@ $localizableRoutes = function () {
     // Games
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+
+    // Authenticated routes
+    Route::middleware('auth')->group(function () {
+        Route::get('/upload', [TranslationController::class, 'create'])->name('translations.create');
+        Route::post('/upload', [TranslationController::class, 'store'])->name('translations.store');
+        Route::get('/api/translations/check-uuid', [TranslationController::class, 'checkUuid'])->name('translations.check-uuid');
+        Route::get('/my-translations', [TranslationController::class, 'myTranslations'])->name('translations.mine');
+        Route::get('/my-translations/{translation}/dashboard', [TranslationController::class, 'dashboard'])->name('translations.dashboard');
+        Route::post('/my-translations/{translation}/convert-to-fork', [TranslationController::class, 'convertToFork'])->name('translations.convert-to-fork');
+        Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
+        Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
+        Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
+        Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
+
+        // Profile
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile/export', [ProfileController::class, 'export'])->name('profile.export');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        // Reports
+        Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');
+
+        // Votes
+        Route::post('/vote/{translation}', [VoteController::class, 'vote'])->name('votes.store');
+
+        // Merge View (Main owner only)
+        Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
+        Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
+        Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
+    });
+
+    // Admin routes
+    Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+        Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        Route::get('/reports/{report}', [AdminController::class, 'showReport'])->name('reports.show');
+        Route::post('/reports/{report}', [AdminController::class, 'handleReport'])->name('reports.handle');
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
+        Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
+        Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
+        Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
+        Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
+        Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
+        Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
+    });
 };
 
 // Routes without locale prefix (default locale detection)
@@ -96,55 +144,3 @@ Route::group([
     'prefix' => '{locale}',
     'where' => ['locale' => implode('|', array_keys(config('locales.supported', ['en' => []])))]
 ], $localizableRoutes);
-
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes (no locale prefix for simplicity)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->group(function () {
-    Route::get('/upload', [TranslationController::class, 'create'])->name('translations.create');
-    Route::post('/upload', [TranslationController::class, 'store'])->name('translations.store');
-    Route::get('/api/translations/check-uuid', [TranslationController::class, 'checkUuid'])->name('translations.check-uuid');
-    Route::get('/my-translations', [TranslationController::class, 'myTranslations'])->name('translations.mine');
-    Route::get('/my-translations/{translation}/dashboard', [TranslationController::class, 'dashboard'])->name('translations.dashboard');
-    Route::post('/my-translations/{translation}/convert-to-fork', [TranslationController::class, 'convertToFork'])->name('translations.convert-to-fork');
-    Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
-    Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
-    Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
-    Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
-
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/export', [ProfileController::class, 'export'])->name('profile.export');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Reports
-    Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');
-
-    // Votes
-    Route::post('/vote/{translation}', [VoteController::class, 'vote'])->name('votes.store');
-
-    // Merge View (Main owner only)
-    Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
-    Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
-    Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
-});
-
-// Admin routes
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
-    Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
-    Route::get('/reports/{report}', [AdminController::class, 'showReport'])->name('reports.show');
-    Route::post('/reports/{report}', [AdminController::class, 'handleReport'])->name('reports.handle');
-    Route::get('/users', [AdminController::class, 'users'])->name('users');
-    Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
-    Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
-    Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
-    Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
-    Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
-    Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
-    Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
-});
