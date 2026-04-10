@@ -34,6 +34,7 @@ class LocaleController extends Controller
 
     /**
      * Replace or add the locale prefix in a URL.
+     * Only adds locale prefix for routes that support it (localizable routes).
      */
     protected function replaceLocaleInUrl(string $url, string $newLocale, array $supportedLocales): string
     {
@@ -42,18 +43,51 @@ class LocaleController extends Controller
 
         // Strip existing locale prefix if present
         $segments = explode('/', ltrim($path, '/'));
-        if (!empty($segments[0]) && in_array($segments[0], $supportedLocales)) {
+        $hadLocalePrefix = !empty($segments[0]) && in_array($segments[0], $supportedLocales);
+        if ($hadLocalePrefix) {
             array_shift($segments);
         }
 
-        // Rebuild path with new locale prefix
-        $newPath = '/' . $newLocale . '/' . implode('/', $segments);
-        $newPath = rtrim($newPath, '/');
+        // Check if the route (without locale prefix) is localizable
+        $pathWithoutLocale = '/' . implode('/', $segments);
+        if ($this->isLocalizableRoute($pathWithoutLocale)) {
+            $newPath = '/' . $newLocale . '/' . implode('/', $segments);
+        } else {
+            // Non-localizable route: don't add locale prefix, just keep the path
+            $newPath = $pathWithoutLocale;
+        }
+        $newPath = rtrim($newPath, '/') ?: '/';
 
         // Rebuild URL preserving query string
         $baseUrl = rtrim(config('app.url'), '/');
         $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
 
         return $baseUrl . $newPath . $query;
+    }
+
+    /**
+     * Check if a path (without locale prefix) matches a localizable route.
+     */
+    protected function isLocalizableRoute(string $path): bool
+    {
+        $path = rtrim($path, '/') ?: '/';
+
+        $localizablePrefixes = [
+            '/',
+            '/login',
+            '/docs',
+            '/legal',
+            '/privacy',
+            '/terms',
+            '/games',
+        ];
+
+        foreach ($localizablePrefixes as $prefix) {
+            if ($path === $prefix || ($prefix !== '/' && str_starts_with($path, $prefix))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
