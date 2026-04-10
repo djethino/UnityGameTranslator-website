@@ -140,7 +140,11 @@ $localizableRoutes = function () {
 Route::group([], $localizableRoutes);
 
 // Routes with locale prefix (/en/, /fr/, /de/, etc.)
+// The {locale} group reuses the same closure but must NOT overwrite named routes,
+// otherwise route() helpers would require a {locale} parameter everywhere.
+// We strip names by wrapping in a name('') prefix — this makes locale routes unnamed.
 Route::group([
     'prefix' => '{locale}',
-    'where' => ['locale' => implode('|', array_keys(config('locales.supported', ['en' => []])))]
+    'where' => ['locale' => implode('|', array_keys(config('locales.supported', ['en' => []])))],
+    'as' => 'locale.',
 ], $localizableRoutes);
