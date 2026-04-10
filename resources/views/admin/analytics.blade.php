@@ -3,6 +3,11 @@
 @section('title', 'Analytics - UnityGameTranslator')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('admin.dashboard') }}" class="text-gray-400 hover:text-white">
+        <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+    </a>
+</div>
 <div class="mb-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold"><i class="fas fa-chart-line mr-2"></i> Analytics</h1>
 
