@@ -346,8 +346,8 @@
                         </div>
                     </div>
                     <div class="bg-gray-700/50 rounded-lg p-4">
-                        <h4 class="font-semibold text-orange-400 mb-2"><i class="fas fa-language mr-2"></i>{{ __('docs.ai_commercial_title') }}</h4>
-                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_commercial_desc') }}</p>
+                        <h4 class="font-semibold text-orange-400 mb-2"><i class="fas fa-language mr-2"></i>{{ __('docs.ai_translation_api_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_translation_api_desc') }}</p>
                         <div class="flex gap-3 text-sm">
                             <a href="https://cloud.google.com/translate" target="_blank" class="text-purple-400 hover:underline">Google Translate</a>
                             <a href="https://www.deepl.com/pro-api" target="_blank" class="text-purple-400 hover:underline">DeepL</a>
