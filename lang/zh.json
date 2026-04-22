@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "推荐本地模型",
-    "docs.ai_tip_content": "qwen3.5:latest（9B）是推荐的本地模型。它支持 201 种语言和方言，在消费级显卡上为游戏翻译提供最佳的质量和速度平衡。",
+    "docs.ai_tip_content": "qwen3.5:latest（9B）是通过 Ollama 推荐的本地模型。它支持 201 种语言和方言，占用约 6 GB VRAM。在独立 GPU 上，12 GB VRAM（如 RTX 3060 12 GB / 4070 或 AMD RX 6800+）可以舒适地同时运行模型和游戏；8 GB 显卡上，Ollama 会将部分模型卸载到系统 RAM（更慢）。在 Apple Silicon 上，16 GB 统一内存已足够。如果您的 GPU 不够，请改用兼容 OpenAI 的云端 endpoint（Groq、OpenAI、Gemini 等）。",
     "docs.first_launch": "首次启动",
     "docs.first_launch_intro": "首次启动时，设置向导将引导您完成初始配置：",
     "docs.wizard_screenshot_alt": "UnityGameTranslator 设置向导",

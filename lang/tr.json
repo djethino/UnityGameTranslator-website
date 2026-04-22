@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "Önerilen yerel model",
-    "docs.ai_tip_content": "qwen3.5:latest (9B), önerilen yerel modeldir. 201 dil ve lehçeyi destekler ve tüketici GPU'larında oyun çevirisi için kalite ve hız arasında en iyi dengeyi sunar.",
+    "docs.ai_tip_content": "qwen3.5:latest (9B), Ollama üzerinden önerilen yerel modeldir. 201 dil ve lehçeyi destekler ve yaklaşık 6 GB VRAM kullanır. Ayrık GPU'da 12 GB VRAM (RTX 3060 12 GB / 4070 veya AMD RX 6800+ gibi) modeli oyunla birlikte çalıştırmak için rahattır; 8 GB kartlarda Ollama bir kısmını sistem RAM'ine aktarır (daha yavaş). Apple Silicon'da 16 GB birleşik bellek yeterlidir. GPU'nuz yetersizse, bunun yerine OpenAI uyumlu bir bulut uç noktası (Groq, OpenAI, Gemini…) kullanın.",
     "docs.first_launch": "İlk Başlatma",
     "docs.first_launch_intro": "İlk başlatmada, bir kurulum sihirbazı ilk yapılandırmada size rehberlik eder:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator kurulum sihirbazı",

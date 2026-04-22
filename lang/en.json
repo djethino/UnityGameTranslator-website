@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https:\/\/api.openai.com",
     "docs.ai_url_example_gemini": "https:\/\/generativelanguage.googleapis.com\/v1beta\/openai\/chat\/completions",
     "docs.ai_tip_title": "Recommended local model",
-    "docs.ai_tip_content": "qwen3.5:latest (9B) is the recommended local model. It supports 201 languages and dialects, and offers the best balance of quality and speed for game translation on consumer GPUs.",
+    "docs.ai_tip_content": "qwen3.5:latest (9B) is the recommended local model via Ollama. It supports 201 languages and dialects and uses ~6 GB of VRAM. On a dedicated GPU, 12 GB VRAM (e.g. RTX 3060 12 GB / 4070, or AMD RX 6800+) is comfortable for running the model alongside the game; on 8 GB cards, Ollama will offload part to system RAM (slower). On Apple Silicon, 16 GB of unified memory is enough. If your GPU is too limited, use an OpenAI-compatible cloud endpoint instead (Groq, OpenAI, Gemini…).",
     "docs.first_launch": "First Launch",
     "docs.first_launch_intro": "On first launch, a setup wizard guides you through the initial configuration:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator setup wizard",

@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "Model cục bộ khuyên dùng",
-    "docs.ai_tip_content": "qwen3.5:latest (9B) là model cục bộ được khuyến nghị. Nó hỗ trợ 201 ngôn ngữ và phương ngữ, và mang lại sự cân bằng tốt nhất giữa chất lượng và tốc độ cho dịch game trên GPU phổ thông.",
+    "docs.ai_tip_content": "qwen3.5:latest (9B) là model cục bộ được khuyến nghị thông qua Ollama. Nó hỗ trợ 201 ngôn ngữ và phương ngữ và sử dụng ~6 GB VRAM. Trên GPU rời, 12 GB VRAM (như RTX 3060 12 GB / 4070, hoặc AMD RX 6800+) thoải mái để chạy model cùng với game; trên card 8 GB, Ollama sẽ chuyển một phần sang RAM hệ thống (chậm hơn). Trên Apple Silicon, 16 GB bộ nhớ hợp nhất là đủ. Nếu GPU của bạn quá yếu, hãy sử dụng endpoint cloud tương thích OpenAI (Groq, OpenAI, Gemini…).",
     "docs.first_launch": "Lần chạy đầu tiên",
     "docs.first_launch_intro": "Ở lần chạy đầu tiên, trình hướng dẫn cài đặt sẽ giúp bạn cấu hình ban đầu:",
     "docs.wizard_screenshot_alt": "Trình hướng dẫn cài đặt UnityGameTranslator",

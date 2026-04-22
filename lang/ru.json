@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "Рекомендуемая локальная модель",
-    "docs.ai_tip_content": "qwen3.5:latest (9B) — рекомендованная локальная модель. Она поддерживает 201 язык и диалект и обеспечивает лучший баланс качества и скорости для перевода игр на потребительских видеокартах.",
+    "docs.ai_tip_content": "qwen3.5:latest (9B) — рекомендованная локальная модель через Ollama. Она поддерживает 201 язык и диалект и использует ~6 ГБ видеопамяти. На дискретной видеокарте 12 ГБ VRAM (например, RTX 3060 12 GB / 4070 или AMD RX 6800+) комфортны для запуска модели вместе с игрой; на 8 ГБ Ollama перенесёт часть в системную RAM (медленнее). На Apple Silicon достаточно 16 ГБ унифицированной памяти. Если видеокарта слишком слабая, используйте облачный endpoint, совместимый с OpenAI (Groq, OpenAI, Gemini…).",
     "docs.first_launch": "Первый запуск",
     "docs.first_launch_intro": "При первом запуске мастер настройки проведёт вас через начальную конфигурацию:",
     "docs.wizard_screenshot_alt": "Мастер настройки UnityGameTranslator",

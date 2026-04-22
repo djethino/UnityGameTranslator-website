@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "권장 로컬 모델",
-    "docs.ai_tip_content": "qwen3.5:latest(9B)는 권장 로컬 모델입니다. 201개 언어와 방언을 지원하며, 소비자용 GPU에서 게임 번역에 품질과 속도의 최적 균형을 제공합니다.",
+    "docs.ai_tip_content": "qwen3.5:latest(9B)는 Ollama를 통한 권장 로컬 모델입니다. 201개 언어와 방언을 지원하며 약 6 GB의 VRAM을 사용합니다. 전용 GPU에서는 12 GB VRAM(RTX 3060 12 GB / 4070, 또는 AMD RX 6800+)이 게임과 모델을 함께 실행하기에 편안합니다. 8 GB 카드에서는 Ollama가 일부를 시스템 RAM으로 오프로드합니다(더 느림). Apple Silicon에서는 16 GB 통합 메모리로 충분합니다. GPU가 부족하면 OpenAI 호환 클라우드 엔드포인트(Groq, OpenAI, Gemini 등)를 사용하세요.",
     "docs.first_launch": "첫 실행",
     "docs.first_launch_intro": "첫 실행 시 설정 마법사가 초기 구성을 안내합니다:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator 설정 마법사",

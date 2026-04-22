@@ -303,7 +303,7 @@
     "docs.ai_url_example_openai": "https://api.openai.com",
     "docs.ai_url_example_gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     "docs.ai_tip_title": "अनुशंसित लोकल मॉडल",
-    "docs.ai_tip_content": "qwen3.5:latest (9B) अनुशंसित लोकल मॉडल है। यह 201 भाषाओं और बोलियों का समर्थन करता है, और कंज्यूमर GPU पर गेम अनुवाद के लिए क्वालिटी और स्पीड का सबसे अच्छा संतुलन प्रदान करता है।",
+    "docs.ai_tip_content": "qwen3.5:latest (9B) Ollama के माध्यम से अनुशंसित लोकल मॉडल है। यह 201 भाषाओं और बोलियों का समर्थन करता है और लगभग 6 GB VRAM का उपयोग करता है। डेडिकेटेड GPU पर, 12 GB VRAM (जैसे RTX 3060 12 GB / 4070, या AMD RX 6800+) गेम के साथ मॉडल चलाने के लिए आरामदायक है; 8 GB कार्ड पर, Ollama कुछ हिस्सा सिस्टम RAM में ऑफलोड करेगा (धीमा)। Apple Silicon पर, 16 GB यूनिफाइड मेमोरी पर्याप्त है। यदि आपका GPU बहुत सीमित है, तो इसके बजाय OpenAI-संगत क्लाउड एंडपॉइंट (Groq, OpenAI, Gemini…) का उपयोग करें।",
     "docs.first_launch": "पहला लॉन्च",
     "docs.first_launch_intro": "पहले लॉन्च पर, एक सेटअप विज़ार्ड आपको प्रारंभिक कॉन्फ़िगरेशन के माध्यम से गाइड करता है:",
     "docs.wizard_screenshot_alt": "UnityGameTranslator सेटअप विज़ार्ड",
