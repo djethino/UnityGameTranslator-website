@@ -724,7 +724,7 @@
   "ai_api_key": null,
   "enable_ai": false,
   "target_language": "auto",
-  "settings_hotkey": "Ctrl+F10",
+  "settings_hotkey": "F10",
   "online_mode": true,
   "sync": {
     "check_update_on_start": true,
@@ -770,7 +770,7 @@
                             </tr>
                             <tr class="border-t border-gray-700">
                                 <td class="px-4 py-2"><code class="text-purple-300">settings_hotkey</code></td>
-                                <td class="px-4 py-2"><code>"Ctrl+F10"</code></td>
+                                <td class="px-4 py-2"><code>"F10"</code></td>
                                 <td class="px-4 py-2">{{ __('docs.config_hotkey') }}</td>
                             </tr>
                             <tr class="border-t border-gray-700">
