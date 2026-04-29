@@ -369,10 +369,21 @@ class TranslationController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
-        // Find or create game
-        $game = $this->findOrCreateGame($request);
-        if (!$game) {
-            return response()->json(['error' => 'Could not find or create game'], 422);
+        // Resolve game by case (game_id is part of a translation's identity once created):
+        //   UPDATE → keep the translation's existing game (never mutate; the user may have
+        //            uploaded with a slightly different _game.name/steam_id, but identity wins)
+        //   FORK   → inherit the parent's game (a fork of a translation is by definition a
+        //            translation of the same game; the plugin's _game payload is informational)
+        //   NEW    → resolve via findOrCreateGame (steam_id → name → external API → create)
+        if ($existingTranslation) {
+            $game = $existingTranslation->game;
+        } elseif ($originalTranslation) {
+            $game = $originalTranslation->game;
+        } else {
+            $game = $this->findOrCreateGame($request);
+            if (!$game) {
+                return response()->json(['error' => 'Could not find or create game'], 422);
+            }
         }
 
         // Store file
@@ -401,8 +412,10 @@ class TranslationController extends Controller
             // UPDATE: Delete old file and update record
             $service->deleteFile($existingTranslation->file_path);
 
+            // game_id intentionally omitted — see resolution block above. The translation's
+            // game is fixed at creation; the payload's _game metadata is treated as
+            // informational on subsequent uploads.
             $existingTranslation->update([
-                'game_id' => $game->id,
                 'line_count' => $parsed['line_count'],
                 'human_count' => $parsed['tag_counts']['human_count'],
                 'validated_count' => $parsed['tag_counts']['validated_count'],

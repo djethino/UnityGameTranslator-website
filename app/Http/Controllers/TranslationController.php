@@ -37,9 +37,6 @@ class TranslationController extends Controller
             'game_image_url' => 'nullable|url|max:500',
         ]);
 
-        // Find or create game based on API data or existing game_id
-        $game = $this->findOrCreateGame($request);
-
         // Parse and validate content (includes normalization)
         $content = file_get_contents($request->file('file')->getRealPath());
         try {
@@ -79,6 +76,18 @@ class TranslationController extends Controller
             return back()->withErrors(['file' => $e->getMessage()]);
         }
 
+        // Resolve game by case (game_id is part of a translation's identity once created):
+        //   UPDATE → keep the translation's existing game (never mutate)
+        //   FORK   → inherit the parent's game (a fork is by definition same-game)
+        //   NEW    → resolve via findOrCreateGame (form's game_id / external_id / etc.)
+        if ($existingTranslation) {
+            $game = $existingTranslation->game;
+        } elseif ($originalTranslation) {
+            $game = $originalTranslation->game;
+        } else {
+            $game = $this->findOrCreateGame($request);
+        }
+
         // Note: 'type' is now a computed attribute from HVASM stats (getTypeAttribute)
 
         // Determine status: branches inherit from Main or use 'in_progress'
@@ -107,8 +116,9 @@ class TranslationController extends Controller
             // UPDATE: Delete old file and update record
             $service->deleteFile($existingTranslation->file_path);
 
+            // game_id intentionally omitted — see resolution block above. The translation's
+            // game is fixed at creation; subsequent uploads cannot change it via this path.
             $existingTranslation->update([
-                'game_id' => $game->id,
                 'line_count' => $parsed['line_count'],
                 'human_count' => $parsed['tag_counts']['human_count'],
                 'validated_count' => $parsed['tag_counts']['validated_count'],
