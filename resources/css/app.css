@@ -33,13 +33,15 @@
 .animated-bg::after {
     content: '';
     position: fixed;
+    /* inset: -10% gives a 120%×120% box without redundant width/height.
+       No opacity transition: opacity is updated continuously by the JS
+       animation (60-144 Hz via CSS vars); a CSS transition on top would
+       schedule overlapping interpolations on Firefox and produced visible
+       random flicker on the lower pseudo-element. */
     inset: -10%;
-    width: 120%;
-    height: 120%;
     pointer-events: none;
     z-index: -1;
     will-change: transform, opacity;
-    transition: opacity 0.3s ease;
 }
 
 .animated-bg::before {
