@@ -2184,7 +2184,7 @@
     "src": "node_modules/flag-icons/flags/4x3/zw.svg"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C7QH8KfS.css",
+    "file": "assets/app-Mqj2vZY5.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -2199,7 +2199,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-B_Y0j-5X.js",
+    "file": "assets/app-zZatkNGF.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true

@@ -32,10 +32,12 @@ Alpine.start();
     const velocityDecay = 5; // Velocity decay rate (higher = faster return to base speed)
     const velocitySmoothness = 8; // Interpolation speed per second (higher = faster response)
 
-    // Create style element for pseudo-element transforms
-    const style = document.createElement('style');
-    style.id = 'bg-parallax-style';
-    document.head.appendChild(style);
+    // CSS custom properties pipeline: write values to body.style only.
+    // The stylesheet (app.css) consumes them via var(--bg1-x) etc. so no
+    // CSS parsing happens per frame — only a property-value update that
+    // browsers fast-path through compositing. Avoids the layout thrashing
+    // observed on Firefox when the stylesheet was rewritten every frame.
+    const bs = body.style;
 
     function updateTransforms() {
         // Calculate positions based on time (using sine waves for organic motion)
@@ -55,16 +57,15 @@ Alpine.start();
         const rotate2 = Math.sin(t2 * 0.3) * 1;
         const opacity2 = 0.75 + Math.sin(t2 * 0.35) * 0.1;
 
-        style.textContent = `
-            .animated-bg::before {
-                transform: translate(${x1}%, ${y1}%) scale(${scale1});
-                opacity: ${opacity1};
-            }
-            .animated-bg::after {
-                transform: translate(${x2}%, ${y2}%) scale(${scale2}) rotate(${rotate2}deg);
-                opacity: ${opacity2};
-            }
-        `;
+        bs.setProperty('--bg1-x', x1 + '%');
+        bs.setProperty('--bg1-y', y1 + '%');
+        bs.setProperty('--bg1-scale', scale1);
+        bs.setProperty('--bg1-opacity', opacity1);
+        bs.setProperty('--bg2-x', x2 + '%');
+        bs.setProperty('--bg2-y', y2 + '%');
+        bs.setProperty('--bg2-scale', scale2);
+        bs.setProperty('--bg2-rotate', rotate2 + 'deg');
+        bs.setProperty('--bg2-opacity', opacity2);
     }
 
     function onScroll() {
