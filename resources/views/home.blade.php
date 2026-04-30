@@ -190,7 +190,7 @@
                         <span>{{ __('home.community_opensource') }}</span>
                     </li>
                     <li class="flex items-start">
-                        <a href="https://github.com/djethino/UnityGameTranslator/discussions" target="_blank" class="flex items-start text-purple-400 hover:text-purple-300 transition">
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" class="flex items-start text-purple-400 hover:text-purple-300 transition">
                             <i class="fas fa-comments mr-2 mt-0.5"></i>
                             <span>{{ __('home.community_discussions') }}</span>
                         </a>
