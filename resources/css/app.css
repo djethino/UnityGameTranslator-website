@@ -17,48 +17,95 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-/* Organic animated background - scroll-reactive parallax.
+/* Organic animated background — independent blob layers.
  *
- * Animation values are driven by JS via CSS custom properties on <body>.
- * Updating var(--bg*-*) on the body propagates to the pseudo-elements without
- * stylesheet reparse — a previous implementation rewrote the whole stylesheet
- * via style.textContent inside requestAnimationFrame, which on Firefox
- * triggered a full style/layout/paint pipeline at 60-144 Hz. */
+ * Each blob is a real <div> (injected by JS) instead of a pseudo-element
+ * with multiple stacked gradients. One radial gradient per blob, animated
+ * independently (different speed, phase, amplitude). Two reasons:
+ *   1. Avoids a Firefox 150 bug where animating transform on a single
+ *      element with multiple radial gradients caused visible flicker
+ *      (multi-gradient rasterizing inconsistency under transform animation).
+ *   2. Lets each "color blob" move at its own rhythm — visually more
+ *      organic, matching the plasma-lamp / lava-lamp design intent.
+ *
+ * Each blob gets its own GPU layer (will-change) and paint isolation
+ * (contain: paint) so Firefox composes them independently. */
 .animated-bg {
     background: #0f0f1a;
     position: relative;
 }
 
-.animated-bg::before,
-.animated-bg::after {
-    content: '';
+.bg-blob {
     position: fixed;
-    /* inset: -10% gives a 120%×120% box without redundant width/height.
-       No opacity transition: opacity is updated continuously by the JS
-       animation (60-144 Hz via CSS vars); a CSS transition on top would
-       schedule overlapping interpolations on Firefox and produced visible
-       random flicker on the lower pseudo-element. */
     inset: -10%;
     pointer-events: none;
     z-index: -1;
-    will-change: transform, opacity;
+    /* No will-change / contain: on Firefox 150, those hints made the browser
+       periodically recycle the GPU layer (every ~25s) and the gradient
+       re-rasterized, producing recurring flicker. Letting the browser pick
+       its default compositing path with translate3d alone is more stable. */
+    /* JS animates --x, --y (in %) and --o (0-1) per blob. */
+    transform: translate3d(var(--x, 0%), var(--y, 0%), 0);
+    opacity: var(--o, 1);
 }
 
-.animated-bg::before {
-    background:
-        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(15, 52, 96, 0.5) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(30, 27, 75, 0.4) 0%, transparent 50%),
-        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(22, 33, 62, 0.5) 0%, transparent 55%);
-    transform: translate(var(--bg1-x, 0%), var(--bg1-y, 0%)) scale(var(--bg1-scale, 1));
-    opacity: var(--bg1-opacity, 0.9);
+/* Blob backgrounds are set in JS as rasterized PNG dataURLs (see app.js).
+   We can't keep radial-gradient() here: Firefox 150 has a bug where any
+   gradient under transform animation gets re-rasterized periodically
+   (~25s cycle), producing recurring flicker. Bitmap images never trigger
+   that path. The .bg-blob-N classes are kept for selector targeting. */
+.bg-blob-1, .bg-blob-2, .bg-blob-3, .bg-blob-4, .bg-blob-5 {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
 }
 
+/* ------------- Game-flavoured visual identity ------------- */
+
+/* A: Pixel grain overlay — subtle CRT/console feel anchoring the gaming vibe.
+   SVG noise via feTurbulence, fixed 200px tile cycles seamlessly. */
 .animated-bg::after {
-    background:
-        radial-gradient(ellipse 70% 45% at 75% 60%, rgba(26, 26, 46, 0.6) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 30% 70%, rgba(15, 52, 96, 0.35) 0%, transparent 50%);
-    transform: translate(var(--bg2-x, 0%), var(--bg2-y, 0%)) scale(var(--bg2-scale, 1)) rotate(var(--bg2-rotate, 0deg));
-    opacity: var(--bg2-opacity, 0.75);
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0; /* above blobs (-1) but below page content */
+    opacity: 0.12;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* screen blend additively brightens dark backgrounds — overlay was too
+       subtle on the deep #0f0f1a base. */
+    mix-blend-mode: screen;
+}
+
+/* C: RGB-shift hover — apply via .glitch-text class on titles/CTAs.
+   Uses text-shadow for pure GPU compositing (no repaint). */
+.glitch-text {
+    transition: text-shadow 180ms ease-out, transform 180ms ease-out;
+}
+.glitch-text:hover {
+    text-shadow:
+        1.5px 0 0 rgba(0, 240, 255, 0.55),
+        -1.5px 0 0 rgba(255, 0, 200, 0.55);
+}
+
+/* G: Random ambient glitch ping — applied briefly to a random element by JS.
+   Reuses the same RGB language as the hover effect for visual coherence. */
+@keyframes glitch-ping {
+    0%   { transform: translate(0, 0); filter: none; }
+    18%  { transform: translate(-2px, 1px); filter: drop-shadow(2px 0 0 rgba(0, 240, 255, 0.6)) drop-shadow(-2px 0 0 rgba(255, 0, 200, 0.6)); }
+    36%  { transform: translate(2px, -1px); filter: drop-shadow(-1.5px 0 0 rgba(0, 240, 255, 0.5)) drop-shadow(1.5px 0 0 rgba(255, 0, 200, 0.5)); }
+    54%  { transform: translate(-1px, 0); filter: drop-shadow(1px 0 0 rgba(0, 240, 255, 0.4)) drop-shadow(-1px 0 0 rgba(255, 0, 200, 0.4)); }
+    72%  { transform: translate(1px, 0); filter: none; }
+    100% { transform: translate(0, 0); filter: none; }
+}
+.glitching {
+    animation: glitch-ping 280ms steps(5, end);
+}
+
+/* a11y: respect users who asked to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+    .glitch-text:hover { text-shadow: none; }
+    .glitching { animation: none; }
+    .animated-bg::after { display: none; }
 }
 
 /* Hide elements until Alpine.js is initialized (prevents FOUC) */

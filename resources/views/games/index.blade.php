@@ -34,7 +34,7 @@
 
 @section('content')
 <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-6">{{ __('games.browse') }}</h1>
+    <h1 class="glitch-text text-3xl font-bold mb-6">{{ __('games.browse') }}</h1>
 
     <form action="{{ route('games.index') }}" method="GET" class="bg-gray-800 rounded-lg p-6 mb-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -110,7 +110,8 @@
                             </span>
                             @if(($game->translations_sum_download_count ?? 0) > 0)
                                 <span class="text-xs text-gray-300" title="{{ __('my_translations.downloads') }}">
-                                    <i class="fas fa-download text-[10px]"></i> {{ number_format($game->translations_sum_download_count) }}
+                                    <i class="fas fa-download text-[10px]"></i>
+                                    <span data-counter="{{ $game->translations_sum_download_count }}">{{ number_format($game->translations_sum_download_count) }}</span>
                                 </span>
                             @endif
                         </div>

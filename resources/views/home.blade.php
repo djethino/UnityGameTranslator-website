@@ -43,7 +43,7 @@
     <div class="text-center py-12 mb-12 relative">
         <!-- Gradient Background -->
         <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-transparent rounded-3xl -z-10"></div>
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        <h1 class="glitch-text text-4xl md:text-5xl font-bold text-white mb-4">
             <i class="fas fa-language text-purple-400 mr-3"></i>{{ __('home.hero_title') }}
         </h1>
         <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-6">
@@ -94,7 +94,7 @@
 
     <!-- How it works - 3 columns -->
     <div class="mb-12">
-        <h2 class="text-2xl font-bold text-white text-center mb-8">
+        <h2 class="glitch-text text-2xl font-bold text-white text-center mb-8">
             <i class="fas fa-cogs text-purple-400 mr-2"></i>
             {{ __('home.how_it_works') }}
         </h2>
@@ -290,7 +290,7 @@
     <!-- Popular Games -->
     @if($popularGames->count() > 0)
     <div class="mb-12">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+        <h2 class="glitch-text text-2xl font-bold text-white mb-6 flex items-center">
             <i class="fas fa-fire text-purple-400 mr-2"></i>
             {{ __('home.popular_games') }}
         </h2>
@@ -337,7 +337,7 @@
     <!-- Latest Translations -->
     @if($latestTranslations->count() > 0)
     <div class="mb-12">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+        <h2 class="glitch-text text-2xl font-bold text-white mb-6 flex items-center">
             <i class="fas fa-clock text-purple-400 mr-2"></i>
             {{ __('home.latest_translations') }}
         </h2>
