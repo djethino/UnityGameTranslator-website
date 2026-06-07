@@ -12,6 +12,8 @@
 
 <!-- Filters -->
 <form action="{{ route('admin.users') }}" method="GET" class="bg-gray-800 rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
+    @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+    @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
     <div class="flex-1 min-w-[200px]">
         <label class="block text-sm text-gray-400 mb-1">Search</label>
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Name or email..."
@@ -25,9 +27,23 @@
             <option value="banned" {{ request('status') == 'banned' ? 'selected' : '' }}>Banned</option>
         </select>
     </div>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">Provider</label>
+        <select name="provider" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
+            <option value="">All</option>
+            @foreach($providers as $provider)
+                <option value="{{ $provider }}" {{ request('provider') === $provider ? 'selected' : '' }}>{{ ucfirst($provider) }}</option>
+            @endforeach
+        </select>
+    </div>
     <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
         <i class="fas fa-search"></i> Search
     </button>
+    @if(request()->hasAny(['search', 'status', 'provider']))
+        <a href="{{ route('admin.users') }}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">
+            <i class="fas fa-times mr-1"></i> Clear
+        </a>
+    @endif
 </form>
 
 <!-- Users List -->
@@ -37,9 +53,11 @@
             <tr>
                 <th class="px-4 py-3 text-left">User</th>
                 <th class="px-4 py-3 text-left">Provider</th>
-                <th class="px-4 py-3 text-center">Translations</th>
+                <x-admin.sortable-th column="translations_count" label="Translations" align="center" />
+                <x-admin.sortable-th column="downloads_sum" label="Downloads" align="center" />
+                <x-admin.sortable-th column="last_mod_activity" label="Last mod activity" />
                 <th class="px-4 py-3 text-left">Status</th>
-                <th class="px-4 py-3 text-left">Joined</th>
+                <x-admin.sortable-th column="created_at" label="Joined" />
                 <th class="px-4 py-3 text-center">Actions</th>
             </tr>
         </thead>
@@ -72,6 +90,22 @@
                     </td>
                     <td class="px-4 py-3 text-center">
                         {{ $user->translations_count }}
+                    </td>
+                    <td class="px-4 py-3 text-center text-gray-300">
+                        {{ number_format($user->downloads_sum ?? 0) }}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        @if($user->last_mod_activity)
+                            @php $activity = \Illuminate\Support\Carbon::parse($user->last_mod_activity); @endphp
+                            <span class="text-gray-300" title="{{ $activity->format('M d, Y H:i') }}">
+                                @if($activity->gt(now()->subDays(30)))
+                                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" title="Active in last 30 days"></span>
+                                @endif
+                                {{ $activity->diffForHumans() }}
+                            </span>
+                        @else
+                            <span class="text-gray-600">Never</span>
+                        @endif
                     </td>
                     <td class="px-4 py-3">
                         @if($user->isBanned())
@@ -112,7 +146,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">
                         No users found.
                     </td>
                 </tr>

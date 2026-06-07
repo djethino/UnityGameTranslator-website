@@ -13,6 +13,8 @@
 <!-- Filters -->
 <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
     <form action="{{ route('admin.translations.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+        @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+        @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
         <div class="flex-1 min-w-[200px]">
             <label class="block text-sm text-gray-400 mb-1">{{ __('common.search') }}</label>
             <input type="text" name="search" value="{{ request('search') }}"
@@ -37,10 +39,28 @@
                 @endforeach
             </select>
         </div>
+        <div class="min-w-[140px]">
+            <label class="block text-sm text-gray-400 mb-1">{{ __('admin.status') }}</label>
+            <select name="status" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($statuses as $value => $label)
+                    <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="min-w-[140px]">
+            <label class="block text-sm text-gray-400 mb-1">{{ __('admin.visibility') }}</label>
+            <select name="visibility" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($visibilities as $value => $label)
+                    <option value="{{ $value }}" {{ request('visibility') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
         <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
             <i class="fas fa-search mr-1"></i> {{ __('common.search') }}
         </button>
-        @if(request()->hasAny(['search', 'game_id', 'language']))
+        @if(request()->hasAny(['search', 'game_id', 'language', 'status', 'visibility']))
             <a href="{{ route('admin.translations.index') }}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg">
                 <i class="fas fa-times mr-1"></i> {{ __('common.cancel') }}
             </a>
@@ -57,10 +77,12 @@
                     <th class="text-left py-3 px-4">{{ __('admin.game') }}</th>
                     <th class="text-left py-3 px-4">{{ __('games.target_language') }}</th>
                     <th class="text-left py-3 px-4">{{ __('admin.uploader') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('my_translations.lines') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('my_translations.downloads') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('admin.created_at') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('admin.updated_at') }}</th>
+                    <th class="text-left py-3 px-4">{{ __('admin.composition') }}</th>
+                    <x-admin.sortable-th column="line_count" :label="__('my_translations.lines')" />
+                    <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" />
+                    <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" />
+                    <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" />
+                    <x-admin.sortable-th column="updated_at" :label="__('admin.updated_at')" />
                     <th class="text-right py-3 px-4">{{ __('admin.actions') }}</th>
                 </tr>
             </thead>
@@ -94,8 +116,28 @@
                         <td class="py-3 px-4">
                             <span class="text-gray-300">{{ $translation->user->name ?? '[Deleted]' }}</span>
                         </td>
+                        <td class="py-3 px-4">
+                            @php
+                                $h = $translation->human_count; $v = $translation->validated_count; $a = $translation->ai_count;
+                                $tot = $h + $v + $a;
+                            @endphp
+                            @if($tot > 0)
+                                <div class="flex h-2 w-24 rounded overflow-hidden bg-gray-700"
+                                     title="Human {{ round($h / $tot * 100) }}% · Validated {{ round($v / $tot * 100) }}% · AI {{ round($a / $tot * 100) }}%">
+                                    <div class="bg-green-500" style="width: {{ $h / $tot * 100 }}%"></div>
+                                    <div class="bg-blue-500" style="width: {{ $v / $tot * 100 }}%"></div>
+                                    <div class="bg-orange-500" style="width: {{ $a / $tot * 100 }}%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500">{{ round(($h + $v) / $tot * 100) }}% human</span>
+                            @else
+                                <span class="text-gray-600 text-sm">—</span>
+                            @endif
+                        </td>
                         <td class="py-3 px-4 text-gray-400">
                             {{ number_format($translation->line_count) }}
+                        </td>
+                        <td class="py-3 px-4 text-gray-400">
+                            {{ number_format($translation->vote_count) }}
                         </td>
                         <td class="py-3 px-4 text-gray-400">
                             {{ number_format($translation->download_count) }}
@@ -126,7 +168,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="py-8 text-center text-gray-500">
+                        <td colspan="10" class="py-8 text-center text-gray-500">
                             {{ __('admin.no_translations') }}
                         </td>
                     </tr>

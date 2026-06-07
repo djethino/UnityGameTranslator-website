@@ -89,7 +89,9 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::withCount('translations');
+        $query = User::withCount('translations')
+            ->withSum('translations as downloads_sum', 'download_count')
+            ->withMax('apiTokens as last_mod_activity', 'last_used_at');
 
         if ($request->filled('search')) {
             $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
@@ -107,9 +109,23 @@ class AdminController extends Controller
             }
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+        // Filter by OAuth provider
+        if ($request->filled('provider')) {
+            $query->where('provider', $request->provider);
+        }
 
-        return view('admin.users', compact('users'));
+        // Sorting (whitelisted columns, including aggregates)
+        $sortable = ['created_at', 'translations_count', 'downloads_sum', 'last_mod_activity'];
+        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
+        $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sort, $dir);
+
+        $users = $query->paginate(20)->appends($request->query());
+
+        // Providers actually present in DB (dynamic filter options)
+        $providers = User::whereNotNull('provider')->distinct()->orderBy('provider')->pluck('provider');
+
+        return view('admin.users', compact('users', 'providers'));
     }
 
     public function banUser(Request $request, User $user)
@@ -168,11 +184,29 @@ class AdminController extends Controller
             $query->where('target_language', $request->language);
         }
 
-        $translations = $query->orderBy('created_at', 'desc')->paginate(20);
+        // Filter by status (in_progress / complete)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by visibility (public / branch)
+        if ($request->filled('visibility')) {
+            $query->where('visibility', $request->visibility);
+        }
+
+        // Sorting (whitelisted columns to prevent SQL injection)
+        $sortable = ['created_at', 'updated_at', 'download_count', 'vote_count', 'line_count'];
+        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
+        $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sort, $dir);
+
+        $translations = $query->paginate(20)->appends($request->query());
         $games = Game::orderBy('name')->get();
         $languages = config('languages');
+        $statuses = Translation::STATUSES;
+        $visibilities = Translation::VISIBILITY;
 
-        return view('admin.translations', compact('translations', 'games', 'languages'));
+        return view('admin.translations', compact('translations', 'games', 'languages', 'statuses', 'visibilities'));
     }
 
     public function showTranslation(Request $request, Translation $translation)

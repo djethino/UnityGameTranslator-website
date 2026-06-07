@@ -161,6 +161,11 @@ class Translation extends Model
         'branch' => 'Branch (Private)',
     ];
 
+    public const STATUSES = [
+        'in_progress' => 'In Progress',
+        'complete' => 'Complete',
+    ];
+
     /**
      * Compute type from HVASM stats.
      * This replaces the stored 'type' column with a derived value.

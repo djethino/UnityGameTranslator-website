@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $this->hasMany(Report::class, 'reporter_id');
     }
 
+    public function apiTokens()
+    {
+        return $this->hasMany(ApiToken::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->is_admin;
