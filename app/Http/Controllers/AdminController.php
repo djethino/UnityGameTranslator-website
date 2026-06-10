@@ -345,7 +345,7 @@ class AdminController extends Controller
      */
     public function analytics(Request $request)
     {
-        $period = $request->get('period', '30'); // days
+        $period = max(1, min((int) $request->get('period', 30), 365)); // days, clamped
 
         // Get aggregated daily stats for the period
         $dailyStats = AnalyticsDaily::where('date', '>=', now()->subDays($period))

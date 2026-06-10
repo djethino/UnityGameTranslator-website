@@ -618,9 +618,15 @@ class TranslationController extends Controller
 
             // Delete token after use (one-time)
             $mergeToken->delete();
+
+            // Redirect to the same URL without the token: it must not linger in
+            // browser history, server/proxy logs or Referer headers. The next
+            // request is served by session recovery (Mode 2) below.
+            return redirect()->route('translations.merge-preview', $translation, 303);
         }
-        // Mode 2: Session recovery (page reload after token was consumed)
-        elseif (session('merge_preview_only') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
+        // Mode 2: Session recovery (after token-consuming redirect or page reload).
+        // Content was bound to this translation by Mode 1 after ownership checks.
+        elseif (session()->has('merge_preview_local_content') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
             $tokenContent = session('merge_preview_local_content');
         }
         // Mode 3: Web session auth (from website)
@@ -798,6 +804,10 @@ class TranslationController extends Controller
                 ->route('home')
                 ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount]));
         }
+
+        // Regular web session: clear the merge data so a stale local content
+        // can't be recovered on a later visit to the merge-preview URL
+        session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_local_content']);
 
         return redirect()
             ->route('translations.mine')

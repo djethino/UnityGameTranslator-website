@@ -19,5 +19,8 @@
         "@fortawesome/fontawesome-free": "^7.1.0",
         "chart.js": "^4.5.1",
         "flag-icons": "^7.5.0"
+    },
+    "overrides": {
+        "shell-quote": "^1.8.4"
     }
 }

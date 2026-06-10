@@ -114,6 +114,19 @@ class TranslationController extends Controller
      */
     public function check(Translation $translation, Request $request): JsonResponse
     {
+        // Visibility check: branches are private to their Main owner (same rule as download)
+        if ($translation->visibility === 'branch') {
+            $main = $translation->getMain();
+            $user = $request->user();
+
+            if (!$user || !$main || $main->user_id !== $user->id) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'message' => 'Branch translations are only visible to the Main owner',
+                ], 403);
+            }
+        }
+
         // Compute hash if not already stored
         if (!$translation->file_hash) {
             $translation->updateHash();
@@ -300,12 +313,16 @@ class TranslationController extends Controller
             return response($gzipped)
                 ->header('Content-Type', 'application/json')
                 ->header('Content-Encoding', 'gzip')
+                ->header('Content-Disposition', 'attachment; filename="translations.json"')
+                ->header('X-Content-Type-Options', 'nosniff')
                 ->header('ETag', $etag)
                 ->header('Cache-Control', 'private, max-age=3600');
         }
 
         return response($content)
             ->header('Content-Type', 'application/json')
+            ->header('Content-Disposition', 'attachment; filename="translations.json"')
+            ->header('X-Content-Type-Options', 'nosniff')
             ->header('ETag', $etag)
             ->header('Cache-Control', 'private, max-age=3600');
     }
@@ -326,9 +343,10 @@ class TranslationController extends Controller
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             // 'type' is now auto-calculated from HVASM stats
             'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
-            'content' => 'required|string|min:2',
+            // max aligned with DecodeGzipRequest::MAX_DECOMPRESSED_SIZE (100 MB)
+            'content' => 'required|string|min:2|max:104857600',
             'notes' => 'nullable|string|max:1000',
-            'resources_url' => 'nullable|string|max:2048|url',
+            'resources_url' => 'nullable|string|max:2048|url:http,https',
         ]);
 
         // Parse and validate content (includes normalization)
@@ -616,6 +634,14 @@ class TranslationController extends Controller
      */
     public function vote(Request $request, Translation $translation): JsonResponse
     {
+        // Voting only makes sense on public translations; branches are private
+        if ($translation->visibility !== 'public') {
+            return response()->json([
+                'error' => 'Forbidden',
+                'message' => 'Voting is only allowed on public translations',
+            ], 403);
+        }
+
         $request->validate([
             'value' => 'required|integer|in:-1,1',
         ]);

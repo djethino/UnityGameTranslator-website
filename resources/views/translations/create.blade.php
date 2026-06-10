@@ -400,7 +400,14 @@ function showAutoDetected(data) {
     gameId.value = data.game.id;
     gameName.value = data.game.name;
     document.getElementById('display_game_name').textContent = data.game.name;
-    document.getElementById('display_main_owner').innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> Main by: <strong>${data.uploader}</strong>`;
+    // Build via DOM: data.uploader is a user-controlled OAuth display name (XSS sink if innerHTML)
+    const ownerEl = document.getElementById('display_main_owner');
+    ownerEl.textContent = '';
+    const crownIcon = document.createElement('i');
+    crownIcon.className = 'fas fa-crown text-yellow-400 mr-1';
+    const ownerStrong = document.createElement('strong');
+    ownerStrong.textContent = data.uploader;
+    ownerEl.append(crownIcon, ' Main by: ', ownerStrong);
     if (data.game.image_url) {
         document.getElementById('display_game_image').src = data.game.image_url;
     }
@@ -628,16 +635,32 @@ gameSearch.addEventListener('input', function() {
                 const div = document.createElement('div');
                 div.className = 'flex items-center gap-3 px-4 py-2 hover:bg-gray-600 cursor-pointer';
 
-                const imgHtml = g.image_url
-                    ? `<img src="${g.image_url}" class="w-10 h-14 object-cover rounded flex-shrink-0" onerror="this.style.display='none'">`
-                    : '<div class="w-10 h-14 bg-gray-600 rounded flex-shrink-0 flex items-center justify-center"><i class="fas fa-gamepad text-gray-400"></i></div>';
+                // Build via DOM: g.name / g.image_url come from external APIs (XSS sink if innerHTML)
+                let imgEl;
+                if (g.image_url) {
+                    imgEl = document.createElement('img');
+                    imgEl.src = g.image_url;
+                    imgEl.className = 'w-10 h-14 object-cover rounded flex-shrink-0';
+                    imgEl.addEventListener('error', () => { imgEl.style.display = 'none'; });
+                } else {
+                    imgEl = document.createElement('div');
+                    imgEl.className = 'w-10 h-14 bg-gray-600 rounded flex-shrink-0 flex items-center justify-center';
+                    imgEl.innerHTML = '<i class="fas fa-gamepad text-gray-400"></i>';
+                }
 
                 let sourceLabel = '';
                 if (g.source === 'igdb') sourceLabel = '<span class="text-xs bg-purple-600 px-1.5 py-0.5 rounded ml-2">IGDB</span>';
                 else if (g.source === 'rawg') sourceLabel = '<span class="text-xs bg-blue-600 px-1.5 py-0.5 rounded ml-2">RAWG</span>';
                 else if (g.local_id) sourceLabel = '<span class="text-xs bg-green-600 px-1.5 py-0.5 rounded ml-2">Local</span>';
 
-                div.innerHTML = imgHtml + `<div class="flex-1 min-w-0"><div class="font-medium truncate">${g.name}${sourceLabel}</div></div>`;
+                const nameWrap = document.createElement('div');
+                nameWrap.className = 'flex-1 min-w-0';
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'font-medium truncate';
+                nameDiv.textContent = g.name;
+                if (sourceLabel) nameDiv.insertAdjacentHTML('beforeend', sourceLabel); // static markup only
+                nameWrap.appendChild(nameDiv);
+                div.append(imgEl, nameWrap);
 
                 div.addEventListener('click', () => {
                     gameSearch.value = g.name;

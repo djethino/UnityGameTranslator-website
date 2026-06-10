@@ -105,16 +105,9 @@ class DeviceCode extends Model
         // Normalize: uppercase, remove spaces, add dash if missing
         $normalized = strtoupper(preg_replace('/\s+/', '', trim($userCode)));
 
-        // Handle both old (ABC-123) and new (ABCD-1234) formats
-        if (!str_contains($normalized, '-')) {
-            // Try new format first (4+4)
-            if (strlen($normalized) === 8) {
-                $normalized = substr($normalized, 0, 4) . '-' . substr($normalized, 4);
-            }
-            // Fallback to old format (3+3) for backwards compatibility
-            elseif (strlen($normalized) === 6) {
-                $normalized = substr($normalized, 0, 3) . '-' . substr($normalized, 3);
-            }
+        // Re-insert the dash if the user typed the code without it (ABCD-1234 format)
+        if (!str_contains($normalized, '-') && strlen($normalized) === 8) {
+            $normalized = substr($normalized, 0, 4) . '-' . substr($normalized, 4);
         }
 
         return self::where('user_code', $normalized)
