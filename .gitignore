@@ -42,3 +42,4 @@ Thumbs.db
 # OS files
 .DS_Store
 Desktop.ini
+.claude/

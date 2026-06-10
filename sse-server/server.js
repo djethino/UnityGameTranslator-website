@@ -57,11 +57,18 @@ redis.on('connect', () => {
 
 /**
  * Extract client IP from request (supports X-Forwarded-For behind proxy).
+ *
+ * Deployment assumption: exactly one trusted reverse proxy in front
+ * (cPanel Passenger/Apache), which APPENDS the real client IP to any
+ * client-supplied X-Forwarded-For. The LAST entry is therefore the only
+ * trustworthy one — taking the first would let a client spoof arbitrary
+ * IPs and bypass the per-IP connection limit.
  */
 function getClientIp(req) {
     const forwarded = req.headers['x-forwarded-for'];
     if (forwarded) {
-        return forwarded.split(',')[0].trim();
+        const parts = forwarded.split(',');
+        return parts[parts.length - 1].trim();
     }
     return req.socket.remoteAddress || '0.0.0.0';
 }
