@@ -236,6 +236,35 @@ class MergeViewStateTest extends TestCase
         $show(['search' => 'BetaValue', 'scope' => 'nonsense'])->assertOk()->assertSee('AlphaKey');
     }
 
+    public function test_branch_relative_filters_hidden_and_neutralized_in_edit_mode(): void
+    {
+        [$owner, $uuid] = $this->makeMergeView();
+
+        // Edit mode with stale branch-relative filters in the URL (e.g. kept by
+        // the mode switcher): they must be ignored (rows still listed) and their
+        // checkboxes must not be rendered.
+        $response = $this->actingAs($owner)->get(route('translations.merge', [
+            'uuid' => $uuid,
+            'mode' => 'edit',
+            'new_keys' => 1,
+            'difference' => 1,
+        ]));
+        $response->assertOk()->assertSee('Key 001');
+        $html = $response->getContent();
+        $this->assertStringNotContainsString('name="new_keys"', $html);
+        $this->assertStringNotContainsString('name="difference"', $html);
+
+        // Merge mode still renders them.
+        $response = $this->actingAs($owner)->get(route('translations.merge', [
+            'uuid' => $uuid,
+            'mode' => 'merge',
+        ]));
+        $response->assertOk();
+        $html = $response->getContent();
+        $this->assertStringContainsString('name="new_keys"', $html);
+        $this->assertStringContainsString('name="difference"', $html);
+    }
+
     public function test_edit_mode_survives_pagination_and_mode_switcher_keeps_state(): void
     {
         [$owner, $uuid] = $this->makeMergeView();

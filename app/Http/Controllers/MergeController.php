@@ -87,6 +87,14 @@ class MergeController extends Controller
             'skipped' => $request->boolean('skipped'),
         ];
 
+        // new_keys / difference compare Main against branches — meaningless in
+        // edit mode (no branches loaded): force them off so a stale URL param
+        // (e.g. kept by the mode switcher) can't produce an empty list.
+        if ($mode === 'edit') {
+            $filters['new_keys'] = false;
+            $filters['difference'] = false;
+        }
+
         $filteredKeys = $this->applyFilters($allKeys, $mainContent, $branchContents, $filters);
 
         // Apply search (scope: 'both' = keys + values, 'keys', 'values')

@@ -146,6 +146,8 @@
 
         <span class="text-gray-500">{{ __('merge.filters') }}</span>
 
+        {{-- Branch-relative filters: only meaningful in merge mode (compare Main vs branches) --}}
+        @if($mode === 'merge')
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="new_keys" value="1" {{ $filters['new_keys'] ? 'checked' : '' }}
                 class="filter-checkbox rounded bg-gray-700 border-gray-600 text-green-600">
@@ -159,6 +161,7 @@
         </label>
 
         <span class="text-gray-600">|</span>
+        @endif
 
         {{-- Tag filters in HVASM order --}}
         <label class="flex items-center gap-2 cursor-pointer">
