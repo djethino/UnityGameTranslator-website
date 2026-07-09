@@ -89,8 +89,34 @@ class EditSessionController extends Controller
     }
 
     /**
+     * Keep the session alive while the game runs. A session must only end
+     * when the browser page is explicitly closed or the game stops — never
+     * on a timer: a player can keep the editor open for hours between
+     * edits. The mod pings this every ~10 minutes for the whole play
+     * session; the sliding TTL is only a backstop for orphaned sessions
+     * (game AND browser both gone without cleanup).
+     *
+     * POST /api/v1/edit-session/{modKey}/keepalive
+     */
+    public function keepalive(string $modKey): JsonResponse
+    {
+        $session = EditSessionToken::findByModKey($modKey);
+        if (!$session) {
+            return response()->json(['error' => 'Edit session expired or not found.'], 404);
+        }
+
+        $session->touchExpiry();
+
+        return response()->json([
+            'expires_at' => $session->expires_at->toIso8601String(),
+            'browser_left' => $session->browser_left_at !== null,
+        ]);
+    }
+
+    /**
      * Mod-side session end: the mod stops the session (user clicked Stop,
-     * or the browser page was gone past the grace period).
+     * the browser page was closed past the grace period, or the game
+     * is shutting down).
      *
      * DELETE /api/v1/edit-session/{modKey}
      */

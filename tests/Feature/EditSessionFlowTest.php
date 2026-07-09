@@ -285,6 +285,26 @@ class EditSessionFlowTest extends TestCase
         $this->assertNull($session->fresh()->browser_left_at);
     }
 
+    public function test_keepalive_extends_expiry_while_game_runs(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+        $expiryBefore = $session->fresh()->expires_at;
+
+        $this->travel(30)->minutes();
+
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/keepalive')
+            ->assertOk()
+            ->assertJson(['browser_left' => false]);
+
+        $this->assertTrue($session->fresh()->expires_at->gt($expiryBefore));
+
+        // Unknown key → 404 so the mod stops cleanly
+        $this->postJson('/api/v1/edit-session/' . str_repeat('x', 64) . '/keepalive')
+            ->assertStatus(404);
+    }
+
     public function test_mod_can_end_session_with_mod_key(): void
     {
         $this->initSession();

@@ -82,25 +82,25 @@
             <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.localOnly"
+                <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
                     class="rounded bg-gray-700 border-gray-600 text-green-600">
                 <span class="text-green-400">{{ __('merge_preview.local_only') }}</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.onlineOnly"
+                <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
                     class="rounded bg-gray-700 border-gray-600 text-blue-600">
                 <span class="text-blue-400">{{ __('merge_preview.online_only') }}</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.different"
+                <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
                     class="rounded bg-gray-700 border-gray-600 text-yellow-600">
                 <span class="text-yellow-400">{{ __('merge_preview.different') }}</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.same"
+                <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
                     class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
             </label>
@@ -109,31 +109,31 @@
 
             {{-- Tag filters in HVASM order --}}
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagH"
+                <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
                     class="rounded bg-gray-700 border-gray-600 text-green-600">
                 <span class="tag-H">H</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagV"
+                <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
                     class="rounded bg-gray-700 border-gray-600 text-blue-600">
                 <span class="tag-V">V</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagA"
+                <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
                     class="rounded bg-gray-700 border-gray-600 text-orange-600">
                 <span class="tag-A">A</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagS"
+                <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
                     class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="tag-S">S</span>
             </label>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagM"
+                <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
                     class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="tag-M">M</span>
             </label>
@@ -353,11 +353,13 @@
 
             {{-- Modal Body --}}
             <div class="px-6 py-4">
+                {{-- x-model must target a TOP-LEVEL property: the Alpine CSP
+                     build prohibits property assignments (editModal.value = x) --}}
                 <textarea
                     id="editModalTextarea"
-                    x-model="editModal.value"
+                    x-model="editModalValue"
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
-                    :placeholder="__('merge_preview.enter_translation')"
+                    placeholder="{{ __('merge_preview.enter_translation') }}"
                 ></textarea>
                 <p class="mt-2 text-xs text-gray-500">
                     <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge_preview.to_save') }} &bull;
@@ -554,9 +556,12 @@ document.addEventListener('alpine:init', () => {
         editModal: {
             open: false,
             key: '',
-            value: '',
             originalValue: ''
         },
+        // Top-level on purpose: the Alpine CSP build prohibits property
+        // assignments in inline expressions, so x-model can't target
+        // editModal.value (assignments inside these JS methods are fine)
+        editModalValue: '',
 
         // Tag change state (branches can only skip, not invalidate)
         tagChanges: {},  // { key: { newTag: 'S', originalTag: 'A', value: '...' } }
@@ -972,13 +977,16 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        toggleFilter(name) {
+            this.filters[name] = !this.filters[name];
+        },
+
         editCell(key, currentValue) {
             // Use existing edit if any, otherwise use current value
-            const existingValue = this.editedValues[key] ?? currentValue;
+            this.editModalValue = this.editedValues[key] ?? currentValue;
             this.editModal = {
                 open: true,
                 key: key,
-                value: existingValue,
                 originalValue: currentValue
             };
 
@@ -993,7 +1001,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         saveEditModal() {
-            const { key, value, originalValue } = this.editModal;
+            const { key, originalValue } = this.editModal;
+            const value = this.editModalValue;
 
             if (value !== originalValue) {
                 // Save edited value
@@ -1012,9 +1021,9 @@ document.addEventListener('alpine:init', () => {
             this.editModal = {
                 open: false,
                 key: '',
-                value: '',
                 originalValue: ''
             };
+            this.editModalValue = '';
 
             // Close modal on Escape key
             document.addEventListener('keydown', (e) => {

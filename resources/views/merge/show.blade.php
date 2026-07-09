@@ -488,9 +488,11 @@
 
             {{-- Modal Body --}}
             <div class="px-6 py-4">
+                {{-- No x-model: the Alpine CSP build prohibits property
+                     assignments; merge-table.js reads/writes the textarea
+                     directly via the DOM --}}
                 <textarea
                     id="editModalTextarea"
-                    x-model="editModal.value"
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                     placeholder="{{ __('merge.enter_translation') }}"
                 ></textarea>

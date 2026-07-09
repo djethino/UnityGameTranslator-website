@@ -62,6 +62,8 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:30,1');
     Route::post('edit-session/{modKey}/update', [EditSessionController::class, 'update'])
         ->middleware('throttle:30,1');
+    Route::post('edit-session/{modKey}/keepalive', [EditSessionController::class, 'keepalive'])
+        ->middleware('throttle:30,1');
     Route::delete('edit-session/{modKey}', [EditSessionController::class, 'destroy'])
         ->middleware('throttle:30,1');
 

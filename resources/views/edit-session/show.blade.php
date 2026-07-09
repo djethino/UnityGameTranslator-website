@@ -64,27 +64,27 @@
 
             {{-- Tag filters in HVASM order --}}
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagH"
+                <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
                     class="rounded bg-gray-700 border-gray-600 text-green-600">
                 <span class="tag-H">H</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagV"
+                <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
                     class="rounded bg-gray-700 border-gray-600 text-blue-600">
                 <span class="tag-V">V</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagA"
+                <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
                     class="rounded bg-gray-700 border-gray-600 text-orange-600">
                 <span class="tag-A">A</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagS"
+                <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
                     class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="tag-S">S</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.tagM"
+                <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
                     class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="tag-M">M</span>
             </label>
@@ -92,7 +92,7 @@
             <span class="text-gray-600">|</span>
 
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" x-model="filters.pendingOnly"
+                <input type="checkbox" :checked="filters.pendingOnly" @change="toggleFilter('pendingOnly')"
                     class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="text-purple-400">{{ __('edit_session.pending_changes') }}</span>
             </label>
@@ -245,9 +245,11 @@
                 <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
             </div>
             <div class="px-6 py-4">
+                {{-- x-model must target a TOP-LEVEL property: the Alpine CSP
+                     build prohibits property assignments (editModal.value = x) --}}
                 <textarea
                     id="editModalTextarea"
-                    x-model="editModal.value"
+                    x-model="editModalValue"
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                     placeholder="{{ __('merge_preview.enter_translation') }}"
                 ></textarea>
@@ -374,9 +376,12 @@ document.addEventListener('alpine:init', () => {
         editModal: {
             open: false,
             key: '',
-            value: '',
             originalValue: ''
         },
+        // Top-level on purpose: the Alpine CSP build prohibits property
+        // assignments in inline expressions, so x-model can't target
+        // editModal.value (assignments inside these JS methods are fine)
+        editModalValue: '',
         tagDropdown: {
             open: false,
             key: '',
@@ -388,6 +393,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            // Search and filters survive page refreshes (F5 keeps the session
+            // alive by design — the UI state should survive with it)
+            this.restoreUiState();
+            this.$watch('searchQuery', () => this.persistUiState());
+            this.$watch('searchScope', () => this.persistUiState());
+
             // Content is streamed from the server, never inlined in the page:
             // translation files can be tens of MB
             fetch('{{ route("edit-session.data") }}', {
@@ -637,12 +648,43 @@ document.addEventListener('alpine:init', () => {
             return this.sortDirection === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400';
         },
 
+        toggleFilter(name) {
+            this.filters[name] = !this.filters[name];
+            this.persistUiState();
+        },
+
+        persistUiState() {
+            try {
+                sessionStorage.setItem('edit_session_ui', JSON.stringify({
+                    searchQuery: this.searchQuery,
+                    searchScope: this.searchScope,
+                    filters: this.filters
+                }));
+            } catch (e) { /* storage full/blocked: non-essential */ }
+        },
+
+        restoreUiState() {
+            try {
+                const raw = sessionStorage.getItem('edit_session_ui');
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (typeof state.searchQuery === 'string') this.searchQuery = state.searchQuery;
+                if (['both', 'keys', 'values'].includes(state.searchScope)) this.searchScope = state.searchScope;
+                if (state.filters && typeof state.filters === 'object') {
+                    for (const name of Object.keys(this.filters)) {
+                        if (typeof state.filters[name] === 'boolean') {
+                            this.filters[name] = state.filters[name];
+                        }
+                    }
+                }
+            } catch (e) { /* corrupted state: keep defaults */ }
+        },
+
         editCell(key, currentValue) {
-            const existingValue = this.editedValues[key] ?? currentValue;
+            this.editModalValue = this.editedValues[key] ?? currentValue;
             this.editModal = {
                 open: true,
                 key: key,
-                value: existingValue,
                 originalValue: currentValue
             };
 
@@ -656,7 +698,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         saveEditModal() {
-            const { key, value, originalValue } = this.editModal;
+            const { key, originalValue } = this.editModal;
+            const value = this.editModalValue;
 
             if (value !== originalValue) {
                 this.editedValues[key] = value;
@@ -668,7 +711,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         closeEditModal() {
-            this.editModal = { open: false, key: '', value: '', originalValue: '' };
+            this.editModal = { open: false, key: '', originalValue: '' };
+            this.editModalValue = '';
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && this.editModal.open) {
