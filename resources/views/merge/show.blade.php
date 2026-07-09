@@ -3,6 +3,19 @@
 @section('title', ($mode === 'edit' ? __('merge.edit_heading') : __('merge.title')) . ' - ' . $main->game->name)
 
 @section('content')
+@php
+    // Shared view state: every navigation vector (links + GET forms) must preserve ALL of it,
+    // overriding only the parameter it changes. 'page' is intentionally excluded: any change
+    // of mode/branches/filters/search/sort resets to page 1.
+    $filterKeys = ['new_keys', 'difference', 'human', 'validated', 'ai', 'skipped', 'mod_ui'];
+    $stateParams = array_merge(
+        ['mode' => $mode],
+        $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->all()] : [],
+        array_filter($filters),
+        request('search') ? ['search' => request('search')] : [],
+        request('sort') ? ['sort' => request('sort'), 'dir' => request('dir', 'asc')] : []
+    );
+@endphp
 <div class="container mx-auto px-4 py-8" x-data="mergeTable" data-uuid="{{ $uuid }}" data-is-main="true">
     {{-- Header --}}
     <div class="mb-6">
@@ -13,11 +26,11 @@
             @if($hasBranches)
             {{-- Mode switcher --}}
             <div class="ml-auto flex gap-2 text-sm">
-                <a href="{{ route('translations.merge', ['uuid' => $uuid, 'mode' => 'edit']) }}"
+                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['mode' => 'edit'])) }}"
                    class="px-3 py-1 rounded {{ $mode === 'edit' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white' }}">
                     <i class="fas fa-pen mr-1"></i> {{ __('merge.mode_edit') }}
                 </a>
-                <a href="{{ route('translations.merge', ['uuid' => $uuid, 'mode' => 'merge']) }}"
+                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['mode' => 'merge'])) }}"
                    class="px-3 py-1 rounded {{ $mode === 'merge' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white' }}">
                     <i class="fas fa-code-merge mr-1"></i> {{ __('merge.mode_merge') }}
                 </a>
@@ -60,7 +73,7 @@
         @if($branches->isNotEmpty())
         <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
             <form method="GET" id="branchForm" class="flex flex-wrap gap-3 items-center">
-                <input type="hidden" name="mode" value="merge">
+                @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, 'branches')])
                 <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
 
                 {{-- Quick filters --}}
@@ -128,10 +141,7 @@
 
     {{-- Filters --}}
     <form method="GET" id="filterForm" class="mb-4 flex flex-wrap gap-4 items-center text-sm">
-        {{-- Preserve branch selection --}}
-        @foreach($selectedBranches as $branch)
-        <input type="hidden" name="branches[]" value="{{ $branch->id }}">
-        @endforeach
+        @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, $filterKeys)])
 
         <span class="text-gray-500">{{ __('merge.filters') }}</span>
 
@@ -181,7 +191,7 @@
         </label>
 
         @if(array_filter($filters))
-        <a href="{{ route('translations.merge', ['uuid' => $uuid, 'branches' => $selectedBranches->pluck('id')->toArray()]) }}"
+        <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, $filterKeys))) }}"
             class="text-gray-400 hover:text-white text-xs">
             <i class="fas fa-times"></i> {{ __('merge.reset_filters') }}
         </a>
@@ -191,31 +201,14 @@
     {{-- Search --}}
     <div class="mb-4">
         <form method="GET" class="relative">
-            {{-- Preserve existing params --}}
-            @foreach($selectedBranches as $branch)
-            <input type="hidden" name="branches[]" value="{{ $branch->id }}">
-            @endforeach
-            @foreach(array_filter($filters) as $filterKey => $filterValue)
-            <input type="hidden" name="{{ $filterKey }}" value="{{ $filterValue }}">
-            @endforeach
-            @if(request('sort'))
-            <input type="hidden" name="sort" value="{{ request('sort') }}">
-            @endif
-            @if(request('dir'))
-            <input type="hidden" name="dir" value="{{ request('dir') }}">
-            @endif
+            @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, 'search')])
 
             <input type="text" name="search" value="{{ request('search') }}"
                 placeholder="{{ __('merge.search_placeholder') }}"
                 class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
             @if(request('search'))
-            <a href="{{ route('translations.merge', array_merge(
-                ['uuid' => $uuid],
-                $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->toArray()] : [],
-                array_filter($filters),
-                request('sort') ? ['sort' => request('sort'), 'dir' => request('dir')] : []
-            )) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+            <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, 'search'))) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
                 <i class="fas fa-times"></i>
             </a>
             @endif
@@ -226,17 +219,7 @@
     <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
         @csrf
         {{-- Preserve current view state for redirect after save --}}
-        <input type="hidden" name="mode" value="{{ $mode }}">
-        @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
-        @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
-        @if(request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
-        @if(request('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
-        @foreach($selectedBranches as $branch)
-        <input type="hidden" name="branches[]" value="{{ $branch->id }}">
-        @endforeach
-        @foreach(array_filter($filters) as $filterKey => $filterValue)
-        <input type="hidden" name="{{ $filterKey }}" value="{{ $filterValue }}">
-        @endforeach
+        @include('merge.partials.state-inputs', ['params' => array_merge($stateParams, request('page') ? ['page' => request('page')] : [])])
 
         {{-- Table --}}
         <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
@@ -244,12 +227,7 @@
                 @php
                     $currentSort = request('sort', 'key');
                     $currentDir = request('dir', 'asc');
-                    $sortParams = array_merge(
-                        ['uuid' => $uuid],
-                        $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->toArray()] : [],
-                        array_filter($filters),
-                        request('search') ? ['search' => request('search')] : []
-                    );
+                    $sortParams = array_merge(['uuid' => $uuid], $stateParams);
                 @endphp
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
@@ -414,13 +392,13 @@
             </span>
             <div class="flex gap-2">
                 @if($page > 1)
-                <a href="?page={{ $page - 1 }}{{ $selectedBranches->isNotEmpty() ? '&branches[]=' . $selectedBranches->pluck('id')->implode('&branches[]=') : '' }}{{ array_filter($filters) ? '&' . http_build_query(array_filter($filters)) : '' }}"
+                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['page' => $page - 1])) }}"
                     class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
                     <i class="fas fa-chevron-left mr-1"></i> {{ __('common.previous') }}
                 </a>
                 @endif
                 @if($page < $totalPages)
-                <a href="?page={{ $page + 1 }}{{ $selectedBranches->isNotEmpty() ? '&branches[]=' . $selectedBranches->pluck('id')->implode('&branches[]=') : '' }}{{ array_filter($filters) ? '&' . http_build_query(array_filter($filters)) : '' }}"
+                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['page' => $page + 1])) }}"
                     class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
                     {{ __('common.next') }} <i class="fas fa-chevron-right ml-1"></i>
                 </a>
