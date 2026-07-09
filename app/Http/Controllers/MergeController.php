@@ -89,28 +89,34 @@ class MergeController extends Controller
 
         $filteredKeys = $this->applyFilters($allKeys, $mainContent, $branchContents, $filters);
 
-        // Apply search
+        // Apply search (scope: 'both' = keys + values, 'keys', 'values')
         $search = $request->input('search');
+        $searchScope = $request->input('scope', 'both');
+        if (!in_array($searchScope, ['keys', 'values'], true)) {
+            $searchScope = 'both';
+        }
         if ($search) {
             $searchLower = mb_strtolower($search);
-            $filteredKeys = array_values(array_filter($filteredKeys, function ($key) use ($searchLower, $mainContent, $branchContents) {
+            $filteredKeys = array_values(array_filter($filteredKeys, function ($key) use ($searchLower, $searchScope, $mainContent, $branchContents) {
                 // Check key
-                if (mb_stripos($key, $searchLower) !== false) {
+                if ($searchScope !== 'values' && mb_stripos($key, $searchLower) !== false) {
                     return true;
                 }
-                // Check main value
-                if (isset($mainContent[$key])) {
-                    $mainValue = $this->extractValue($mainContent[$key]);
-                    if (mb_stripos($mainValue, $searchLower) !== false) {
-                        return true;
-                    }
-                }
-                // Check branch values
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key])) {
-                        $branchValue = $this->extractValue($content[$key]);
-                        if (mb_stripos($branchValue, $searchLower) !== false) {
+                if ($searchScope !== 'keys') {
+                    // Check main value
+                    if (isset($mainContent[$key])) {
+                        $mainValue = $this->extractValue($mainContent[$key]);
+                        if (mb_stripos($mainValue, $searchLower) !== false) {
                             return true;
+                        }
+                    }
+                    // Check branch values
+                    foreach ($branchContents as $content) {
+                        if (isset($content[$key])) {
+                            $branchValue = $this->extractValue($content[$key]);
+                            if (mb_stripos($branchValue, $searchLower) !== false) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -145,7 +151,8 @@ class MergeController extends Controller
             'filters',
             'uuid',
             'mode',
-            'hasBranches'
+            'hasBranches',
+            'searchScope'
         ));
     }
 
@@ -340,7 +347,7 @@ class MergeController extends Controller
 
         // Preserve query parameters (sort, search, page, filters, branches)
         $queryParams = $request->only([
-            'mode', 'sort', 'dir', 'search', 'page',
+            'mode', 'sort', 'dir', 'search', 'scope', 'page',
             'branches', 'new_keys', 'difference',
             'human', 'validated', 'ai', 'skipped', 'mod_ui',
         ]);

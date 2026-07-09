@@ -109,6 +109,7 @@ class MergeViewStateTest extends TestCase
             'uuid' => $uuid,
             'mode' => 'merge',
             'search' => 'Key',
+            'scope' => 'keys',
             'sort' => 'mainValue',
             'dir' => 'desc',
             'human' => 1,
@@ -119,6 +120,7 @@ class MergeViewStateTest extends TestCase
         $nextLink = $this->findLink($html, 'page=2');
         $this->assertNotNull($nextLink, 'Next-page link not found');
         $this->assertStringContainsString('search=Key', $nextLink);
+        $this->assertStringContainsString('scope=keys', $nextLink);
         $this->assertStringContainsString('sort=mainValue', $nextLink);
         $this->assertStringContainsString('dir=desc', $nextLink);
         $this->assertStringContainsString('human=1', $nextLink);
@@ -199,6 +201,39 @@ class MergeViewStateTest extends TestCase
             }
         }
         $this->assertTrue($found, 'Reset-filters link dropping only the filters not found');
+    }
+
+    public function test_search_scope_restricts_matches_to_keys_or_values(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $game = Game::forceCreate(['name' => 'Scope Game', 'slug' => 'scope-game-' . uniqid()]);
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        $this->makeTranslation($owner, $game, $uuid, 'public', [
+            'AlphaKey' => ['v' => 'BetaValue', 't' => 'H'],
+            'GammaKey' => ['v' => 'DeltaValue', 't' => 'H'],
+        ]);
+
+        $show = fn(array $params) => $this->actingAs($owner)
+            ->get(route('translations.merge', array_merge(['uuid' => $uuid, 'mode' => 'edit'], $params)));
+
+        // NOTE: the searched term is echoed back in the search input, so a row's
+        // presence is asserted via its OTHER half (key when searching the value,
+        // value when searching the key).
+
+        // Default (both): a value term matches its row, a key term too.
+        $show(['search' => 'BetaValue'])->assertOk()->assertSee('AlphaKey')->assertDontSee('GammaKey');
+        $show(['search' => 'AlphaKey'])->assertOk()->assertSee('BetaValue')->assertDontSee('GammaKey');
+
+        // Keys only: value terms no longer match, key terms still do.
+        $show(['search' => 'BetaValue', 'scope' => 'keys'])->assertOk()->assertDontSee('AlphaKey');
+        $show(['search' => 'AlphaKey', 'scope' => 'keys'])->assertOk()->assertSee('BetaValue');
+
+        // Values only: key terms no longer match, value terms still do.
+        $show(['search' => 'AlphaKey', 'scope' => 'values'])->assertOk()->assertDontSee('BetaValue');
+        $show(['search' => 'BetaValue', 'scope' => 'values'])->assertOk()->assertSee('AlphaKey');
+
+        // Invalid scope falls back to 'both'.
+        $show(['search' => 'BetaValue', 'scope' => 'nonsense'])->assertOk()->assertSee('AlphaKey');
     }
 
     public function test_edit_mode_survives_pagination_and_mode_switcher_keeps_state(): void

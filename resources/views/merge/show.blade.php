@@ -13,6 +13,7 @@
         $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->all()] : [],
         array_filter($filters),
         request('search') ? ['search' => request('search')] : [],
+        $searchScope !== 'both' ? ['scope' => $searchScope] : [],
         request('sort') ? ['sort' => request('sort'), 'dir' => request('dir', 'asc')] : []
     );
 @endphp
@@ -200,18 +201,26 @@
 
     {{-- Search --}}
     <div class="mb-4">
-        <form method="GET" class="relative">
-            @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, 'search')])
+        <form method="GET" class="flex gap-2">
+            @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, ['search', 'scope'])])
 
-            <input type="text" name="search" value="{{ request('search') }}"
-                placeholder="{{ __('merge.search_placeholder') }}"
-                class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-            @if(request('search'))
-            <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, 'search'))) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                <i class="fas fa-times"></i>
-            </a>
-            @endif
+            <div class="relative flex-1">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="{{ __('merge.search_placeholder') }}"
+                    class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                @if(request('search'))
+                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, 'search'))) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </a>
+                @endif
+            </div>
+            <select name="scope" class="search-scope-select bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                title="{{ __('merge.search_scope_title') }}">
+                <option value="both" {{ $searchScope === 'both' ? 'selected' : '' }}>{{ __('merge.search_scope_both') }}</option>
+                <option value="keys" {{ $searchScope === 'keys' ? 'selected' : '' }}>{{ __('merge.search_scope_keys') }}</option>
+                <option value="values" {{ $searchScope === 'values' ? 'selected' : '' }}>{{ __('merge.search_scope_values') }}</option>
+            </select>
         </form>
     </div>
 

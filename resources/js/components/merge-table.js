@@ -65,6 +65,15 @@ export default function mergeTable() {
                 });
             }
 
+            // Search scope select: re-run the search with the new scope
+            const scopeSelect = document.querySelector('.search-scope-select');
+            if (scopeSelect) {
+                scopeSelect.addEventListener('change', () => {
+                    this.saveState();
+                    scopeSelect.form.submit();
+                });
+            }
+
             // Clear state on successful form submit (merge applied)
             const mergeForm = document.getElementById('mergeForm');
             if (mergeForm) {

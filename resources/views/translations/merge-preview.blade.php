@@ -150,8 +150,8 @@
         </div>
 
         {{-- Search --}}
-        <div class="mb-4">
-            <div class="relative">
+        <div class="mb-4 flex gap-2">
+            <div class="relative flex-1">
                 <input type="text" x-model="searchQuery" placeholder="{{ __('merge_preview.search_placeholder') }}"
                     class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -160,6 +160,13 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            <select x-model="searchScope"
+                class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                title="{{ __('merge_preview.search_scope_title') }}">
+                <option value="both">{{ __('merge_preview.search_scope_both') }}</option>
+                <option value="keys">{{ __('merge_preview.search_scope_keys') }}</option>
+                <option value="values">{{ __('merge_preview.search_scope_values') }}</option>
+            </select>
         </div>
 
         {{-- Table --}}
@@ -531,6 +538,7 @@ document.addEventListener('alpine:init', () => {
             tagM: true
         },
         searchQuery: '',
+        searchScope: 'both', // 'both' | 'keys' | 'values'
         sortColumn: 'key',
         sortDirection: 'asc',
         stats: {
@@ -746,14 +754,17 @@ document.addEventListener('alpine:init', () => {
                 const onlineTagPass = onlineTag && tagFilters[onlineTag];
                 if (!localTagPass && !onlineTagPass) return false;
 
-                // Search filter
+                // Search filter (scope: 'both' = keys + values, 'keys', 'values')
                 if (this.searchQuery.trim()) {
                     const query = this.searchQuery.toLowerCase().trim();
-                    const localVal = hasLocal ? this.getValue(this.localData[key]).toLowerCase() : '';
-                    const onlineVal = hasOnline ? this.getValue(this.onlineData[key]).toLowerCase() : '';
-                    if (!key.toLowerCase().includes(query) &&
-                        !localVal.includes(query) &&
-                        !onlineVal.includes(query)) {
+                    const keyMatch = this.searchScope !== 'values' && key.toLowerCase().includes(query);
+                    let valueMatch = false;
+                    if (this.searchScope !== 'keys') {
+                        const localVal = hasLocal ? this.getValue(this.localData[key]).toLowerCase() : '';
+                        const onlineVal = hasOnline ? this.getValue(this.onlineData[key]).toLowerCase() : '';
+                        valueMatch = localVal.includes(query) || onlineVal.includes(query);
+                    }
+                    if (!keyMatch && !valueMatch) {
                         return false;
                     }
                 }
