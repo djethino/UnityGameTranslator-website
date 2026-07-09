@@ -86,6 +86,11 @@ export function editorCore(config) {
         // ── Search / filters / sort (persisted across refreshes) ─────────
         filters: { ...config.filters },
         searchQuery: '',
+        // Debounced copy actually used by the filtering pipeline: on large
+        // RPG files (tens of thousands of keys) re-filtering on every
+        // keystroke is perceptible — waiting for a typing pause is not
+        _debouncedQuery: '',
+        _debounceTimer: null,
         searchScope: 'both', // 'both' | 'keys' | 'values'
         sortColumn: 'key',
         sortDirection: 'asc',
@@ -99,7 +104,14 @@ export function editorCore(config) {
         initEditorCore() {
             this.restoreUiState();
             this.restorePendingState();
-            this.$watch('searchQuery', () => this.persistUiState());
+            this._debouncedQuery = this.searchQuery;
+            this.$watch('searchQuery', () => {
+                this.persistUiState();
+                clearTimeout(this._debounceTimer);
+                this._debounceTimer = setTimeout(() => {
+                    this._debouncedQuery = this.searchQuery;
+                }, 200);
+            });
             this.$watch('searchScope', () => this.persistUiState());
         },
 
@@ -167,7 +179,7 @@ export function editorCore(config) {
         // ── Filtering pipeline ────────────────────────────────────────────
 
         get filteredKeys() {
-            const query = this.searchQuery.toLowerCase().trim();
+            const query = this._debouncedQuery.toLowerCase().trim();
 
             let keys = this.allKeys.filter(key => {
                 if (!this.rowPassesFilters(key)) return false;
