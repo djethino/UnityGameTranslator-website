@@ -145,12 +145,18 @@ class EditSessionController extends Controller
         }
 
         $request->validate([
-            'selections' => 'required|array|max:5000',
+            'selections' => 'sometimes|array|max:5000',
             'selections.*.key' => 'required|string',
             'selections.*.value' => 'present|string',
             'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string', // 'manual' or 'local' (tag change)
+            'deletions' => 'sometimes|array|max:5000',
+            'deletions.*' => 'string',
         ]);
+
+        if (empty($request->input('selections')) && empty($request->input('deletions'))) {
+            return response()->json(['error' => 'No changes to apply.'], 422);
+        }
 
         $rawContent = file_get_contents($path);
         $rawContent = $service->normalizeContent($rawContent);
@@ -160,7 +166,7 @@ class EditSessionController extends Controller
         }
 
         $modifiedCount = 0;
-        foreach ($request->selections as $sel) {
+        foreach ($request->input('selections', []) as $sel) {
             $key = $service->normalizeContent($sel['key']);
 
             // Metadata keys (_uuid, _game, _source, ...) must never be written
@@ -184,6 +190,16 @@ class EditSessionController extends Controller
             $modifiedCount++;
         }
 
+        // Deletions — same guard as selections: metadata keys are untouchable
+        $deletedCount = 0;
+        foreach ($request->input('deletions', []) as $delKey) {
+            $delKey = $service->normalizeContent($delKey);
+            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $content)) {
+                unset($content[$delKey]);
+                $deletedCount++;
+            }
+        }
+
         try {
             $contentHash = $session->writeContent($content);
         } catch (\InvalidArgumentException $e) {
@@ -204,6 +220,7 @@ class EditSessionController extends Controller
 
         return response()->json([
             'saved' => $modifiedCount,
+            'deleted' => $deletedCount,
             'line_count' => $lineCount,
             'content_hash' => $contentHash,
         ]);

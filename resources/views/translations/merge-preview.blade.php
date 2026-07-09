@@ -257,11 +257,18 @@
 
                             {{-- Local Value column --}}
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="getCellClass(key, 'local')"
+                                :class="[getCellClass(key, 'local'), isDeleted(key) ? 'deleted-cell' : '']"
                                 @click="select(key, 'local')"
                                 @dblclick="editCell(key, getValue(localData[key]))">
+                                <span class="edit-affordance">
+                                    <button type="button" @click.stop="editCell(key, getValue(localData[key]))"
+                                        title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                                    <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+                                        title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
+                                </span>
                                 <template x-if="localData[key] !== undefined">
-                                    <span class="break-words" :class="isEdited(key) ? 'text-purple-300' : ''">
+                                    <span class="break-words"
+                                        :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
                                         <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
                                         <span x-show="!isEdited(key)" x-text="getValue(localData[key])"></span>
                                     </span>
@@ -450,76 +457,10 @@
     </div>
 </div>
 
+{{-- Editor styles (tags, cells, affordances) are shared in resources/css/app.css --}}
 @push('head')
 <style>
     [x-cloak] { display: none !important; }
-
-    .tag-H {
-        background-color: rgb(22 163 74);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-A {
-        background-color: rgb(234 88 12);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-V {
-        background-color: rgb(37 99 235);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-M {
-        background-color: rgb(147 51 234);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-S {
-        background-color: rgb(75 85 99);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-
-    .merge-cell {
-        cursor: pointer;
-        transition: all 150ms;
-        user-select: none;
-        -webkit-user-select: none;
-    }
-    .merge-cell:hover {
-        background-color: rgba(55, 65, 81, 0.5);
-    }
-
-    .selected-local {
-        background-color: rgba(20, 83, 45, 0.5) !important;
-        box-shadow: inset 0 0 0 2px rgb(34 197 94);
-    }
-    .selected-online {
-        background-color: rgba(30, 58, 138, 0.5) !important;
-        box-shadow: inset 0 0 0 2px rgb(59 130 246);
-    }
-    .selected-manual {
-        background-color: rgba(88, 28, 135, 0.5) !important;
-        box-shadow: inset 0 0 0 2px rgb(168 85 247);
-    }
-    .tag-changed-cell {
-        background-color: rgba(88, 28, 135, 0.3) !important;
-    }
 </style>
 @endpush
 
@@ -697,11 +638,14 @@ document.addEventListener('alpine:init', () => {
          * - Online-only: select ONLINE (already on server)
          * - Different: smart default based on tag quality (H > V > A, online wins ties)
          * - Same: select ONLINE (no change needed)
+         * Keys already selected are skipped: restored pending choices
+         * (F5 mid-review) must not be overwritten by the defaults.
          */
         applySmartDefaults() {
             const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
 
             for (const key of this.allKeys) {
+                if (key in this.selections) continue;
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
@@ -830,6 +774,22 @@ document.addEventListener('alpine:init', () => {
             this.selections[key] = 'local';
         },
 
+        /** Core hook: a deletion cancels any side selection for the key. */
+        onDeleteToggled(key) {
+            delete this.selections[key];
+        },
+
+        /** Merge selections survive refreshes with the rest of the pending state. */
+        pendingExtraState() {
+            return { selections: this.selections };
+        },
+
+        restorePendingExtra(extra) {
+            if (extra && extra.selections && typeof extra.selections === 'object') {
+                this.selections = extra.selections;
+            }
+        },
+
         // ── Merge selection logic ────────────────────────────────────────
 
         /**
@@ -842,6 +802,7 @@ document.addEventListener('alpine:init', () => {
             const hasLocal = key in this.localData;
             const hasOnline = key in this.onlineData;
 
+            if (this.isDeleted(key)) return true;
             if (this.editedValues[key] !== undefined) return true;
             if (key in this.tagChanges) return true;
             if (hasLocal && !hasOnline && source === 'local') return true;
@@ -870,11 +831,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         select(key, source) {
+            // A deleted key must be un-deleted before picking a side again
+            if (this.isDeleted(key)) return;
             this.selections[key] = source;
             // If selecting online, clear any manual edit
             if (source === 'online') {
                 delete this.editedValues[key];
             }
+            this.persistPendingState();
         },
 
         getCellClass(key, source) {
@@ -892,27 +856,28 @@ document.addEventListener('alpine:init', () => {
 
         selectAllLocal() {
             for (const key of this.allKeys) {
-                if (key in this.localData) {
+                if (key in this.localData && !this.isDeleted(key)) {
                     this.selections[key] = 'local';
                 }
             }
+            this.persistPendingState();
         },
 
         selectAllOnline() {
             for (const key of this.allKeys) {
-                if (key in this.onlineData) {
+                if (key in this.onlineData && !this.isDeleted(key)) {
                     this.selections[key] = 'online';
                     // Clear any manual edits when selecting online
                     delete this.editedValues[key];
                 }
             }
+            this.persistPendingState();
         },
 
         clearAll() {
             if (confirm(@js(__('merge_preview.confirm_cancel')))) {
                 this.selections = {};
-                this.editedValues = {};
-                this.tagChanges = {};
+                this.clearPendingState();
                 this.applySmartDefaults();
             }
         },
@@ -1048,10 +1013,24 @@ document.addEventListener('alpine:init', () => {
                 i++;
             }
 
-            if (i === 0) {
+            // Deletions: keys to remove from the server file
+            let d = 0;
+            for (const key of Object.keys(this.deletions)) {
+                const el = document.createElement('input');
+                el.type = 'hidden';
+                el.name = `deletions[${d}]`;
+                el.value = key;
+                container.appendChild(el);
+                d++;
+            }
+
+            if (i === 0 && d === 0) {
                 this.saving = false;
                 return;
             }
+
+            // Pending work is about to be applied server-side
+            this.clearPendingState();
 
             // Submit the form
             document.getElementById('saveForm').submit();

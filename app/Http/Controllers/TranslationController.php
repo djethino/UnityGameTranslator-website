@@ -786,14 +786,20 @@ class TranslationController extends Controller
             abort(403, 'You can only modify your own translations.');
         }
 
-        // Validate selections
+        // Validate selections and deletions
         $request->validate([
-            'selections' => 'required|array',
+            'selections' => 'sometimes|array',
             'selections.*.key' => 'required|string',
             'selections.*.value' => 'present|string',
             'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string', // 'local', 'online', or 'manual'
+            'deletions' => 'sometimes|array',
+            'deletions.*' => 'string',
         ]);
+
+        if (empty($request->input('selections')) && empty($request->input('deletions'))) {
+            return back()->withErrors(['error' => 'No changes to apply.']);
+        }
 
         // Load current file content
         $path = $translation->getSafeFilePath();
@@ -810,7 +816,7 @@ class TranslationController extends Controller
 
         // Apply selections
         $modifiedCount = 0;
-        foreach ($request->selections as $sel) {
+        foreach ($request->input('selections', []) as $sel) {
             $key = $service->normalizeContent($sel['key']);
             $value = $service->normalizeContent($sel['value']);
             $tag = $sel['tag'];
@@ -831,6 +837,16 @@ class TranslationController extends Controller
 
             $content[$key] = ['v' => $value, 't' => $tag];
             $modifiedCount++;
+        }
+
+        // Apply deletions — metadata keys are untouchable (same rule as MergeController)
+        $deletedCount = 0;
+        foreach ($request->input('deletions', []) as $delKey) {
+            $delKey = $service->normalizeContent($delKey);
+            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $content)) {
+                unset($content[$delKey]);
+                $deletedCount++;
+            }
         }
 
         // Save the file
@@ -884,7 +900,7 @@ class TranslationController extends Controller
 
             return redirect()
                 ->route('home')
-                ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount]));
+                ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount]));
         }
 
         // Regular web session: clear the merge reference so a stale token
@@ -893,7 +909,7 @@ class TranslationController extends Controller
 
         return redirect()
             ->route('translations.mine')
-            ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount]));
+            ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount]));
     }
 
     /**

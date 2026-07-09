@@ -169,16 +169,24 @@
                                 </button>
                             </td>
 
-                            {{-- Value (click to edit) --}}
+                            {{-- Value (double-click or pencil to edit — same gesture
+                                 as the merge views, where single click selects a version) --}}
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="isEdited(key) ? 'selected-manual' : ''"
-                                @click="editCell(key, getValue(data[key]))">
+                                :class="[isEdited(key) ? 'selected-manual' : '', isDeleted(key) ? 'deleted-cell' : '']"
+                                @dblclick="editCell(key, getValue(data[key]))">
+                                <span class="edit-affordance">
+                                    <button type="button" @click.stop="editCell(key, getValue(data[key]))"
+                                        title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                                    <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+                                        title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
+                                </span>
                                 <span x-show="underlyingChanged[key]"
                                     class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
                                     title="{{ __('edit_session.changed_in_game') }}">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('edit_session.changed_in_game') }}
                                 </span>
-                                <span class="break-words" :class="isEdited(key) ? 'text-purple-300' : ''">
+                                <span class="break-words"
+                                    :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
                                     <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
                                     <span x-show="!isEdited(key)" x-text="getValue(data[key])"></span>
                                 </span>
@@ -328,20 +336,10 @@
     </div>
 </div>
 
+{{-- Editor styles (tags, cells, affordances) are shared in resources/css/app.css --}}
 @push('head')
 <style>
     [x-cloak] { display: none !important; }
-
-    .tag-H { background-color: rgb(22 163 74); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-    .tag-A { background-color: rgb(234 88 12); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-    .tag-V { background-color: rgb(37 99 235); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-    .tag-M { background-color: rgb(147 51 234); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-    .tag-S { background-color: rgb(75 85 99); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-
-    .merge-cell { cursor: pointer; transition: all 150ms; user-select: none; -webkit-user-select: none; }
-    .merge-cell:hover { background-color: rgba(55, 65, 81, 0.5); }
-    .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }
-    .tag-changed-cell { background-color: rgba(88, 28, 135, 0.3) !important; }
 </style>
 @endpush
 
@@ -428,7 +426,7 @@ document.addEventListener('alpine:init', () => {
         // ── Shared-core callbacks ────────────────────────────────────────
 
         rowPassesFilters(key) {
-            if (this.filters.pendingOnly && !this.isEdited(key) && !this.hasTagChange(key)) {
+            if (this.filters.pendingOnly && !this.isEdited(key) && !this.hasTagChange(key) && !this.isDeleted(key)) {
                 return false;
             }
 
@@ -474,7 +472,8 @@ document.addEventListener('alpine:init', () => {
         get totalChanges() {
             const keys = new Set([
                 ...Object.keys(this.editedValues),
-                ...Object.keys(this.tagChanges)
+                ...Object.keys(this.tagChanges),
+                ...Object.keys(this.deletions)
             ]);
             return keys.size;
         },
@@ -586,8 +585,7 @@ document.addEventListener('alpine:init', () => {
 
         clearAll() {
             if (confirm(@js(__('merge_preview.confirm_cancel')))) {
-                this.editedValues = {};
-                this.tagChanges = {};
+                this.clearPendingState();
             }
         },
 
@@ -616,6 +614,7 @@ document.addEventListener('alpine:init', () => {
                     source: isEdited ? 'manual' : 'local'
                 });
             }
+            const deletions = Object.keys(this.deletions);
 
             fetch('{{ route("edit-session.save") }}', {
                 method: 'POST',
@@ -624,7 +623,7 @@ document.addEventListener('alpine:init', () => {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ selections })
+                body: JSON.stringify({ selections, deletions })
             })
                 .then(response => {
                     if (!response.ok) {
@@ -643,9 +642,15 @@ document.addEventListener('alpine:init', () => {
                         // Conflict resolved by this save: the user's version won
                         delete this.underlyingChanged[sel.key];
                     }
-                    this.editedValues = {};
-                    this.tagChanges = {};
-                    this.savedCount += result.saved;
+                    for (const key of deletions) {
+                        delete this.data[key];
+                        delete this.underlyingChanged[key];
+                    }
+                    if (deletions.length > 0) {
+                        this.allKeys = Object.keys(this.data).sort();
+                    }
+                    this.clearPendingState();
+                    this.savedCount += (result.saved || 0) + (result.deleted || 0);
                     // Our own save changed the session hash — don't refetch on next poll
                     this.currentHash = result.content_hash;
                     this.saveMessage = @js(__('edit_session.saved_ok'));

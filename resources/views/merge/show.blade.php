@@ -573,85 +573,10 @@
     </div>
 </div>
 
+{{-- Editor styles (tags, cells, affordances) are shared in resources/css/app.css --}}
 @push('head')
 <style>
-    /* Hide elements with x-cloak until Alpine initializes */
     [x-cloak] { display: none !important; }
-
-    /* Tag badges - native CSS (no @apply for runtime styles) */
-    .tag-H {
-        background-color: rgb(22 163 74); /* green-600 */
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-A {
-        background-color: rgb(234 88 12); /* orange-600 */
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-V {
-        background-color: rgb(37 99 235); /* blue-600 */
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-M {
-        background-color: rgb(147 51 234); /* purple-600 */
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .tag-S {
-        background-color: rgb(75 85 99); /* gray-600 */
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-
-    /* Merge cell interactivity */
-    .merge-cell {
-        cursor: pointer;
-        transition: all 150ms;
-        user-select: none;
-        -webkit-user-select: none;
-    }
-    .merge-cell:hover {
-        background-color: rgba(55, 65, 81, 0.5); /* gray-700/50 */
-    }
-
-    /* Selection states - visible feedback when clicked */
-    .selected-main {
-        background-color: rgba(20, 83, 45, 0.5) !important; /* green-900/50 */
-        box-shadow: inset 0 0 0 2px rgb(34 197 94); /* ring-2 ring-green-500 */
-    }
-    .selected-branch {
-        background-color: rgba(30, 58, 138, 0.5) !important; /* blue-900/50 */
-        box-shadow: inset 0 0 0 2px rgb(59 130 246); /* ring-2 ring-blue-500 */
-    }
-    .selected-manual {
-        background-color: rgba(88, 28, 135, 0.5) !important; /* purple-900/50 */
-        box-shadow: inset 0 0 0 2px rgb(168 85 247); /* ring-2 ring-purple-500 */
-    }
-    .deleted-cell {
-        background-color: rgba(127, 29, 29, 0.5) !important; /* red-900/50 */
-        box-shadow: inset 0 0 0 2px rgb(239 68 68); /* ring-2 ring-red-500 */
-        cursor: not-allowed;
-    }
-    .tag-changed-cell {
-        background-color: rgba(88, 28, 135, 0.3) !important; /* purple-900/30 */
-    }
 </style>
 @endpush
 

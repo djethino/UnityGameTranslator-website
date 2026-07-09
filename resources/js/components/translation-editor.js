@@ -59,6 +59,7 @@ export function editorCore(config) {
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
         tagChanges: {},     // key -> { newTag, originalTag, value }
+        deletions: {},      // key -> true (marked for removal on save)
 
         // ── Edit modal ────────────────────────────────────────────────────
         editModal: {
@@ -97,9 +98,71 @@ export function editorCore(config) {
          */
         initEditorCore() {
             this.restoreUiState();
+            this.restorePendingState();
             this.$watch('searchQuery', () => this.persistUiState());
             this.$watch('searchScope', () => this.persistUiState());
         },
+
+        // ── Deletions (marked, applied by the page-specific save) ────────
+
+        isDeleted(key) {
+            return this.deletions[key] === true;
+        },
+
+        toggleDelete(key) {
+            if (this.deletions[key]) {
+                delete this.deletions[key];
+            } else {
+                this.deletions[key] = true;
+                // A deleted key can't also carry an edit or a tag change
+                delete this.editedValues[key];
+                delete this.tagChanges[key];
+                this.onDeleteToggled(key);
+            }
+            this.persistPendingState();
+        },
+
+        /** Page hook: called when a key gets marked for deletion. */
+        onDeleteToggled(key) {},
+
+        // ── Pending-state persistence (survives F5 until the save) ───────
+
+        persistPendingState() {
+            try {
+                sessionStorage.setItem(config.persistKey + '_pending', JSON.stringify({
+                    editedValues: this.editedValues,
+                    tagChanges: this.tagChanges,
+                    deletions: this.deletions,
+                    extra: this.pendingExtraState()
+                }));
+            } catch (e) { /* storage full/blocked: non-essential */ }
+        },
+
+        restorePendingState() {
+            try {
+                const raw = sessionStorage.getItem(config.persistKey + '_pending');
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (state.editedValues && typeof state.editedValues === 'object') this.editedValues = state.editedValues;
+                if (state.tagChanges && typeof state.tagChanges === 'object') this.tagChanges = state.tagChanges;
+                if (state.deletions && typeof state.deletions === 'object') this.deletions = state.deletions;
+                this.restorePendingExtra(state.extra);
+            } catch (e) { /* corrupted state: keep defaults */ }
+        },
+
+        /** Call after a successful save: pending work is done. */
+        clearPendingState() {
+            this.editedValues = {};
+            this.tagChanges = {};
+            this.deletions = {};
+            try {
+                sessionStorage.removeItem(config.persistKey + '_pending');
+            } catch (e) { /* non-essential */ }
+        },
+
+        /** Page hooks: extra pending state (e.g. merge selections). */
+        pendingExtraState() { return null; },
+        restorePendingExtra(extra) {},
 
         // ── Filtering pipeline ────────────────────────────────────────────
 
@@ -254,10 +317,13 @@ export function editorCore(config) {
 
             if (value !== originalValue) {
                 this.editedValues[key] = value;
+                // Editing a key cancels a pending deletion of it
+                delete this.deletions[key];
                 this.onEditStaged(key);
             } else {
                 delete this.editedValues[key];
             }
+            this.persistPendingState();
 
             this.closeEditModal();
         },
@@ -303,11 +369,13 @@ export function editorCore(config) {
             } else {
                 this.tagChanges[key] = { newTag: 'S', originalTag: originalTag, value: value };
             }
+            this.persistPendingState();
             this.closeTagDropdown();
         },
 
         cancelTagChange(key) {
             delete this.tagChanges[key];
+            this.persistPendingState();
         },
 
         cancelAndCloseTagDropdown(key) {
