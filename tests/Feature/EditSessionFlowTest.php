@@ -18,13 +18,13 @@ class EditSessionFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function tearDown(): void
+    protected function setUp(): void
     {
-        $disk = Storage::disk('local');
-        foreach ($disk->files(EditSessionToken::CONTENT_DIR) as $file) {
-            $disk->delete($file);
-        }
-        parent::tearDown();
+        parent::setUp();
+        // Session content files must never touch the real storage disk:
+        // without the fake, test files land in storage/app/private and any
+        // cleanup sweep would also delete LIVE dev sessions.
+        Storage::fake('local');
     }
 
     private const CONTENT = [

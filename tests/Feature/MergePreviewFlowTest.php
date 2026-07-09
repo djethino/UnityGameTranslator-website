@@ -25,15 +25,21 @@ class MergePreviewFlowTest extends TestCase
 
     private array $createdFiles = [];
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Token content files must never touch the real storage disk:
+        // without the fake, test files land in storage/app/private and any
+        // cleanup sweep would also delete LIVE dev merge sessions.
+        // (Translation files still use storage_path() directly and are
+        // tracked/deleted per-test via $createdFiles.)
+        Storage::fake('local');
+    }
+
     protected function tearDown(): void
     {
         foreach ($this->createdFiles as $file) {
             @unlink($file);
-        }
-        // Remove merge-preview content files created by the tests
-        $disk = Storage::disk('local');
-        foreach ($disk->files(MergePreviewToken::CONTENT_DIR) as $file) {
-            $disk->delete($file);
         }
         parent::tearDown();
     }
