@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Auth\SocialController;
+use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
@@ -51,6 +52,15 @@ Route::get('/download/{translation}', [TranslationController::class, 'download']
 // Merge preview - supports token-based auth from mod (no locale prefix)
 Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
 Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
+
+// Live edit session - anonymous, token-based auth from mod (no locale prefix).
+// The entry route consumes the one-time token and redirects to the
+// session-bound token-less URL; save is AJAX (throttled: anonymous endpoint).
+Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->name('edit-session.open');
+Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-session.show');
+Route::get('/edit-session-data', [EditSessionController::class, 'data'])->name('edit-session.data');
+Route::post('/edit-session-save', [EditSessionController::class, 'save'])->middleware('throttle:30,1')->name('edit-session.save');
+Route::post('/edit-session-end', [EditSessionController::class, 'end'])->name('edit-session.end');
 
 /*
 |--------------------------------------------------------------------------

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Redis;
  *   sse:translation:{id}      — Translation update events
  *   sse:uuid:{uuid}           — UUID lineage change events
  *   sse:merge:{token}         — Merge completion events
+ *   sse:edit:{modKey}         — Live edit session events (saves + end)
  */
 class SsePublisher
 {
@@ -127,6 +128,51 @@ class SsePublisher
 
         // Store result for late-connecting clients
         self::safeSetex("sse:merge:{$token}:result", self::RESULT_TTL, $message);
+    }
+
+    /**
+     * Signal that the browser saved during a live edit session.
+     * Called from EditSessionController::save(). Unlike merges, one session
+     * can emit many of these — the SSE stream stays open between saves.
+     *
+     * @param string $modKey The session's mod key (SSE channel identity)
+     * @param array $data ['content_hash' => ..., 'line_count' => ..., 'saved_at' => ...]
+     */
+    public static function editSessionSaved(string $modKey, array $data): void
+    {
+        $channel = "sse:edit:{$modKey}";
+        $message = json_encode([
+            'event' => 'edit_saved',
+            'data' => $data,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        self::safePublish($channel, $message);
+
+        // Latest save replayed to (re)connecting clients: a save emitted
+        // during a mod reconnection gap must not be lost. The mod dedupes
+        // via content_hash, so replaying an already-applied save is a no-op.
+        self::safeSetex("sse:edit:{$modKey}:result", self::RESULT_TTL, $message);
+    }
+
+    /**
+     * Signal that a live edit session was ended from the browser.
+     * Called from EditSessionController::end().
+     *
+     * @param string $modKey The session's mod key
+     */
+    public static function editSessionEnded(string $modKey): void
+    {
+        $channel = "sse:edit:{$modKey}";
+        $message = json_encode([
+            'event' => 'edit_session_ended',
+            'data' => [],
+        ]);
+
+        self::safePublish($channel, $message);
+
+        // Overwrite any stored save event: the session (and its content
+        // endpoint) no longer exists, a replayed edit_saved would 404.
+        self::safeSetex("sse:edit:{$modKey}:result", self::RESULT_TTL, $message);
     }
 
     /**

@@ -23,6 +23,7 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://unitygametranslato
 const DEVICE_FLOW_TIMEOUT_MS = 15 * 60 * 1000;  // 15 min
 const SYNC_TIMEOUT_MS = 60 * 60 * 1000;          // 1 hour
 const MERGE_TIMEOUT_MS = 15 * 60 * 1000;         // 15 min
+const EDIT_SESSION_TIMEOUT_MS = 60 * 60 * 1000;  // 1 hour (mod auto-reconnects)
 
 /**
  * Build ioredis client with Unix socket or TCP URL.
@@ -430,6 +431,93 @@ async function handleMerge(req, res, token) {
     res.on('close', cleanup);
 }
 
+// ─── Route: Live Edit Session SSE ────────────────────────────────────────────
+
+/**
+ * Unlike device/merge streams, an edit session emits MANY events over one
+ * connection (one edit_saved per browser save): the stream stays open until
+ * edit_session_ended, the timeout, or the client closing. On (re)connection
+ * the latest stored save is replayed — the mod dedupes via content_hash.
+ */
+async function handleEditSession(req, res, modKey) {
+    const sub = createSubscriber();
+    let eventId = 0;
+    let closed = false;
+    const releaseConnection = trackConnection(req);
+
+    // let (not const like the other handlers): cleanup can fire from a Redis
+    // message during the awaited replay read below, BEFORE these are assigned —
+    // a const would throw a TDZ ReferenceError inside the ioredis listener
+    let heartbeatId = null;
+    let timeoutId = null;
+
+    const cleanup = () => {
+        if (closed) return;
+        closed = true;
+        clearTimeout(timeoutId);
+        clearInterval(heartbeatId);
+        sub.unsubscribe().catch(() => {});
+        sub.quit().catch(() => {});
+        releaseConnection();
+    };
+
+    setupSSE(res);
+
+    sub.subscribe(`sse:edit:${modKey}`, (err) => {
+        if (err) {
+            console.error('[EditSession] Subscribe error:', err.message);
+            emitEvent(res, ++eventId, 'error', { error: 'Internal error' });
+            res.end();
+            cleanup();
+        }
+    });
+
+    sub.on('message', (channel, message) => {
+        try {
+            const parsed = JSON.parse(message);
+            emitEvent(res, ++eventId, parsed.event, parsed.data);
+            // Session ended in the browser: close the stream for good
+            if (parsed.event === 'edit_session_ended') {
+                res.end();
+                cleanup();
+            }
+        } catch (e) {
+            console.error('[EditSession] Message parse error:', e.message);
+        }
+    });
+
+    // Replay the latest stored event AFTER subscribing (no gap where a save
+    // could slip between the replay read and the subscription)
+    try {
+        const stored = await redis.get(`sse:edit:${modKey}:result`);
+        if (stored && !res.writableEnded) {
+            const parsed = JSON.parse(stored);
+            emitEvent(res, ++eventId, parsed.event, parsed.data);
+            if (parsed.event === 'edit_session_ended') {
+                res.end();
+                cleanup();
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('[EditSession] Redis GET error:', e.message);
+    }
+
+    // The awaited replay above may have already ended the session
+    if (closed) return;
+
+    heartbeatId = setInterval(() => {
+        if (!res.writableEnded) res.write(': heartbeat\n\n');
+    }, HEARTBEAT_INTERVAL_MS);
+
+    timeoutId = setTimeout(() => {
+        if (!res.writableEnded) res.end();
+        cleanup();
+    }, EDIT_SESSION_TIMEOUT_MS);
+
+    res.on('close', cleanup);
+}
+
 // ─── HTTP Server ─────────────────────────────────────────────────────────────
 
 const server = http.createServer(async (req, res) => {
@@ -494,6 +582,15 @@ const server = http.createServer(async (req, res) => {
     const mergeMatch = pathname.match(/^\/merge-preview\/([A-Za-z0-9_-]{1,128})\/stream$/);
     if (method === 'GET' && mergeMatch) {
         await handleMerge(req, res, mergeMatch[1]);
+        return;
+    }
+
+    // Live edit session SSE: GET /edit-session/:modKey/stream
+    // Input validation: mod keys are exactly 64 alphanumeric chars
+    // (Str::random(64)) — stricter than the legacy routes on purpose
+    const editMatch = pathname.match(/^\/edit-session\/([A-Za-z0-9]{64})\/stream$/);
+    if (method === 'GET' && editMatch) {
+        await handleEditSession(req, res, editMatch[1]);
         return;
     }
 

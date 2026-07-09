@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DeviceFlowController;
+use App\Http\Controllers\Api\EditSessionController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MergePreviewController;
 use App\Http\Controllers\Api\SyncStateController;
@@ -50,6 +51,15 @@ Route::prefix('v1')->group(function () {
     // ===========================================
     Route::post('auth/device', [DeviceFlowController::class, 'initiate'])
         ->middleware('throttle:10,1');
+
+    // ===========================================
+    // LIVE EDIT SESSION (public by design — no account required)
+    // Guards: tight throttle, content size cap, unguessable 64-char keys
+    // ===========================================
+    Route::post('edit-session/init', [EditSessionController::class, 'init'])
+        ->middleware('throttle:6,1');
+    Route::get('edit-session/{modKey}/content', [EditSessionController::class, 'content'])
+        ->middleware('throttle:30,1');
 
     // ===========================================
     // AUTHENTICATED ENDPOINTS
