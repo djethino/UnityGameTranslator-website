@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "सभी ऑनलाइन चुनें",
     "merge_preview.error_no_local_file": "लोकल फ़ाइल नहीं मिली। कृपया वापस जाएं और अपनी फ़ाइल फिर से अपलोड करें।",
     "merge_preview.error_invalid_json": "लोकल फ़ाइल में अमान्य JSON फॉर्मेट।",
+    "merge_preview.error_session_expired": "तुलना सत्र समाप्त हो गया है। कृपया मॉड से तुलना फिर से शुरू करें।",
+    "merge_preview.error_load_failed": "तुलना डेटा लोड नहीं हो सका। कृपया पेज को फिर से लोड करें।",
     "merge_preview.error_file_not_found": "सर्वर पर अनुवाद फ़ाइल नहीं मिली।",
     "merge_preview.edit_translation": "अनुवाद एडिट करें",
     "merge_preview.enter_translation": "अनुवाद दर्ज करें...",

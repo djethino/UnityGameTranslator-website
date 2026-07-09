@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Selecionar tudo online",
     "merge_preview.error_no_local_file": "Arquivo local não encontrado. Por favor, volte e re-envie seu arquivo.",
     "merge_preview.error_invalid_json": "Formato JSON inválido no arquivo local.",
+    "merge_preview.error_session_expired": "Sessão de comparação expirada. Reinicie a comparação a partir do mod.",
+    "merge_preview.error_load_failed": "Não foi possível carregar os dados de comparação. Recarregue a página.",
     "merge_preview.error_file_not_found": "Arquivo de tradução não encontrado no servidor.",
     "merge_preview.edit_translation": "Editar tradução",
     "merge_preview.enter_translation": "Digite a tradução...",

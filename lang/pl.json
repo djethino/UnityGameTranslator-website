@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Zaznacz wszystkie online",
     "merge_preview.error_no_local_file": "Plik lokalny nie znaleziony. Wróć i ponownie prześlij swój plik.",
     "merge_preview.error_invalid_json": "Nieprawidłowy format JSON w pliku lokalnym.",
+    "merge_preview.error_session_expired": "Sesja porównania wygasła. Uruchom porównanie ponownie z poziomu moda.",
+    "merge_preview.error_load_failed": "Nie udało się załadować danych porównania. Odśwież stronę.",
     "merge_preview.error_file_not_found": "Plik tłumaczenia nie znaleziony na serwerze.",
     "merge_preview.edit_translation": "Edytuj tłumaczenie",
     "merge_preview.enter_translation": "Wprowadź tłumaczenie...",

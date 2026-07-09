@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Select all online",
     "merge_preview.error_no_local_file": "Local file not found. Please go back and re-upload your file.",
     "merge_preview.error_invalid_json": "Invalid JSON format in local file.",
+    "merge_preview.error_session_expired": "Comparison session expired. Please restart the comparison from the mod.",
+    "merge_preview.error_load_failed": "Failed to load comparison data. Please reload the page.",
     "merge_preview.error_file_not_found": "Translation file not found on server.",
     "merge_preview.edit_translation": "Edit translation",
     "merge_preview.enter_translation": "Enter translation...",

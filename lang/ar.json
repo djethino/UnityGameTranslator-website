@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "اختيار الكل متصل",
     "merge_preview.error_no_local_file": "الملف المحلي غير موجود. يرجى العودة وإعادة رفع ملفك.",
     "merge_preview.error_invalid_json": "صيغة JSON غير صالحة في الملف المحلي.",
+    "merge_preview.error_session_expired": "انتهت صلاحية جلسة المقارنة. يرجى إعادة بدء المقارنة من المود.",
+    "merge_preview.error_load_failed": "تعذر تحميل بيانات المقارنة. يرجى إعادة تحميل الصفحة.",
     "merge_preview.error_file_not_found": "ملف الترجمة غير موجود على الخادم.",
     "merge_preview.edit_translation": "تعديل الترجمة",
     "merge_preview.enter_translation": "أدخل الترجمة...",

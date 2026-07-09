@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "すべてオンラインを選択",
     "merge_preview.error_no_local_file": "ローカルファイルが見つかりません。戻って、ファイルを再度アップロードしてください。",
     "merge_preview.error_invalid_json": "ローカルファイルのJSON形式が無効です。",
+    "merge_preview.error_session_expired": "比較セッションの有効期限が切れました。Modから比較をやり直してください。",
+    "merge_preview.error_load_failed": "比較データを読み込めませんでした。ページを再読み込みしてください。",
     "merge_preview.error_file_not_found": "サーバーに翻訳ファイルが見つかりません。",
     "merge_preview.edit_translation": "翻訳を編集",
     "merge_preview.enter_translation": "翻訳を入力...",

@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Chọn tất cả online",
     "merge_preview.error_no_local_file": "Không tìm thấy file cục bộ. Vui lòng quay lại và tải lên lại file.",
     "merge_preview.error_invalid_json": "Định dạng JSON không hợp lệ trong file cục bộ.",
+    "merge_preview.error_session_expired": "Phiên so sánh đã hết hạn. Vui lòng khởi động lại việc so sánh từ mod.",
+    "merge_preview.error_load_failed": "Không thể tải dữ liệu so sánh. Vui lòng tải lại trang.",
     "merge_preview.error_file_not_found": "Không tìm thấy file bản dịch trên server.",
     "merge_preview.edit_translation": "Chỉnh sửa bản dịch",
     "merge_preview.enter_translation": "Nhập bản dịch...",

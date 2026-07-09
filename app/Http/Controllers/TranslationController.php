@@ -11,6 +11,7 @@ use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationController extends Controller
@@ -575,10 +576,16 @@ class TranslationController extends Controller
      * Supports two access modes:
      * 1. Web upload flow: local content passed via sessionStorage (JS)
      * 2. Mod flow: local content passed via ?token=xxx (from API init)
+     *
+     * The page itself carries no translation data: the JS fetches it from
+     * mergePreviewData(), and the mod's local content lives in a file on the
+     * private disk referenced by the token. Neither the session nor the page
+     * ever holds the content — large files broke both on shared hosting.
      */
     public function mergePreview(Request $request, Translation $translation)
     {
-        $tokenContent = null;
+        $hasTokenContent = false;
+        $tokenError = null;
         $token = $request->query('token');
 
         // Mode 1: Token-based auth (from mod)
@@ -599,8 +606,6 @@ class TranslationController extends Controller
                 abort(403, 'You can only preview your own translations.');
             }
 
-            $tokenContent = $mergeToken->local_content;
-
             // Check if user was already authenticated before token login
             $wasAlreadyLoggedIn = auth()->check() && (int) auth()->id() === (int) $mergeToken->user_id;
 
@@ -613,11 +618,13 @@ class TranslationController extends Controller
                 // This prevents destroying their existing web session after save
                 'merge_preview_only' => !$wasAlreadyLoggedIn,
                 'merge_preview_translation_id' => $translation->id,
-                'merge_preview_local_content' => $tokenContent,
+                'merge_preview_token' => $mergeToken->token,
             ]);
 
-            // Delete token after use (one-time)
-            $mergeToken->delete();
+            // One-time login: the token can no longer authenticate, but the
+            // row and content file survive so the post-redirect request and
+            // the save's SSE publish can still find them.
+            $mergeToken->markConsumed();
 
             // Redirect to the same URL without the token: it must not linger in
             // browser history, server/proxy logs or Referer headers. The next
@@ -625,9 +632,38 @@ class TranslationController extends Controller
             return redirect()->route('translations.merge-preview', $translation, 303);
         }
         // Mode 2: Session recovery (after token-consuming redirect or page reload).
-        // Content was bound to this translation by Mode 1 after ownership checks.
-        elseif (session()->has('merge_preview_local_content') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
-            $tokenContent = session('merge_preview_local_content');
+        // The token reference was bound to this translation by Mode 1 after
+        // ownership checks; the content itself stays in the token's file.
+        elseif (session('merge_preview_token') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
+            $mergeToken = MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id);
+
+            if ($mergeToken && $mergeToken->getContentFilePath()) {
+                $hasTokenContent = true;
+            } else {
+                // Token expired or content file gone: fail loudly, never
+                // silently degrade to Mode 3 (which would show a misleading
+                // "local file not found" error).
+                Log::warning('[MergePreview] Session token expired or content file missing', [
+                    'translation_id' => $translation->id,
+                    'token_found' => $mergeToken !== null,
+                ]);
+
+                $scopedSession = (bool) session('merge_preview_only');
+                session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
+
+                if ($scopedSession) {
+                    // Scoped sessions exist only for the merge: close it entirely
+                    Auth::logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+
+                    return redirect()
+                        ->route('home')
+                        ->with('error', __('merge_preview.error_session_expired'));
+                }
+
+                $tokenError = __('merge_preview.error_session_expired');
+            }
         }
         // Mode 3: Web session auth (from website)
         else {
@@ -645,37 +681,77 @@ class TranslationController extends Controller
         // Load game and user relationships
         $translation->load(['game', 'user']);
 
-        // Get online content
-        $onlineContent = $this->getTranslationContent($translation);
-        if ($onlineContent === null) {
+        // The online file must exist for the data endpoint to serve it
+        $onlinePath = $translation->getSafeFilePath();
+        if (!$onlinePath || !file_exists($onlinePath)) {
             abort(404, 'Translation file not found.');
-        }
-
-        // Check if this is a branch (to show Main comparison option)
-        $isMainOwner = $translation->visibility === 'public';
-        $mainTranslation = null;
-
-        if (!$isMainOwner) {
-            // Find the Main translation for comparison
-            $mainTranslation = Translation::where('file_uuid', $translation->file_uuid)
-                ->where('visibility', 'public')
-                ->with('user:id,name')
-                ->first();
-        }
-
-        $mainContent = null;
-        if ($mainTranslation) {
-            $mainContent = $this->getTranslationContent($mainTranslation);
         }
 
         return view('translations.merge-preview', compact(
             'translation',
-            'onlineContent',
-            'isMainOwner',
-            'mainTranslation',
-            'mainContent',
-            'tokenContent'
+            'hasTokenContent',
+            'tokenError'
         ));
+    }
+
+    /**
+     * Stream the merge preview data (local + online content) as JSON.
+     *
+     * Called by the merge-preview page's JS. Contents are streamed straight
+     * from the files with constant memory — no PHP-side decoding, no size
+     * limit below the upload cap. The JS already filters metadata keys and
+     * normalizes line endings on both sides.
+     *
+     * "local" is the mod-flow content file (null in the web upload flow,
+     * where the local file lives in the browser's sessionStorage).
+     */
+    public function mergePreviewData(Request $request, Translation $translation)
+    {
+        $localPath = null;
+
+        // Mod flow: ongoing token session (bound by mergePreview Mode 1 after
+        // ownership checks — the token only ever references its own translation)
+        if (session('merge_preview_token') && (int) session('merge_preview_translation_id') === (int) $translation->id) {
+            $mergeToken = MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id);
+            $localPath = $mergeToken?->getContentFilePath();
+
+            if (!$localPath) {
+                abort(410, 'Merge preview session expired. Please restart the comparison from the mod.');
+            }
+        }
+        // Web flow: regular authenticated owner
+        else {
+            $user = auth()->user();
+
+            if (!$user) {
+                abort(401, 'Authentication required.');
+            }
+
+            if ((int) $translation->user_id !== (int) $user->id) {
+                abort(403, 'You can only merge your own translations.');
+            }
+        }
+
+        $onlinePath = $translation->getSafeFilePath();
+        if (!$onlinePath || !file_exists($onlinePath)) {
+            abort(404, 'Translation file not found.');
+        }
+
+        return response()->stream(function () use ($localPath, $onlinePath) {
+            echo '{"local":';
+            if ($localPath) {
+                readfile($localPath);
+            } else {
+                echo 'null';
+            }
+            echo ',"online":';
+            readfile($onlinePath);
+            echo '}';
+        }, 200, [
+            'Content-Type' => 'application/json; charset=utf-8',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 
     /**
@@ -775,15 +851,15 @@ class TranslationController extends Controller
         $translation->save();
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
-        $activeTokens = MergePreviewToken::where('translation_id', $translation->id)
-            ->where('expires_at', '>', now())
-            ->get();
-        foreach ($activeTokens as $mergeToken) {
-            SsePublisher::mergeCompleted($mergeToken->token, [
-                'translation_id' => $translation->id,
-                'file_hash' => $translation->file_hash,
-                'line_count' => $translation->line_count,
-            ]);
+        $mergeTokens = MergePreviewToken::where('translation_id', $translation->id)->get();
+        foreach ($mergeTokens as $mergeToken) {
+            if (!$mergeToken->isExpired()) {
+                SsePublisher::mergeCompleted($mergeToken->token, [
+                    'translation_id' => $translation->id,
+                    'file_hash' => $translation->file_hash,
+                    'line_count' => $translation->line_count,
+                ]);
+            }
         }
         SsePublisher::translationUpdated($translation->id, [
             'file_hash' => $translation->file_hash,
@@ -792,10 +868,16 @@ class TranslationController extends Controller
             'updated_at' => $translation->updated_at->toIso8601String(),
         ]);
 
+        // The merge is done: the tokens and their content files reference a
+        // now-obsolete local state, drop them (after the SSE publish above)
+        foreach ($mergeTokens as $mergeToken) {
+            $mergeToken->deleteWithFile();
+        }
+
         // If this was a token-based merge preview session, invalidate it
         // to prevent the scoped session from being used for other actions
         if (session('merge_preview_only')) {
-            session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_local_content']);
+            session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
             Auth::logout();
             session()->invalidate();
             session()->regenerateToken();
@@ -805,9 +887,9 @@ class TranslationController extends Controller
                 ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount]));
         }
 
-        // Regular web session: clear the merge data so a stale local content
+        // Regular web session: clear the merge reference so a stale token
         // can't be recovered on a later visit to the merge-preview URL
-        session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_local_content']);
+        session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
 
         return redirect()
             ->route('translations.mine')

@@ -521,7 +521,8 @@ document.addEventListener('alpine:init', () => {
         error: null,
         saving: false,
         localData: {},
-        onlineData: @json($onlineContent),
+        onlineData: {},
+        onlineMetadata: {},
         allKeys: [],
         selections: {},
         editedValues: {},
@@ -570,41 +571,89 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
-            // Check for token-provided content first (mod flow)
-            const tokenContent = @json($tokenContent);
-
-            if (tokenContent) {
-                // Mod flow: use token content
-                this.loadContent(tokenContent);
-                return;
-            }
-
-            // Web flow: check sessionStorage
-            const localContent = sessionStorage.getItem('merge_local_content');
-            const translationId = sessionStorage.getItem('merge_translation_id');
-
-            if (!localContent || translationId !== '{{ $translation->id }}') {
-                this.error = '{{ __("merge_preview.error_no_local_file") }}';
+            // Server-side token session error (expired / content file gone)
+            const tokenError = @json($tokenError);
+            if (tokenError) {
+                this.error = tokenError;
                 this.loaded = true;
                 return;
             }
 
-            try {
-                const parsed = JSON.parse(localContent);
-                this.loadContent(parsed);
+            // Mod flow: the local content waits server-side, keyed by the
+            // session's merge token. Web flow: it was stored in
+            // sessionStorage by the upload page.
+            const hasTokenContent = @json($hasTokenContent);
 
-                // Clear sessionStorage after successful load
-                sessionStorage.removeItem('merge_local_content');
-                sessionStorage.removeItem('merge_translation_id');
-                sessionStorage.removeItem('merge_main_translation_id');
-                sessionStorage.removeItem('merge_is_main_owner');
-            } catch (e) {
-                this.error = '{{ __("merge_preview.error_invalid_json") }}';
-                this.loaded = true;
+            let webLocalContent = null;
+            if (!hasTokenContent) {
+                const raw = sessionStorage.getItem('merge_local_content');
+                const translationId = sessionStorage.getItem('merge_translation_id');
+
+                if (!raw || translationId !== '{{ $translation->id }}') {
+                    this.error = '{{ __("merge_preview.error_no_local_file") }}';
+                    this.loaded = true;
+                    return;
+                }
+
+                try {
+                    webLocalContent = JSON.parse(raw);
+                } catch (e) {
+                    this.error = '{{ __("merge_preview.error_invalid_json") }}';
+                    this.loaded = true;
+                    return;
+                }
             }
+
+            // Local and online contents are streamed from the server, never
+            // inlined in the page: translation files can be tens of MB.
+            fetch('{{ route("translations.merge-preview.data", $translation) }}', {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.status === 410 ? 'expired' : 'load_failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const localContent = hasTokenContent ? data.local : webLocalContent;
+                    if (!localContent) {
+                        this.error = '{{ __("merge_preview.error_no_local_file") }}';
+                        this.loaded = true;
+                        return;
+                    }
+
+                    this.loadContent(localContent, data.online);
+
+                    if (!hasTokenContent) {
+                        // Clear sessionStorage after successful load
+                        sessionStorage.removeItem('merge_local_content');
+                        sessionStorage.removeItem('merge_translation_id');
+                        sessionStorage.removeItem('merge_main_translation_id');
+                        sessionStorage.removeItem('merge_is_main_owner');
+                    }
+                })
+                .catch(e => {
+                    this.error = e.message === 'expired'
+                        ? '{{ __("merge_preview.error_session_expired") }}'
+                        : '{{ __("merge_preview.error_load_failed") }}';
+                    this.loaded = true;
+                });
         },
 
-        loadContent(content) {
+        loadContent(content, onlineContent) {
+            // Keep online metadata keys (_uuid, _game, ...) for buildMergedContent
+            this.onlineMetadata = {};
+            const rawOnline = {};
+            for (const [key, value] of Object.entries(onlineContent)) {
+                if (key.startsWith('_')) {
+                    this.onlineMetadata[key] = value;
+                } else {
+                    rawOnline[key] = value;
+                }
+            }
+            this.onlineData = rawOnline;
+
             // Filter out metadata keys from local and normalize line endings
             this.localData = {};
             for (const [key, value] of Object.entries(content)) {
@@ -1099,11 +1148,9 @@ document.addEventListener('alpine:init', () => {
         buildMergedContent() {
             const merged = {};
 
-            // Copy metadata from online (server version)
-            for (const [key, value] of Object.entries(@json($onlineContent))) {
-                if (key.startsWith('_')) {
-                    merged[key] = value;
-                }
+            // Copy metadata from online (server version), kept aside by loadContent
+            for (const [key, value] of Object.entries(this.onlineMetadata)) {
+                merged[key] = value;
             }
 
             // Build merged translations

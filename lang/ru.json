@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Выбрать все онлайн",
     "merge_preview.error_no_local_file": "Локальный файл не найден. Вернитесь и повторно загрузите свой файл.",
     "merge_preview.error_invalid_json": "Недопустимый формат JSON в локальном файле.",
+    "merge_preview.error_session_expired": "Сессия сравнения истекла. Запустите сравнение заново из мода.",
+    "merge_preview.error_load_failed": "Не удалось загрузить данные сравнения. Перезагрузите страницу.",
     "merge_preview.error_file_not_found": "Файл перевода не найден на сервере.",
     "merge_preview.edit_translation": "Редактировать перевод",
     "merge_preview.enter_translation": "Введите перевод...",

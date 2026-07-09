@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Tüm çevrimiçileri seç",
     "merge_preview.error_no_local_file": "Yerel dosya bulunamadı. Lütfen geri dönün ve dosyanızı yeniden yükleyin.",
     "merge_preview.error_invalid_json": "Yerel dosyada geçersiz JSON formatı.",
+    "merge_preview.error_session_expired": "Karşılaştırma oturumu sona erdi. Lütfen karşılaştırmayı moddan yeniden başlatın.",
+    "merge_preview.error_load_failed": "Karşılaştırma verileri yüklenemedi. Lütfen sayfayı yeniden yükleyin.",
     "merge_preview.error_file_not_found": "Çeviri dosyası sunucuda bulunamadı.",
     "merge_preview.edit_translation": "Çeviriyi düzenle",
     "merge_preview.enter_translation": "Çeviri girin...",

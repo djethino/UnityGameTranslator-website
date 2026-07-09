@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Pilih semua online",
     "merge_preview.error_no_local_file": "File lokal tidak ditemukan. Silakan kembali dan unggah ulang file-mu.",
     "merge_preview.error_invalid_json": "Format JSON tidak valid di file lokal.",
+    "merge_preview.error_session_expired": "Sesi perbandingan telah berakhir. Silakan mulai ulang perbandingan dari mod.",
+    "merge_preview.error_load_failed": "Gagal memuat data perbandingan. Silakan muat ulang halaman.",
     "merge_preview.error_file_not_found": "File terjemahan tidak ditemukan di server.",
     "merge_preview.edit_translation": "Edit terjemahan",
     "merge_preview.enter_translation": "Masukkan terjemahan...",

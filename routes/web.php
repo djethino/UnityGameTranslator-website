@@ -50,6 +50,7 @@ Route::get('/download/{translation}', [TranslationController::class, 'download']
 
 // Merge preview - supports token-based auth from mod (no locale prefix)
 Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
+Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
 
 /*
 |--------------------------------------------------------------------------

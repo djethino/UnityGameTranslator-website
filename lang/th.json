@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "เลือกทั้งหมดออนไลน์",
     "merge_preview.error_no_local_file": "ไม่พบไฟล์ในเครื่อง กรุณากลับไปและอัปโหลดไฟล์ของคุณใหม่",
     "merge_preview.error_invalid_json": "รูปแบบ JSON ไม่ถูกต้องในไฟล์ในเครื่อง",
+    "merge_preview.error_session_expired": "เซสชันการเปรียบเทียบหมดอายุแล้ว กรุณาเริ่มการเปรียบเทียบใหม่จากม็อด",
+    "merge_preview.error_load_failed": "ไม่สามารถโหลดข้อมูลการเปรียบเทียบได้ กรุณาโหลดหน้าใหม่",
     "merge_preview.error_file_not_found": "ไม่พบไฟล์การแปลบนเซิร์ฟเวอร์",
     "merge_preview.edit_translation": "แก้ไขการแปล",
     "merge_preview.enter_translation": "กรอกการแปล...",

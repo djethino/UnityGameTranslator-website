@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Selecteer alle online",
     "merge_preview.error_no_local_file": "Lokaal bestand niet gevonden. Ga terug en upload je bestand opnieuw.",
     "merge_preview.error_invalid_json": "Ongeldig JSON-formaat in lokaal bestand.",
+    "merge_preview.error_session_expired": "Vergelijkingssessie verlopen. Start de vergelijking opnieuw vanuit de mod.",
+    "merge_preview.error_load_failed": "Kan vergelijkingsgegevens niet laden. Herlaad de pagina.",
     "merge_preview.error_file_not_found": "Vertaalbestand niet gevonden op server.",
     "merge_preview.edit_translation": "Vertaling bewerken",
     "merge_preview.enter_translation": "Voer vertaling in...",

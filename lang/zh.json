@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "全选在线",
     "merge_preview.error_no_local_file": "未找到本地文件。请返回并重新上传您的文件。",
     "merge_preview.error_invalid_json": "本地文件中的JSON格式无效。",
+    "merge_preview.error_session_expired": "对比会话已过期。请从模组中重新开始对比。",
+    "merge_preview.error_load_failed": "无法加载对比数据。请重新加载页面。",
     "merge_preview.error_file_not_found": "服务器上未找到翻译文件。",
     "merge_preview.edit_translation": "编辑翻译",
     "merge_preview.enter_translation": "输入翻译...",

@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "בחירת הכל מקוון",
     "merge_preview.error_no_local_file": "הקובץ המקומי לא נמצא. אנא חזרו והעלו מחדש את הקובץ שלכם.",
     "merge_preview.error_invalid_json": "פורמט JSON לא תקין בקובץ המקומי.",
+    "merge_preview.error_session_expired": "פג תוקף סשן ההשוואה. הפעילו מחדש את ההשוואה מהמוד.",
+    "merge_preview.error_load_failed": "טעינת נתוני ההשוואה נכשלה. רעננו את הדף.",
     "merge_preview.error_file_not_found": "קובץ התרגום לא נמצא בשרת.",
     "merge_preview.edit_translation": "עריכת תרגום",
     "merge_preview.enter_translation": "הזינו תרגום...",

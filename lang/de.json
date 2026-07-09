@@ -660,6 +660,8 @@
     "merge_preview.select_all_online": "Alles online auswählen",
     "merge_preview.error_no_local_file": "Lokale Datei nicht gefunden. Bitte gehen Sie zurück und laden Sie Ihre Datei erneut hoch.",
     "merge_preview.error_invalid_json": "Ungültiges JSON-Format in der lokalen Datei.",
+    "merge_preview.error_session_expired": "Vergleichssitzung abgelaufen. Bitte starten Sie den Vergleich erneut aus dem Mod.",
+    "merge_preview.error_load_failed": "Vergleichsdaten konnten nicht geladen werden. Bitte laden Sie die Seite neu.",
     "merge_preview.error_file_not_found": "Übersetzungsdatei nicht auf dem Server gefunden.",
     "merge_preview.edit_translation": "Übersetzung bearbeiten",
     "merge_preview.enter_translation": "Übersetzung eingeben...",
