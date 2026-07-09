@@ -125,7 +125,7 @@
 <script nonce="{{ $cspNonce }}">
 document.querySelectorAll('.delete-form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
-        if (!confirm('{{ __('my_translations.delete_confirm') }}')) {
+        if (!confirm(@js(__('my_translations.delete_confirm')))) {
             e.preventDefault();
         }
     });

@@ -216,7 +216,7 @@
                 </button>
 
                 <form method="POST" action="{{ route('edit-session.end') }}"
-                    onsubmit="return confirm('{{ __('edit_session.end_confirm') }}')">
+                    onsubmit="return confirm(@js(__('edit_session.end_confirm')))">
                     @csrf
                     <button type="submit"
                         class="text-red-400 hover:text-red-300 text-sm transition">
@@ -416,8 +416,8 @@ document.addEventListener('alpine:init', () => {
                 })
                 .catch(e => {
                     this.error = e.message === 'expired'
-                        ? '{{ __("edit_session.error_expired") }}'
-                        : '{{ __("merge_preview.error_load_failed") }}';
+                        ? @js(__('edit_session.error_expired'))
+                        : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
         },
@@ -467,7 +467,7 @@ document.addEventListener('alpine:init', () => {
                 .catch(e => {
                     if (e.message === 'expired') {
                         this.stopLiveSync();
-                        this.error = '{{ __("edit_session.error_expired") }}';
+                        this.error = @js(__('edit_session.error_expired'));
                     }
                     // transient network errors: next poll retries
                 });
@@ -520,7 +520,7 @@ document.addEventListener('alpine:init', () => {
             this.allKeys = Object.keys(fresh).sort();
 
             if (changedCount > 0) {
-                this.refreshNotice = '{{ __("edit_session.updated_from_game") }}' + ' (' + changedCount + ')';
+                this.refreshNotice = @js(__('edit_session.updated_from_game')) + ' (' + changedCount + ')';
                 setTimeout(() => { this.refreshNotice = ''; }, 5000);
             }
         },
@@ -593,14 +593,18 @@ document.addEventListener('alpine:init', () => {
                 };
                 if (!tagFilters[tag]) return false;
 
-                // Search filter (scope: 'both' = keys + values, 'keys', 'values')
+                // Search filter (scope: 'both' = keys + values, 'keys', 'values').
+                // A pending edit matches on its OLD value too: correcting the
+                // very text you searched for must not make the row vanish
+                // before you've clicked "Save & apply in game".
                 if (this.searchQuery.trim()) {
                     const query = this.searchQuery.toLowerCase().trim();
                     const keyMatch = this.searchScope !== 'values' && key.toLowerCase().includes(query);
                     let valueMatch = false;
                     if (this.searchScope !== 'keys') {
-                        const value = (this.editedValues[key] ?? this.getValue(this.data[key])).toLowerCase();
-                        valueMatch = value.includes(query);
+                        valueMatch = this.getValue(this.data[key]).toLowerCase().includes(query)
+                            || (this.editedValues[key] !== undefined
+                                && this.editedValues[key].toLowerCase().includes(query));
                     }
                     if (!keyMatch && !valueMatch) return false;
                 }
@@ -619,8 +623,10 @@ document.addEventListener('alpine:init', () => {
                     valA = this.getTag(this.data[a]);
                     valB = this.getTag(this.data[b]);
                 } else if (col === 'value') {
-                    valA = (this.editedValues[a] ?? this.getValue(this.data[a])).toLowerCase();
-                    valB = (this.editedValues[b] ?? this.getValue(this.data[b])).toLowerCase();
+                    // Sort on the stored value: a pending edit must not make
+                    // the row jump around while the user is still working
+                    valA = this.getValue(this.data[a]).toLowerCase();
+                    valB = this.getValue(this.data[b]).toLowerCase();
                 } else {
                     return 0;
                 }
@@ -755,7 +761,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         clearAll() {
-            if (confirm('{{ __("merge_preview.confirm_cancel") }}')) {
+            if (confirm(@js(__('merge_preview.confirm_cancel')))) {
                 this.editedValues = {};
                 this.tagChanges = {};
             }
@@ -818,15 +824,15 @@ document.addEventListener('alpine:init', () => {
                     this.savedCount += result.saved;
                     // Our own save changed the session hash — don't refetch on next poll
                     this.currentHash = result.content_hash;
-                    this.saveMessage = '{{ __("edit_session.saved_ok") }}';
+                    this.saveMessage = @js(__('edit_session.saved_ok'));
                     setTimeout(() => { this.saveMessage = ''; }, 5000);
                 })
                 .catch(e => {
                     if (e.message === 'expired') {
-                        this.error = '{{ __("edit_session.error_expired") }}';
+                        this.error = @js(__('edit_session.error_expired'));
                     } else {
                         this.saveMessage = '';
-                        alert('{{ __("edit_session.save_failed") }}');
+                        alert(@js(__('edit_session.save_failed')));
                     }
                 })
                 .finally(() => {

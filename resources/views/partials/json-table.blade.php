@@ -151,12 +151,12 @@
                 preview.classList.remove('hidden');
                 icon.classList.remove('fa-chevron-down');
                 icon.classList.add('fa-chevron-up');
-                text.textContent = '{{ __('common.hide') }}';
+                text.textContent = @js(__('common.hide'));
             } else {
                 preview.classList.add('hidden');
                 icon.classList.remove('fa-chevron-up');
                 icon.classList.add('fa-chevron-down');
-                text.textContent = '{{ __('common.show') }}';
+                text.textContent = @js(__('common.show'));
             }
         });
     }

@@ -362,11 +362,11 @@ function showAutoDetected(data) {
 
     if (data.type === 'update') {
         const updateLabel = isMainOwner
-            ? '{{ __("upload.update_your_translation") }}'
-            : '{{ __("upload.update_your_branch") }}';
+            ? @js(__('upload.update_your_translation'))
+            : @js(__('upload.update_your_branch'));
         const updateDesc = isMainOwner
-            ? '{{ __("upload.update_description") }}'
-            : '{{ __("upload.update_branch_description") }}';
+            ? @js(__('upload.update_description'))
+            : @js(__('upload.update_branch_description'));
 
         detectionMessage = `
             <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">

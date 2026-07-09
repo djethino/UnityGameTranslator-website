@@ -285,7 +285,7 @@
             </div>
 
             <form action="{{ route('translations.convert-to-fork', $translation) }}" method="POST"
-                  onsubmit="return confirm('{{ __('dashboard.convert_confirm') }}')">
+                  onsubmit="return confirm(@js(__('dashboard.convert_confirm')))">
                 @csrf
                 <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition">
                     <i class="fas fa-download mr-2"></i>{{ __('dashboard.convert_and_download') }}

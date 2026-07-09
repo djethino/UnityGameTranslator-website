@@ -595,7 +595,7 @@ document.addEventListener('alpine:init', () => {
                 const translationId = sessionStorage.getItem('merge_translation_id');
 
                 if (!raw || translationId !== '{{ $translation->id }}') {
-                    this.error = '{{ __("merge_preview.error_no_local_file") }}';
+                    this.error = @js(__('merge_preview.error_no_local_file'));
                     this.loaded = true;
                     return;
                 }
@@ -603,7 +603,7 @@ document.addEventListener('alpine:init', () => {
                 try {
                     webLocalContent = JSON.parse(raw);
                 } catch (e) {
-                    this.error = '{{ __("merge_preview.error_invalid_json") }}';
+                    this.error = @js(__('merge_preview.error_invalid_json'));
                     this.loaded = true;
                     return;
                 }
@@ -623,7 +623,7 @@ document.addEventListener('alpine:init', () => {
                 .then(data => {
                     const localContent = hasTokenContent ? data.local : webLocalContent;
                     if (!localContent) {
-                        this.error = '{{ __("merge_preview.error_no_local_file") }}';
+                        this.error = @js(__('merge_preview.error_no_local_file'));
                         this.loaded = true;
                         return;
                     }
@@ -640,8 +640,8 @@ document.addEventListener('alpine:init', () => {
                 })
                 .catch(e => {
                     this.error = e.message === 'expired'
-                        ? '{{ __("merge_preview.error_session_expired") }}'
-                        : '{{ __("merge_preview.error_load_failed") }}';
+                        ? @js(__('merge_preview.error_session_expired'))
+                        : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
         },
@@ -1105,7 +1105,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         clearAll() {
-            if (confirm('{{ __("merge_preview.confirm_cancel") }}')) {
+            if (confirm(@js(__('merge_preview.confirm_cancel')))) {
                 this.selections = {};
                 this.editedValues = {};
                 this.tagChanges = {};

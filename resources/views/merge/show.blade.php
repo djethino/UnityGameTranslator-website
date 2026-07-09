@@ -548,7 +548,7 @@
             ]"
             :disabled="!isMain"
             class="w-full px-3 py-2 text-left flex items-center gap-3 transition"
-            :title="!isMain ? '{{ __('merge.main_only') }}' : ''">
+            :title="!isMain ? @js(__('merge.main_only')) : ''">
             <span class="tag-A">A</span>
             <span class="text-sm text-gray-300">{{ __('merge.tag_invalidate') }}</span>
             <span x-show="!isMain" class="ml-auto text-gray-500 text-xs">
