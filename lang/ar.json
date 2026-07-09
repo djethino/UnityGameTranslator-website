@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "المفاتيح + القيم",
     "merge_preview.search_scope_keys": "المفاتيح فقط",
     "merge_preview.search_scope_values": "القيم فقط",
+    "merge_preview.show_more": "عرض المزيد",
     "edit_session.title": "تعديل مباشر",
     "edit_session.subtitle": "تحرير ملفك المحلي — يُطبَّق كل حفظ داخل اللعبة أثناء لعبك",
     "edit_session.pending_changes": "تغييرات معلّقة",

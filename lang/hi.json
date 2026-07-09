@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "की + वैल्यू",
     "merge_preview.search_scope_keys": "केवल की",
     "merge_preview.search_scope_values": "केवल वैल्यू",
+    "merge_preview.show_more": "और दिखाएं",
     "edit_session.title": "लाइव एडिट",
     "edit_session.subtitle": "आपकी लोकल फ़ाइल एडिट की जा रही है — हर सेव आपके खेलते समय गेम में लागू होता है",
     "edit_session.pending_changes": "लंबित बदलाव",

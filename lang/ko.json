@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "키 + 값",
     "merge_preview.search_scope_keys": "키만",
     "merge_preview.search_scope_values": "값만",
+    "merge_preview.show_more": "더 보기",
     "edit_session.title": "실시간 편집",
     "edit_session.subtitle": "로컬 파일을 편집 중 — 저장할 때마다 플레이 중인 게임에 즉시 적용됩니다",
     "edit_session.pending_changes": "대기 중인 변경",

@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Claves + valores",
     "merge_preview.search_scope_keys": "Solo claves",
     "merge_preview.search_scope_values": "Solo valores",
+    "merge_preview.show_more": "Mostrar más",
     "edit_session.title": "Edición en vivo",
     "edit_session.subtitle": "Editando tu archivo local — cada guardado se aplica en el juego mientras juegas",
     "edit_session.pending_changes": "Cambios pendientes",

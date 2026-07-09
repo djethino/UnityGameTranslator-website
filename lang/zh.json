@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "键 + 值",
     "merge_preview.search_scope_keys": "仅键",
     "merge_preview.search_scope_values": "仅值",
+    "merge_preview.show_more": "显示更多",
     "edit_session.title": "实时编辑",
     "edit_session.subtitle": "正在编辑您的本地文件 — 每次保存都会在您游玩时应用到游戏中",
     "edit_session.pending_changes": "待处理更改",

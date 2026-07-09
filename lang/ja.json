@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "キー＋値",
     "merge_preview.search_scope_keys": "キーのみ",
     "merge_preview.search_scope_values": "値のみ",
+    "merge_preview.show_more": "もっと見る",
     "edit_session.title": "ライブ編集",
     "edit_session.subtitle": "ローカルファイルを編集中 — 保存するたびにプレイ中のゲーム内へ適用されます",
     "edit_session.pending_changes": "保留中の変更",

@@ -7,6 +7,13 @@ import Alpine from '@alpinejs/csp';
 import mergeTable from './components/merge-table.js';
 Alpine.data('mergeTable', mergeTable);
 
+// Shared editor core for the client-side translation editors (merge-preview,
+// edit-session). Their Alpine components stay inline in the Blade views
+// (they need @js() strings and route() URLs), so the factory is exposed
+// globally for the nonce'd inline scripts.
+import { composeEditor, normalizeLineEndings } from './components/translation-editor.js';
+window.UGT = { composeEditor, normalizeLineEndings };
+
 window.Alpine = Alpine;
 Alpine.start();
 

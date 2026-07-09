@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Chiavi + valori",
     "merge_preview.search_scope_keys": "Solo chiavi",
     "merge_preview.search_scope_values": "Solo valori",
+    "merge_preview.show_more": "Mostra altro",
     "edit_session.title": "Modifica in tempo reale",
     "edit_session.subtitle": "Modifica del tuo file locale — ogni salvataggio viene applicato nel gioco mentre giochi",
     "edit_session.pending_changes": "Modifiche in sospeso",

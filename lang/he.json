@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "מפתחות + ערכים",
     "merge_preview.search_scope_keys": "מפתחות בלבד",
     "merge_preview.search_scope_values": "ערכים בלבד",
+    "merge_preview.show_more": "הצג עוד",
     "edit_session.title": "עריכה חיה",
     "edit_session.subtitle": "עריכת הקובץ המקומי שלך — כל שמירה מוחלת במשחק בזמן שאתה משחק",
     "edit_session.pending_changes": "שינויים ממתינים",

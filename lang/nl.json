@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Sleutels + waarden",
     "merge_preview.search_scope_keys": "Alleen sleutels",
     "merge_preview.search_scope_values": "Alleen waarden",
+    "merge_preview.show_more": "Meer tonen",
     "edit_session.title": "Live bewerken",
     "edit_session.subtitle": "Je lokale bestand bewerken — elke opslag wordt tijdens het spelen in de game toegepast",
     "edit_session.pending_changes": "Openstaande wijzigingen",

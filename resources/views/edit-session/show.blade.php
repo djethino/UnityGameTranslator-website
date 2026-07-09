@@ -147,7 +147,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="key in filteredKeys" :key="key">
+                    {{-- Windowed rendering: huge files stay snappy --}}
+                    <template x-for="key in visibleKeys" :key="key">
                         <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                             {{-- Key --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-text="key"></td>
@@ -189,6 +190,16 @@
                         <td colspan="3" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-filter text-4xl mb-3 text-gray-600"></i>
                             <p>{{ __('edit_session.no_entries') }}</p>
+                        </td>
+                    </tr>
+
+                    <tr x-show="hiddenCount > 0">
+                        <td colspan="3" class="px-4 py-3 text-center">
+                            <button type="button" @click="showMore()"
+                                class="text-purple-400 hover:text-purple-300 text-sm transition">
+                                <i class="fas fa-chevron-down mr-1"></i>
+                                {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -335,31 +346,15 @@
 @endpush
 
 <script nonce="{{ $cspNonce }}">
-/**
- * Normalize line endings to Unix format (\n) — same helper as merge-preview,
- * keys must stay consistent across platforms.
- */
-function normalizeLineEndings(text) {
-    if (typeof text !== 'string') return text;
-    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-}
-
+// Shared editor core (modal, filters, search, sort, tag rules, windowing):
+// resources/js/components/translation-editor.js, exposed by app.js.
+// Only the edit-session specifics live here.
 document.addEventListener('alpine:init', () => {
-    Alpine.data('editSession', () => ({
-        loaded: false,
-        error: null,
-        saving: false,
-        saveMessage: '',
-        savedCount: 0,
-        data: {},          // key -> {v, t} or string (session file, minus _metadata)
-        allKeys: [],
-        editedValues: {},  // key -> new value (pending)
-        tagChanges: {},    // key -> { newTag, originalTag, value } (pending)
-        // Live sync with the game (mod pushes new AI translations / in-game edits)
-        currentHash: null,
-        pollTimer: null,
-        refreshNotice: '',
-        underlyingChanged: {},  // pending keys whose in-game value changed under the edit
+    // window.UGT is set by app.js (deferred module): it exists by the time
+    // Alpine fires alpine:init, but NOT during the initial HTML parse
+    const normalizeLineEndings = window.UGT.normalizeLineEndings;
+    Alpine.data('editSession', () => window.UGT.composeEditor({
+        persistKey: 'edit_session_ui',
         filters: {
             tagH: true,
             tagV: true,
@@ -367,37 +362,25 @@ document.addEventListener('alpine:init', () => {
             tagS: true,
             tagM: true,
             pendingOnly: false
-        },
-        searchQuery: '',
-        searchScope: 'both', // 'both' | 'keys' | 'values'
-        sortColumn: 'key',
-        sortDirection: 'asc',
-
-        editModal: {
-            open: false,
-            key: '',
-            originalValue: ''
-        },
-        // Top-level on purpose: the Alpine CSP build prohibits property
-        // assignments in inline expressions, so x-model can't target
-        // editModal.value (assignments inside these JS methods are fine)
-        editModalValue: '',
-        tagDropdown: {
-            open: false,
-            key: '',
-            currentTag: '',
-            originalTag: '',
-            value: '',
-            x: 0,
-            y: 0
-        },
+        }
+    }, {
+        loaded: false,
+        error: null,
+        saving: false,
+        saveMessage: '',
+        savedCount: 0,
+        data: {},          // key -> {v, t} or string (session file, minus _metadata)
+        allKeys: [],
+        // Live sync with the game (mod pushes new AI translations / in-game edits)
+        currentHash: null,
+        pollTimer: null,
+        refreshNotice: '',
+        underlyingChanged: {},  // pending keys whose in-game value changed under the edit
 
         init() {
-            // Search and filters survive page refreshes (F5 keeps the session
-            // alive by design — the UI state should survive with it)
-            this.restoreUiState();
-            this.$watch('searchQuery', () => this.persistUiState());
-            this.$watch('searchScope', () => this.persistUiState());
+            // Search/filters/sort survive page refreshes (F5 keeps the
+            // session alive by design — the UI state survives with it)
+            this.initEditorCore();
 
             // Content is streamed from the server, never inlined in the page:
             // translation files can be tens of MB
@@ -420,6 +403,80 @@ document.addEventListener('alpine:init', () => {
                         : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
+        },
+
+        loadContent(content) {
+            // Metadata keys (_uuid, _game, ...) stay server-side untouched:
+            // the page neither displays nor sends them
+            this.data = {};
+            for (const [key, value] of Object.entries(content)) {
+                if (key.startsWith('_')) continue;
+                const normalizedKey = normalizeLineEndings(key);
+                let normalizedValue = value;
+                if (typeof value === 'object' && value !== null && 'v' in value) {
+                    normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
+                } else if (typeof value === 'string') {
+                    normalizedValue = normalizeLineEndings(value);
+                }
+                this.data[normalizedKey] = normalizedValue;
+            }
+
+            this.allKeys = Object.keys(this.data).sort();
+            this.loaded = true;
+        },
+
+        // ── Shared-core callbacks ────────────────────────────────────────
+
+        rowPassesFilters(key) {
+            if (this.filters.pendingOnly && !this.isEdited(key) && !this.hasTagChange(key)) {
+                return false;
+            }
+
+            // Filter on the DISPLAYED tag: a pending edit shows H, a pending
+            // skip shows S
+            let tag = this.getTag(this.data[key]);
+            if (this.hasTagChange(key)) tag = this.tagChanges[key].newTag;
+            else if (this.isEdited(key)) tag = 'H';
+            const tagFilters = {
+                'H': this.filters.tagH,
+                'V': this.filters.tagV,
+                'A': this.filters.tagA,
+                'S': this.filters.tagS,
+                'M': this.filters.tagM
+            };
+            return !!tagFilters[tag];
+        },
+
+        rowMatchesSearch(key, query) {
+            if (this.searchScope !== 'values' && key.toLowerCase().includes(query)) {
+                return true;
+            }
+            if (this.searchScope !== 'keys') {
+                // A pending edit matches on its OLD value too: correcting the
+                // very text you searched for must not make the row vanish
+                // before "Save & apply in game"
+                if (this.getValue(this.data[key]).toLowerCase().includes(query)) return true;
+                if (this.editedValues[key] !== undefined
+                    && this.editedValues[key].toLowerCase().includes(query)) return true;
+            }
+            return false;
+        },
+
+        rowSortValue(key, column) {
+            if (column === 'tag') {
+                return this.getTag(this.data[key]);
+            }
+            // 'value' — sort on the stored value: a pending edit must not
+            // make the row jump around while the user is still working
+            return this.getValue(this.data[key]).toLowerCase();
+        },
+
+        get totalChanges() {
+            const keys = new Set([
+                ...Object.keys(this.editedValues),
+                ...Object.keys(this.tagChanges)
+            ]);
+            return keys.size;
         },
 
         // ── Live sync with the game ─────────────────────────────────────
@@ -525,240 +582,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        loadContent(content) {
-            // Metadata keys (_uuid, _game, ...) stay server-side untouched:
-            // the page neither displays nor sends them
-            this.data = {};
-            for (const [key, value] of Object.entries(content)) {
-                if (key.startsWith('_')) continue;
-                const normalizedKey = normalizeLineEndings(key);
-                let normalizedValue = value;
-                if (typeof value === 'object' && value !== null && 'v' in value) {
-                    normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
-                } else if (typeof value === 'string') {
-                    normalizedValue = normalizeLineEndings(value);
-                }
-                this.data[normalizedKey] = normalizedValue;
-            }
-
-            this.allKeys = Object.keys(this.data).sort();
-            this.loaded = true;
-        },
-
-        getValue(entry) {
-            if (entry === null || entry === undefined) return '';
-            if (typeof entry === 'object') return entry.v || '';
-            return String(entry);
-        },
-
-        getTag(entry) {
-            if (entry === null || entry === undefined) return 'A';
-            if (typeof entry === 'object') return entry.t || 'A';
-            return 'A';
-        },
-
-        isEdited(key) {
-            return this.editedValues[key] !== undefined;
-        },
-
-        hasTagChange(key) {
-            return key in this.tagChanges;
-        },
-
-        get totalChanges() {
-            const keys = new Set([
-                ...Object.keys(this.editedValues),
-                ...Object.keys(this.tagChanges)
-            ]);
-            return keys.size;
-        },
-
-        get filteredKeys() {
-            let keys = this.allKeys.filter(key => {
-                // Pending-only filter
-                if (this.filters.pendingOnly && !this.isEdited(key) && !this.hasTagChange(key)) {
-                    return false;
-                }
-
-                // Tag filter (on the DISPLAYED tag: pending edit shows H, pending skip shows S)
-                let tag = this.getTag(this.data[key]);
-                if (this.hasTagChange(key)) tag = this.tagChanges[key].newTag;
-                else if (this.isEdited(key)) tag = 'H';
-                const tagFilters = {
-                    'H': this.filters.tagH,
-                    'V': this.filters.tagV,
-                    'A': this.filters.tagA,
-                    'S': this.filters.tagS,
-                    'M': this.filters.tagM
-                };
-                if (!tagFilters[tag]) return false;
-
-                // Search filter (scope: 'both' = keys + values, 'keys', 'values').
-                // A pending edit matches on its OLD value too: correcting the
-                // very text you searched for must not make the row vanish
-                // before you've clicked "Save & apply in game".
-                if (this.searchQuery.trim()) {
-                    const query = this.searchQuery.toLowerCase().trim();
-                    const keyMatch = this.searchScope !== 'values' && key.toLowerCase().includes(query);
-                    let valueMatch = false;
-                    if (this.searchScope !== 'keys') {
-                        valueMatch = this.getValue(this.data[key]).toLowerCase().includes(query)
-                            || (this.editedValues[key] !== undefined
-                                && this.editedValues[key].toLowerCase().includes(query));
-                    }
-                    if (!keyMatch && !valueMatch) return false;
-                }
-
-                return true;
-            });
-
-            const col = this.sortColumn;
-            const dir = this.sortDirection === 'asc' ? 1 : -1;
-            keys.sort((a, b) => {
-                let valA, valB;
-                if (col === 'key') {
-                    valA = a.toLowerCase();
-                    valB = b.toLowerCase();
-                } else if (col === 'tag') {
-                    valA = this.getTag(this.data[a]);
-                    valB = this.getTag(this.data[b]);
-                } else if (col === 'value') {
-                    // Sort on the stored value: a pending edit must not make
-                    // the row jump around while the user is still working
-                    valA = this.getValue(this.data[a]).toLowerCase();
-                    valB = this.getValue(this.data[b]).toLowerCase();
-                } else {
-                    return 0;
-                }
-                if (valA < valB) return -1 * dir;
-                if (valA > valB) return 1 * dir;
-                return 0;
-            });
-
-            return keys;
-        },
-
-        toggleSort(column) {
-            if (this.sortColumn === column) {
-                this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortColumn = column;
-                this.sortDirection = 'asc';
-            }
-        },
-
-        getSortIcon(column) {
-            if (this.sortColumn !== column) {
-                return 'fa-sort text-gray-600';
-            }
-            return this.sortDirection === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400';
-        },
-
-        toggleFilter(name) {
-            this.filters[name] = !this.filters[name];
-            this.persistUiState();
-        },
-
-        persistUiState() {
-            try {
-                sessionStorage.setItem('edit_session_ui', JSON.stringify({
-                    searchQuery: this.searchQuery,
-                    searchScope: this.searchScope,
-                    filters: this.filters
-                }));
-            } catch (e) { /* storage full/blocked: non-essential */ }
-        },
-
-        restoreUiState() {
-            try {
-                const raw = sessionStorage.getItem('edit_session_ui');
-                if (!raw) return;
-                const state = JSON.parse(raw);
-                if (typeof state.searchQuery === 'string') this.searchQuery = state.searchQuery;
-                if (['both', 'keys', 'values'].includes(state.searchScope)) this.searchScope = state.searchScope;
-                if (state.filters && typeof state.filters === 'object') {
-                    for (const name of Object.keys(this.filters)) {
-                        if (typeof state.filters[name] === 'boolean') {
-                            this.filters[name] = state.filters[name];
-                        }
-                    }
-                }
-            } catch (e) { /* corrupted state: keep defaults */ }
-        },
-
-        editCell(key, currentValue) {
-            this.editModalValue = this.editedValues[key] ?? currentValue;
-            this.editModal = {
-                open: true,
-                key: key,
-                originalValue: currentValue
-            };
-
-            this.$nextTick(() => {
-                const textarea = document.getElementById('editModalTextarea');
-                if (textarea) {
-                    textarea.focus();
-                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-                }
-            });
-        },
-
-        saveEditModal() {
-            const { key, originalValue } = this.editModal;
-            const value = this.editModalValue;
-
-            if (value !== originalValue) {
-                this.editedValues[key] = value;
-            } else {
-                delete this.editedValues[key];
-            }
-
-            this.closeEditModal();
-        },
-
-        closeEditModal() {
-            this.editModal = { open: false, key: '', originalValue: '' };
-            this.editModalValue = '';
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && this.editModal.open) {
-                    this.closeEditModal();
-                }
-            }, { once: true });
-        },
-
-        openTagDropdown(event, key, currentTag, value) {
-            event.stopPropagation();
-            const rect = event.target.getBoundingClientRect();
-            this.tagDropdown = {
-                open: true,
-                key: key,
-                currentTag: this.hasTagChange(key) ? this.tagChanges[key].newTag : currentTag,
-                originalTag: currentTag,
-                value: value,
-                x: rect.left,
-                y: rect.bottom + window.scrollY
-            };
-        },
-
-        closeTagDropdown() {
-            this.tagDropdown = { open: false, key: '', currentTag: '', originalTag: '', value: '', x: 0, y: 0 };
-        },
-
-        setTagSkip() {
-            const { key, originalTag, value } = this.tagDropdown;
-            if (originalTag === 'S') {
-                delete this.tagChanges[key];
-            } else {
-                this.tagChanges[key] = { newTag: 'S', originalTag: originalTag, value: value };
-            }
-            this.closeTagDropdown();
-        },
-
-        cancelAndCloseTagDropdown(key) {
-            delete this.tagChanges[key];
-            this.closeTagDropdown();
-        },
+        // ── Actions ──────────────────────────────────────────────────────
 
         clearAll() {
             if (confirm(@js(__('merge_preview.confirm_cancel')))) {

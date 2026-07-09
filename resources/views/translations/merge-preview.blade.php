@@ -140,6 +140,14 @@
 
             <span class="text-gray-600">|</span>
 
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" :checked="filters.modifiedOnly" @change="toggleFilter('modifiedOnly')"
+                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                <span class="text-purple-400">{{ __('merge_preview.modifications') }}</span>
+            </label>
+
+            <span class="text-gray-600">|</span>
+
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_local') }}
             </button>
@@ -218,7 +226,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="key in filteredKeys" :key="key">
+                    {{-- Windowed rendering: huge files stay snappy --}}
+                    <template x-for="key in visibleKeys" :key="key">
                         <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
                             {{-- Key column --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-text="key"></td>
@@ -292,6 +301,16 @@
                         <td colspan="5" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
                             <p>{{ __('merge_preview.no_differences') }}</p>
+                        </td>
+                    </tr>
+
+                    <tr x-show="hiddenCount > 0">
+                        <td colspan="5" class="px-4 py-3 text-center">
+                            <button type="button" @click="showMore()"
+                                class="text-purple-400 hover:text-purple-300 text-sm transition">
+                                <i class="fas fa-chevron-down mr-1"></i>
+                                {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -505,29 +524,15 @@
 @endpush
 
 <script nonce="{{ $cspNonce }}">
-/**
- * Normalize line endings to Unix format (\n).
- * Converts \r\n (Windows) and \r (old Mac) to \n.
- * This ensures consistent keys across platforms.
- */
-function normalizeLineEndings(text) {
-    if (typeof text !== 'string') return text;
-    // Order is important: first \r\n, then \r
-    // Otherwise \r\n would become \n\n
-    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-}
-
+// Shared editor core (modal, filters, search, sort, tag rules, windowing):
+// resources/js/components/translation-editor.js, exposed by app.js.
+// Only the merge-preview specifics live here.
 document.addEventListener('alpine:init', () => {
-    Alpine.data('mergePreview', () => ({
-        loaded: false,
-        error: null,
-        saving: false,
-        localData: {},
-        onlineData: {},
-        onlineMetadata: {},
-        allKeys: [],
-        selections: {},
-        editedValues: {},
+    // window.UGT is set by app.js (deferred module): it exists by the time
+    // Alpine fires alpine:init, but NOT during the initial HTML parse
+    const normalizeLineEndings = window.UGT.normalizeLineEndings;
+    Alpine.data('mergePreview', () => window.UGT.composeEditor({
+        persistKey: 'merge_preview_ui',
         filters: {
             localOnly: true,
             onlineOnly: false,  // Already on server, nothing to merge
@@ -538,12 +543,18 @@ document.addEventListener('alpine:init', () => {
             tagV: true,
             tagA: true,
             tagS: true,
-            tagM: true
-        },
-        searchQuery: '',
-        searchScope: 'both', // 'both' | 'keys' | 'values'
-        sortColumn: 'key',
-        sortDirection: 'asc',
+            tagM: true,
+            modifiedOnly: false
+        }
+    }, {
+        loaded: false,
+        error: null,
+        saving: false,
+        localData: {},
+        onlineData: {},
+        onlineMetadata: {},
+        allKeys: [],
+        selections: {},
         stats: {
             total: 0,
             localOnly: 0,
@@ -552,30 +563,9 @@ document.addEventListener('alpine:init', () => {
             same: 0
         },
 
-        // Modal state
-        editModal: {
-            open: false,
-            key: '',
-            originalValue: ''
-        },
-        // Top-level on purpose: the Alpine CSP build prohibits property
-        // assignments in inline expressions, so x-model can't target
-        // editModal.value (assignments inside these JS methods are fine)
-        editModalValue: '',
-
-        // Tag change state (branches can only skip, not invalidate)
-        tagChanges: {},  // { key: { newTag: 'S', originalTag: 'A', value: '...' } }
-        tagDropdown: {
-            open: false,
-            key: '',
-            currentTag: '',
-            originalTag: '',
-            value: '',
-            x: 0,
-            y: 0
-        },
-
         init() {
+            this.initEditorCore();
+
             // Server-side token session error (expired / content file gone)
             const tokenError = @json($tokenError);
             if (tokenError) {
@@ -663,9 +653,7 @@ document.addEventListener('alpine:init', () => {
             this.localData = {};
             for (const [key, value] of Object.entries(content)) {
                 if (!key.startsWith('_')) {
-                    // Normalize key line endings for cross-platform consistency
                     const normalizedKey = normalizeLineEndings(key);
-                    // Normalize value if it's a string or {v, t} object
                     let normalizedValue = value;
                     if (typeof value === 'object' && value !== null && 'v' in value) {
                         normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
@@ -680,9 +668,7 @@ document.addEventListener('alpine:init', () => {
             const filteredOnline = {};
             for (const [key, value] of Object.entries(this.onlineData)) {
                 if (!key.startsWith('_')) {
-                    // Normalize key line endings for cross-platform consistency
                     const normalizedKey = normalizeLineEndings(key);
-                    // Normalize value if it's a string or {v, t} object
                     let normalizedValue = value;
                     if (typeof value === 'object' && value !== null && 'v' in value) {
                         normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
@@ -700,14 +686,19 @@ document.addEventListener('alpine:init', () => {
                 ...Object.keys(this.onlineData)
             ])].sort();
 
-            // Calculate stats
             this.calculateStats();
+            this.applySmartDefaults();
+            this.loaded = true;
+        },
 
-            // Auto-select based on smart defaulting:
-            // - Local-only: select LOCAL (additions to server)
-            // - Online-only: select ONLINE (already on server)
-            // - Different: smart default based on tag quality (H > V > A, online wins ties)
-            // - Same: select ONLINE (no change needed)
+        /**
+         * Auto-select based on smart defaulting:
+         * - Local-only: select LOCAL (additions to server)
+         * - Online-only: select ONLINE (already on server)
+         * - Different: smart default based on tag quality (H > V > A, online wins ties)
+         * - Same: select ONLINE (no change needed)
+         */
+        applySmartDefaults() {
             const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
 
             for (const key of this.allKeys) {
@@ -715,38 +706,25 @@ document.addEventListener('alpine:init', () => {
                 const hasOnline = key in this.onlineData;
 
                 if (hasLocal && !hasOnline) {
-                    // Local-only: addition, select local
                     this.selections[key] = 'local';
                 } else if (!hasLocal && hasOnline) {
-                    // Online-only: already on server, keep online
                     this.selections[key] = 'online';
                 } else if (hasLocal && hasOnline) {
-                    // Both exist: check if values differ (conflict)
                     const localVal = this.getValue(this.localData[key]);
                     const onlineVal = this.getValue(this.onlineData[key]);
 
                     if (localVal !== onlineVal) {
-                        // Conflict: smart default based on tag quality
                         const localTag = this.getTag(this.localData[key]);
                         const onlineTag = this.getTag(this.onlineData[key]);
                         const localPriority = tagPriority[localTag] || 0;
                         const onlinePriority = tagPriority[onlineTag] || 0;
 
-                        if (localPriority > onlinePriority) {
-                            // Local is better quality
-                            this.selections[key] = 'local';
-                        } else {
-                            // Online is better or equal (server wins ties)
-                            this.selections[key] = 'online';
-                        }
+                        this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
                     } else {
-                        // Same value: keep online (no change)
                         this.selections[key] = 'online';
                     }
                 }
             }
-
-            this.loaded = true;
         },
 
         calculateStats() {
@@ -774,168 +752,121 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        get filteredKeys() {
-            let keys = this.allKeys.filter(key => {
+        // ── Shared-core callbacks ────────────────────────────────────────
+
+        rowPassesFilters(key) {
+            if (this.filters.modifiedOnly && !this.isRowModified(key)) {
+                return false;
+            }
+
+            const hasLocal = key in this.localData;
+            const hasOnline = key in this.onlineData;
+
+            // Category filter
+            let passesCategory = false;
+            if (hasLocal && !hasOnline) {
+                passesCategory = this.filters.localOnly;
+            } else if (!hasLocal && hasOnline) {
+                passesCategory = this.filters.onlineOnly;
+            } else if (hasLocal && hasOnline) {
+                const localVal = this.getValue(this.localData[key]);
+                const onlineVal = this.getValue(this.onlineData[key]);
+                passesCategory = (localVal !== onlineVal) ? this.filters.different : this.filters.same;
+            }
+            if (!passesCategory) return false;
+
+            // Tag filter (check both local and online tags)
+            const localTag = hasLocal ? this.getTag(this.localData[key]) : null;
+            const onlineTag = hasOnline ? this.getTag(this.onlineData[key]) : null;
+            const tagFilters = {
+                'H': this.filters.tagH,
+                'V': this.filters.tagV,
+                'A': this.filters.tagA,
+                'S': this.filters.tagS,
+                'M': this.filters.tagM
+            };
+            const localTagPass = localTag && tagFilters[localTag];
+            const onlineTagPass = onlineTag && tagFilters[onlineTag];
+            return !!(localTagPass || onlineTagPass);
+        },
+
+        rowMatchesSearch(key, query) {
+            if (this.searchScope !== 'values' && key.toLowerCase().includes(query)) {
+                return true;
+            }
+            if (this.searchScope !== 'keys') {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
+                if (hasLocal && this.getValue(this.localData[key]).toLowerCase().includes(query)) return true;
+                if (hasOnline && this.getValue(this.onlineData[key]).toLowerCase().includes(query)) return true;
+                // A pending edit matches on its NEW value too, and editing a
+                // row must not make it vanish from the current search
+                if (this.editedValues[key] !== undefined
+                    && this.editedValues[key].toLowerCase().includes(query)) return true;
+            }
+            return false;
+        },
 
-                // Category filter
-                let passesCategory = false;
-                if (hasLocal && !hasOnline) {
-                    passesCategory = this.filters.localOnly;
-                } else if (!hasLocal && hasOnline) {
-                    passesCategory = this.filters.onlineOnly;
-                } else if (hasLocal && hasOnline) {
-                    const localVal = this.getValue(this.localData[key]);
-                    const onlineVal = this.getValue(this.onlineData[key]);
-                    passesCategory = (localVal !== onlineVal) ? this.filters.different : this.filters.same;
-                }
+        rowSortValue(key, column) {
+            // Sort on STORED values: a pending edit must not make the row
+            // jump around while the user is still working
+            if (column === 'localTag') {
+                return key in this.localData ? this.getTag(this.localData[key]) : '';
+            }
+            if (column === 'localValue') {
+                return key in this.localData ? this.getValue(this.localData[key]).toLowerCase() : '';
+            }
+            if (column === 'onlineTag') {
+                return key in this.onlineData ? this.getTag(this.onlineData[key]) : '';
+            }
+            if (column === 'onlineValue') {
+                return key in this.onlineData ? this.getValue(this.onlineData[key]).toLowerCase() : '';
+            }
+            return '';
+        },
 
-                if (!passesCategory) return false;
+        /** Core hook: a staged manual edit selects the local side. */
+        onEditStaged(key) {
+            this.selections[key] = 'local';
+        },
 
-                // Tag filter (check both local and online tags)
-                const localTag = hasLocal ? this.getTag(this.localData[key]) : null;
-                const onlineTag = hasOnline ? this.getTag(this.onlineData[key]) : null;
-                const tagFilters = {
-                    'H': this.filters.tagH,
-                    'V': this.filters.tagV,
-                    'A': this.filters.tagA,
-                    'S': this.filters.tagS,
-                    'M': this.filters.tagM
-                };
-                // Pass if either tag matches an enabled filter
-                const localTagPass = localTag && tagFilters[localTag];
-                const onlineTagPass = onlineTag && tagFilters[onlineTag];
-                if (!localTagPass && !onlineTagPass) return false;
+        // ── Merge selection logic ────────────────────────────────────────
 
-                // Search filter (scope: 'both' = keys + values, 'keys', 'values')
-                if (this.searchQuery.trim()) {
-                    const query = this.searchQuery.toLowerCase().trim();
-                    const keyMatch = this.searchScope !== 'values' && key.toLowerCase().includes(query);
-                    let valueMatch = false;
-                    if (this.searchScope !== 'keys') {
-                        const localVal = hasLocal ? this.getValue(this.localData[key]).toLowerCase() : '';
-                        const onlineVal = hasOnline ? this.getValue(this.onlineData[key]).toLowerCase() : '';
-                        valueMatch = localVal.includes(query) || onlineVal.includes(query);
-                    }
-                    if (!keyMatch && !valueMatch) {
-                        return false;
-                    }
-                }
+        /**
+         * A row counts as modified when the user did something meaningful:
+         * manual edit, explicit tag change, a local-only addition kept, or
+         * a differing key where local was selected.
+         */
+        isRowModified(key) {
+            const source = this.selections[key];
+            const hasLocal = key in this.localData;
+            const hasOnline = key in this.onlineData;
 
-                return true;
-            });
-
-            // Sorting
-            const col = this.sortColumn;
-            const dir = this.sortDirection === 'asc' ? 1 : -1;
-
-            keys.sort((a, b) => {
-                let valA, valB;
-
-                if (col === 'key') {
-                    valA = a.toLowerCase();
-                    valB = b.toLowerCase();
-                } else if (col === 'localTag') {
-                    valA = a in this.localData ? this.getTag(this.localData[a]) : '';
-                    valB = b in this.localData ? this.getTag(this.localData[b]) : '';
-                } else if (col === 'localValue') {
-                    valA = a in this.localData ? this.getValue(this.localData[a]).toLowerCase() : '';
-                    valB = b in this.localData ? this.getValue(this.localData[b]).toLowerCase() : '';
-                } else if (col === 'onlineTag') {
-                    valA = a in this.onlineData ? this.getTag(this.onlineData[a]) : '';
-                    valB = b in this.onlineData ? this.getTag(this.onlineData[b]) : '';
-                } else if (col === 'onlineValue') {
-                    valA = a in this.onlineData ? this.getValue(this.onlineData[a]).toLowerCase() : '';
-                    valB = b in this.onlineData ? this.getValue(this.onlineData[b]).toLowerCase() : '';
-                } else {
-                    return 0;
-                }
-
-                if (valA < valB) return -1 * dir;
-                if (valA > valB) return 1 * dir;
-                return 0;
-            });
-
-            return keys;
+            if (this.editedValues[key] !== undefined) return true;
+            if (key in this.tagChanges) return true;
+            if (hasLocal && !hasOnline && source === 'local') return true;
+            if (hasLocal && hasOnline && source === 'local') {
+                return this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key]);
+            }
+            return false;
         },
 
         get totalChanges() {
-            // Count only user-meaningful modifications to the server file:
-            // - Manual edits (value changed by user)
-            // - Local-only keys added to server
-            // - Keys where selected value differs from online value
-            // - Explicit tag changes (user chose to skip/change a tag)
-            // Note: automatic A→V promotion is NOT counted (it's implicit, not a user choice)
+            // Count only user-meaningful modifications to the server file.
+            // Note: automatic A→V promotion is NOT counted (implicit).
             let count = 0;
             for (const key of this.allKeys) {
-                const source = this.selections[key];
-                const hasLocal = key in this.localData;
-                const hasOnline = key in this.onlineData;
-                const isEdited = this.editedValues[key] !== undefined;
-                const hasTagChange = key in this.tagChanges;
-
-                // Case 1: Manual edit - always a change (becomes H tag)
-                if (isEdited) {
-                    count++;
-                    continue;
-                }
-
-                // Case 2: Explicit tag change by user
-                if (hasTagChange) {
-                    count++;
-                    continue;
-                }
-
-                // Case 3: Local-only key selected as local = addition
-                if (hasLocal && !hasOnline && source === 'local') {
-                    count++;
-                    continue;
-                }
-
-                // Case 4: Selection from common key - only count if VALUE differs
-                if (hasLocal && hasOnline && source === 'local') {
-                    const localValue = this.getValue(this.localData[key]);
-                    const onlineValue = this.getValue(this.onlineData[key]);
-
-                    if (localValue !== onlineValue) {
-                        count++;
-                    }
-                }
+                if (this.isRowModified(key)) count++;
             }
             return count;
         },
 
-        getValue(entry) {
-            if (entry === null || entry === undefined) return '';
-            if (typeof entry === 'object') return entry.v || '';
-            return String(entry);
+        get editedCount() {
+            return Object.keys(this.editedValues).length;
         },
 
-        getTag(entry) {
-            if (entry === null || entry === undefined) return 'A';
-            if (typeof entry === 'object') return entry.t || 'A';
-            return 'A';
-        },
-
-        toggleSort(column) {
-            if (this.sortColumn === column) {
-                this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortColumn = column;
-                this.sortDirection = 'asc';
-            }
-        },
-
-        getSortIcon(column) {
-            if (this.sortColumn !== column) {
-                return 'fa-sort text-gray-600';
-            }
-            return this.sortDirection === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400';
-        },
-
-        isEdited(key) {
-            return this.editedValues[key] !== undefined;
+        get tagChangeCount() {
+            return Object.keys(this.tagChanges).length;
         },
 
         select(key, source) {
@@ -977,168 +908,16 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        toggleFilter(name) {
-            this.filters[name] = !this.filters[name];
-        },
-
-        editCell(key, currentValue) {
-            // Use existing edit if any, otherwise use current value
-            this.editModalValue = this.editedValues[key] ?? currentValue;
-            this.editModal = {
-                open: true,
-                key: key,
-                originalValue: currentValue
-            };
-
-            // Focus textarea after modal opens
-            this.$nextTick(() => {
-                const textarea = document.getElementById('editModalTextarea');
-                if (textarea) {
-                    textarea.focus();
-                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-                }
-            });
-        },
-
-        saveEditModal() {
-            const { key, originalValue } = this.editModal;
-            const value = this.editModalValue;
-
-            if (value !== originalValue) {
-                // Save edited value
-                this.editedValues[key] = value;
-                // Ensure local is selected when editing
-                this.selections[key] = 'local';
-            } else {
-                // Value unchanged, clear any existing edit
-                delete this.editedValues[key];
-            }
-
-            this.closeEditModal();
-        },
-
-        closeEditModal() {
-            this.editModal = {
-                open: false,
-                key: '',
-                originalValue: ''
-            };
-            this.editModalValue = '';
-
-            // Close modal on Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && this.editModal.open) {
-                    this.closeEditModal();
-                }
-            }, { once: true });
-        },
-
-        // Tag change methods (branches can only set Skip)
-        hasTagChange(key) {
-            return key in this.tagChanges;
-        },
-
-        getDisplayTag(key, originalTag) {
-            if (this.tagChanges[key]) {
-                return this.tagChanges[key].newTag;
-            }
-            return originalTag;
-        },
-
-        openTagDropdown(event, key, currentTag, value) {
-            event.stopPropagation();
-            const rect = event.target.getBoundingClientRect();
-            this.tagDropdown = {
-                open: true,
-                key: key,
-                currentTag: this.getDisplayTag(key, currentTag),
-                originalTag: currentTag,
-                value: value,
-                x: rect.left,
-                y: rect.bottom + window.scrollY
-            };
-        },
-
-        closeTagDropdown() {
-            this.tagDropdown = {
-                open: false,
-                key: '',
-                currentTag: '',
-                originalTag: '',
-                value: '',
-                x: 0,
-                y: 0
-            };
-        },
-
-        setTagSkip() {
-            const { key, originalTag, value } = this.tagDropdown;
-            const newTag = 'S';
-
-            if (newTag === originalTag) {
-                delete this.tagChanges[key];
-            } else {
-                this.tagChanges[key] = {
-                    newTag: newTag,
-                    originalTag: originalTag,
-                    value: value
-                };
-            }
-            this.closeTagDropdown();
-        },
-
-        cancelTagChange(key) {
-            delete this.tagChanges[key];
-        },
-
-        cancelAndCloseTagDropdown(key) {
-            this.cancelTagChange(key);
-            this.closeTagDropdown();
-        },
-
-        get editedCount() {
-            return Object.keys(this.editedValues).length;
-        },
-
-        get tagChangeCount() {
-            return Object.keys(this.tagChanges).length;
-        },
-
         clearAll() {
             if (confirm(@js(__('merge_preview.confirm_cancel')))) {
                 this.selections = {};
                 this.editedValues = {};
                 this.tagChanges = {};
-
-                // Reset to smart defaults (same logic as loadContent)
-                const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
-
-                for (const key of this.allKeys) {
-                    const hasLocal = key in this.localData;
-                    const hasOnline = key in this.onlineData;
-
-                    if (hasLocal && !hasOnline) {
-                        this.selections[key] = 'local';
-                    } else if (!hasLocal && hasOnline) {
-                        this.selections[key] = 'online';
-                    } else if (hasLocal && hasOnline) {
-                        const localVal = this.getValue(this.localData[key]);
-                        const onlineVal = this.getValue(this.onlineData[key]);
-
-                        if (localVal !== onlineVal) {
-                            const localTag = this.getTag(this.localData[key]);
-                            const onlineTag = this.getTag(this.onlineData[key]);
-                            const localPriority = tagPriority[localTag] || 0;
-                            const onlinePriority = tagPriority[onlineTag] || 0;
-
-                            this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
-                        } else {
-                            this.selections[key] = 'online';
-                        }
-                    }
-                }
+                this.applySmartDefaults();
             }
         },
+
+        // ── Export / save ────────────────────────────────────────────────
 
         downloadMerged() {
             const merged = this.buildMergedContent();

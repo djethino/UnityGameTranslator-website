@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "คีย์ + ค่า",
     "merge_preview.search_scope_keys": "คีย์เท่านั้น",
     "merge_preview.search_scope_values": "ค่าเท่านั้น",
+    "merge_preview.show_more": "แสดงเพิ่มเติม",
     "edit_session.title": "แก้ไขสด",
     "edit_session.subtitle": "กำลังแก้ไขไฟล์ในเครื่องของคุณ — การบันทึกแต่ละครั้งจะถูกนำไปใช้ในเกมขณะที่คุณเล่น",
     "edit_session.pending_changes": "การเปลี่ยนแปลงที่รอดำเนินการ",

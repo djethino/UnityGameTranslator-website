@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Khóa + giá trị",
     "merge_preview.search_scope_keys": "Chỉ khóa",
     "merge_preview.search_scope_values": "Chỉ giá trị",
+    "merge_preview.show_more": "Hiển thị thêm",
     "edit_session.title": "Chỉnh sửa trực tiếp",
     "edit_session.subtitle": "Đang chỉnh sửa tệp cục bộ của bạn — mỗi lần lưu sẽ được áp dụng trong game khi bạn chơi",
     "edit_session.pending_changes": "Thay đổi đang chờ",

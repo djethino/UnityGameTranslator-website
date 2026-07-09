@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Ключи + значения",
     "merge_preview.search_scope_keys": "Только ключи",
     "merge_preview.search_scope_values": "Только значения",
+    "merge_preview.show_more": "Показать ещё",
     "edit_session.title": "Живое редактирование",
     "edit_session.subtitle": "Редактирование локального файла — каждое сохранение применяется в игре во время игры",
     "edit_session.pending_changes": "Ожидающие изменения",

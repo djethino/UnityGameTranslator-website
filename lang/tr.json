@@ -676,6 +676,7 @@
     "merge_preview.search_scope_both": "Anahtar + değer",
     "merge_preview.search_scope_keys": "Yalnızca anahtar",
     "merge_preview.search_scope_values": "Yalnızca değer",
+    "merge_preview.show_more": "Daha fazla göster",
     "edit_session.title": "Canlı Düzenleme",
     "edit_session.subtitle": "Yerel dosyanızı düzenliyorsunuz — her kayıt siz oynarken oyun içinde uygulanır",
     "edit_session.pending_changes": "Bekleyen değişiklikler",
