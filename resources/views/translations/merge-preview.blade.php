@@ -420,12 +420,23 @@
 
         {{-- Skip option --}}
         <button type="button"
-            @click="setTagSkip()"
+            @click="setTag('S')"
             :class="tagDropdown.currentTag === 'S' ? 'bg-gray-700' : 'hover:bg-gray-700'"
             class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
             <span class="tag-S">S</span>
             <span class="text-sm text-gray-300">{{ __('merge.tag_skip') }}</span>
             <span x-show="tagDropdown.currentTag === 'S'" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
+
+        <button type="button"
+            @click="setTag('A')"
+            :class="tagDropdown.currentTag === 'A' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+            <span class="tag-A">A</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_invalidate') }}</span>
+            <span x-show="tagDropdown.currentTag === 'A'" class="ml-auto text-green-400">
                 <i class="fas fa-check"></i>
             </span>
         </button>

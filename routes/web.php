@@ -127,6 +127,7 @@ $localizableRoutes = function () {
 
         // Merge View (Main owner only)
         Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
+        Route::get('/translations/{uuid}/merge/data', [MergeController::class, 'data'])->name('translations.merge.data');
         Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
         Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
     });

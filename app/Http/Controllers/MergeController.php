@@ -64,104 +64,73 @@ class MergeController extends Controller
             $selectedBranches = $branches->whereIn('id', $selectedIds);
         }
 
-        // Load Main content
-        $mainContent = $this->loadTranslationContent($main);
-
-        // Load selected branches content
-        $branchContents = [];
-        foreach ($selectedBranches as $branch) {
-            $branchContents[$branch->id] = $this->loadTranslationContent($branch);
-        }
-
-        // Build unified list of all keys
-        $allKeys = $this->getAllKeys($mainContent, $branchContents);
-
-        // Apply filters
-        $filters = [
-            'new_keys' => $request->boolean('new_keys'),
-            'difference' => $request->boolean('difference'),
-            'human' => $request->boolean('human'),
-            'ai' => $request->boolean('ai'),
-            'validated' => $request->boolean('validated'),
-            'mod_ui' => $request->boolean('mod_ui'),
-            'skipped' => $request->boolean('skipped'),
-        ];
-
-        // new_keys / difference compare Main against branches — meaningless in
-        // edit mode (no branches loaded): force them off so a stale URL param
-        // (e.g. kept by the mode switcher) can't produce an empty list.
-        if ($mode === 'edit') {
-            $filters['new_keys'] = false;
-            $filters['difference'] = false;
-        }
-
-        $filteredKeys = $this->applyFilters($allKeys, $mainContent, $branchContents, $filters);
-
-        // Apply search (scope: 'both' = keys + values, 'keys', 'values')
-        $search = $request->input('search');
-        $searchScope = $request->input('scope', 'both');
-        if (!in_array($searchScope, ['keys', 'values'], true)) {
-            $searchScope = 'both';
-        }
-        if ($search) {
-            $searchLower = mb_strtolower($search);
-            $filteredKeys = array_values(array_filter($filteredKeys, function ($key) use ($searchLower, $searchScope, $mainContent, $branchContents) {
-                // Check key
-                if ($searchScope !== 'values' && mb_stripos($key, $searchLower) !== false) {
-                    return true;
-                }
-                if ($searchScope !== 'keys') {
-                    // Check main value
-                    if (isset($mainContent[$key])) {
-                        $mainValue = $this->extractValue($mainContent[$key]);
-                        if (mb_stripos($mainValue, $searchLower) !== false) {
-                            return true;
-                        }
-                    }
-                    // Check branch values
-                    foreach ($branchContents as $content) {
-                        if (isset($content[$key])) {
-                            $branchValue = $this->extractValue($content[$key]);
-                            if (mb_stripos($branchValue, $searchLower) !== false) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            }));
-        }
-
-        // Apply sorting
-        $sortColumn = $request->input('sort', 'key');
-        $sortDir = $request->input('dir', 'asc');
-        $filteredKeys = $this->applySorting($filteredKeys, $mainContent, $sortColumn, $sortDir);
-
-        // Pagination
-        $page = max(1, (int) $request->input('page', 1));
-        $perPage = 100;
-        $totalKeys = count($filteredKeys);
-        $totalPages = max(1, ceil($totalKeys / $perPage));
-        $page = min($page, $totalPages);
-        $pagedKeys = array_slice($filteredKeys, ($page - 1) * $perPage, $perPage);
-
+        // Content, filtering, search, sort and windowing are client-side
+        // (shared translation-editor core, same as merge-preview and
+        // edit-session): the page only renders the frame and the client
+        // fetches the data endpoint below.
         return view('merge.show', compact(
             'main',
             'branches',
             'selectedBranches',
-            'mainContent',
-            'branchContents',
-            'pagedKeys',
-            'page',
-            'perPage',
-            'totalKeys',
-            'totalPages',
-            'filters',
             'uuid',
             'mode',
-            'hasBranches',
-            'searchScope'
+            'hasBranches'
         ));
+    }
+
+    /**
+     * Stream the merge data for the client-side editor: Main content plus
+     * the selected branches. Same access rule as show() (Main owner only).
+     *
+     * GET /translations/{uuid}/merge/data?mode=&branches[]=
+     */
+    public function data(Request $request, string $uuid)
+    {
+        $user = auth()->user();
+
+        $main = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'public')
+            ->where('user_id', $user->id)
+            ->with('user:id,name')
+            ->firstOrFail();
+
+        $mode = $request->input('mode', 'merge');
+
+        $branchesPayload = [];
+        if ($mode !== 'edit') {
+            $selectedIds = $request->input('branches', []);
+            if (is_string($selectedIds)) {
+                $selectedIds = explode(',', $selectedIds);
+            }
+            $selectedIds = array_map('intval', array_filter((array) $selectedIds));
+
+            if (!empty($selectedIds)) {
+                $selectedBranches = Translation::where('file_uuid', $uuid)
+                    ->where('visibility', 'branch')
+                    ->whereIn('id', $selectedIds)
+                    ->with('user:id,name')
+                    ->get();
+
+                foreach ($selectedBranches as $branch) {
+                    $branchesPayload[] = [
+                        'id' => $branch->id,
+                        'name' => $branch->user->name ?? '',
+                        'human_count' => $branch->human_count,
+                        'validated_count' => $branch->validated_count,
+                        'ai_count' => $branch->ai_count,
+                        'content' => $this->loadTranslationContent($branch),
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'main' => $this->loadTranslationContent($main),
+            'main_owner' => $main->user->name ?? '',
+            'branches' => $branchesPayload,
+        ], 200, [
+            'Cache-Control' => 'no-store, private',
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -391,192 +360,10 @@ class MergeController extends Controller
         );
     }
 
-    /**
-     * Get all unique keys from Main and branches.
-     */
-    private function getAllKeys(array $mainContent, array $branchContents): array
-    {
-        $keys = array_keys($mainContent);
 
-        foreach ($branchContents as $content) {
-            $keys = array_merge($keys, array_keys($content));
-        }
 
-        $keys = array_unique($keys);
-        sort($keys); // Sort alphabetically for consistency
 
-        return $keys;
-    }
 
-    /**
-     * Apply filters to the key list.
-     */
-    private function applyFilters(
-        array $allKeys,
-        array $mainContent,
-        array $branchContents,
-        array $filters
-    ): array {
-        // If no filters active, return all keys
-        if (!array_filter($filters)) {
-            return $allKeys;
-        }
-
-        return array_values(array_filter($allKeys, function ($key) use ($mainContent, $branchContents, $filters) {
-            $mainEntry = $mainContent[$key] ?? null;
-            $mainValue = $this->extractValue($mainEntry);
-            $mainTag = $this->extractTag($mainEntry);
-
-            // Check each filter
-            $matches = false;
-
-            // New keys: exists in at least one branch but not in Main
-            if ($filters['new_keys']) {
-                if ($mainEntry === null) {
-                    foreach ($branchContents as $content) {
-                        if (isset($content[$key])) {
-                            $matches = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Difference: value differs between Main and at least one branch
-            if ($filters['difference']) {
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key])) {
-                        $branchValue = $this->extractValue($content[$key]);
-                        if ($branchValue !== $mainValue) {
-                            $matches = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Tag filters (check Main and branches)
-            if ($filters['human']) {
-                if ($mainTag === 'H') {
-                    $matches = true;
-                }
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'H') {
-                        $matches = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($filters['ai']) {
-                if ($mainTag === 'A') {
-                    $matches = true;
-                }
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'A') {
-                        $matches = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($filters['validated']) {
-                if ($mainTag === 'V') {
-                    $matches = true;
-                }
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'V') {
-                        $matches = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($filters['mod_ui']) {
-                if ($mainTag === 'M') {
-                    $matches = true;
-                }
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'M') {
-                        $matches = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($filters['skipped']) {
-                if ($mainTag === 'S') {
-                    $matches = true;
-                }
-                foreach ($branchContents as $content) {
-                    if (isset($content[$key]) && $this->extractTag($content[$key]) === 'S') {
-                        $matches = true;
-                        break;
-                    }
-                }
-            }
-
-            return $matches;
-        }));
-    }
-
-    /**
-     * Apply sorting to the key list.
-     */
-    private function applySorting(array $keys, array $mainContent, string $column, string $direction): array
-    {
-        $multiplier = ($direction === 'desc') ? -1 : 1;
-
-        usort($keys, function ($a, $b) use ($mainContent, $column, $multiplier) {
-            switch ($column) {
-                case 'mainTag':
-                    $valA = isset($mainContent[$a]) ? $this->extractTag($mainContent[$a]) : '';
-                    $valB = isset($mainContent[$b]) ? $this->extractTag($mainContent[$b]) : '';
-                    break;
-                case 'mainValue':
-                    $valA = isset($mainContent[$a]) ? mb_strtolower($this->extractValue($mainContent[$a])) : '';
-                    $valB = isset($mainContent[$b]) ? mb_strtolower($this->extractValue($mainContent[$b])) : '';
-                    break;
-                case 'key':
-                default:
-                    $valA = mb_strtolower($a);
-                    $valB = mb_strtolower($b);
-                    break;
-            }
-
-            return strcmp($valA, $valB) * $multiplier;
-        });
-
-        return $keys;
-    }
-
-    /**
-     * Extract value from entry (supports both old string format and new object format).
-     */
-    private function extractValue($entry): string
-    {
-        if ($entry === null) {
-            return '';
-        }
-        if (is_array($entry)) {
-            return $entry['v'] ?? '';
-        }
-        return (string) $entry;
-    }
-
-    /**
-     * Extract tag from entry (defaults to A for old format).
-     */
-    private function extractTag($entry): string
-    {
-        if ($entry === null) {
-            return 'A';
-        }
-        if (is_array($entry)) {
-            return $entry['t'] ?? 'A';
-        }
-        return 'A'; // Old format = AI by default
-    }
 
     /**
      * Rate a branch translation (Main owner only).

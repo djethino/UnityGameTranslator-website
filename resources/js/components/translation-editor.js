@@ -322,14 +322,16 @@ export function editorCore(config) {
                 this.onEditStaged(key);
             } else {
                 delete this.editedValues[key];
+                this.onEditUnstaged(key);
             }
             this.persistPendingState();
 
             this.closeEditModal();
         },
 
-        /** Page hook: called when an edit is staged (default: nothing). */
+        /** Page hooks: an edit was staged / reverted to the original value. */
         onEditStaged(key) {},
+        onEditUnstaged(key) {},
 
         closeEditModal() {
             this.editModal = { open: false, key: '', originalValue: '' };
@@ -362,12 +364,17 @@ export function editorCore(config) {
             this.tagDropdown = { open: false, key: '', currentTag: '', originalTag: '', value: '', x: 0, y: 0 };
         },
 
-        setTagSkip() {
+        /**
+         * Explicit tag change: S (skip) everywhere, A (invalidate — send back
+         * to AI) where the page offers it. Setting the original tag back
+         * removes the pending change.
+         */
+        setTag(newTag) {
             const { key, originalTag, value } = this.tagDropdown;
-            if (originalTag === 'S') {
+            if (newTag === originalTag) {
                 delete this.tagChanges[key];
             } else {
-                this.tagChanges[key] = { newTag: 'S', originalTag: originalTag, value: value };
+                this.tagChanges[key] = { newTag: newTag, originalTag: originalTag, value: value };
             }
             this.persistPendingState();
             this.closeTagDropdown();

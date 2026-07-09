@@ -4,20 +4,16 @@
 
 @section('content')
 @php
-    // Shared view state: every navigation vector (links + GET forms) must preserve ALL of it,
-    // overriding only the parameter it changes. 'page' is intentionally excluded: any change
-    // of mode/branches/filters/search/sort resets to page 1.
-    $filterKeys = ['new_keys', 'difference', 'human', 'validated', 'ai', 'skipped', 'mod_ui'];
+    // Navigation state is now limited to what the SERVER needs to rebuild the
+    // page: mode and selected branches. Filters/search/sort/windowing are
+    // client-side (shared translation-editor core) and persist on their own.
     $stateParams = array_merge(
         ['mode' => $mode],
-        $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->all()] : [],
-        array_filter($filters),
-        request('search') ? ['search' => request('search')] : [],
-        $searchScope !== 'both' ? ['scope' => $searchScope] : [],
-        request('sort') ? ['sort' => request('sort'), 'dir' => request('dir', 'asc')] : []
+        $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->all()] : []
     );
+    $dataUrl = route('translations.merge.data', ['uuid' => $uuid]) . '?' . http_build_query($stateParams);
 @endphp
-<div class="container mx-auto px-4 py-8" x-data="mergeTable" data-uuid="{{ $uuid }}" data-is-main="true">
+<div class="container mx-auto px-4 py-8" x-data="mergeTable">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -47,7 +43,6 @@
         </h1>
         <p class="text-gray-400">
             {{ $main->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $main->target_language }}
-            &bull; {{ __('merge.keys_count', ['count' => $totalKeys]) }}
         </p>
     </div>
 
@@ -74,7 +69,7 @@
         @if($branches->isNotEmpty())
         <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
             <form method="GET" id="branchForm" class="flex flex-wrap gap-3 items-center">
-                @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, 'branches')])
+                <input type="hidden" name="mode" value="{{ $mode }}">
                 <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
 
                 {{-- Quick filters --}}
@@ -140,436 +135,410 @@
         @endif
     @endif
 
-    {{-- Filters --}}
-    <form method="GET" id="filterForm" class="mb-4 flex flex-wrap gap-4 items-center text-sm">
-        @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, $filterKeys)])
+    {{-- Client-side editor (shared translation-editor core) --}}
+    <div x-data="mergeView">
+        {{-- Loading state --}}
+        <div x-show="!loaded" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
+            <p class="text-gray-400">{{ __('merge_preview.loading') }}</p>
+        </div>
 
-        <span class="text-gray-500">{{ __('merge.filters') }}</span>
+        {{-- Error state --}}
+        <div x-show="error" x-cloak class="bg-red-900/50 border border-red-600 rounded-lg p-6 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+            <p class="text-red-300" x-text="error"></p>
+        </div>
 
-        {{-- Branch-relative filters: only meaningful in merge mode (compare Main vs branches) --}}
-        @if($mode === 'merge')
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="new_keys" value="1" {{ $filters['new_keys'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-green-600">
-            <span class="text-gray-300">{{ __('merge.filter_new_keys') }}</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="difference" value="1" {{ $filters['difference'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-yellow-600">
-            <span class="text-gray-300">{{ __('merge.filter_differences') }}</span>
-        </label>
-
-        <span class="text-gray-600">|</span>
-        @endif
-
-        {{-- Tag filters in HVASM order --}}
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="human" value="1" {{ $filters['human'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-green-600">
-            <span class="tag-H">H</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="validated" value="1" {{ $filters['validated'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-blue-600">
-            <span class="tag-V">V</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="ai" value="1" {{ $filters['ai'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-orange-600">
-            <span class="tag-A">A</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="skipped" value="1" {{ $filters['skipped'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-gray-600">
-            <span class="tag-S">S</span>
-        </label>
-
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="mod_ui" value="1" {{ $filters['mod_ui'] ? 'checked' : '' }}
-                class="filter-checkbox rounded bg-gray-700 border-gray-600 text-purple-600">
-            <span class="tag-M">M</span>
-        </label>
-
-        @if(array_filter($filters))
-        <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, $filterKeys))) }}"
-            class="text-gray-400 hover:text-white text-xs">
-            <i class="fas fa-times"></i> {{ __('merge.reset_filters') }}
-        </a>
-        @endif
-    </form>
-
-    {{-- Search --}}
-    <div class="mb-4">
-        <form method="GET" class="flex gap-2">
-            @include('merge.partials.state-inputs', ['params' => Arr::except($stateParams, ['search', 'scope'])])
-
-            <div class="relative flex-1">
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="{{ __('merge.search_placeholder') }}"
-                    class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                @if(request('search'))
-                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], Arr::except($stateParams, 'search'))) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                    <i class="fas fa-times"></i>
-                </a>
+        <div x-show="loaded && !error" x-cloak>
+            {{-- Stats --}}
+            <div class="mb-6 grid {{ $mode === 'edit' ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4' }} gap-4">
+                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center">
+                    <p class="text-2xl font-bold text-white" x-text="allKeys.length"></p>
+                    <p class="text-sm text-gray-400">{{ __('merge_preview.total_keys') }}</p>
+                </div>
+                @if($mode === 'merge')
+                <div class="bg-gray-800 rounded-lg p-4 border border-green-700 text-center">
+                    <p class="text-2xl font-bold text-green-400" x-text="stats.newKeys"></p>
+                    <p class="text-sm text-gray-400">{{ __('merge.filter_new_keys') }}</p>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4 border border-yellow-700 text-center">
+                    <p class="text-2xl font-bold text-yellow-400" x-text="stats.different"></p>
+                    <p class="text-sm text-gray-400">{{ __('merge.filter_differences') }}</p>
+                </div>
                 @endif
+                <div class="bg-gray-800 rounded-lg p-4 border border-purple-700 text-center">
+                    <p class="text-2xl font-bold text-purple-400" x-text="totalChanges"></p>
+                    <p class="text-sm text-gray-400">{{ __('merge.modifications') }}</p>
+                </div>
             </div>
-            <select name="scope" class="search-scope-select bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                title="{{ __('merge.search_scope_title') }}">
-                <option value="both" {{ $searchScope === 'both' ? 'selected' : '' }}>{{ __('merge.search_scope_both') }}</option>
-                <option value="keys" {{ $searchScope === 'keys' ? 'selected' : '' }}>{{ __('merge.search_scope_keys') }}</option>
-                <option value="values" {{ $searchScope === 'values' ? 'selected' : '' }}>{{ __('merge.search_scope_values') }}</option>
-            </select>
-        </form>
-    </div>
 
-    {{-- Merge Form --}}
-    <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
-        @csrf
-        {{-- Preserve current view state for redirect after save --}}
-        @include('merge.partials.state-inputs', ['params' => array_merge($stateParams, request('page') ? ['page' => request('page')] : [])])
+            {{-- Filters (checked = visible, same model as the other editors) --}}
+            <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
 
-        {{-- Table --}}
-        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
-            <table class="w-full text-sm">
-                @php
-                    $currentSort = request('sort', 'key');
-                    $currentDir = request('dir', 'asc');
-                    $sortParams = array_merge(['uuid' => $uuid], $stateParams);
-                @endphp
-                <thead class="bg-gray-900 sticky top-0 z-10">
-                    <tr>
-                        {{-- Key column with sort --}}
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium">
-                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'key', 'dir' => ($currentSort === 'key' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
-                                class="flex items-center gap-2 hover:text-white transition">
-                                {{ __('merge.key') }}
-                                <i class="fas {{ $currentSort === 'key' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
-                            </a>
-                        </th>
-                        {{-- Main Tag column --}}
-                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12">
-                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'mainTag', 'dir' => ($currentSort === 'mainTag' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
-                                class="flex items-center justify-center gap-1 hover:text-white transition">
-                                <span class="text-green-400 font-medium text-xs">Tag</span>
-                                <i class="fas text-xs {{ $currentSort === 'mainTag' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
-                            </a>
-                        </th>
-                        {{-- Main Value column --}}
-                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
-                            <a href="{{ route('translations.merge', array_merge($sortParams, ['sort' => 'mainValue', 'dir' => ($currentSort === 'mainValue' && $currentDir === 'asc') ? 'desc' : 'asc'])) }}"
-                                class="flex items-center gap-2 hover:text-white transition">
-                                <span class="text-green-400 font-medium">Main</span>
-                                <span class="text-xs text-gray-500">({{ $main->user->name ?? __('common.you') }})</span>
-                                <i class="fas {{ $currentSort === 'mainValue' ? ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400') : 'fa-sort text-gray-600' }}"></i>
-                            </a>
-                        </th>
-                        @foreach($selectedBranches as $branch)
-                        {{-- Branch Tag column --}}
-                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12">
-                            <span class="text-blue-400 font-medium text-xs">Tag</span>
-                        </th>
-                        {{-- Branch Value column --}}
-                        <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
-                            <div class="flex items-center gap-2">
-                                <span class="text-blue-400 font-medium">{{ $branch->user->name }}</span>
-                                <span class="text-xs text-gray-500">
-                                    ({{ $branch->human_count }}H / {{ $branch->validated_count }}V / {{ $branch->ai_count }}A)
-                                </span>
-                            </div>
-                        </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($pagedKeys as $key)
-                    @php
-                        $mainEntry = $mainContent[$key] ?? null;
-                        $mainValue = is_array($mainEntry) ? ($mainEntry['v'] ?? '') : ($mainEntry ?? '');
-                        $mainTag = is_array($mainEntry) ? ($mainEntry['t'] ?? 'A') : 'A';
-                        $keyJson = json_encode($key, JSON_UNESCAPED_UNICODE);
-                    @endphp
-                    @php $rowIdx = $loop->index; @endphp
-                    <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors merge-row"
-                        data-key="{{ $key }}"
-                        data-main-value="{{ $mainValue }}"
-                        data-main-tag="{{ $mainTag }}">
-                        {{-- Key column --}}
-                        <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
-                            <div class="flex items-center gap-2">
-                                @if($mainEntry !== null)
-                                <button type="button"
-                                    @click="toggleDeleteFromRow($event)"
-                                    :class="isDeleted(rowKey($el)) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
-                                    class="transition shrink-0"
-                                    title="{{ __('merge.delete_key') }}">
-                                    <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
-                                @endif
-                                <span :class="isDeleted(rowKey($el)) ? 'line-through text-red-400' : ''">{{ $key }}</span>
-                            </div>
-                        </td>
+                @if($mode === 'merge')
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.catNew" @change="toggleFilter('catNew')"
+                        class="rounded bg-gray-700 border-gray-600 text-green-600">
+                    <span class="text-green-400">{{ __('merge.filter_new_keys') }}</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.catDiff" @change="toggleFilter('catDiff')"
+                        class="rounded bg-gray-700 border-gray-600 text-yellow-600">
+                    <span class="text-yellow-400">{{ __('merge.filter_differences') }}</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.catOther" @change="toggleFilter('catOther')"
+                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                    <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
+                </label>
 
-                        {{-- Main Tag column (clickable for tag change) --}}
-                        <td class="px-2 py-2 text-center border-l border-gray-700"
-                            :class="[hasTagChange(rowKey($el)) ? 'tag-changed-cell' : '', isDeleted(rowKey($el)) ? 'deleted-cell' : '']">
-                            <button type="button"
-                                @click.stop="openTagDropdownFromRow($event)"
-                                :class="isDeleted(rowKey($el)) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
-                                class="transition rounded"
-                                :disabled="isDeleted(rowKey($el))"
-                                title="{{ __('merge.click_to_change_tag') }}">
-                                {{-- Show edited tag (H) if manually edited --}}
-                                <span x-show="isEdited(rowKey($el))" class="tag-H">H</span>
-                                {{-- Show changed tag if tag was explicitly changed --}}
-                                <template x-if="!isEdited(rowKey($el)) && hasTagChange(rowKey($el))">
-                                    <span :class="'tag-' + getDisplayTag(rowKey($el), rowMainTag($el))" x-text="getDisplayTag(rowKey($el), rowMainTag($el))"></span>
+                <span class="text-gray-600">|</span>
+                @endif
+
+                {{-- Tag filters in HVASM order --}}
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
+                        class="rounded bg-gray-700 border-gray-600 text-green-600">
+                    <span class="tag-H">H</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
+                        class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                    <span class="tag-V">V</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
+                        class="rounded bg-gray-700 border-gray-600 text-orange-600">
+                    <span class="tag-A">A</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
+                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                    <span class="tag-S">S</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
+                        class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                    <span class="tag-M">M</span>
+                </label>
+
+                <span class="text-gray-600">|</span>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.modifiedOnly" @change="toggleFilter('modifiedOnly')"
+                        class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                    <span class="text-purple-400">{{ __('merge.modifications') }}</span>
+                </label>
+            </div>
+
+            {{-- Search --}}
+            <div class="mb-4 flex gap-2">
+                <div class="relative flex-1">
+                    <input type="text" x-model="searchQuery" placeholder="{{ __('merge.search_placeholder') }}"
+                        class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <button x-show="searchQuery" @click="searchQuery = ''" type="button"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <select x-model="searchScope"
+                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                    title="{{ __('merge.search_scope_title') }}">
+                    <option value="both">{{ __('merge.search_scope_both') }}</option>
+                    <option value="keys">{{ __('merge.search_scope_keys') }}</option>
+                    <option value="values">{{ __('merge.search_scope_values') }}</option>
+                </select>
+            </div>
+
+            {{-- Table --}}
+            <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-900 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
+                                @click="toggleSort('key')">
+                                <div class="flex items-center gap-2">
+                                    {{ __('merge.key') }}
+                                    <i class="fas" :class="getSortIcon('key')"></i>
+                                </div>
+                            </th>
+                            <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                                @click="toggleSort('mainTag')">
+                                <div class="flex items-center justify-center gap-1">
+                                    <span class="text-green-400 font-medium text-xs">Tag</span>
+                                    <i class="fas text-xs" :class="getSortIcon('mainTag')"></i>
+                                </div>
+                            </th>
+                            <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
+                                @click="toggleSort('mainValue')">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-green-400 font-medium">Main</span>
+                                    <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
+                                    <i class="fas" :class="getSortIcon('mainValue')"></i>
+                                </div>
+                            </th>
+                            <template x-for="branch in branches" :key="branch.id">
+                                <th colspan="2" class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-blue-400 font-medium" x-text="branch.name"></span>
+                                        <span class="text-xs text-gray-500"
+                                            x-text="'(' + branch.human_count + 'H / ' + branch.validated_count + 'V / ' + branch.ai_count + 'A)'"></span>
+                                    </div>
+                                </th>
+                            </template>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{-- Windowed rendering: huge files stay snappy --}}
+                        <template x-for="key in visibleKeys" :key="key">
+                            <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                                {{-- Key + delete affordance --}}
+                                <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
+                                    <div class="flex items-center gap-2">
+                                        <template x-if="mainData[key] !== undefined">
+                                            <button type="button"
+                                                @click="toggleDelete(key)"
+                                                :class="isDeleted(key) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
+                                                class="transition shrink-0"
+                                                title="{{ __('merge.delete_key') }}">
+                                                <i class="fas fa-trash-alt text-xs"></i>
+                                            </button>
+                                        </template>
+                                        <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-text="key"></span>
+                                    </div>
+                                </td>
+
+                                {{-- Main Tag (clickable for tag change) --}}
+                                <td class="px-2 py-2 text-center border-l border-gray-700"
+                                    :class="[hasTagChange(key) ? 'tag-changed-cell' : '', isDeleted(key) ? 'deleted-cell' : '']">
+                                    <template x-if="mainData[key] !== undefined">
+                                        <button type="button"
+                                            @click.stop="openTagDropdown($event, key, getTag(mainData[key]), getValue(mainData[key]))"
+                                            :class="isDeleted(key) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
+                                            :disabled="isDeleted(key)"
+                                            class="transition rounded"
+                                            title="{{ __('merge.click_to_change_tag') }}">
+                                            <span x-show="isEdited(key) && !hasTagChange(key)" class="tag-H">H</span>
+                                            <template x-if="hasTagChange(key)">
+                                                <span :class="'tag-' + tagChanges[key].newTag" x-text="tagChanges[key].newTag"></span>
+                                            </template>
+                                            <span x-show="!isEdited(key) && !hasTagChange(key)"
+                                                :class="'tag-' + getTag(mainData[key])" x-text="getTag(mainData[key])"></span>
+                                        </button>
+                                    </template>
+                                    <template x-if="mainData[key] === undefined">
+                                        <span class="text-gray-600">—</span>
+                                    </template>
+                                </td>
+
+                                {{-- Main Value (click = keep/validate main, dblclick/pencil = edit) --}}
+                                <td class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                    :class="[getCellClass(key, 'main'), isDeleted(key) ? 'deleted-cell' : '']"
+                                    @click="select(key, 'main')"
+                                    @dblclick="editCell(key, getValue(mainData[key]))">
+                                    <span class="edit-affordance" x-show="mainData[key] !== undefined && !isDeleted(key)">
+                                        <button type="button" @click.stop="editCell(key, getValue(mainData[key]))"
+                                            title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                                    </span>
+                                    <template x-if="mainData[key] !== undefined || isEdited(key)">
+                                        <span class="break-words"
+                                            :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
+                                            <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
+                                            <span x-show="!isEdited(key)" x-text="getValue(mainData[key]) !== '' ? getValue(mainData[key]) : @js(__('merge.empty_value'))"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="mainData[key] === undefined && !isEdited(key)">
+                                        <span class="text-gray-600 italic">—</span>
+                                    </template>
+                                </td>
+
+                                {{-- Branch columns (click = take this branch's version) --}}
+                                <template x-for="branch in branches" :key="branch.id">
+                                    <td class="px-2 py-2 border-l border-gray-700 merge-cell" colspan="2"
+                                        :class="[getCellClass(key, 'branch_' + branch.id), branchCellTint(branch, key)]"
+                                        @click="select(key, 'branch_' + branch.id)">
+                                        <template x-if="branch.content[key] !== undefined">
+                                            <div class="flex items-start gap-2">
+                                                <span :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
+                                                <span class="break-words"
+                                                    :class="branchTextTint(branch, key)"
+                                                    x-text="getValue(branch.content[key])"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="branch.content[key] === undefined">
+                                            <span class="text-gray-600 italic">—</span>
+                                        </template>
+                                    </td>
                                 </template>
-                                {{-- Show original tag if not edited and not changed --}}
-                                <span x-show="!isEdited(rowKey($el)) && !hasTagChange(rowKey($el))" class="tag-{{ $mainTag }}">{{ $mainTag }}</span>
-                            </button>
-                        </td>
+                            </tr>
+                        </template>
 
-                        {{-- Main Value column --}}
-                        <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                            :class="[getCellClass(rowKey($el), 'main'), isDeleted(rowKey($el)) ? 'deleted-cell' : '']"
-                            @click="selectFromRow($event, 'main')"
-                            @dblclick="editCellFromRow($event)">
-                            <span class="break-words" :class="[isEdited(rowKey($el)) ? 'text-purple-300' : '', isDeleted(rowKey($el)) ? 'line-through opacity-40' : '']">
-                                <span x-show="isEdited(rowKey($el))" x-text="getEditedValue(rowKey($el))"></span>
-                                <span x-show="!isEdited(rowKey($el))">{{ $mainValue !== '' ? $mainValue : __('merge.empty_value') }}</span>
+                        <tr x-show="filteredKeys.length === 0">
+                            <td :colspan="3 + branches.length" class="px-4 py-12 text-center text-gray-500">
+                                <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
+                                <p>{{ __('merge.no_keys_found') }}</p>
+                            </td>
+                        </tr>
+
+                        <tr x-show="hiddenCount > 0">
+                            <td :colspan="3 + branches.length" class="px-4 py-3 text-center">
+                                <button type="button" @click="showMore()"
+                                    class="text-purple-400 hover:text-purple-300 text-sm transition">
+                                    <i class="fas fa-chevron-down mr-1"></i>
+                                    {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Apply form + footer --}}
+            <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
+                @csrf
+                {{-- Server needs mode + branches back for the redirect --}}
+                <input type="hidden" name="mode" value="{{ $mode }}">
+                @foreach($selectedBranches as $branch)
+                <input type="hidden" name="branches[]" value="{{ $branch->id }}">
+                @endforeach
+                {{-- JSON-encoded data (avoids Laravel TrimStrings corrupting keys with whitespace) --}}
+                <input type="hidden" id="selectionsJson" name="selections_json" value="">
+                <input type="hidden" id="deletionsJson" name="deletions_json" value="">
+                <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
+
+                <div class="mt-6 flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700 sticky bottom-4">
+                    <div class="text-sm text-gray-400">
+                        <span x-show="totalChanges > 0">
+                            <span x-show="selectionCount > 0">
+                                <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
                             </span>
-                        </td>
-
-                        {{-- Branch columns --}}
-                        @foreach($selectedBranches as $branch)
-                        @php
-                            $branchEntry = $branchContents[$branch->id][$key] ?? null;
-                            $branchValue = is_array($branchEntry) ? ($branchEntry['v'] ?? '') : ($branchEntry ?? '');
-                            $branchTag = is_array($branchEntry) ? ($branchEntry['t'] ?? 'A') : 'A';
-                            $isDiff = $branchValue !== $mainValue && $branchEntry !== null;
-                            $isNew = $mainEntry === null && $branchEntry !== null;
-                        @endphp
-                        {{-- Branch Tag column --}}
-                        <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
-                            :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
-                            data-branch-value="{{ $branchValue }}"
-                            data-branch-tag="{{ $branchTag }}"
-                            data-branch-source="branch_{{ $branch->id }}"
-                            @click="selectFromBranch($event)">
-                            @if($branchEntry !== null)
-                            <span class="tag-{{ $branchTag }}">{{ $branchTag }}</span>
-                            @else
-                            <span class="text-gray-600">—</span>
-                            @endif
-                        </td>
-                        {{-- Branch Value column --}}
-                        <td class="px-4 py-2 border-l border-gray-700 merge-cell {{ $isDiff ? 'bg-yellow-900/20' : '' }} {{ $isNew ? 'bg-green-900/20' : '' }}"
-                            :class="getCellClass(rowKey($el), 'branch_{{ $branch->id }}')"
-                            data-branch-value="{{ $branchValue }}"
-                            data-branch-tag="{{ $branchTag }}"
-                            data-branch-source="branch_{{ $branch->id }}"
-                            @click="selectFromBranch($event)">
-                            @if($branchEntry !== null)
-                            <span class="break-words {{ $isDiff ? 'text-yellow-300' : '' }} {{ $isNew ? 'text-green-300' : '' }}">
-                                {{ $branchValue }}
+                            <span x-show="selectionCount > 0 && (deleteCount > 0 || tagChangeCount > 0)"> &bull; </span>
+                            <span x-show="deleteCount > 0">
+                                <span class="text-red-400 font-bold" x-text="deleteCount"></span> {{ __('merge.deletions') }}
                             </span>
-                            @else
-                            <span class="text-gray-600 italic">—</span>
-                            @endif
-                        </td>
-                        @endforeach
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="{{ 3 + ($selectedBranches->count() * 2) }}" class="px-4 py-12 text-center text-gray-500">
-                            <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
-                            <p>{{ __('merge.no_keys_found') }}</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            <span x-show="deleteCount > 0 && tagChangeCount > 0"> &bull; </span>
+                            <span x-show="tagChangeCount > 0">
+                                <span class="text-purple-400 font-bold" x-text="tagChangeCount"></span> {{ __('merge.tag_changes') }}
+                            </span>
+                        </span>
+                        <span x-show="totalChanges === 0" class="text-gray-500">
+                            {{ __('merge.instructions') }}
+                        </span>
+                    </div>
+                    <div class="flex gap-4 items-center">
+                        <button type="button" @click="clearAll()" x-show="totalChanges > 0"
+                            class="text-gray-400 hover:text-white text-sm transition">
+                            <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
+                        </button>
+                        <button type="button" @click="submitMerge()" :disabled="totalChanges === 0"
+                            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ __('common.save') }} (<span x-text="totalChanges">0</span>)
+                        </button>
+                    </div>
+                </div>
+            </form>
 
-        {{-- Pagination --}}
-        @if($totalPages > 1)
-        <div class="mt-4 flex justify-between items-center">
-            <span class="text-gray-400 text-sm">
-                {{ __('merge.page_info', ['page' => $page, 'total' => $totalPages, 'keys' => $totalKeys]) }}
-            </span>
-            <div class="flex gap-2">
-                @if($page > 1)
-                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['page' => $page - 1])) }}"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
-                    <i class="fas fa-chevron-left mr-1"></i> {{ __('common.previous') }}
-                </a>
-                @endif
-                @if($page < $totalPages)
-                <a href="{{ route('translations.merge', array_merge(['uuid' => $uuid], $stateParams, ['page' => $page + 1])) }}"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition">
-                    {{ __('common.next') }} <i class="fas fa-chevron-right ml-1"></i>
-                </a>
-                @endif
+            {{-- Legend (HVASM order) --}}
+            <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
+                <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
+                <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
+                <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
+                <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
+                <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
+                <span class="text-gray-600">|</span>
+                <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_main') }}</span>
+                <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_branch') }}</span>
+                <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge.legend_manual_edit') }}</span>
+                <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> {{ __('merge.legend_difference') }}</span>
+                <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> {{ __('merge.legend_new_key') }}</span>
+                <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> {{ __('merge.legend_deletion') }}</span>
             </div>
         </div>
-        @endif
 
-        {{-- Footer with Save button --}}
-        <div class="mt-6 flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700 sticky bottom-4">
-            <div class="text-sm text-gray-400">
-                <span x-show="totalChanges > 0">
-                    <span x-show="selectionCount > 0">
-                        <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
-                    </span>
-                    <span x-show="selectionCount > 0 && (deleteCount > 0 || tagChangeCount > 0)"> &bull; </span>
-                    <span x-show="deleteCount > 0">
-                        <span class="text-red-400 font-bold" x-text="deleteCount"></span> {{ __('merge.deletions') }}
-                    </span>
-                    <span x-show="deleteCount > 0 && tagChangeCount > 0"> &bull; </span>
-                    <span x-show="tagChangeCount > 0">
-                        <span class="text-purple-400 font-bold" x-text="tagChangeCount"></span> {{ __('merge.tag_changes') }}
-                    </span>
+        {{-- Edit Modal --}}
+        <div x-show="editModal.open" x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+            @click.self="closeEditModal()">
+            <div class="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-2xl mx-4"
+                @keydown.ctrl.enter="saveEditModal()">
+                <div class="px-6 py-4 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-white">{{ __('merge.edit_translation') }}</h3>
+                    <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
+                </div>
+                <div class="px-6 py-4">
+                    {{-- x-model must target a TOP-LEVEL property: the Alpine CSP
+                         build prohibits property assignments (editModal.value = x) --}}
+                    <textarea
+                        id="editModalTextarea"
+                        x-model="editModalValue"
+                        class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
+                        placeholder="{{ __('merge.enter_translation') }}"
+                    ></textarea>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge.save_shortcut') }} &bull;
+                        <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge.cancel_shortcut') }}
+                    </p>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+                    <button type="button" @click="closeEditModal()"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition">
+                        {{ __('common.cancel') }}
+                    </button>
+                    <button type="button" @click="saveEditModal()"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
+                        <i class="fas fa-check mr-1"></i> {{ __('common.save') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tag Dropdown Menu (S for everyone, A = invalidate) --}}
+        <div x-show="tagDropdown.open" x-cloak
+            class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
+            :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
+            @click.outside="closeTagDropdown()"
+            @keydown.escape="closeTagDropdown()">
+
+            <div class="px-3 py-2 border-b border-gray-700">
+                <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
+            </div>
+
+            <button type="button"
+                @click="setTag('S')"
+                :class="tagDropdown.currentTag === 'S' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+                class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+                <span class="tag-S">S</span>
+                <span class="text-sm text-gray-300">{{ __('merge.tag_skip') }}</span>
+                <span x-show="tagDropdown.currentTag === 'S'" class="ml-auto text-green-400">
+                    <i class="fas fa-check"></i>
                 </span>
-                <span x-show="totalChanges === 0" class="text-gray-500">
-                    {{ __('merge.instructions') }}
+            </button>
+
+            <button type="button"
+                @click="setTag('A')"
+                :class="tagDropdown.currentTag === 'A' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+                class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+                <span class="tag-A">A</span>
+                <span class="text-sm text-gray-300">{{ __('merge.tag_invalidate') }}</span>
+                <span x-show="tagDropdown.currentTag === 'A'" class="ml-auto text-green-400">
+                    <i class="fas fa-check"></i>
                 </span>
-            </div>
-            <div class="flex gap-4 items-center">
-                <button type="button" @click="clearAll()" x-show="totalChanges > 0"
-                    class="text-gray-400 hover:text-white text-sm transition">
-                    <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
-                </button>
-                <button type="submit" :disabled="totalChanges === 0"
-                    class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
-                    <i class="fas fa-save mr-2"></i>
-                    {{ __('common.save') }} (<span x-text="totalChanges">0</span>)
-                </button>
-            </div>
+            </button>
+
+            <template x-if="hasTagChange(tagDropdown.key)">
+                <div class="border-t border-gray-700 mt-1 pt-1">
+                    <button type="button"
+                        @click="cancelAndCloseTagDropdown(tagDropdown.key)"
+                        class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fas fa-undo text-xs"></i>
+                        <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
+                    </button>
+                </div>
+            </template>
         </div>
-
-        {{-- JSON-encoded data (avoids Laravel TrimStrings corrupting keys with whitespace) --}}
-        <input type="hidden" id="selectionsJson" name="selections_json" value="">
-        <input type="hidden" id="deletionsJson" name="deletions_json" value="">
-        <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
-    </form>
-
-    {{-- Legend (HVASM order) --}}
-    <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
-        <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
-        <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
-        <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
-        <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
-        <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
-        <span class="text-gray-600">|</span>
-        <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_main') }}</span>
-        <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_branch') }}</span>
-        <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge.legend_manual_edit') }}</span>
-        <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> {{ __('merge.legend_difference') }}</span>
-        <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> {{ __('merge.legend_new_key') }}</span>
-        <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> {{ __('merge.legend_deletion') }}</span>
-    </div>
-
-    {{-- Edit Modal --}}
-    <div x-show="editModal.open" x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-        @click.self="closeEditModal()">
-        <div class="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-2xl mx-4"
-            @keydown.ctrl.enter="saveEditModal()">
-            {{-- Modal Header --}}
-            <div class="px-6 py-4 border-b border-gray-700">
-                <h3 class="text-lg font-semibold text-white">{{ __('merge.edit_translation') }}</h3>
-                <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="px-6 py-4">
-                {{-- No x-model: the Alpine CSP build prohibits property
-                     assignments; merge-table.js reads/writes the textarea
-                     directly via the DOM --}}
-                <textarea
-                    id="editModalTextarea"
-                    class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
-                    placeholder="{{ __('merge.enter_translation') }}"
-                ></textarea>
-                <p class="mt-2 text-xs text-gray-500">
-                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge.save_shortcut') }} &bull;
-                    <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge.cancel_shortcut') }}
-                </p>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
-                <button type="button" @click="closeEditModal()"
-                    class="px-4 py-2 text-gray-400 hover:text-white transition">
-                    {{ __('common.cancel') }}
-                </button>
-                <button type="button" @click="saveEditModal()"
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
-                    <i class="fas fa-check mr-1"></i> {{ __('common.save') }}
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Tag Dropdown Menu --}}
-    <div x-show="tagDropdown.open" x-cloak
-        class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
-        :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
-        @click.outside="closeTagDropdown()"
-        @keydown.escape="closeTagDropdown()">
-
-        <div class="px-3 py-2 border-b border-gray-700">
-            <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
-        </div>
-
-        {{-- Skip option (available to everyone) --}}
-        <button type="button"
-            @click="setTag('S')"
-            :class="tagDropdown.currentTag === 'S' ? 'bg-gray-700' : 'hover:bg-gray-700'"
-            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
-            <span class="tag-S">S</span>
-            <span class="text-sm text-gray-300">{{ __('merge.tag_skip') }}</span>
-            <span x-show="tagDropdown.currentTag === 'S'" class="ml-auto text-green-400">
-                <i class="fas fa-check"></i>
-            </span>
-        </button>
-
-        {{-- Invalidate option (Main only) --}}
-        <button type="button"
-            @click="setTag('A')"
-            :class="[
-                tagDropdown.currentTag === 'A' ? 'bg-gray-700' : 'hover:bg-gray-700',
-                !isMain ? 'opacity-50 cursor-not-allowed' : ''
-            ]"
-            :disabled="!isMain"
-            class="w-full px-3 py-2 text-left flex items-center gap-3 transition"
-            :title="!isMain ? @js(__('merge.main_only')) : ''">
-            <span class="tag-A">A</span>
-            <span class="text-sm text-gray-300">{{ __('merge.tag_invalidate') }}</span>
-            <span x-show="!isMain" class="ml-auto text-gray-500 text-xs">
-                <i class="fas fa-lock"></i>
-            </span>
-            <span x-show="tagDropdown.currentTag === 'A' && isMain" class="ml-auto text-green-400">
-                <i class="fas fa-check"></i>
-            </span>
-        </button>
-
-        {{-- Cancel change (if tag was changed) --}}
-        <template x-if="hasTagChange(tagDropdown.key)">
-            <div class="border-t border-gray-700 mt-1 pt-1">
-                <button type="button"
-                    @click="cancelAndCloseTagDropdown(tagDropdown.key)"
-                    class="w-full px-3 py-2 text-left flex items-center gap-3 text-gray-400 hover:bg-gray-700 hover:text-white transition">
-                    <i class="fas fa-undo text-xs"></i>
-                    <span class="text-sm">{{ __('merge.cancel_tag_change') }}</span>
-                </button>
-            </div>
-        </template>
     </div>
 </div>
 
@@ -580,5 +549,327 @@
 </style>
 @endpush
 
-{{-- JavaScript component is in resources/js/components/merge-table.js --}}
+<script nonce="{{ $cspNonce }}">
+// Shared editor core (modal, filters, search, sort, tag rules, windowing):
+// resources/js/components/translation-editor.js, exposed by app.js.
+// Only the merge-view specifics live here (multi-branch columns, the
+// selections model of the apply endpoint, the hidden-form submit).
+document.addEventListener('alpine:init', () => {
+    // window.UGT is set by app.js (deferred module): it exists by the time
+    // Alpine fires alpine:init, but NOT during the initial HTML parse
+    const normalizeLineEndings = window.UGT.normalizeLineEndings;
+    const isEditMode = @json($mode === 'edit');
+
+    Alpine.data('mergeView', () => window.UGT.composeEditor({
+        persistKey: 'merge_view_{{ $uuid }}',
+        filters: {
+            catNew: true,
+            catDiff: true,
+            catOther: true,
+            tagH: true,
+            tagV: true,
+            tagA: true,
+            tagS: true,
+            tagM: true,
+            modifiedOnly: false
+        }
+    }, {
+        loaded: false,
+        error: null,
+        mainData: {},
+        mainOwner: '',
+        branches: [],       // [{id, name, human_count, validated_count, ai_count, content{}}]
+        allKeys: [],
+        // Merge selections: key -> {source: 'main'|'branch_{id}'|'manual', value, tag}
+        // (selecting main = validate it: the apply endpoint promotes A -> V)
+        selections: {},
+        stats: { newKeys: 0, different: 0 },
+
+        init() {
+            this.initEditorCore();
+
+            fetch(@js($dataUrl), { headers: { 'Accept': 'application/json' } })
+                .then(response => response.ok ? response.json() : Promise.reject(new Error('load_failed')))
+                .then(payload => this.loadContent(payload))
+                .catch(() => {
+                    this.error = @js(__('merge_preview.error_load_failed'));
+                    this.loaded = true;
+                });
+        },
+
+        loadContent(payload) {
+            this.mainOwner = payload.main_owner || '';
+
+            this.mainData = {};
+            for (const [key, value] of Object.entries(payload.main || {})) {
+                this.mainData[normalizeLineEndings(key)] = this.normalizeEntry(value);
+            }
+
+            this.branches = (payload.branches || []).map(branch => {
+                const content = {};
+                for (const [key, value] of Object.entries(branch.content || {})) {
+                    content[normalizeLineEndings(key)] = this.normalizeEntry(value);
+                }
+                return { ...branch, content };
+            });
+
+            const keys = new Set(Object.keys(this.mainData));
+            for (const branch of this.branches) {
+                for (const key of Object.keys(branch.content)) keys.add(key);
+            }
+            this.allKeys = [...keys].sort();
+
+            this.calculateStats();
+            this.loaded = true;
+        },
+
+        normalizeEntry(value) {
+            if (typeof value === 'object' && value !== null && 'v' in value) {
+                return { ...value, v: normalizeLineEndings(value.v) };
+            }
+            if (typeof value === 'string') {
+                return normalizeLineEndings(value);
+            }
+            return value;
+        },
+
+        calculateStats() {
+            this.stats = { newKeys: 0, different: 0 };
+            for (const key of this.allKeys) {
+                const category = this.rowCategory(key);
+                if (category === 'new') this.stats.newKeys++;
+                else if (category === 'diff') this.stats.different++;
+            }
+        },
+
+        /**
+         * Category of a row relative to the branches:
+         * 'new'  = missing in Main, present in at least one branch
+         * 'diff' = present in Main, at least one branch differs
+         * 'other' = everything else (identical everywhere or Main-only)
+         */
+        rowCategory(key) {
+            const hasMain = key in this.mainData;
+            if (!hasMain) {
+                for (const branch of this.branches) {
+                    if (key in branch.content) return 'new';
+                }
+                return 'other';
+            }
+            const mainValue = this.getValue(this.mainData[key]);
+            for (const branch of this.branches) {
+                if (key in branch.content && this.getValue(branch.content[key]) !== mainValue) {
+                    return 'diff';
+                }
+            }
+            return 'other';
+        },
+
+        // ── Shared-core callbacks ────────────────────────────────────────
+
+        rowPassesFilters(key) {
+            if (this.filters.modifiedOnly && !this.isRowModified(key)) {
+                return false;
+            }
+
+            if (!isEditMode && this.branches.length > 0) {
+                const category = this.rowCategory(key);
+                if (category === 'new' && !this.filters.catNew) return false;
+                if (category === 'diff' && !this.filters.catDiff) return false;
+                if (category === 'other' && !this.filters.catOther) return false;
+            }
+
+            // Tag filter: the row passes if ANY of its tags (Main or branch)
+            // is visible — same semantics as before, inverted model
+            const tagFilters = {
+                'H': this.filters.tagH,
+                'V': this.filters.tagV,
+                'A': this.filters.tagA,
+                'S': this.filters.tagS,
+                'M': this.filters.tagM
+            };
+            if (key in this.mainData && tagFilters[this.getTag(this.mainData[key])]) return true;
+            for (const branch of this.branches) {
+                if (key in branch.content && tagFilters[this.getTag(branch.content[key])]) return true;
+            }
+            return false;
+        },
+
+        rowMatchesSearch(key, query) {
+            if (this.searchScope !== 'values' && key.toLowerCase().includes(query)) {
+                return true;
+            }
+            if (this.searchScope !== 'keys') {
+                if (key in this.mainData
+                    && this.getValue(this.mainData[key]).toLowerCase().includes(query)) return true;
+                for (const branch of this.branches) {
+                    if (key in branch.content
+                        && this.getValue(branch.content[key]).toLowerCase().includes(query)) return true;
+                }
+                if (this.editedValues[key] !== undefined
+                    && this.editedValues[key].toLowerCase().includes(query)) return true;
+            }
+            return false;
+        },
+
+        rowSortValue(key, column) {
+            if (column === 'mainTag') {
+                return key in this.mainData ? this.getTag(this.mainData[key]) : '';
+            }
+            // 'mainValue' — stored value so pending edits don't reorder rows
+            return key in this.mainData ? this.getValue(this.mainData[key]).toLowerCase() : '';
+        },
+
+        /** Core hook: a staged manual edit becomes a 'manual' selection. */
+        onEditStaged(key) {
+            this.selections[key] = { source: 'manual', value: this.editedValues[key], tag: 'H' };
+        },
+
+        /** Core hook: an edit reverted to the original drops its selection. */
+        onEditUnstaged(key) {
+            if (this.selections[key]?.source === 'manual') {
+                delete this.selections[key];
+            }
+        },
+
+        /** Core hook: a deletion cancels any selection for the key. */
+        onDeleteToggled(key) {
+            delete this.selections[key];
+        },
+
+        /** Merge selections survive refreshes with the rest of the pending state. */
+        pendingExtraState() {
+            return { selections: this.selections };
+        },
+
+        restorePendingExtra(extra) {
+            if (extra && extra.selections && typeof extra.selections === 'object') {
+                this.selections = extra.selections;
+            }
+        },
+
+        // ── Merge selection logic ────────────────────────────────────────
+
+        /**
+         * Pick a version for a key. Re-clicking the same source deselects
+         * (toggle, same behavior as before). Selecting main = validate it
+         * (A -> V server-side).
+         */
+        select(key, source) {
+            if (this.isDeleted(key)) return;
+
+            if (this.selections[key]?.source === source && source !== 'manual') {
+                delete this.selections[key];
+                delete this.editedValues[key];
+                this.persistPendingState();
+                return;
+            }
+
+            let value = '';
+            let tag = 'A';
+            if (source === 'main') {
+                if (this.mainData[key] === undefined) return;
+                value = this.getValue(this.mainData[key]);
+                tag = this.getTag(this.mainData[key]);
+            } else {
+                const branchId = parseInt(source.replace('branch_', ''), 10);
+                const branch = this.branches.find(b => b.id === branchId);
+                if (!branch || branch.content[key] === undefined) return;
+                value = this.getValue(branch.content[key]);
+                tag = this.getTag(branch.content[key]);
+            }
+
+            // Choosing a version discards a pending manual edit
+            delete this.editedValues[key];
+            this.selections[key] = { source, value, tag };
+            this.persistPendingState();
+        },
+
+        getCellClass(key, source) {
+            const sel = this.selections[key];
+            if (!sel) return '';
+            if (sel.source === source) {
+                return source === 'main' ? 'selected-main' : 'selected-branch';
+            }
+            // A manual edit displays in the Main column
+            if (source === 'main' && sel.source === 'manual') {
+                return 'selected-manual';
+            }
+            return '';
+        },
+
+        branchCellTint(branch, key) {
+            if (branch.content[key] === undefined) return '';
+            if (this.mainData[key] === undefined) return 'bg-green-900/20';
+            if (this.getValue(branch.content[key]) !== this.getValue(this.mainData[key])) return 'bg-yellow-900/20';
+            return '';
+        },
+
+        branchTextTint(branch, key) {
+            if (branch.content[key] === undefined) return '';
+            if (this.mainData[key] === undefined) return 'text-green-300';
+            if (this.getValue(branch.content[key]) !== this.getValue(this.mainData[key])) return 'text-yellow-300';
+            return '';
+        },
+
+        isRowModified(key) {
+            return key in this.selections
+                || this.editedValues[key] !== undefined
+                || key in this.tagChanges
+                || this.isDeleted(key);
+        },
+
+        get selectionCount() {
+            return Object.keys(this.selections).length;
+        },
+
+        get deleteCount() {
+            return Object.keys(this.deletions).length;
+        },
+
+        get tagChangeCount() {
+            return Object.keys(this.tagChanges).length;
+        },
+
+        get totalChanges() {
+            return this.selectionCount + this.deleteCount + this.tagChangeCount;
+        },
+
+        clearAll() {
+            if (confirm(@js(__('merge.cancel_all')))) {
+                this.selections = {};
+                this.clearPendingState();
+            }
+        },
+
+        // ── Submit (exact wire format of MergeController::apply) ─────────
+
+        submitMerge() {
+            if (this.totalChanges === 0) return;
+
+            const selectionsArr = Object.entries(this.selections).map(([key, data]) => ({
+                key,
+                value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
+                tag: data.tag,
+                source: data.source
+            }));
+            const deletionsArr = Object.keys(this.deletions);
+            const tagChangesArr = Object.entries(this.tagChanges).map(([key, data]) => ({
+                key,
+                tag: data.newTag,
+                value: data.value
+            }));
+
+            document.getElementById('selectionsJson').value = selectionsArr.length > 0 ? JSON.stringify(selectionsArr) : '';
+            document.getElementById('deletionsJson').value = deletionsArr.length > 0 ? JSON.stringify(deletionsArr) : '';
+            document.getElementById('tagChangesJson').value = tagChangesArr.length > 0 ? JSON.stringify(tagChangesArr) : '';
+
+            // Pending work is about to be applied server-side
+            this.clearPendingState();
+
+            document.getElementById('mergeForm').submit();
+        }
+    }));
+});
+</script>
 @endsection
