@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Sessão de edição expirada. Reinicie-a a partir do mod.",
     "edit_session.expired_title": "Sessão expirada",
     "edit_session.expired_help": "Esta sessão de edição não existe mais. Inicie uma nova a partir do mod (aba Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Atualizado a partir do jogo",
+    "edit_session.changed_in_game": "Alterado no jogo",
     "dashboard.title": "Painel",
     "dashboard.back_to_translations": "Voltar para Minhas Traduções",
     "dashboard.main_owner": "Main",

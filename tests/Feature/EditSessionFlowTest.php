@@ -206,4 +206,99 @@ class EditSessionFlowTest extends TestCase
         $this->postJson('/api/v1/edit-session/init', ['game_name' => 'X'])
             ->assertStatus(422);
     }
+
+    public function test_save_ignores_metadata_keys(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+
+        $this->postJson('/edit-session-save', [
+            'selections' => [
+                ['key' => '_uuid', 'value' => 'forged', 'tag' => 'H', 'source' => 'manual'],
+                ['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual'],
+            ],
+        ])->assertOk()->assertJson(['saved' => 1]);
+
+        $stored = json_decode(file_get_contents($session->getContentFilePath()), true);
+        // The forged metadata write was ignored, the real edit applied
+        $this->assertSame('test-uuid-123', $stored['_uuid']);
+        $this->assertSame('Salut', $stored['Hello']['v']);
+    }
+
+    public function test_mod_update_replaces_content_and_reports_presence(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+        // Browser heartbeat
+        $this->get('/edit-session-state')->assertOk();
+
+        $newContent = self::CONTENT;
+        $newContent['NewKey'] = ['v' => 'Nouvelle', 't' => 'A'];
+
+        $response = $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/update', [
+            'content' => $newContent,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['content_hash', 'browser_seen_seconds_ago', 'browser_left'])
+            ->assertJson(['browser_left' => false]);
+        $this->assertNotNull($response->json('browser_seen_seconds_ago'));
+
+        $stored = json_decode(file_get_contents($session->getContentFilePath()), true);
+        $this->assertSame('Nouvelle', $stored['NewKey']['v']);
+        // The state poll now reports the new hash
+        $this->assertSame($response->json('content_hash'), $this->get('/edit-session-state')->json('content_hash'));
+    }
+
+    public function test_state_updates_browser_presence_and_returns_hash(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+
+        $response = $this->get('/edit-session-state');
+
+        $response->assertOk();
+        $this->assertSame($session->fresh()->content_hash, $response->json('content_hash'));
+        $this->assertNotNull($session->fresh()->browser_last_seen_at);
+    }
+
+    public function test_leave_beacon_marks_browser_away_and_state_rejoins(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+
+        // sendBeacon carries no CSRF token — the route is exempt
+        $this->post('/edit-session-leave')->assertNoContent();
+        $this->assertNotNull($session->fresh()->browser_left_at);
+
+        // The mod's update push sees the browser as away
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/update', [
+            'content' => self::CONTENT,
+        ])->assertOk()->assertJson(['browser_left' => true]);
+
+        // Next state poll (page reopened / refresh finished) rejoins
+        $this->get('/edit-session-state')->assertOk();
+        $this->assertNull($session->fresh()->browser_left_at);
+    }
+
+    public function test_mod_can_end_session_with_mod_key(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $filePath = $session->getContentFilePath();
+
+        $this->deleteJson('/api/v1/edit-session/' . $session->mod_key)
+            ->assertOk()->assertJson(['ended' => true]);
+
+        $this->assertDatabaseCount('edit_session_tokens', 0);
+        $this->assertFileDoesNotExist($filePath);
+
+        // Idempotent on an already-gone session
+        $this->deleteJson('/api/v1/edit-session/' . $session->mod_key)
+            ->assertOk()->assertJson(['ended' => true]);
+    }
 }

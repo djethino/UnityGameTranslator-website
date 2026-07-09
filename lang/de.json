@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Bearbeitungssitzung abgelaufen. Bitte starten Sie sie erneut über den Mod.",
     "edit_session.expired_title": "Sitzung abgelaufen",
     "edit_session.expired_help": "Diese Bearbeitungssitzung existiert nicht mehr. Starten Sie eine neue über den Mod (Tab \"Tools\", \"Im Browser bearbeiten\").",
+    "edit_session.updated_from_game": "Aus dem Spiel aktualisiert",
+    "edit_session.changed_in_game": "Im Spiel geändert",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Zurück zu meinen Übersetzungen",
     "dashboard.main_owner": "Haupt",

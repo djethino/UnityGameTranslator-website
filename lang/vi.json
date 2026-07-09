@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Phiên chỉnh sửa đã hết hạn. Vui lòng khởi động lại từ mod.",
     "edit_session.expired_title": "Phiên đã hết hạn",
     "edit_session.expired_help": "Phiên chỉnh sửa này không còn tồn tại. Hãy bắt đầu phiên mới từ mod (tab Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Đã cập nhật từ game",
+    "edit_session.changed_in_game": "Đã thay đổi trong game",
     "dashboard.title": "Bảng điều khiển",
     "dashboard.back_to_translations": "Quay lại Bản dịch của tôi",
     "dashboard.main_owner": "Main",

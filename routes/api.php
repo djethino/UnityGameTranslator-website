@@ -60,6 +60,10 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:6,1');
     Route::get('edit-session/{modKey}/content', [EditSessionController::class, 'content'])
         ->middleware('throttle:30,1');
+    Route::post('edit-session/{modKey}/update', [EditSessionController::class, 'update'])
+        ->middleware('throttle:30,1');
+    Route::delete('edit-session/{modKey}', [EditSessionController::class, 'destroy'])
+        ->middleware('throttle:30,1');
 
     // ===========================================
     // AUTHENTICATED ENDPOINTS

@@ -692,6 +692,8 @@
     "edit_session.error_expired": "เซสชันการแก้ไขหมดอายุ กรุณาเริ่มใหม่จากม็อด",
     "edit_session.expired_title": "เซสชันหมดอายุ",
     "edit_session.expired_help": "เซสชันการแก้ไขนี้ไม่มีอยู่แล้ว เริ่มเซสชันใหม่จากม็อด (แท็บ Tools, \"Edit in browser\")",
+    "edit_session.updated_from_game": "อัปเดตจากเกมแล้ว",
+    "edit_session.changed_in_game": "มีการเปลี่ยนแปลงในเกม",
     "dashboard.title": "แดชบอร์ด",
     "dashboard.back_to_translations": "กลับไปยังการแปลของฉัน",
     "dashboard.main_owner": "Main",

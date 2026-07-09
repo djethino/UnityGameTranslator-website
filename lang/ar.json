@@ -692,6 +692,8 @@
     "edit_session.error_expired": "انتهت صلاحية جلسة التعديل. يرجى إعادة تشغيلها من الـ mod.",
     "edit_session.expired_title": "انتهت صلاحية الجلسة",
     "edit_session.expired_help": "لم تعد جلسة التعديل هذه موجودة. ابدأ جلسة جديدة من الـ mod (تبويب Tools، \"Edit in browser\").",
+    "edit_session.updated_from_game": "تم التحديث من اللعبة",
+    "edit_session.changed_in_game": "تم التغيير داخل اللعبة",
     "dashboard.title": "لوحة التحكم",
     "dashboard.back_to_translations": "العودة لترجماتي",
     "dashboard.main_owner": "Main",

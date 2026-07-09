@@ -692,6 +692,8 @@
     "edit_session.error_expired": "एडिट सत्र समाप्त हो गया। कृपया इसे मॉड से फिर से शुरू करें।",
     "edit_session.expired_title": "सत्र समाप्त हो गया",
     "edit_session.expired_help": "यह एडिट सत्र अब मौजूद नहीं है। मॉड से एक नया शुरू करें (Tools टैब, \"Edit in browser\")।",
+    "edit_session.updated_from_game": "गेम से अपडेट किया गया",
+    "edit_session.changed_in_game": "गेम में बदला गया",
     "dashboard.title": "डैशबोर्ड",
     "dashboard.back_to_translations": "मेरे अनुवादों पर वापस",
     "dashboard.main_owner": "मेन",

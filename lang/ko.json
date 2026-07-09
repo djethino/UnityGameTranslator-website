@@ -692,6 +692,8 @@
     "edit_session.error_expired": "편집 세션이 만료되었습니다. 모드에서 다시 시작하세요.",
     "edit_session.expired_title": "세션 만료됨",
     "edit_session.expired_help": "이 편집 세션이 더 이상 존재하지 않습니다. 모드에서 새 세션을 시작하세요 (Tools 탭, \"Edit in browser\").",
+    "edit_session.updated_from_game": "게임에서 업데이트됨",
+    "edit_session.changed_in_game": "게임 내에서 변경됨",
     "dashboard.title": "대시보드",
     "dashboard.back_to_translations": "내 번역으로 돌아가기",
     "dashboard.main_owner": "메인",

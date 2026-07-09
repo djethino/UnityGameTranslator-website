@@ -59,7 +59,9 @@ Route::get('/translations/{translation}/merge-preview/data', [TranslationControl
 Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->name('edit-session.open');
 Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-session.show');
 Route::get('/edit-session-data', [EditSessionController::class, 'data'])->name('edit-session.data');
+Route::get('/edit-session-state', [EditSessionController::class, 'state'])->name('edit-session.state');
 Route::post('/edit-session-save', [EditSessionController::class, 'save'])->middleware('throttle:30,1')->name('edit-session.save');
+Route::post('/edit-session-leave', [EditSessionController::class, 'leave'])->name('edit-session.leave');
 Route::post('/edit-session-end', [EditSessionController::class, 'end'])->name('edit-session.end');
 
 /*

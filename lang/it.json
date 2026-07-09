@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Sessione di modifica scaduta. Riavviala dal mod.",
     "edit_session.expired_title": "Sessione scaduta",
     "edit_session.expired_help": "Questa sessione di modifica non esiste più. Avviane una nuova dal mod (scheda Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Aggiornato dal gioco",
+    "edit_session.changed_in_game": "Modificato nel gioco",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Torna alle mie traduzioni",
     "dashboard.main_owner": "Main",

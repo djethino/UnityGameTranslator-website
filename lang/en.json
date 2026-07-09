@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Edit session expired. Please restart it from the mod.",
     "edit_session.expired_title": "Session expired",
     "edit_session.expired_help": "This edit session no longer exists. Start a new one from the mod (Tools tab, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Updated from the game",
+    "edit_session.changed_in_game": "Changed in-game",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Back to My Translations",
     "dashboard.main_owner": "Main",

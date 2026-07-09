@@ -692,6 +692,8 @@
     "edit_session.error_expired": "編集セッションの有効期限が切れました。Modからやり直してください。",
     "edit_session.expired_title": "セッションの有効期限切れ",
     "edit_session.expired_help": "この編集セッションは存在しません。Modから新しいセッションを開始してください（Toolsタブの「Edit in browser」）。",
+    "edit_session.updated_from_game": "ゲームから更新されました",
+    "edit_session.changed_in_game": "ゲーム内で変更されました",
     "dashboard.title": "ダッシュボード",
     "dashboard.back_to_translations": "マイ翻訳に戻る",
     "dashboard.main_owner": "Main",

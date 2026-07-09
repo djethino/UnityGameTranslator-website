@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\EditSessionToken;
+use App\Services\SsePublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -53,6 +54,56 @@ class EditSessionController extends Controller
             'url' => route('edit-session.open', ['token' => $session->token]),
             'expires_at' => $session->expires_at->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Mod → session push: the local file changed in-game (AI translations,
+     * in-game edits) while the session is open. Replaces the session file;
+     * the browser picks it up through its state poll. The response carries
+     * browser presence so the mod can conclude the page was closed.
+     *
+     * POST /api/v1/edit-session/{modKey}/update
+     * Body: { "content": {...} }
+     */
+    public function update(Request $request, string $modKey): JsonResponse
+    {
+        $session = EditSessionToken::findByModKey($modKey);
+        if (!$session || !$session->getContentFilePath()) {
+            return response()->json(['error' => 'Edit session expired or not found.'], 404);
+        }
+
+        $request->validate(['content' => 'required|array']);
+
+        try {
+            $contentHash = $session->writeContent($request->input('content'));
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => 'Content exceeds the size limit.'], 413);
+        }
+        $session->touchExpiry();
+
+        return response()->json([
+            'content_hash' => $contentHash,
+            'browser_seen_seconds_ago' => $session->browserSeenSecondsAgo(),
+            'browser_left' => $session->browser_left_at !== null,
+        ]);
+    }
+
+    /**
+     * Mod-side session end: the mod stops the session (user clicked Stop,
+     * or the browser page was gone past the grace period).
+     *
+     * DELETE /api/v1/edit-session/{modKey}
+     */
+    public function destroy(string $modKey): JsonResponse
+    {
+        $session = EditSessionToken::findByModKey($modKey);
+        if ($session) {
+            SsePublisher::editSessionEnded($session->mod_key);
+            $session->deleteWithFile();
+        }
+
+        // Idempotent: an already-gone session is a success for the caller
+        return response()->json(['ended' => true]);
     }
 
     /**

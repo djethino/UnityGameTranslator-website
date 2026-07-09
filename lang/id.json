@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Sesi edit telah berakhir. Silakan mulai ulang dari mod.",
     "edit_session.expired_title": "Sesi berakhir",
     "edit_session.expired_help": "Sesi edit ini tidak ada lagi. Mulai sesi baru dari mod (tab Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Diperbarui dari game",
+    "edit_session.changed_in_game": "Diubah dalam game",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Kembali ke Terjemahan Saya",
     "dashboard.main_owner": "Main",

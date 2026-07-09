@@ -55,7 +55,53 @@ class EditSessionController extends Controller
             return view('edit-session.expired');
         }
 
+        if ($session->touchBrowserSeen()) {
+            SsePublisher::editSessionBrowserJoined($session->mod_key);
+        }
+
         return view('edit-session.show', ['editSession' => $session]);
+    }
+
+    /**
+     * Lightweight state poll: current content hash + presence heartbeat.
+     * The page calls this every ~10s; a hash change means the mod pushed an
+     * update and the page should refetch the data.
+     *
+     * GET /edit-session-state
+     */
+    public function state()
+    {
+        $session = $this->currentSession();
+
+        if (!$session) {
+            return response()->json(['error' => __('edit_session.error_expired')], 410);
+        }
+
+        if ($session->touchBrowserSeen()) {
+            SsePublisher::editSessionBrowserJoined($session->mod_key);
+        }
+
+        return response()->json(['content_hash' => $session->content_hash]);
+    }
+
+    /**
+     * pagehide beacon: the browser is leaving (close, navigation or refresh).
+     * Marks the session as away and tells the mod, which applies its grace
+     * period before ending the session. CSRF-exempt (sendBeacon cannot send
+     * a token) — see bootstrap/app.php for why that is safe.
+     *
+     * POST /edit-session-leave
+     */
+    public function leave()
+    {
+        $session = $this->currentSession();
+
+        if ($session) {
+            $session->markBrowserLeft();
+            SsePublisher::editSessionBrowserLeft($session->mod_key);
+        }
+
+        return response()->noContent();
     }
 
     /**
@@ -159,6 +205,7 @@ class EditSessionController extends Controller
         return response()->json([
             'saved' => $modifiedCount,
             'line_count' => $lineCount,
+            'content_hash' => $contentHash,
         ]);
     }
 

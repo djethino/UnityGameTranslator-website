@@ -692,6 +692,8 @@
     "edit_session.error_expired": "La sesión de edición ha caducado. Reiníciala desde el mod.",
     "edit_session.expired_title": "Sesión caducada",
     "edit_session.expired_help": "Esta sesión de edición ya no existe. Inicia una nueva desde el mod (pestaña Tools, «Edit in browser»).",
+    "edit_session.updated_from_game": "Actualizado desde el juego",
+    "edit_session.changed_in_game": "Modificado en el juego",
     "dashboard.title": "Panel de control",
     "dashboard.back_to_translations": "Volver a Mis Traducciones",
     "dashboard.main_owner": "Principal",

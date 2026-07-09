@@ -63,11 +63,16 @@ class EditSessionToken extends Model
         'target_language',
         'expires_at',
         'consumed_at',
+        'content_hash',
+        'browser_last_seen_at',
+        'browser_left_at',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'consumed_at' => 'datetime',
+        'browser_last_seen_at' => 'datetime',
+        'browser_left_at' => 'datetime',
     ];
 
     /**
@@ -107,6 +112,7 @@ class EditSessionToken extends Model
             'source_language' => $sourceLanguage,
             'target_language' => $targetLanguage,
             'expires_at' => now()->addMinutes(self::INITIAL_TTL_MINUTES),
+            'content_hash' => hash('sha256', $json),
         ]);
     }
 
@@ -205,7 +211,47 @@ class EditSessionToken extends Model
             throw new \RuntimeException('Failed to write edit session content file.');
         }
 
-        return hash('sha256', $json);
+        $hash = hash('sha256', $json);
+        $this->update(['content_hash' => $hash]);
+
+        return $hash;
+    }
+
+    /**
+     * Browser presence heartbeat: stamped by the page's state poll and data
+     * load; also clears a pending "left" mark (page reload / bfcache return).
+     * Returns true when the browser was marked away (caller may signal rejoin).
+     */
+    public function touchBrowserSeen(): bool
+    {
+        $wasAway = $this->browser_left_at !== null;
+        $this->update([
+            'browser_last_seen_at' => now(),
+            'browser_left_at' => null,
+        ]);
+
+        return $wasAway;
+    }
+
+    /**
+     * pagehide beacon: the browser is (probably) gone. Never destroys the
+     * session — pagehide also fires on refresh/navigation; the mod concludes
+     * after its own grace period.
+     */
+    public function markBrowserLeft(): void
+    {
+        $this->update(['browser_left_at' => now()]);
+    }
+
+    /**
+     * Seconds since the browser last signaled presence, or null if it never
+     * opened the page.
+     */
+    public function browserSeenSecondsAgo(): ?int
+    {
+        return $this->browser_last_seen_at
+            ? (int) abs(now()->diffInSeconds($this->browser_last_seen_at))
+            : null;
     }
 
     /**

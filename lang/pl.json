@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Sesja edycji wygasła. Uruchom ją ponownie z poziomu moda.",
     "edit_session.expired_title": "Sesja wygasła",
     "edit_session.expired_help": "Ta sesja edycji już nie istnieje. Uruchom nową z poziomu moda (zakładka Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Zaktualizowano z gry",
+    "edit_session.changed_in_game": "Zmienione w grze",
     "dashboard.title": "Panel",
     "dashboard.back_to_translations": "Powrót do Moich Tłumaczeń",
     "dashboard.main_owner": "Main",

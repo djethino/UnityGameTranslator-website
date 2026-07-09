@@ -22,6 +22,12 @@
         </p>
     </div>
 
+    {{-- Live update toast (mod pushed changes from the game) --}}
+    <div x-show="refreshNotice" x-cloak
+        class="fixed top-4 right-4 z-50 bg-purple-900/90 border border-purple-600 rounded-lg px-4 py-3 text-purple-200 shadow-xl">
+        <i class="fas fa-gamepad mr-2"></i><span x-text="refreshNotice"></span>
+    </div>
+
     {{-- Loading state --}}
     <div x-show="!loaded" class="text-center py-12">
         <i class="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
@@ -166,6 +172,11 @@
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="isEdited(key) ? 'selected-manual' : ''"
                                 @click="editCell(key, getValue(data[key]))">
+                                <span x-show="underlyingChanged[key]"
+                                    class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
+                                    title="{{ __('edit_session.changed_in_game') }}">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('edit_session.changed_in_game') }}
+                                </span>
                                 <span class="break-words" :class="isEdited(key) ? 'text-purple-300' : ''">
                                     <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
                                     <span x-show="!isEdited(key)" x-text="getValue(data[key])"></span>
@@ -342,6 +353,11 @@ document.addEventListener('alpine:init', () => {
         allKeys: [],
         editedValues: {},  // key -> new value (pending)
         tagChanges: {},    // key -> { newTag, originalTag, value } (pending)
+        // Live sync with the game (mod pushes new AI translations / in-game edits)
+        currentHash: null,
+        pollTimer: null,
+        refreshNotice: '',
+        underlyingChanged: {},  // pending keys whose in-game value changed under the edit
         filters: {
             tagH: true,
             tagV: true,
@@ -385,6 +401,7 @@ document.addEventListener('alpine:init', () => {
                 })
                 .then(payload => {
                     this.loadContent(payload.content);
+                    this.startLiveSync();
                 })
                 .catch(e => {
                     this.error = e.message === 'expired'
@@ -392,6 +409,109 @@ document.addEventListener('alpine:init', () => {
                         : '{{ __("merge_preview.error_load_failed") }}';
                     this.loaded = true;
                 });
+        },
+
+        // ── Live sync with the game ─────────────────────────────────────
+        // The mod pushes its local file to the session when it changes
+        // (new AI translations while playing, in-game edits). The state
+        // endpoint doubles as the browser presence heartbeat.
+
+        startLiveSync() {
+            this.pollTimer = setInterval(() => this.checkState(), 10000);
+            this.checkState(); // seed currentHash immediately
+
+            // Tell the mod when the page goes away (close, navigation —
+            // also fires on refresh, which the mod absorbs with its grace
+            // period; the next state poll signals the rejoin)
+            window.addEventListener('pagehide', () => {
+                navigator.sendBeacon('{{ route("edit-session.leave") }}');
+            });
+        },
+
+        stopLiveSync() {
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+        },
+
+        checkState() {
+            fetch('{{ route("edit-session.state") }}', { headers: { 'Accept': 'application/json' } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.status === 410 ? 'expired' : 'state_failed');
+                    }
+                    return response.json();
+                })
+                .then(state => {
+                    if (this.currentHash === null) {
+                        this.currentHash = state.content_hash;
+                        return;
+                    }
+                    if (state.content_hash !== this.currentHash) {
+                        this.currentHash = state.content_hash;
+                        this.refreshData();
+                    }
+                })
+                .catch(e => {
+                    if (e.message === 'expired') {
+                        this.stopLiveSync();
+                        this.error = '{{ __("edit_session.error_expired") }}';
+                    }
+                    // transient network errors: next poll retries
+                });
+        },
+
+        refreshData() {
+            fetch('{{ route("edit-session.data") }}', { headers: { 'Accept': 'application/json' } })
+                .then(response => response.ok ? response.json() : Promise.reject())
+                .then(payload => this.mergeRefreshedContent(payload.content))
+                .catch(() => { /* next poll retries */ });
+        },
+
+        mergeRefreshedContent(content) {
+            const fresh = {};
+            for (const [key, value] of Object.entries(content)) {
+                if (key.startsWith('_')) continue;
+                const normalizedKey = normalizeLineEndings(key);
+                let normalizedValue = value;
+                if (typeof value === 'object' && value !== null && 'v' in value) {
+                    normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
+                } else if (typeof value === 'string') {
+                    normalizedValue = normalizeLineEndings(value);
+                }
+                fresh[normalizedKey] = normalizedValue;
+            }
+
+            // Flag pending keys whose in-game value changed under the edit —
+            // the pending edit stays displayed and wins at save (human > AI),
+            // the badge lets the user double-check before saving
+            const pendingKeys = new Set([
+                ...Object.keys(this.editedValues),
+                ...Object.keys(this.tagChanges)
+            ]);
+            for (const key of pendingKeys) {
+                if (key in fresh && key in this.data
+                    && this.getValue(fresh[key]) !== this.getValue(this.data[key])) {
+                    this.underlyingChanged[key] = true;
+                }
+            }
+
+            let changedCount = 0;
+            for (const key of Object.keys(fresh)) {
+                if (!(key in this.data) || this.getValue(fresh[key]) !== this.getValue(this.data[key])
+                    || this.getTag(fresh[key]) !== this.getTag(this.data[key])) {
+                    changedCount++;
+                }
+            }
+
+            this.data = fresh;
+            this.allKeys = Object.keys(fresh).sort();
+
+            if (changedCount > 0) {
+                this.refreshNotice = '{{ __("edit_session.updated_from_game") }}' + ' (' + changedCount + ')';
+                setTimeout(() => { this.refreshNotice = ''; }, 5000);
+            }
         },
 
         loadContent(content) {
@@ -646,10 +766,14 @@ document.addEventListener('alpine:init', () => {
                             tag = 'H';
                         }
                         this.data[sel.key] = { v: sel.value, t: tag };
+                        // Conflict resolved by this save: the user's version won
+                        delete this.underlyingChanged[sel.key];
                     }
                     this.editedValues = {};
                     this.tagChanges = {};
                     this.savedCount += result.saved;
+                    // Our own save changed the session hash — don't refetch on next poll
+                    this.currentHash = result.content_hash;
                     this.saveMessage = '{{ __("edit_session.saved_ok") }}';
                     setTimeout(() => { this.saveMessage = ''; }, 5000);
                 })

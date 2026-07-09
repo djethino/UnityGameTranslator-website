@@ -692,6 +692,8 @@
     "edit_session.error_expired": "Düzenleme oturumu sona erdi. Lütfen moddan yeniden başlatın.",
     "edit_session.expired_title": "Oturum sona erdi",
     "edit_session.expired_help": "Bu düzenleme oturumu artık mevcut değil. Moddan yeni bir tane başlatın (Tools sekmesi, \"Edit in browser\").",
+    "edit_session.updated_from_game": "Oyundan güncellendi",
+    "edit_session.changed_in_game": "Oyunda değiştirildi",
     "dashboard.title": "Kontrol Paneli",
     "dashboard.back_to_translations": "Çevirilerime Dön",
     "dashboard.main_owner": "Main",

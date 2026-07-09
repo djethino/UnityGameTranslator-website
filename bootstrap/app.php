@@ -31,6 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('api', [
             \App\Http\Middleware\DecodeGzipRequest::class,
         ]);
+
+        // navigator.sendBeacon (page close signal) cannot carry a CSRF token.
+        // Safe to exempt: session-bound, no parameters, and a forged call only
+        // marks the browser as away — the page's 10s state heartbeat rejoins
+        // well within the mod's 90s grace period.
+        $middleware->validateCsrfTokens(except: [
+            'edit-session-leave',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

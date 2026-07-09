@@ -692,6 +692,8 @@
     "edit_session.error_expired": "פג תוקף הפעלת העריכה. אנא הפעל אותה מחדש מה-mod.",
     "edit_session.expired_title": "פג תוקף ההפעלה",
     "edit_session.expired_help": "הפעלת עריכה זו כבר אינה קיימת. התחל חדשה מה-mod (לשונית Tools, \"Edit in browser\").",
+    "edit_session.updated_from_game": "עודכן מהמשחק",
+    "edit_session.changed_in_game": "השתנה בתוך המשחק",
     "dashboard.title": "לוח בקרה",
     "dashboard.back_to_translations": "חזרה לתרגומים שלי",
     "dashboard.main_owner": "Main",

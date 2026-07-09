@@ -176,6 +176,30 @@ class SsePublisher
     }
 
     /**
+     * Signal browser presence changes during a live edit session.
+     * left: pagehide beacon fired. joined: the page (re)signaled presence
+     * after having been marked away. No :result storage — presence is also
+     * carried by the mod's update-push responses, which covers missed events.
+     *
+     * @param string $modKey The session's mod key
+     */
+    public static function editSessionBrowserLeft(string $modKey): void
+    {
+        self::safePublish("sse:edit:{$modKey}", json_encode([
+            'event' => 'browser_left',
+            'data' => [],
+        ]));
+    }
+
+    public static function editSessionBrowserJoined(string $modKey): void
+    {
+        self::safePublish("sse:edit:{$modKey}", json_encode([
+            'event' => 'browser_joined',
+            'data' => [],
+        ]));
+    }
+
+    /**
      * Safely publish a message to a Redis channel.
      * Catches all exceptions so Redis failure never breaks core functionality.
      */
