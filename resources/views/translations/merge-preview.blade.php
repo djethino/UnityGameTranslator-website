@@ -290,6 +290,8 @@
                                 @click="select(key, 'local')"
                                 @dblclick="editCell(key, getValue(localData[key]))">
                                 <span class="edit-affordance">
+                                    <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
+                                        title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
                                     <button type="button" @click.stop="editCell(key, getValue(localData[key]))"
                                         title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
                                     <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
@@ -846,6 +848,14 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: a deletion cancels any side selection for the key. */
         onDeleteToggled(key) {
             delete this.selections[key];
+        },
+
+        /** Core hook: a per-row revert puts the selection back to its
+         *  smart default (applySmartDefaults skips already-selected keys,
+         *  so only this row is recomputed). */
+        onRowReverted(key) {
+            delete this.selections[key];
+            this.applySmartDefaults();
         },
 
         /** Merge selections survive refreshes with the rest of the pending state. */

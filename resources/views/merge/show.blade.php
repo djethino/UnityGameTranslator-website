@@ -370,8 +370,10 @@
                                     :class="[getCellClass(key, 'main'), isDeleted(key) ? 'deleted-cell' : '']"
                                     @click="select(key, 'main')"
                                     @dblclick="editCell(key, getValue(mainData[key]))">
-                                    <span class="edit-affordance" x-show="mainData[key] !== undefined && !isDeleted(key)">
-                                        <button type="button" @click.stop="editCell(key, getValue(mainData[key]))"
+                                    <span class="edit-affordance" x-show="mainData[key] !== undefined">
+                                        <button type="button" x-show="isRowModified(key)" @click.stop="revertRow(key)"
+                                            title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
+                                        <button type="button" x-show="!isDeleted(key)" @click.stop="editCell(key, getValue(mainData[key]))"
                                             title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
                                     </span>
                                     <template x-if="mainData[key] !== undefined || isEdited(key)">
@@ -807,6 +809,11 @@ document.addEventListener('alpine:init', () => {
 
         /** Core hook: a deletion cancels any selection for the key. */
         onDeleteToggled(key) {
+            delete this.selections[key];
+        },
+
+        /** Core hook: a per-row revert also drops the merge selection. */
+        onRowReverted(key) {
             delete this.selections[key];
         },
 

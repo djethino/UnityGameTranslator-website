@@ -175,6 +175,25 @@ export function editorCore(config) {
         /** Page hook: called when a key gets marked for deletion. */
         onDeleteToggled(key) {},
 
+        // ── Per-row revert (the floating bar's "cancel all", row-sized) ──
+
+        /** The row carries pending user work (edit, tag change, deletion). */
+        rowHasPending(key) {
+            return this.isEdited(key) || this.hasTagChange(key) || this.isDeleted(key);
+        },
+
+        /** Revert every pending change on this row. */
+        revertRow(key) {
+            delete this.editedValues[key];
+            delete this.tagChanges[key];
+            delete this.deletions[key];
+            this.onRowReverted(key);
+            this.persistPendingState();
+        },
+
+        /** Page hook: extra per-row state to drop on revert (e.g. selections). */
+        onRowReverted(key) {},
+
         // ── Pending-state persistence (survives F5 until the save) ───────
 
         persistPendingState() {

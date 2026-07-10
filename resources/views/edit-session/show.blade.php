@@ -200,12 +200,17 @@
                                 </button>
                             </td>
 
-                            {{-- Value (double-click or pencil to edit — same gesture
-                                 as the merge views, where single click selects a version) --}}
+                            {{-- Value: single click validates an AI line (A → V, same
+                                 gesture as clicking Main in the merge view — a double
+                                 click toggles twice, so editing never alters the tag),
+                                 double-click or pencil to edit --}}
                             <td class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="[isEdited(key) ? 'selected-manual' : '', isDeleted(key) ? 'deleted-cell' : '']"
+                                :class="[isValidatedPending(key) ? 'selected-main' : '', isEdited(key) ? 'selected-manual' : '', isDeleted(key) ? 'deleted-cell' : '']"
+                                @click="toggleValidate(key)"
                                 @dblclick="editCell(key, getValue(data[key]))">
                                 <span class="edit-affordance">
+                                    <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
+                                        title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
                                     <button type="button" @click.stop="editCell(key, getValue(data[key]))"
                                         title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
                                     <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
@@ -260,6 +265,10 @@
                 </span>
                 {{-- One line per gesture, with the same icons as the table --}}
                 <div x-show="totalChanges === 0 && !saveMessage" class="text-gray-500 space-y-1">
+                    <p>
+                        <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('edit_session.instructions_validate') }}
+                        <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
+                    </p>
                     <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('edit_session.instructions') }}</p>
                     <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
                 </div>
@@ -533,6 +542,30 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.data[key]);
+        },
+
+        // ── Click-to-validate (parity with the merge view's Main click) ──
+
+        /** The row carries a pending validation (previewed V, green cell). */
+        isValidatedPending(key) {
+            return this.hasTagChange(key) && this.tagChanges[key].newTag === 'V';
+        },
+
+        /**
+         * Single click on an AI-tagged line stages its validation (A → V)
+         * as a regular tag change; clicking again cancels it. Other tags,
+         * pending edits and deleted rows are left alone.
+         */
+        toggleValidate(key) {
+            if (this.isDeleted(key) || this.isEdited(key)) return;
+            if (this.isValidatedPending(key)) {
+                this.cancelTagChange(key);
+                return;
+            }
+            const tag = this.getTag(this.data[key]);
+            if (tag !== 'A') return;
+            this.tagChanges[key] = { newTag: 'V', originalTag: tag, value: this.getValue(this.data[key]) };
+            this.persistPendingState();
         },
 
         get totalChanges() {
