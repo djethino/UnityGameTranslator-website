@@ -259,6 +259,10 @@
                 </thead>
                 <tbody>
                     {{-- Windowed rendering: huge files stay snappy --}}
+                    {{-- Keyed by translation key, NOT by position: index-keyed row
+                         recycling was measured barely faster and desynced recycled
+                         scopes (wrong values shown on wrong keys) — unacceptable in
+                         an editor. The window size is the safe lever instead. --}}
                     <template x-for="(key, idx) in visibleKeys" :key="key">
                         <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
