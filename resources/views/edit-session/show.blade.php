@@ -424,7 +424,6 @@
 document.addEventListener('alpine:init', () => {
     // window.UGT is set by app.js (deferred module): it exists by the time
     // Alpine fires alpine:init, but NOT during the initial HTML parse
-    const normalizeLineEndings = window.UGT.normalizeLineEndings;
     Alpine.data('editSession', () => window.UGT.composeEditor({
         // UI state (filters/search) is shared across sessions of the same
         // browser tab; PENDING work is scoped to THIS session — restored
@@ -454,24 +453,25 @@ document.addEventListener('alpine:init', () => {
         refreshNotice: '',
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
 
+        _sync: null,
+
         init() {
             // Search/filters/sort survive page refreshes (F5 keeps the
             // session alive by design — the UI state survives with it)
             this.initEditorCore();
 
-            // Content is streamed from the server, never inlined in the page:
-            // translation files can be tens of MB
-            fetch('{{ route("edit-session.data") }}', {
-                headers: { 'Accept': 'application/json' }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(response.status === 410 ? 'expired' : 'load_failed');
-                    }
-                    return response.json();
-                })
-                .then(payload => {
-                    this.loadContent(payload.content);
+            // Fetch + parse + normalize + diff all run in a Web Worker:
+            // doing them here froze the main thread ~200ms on every mod
+            // push (translation files can be tens of MB), stalling cursor
+            // and clicks while the game translates
+            this._sync = window.UGT.createLiveSync('{{ route("edit-session.data") }}');
+            this._sync.fetch()
+                .then(result => {
+                    // First fetch: the worker sends the full content,
+                    // already normalized and metadata-stripped
+                    this.data = result.full;
+                    this.allKeys = Object.keys(result.full).sort();
+                    this.loaded = true;
                     this.startLiveSync();
                 })
                 .catch(e => {
@@ -480,26 +480,6 @@ document.addEventListener('alpine:init', () => {
                         : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
-        },
-
-        loadContent(content) {
-            // Metadata keys (_uuid, _game, ...) stay server-side untouched:
-            // the page neither displays nor sends them
-            this.data = {};
-            for (const [key, value] of Object.entries(content)) {
-                if (key.startsWith('_')) continue;
-                const normalizedKey = normalizeLineEndings(key);
-                let normalizedValue = value;
-                if (typeof value === 'object' && value !== null && 'v' in value) {
-                    normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
-                } else if (typeof value === 'string') {
-                    normalizedValue = normalizeLineEndings(value);
-                }
-                this.data[normalizedKey] = normalizedValue;
-            }
-
-            this.allKeys = Object.keys(this.data).sort();
-            this.loaded = true;
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────
@@ -629,60 +609,44 @@ document.addEventListener('alpine:init', () => {
         },
 
         refreshData() {
-            fetch('{{ route("edit-session.data") }}', { headers: { 'Accept': 'application/json' } })
-                .then(response => response.ok ? response.json() : Promise.reject())
-                .then(payload => this.mergeRefreshedContent(payload.content))
+            this._sync.fetch()
+                .then(result => this.applyDiff(result.changed || {}, result.removed || []))
                 .catch(() => { /* next poll retries */ });
         },
 
-        mergeRefreshedContent(content) {
-            const fresh = {};
-            for (const [key, value] of Object.entries(content)) {
-                if (key.startsWith('_')) continue;
-                const normalizedKey = normalizeLineEndings(key);
-                let normalizedValue = value;
-                if (typeof value === 'object' && value !== null && 'v' in value) {
-                    normalizedValue = { ...value, v: normalizeLineEndings(value.v) };
-                } else if (typeof value === 'string') {
-                    normalizedValue = normalizeLineEndings(value);
-                }
-                fresh[normalizedKey] = normalizedValue;
-            }
-
-            // Flag pending keys whose in-game value changed under the edit —
-            // the pending edit stays displayed and wins at save (human > AI),
-            // the badge lets the user double-check before saving
+        /**
+         * Apply the worker's diff. Entries identical to what we already
+         * display are skipped: after OUR OWN save the worker's cache lags
+         * behind and re-reports the saved entries — they must not count
+         * as "updated from game".
+         */
+        applyDiff(changed, removed) {
             const pendingKeys = new Set([
                 ...Object.keys(this.editedValues),
                 ...Object.keys(this.tagChanges)
             ]);
-            for (const key of pendingKeys) {
-                if (key in fresh && key in this.data
-                    && this.getValue(fresh[key]) !== this.getValue(this.data[key])) {
-                    this.underlyingChanged[key] = true;
-                }
-            }
 
-            // Apply as a DIFF: replacing this.data wholesale would
-            // invalidate every row's reactive dependencies and re-render
-            // the full window — a visible hitch every 10s while the game
-            // translates. Touching only actual changes keeps the mod's
-            // periodic pushes almost free.
             let changedCount = 0;
             let keysChanged = false;
-            for (const key of Object.keys(fresh)) {
-                if (!(key in this.data)) {
-                    this.data[key] = fresh[key];
-                    changedCount++;
-                    keysChanged = true;
-                } else if (this.getValue(fresh[key]) !== this.getValue(this.data[key])
-                    || this.getTag(fresh[key]) !== this.getTag(this.data[key])) {
-                    this.data[key] = fresh[key];
-                    changedCount++;
+            for (const [key, value] of Object.entries(changed)) {
+                if (key in this.data
+                    && this.getValue(value) === this.getValue(this.data[key])
+                    && this.getTag(value) === this.getTag(this.data[key])) {
+                    continue;
                 }
+                // Flag pending keys whose in-game value changed under the
+                // edit — the pending edit stays displayed and wins at save
+                // (human > AI), the badge lets the user double-check
+                if (pendingKeys.has(key) && key in this.data
+                    && this.getValue(value) !== this.getValue(this.data[key])) {
+                    this.underlyingChanged[key] = true;
+                }
+                if (!(key in this.data)) keysChanged = true;
+                this.data[key] = value;
+                changedCount++;
             }
-            for (const key of Object.keys(this.data)) {
-                if (!(key in fresh)) {
+            for (const key of removed) {
+                if (key in this.data) {
                     delete this.data[key];
                     changedCount++;
                     keysChanged = true;

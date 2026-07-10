@@ -12,7 +12,8 @@ Alpine.data('mergeTable', mergeTable);
 // (they need @js() strings and route() URLs), so the factory is exposed
 // globally for the nonce'd inline scripts.
 import { composeEditor, normalizeLineEndings } from './components/translation-editor.js';
-window.UGT = { composeEditor, normalizeLineEndings };
+import { createLiveSync } from './components/live-sync.js';
+window.UGT = { composeEditor, normalizeLineEndings, createLiveSync };
 
 // x-html is prohibited by the Alpine CSP build. The editors need to inject
 // their own search-highlight markup, so x-safe-html provides the same

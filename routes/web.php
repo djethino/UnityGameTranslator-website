@@ -56,13 +56,16 @@ Route::get('/translations/{translation}/merge-preview/data', [TranslationControl
 // Live edit session - anonymous, token-based auth from mod (no locale prefix).
 // The entry route consumes the one-time token and redirects to the
 // session-bound token-less URL; save is AJAX (throttled: anonymous endpoint).
-Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->name('edit-session.open');
+Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->middleware('throttle:10,1')->name('edit-session.open');
 Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-session.show');
-Route::get('/edit-session-data', [EditSessionController::class, 'data'])->name('edit-session.data');
-Route::get('/edit-session-state', [EditSessionController::class, 'state'])->name('edit-session.state');
+// Legitimate rhythm: state polls every 10s (6/min) and data only refetches
+// when the content hash changed — 30/min leaves a wide margin while capping
+// a runaway client or a flood on these anonymous endpoints
+Route::get('/edit-session-data', [EditSessionController::class, 'data'])->middleware('throttle:30,1')->name('edit-session.data');
+Route::get('/edit-session-state', [EditSessionController::class, 'state'])->middleware('throttle:30,1')->name('edit-session.state');
 Route::post('/edit-session-save', [EditSessionController::class, 'save'])->middleware('throttle:30,1')->name('edit-session.save');
-Route::post('/edit-session-leave', [EditSessionController::class, 'leave'])->name('edit-session.leave');
-Route::post('/edit-session-end', [EditSessionController::class, 'end'])->name('edit-session.end');
+Route::post('/edit-session-leave', [EditSessionController::class, 'leave'])->middleware('throttle:30,1')->name('edit-session.leave');
+Route::post('/edit-session-end', [EditSessionController::class, 'end'])->middleware('throttle:10,1')->name('edit-session.end');
 
 /*
 |--------------------------------------------------------------------------
