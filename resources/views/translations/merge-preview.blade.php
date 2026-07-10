@@ -319,21 +319,28 @@
             </table>
         </div>
 
-        {{-- Footer with Save button --}}
+        {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
+             buttons: the instructions wrap instead of squeezing the save button --}}
         <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
-            <div class="text-sm text-gray-400">
+            <div class="text-sm text-gray-400 min-w-0">
                 <span x-show="totalChanges > 0">
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
                     <span x-show="editedCount > 0" class="ml-2 text-purple-400">
                         (<span x-text="editedCount"></span> {{ __('merge_preview.edited_manually') }})
                     </span>
                 </span>
-                <span x-show="totalChanges === 0" class="text-gray-500">
-                    {{ __('merge_preview.instructions') }}
-                </span>
+                {{-- One line per gesture, with the same icons as the table --}}
+                <div x-show="totalChanges === 0" class="text-gray-500 space-y-1">
+                    <p>
+                        <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('merge.instructions_select') }}
+                        <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
+                    </p>
+                    <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
+                    <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                </div>
             </div>
 
-            <div class="flex gap-4 items-center">
+            <div class="flex gap-4 items-center shrink-0">
                 <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
                     <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
@@ -490,7 +497,11 @@ document.addEventListener('alpine:init', () => {
     // Alpine fires alpine:init, but NOT during the initial HTML parse
     const normalizeLineEndings = window.UGT.normalizeLineEndings;
     Alpine.data('mergePreview', () => window.UGT.composeEditor({
+        // UI state (filters/search) is shared across merge previews;
+        // PENDING work is scoped to THIS translation — restored edits
+        // from another file would be ghost modifications
         persistKey: 'merge_preview_ui',
+        pendingKey: 'merge_preview_{{ $translation->id }}_pending',
         filters: {
             localOnly: true,
             onlineOnly: false,  // Already on server, nothing to merge

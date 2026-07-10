@@ -42,6 +42,11 @@ export function composeEditor(config, page) {
  *
  * config:
  *  - persistKey  : sessionStorage key for UI state (search/filters/sort)
+ *  - pendingKey  : sessionStorage key for PENDING work (edits/tags/deletions).
+ *                  Defaults to persistKey + '_pending'. Pages whose persistKey
+ *                  is shared across documents (edit sessions, translations)
+ *                  MUST scope this one per document: restored pending edits
+ *                  from another file would show up as ghost modifications
  *  - filters     : default filter map (page-specific names allowed)
  *
  * The consuming component must define (used by the core):
@@ -55,6 +60,8 @@ export function composeEditor(config, page) {
  *  - allKeys                        array of keys to list
  */
 export function editorCore(config) {
+    const pendingKey = config.pendingKey || (config.persistKey + '_pending');
+
     return {
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
@@ -159,7 +166,7 @@ export function editorCore(config) {
 
         persistPendingState() {
             try {
-                sessionStorage.setItem(config.persistKey + '_pending', JSON.stringify({
+                sessionStorage.setItem(pendingKey, JSON.stringify({
                     editedValues: this.editedValues,
                     tagChanges: this.tagChanges,
                     deletions: this.deletions,
@@ -170,7 +177,7 @@ export function editorCore(config) {
 
         restorePendingState() {
             try {
-                const raw = sessionStorage.getItem(config.persistKey + '_pending');
+                const raw = sessionStorage.getItem(pendingKey);
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.editedValues && typeof state.editedValues === 'object') this.editedValues = state.editedValues;
@@ -186,7 +193,7 @@ export function editorCore(config) {
             this.tagChanges = {};
             this.deletions = {};
             try {
-                sessionStorage.removeItem(config.persistKey + '_pending');
+                sessionStorage.removeItem(pendingKey);
             } catch (e) { /* non-essential */ }
         },
 

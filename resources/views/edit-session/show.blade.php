@@ -211,21 +211,24 @@
             </table>
         </div>
 
-        {{-- Footer with Save button --}}
+        {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
+             buttons: the instructions wrap instead of squeezing the save button --}}
         <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
-            <div class="text-sm text-gray-400">
+            <div class="text-sm text-gray-400 min-w-0">
                 <span x-show="totalChanges > 0">
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
                 </span>
-                <span x-show="totalChanges === 0 && !saveMessage" class="text-gray-500">
-                    {{ __('edit_session.instructions') }}
-                </span>
+                {{-- One line per gesture, with the same icons as the table --}}
+                <div x-show="totalChanges === 0 && !saveMessage" class="text-gray-500 space-y-1">
+                    <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('edit_session.instructions') }}</p>
+                    <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                </div>
                 <span x-show="saveMessage" class="text-green-400">
                     <i class="fas fa-check-circle mr-1"></i><span x-text="saveMessage"></span>
                 </span>
             </div>
 
-            <div class="flex gap-4 items-center">
+            <div class="flex gap-4 items-center shrink-0">
                 <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
                     <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
@@ -371,7 +374,12 @@ document.addEventListener('alpine:init', () => {
     // Alpine fires alpine:init, but NOT during the initial HTML parse
     const normalizeLineEndings = window.UGT.normalizeLineEndings;
     Alpine.data('editSession', () => window.UGT.composeEditor({
+        // UI state (filters/search) is shared across sessions of the same
+        // browser tab; PENDING work is scoped to THIS session — restored
+        // edits from a previous session would be ghost modifications on
+        // keys this file may not even contain
         persistKey: 'edit_session_ui',
+        pendingKey: 'edit_session_{{ $editSession->id }}_pending',
         filters: {
             tagH: true,
             tagV: true,

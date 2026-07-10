@@ -410,8 +410,10 @@
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
                 <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
 
-                <div class="flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700">
-                    <div class="text-sm text-gray-400">
+                {{-- min-w-0 on the text + shrink-0 on the buttons: the
+                     instructions wrap instead of squeezing the save button --}}
+                <div class="flex justify-between items-center gap-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div class="text-sm text-gray-400 min-w-0">
                         <span x-show="totalChanges > 0">
                             <span x-show="selectionCount > 0">
                                 <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
@@ -425,11 +427,17 @@
                                 <span class="text-purple-400 font-bold" x-text="tagChangeCount"></span> {{ __('merge.tag_changes') }}
                             </span>
                         </span>
-                        <span x-show="totalChanges === 0" class="text-gray-500">
-                            {{ __('merge.instructions') }}
-                        </span>
+                        {{-- One line per gesture, with the same icons as the table --}}
+                        <div x-show="totalChanges === 0" class="text-gray-500 space-y-1">
+                            <p>
+                                <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('merge.instructions_select') }}
+                                <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
+                            </p>
+                            <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
+                            <p><i class="fas fa-trash-alt w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                        </div>
                     </div>
-                    <div class="flex gap-4 items-center">
+                    <div class="flex gap-4 items-center shrink-0">
                         <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                             class="text-gray-400 hover:text-white text-sm transition">
                             <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
