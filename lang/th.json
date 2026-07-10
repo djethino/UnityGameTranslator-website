@@ -482,7 +482,6 @@
     "merge.filter_differences": "ความแตกต่าง",
     "merge.reset_filters": "รีเซ็ต",
     "merge.key": "คีย์",
-    "merge.delete_key": "ลบคีย์นี้",
     "merge.empty_value": "- ว่าง -",
     "merge.no_keys_found": "ไม่พบคีย์ที่ตรงกับตัวกรองเหล่านี้",
     "merge.page_info": "หน้า :page / :total (:keys คีย์)",

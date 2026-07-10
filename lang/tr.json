@@ -482,7 +482,6 @@
     "merge.filter_differences": "Farklılıklar",
     "merge.reset_filters": "Sıfırla",
     "merge.key": "Anahtar",
-    "merge.delete_key": "Bu anahtarı sil",
     "merge.empty_value": "- boş -",
     "merge.no_keys_found": "Bu filtrelerle anahtar bulunamadı.",
     "merge.page_info": "Sayfa :page / :total (:keys anahtar)",

@@ -482,7 +482,6 @@
     "merge.filter_differences": "Perbedaan",
     "merge.reset_filters": "Reset",
     "merge.key": "Kunci",
-    "merge.delete_key": "Hapus kunci ini",
     "merge.empty_value": "- kosong -",
     "merge.no_keys_found": "Tidak ada kunci ditemukan dengan filter ini.",
     "merge.page_info": "Halaman :page / :total (:keys kunci)",

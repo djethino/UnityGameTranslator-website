@@ -482,7 +482,6 @@
     "merge.filter_differences": "Khác biệt",
     "merge.reset_filters": "Đặt lại",
     "merge.key": "Khóa",
-    "merge.delete_key": "Xóa khóa này",
     "merge.empty_value": "- trống -",
     "merge.no_keys_found": "Không tìm thấy khóa với bộ lọc này.",
     "merge.page_info": "Trang :page / :total (:keys khóa)",

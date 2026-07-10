@@ -482,7 +482,6 @@
     "merge.filter_differences": "Различия",
     "merge.reset_filters": "Сбросить",
     "merge.key": "Ключ",
-    "merge.delete_key": "Удалить этот ключ",
     "merge.empty_value": "- пусто -",
     "merge.no_keys_found": "Ключи с такими фильтрами не найдены.",
     "merge.page_info": "Страница :page / :total (:keys ключей)",

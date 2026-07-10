@@ -337,20 +337,9 @@
                             <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                                 :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                                 :data-row-index="idx">
-                                {{-- Key + delete affordance --}}
+                                {{-- Key --}}
                                 <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
-                                    <div class="flex items-center gap-2">
-                                        <template x-if="mainData[key] !== undefined">
-                                            <button type="button"
-                                                @click="toggleDelete(key)"
-                                                :class="isDeleted(key) ? 'text-red-500' : 'text-gray-600 hover:text-red-400'"
-                                                class="transition shrink-0"
-                                                title="{{ __('merge.delete_key') }}">
-                                                <i class="fas fa-trash-alt text-xs"></i>
-                                            </button>
-                                        </template>
-                                        <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
-                                    </div>
+                                    <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
                                 </td>
 
                                 {{-- Main Tag (clickable for tag change) --}}
@@ -383,6 +372,8 @@
                                             title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
                                         <button type="button" x-show="!isDeleted(key)" @click.stop="editCell(key, getValue(mainData[key]))"
                                             title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                                        <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+                                            title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
                                     </span>
                                     <template x-if="mainData[key] !== undefined || isEdited(key)">
                                         <span class="break-words"
@@ -495,7 +486,7 @@
                                 <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
                             </p>
                             <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
-                            <p><i class="fas fa-trash-alt w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                            <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
                             <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                         </div>
                     </div>

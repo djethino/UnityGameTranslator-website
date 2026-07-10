@@ -482,7 +482,6 @@
     "merge.filter_differences": "Differences",
     "merge.reset_filters": "Reset",
     "merge.key": "Key",
-    "merge.delete_key": "Delete this key",
     "merge.empty_value": "- empty -",
     "merge.no_keys_found": "No keys found with these filters.",
     "merge.page_info": "Page :page / :total (:keys keys)",

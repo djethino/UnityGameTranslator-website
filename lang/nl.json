@@ -482,7 +482,6 @@
     "merge.filter_differences": "Verschillen",
     "merge.reset_filters": "Resetten",
     "merge.key": "Sleutel",
-    "merge.delete_key": "Verwijder deze sleutel",
     "merge.empty_value": "- leeg -",
     "merge.no_keys_found": "Geen sleutels gevonden met deze filters.",
     "merge.page_info": "Pagina :page / :total (:keys sleutels)",

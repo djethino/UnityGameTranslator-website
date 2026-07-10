@@ -482,7 +482,6 @@
     "merge.filter_differences": "Differenze",
     "merge.reset_filters": "Reimposta",
     "merge.key": "Chiave",
-    "merge.delete_key": "Elimina questa chiave",
     "merge.empty_value": "- vuoto -",
     "merge.no_keys_found": "Nessuna chiave trovata con questi filtri.",
     "merge.page_info": "Pagina :page / :total (:keys chiavi)",

@@ -482,7 +482,6 @@
     "merge.filter_differences": "차이점",
     "merge.reset_filters": "초기화",
     "merge.key": "키",
-    "merge.delete_key": "이 키 삭제",
     "merge.empty_value": "- 비어 있음 -",
     "merge.no_keys_found": "이 필터로 키를 찾을 수 없습니다.",
     "merge.page_info": "페이지 :page / :total (:keys개 키)",

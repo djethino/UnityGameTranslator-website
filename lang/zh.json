@@ -482,7 +482,6 @@
     "merge.filter_differences": "差异",
     "merge.reset_filters": "重置",
     "merge.key": "键",
-    "merge.delete_key": "删除此键",
     "merge.empty_value": "- 空 -",
     "merge.no_keys_found": "使用这些筛选条件未找到任何键。",
     "merge.page_info": "第 :page 页 / 共 :total 页（:keys 个键）",

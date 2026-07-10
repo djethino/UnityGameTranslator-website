@@ -482,7 +482,6 @@
     "merge.filter_differences": "הבדלים",
     "merge.reset_filters": "איפוס",
     "merge.key": "מפתח",
-    "merge.delete_key": "מחיקת מפתח זה",
     "merge.empty_value": "- ריק -",
     "merge.no_keys_found": "לא נמצאו מפתחות עם מסננים אלה.",
     "merge.page_info": "עמוד :page / :total (:keys מפתחות)",

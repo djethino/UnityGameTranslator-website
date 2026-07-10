@@ -482,7 +482,6 @@
     "merge.filter_differences": "差分",
     "merge.reset_filters": "リセット",
     "merge.key": "キー",
-    "merge.delete_key": "このキーを削除",
     "merge.empty_value": "- 空 -",
     "merge.no_keys_found": "これらのフィルターに一致するキーが見つかりません。",
     "merge.page_info": "ページ :page / :total (:keysキー)",

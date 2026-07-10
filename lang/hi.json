@@ -482,7 +482,6 @@
     "merge.filter_differences": "अंतर",
     "merge.reset_filters": "रीसेट",
     "merge.key": "की",
-    "merge.delete_key": "इस की को हटाएं",
     "merge.empty_value": "- खाली -",
     "merge.no_keys_found": "इन फ़िल्टर्स के साथ कोई कीज़ नहीं मिली।",
     "merge.page_info": "पेज :page / :total (:keys कीज़)",

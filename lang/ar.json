@@ -482,7 +482,6 @@
     "merge.filter_differences": "الاختلافات",
     "merge.reset_filters": "إعادة تعيين",
     "merge.key": "المفتاح",
-    "merge.delete_key": "حذف هذا المفتاح",
     "merge.empty_value": "- فارغ -",
     "merge.no_keys_found": "لم يتم العثور على مفاتيح بهذه المرشحات.",
     "merge.page_info": "صفحة :page / :total (:keys مفتاح)",
