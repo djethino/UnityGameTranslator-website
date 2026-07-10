@@ -492,6 +492,7 @@
     "merge.instructions_edit": "לחיצה כפולה לעריכה",
     "merge.instructions_delete": "לחץ על סמל פח האשפה למחיקה",
     "merge.instructions_keyboard": "‏↑↓ ניווט — V אימות — E עריכה — Del מחיקה",
+    "merge.quality_progress": "התקדמות איכות",
     "merge.cancel_all": "ביטול",
     "merge.save_count": "שמירה (:count)",
     "merge.legend_human": "אנושי - תרגום ידני",

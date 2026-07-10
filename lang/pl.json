@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Kliknij dwukrotnie, aby edytować",
     "merge.instructions_delete": "Kliknij ikonę kosza, aby usunąć",
     "merge.instructions_keyboard": "↑↓ nawigacja — V zatwierdź — E edytuj — Del usuń",
+    "merge.quality_progress": "Postęp jakości",
     "merge.cancel_all": "Anuluj",
     "merge.save_count": "Zapisz (:count)",
     "merge.legend_human": "Ludzkie - ręczne tłumaczenie",

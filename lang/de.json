@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Doppelklick zum Bearbeiten",
     "merge.instructions_delete": "Klicken Sie auf das Papierkorb-Symbol zum Löschen",
     "merge.instructions_keyboard": "↑↓ navigieren — V validieren — E bearbeiten — Entf löschen",
+    "merge.quality_progress": "Qualitätsfortschritt",
     "merge.cancel_all": "Abbrechen",
     "merge.save_count": "Speichern (:count)",
     "merge.legend_human": "Mensch - manuelle Übersetzung",

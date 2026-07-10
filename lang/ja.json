@@ -492,6 +492,7 @@
     "merge.instructions_edit": "ダブルクリックで編集",
     "merge.instructions_delete": "ゴミ箱アイコンをクリックで削除",
     "merge.instructions_keyboard": "↑↓ 移動 — V 検証 — E 編集 — Del 削除",
+    "merge.quality_progress": "品質の進捗",
     "merge.cancel_all": "キャンセル",
     "merge.save_count": "保存 (:count)",
     "merge.legend_human": "Human - 手動翻訳",

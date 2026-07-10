@@ -60,6 +60,8 @@
             </div>
         </div>
 
+        @include('partials.editor-quality-bar')
+
         {{-- Filters --}}
         <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
             <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
@@ -590,6 +592,11 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.data[key]);
+        },
+
+        /** Core hook: projected tag for the quality bar. */
+        rowQualityTag(key) {
+            return this.displayTag(key, this.getTag(this.data[key]));
         },
 
         /** Core hook: V on the cursor row = the click-to-validate gesture. */

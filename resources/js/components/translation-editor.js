@@ -128,6 +128,7 @@ export function editorCore(config) {
         // ── filteredKeys memoization (see the getter) ─────────────────────
         _fkVersion: 0,
         _fkCache: [],
+        _tagCounts: { H: 0, V: 0, A: 0, S: 0, M: 0, total: 0 },
 
         /**
          * Wire persistence + the memoized filter pipeline. Call from the
@@ -158,6 +159,9 @@ export function editorCore(config) {
             // reactivity engine: an effect's own writes don't re-queue it.)
             window.Alpine.effect(() => {
                 this._fkCache = this._computeFilteredKeys();
+                // Same pass, same dependencies: the quality bar counts the
+                // PROJECTED tags (pending edits/validations move the bar)
+                this._tagCounts = this._computeTagCounts();
                 this._fkVersion++;
             });
 
@@ -616,6 +620,45 @@ export function editorCore(config) {
         /** Whether a tag's filter checkbox is on (filters are named tagH/tagV/...). */
         tagVisible(tag) {
             return this.filters['tag' + tag] === true;
+        },
+
+        // ── Quality progress (shared bar over the whole file) ─────────────
+
+        /**
+         * Page hook: the PROJECTED tag of a row for the quality bar, or
+         * null when the row is not part of the page's saved file.
+         */
+        rowQualityTag(key) { return null; },
+
+        _computeTagCounts() {
+            const counts = { H: 0, V: 0, A: 0, S: 0, M: 0, total: 0 };
+            for (const key of this.allKeys) {
+                if (this.isDeleted(key)) continue;
+                const tag = this.rowQualityTag(key);
+                if (!tag || counts[tag] === undefined) continue;
+                counts[tag]++;
+                counts.total++;
+            }
+            return counts;
+        },
+
+        get tagCounts() {
+            this._fkVersion;
+            return this._tagCounts;
+        },
+
+        /** Width (%) of one tag's segment in the quality bar. */
+        tagPercent(tag) {
+            const counts = this.tagCounts;
+            if (counts.total === 0) return 0;
+            return (counts[tag] / counts.total) * 100;
+        },
+
+        /** Share of human + validated lines, the number that matters. */
+        get qualityPercent() {
+            const counts = this.tagCounts;
+            if (counts.total === 0) return 0;
+            return Math.round(((counts.H + counts.V) / counts.total) * 100);
         },
 
         // ── Filters / sort / persistence ─────────────────────────────────

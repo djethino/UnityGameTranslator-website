@@ -492,6 +492,7 @@
     "merge.instructions_edit": "संपादित करने के लिए डबल-क्लिक करें",
     "merge.instructions_delete": "हटाने के लिए ट्रैश आइकन पर क्लिक करें",
     "merge.instructions_keyboard": "↑↓ नेविगेट — V मान्य — E संपादित — Del हटाएँ",
+    "merge.quality_progress": "गुणवत्ता प्रगति",
     "merge.cancel_all": "रद्द करें",
     "merge.save_count": "सेव करें (:count)",
     "merge.legend_human": "मानव - मैनुअल अनुवाद",

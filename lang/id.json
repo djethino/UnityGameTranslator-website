@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Klik dua kali untuk mengedit",
     "merge.instructions_delete": "Klik ikon tempat sampah untuk menghapus",
     "merge.instructions_keyboard": "↑↓ navigasi — V validasi — E edit — Del hapus",
+    "merge.quality_progress": "Kemajuan kualitas",
     "merge.cancel_all": "Batal",
     "merge.save_count": "Simpan (:count)",
     "merge.legend_human": "Manusia - terjemahan manual",

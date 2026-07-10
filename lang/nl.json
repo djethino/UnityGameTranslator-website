@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Dubbelklik om te bewerken",
     "merge.instructions_delete": "Klik op het prullenbak-icoon om te verwijderen",
     "merge.instructions_keyboard": "↑↓ navigeren — V valideren — E bewerken — Del verwijderen",
+    "merge.quality_progress": "Kwaliteitsvoortgang",
     "merge.cancel_all": "Annuleren",
     "merge.save_count": "Opslaan (:count)",
     "merge.legend_human": "Menselijk - handmatige vertaling",

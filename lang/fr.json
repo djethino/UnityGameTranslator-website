@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Double-cliquez pour éditer",
     "merge.instructions_delete": "Cliquez sur la poubelle pour supprimer",
     "merge.instructions_keyboard": "↑↓ naviguer — V valider — E éditer — Suppr supprimer",
+    "merge.quality_progress": "Progression qualité",
     "merge.cancel_all": "Annuler",
     "merge.save_count": "Sauvegarder (:count)",
     "merge.legend_human": "Human - traduction manuelle",

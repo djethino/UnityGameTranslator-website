@@ -172,6 +172,8 @@
                 </div>
             </div>
 
+            @include('partials.editor-quality-bar')
+
             {{-- Filters (checked = visible, same model as the other editors) --}}
             <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
@@ -812,6 +814,15 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.mainData[key]);
+        },
+
+        /** Core hook: projected Main tag for the quality bar (rows the
+         *  save will put in the Main file: existing, edited or selected). */
+        rowQualityTag(key) {
+            if (key in this.mainData || this.isEdited(key) || this.selections[key]) {
+                return this.displayMainTag(key);
+            }
+            return null;
         },
 
         /** Core hook: V on the cursor row = the click-Main validate gesture

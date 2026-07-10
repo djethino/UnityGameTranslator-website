@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Двойной щелчок для редактирования",
     "merge.instructions_delete": "Нажмите на значок корзины для удаления",
     "merge.instructions_keyboard": "↑↓ навигация — V подтвердить — E редактировать — Del удалить",
+    "merge.quality_progress": "Прогресс качества",
     "merge.cancel_all": "Отмена",
     "merge.save_count": "Сохранить (:count)",
     "merge.legend_human": "Человек — ручной перевод",

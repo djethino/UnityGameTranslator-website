@@ -492,6 +492,7 @@
     "merge.instructions_edit": "双击编辑",
     "merge.instructions_delete": "点击垃圾桶图标删除",
     "merge.instructions_keyboard": "↑↓ 导航 — V 验证 — E 编辑 — Del 删除",
+    "merge.quality_progress": "质量进度",
     "merge.cancel_all": "取消",
     "merge.save_count": "保存（:count）",
     "merge.legend_human": "人工 - 手动翻译",

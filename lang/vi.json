@@ -492,6 +492,7 @@
     "merge.instructions_edit": "Nhấp đúp để chỉnh sửa",
     "merge.instructions_delete": "Nhấp vào biểu tượng thùng rác để xóa",
     "merge.instructions_keyboard": "↑↓ điều hướng — V xác nhận — E chỉnh sửa — Del xóa",
+    "merge.quality_progress": "Tiến độ chất lượng",
     "merge.cancel_all": "Hủy",
     "merge.save_count": "Lưu (:count)",
     "merge.legend_human": "Thủ công - bản dịch thủ công",

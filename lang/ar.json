@@ -492,6 +492,7 @@
     "merge.instructions_edit": "انقر نقرًا مزدوجًا للتعديل",
     "merge.instructions_delete": "انقر على أيقونة سلة المهملات للحذف",
     "merge.instructions_keyboard": "‏↑↓ التنقل — V تصديق — E تعديل — Del حذف",
+    "merge.quality_progress": "تقدم الجودة",
     "merge.cancel_all": "إلغاء",
     "merge.save_count": "حفظ (:count)",
     "merge.legend_human": "بشري - ترجمة يدوية",
