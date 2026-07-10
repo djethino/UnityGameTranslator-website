@@ -98,8 +98,13 @@ export function editorCore(config) {
         // ── Windowed rendering (large files: thousands of rows) ──────────
         displayLimit: 500,
 
+        // ── filteredKeys memoization (see the getter) ─────────────────────
+        _fkVersion: 0,
+        _fkCache: [],
+
         /**
-         * Wire persistence. Call from the component's init().
+         * Wire persistence + the memoized filter pipeline. Call from the
+         * component's init().
          */
         initEditorCore() {
             this.restoreUiState();
@@ -113,6 +118,19 @@ export function editorCore(config) {
                 }, 200);
             });
             this.$watch('searchScope', () => this.persistUiState());
+
+            // Alpine does NOT memoize getters: every template consumer of
+            // filteredKeys (x-for, counters, ...) would re-run the full
+            // filter + sort — 4 times per interaction on a 20k-key file.
+            // This effect owns the heavy compute instead: it re-runs once
+            // per actual dependency change (its reads are tracked), and
+            // consumers only subscribe to the version bump.
+            // (Self-trigger on _fkVersion++ is filtered out by the
+            // reactivity engine: an effect's own writes don't re-queue it.)
+            window.Alpine.effect(() => {
+                this._fkCache = this._computeFilteredKeys();
+                this._fkVersion++;
+            });
         },
 
         // ── Deletions (marked, applied by the page-specific save) ────────
@@ -178,10 +196,20 @@ export function editorCore(config) {
 
         // ── Filtering pipeline ────────────────────────────────────────────
 
+        /**
+         * Memoized: the actual compute lives in the initEditorCore effect,
+         * which re-runs once per real dependency change. Reading _fkVersion
+         * here subscribes each consumer to those recomputes.
+         */
         get filteredKeys() {
+            this._fkVersion;
+            return this._fkCache;
+        },
+
+        _computeFilteredKeys() {
             const query = this._debouncedQuery.toLowerCase().trim();
 
-            let keys = this.allKeys.filter(key => {
+            const keys = this.allKeys.filter(key => {
                 if (!this.rowPassesFilters(key)) return false;
                 if (query && !this.rowMatchesSearch(key, query)) return false;
                 return true;
@@ -189,21 +217,19 @@ export function editorCore(config) {
 
             const col = this.sortColumn;
             const dir = this.sortDirection === 'asc' ? 1 : -1;
-            keys.sort((a, b) => {
-                let valA, valB;
-                if (col === 'key') {
-                    valA = a.toLowerCase();
-                    valB = b.toLowerCase();
-                } else {
-                    valA = this.rowSortValue(a, col);
-                    valB = this.rowSortValue(b, col);
-                }
-                if (valA < valB) return -1 * dir;
-                if (valA > valB) return 1 * dir;
+            // Sort values are computed ONCE per key (Schwartzian transform):
+            // computing lowercase strings inside the comparator — O(n log n)
+            // times — dominated the sort cost on large files
+            const decorated = keys.map(key =>
+                [key, col === 'key' ? key.toLowerCase() : this.rowSortValue(key, col)]
+            );
+            decorated.sort((a, b) => {
+                if (a[1] < b[1]) return -1 * dir;
+                if (a[1] > b[1]) return 1 * dir;
                 return 0;
             });
 
-            return keys;
+            return decorated.map(entry => entry[0]);
         },
 
         /** Rows actually rendered (windowed). */

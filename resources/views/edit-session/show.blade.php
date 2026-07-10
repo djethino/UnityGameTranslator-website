@@ -574,16 +574,34 @@ document.addEventListener('alpine:init', () => {
                 }
             }
 
+            // Apply as a DIFF: replacing this.data wholesale would
+            // invalidate every row's reactive dependencies and re-render
+            // the full window — a visible hitch every 10s while the game
+            // translates. Touching only actual changes keeps the mod's
+            // periodic pushes almost free.
             let changedCount = 0;
+            let keysChanged = false;
             for (const key of Object.keys(fresh)) {
-                if (!(key in this.data) || this.getValue(fresh[key]) !== this.getValue(this.data[key])
+                if (!(key in this.data)) {
+                    this.data[key] = fresh[key];
+                    changedCount++;
+                    keysChanged = true;
+                } else if (this.getValue(fresh[key]) !== this.getValue(this.data[key])
                     || this.getTag(fresh[key]) !== this.getTag(this.data[key])) {
+                    this.data[key] = fresh[key];
                     changedCount++;
                 }
             }
-
-            this.data = fresh;
-            this.allKeys = Object.keys(fresh).sort();
+            for (const key of Object.keys(this.data)) {
+                if (!(key in fresh)) {
+                    delete this.data[key];
+                    changedCount++;
+                    keysChanged = true;
+                }
+            }
+            if (keysChanged) {
+                this.allKeys = Object.keys(this.data).sort();
+            }
 
             if (changedCount > 0) {
                 this.refreshNotice = @js(__('edit_session.updated_from_game')) + ' (' + changedCount + ')';
