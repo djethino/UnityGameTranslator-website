@@ -46,7 +46,9 @@
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     }
     .doc-img-mod {
-        max-width: 500px;
+        /* Never wider than the column it lives in (side-by-side grids) */
+        max-width: min(500px, 100%);
+        height: auto;
         margin: 0 auto;
         display: block;
     }
@@ -151,6 +153,9 @@
             </a>
             <a href="#quality-system" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-star mr-2 w-4"></i>{{ __('docs.nav.quality_system') }}
+            </a>
+            <a href="#editing" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-pen-to-square mr-2 w-4"></i>{{ __('docs.nav.editing') }}
             </a>
             <a href="#collaboration" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-users mr-2 w-4"></i>{{ __('docs.nav.collaboration') }}
@@ -512,6 +517,152 @@
                     </h4>
                     <p class="text-sm text-gray-300">{{ __('docs.quality_system.capture_desc') }}</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Editing (in-game text editor + browser live edit) -->
+        <section id="editing" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-pen-to-square mr-3 text-purple-400"></i>{{ __('docs.editing.title') }}
+            </h2>
+            <p class="text-gray-300 mb-6">{{ __('docs.editing.intro') }}</p>
+
+            <!-- The mod's Tools tab: entry point of both in-game editors -->
+            <figure class="mb-6 text-center">
+                <picture>
+                    <source srcset="{{ asset('images/screenshots/ModToolsPanel.webp') }}" type="image/webp">
+                    <img src="{{ asset('images/screenshots/ModToolsPanel.png') }}"
+                         alt="{{ __('docs.editing.mod_tools_alt') }}"
+                         class="doc-img doc-img-mod mx-auto"
+                         width="1155" height="1231"
+                         onclick="openLightbox(this.src)">
+                </picture>
+                <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
+            </figure>
+
+            <!-- In-game Text Editor -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 class="font-semibold mb-4 text-lg">
+                    <i class="fas fa-i-cursor text-blue-400 mr-2"></i>{{ __('docs.editing.text_editor_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.editing.text_editor_intro') }}</p>
+                <ol class="text-gray-300 space-y-2 list-decimal list-inside mb-4">
+                    <li>{{ __('docs.editing.text_editor_step1') }}</li>
+                    <li>{{ __('docs.editing.text_editor_step2') }}</li>
+                    <li>{{ __('docs.editing.text_editor_step3') }}</li>
+                </ol>
+                <div class="callout callout-tip mb-4">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-hashtag text-blue-400 mr-2"></i>
+                        <strong>{{ __('docs.editing.placeholders_title') }}</strong><br>
+                        {{ __('docs.editing.placeholders_desc') }}
+                    </p>
+                </div>
+
+                <div class="callout callout-warning">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-keyboard text-yellow-400 mr-2"></i>
+                        <strong>{{ __('docs.editing.text_editor_limits_title') }}</strong><br>
+                        {{ __('docs.editing.text_editor_limits_desc') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Browser Live Edit -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 class="font-semibold mb-4 text-lg">
+                    <i class="fas fa-globe text-green-400 mr-2"></i>{{ __('docs.editing.live_edit_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.editing.live_edit_intro') }}</p>
+
+                <!-- The three promises, scannable -->
+                <div class="grid sm:grid-cols-3 gap-3 mb-6">
+                    <div class="bg-gray-900 rounded-lg p-3 text-center text-sm text-gray-300">
+                        <i class="fas fa-user-slash text-green-400 mr-2"></i>{{ __('docs.editing.live_pill1') }}
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-3 text-center text-sm text-gray-300">
+                        <i class="fas fa-eye-slash text-green-400 mr-2"></i>{{ __('docs.editing.live_pill2') }}
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-3 text-center text-sm text-gray-300">
+                        <i class="fas fa-rotate text-green-400 mr-2"></i>{{ __('docs.editing.live_pill3') }}
+                    </div>
+                </div>
+
+                <ol class="text-gray-300 space-y-2 list-decimal list-inside mb-4">
+                    <li>{{ __('docs.editing.live_edit_step1') }}</li>
+                    <li>{{ __('docs.editing.live_edit_step2') }}</li>
+                    <li>{{ __('docs.editing.live_edit_step3') }}</li>
+                </ol>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-4 items-start">
+                    <figure class="text-center">
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/ModBrowserSessionActive.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/ModBrowserSessionActive.png') }}"
+                                 alt="{{ __('docs.editing.session_active_alt') }}"
+                                 class="doc-img doc-img-mod mx-auto"
+                                 width="969" height="1102"
+                                 onclick="openLightbox(this.src)">
+                        </picture>
+                        <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.session_active_caption') }}</figcaption>
+                    </figure>
+                    <figure class="md:col-span-2">
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/WebLiveEdit.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/WebLiveEdit.png') }}"
+                                 alt="{{ __('docs.editing.live_edit_alt') }}"
+                                 class="doc-img doc-img-web"
+                                 width="1228" height="1122"
+                                 onclick="openLightbox(this.src)">
+                        </picture>
+                        <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.editing.live_edit_caption') }}</figcaption>
+                    </figure>
+                </div>
+
+                <div class="callout callout-tip mb-4">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-wand-magic-sparkles text-purple-400 mr-2"></i>
+                        <strong>{{ __('docs.editing.retranslate_title') }}</strong><br>
+                        {{ __('docs.editing.retranslate_desc') }}
+                    </p>
+                </div>
+
+                <div class="callout callout-tip">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-hourglass-half text-blue-400 mr-2"></i>
+                        <strong>{{ __('docs.editing.lifecycle_title') }}</strong><br>
+                        {{ __('docs.editing.lifecycle_desc') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Editing a published translation on the website -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 class="font-semibold mb-4 text-lg">
+                    <i class="fas fa-cloud text-blue-400 mr-2"></i>{{ __('docs.editing.web_edit_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.editing.web_edit_intro') }}</p>
+                <ol class="text-gray-300 space-y-2 list-decimal list-inside">
+                    <li>{{ __('docs.editing.web_edit_step1') }}</li>
+                    <li>{{ __('docs.editing.web_edit_step2') }}</li>
+                    <li>{{ __('docs.editing.web_edit_step3') }}</li>
+                </ol>
+            </div>
+
+            <!-- Editor toolbox (shared by all web editors) -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 class="font-semibold mb-4 text-lg">
+                    <i class="fas fa-toolbox text-orange-400 mr-2"></i>{{ __('docs.editing.toolbox_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.editing.toolbox_intro') }}</p>
+                <ul class="text-gray-300 space-y-2">
+                    <li><i class="fas fa-search text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_search') }}</li>
+                    <li><i class="fas fa-right-left text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_replace') }}</li>
+                    <li><i class="fas fa-keyboard text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_keyboard') }}</li>
+                    <li><i class="fas fa-arrow-pointer text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_validate') }}</li>
+                    <li><i class="fas fa-chart-simple text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_quality') }}</li>
+                    <li><i class="fas fa-shield-halved text-purple-400 mr-2"></i>{{ __('docs.editing.toolbox_placeholders') }}</li>
+                </ul>
             </div>
         </section>
 
