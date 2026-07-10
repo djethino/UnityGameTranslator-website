@@ -67,27 +67,27 @@
             <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
 
             {{-- Tag filters in HVASM order --}}
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_human') }}">
                 <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
                     class="rounded bg-gray-700 border-gray-600 text-green-600">
                 <span class="tag-H">H</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_validated') }}">
                 <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
                     class="rounded bg-gray-700 border-gray-600 text-blue-600">
                 <span class="tag-V">V</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_ai') }}">
                 <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
                     class="rounded bg-gray-700 border-gray-600 text-orange-600">
                 <span class="tag-A">A</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_skipped') }}">
                 <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
                     class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="tag-S">S</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_mod_ui') }}">
                 <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
                     class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="tag-M">M</span>
@@ -457,11 +457,11 @@
 
     {{-- Legend (HVASM order) --}}
     <div class="mt-6 text-xs text-gray-500 flex flex-wrap gap-4">
-        <span><span class="tag-H">H</span> Human</span>
-        <span><span class="tag-V">V</span> Validated</span>
-        <span><span class="tag-A">A</span> AI</span>
-        <span><span class="tag-S">S</span> Skipped</span>
-        <span><span class="tag-M">M</span> Mod UI</span>
+        <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
+        <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
+        <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
+        <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
+        <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
         <span class="text-gray-600">|</span>
         <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge_preview.manual_edit') }}</span>
     </div>

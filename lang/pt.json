@@ -496,7 +496,7 @@
     "merge.save_count": "Guardar (:count)",
     "merge.legend_human": "Human - tradução manual",
     "merge.legend_ai": "AI - tradução por IA",
-    "merge.legend_validated": "Validated - revisto por IA",
+    "merge.legend_validated": "Validated - IA revista",
     "merge.legend_mod_ui": "Interface do Mod - interface do mod",
     "merge.legend_skipped": "Skipped - não traduzido",
     "merge.legend_selection_main": "Seleção Main",
