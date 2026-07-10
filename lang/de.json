@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Tag ändern zu:",
     "merge.tag_skip": "Überspringen (diesen Schlüssel ignorieren)",
     "merge.tag_invalidate": "Entwerten (auf KI zurücksetzen)",
+    "merge.tag_validate": "Validieren (als geprüft markieren)",
     "merge.main_only": "Nur der Hauptbesitzer kann entwerten",
     "merge.cancel_tag_change": "Tag-Änderung abbrechen",
     "auth.sign_in": "Anmelden um fortzufahren",

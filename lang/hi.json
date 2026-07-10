@@ -516,6 +516,7 @@
     "merge.change_tag_to": "टैग बदलें:",
     "merge.tag_skip": "स्किप (इस की को अनदेखा करें)",
     "merge.tag_invalidate": "अमान्य करें (AI पर रीसेट करें)",
+    "merge.tag_validate": "मान्य करें (समीक्षित के रूप में चिह्नित करें)",
     "merge.main_only": "केवल मेन मालिक अमान्य कर सकता है",
     "merge.cancel_tag_change": "टैग बदलाव रद्द करें",
     "auth.sign_in": "जारी रखने के लिए साइन इन करें",

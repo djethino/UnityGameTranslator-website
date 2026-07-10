@@ -516,6 +516,7 @@
     "merge.change_tag_to": "タグを変更：",
     "merge.tag_skip": "Skip（このキーを無視）",
     "merge.tag_invalidate": "無効化（AIにリセット）",
+    "merge.tag_validate": "検証（確認済みとしてマーク）",
     "merge.main_only": "Mainオーナーのみが無効化できます",
     "merge.cancel_tag_change": "タグ変更をキャンセル",
     "auth.sign_in": "ログインして続ける",

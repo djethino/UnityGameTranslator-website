@@ -268,6 +268,29 @@ class MergePreviewFlowTest extends TestCase
         $this->assertSame(['v' => 'Local only', 't' => 'V'], $saved['LocalOnly']);
     }
 
+    public function test_apply_writes_explicit_tag_changes_as_is(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT);
+
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT)->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        // Explicit dropdown gestures (source 'tagchange') bypass the A→V
+        // promotion: without this, Invalidate (A) would be undone by the save
+        $response = $this->post(route('translations.merge-preview.apply', $translation), [
+            'selections' => [
+                ['key' => 'Shared', 'value' => 'Online value', 'tag' => 'A', 'source' => 'tagchange'],
+                ['key' => 'OnlineOnly', 'value' => 'Server only', 'tag' => 'V', 'source' => 'tagchange'],
+            ],
+        ]);
+        $response->assertRedirect(route('home'));
+
+        $saved = json_decode(file_get_contents(storage_path('app/private/' . $translation->file_path)), true);
+        $this->assertSame(['v' => 'Online value', 't' => 'A'], $saved['Shared']);
+        $this->assertSame(['v' => 'Server only', 't' => 'V'], $saved['OnlineOnly']);
+    }
+
     public function test_new_init_replaces_previous_token_and_file(): void
     {
         $user = User::factory()->create()->refresh();

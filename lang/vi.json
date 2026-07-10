@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Đổi nhãn thành:",
     "merge.tag_skip": "Bỏ qua (bỏ qua khóa này)",
     "merge.tag_invalidate": "Hủy xác thực (đặt lại thành AI)",
+    "merge.tag_validate": "Xác nhận (đánh dấu đã kiểm tra)",
     "merge.main_only": "Chỉ chủ sở hữu Main mới có thể hủy xác thực",
     "merge.cancel_tag_change": "Hủy thay đổi nhãn",
     "auth.sign_in": "Đăng nhập để tiếp tục",

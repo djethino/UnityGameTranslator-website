@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Change tag to:",
     "merge.tag_skip": "Skip (ignore this key)",
     "merge.tag_invalidate": "Invalidate (reset to AI)",
+    "merge.tag_validate": "Validate (mark as reviewed)",
     "merge.main_only": "Only the Main owner can invalidate",
     "merge.cancel_tag_change": "Cancel tag change",
     "auth.sign_in": "Sign in to continue",

@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Etiketi şu şekilde değiştir:",
     "merge.tag_skip": "Atla (bu anahtarı yoksay)",
     "merge.tag_invalidate": "Geçersiz kıl (AI'ya sıfırla)",
+    "merge.tag_validate": "Doğrula (incelendi olarak işaretle)",
     "merge.main_only": "Yalnızca Main sahibi geçersiz kılabilir",
     "merge.cancel_tag_change": "Etiket değişikliğini iptal et",
     "auth.sign_in": "Devam etmek için giriş yapın",

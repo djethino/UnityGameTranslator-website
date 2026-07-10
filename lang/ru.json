@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Сменить метку на:",
     "merge.tag_skip": "Пропустить (игнорировать этот ключ)",
     "merge.tag_invalidate": "Аннулировать (сбросить на ИИ)",
+    "merge.tag_validate": "Подтвердить (отметить как проверенное)",
     "merge.main_only": "Только владелец Main может аннулировать",
     "merge.cancel_tag_change": "Отменить смену метки",
     "auth.sign_in": "Войдите для продолжения",

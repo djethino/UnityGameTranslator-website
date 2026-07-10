@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Cambia tag in:",
     "merge.tag_skip": "Salta (ignora questa chiave)",
     "merge.tag_invalidate": "Invalida (reimposta a IA)",
+    "merge.tag_validate": "Valida (segna come revisionato)",
     "merge.main_only": "Solo il proprietario Main può invalidare",
     "merge.cancel_tag_change": "Annulla modifica tag",
     "auth.sign_in": "Accedi per continuare",

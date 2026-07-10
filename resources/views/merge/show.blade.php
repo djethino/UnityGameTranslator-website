@@ -314,18 +314,15 @@
                                 <td class="px-2 py-2 text-center border-l border-gray-700"
                                     :class="[hasTagChange(key) ? 'tag-changed-cell' : '', isDeleted(key) ? 'deleted-cell' : '']">
                                     <template x-if="mainData[key] !== undefined">
+                                        {{-- Shows the tag the save will PRODUCE (edit → H,
+                                             selection → A promoted to V), not just the stored one --}}
                                         <button type="button"
-                                            @click.stop="openTagDropdown($event, key, getTag(mainData[key]), getValue(mainData[key]))"
+                                            @click.stop="openTagDropdown($event, key, displayMainTag(key), getValue(mainData[key]))"
                                             :class="isDeleted(key) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
                                             :disabled="isDeleted(key)"
                                             class="transition rounded"
                                             title="{{ __('merge.click_to_change_tag') }}">
-                                            <span x-show="isEdited(key) && !hasTagChange(key)" class="tag-H">H</span>
-                                            <template x-if="hasTagChange(key)">
-                                                <span :class="'tag-' + tagChanges[key].newTag" x-text="tagChanges[key].newTag"></span>
-                                            </template>
-                                            <span x-show="!isEdited(key) && !hasTagChange(key)"
-                                                :class="'tag-' + getTag(mainData[key])" x-text="getTag(mainData[key])"></span>
+                                            <span :class="'tag-' + displayMainTag(key)" x-text="displayMainTag(key)"></span>
                                         </button>
                                     </template>
                                     <template x-if="mainData[key] === undefined">
@@ -495,7 +492,7 @@
             </div>
         </div>
 
-        {{-- Tag Dropdown Menu (S for everyone, A = invalidate) --}}
+        {{-- Tag Dropdown Menu (V = validate, A = invalidate, S = skip — same in every editor) --}}
         <div x-show="tagDropdown.open" x-cloak
             class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
             :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
@@ -505,6 +502,17 @@
             <div class="px-3 py-2 border-b border-gray-700">
                 <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
             </div>
+
+            <button type="button"
+                @click="setTag('V')"
+                :class="tagDropdown.currentTag === 'V' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+                class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+                <span class="tag-V">V</span>
+                <span class="text-sm text-gray-300">{{ __('merge.tag_validate') }}</span>
+                <span x-show="tagDropdown.currentTag === 'V'" class="ml-auto text-green-400">
+                    <i class="fas fa-check"></i>
+                </span>
+            </button>
 
             <button type="button"
                 @click="setTag('S')"
@@ -680,17 +688,12 @@ document.addEventListener('alpine:init', () => {
             }
 
             // Tag filter: the row passes if ANY of its tags (Main or branch)
-            // is visible — same semantics as before, inverted model
-            const tagFilters = {
-                'H': this.filters.tagH,
-                'V': this.filters.tagV,
-                'A': this.filters.tagA,
-                'S': this.filters.tagS,
-                'M': this.filters.tagM
-            };
-            if (key in this.mainData && tagFilters[this.getTag(this.mainData[key])]) return true;
+            // is visible. Main matches on its STORED and its PREVIEWED tag:
+            // a pending change must not make its row vanish mid-work
+            if (key in this.mainData && this.tagVisible(this.getTag(this.mainData[key]))) return true;
+            if ((key in this.mainData || this.isEdited(key)) && this.tagVisible(this.displayMainTag(key))) return true;
             for (const branch of this.branches) {
-                if (key in branch.content && tagFilters[this.getTag(branch.content[key])]) return true;
+                if (key in branch.content && this.tagVisible(this.getTag(branch.content[key]))) return true;
             }
             return false;
         },
@@ -720,9 +723,11 @@ document.addEventListener('alpine:init', () => {
             return key in this.mainData ? this.getValue(this.mainData[key]).toLowerCase() : '';
         },
 
-        /** Core hook: a staged manual edit becomes a 'manual' selection. */
+        /** Core hook: a staged manual edit becomes a 'manual' selection.
+         *  Sends the STORED tag: the server applies manual → H itself and
+         *  preserves M/S — hardcoding H here would override that rule. */
         onEditStaged(key) {
-            this.selections[key] = { source: 'manual', value: this.editedValues[key], tag: 'H' };
+            this.selections[key] = { source: 'manual', value: this.editedValues[key], tag: this.getTag(this.mainData[key]) };
         },
 
         /** Core hook: an edit reverted to the original drops its selection. */
@@ -796,6 +801,23 @@ document.addEventListener('alpine:init', () => {
                 return 'selected-manual';
             }
             return '';
+        },
+
+        /**
+         * Tag the save will PRODUCE for the Main entry — previewed live,
+         * before anything is saved. Core displayTag covers tag change → that
+         * tag and manual edit → H (M/S preserved); on top of it, a selected
+         * version keeps its tag with the server's A → V promotion.
+         */
+        displayMainTag(key) {
+            if (this.hasTagChange(key) || this.isEdited(key)) {
+                return this.displayTag(key, this.getTag(this.mainData[key]));
+            }
+            const sel = this.selections[key];
+            if (sel) {
+                return sel.tag === 'A' ? 'V' : sel.tag;
+            }
+            return this.getTag(this.mainData[key]);
         },
 
         branchCellTint(branch, key) {

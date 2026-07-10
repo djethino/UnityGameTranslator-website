@@ -516,6 +516,7 @@
     "merge.change_tag_to": "تغيير العلامة إلى:",
     "merge.tag_skip": "تخطي (تجاهل هذا المفتاح)",
     "merge.tag_invalidate": "إلغاء الاعتماد (إعادة تعيين إلى آلي)",
+    "merge.tag_validate": "تصديق (وضع علامة تمت مراجعتها)",
     "merge.main_only": "فقط مالك Main يمكنه إلغاء الاعتماد",
     "merge.cancel_tag_change": "إلغاء تغيير العلامة",
     "auth.sign_in": "سجّل الدخول للمتابعة",

@@ -516,6 +516,7 @@
     "merge.change_tag_to": "태그 변경:",
     "merge.tag_skip": "건너뛰기 (이 키 무시)",
     "merge.tag_invalidate": "무효화 (AI로 초기화)",
+    "merge.tag_validate": "검증 (검토됨으로 표시)",
     "merge.main_only": "메인 소유자만 무효화할 수 있습니다",
     "merge.cancel_tag_change": "태그 변경 취소",
     "auth.sign_in": "계속하려면 로그인하세요",

@@ -138,6 +138,17 @@ class EditSessionFlowTest extends TestCase
         // Manual edit → H (tag rule), explicit Skip preserved
         $this->assertSame(['v' => 'Salut', 't' => 'H'], $stored['Hello']);
         $this->assertSame(['v' => 'Jouer', 't' => 'S'], $stored['Play']);
+        // Explicit dropdown gestures (source 'local') are written as-is:
+        // Validate must stick, Invalidate must not be undone
+        $this->postJson('/edit-session-save', [
+            'selections' => [
+                ['key' => 'Hello', 'value' => 'Salut', 'tag' => 'V', 'source' => 'local'],
+                ['key' => 'Play', 'value' => 'Jouer', 'tag' => 'A', 'source' => 'local'],
+            ],
+        ])->assertOk();
+        $stored = json_decode(file_get_contents($session->getContentFilePath()), true);
+        $this->assertSame(['v' => 'Salut', 't' => 'V'], $stored['Hello']);
+        $this->assertSame(['v' => 'Jouer', 't' => 'A'], $stored['Play']);
         // Metadata untouched
         $this->assertSame('test-uuid-123', $stored['_uuid']);
         // Sliding TTL

@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Changer le tag en :",
     "merge.tag_skip": "Ignorer (ne pas traduire)",
     "merge.tag_invalidate": "Invalider (remettre en IA)",
+    "merge.tag_validate": "Valider (marquer comme vérifié)",
     "merge.main_only": "Seul le propriétaire Main peut invalider",
     "merge.cancel_tag_change": "Annuler le changement de tag",
     "auth.sign_in": "Connectez-vous pour continuer",

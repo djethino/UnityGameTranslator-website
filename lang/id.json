@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Ubah tag menjadi:",
     "merge.tag_skip": "Lewati (abaikan kunci ini)",
     "merge.tag_invalidate": "Batalkan validasi (reset ke AI)",
+    "merge.tag_validate": "Validasi (tandai sudah ditinjau)",
     "merge.main_only": "Hanya pemilik Main yang bisa membatalkan validasi",
     "merge.cancel_tag_change": "Batalkan perubahan tag",
     "auth.sign_in": "Masuk untuk melanjutkan",

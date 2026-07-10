@@ -823,11 +823,13 @@ class TranslationController extends Controller
             $source = $sel['source'];
 
             // Tag rules (same as MergeController):
+            // - source 'tagchange' (explicit V/A/S from the tag dropdown) is
+            //   written AS-IS — promoting it would undo an Invalidate (A)
             // - M (Mod UI) and S (Skipped) are preserved as-is
             // - Manual edit → becomes H
             // - Tag A selected → becomes V (human validated this AI translation)
             // - Tag H and V stay the same
-            if ($tag !== 'M' && $tag !== 'S') {
+            if ($source !== 'tagchange' && $tag !== 'M' && $tag !== 'S') {
                 if ($source === 'manual') {
                     $tag = 'H';
                 } elseif ($tag === 'A') {

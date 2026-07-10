@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Tag wijzigen naar:",
     "merge.tag_skip": "Overslaan (deze sleutel negeren)",
     "merge.tag_invalidate": "Ongeldig maken (terugzetten naar AI)",
+    "merge.tag_validate": "Valideren (markeren als gecontroleerd)",
     "merge.main_only": "Alleen de Main-eigenaar kan ongeldig maken",
     "merge.cancel_tag_change": "Tagwijziging annuleren",
     "auth.sign_in": "Log in om door te gaan",

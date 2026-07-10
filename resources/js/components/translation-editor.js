@@ -242,11 +242,23 @@ export function editorCore(config) {
             return key in this.tagChanges;
         },
 
-        getDisplayTag(key, originalTag) {
-            if (this.tagChanges[key]) {
-                return this.tagChanges[key].newTag;
-            }
-            return originalTag;
+        /**
+         * Tag the save will PRODUCE for a row — previewed live in the tag
+         * cell, before anything is saved: an explicit tag change wins, a
+         * pending manual edit shows H (unless the stored tag is M/S, which
+         * every save endpoint preserves), otherwise the stored tag.
+         * Pages layer their own rules on top (e.g. merge selections
+         * promoting A → V).
+         */
+        displayTag(key, storedTag) {
+            if (this.tagChanges[key]) return this.tagChanges[key].newTag;
+            if (this.isEdited(key) && storedTag !== 'M' && storedTag !== 'S') return 'H';
+            return storedTag;
+        },
+
+        /** Whether a tag's filter checkbox is on (filters are named tagH/tagV/...). */
+        tagVisible(tag) {
+            return this.filters['tag' + tag] === true;
         },
 
         // ── Filters / sort / persistence ─────────────────────────────────

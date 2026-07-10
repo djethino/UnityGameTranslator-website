@@ -236,18 +236,13 @@
                             <td class="px-2 py-2 text-center border-l border-gray-700"
                                 :class="hasTagChange(key) ? 'tag-changed-cell' : ''">
                                 <template x-if="localData[key] !== undefined">
+                                    {{-- Shows the tag the save will PRODUCE (edit → H,
+                                         sent local selection → A promoted to V), not just the stored one --}}
                                     <button type="button"
-                                        @click.stop="openTagDropdown($event, key, getTag(localData[key]), getValue(localData[key]))"
+                                        @click.stop="openTagDropdown($event, key, displayLocalTag(key), getValue(localData[key]))"
                                         class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
                                         title="{{ __('merge.click_to_change_tag') }}">
-                                        {{-- Show H if edited --}}
-                                        <span x-show="isEdited(key)" class="tag-H">H</span>
-                                        {{-- Show changed tag if tag was changed --}}
-                                        <template x-if="!isEdited(key) && hasTagChange(key)">
-                                            <span :class="'tag-' + getDisplayTag(key, getTag(localData[key]))" x-text="getDisplayTag(key, getTag(localData[key]))"></span>
-                                        </template>
-                                        {{-- Show original tag --}}
-                                        <span x-show="!isEdited(key) && !hasTagChange(key)" :class="'tag-' + getTag(localData[key])" x-text="getTag(localData[key])"></span>
+                                        <span :class="'tag-' + displayLocalTag(key)" x-text="displayLocalTag(key)"></span>
                                     </button>
                                 </template>
                                 <template x-if="localData[key] === undefined">
@@ -407,7 +402,7 @@
         </div>
     </div>
 
-    {{-- Tag Dropdown Menu (branches can only Skip) --}}
+    {{-- Tag Dropdown Menu (V = validate, A = invalidate, S = skip — same in every editor) --}}
     <div x-show="tagDropdown.open" x-cloak
         class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
         :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
@@ -417,6 +412,17 @@
         <div class="px-3 py-2 border-b border-gray-700">
             <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
         </div>
+
+        <button type="button"
+            @click="setTag('V')"
+            :class="tagDropdown.currentTag === 'V' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+            <span class="tag-V">V</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_validate') }}</span>
+            <span x-show="tagDropdown.currentTag === 'V'" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
 
         {{-- Skip option --}}
         <button type="button"
@@ -730,18 +736,11 @@ document.addEventListener('alpine:init', () => {
             }
             if (!passesCategory) return false;
 
-            // Tag filter (check both local and online tags)
-            const localTag = hasLocal ? this.getTag(this.localData[key]) : null;
-            const onlineTag = hasOnline ? this.getTag(this.onlineData[key]) : null;
-            const tagFilters = {
-                'H': this.filters.tagH,
-                'V': this.filters.tagV,
-                'A': this.filters.tagA,
-                'S': this.filters.tagS,
-                'M': this.filters.tagM
-            };
-            const localTagPass = localTag && tagFilters[localTag];
-            const onlineTagPass = onlineTag && tagFilters[onlineTag];
+            // Tag filter: local matches on its STORED and its PREVIEWED tag
+            // (a pending change must not make its row vanish mid-work)
+            const localTagPass = hasLocal
+                && (this.tagVisible(this.getTag(this.localData[key])) || this.tagVisible(this.displayLocalTag(key)));
+            const onlineTagPass = hasOnline && this.tagVisible(this.getTag(this.onlineData[key]));
             return !!(localTagPass || onlineTagPass);
         },
 
@@ -852,6 +851,27 @@ document.addEventListener('alpine:init', () => {
             this.persistPendingState();
         },
 
+        /**
+         * Tag the save will PRODUCE for the local side — previewed live,
+         * before anything is saved. Core displayTag covers tag change → that
+         * tag and manual edit → H (M/S preserved); on top of it, a local
+         * selection that will actually be SENT gets the server's A → V
+         * promotion (picks identical to online are not sent → no preview).
+         */
+        displayLocalTag(key) {
+            if (this.hasTagChange(key) || this.isEdited(key)) {
+                return this.displayTag(key, this.getTag(this.localData[key]));
+            }
+            if (this.selections[key] === 'local' && key in this.localData) {
+                const hasOnline = key in this.onlineData;
+                if (!hasOnline || this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key])) {
+                    const tag = this.getTag(this.localData[key]);
+                    return tag === 'A' ? 'V' : tag;
+                }
+            }
+            return this.getTag(this.localData[key]);
+        },
+
         getCellClass(key, source) {
             // Check if manually edited (only applies to local column)
             if (source === 'local' && this.editedValues[key] !== undefined) {
@@ -923,19 +943,23 @@ document.addEventListener('alpine:init', () => {
                 const isEdited = this.editedValues[key] !== undefined;
                 const hasTagChange = key in this.tagChanges;
 
-                if (isEdited) {
-                    // Manual edit -> becomes H tag (unless tag was explicitly changed)
-                    let tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
-                    // M and S are preserved, otherwise manual = H (if no explicit tag change)
-                    if (!hasTagChange && tag !== 'M' && tag !== 'S') {
+                if (hasTagChange) {
+                    // Explicit tag change wins as-is — same rule as saveToServer
+                    merged[key] = {
+                        v: isEdited ? this.editedValues[key] : this.tagChanges[key].value,
+                        t: this.tagChanges[key].newTag
+                    };
+                } else if (isEdited) {
+                    // Manual edit -> becomes H tag (M and S are preserved)
+                    let tag = this.getTag(this.localData[key]);
+                    if (tag !== 'M' && tag !== 'S') {
                         tag = 'H';
                     }
                     merged[key] = { v: this.editedValues[key], t: tag };
                 } else if (source === 'local' && key in this.localData) {
-                    // Check if tag was explicitly changed
-                    let tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
-                    // Apply same tag rules as server: A → V when selected by human (unless tag explicitly changed)
-                    if (!hasTagChange && tag !== 'M' && tag !== 'S' && tag === 'A') {
+                    // Apply same tag rules as server: A → V when selected by human
+                    let tag = this.getTag(this.localData[key]);
+                    if (tag === 'A') {
                         tag = 'V';
                     }
                     merged[key] = { v: this.getValue(this.localData[key]), t: tag };
@@ -972,17 +996,19 @@ document.addEventListener('alpine:init', () => {
                 let value, tag, sourceType;
                 let isRealChange = false;
 
-                if (isEdited) {
-                    // Manual edit = always a change
-                    value = this.editedValues[key];
-                    tag = hasTagChange ? this.tagChanges[key].newTag : this.getTag(this.localData[key]);
-                    sourceType = 'manual';
-                    isRealChange = true;
-                } else if (hasTagChange) {
-                    // Explicit tag change by user
-                    value = this.tagChanges[key].value;
+                if (hasTagChange) {
+                    // Explicit tag change: the server writes it AS-IS (no
+                    // H forcing, no A→V promotion) — the user's chosen tag
+                    // must win, combined with an edit or not
+                    value = isEdited ? this.editedValues[key] : this.tagChanges[key].value;
                     tag = this.tagChanges[key].newTag;
-                    sourceType = 'local';
+                    sourceType = 'tagchange';
+                    isRealChange = true;
+                } else if (isEdited) {
+                    // Manual edit = always a change (server: → H unless M/S)
+                    value = this.editedValues[key];
+                    tag = this.getTag(this.localData[key]);
+                    sourceType = 'manual';
                     isRealChange = true;
                 } else if (hasLocal && !hasOnline && source === 'local') {
                     // Local-only key = addition

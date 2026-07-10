@@ -175,4 +175,26 @@ class MergeViewStateTest extends TestCase
         // Metadata untouched
         $this->assertSame($uuid, $stored['_uuid']);
     }
+
+    public function test_apply_accepts_explicit_validate_tag_change(): void
+    {
+        [$owner, $uuid, $main] = $this->makeMergeView();
+
+        // The tag dropdown offers V (validate), A (invalidate) and S (skip):
+        // all three must be written as-is
+        $response = $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'edit',
+            'selections_json' => '',
+            'deletions_json' => '',
+            'tag_changes_json' => json_encode([
+                ['key' => 'MainOnly', 'tag' => 'V', 'value' => 'Main only'],
+            ]),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+        $this->assertSame(['v' => 'Main only', 't' => 'V'], $stored['MainOnly']);
+    }
 }

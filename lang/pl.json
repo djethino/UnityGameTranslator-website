@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Zmień oznaczenie na:",
     "merge.tag_skip": "Pomiń (ignoruj ten klucz)",
     "merge.tag_invalidate": "Unieważnij (resetuj do AI)",
+    "merge.tag_validate": "Zatwierdź (oznacz jako sprawdzone)",
     "merge.main_only": "Tylko właściciel Main może unieważniać",
     "merge.cancel_tag_change": "Anuluj zmianę oznaczenia",
     "auth.sign_in": "Zaloguj się, aby kontynuować",

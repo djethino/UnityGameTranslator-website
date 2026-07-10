@@ -156,16 +156,13 @@
                             {{-- Tag (clickable for tag change) --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
                                 :class="hasTagChange(key) ? 'tag-changed-cell' : ''">
+                                {{-- Shows the tag the save will PRODUCE (edit → H,
+                                     M/S preserved), not just the stored one --}}
                                 <button type="button"
-                                    @click.stop="openTagDropdown($event, key, getTag(data[key]), getValue(data[key]))"
+                                    @click.stop="openTagDropdown($event, key, displayTag(key, getTag(data[key])), getValue(data[key]))"
                                     class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
                                     title="{{ __('merge.click_to_change_tag') }}">
-                                    <span x-show="isEdited(key) && !hasTagChange(key)" class="tag-H">H</span>
-                                    <template x-if="hasTagChange(key)">
-                                        <span :class="'tag-' + tagChanges[key].newTag" x-text="tagChanges[key].newTag"></span>
-                                    </template>
-                                    <span x-show="!isEdited(key) && !hasTagChange(key)"
-                                        :class="'tag-' + getTag(data[key])" x-text="getTag(data[key])"></span>
+                                    <span :class="'tag-' + displayTag(key, getTag(data[key]))" x-text="displayTag(key, getTag(data[key]))"></span>
                                 </button>
                             </td>
 
@@ -290,7 +287,7 @@
         </div>
     </div>
 
-    {{-- Tag Dropdown Menu (Skip only, same rule as merge-preview) --}}
+    {{-- Tag Dropdown Menu (V = validate, A = invalidate, S = skip — same in every editor) --}}
     <div x-show="tagDropdown.open" x-cloak
         class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
         :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
@@ -300,6 +297,17 @@
         <div class="px-3 py-2 border-b border-gray-700">
             <p class="text-xs text-gray-400">{{ __('merge.change_tag_to') }}</p>
         </div>
+
+        <button type="button"
+            @click="setTag('V')"
+            :class="tagDropdown.currentTag === 'V' ? 'bg-gray-700' : 'hover:bg-gray-700'"
+            class="w-full px-3 py-2 text-left flex items-center gap-3 transition">
+            <span class="tag-V">V</span>
+            <span class="text-sm text-gray-300">{{ __('merge.tag_validate') }}</span>
+            <span x-show="tagDropdown.currentTag === 'V'" class="ml-auto text-green-400">
+                <i class="fas fa-check"></i>
+            </span>
+        </button>
 
         <button type="button"
             @click="setTag('S')"
@@ -441,19 +449,10 @@ document.addEventListener('alpine:init', () => {
                 return false;
             }
 
-            // Filter on the DISPLAYED tag: a pending edit shows H, a pending
-            // skip shows S
-            let tag = this.getTag(this.data[key]);
-            if (this.hasTagChange(key)) tag = this.tagChanges[key].newTag;
-            else if (this.isEdited(key)) tag = 'H';
-            const tagFilters = {
-                'H': this.filters.tagH,
-                'V': this.filters.tagV,
-                'A': this.filters.tagA,
-                'S': this.filters.tagS,
-                'M': this.filters.tagM
-            };
-            return !!tagFilters[tag];
+            // Tag filter: the row passes on its STORED or its PREVIEWED tag —
+            // a pending change must not make its row vanish mid-work
+            return this.tagVisible(this.getTag(this.data[key]))
+                || this.tagVisible(this.displayTag(key, this.getTag(this.data[key])));
         },
 
         rowMatchesSearch(key, query) {
@@ -606,7 +605,10 @@ document.addEventListener('alpine:init', () => {
             this.saveMessage = '';
 
             // One selection per pending key; a value edit combined with a tag
-            // change sends the new value AND the new tag (server keeps S/M as-is)
+            // change sends the new value AND the new tag. An explicit tag
+            // change goes as 'local' even when combined with an edit: the
+            // server writes 'local' tags as-is, while 'manual' would force H
+            // and override the user's chosen tag
             const selections = [];
             const pendingKeys = new Set([
                 ...Object.keys(this.editedValues),
@@ -622,7 +624,7 @@ document.addEventListener('alpine:init', () => {
                     key: key,
                     value: value,
                     tag: tag,
-                    source: isEdited ? 'manual' : 'local'
+                    source: isEdited && !this.tagChanges[key] ? 'manual' : 'local'
                 });
             }
             const deletions = Object.keys(this.deletions);

@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Cambiar etiqueta a:",
     "merge.tag_skip": "Omitir (ignorar esta clave)",
     "merge.tag_invalidate": "Invalidar (restablecer a IA)",
+    "merge.tag_validate": "Validar (marcar como revisado)",
     "merge.main_only": "Solo el propietario del Main puede invalidar",
     "merge.cancel_tag_change": "Cancelar cambio de etiqueta",
     "auth.sign_in": "Inicia sesión para continuar",

@@ -516,6 +516,7 @@
     "merge.change_tag_to": "更改标签为：",
     "merge.tag_skip": "跳过（忽略此键）",
     "merge.tag_invalidate": "撤销验证（重置为AI）",
+    "merge.tag_validate": "验证（标记为已审核）",
     "merge.main_only": "只有Main所有者可以撤销验证",
     "merge.cancel_tag_change": "取消标签更改",
     "auth.sign_in": "登录以继续",

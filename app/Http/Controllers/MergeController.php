@@ -184,7 +184,9 @@ class MergeController extends Controller
             if (!isset($change['key'], $change['tag']) || !array_key_exists('value', $change)) {
                 return back()->withErrors(['error' => 'Invalid tag change entry.']);
             }
-            if (!in_array($change['tag'], ['A', 'S'], true)) {
+            // V = validate, A = invalidate, S = skip — the three explicit
+            // tag gestures offered by every editor's dropdown
+            if (!in_array($change['tag'], ['V', 'A', 'S'], true)) {
                 return back()->withErrors(['error' => 'Invalid tag change value.']);
             }
         }

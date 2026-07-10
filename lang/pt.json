@@ -516,6 +516,7 @@
     "merge.change_tag_to": "Alterar tag para:",
     "merge.tag_skip": "Skip (ignorar esta chave)",
     "merge.tag_invalidate": "Invalidar (redefinir para AI)",
+    "merge.tag_validate": "Validar (marcar como revisto)",
     "merge.main_only": "Apenas o proprietário Main pode invalidar",
     "merge.cancel_tag_change": "Cancelar alteração de tag",
     "auth.sign_in": "Entre para continuar",

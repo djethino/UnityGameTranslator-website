@@ -516,6 +516,7 @@
     "merge.change_tag_to": "שינוי תגית ל:",
     "merge.tag_skip": "דילוג (התעלמות ממפתח זה)",
     "merge.tag_invalidate": "ביטול אימות (איפוס ל-AI)",
+    "merge.tag_validate": "אימות (סמן כנבדק)",
     "merge.main_only": "רק בעל ה-Main יכול לבטל אימות",
     "merge.cancel_tag_change": "ביטול שינוי תגית",
     "auth.sign_in": "התחברו להמשך",
