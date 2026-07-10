@@ -2,6 +2,7 @@ import './bootstrap';
 
 // Alpine.js (CSP build — no eval/Function, compatible with strict CSP)
 import Alpine from '@alpinejs/csp';
+import mediumZoom from 'medium-zoom';
 
 // Alpine components
 import mergeTable from './components/merge-table.js';
@@ -26,6 +27,15 @@ Alpine.directive('safe-html', (el, { expression }, { evaluateLater, effect }) =>
 
 window.Alpine = Alpine;
 Alpine.start();
+
+// Image zoom for documentation screenshots. Inline onclick handlers are dead
+// under our CSP (nonce'd script-src makes browsers ignore 'unsafe-inline'),
+// so the zoom must be wired from the bundle. medium-zoom: click zooms the
+// image for real, scroll/Escape/click puts it back.
+mediumZoom('[data-zoomable]', {
+    background: 'rgba(3, 7, 18, 0.92)',
+    margin: 24,
+});
 
 // Organic animated background — 5 independent blob layers, scroll-reactive.
 //

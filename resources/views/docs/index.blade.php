@@ -38,7 +38,7 @@
         border: 1px solid #374151;
         border-radius: 0.5rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        cursor: pointer;
+        cursor: zoom-in;
         transition: transform 0.2s, box-shadow 0.2s;
     }
     .doc-img:hover {
@@ -53,6 +53,13 @@
         display: block;
     }
     .doc-img-web {
+        max-width: 100%;
+    }
+    /* Tall portrait screenshots: capped height so they never dwarf the text
+       next to them — the real reading happens through the click-to-zoom. */
+    .doc-img-tall {
+        max-height: 440px;
+        width: auto;
         max-width: 100%;
     }
     /* Callout boxes */
@@ -73,26 +80,6 @@
     .callout-danger {
         background: rgba(239, 68, 68, 0.1);
         border-color: #ef4444;
-    }
-    /* Lightbox */
-    .lightbox {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 9999;
-        cursor: pointer;
-        padding: 2rem;
-    }
-    .lightbox.active {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .lightbox img {
-        max-width: 95%;
-        max-height: 95%;
-        object-fit: contain;
     }
     /* Smooth scroll */
     html {
@@ -142,6 +129,9 @@
     <!-- Sidebar -->
     <aside id="docs-sidebar" class="docs-sidebar w-64 flex-shrink-0 hidden lg:block self-start">
         <nav class="space-y-1">
+            <a href="#what-is" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-circle-info mr-2 w-4"></i>{{ __('docs.nav.what_is') }}
+            </a>
             <a href="#quick-start" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-rocket mr-2 w-4"></i>{{ __('docs.nav.quick_start') }}
             </a>
@@ -195,6 +185,74 @@
             <i class="fas fa-book mr-3 text-purple-400"></i>{{ __('docs.title') }}
         </h1>
         <p class="text-gray-400 mb-8">{{ __('docs.subtitle') }}</p>
+
+        <!-- What is it -->
+        <section id="what-is" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-circle-info mr-3 text-purple-400"></i>{{ __('docs.whatis.title') }}
+            </h2>
+
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <p class="text-gray-300 mb-6">{{ __('docs.whatis.pitch') }}</p>
+
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="font-semibold text-white mb-2">
+                            <i class="fas fa-puzzle-piece text-purple-400 mr-2"></i>{{ __('docs.whatis.mod_title') }}
+                        </h3>
+                        <p class="text-sm text-gray-300">{{ __('docs.whatis.mod_desc') }}</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="font-semibold text-white mb-2">
+                            <i class="fas fa-globe text-purple-400 mr-2"></i>{{ __('docs.whatis.site_title') }}
+                        </h3>
+                        <p class="text-sm text-gray-300">{{ __('docs.whatis.site_desc') }}</p>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold mb-3 text-lg">{{ __('docs.whatis.flow_title') }}</h3>
+                <ol class="space-y-3 mb-6">
+                    <li class="flex items-start">
+                        <span class="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-3">1</span>
+                        <span class="text-gray-300 pt-1">{{ __('docs.whatis.flow_step1') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-3">2</span>
+                        <span class="text-gray-300 pt-1">{{ __('docs.whatis.flow_step2') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-3">3</span>
+                        <span class="text-gray-300 pt-1">{{ __('docs.whatis.flow_step3') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-3">4</span>
+                        <span class="text-gray-300 pt-1">{{ __('docs.whatis.flow_step4') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-3">5</span>
+                        <span class="text-gray-300 pt-1">{{ __('docs.whatis.flow_step5') }}</span>
+                    </li>
+                </ol>
+
+                <div class="callout callout-tip mb-4">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-shield-halved text-blue-400 mr-2"></i>
+                        <strong>{{ __('docs.whatis.privacy_title') }}</strong><br>
+                        {{ __('docs.whatis.privacy_desc') }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-code text-purple-400 mr-2"></i>
+                        <strong>{{ __('docs.whatis.dev_title') }}</strong><br>
+                        {{ __('docs.whatis.dev_desc') }}
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions" target="_blank"
+                           class="text-purple-400 hover:text-purple-300 underline">{{ __('docs.whatis.dev_cta') }}</a>
+                    </p>
+                </div>
+            </div>
+        </section>
 
         <!-- Quick Start -->
         <section id="quick-start" class="mb-12 scroll-mt-8">
@@ -413,7 +471,7 @@
                              class="doc-img doc-img-mod block mx-auto"
                              style="max-width: 500px;"
                              width="551" height="434"
-                             onclick="openLightbox(this.src)">
+                             data-zoomable>
                     </picture>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
@@ -425,6 +483,22 @@
                     <li><strong>{{ __('docs.wizard_step3_title') }}</strong> - {{ __('docs.wizard_step3_desc') }}</li>
                     <li><strong>{{ __('docs.wizard_step4_title') }}</strong> - {{ __('docs.wizard_step4_desc') }}</li>
                 </ol>
+
+                <h3 class="font-semibold mb-3 mt-6 text-lg">{{ __('docs.first_launch_after_title') }}</h3>
+                <ul class="text-gray-300 space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-gamepad text-purple-400 mr-2 mt-1"></i>
+                        <span>{{ __('docs.first_launch_after1') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-keyboard text-purple-400 mr-2 mt-1"></i>
+                        <span>{{ __('docs.first_launch_after2') }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-bell text-purple-400 mr-2 mt-1"></i>
+                        <span>{{ __('docs.first_launch_after3') }}</span>
+                    </li>
+                </ul>
 
                 <div class="callout callout-tip mt-4">
                     <p class="text-sm text-gray-300">
@@ -533,9 +607,9 @@
                         <source srcset="{{ asset('images/screenshots/ModToolsPanel.webp') }}" type="image/webp">
                         <img src="{{ asset('images/screenshots/ModToolsPanel.png') }}"
                              alt="{{ __('docs.editing.mod_tools_alt') }}"
-                             class="doc-img doc-img-mod mx-auto"
+                             class="doc-img doc-img-tall mx-auto"
                              width="1155" height="1231"
-                             onclick="openLightbox(this.src)">
+                             data-zoomable>
                     </picture>
                     <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
                 </figure>
@@ -547,8 +621,8 @@
                     <i class="fas fa-i-cursor text-blue-400 mr-2"></i>{{ __('docs.editing.text_editor_title') }}
                 </h3>
                 <p class="text-gray-300 mb-4">{{ __('docs.editing.text_editor_intro') }}</p>
-                <div class="grid md:grid-cols-2 gap-4 mb-4 items-start">
-                    <ol class="text-gray-300 space-y-2 list-decimal list-inside">
+                <div class="grid md:grid-cols-2 gap-6 mb-4 items-center">
+                    <ol class="text-gray-300 space-y-3 list-decimal list-inside">
                         <li>{{ __('docs.editing.text_editor_step1') }}</li>
                         <li>{{ __('docs.editing.text_editor_step2') }}</li>
                         <li>{{ __('docs.editing.text_editor_step3') }}</li>
@@ -558,9 +632,9 @@
                             <source srcset="{{ asset('images/screenshots/ModTextEditor.webp') }}" type="image/webp">
                             <img src="{{ asset('images/screenshots/ModTextEditor.png') }}"
                                  alt="{{ __('docs.editing.text_editor_alt') }}"
-                                 class="doc-img doc-img-mod mx-auto"
+                                 class="doc-img doc-img-tall mx-auto"
                                  width="868" height="1175"
-                                 onclick="openLightbox(this.src)">
+                                 data-zoomable>
                         </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.text_editor_caption') }}</figcaption>
                     </figure>
@@ -608,15 +682,15 @@
                     <li>{{ __('docs.editing.live_edit_step3') }}</li>
                 </ol>
 
-                <div class="grid md:grid-cols-3 gap-4 mb-4 items-start">
+                <div class="grid md:grid-cols-3 gap-6 mb-4 items-center">
                     <figure class="text-center">
                         <picture>
                             <source srcset="{{ asset('images/screenshots/ModBrowserSessionActive.webp') }}" type="image/webp">
                             <img src="{{ asset('images/screenshots/ModBrowserSessionActive.png') }}"
                                  alt="{{ __('docs.editing.session_active_alt') }}"
-                                 class="doc-img doc-img-mod mx-auto"
+                                 class="doc-img doc-img-tall mx-auto"
                                  width="969" height="1102"
-                                 onclick="openLightbox(this.src)">
+                                 data-zoomable>
                         </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.session_active_caption') }}</figcaption>
                     </figure>
@@ -627,7 +701,7 @@
                                  alt="{{ __('docs.editing.live_edit_alt') }}"
                                  class="doc-img doc-img-web"
                                  width="1228" height="1122"
-                                 onclick="openLightbox(this.src)">
+                                 data-zoomable>
                         </picture>
                         <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.editing.live_edit_caption') }}</figcaption>
                     </figure>
@@ -764,7 +838,7 @@
                              alt="{{ __('docs.merge_screenshot_alt') }}"
                              class="doc-img doc-img-web"
                              width="1421" height="1276"
-                             onclick="openLightbox(this.src)">
+                             data-zoomable>
                     </picture>
                     <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.merge_caption') }}</figcaption>
                 </figure>
@@ -807,7 +881,7 @@
                                  alt="{{ __('docs.sync.mod_connect_alt') }}"
                                  class="doc-img doc-img-mod mx-auto"
                                  width="823" height="734"
-                                 onclick="openLightbox(this.src)">
+                                 data-zoomable>
                         </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
                     </figure>
@@ -818,7 +892,7 @@
                                  alt="{{ __('docs.sync.web_connect_alt') }}"
                                  class="doc-img doc-img-web"
                                  width="617" height="583"
-                                 onclick="openLightbox(this.src)">
+                                 data-zoomable>
                         </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.web_connect_caption') }}</figcaption>
                     </figure>
@@ -1065,11 +1139,6 @@
     </main>
 </div>
 
-<!-- Lightbox -->
-<div id="lightbox" class="lightbox" onclick="closeLightbox()">
-    <img id="lightbox-img" src="" alt="">
-</div>
-
 @push('scripts')
 <script nonce="{{ $cspNonce ?? '' }}">
     // Mobile sidebar toggle
@@ -1102,22 +1171,6 @@
     }, { rootMargin: '-20% 0px -80% 0px' });
 
     sections.forEach(section => observer.observe(section));
-
-    // Lightbox
-    function openLightbox(src) {
-        document.getElementById('lightbox-img').src = src;
-        document.getElementById('lightbox').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeLightbox() {
-        document.getElementById('lightbox').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLightbox();
-    });
 </script>
 @endpush
 @endsection

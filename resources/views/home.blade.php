@@ -144,9 +144,10 @@
                         <source srcset="{{ asset('images/screenshots/ModWizard1.webp') }}" type="image/webp">
                         <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
                              alt="{{ __('home.mod_screenshot_alt') }}"
-                             class="w-full h-auto"
+                             class="w-full h-auto cursor-zoom-in"
                              width="551" height="434"
-                             loading="lazy">
+                             loading="lazy"
+                             data-zoomable>
                     </picture>
                 </div>
             </div>
@@ -258,9 +259,10 @@
                         <source srcset="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}" type="image/webp">
                         <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
                              alt="{{ __('home.website_screenshot_alt') }}"
-                             class="w-full h-auto"
+                             class="w-full h-auto cursor-zoom-in"
                              width="1421" height="1276"
-                             loading="lazy">
+                             loading="lazy"
+                             data-zoomable>
                     </picture>
                 </div>
             </div>
