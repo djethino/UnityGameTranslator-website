@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Mở bảng điều khiển mod (Ctrl+F10) → Parameters → Tools, rồi nhấp Start Text Editor.",
     "docs.editing.text_editor_step2": "Nhấp vào bất kỳ văn bản đã dịch nào trong game để mở nó trong trình chỉnh sửa.",
     "docs.editing.text_editor_step3": "Chỉnh sửa bản dịch và lưu — nó được áp dụng trên màn hình ngay lập tức và được đánh dấu Human (H). Bạn cũng có thể gửi lại dòng đó cho AI bằng Retranslate.",
+    "docs.editing.text_editor_alt": "Element Inspector trong trò chơi với một phần tử được chọn và các văn bản có thể chỉnh sửa của nó",
+    "docs.editing.text_editor_caption": "Chọn một phần tử trên màn hình: mọi văn bản mà nó chứa đều có thể được chỉnh sửa hoặc dịch lại",
     "docs.editing.placeholders_title": "Các giá trị động được bảo vệ",
     "docs.editing.placeholders_desc": "Những con số thay đổi khi chơi (sát thương, vàng, bộ đếm thời gian) xuất hiện dưới dạng phần giữ chỗ [!v*0], [!v*1]… Hãy giữ chúng trong văn bản của bạn: mod sẽ tái chèn các giá trị trực tiếp, và trình chỉnh sửa sẽ cảnh báo bạn nếu chỉnh sửa của bạn làm hỏng chúng.",
     "docs.editing.text_editor_limits_title": "Tốt nhất cho các chỉnh sửa nhanh",

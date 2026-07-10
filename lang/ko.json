@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "모드 패널(Ctrl+F10) → Parameters → Tools를 열고 Start Text Editor를 클릭하세요.",
     "docs.editing.text_editor_step2": "게임에서 번역된 텍스트를 클릭하면 편집기에서 열립니다.",
     "docs.editing.text_editor_step3": "번역을 편집하고 저장하면 즉시 화면에 적용되고 Human(H)으로 표시됩니다. Retranslate로 해당 줄을 AI에 다시 보낼 수도 있습니다.",
+    "docs.editing.text_editor_alt": "선택한 요소와 편집 가능한 텍스트가 표시된 게임 내 Element Inspector",
+    "docs.editing.text_editor_caption": "화면에서 요소를 선택하세요: 요소에 포함된 모든 텍스트를 편집하거나 다시 번역할 수 있습니다",
     "docs.editing.placeholders_title": "동적 값은 보호됩니다",
     "docs.editing.placeholders_desc": "플레이 중 변하는 숫자(피해량, 골드, 타이머)는 [!v*0], [!v*1]… 자리 표시자로 표시됩니다. 텍스트에 그대로 유지하세요. 모드가 실시간 값을 다시 삽입하며, 편집으로 인해 손상되면 편집기가 경고합니다.",
     "docs.editing.text_editor_limits_title": "빠른 수정에 적합",

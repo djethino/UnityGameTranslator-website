@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Öffne das Mod-Panel (Ctrl+F10) → Parameters → Tools und klicke auf Start Text Editor.",
     "docs.editing.text_editor_step2": "Klicke auf einen beliebigen übersetzten Text im Spiel, um ihn im Editor zu öffnen.",
     "docs.editing.text_editor_step3": "Bearbeite die Übersetzung und speichere sie — sie wird sofort auf dem Bildschirm angewendet und als Human (H) markiert. Du kannst die Zeile mit Retranslate auch zurück an die KI senden.",
+    "docs.editing.text_editor_alt": "Der spielinterne Element Inspector mit einem ausgewählten Element und seinen bearbeitbaren Texten",
+    "docs.editing.text_editor_caption": "Wähle ein Element auf dem Bildschirm: Jeder darin enthaltene Text kann bearbeitet oder neu übersetzt werden",
     "docs.editing.placeholders_title": "Dynamische Werte sind geschützt",
     "docs.editing.placeholders_desc": "Zahlen, die sich während des Spielens ändern (Schaden, Gold, Timer), erscheinen als Platzhalter [!v*0], [!v*1]…. Behalte sie in deinem Text: Der Mod fügt die Live-Werte wieder ein, und der Editor warnt dich, wenn deine Bearbeitung sie beschädigt.",
     "docs.editing.text_editor_limits_title": "Am besten für schnelle Korrekturen",

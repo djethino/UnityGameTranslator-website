@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Otwórz panel moda (Ctrl+F10) → Parameters → Tools i kliknij Start Text Editor.",
     "docs.editing.text_editor_step2": "Kliknij dowolny przetłumaczony tekst w grze, aby otworzyć go w edytorze.",
     "docs.editing.text_editor_step3": "Edytuj tłumaczenie i zapisz — zostanie natychmiast zastosowane na ekranie i oznaczone jako Human (H). Możesz też odesłać wiersz do AI za pomocą Retranslate.",
+    "docs.editing.text_editor_alt": "Element Inspector w grze z wybranym elementem i jego edytowalnymi tekstami",
+    "docs.editing.text_editor_caption": "Wybierz element na ekranie: każdy zawarty w nim tekst można edytować lub przetłumaczyć ponownie",
     "docs.editing.placeholders_title": "Wartości dynamiczne są chronione",
     "docs.editing.placeholders_desc": "Liczby zmieniające się podczas gry (obrażenia, złoto, liczniki) pojawiają się jako symbole zastępcze [!v*0], [!v*1]… Zachowaj je w tekście: mod ponownie wstawia bieżące wartości, a edytor ostrzeże Cię, jeśli edycja je uszkodzi.",
     "docs.editing.text_editor_limits_title": "Najlepszy do szybkich poprawek",

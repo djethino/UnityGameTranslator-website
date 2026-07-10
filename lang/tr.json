@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Mod panelini (Ctrl+F10) → Parameters → Tools açın ve Start Text Editor'a tıklayın.",
     "docs.editing.text_editor_step2": "Düzenleyicide açmak için oyundaki herhangi bir çevrilmiş metne tıklayın.",
     "docs.editing.text_editor_step3": "Çeviriyi düzenleyin ve kaydedin — ekranda anında uygulanır ve İnsan (H) olarak işaretlenir. Ayrıca satırı Retranslate ile yapay zekâya geri gönderebilirsiniz.",
+    "docs.editing.text_editor_alt": "Seçili bir öğe ve düzenlenebilir metinleriyle oyun içi Element Inspector",
+    "docs.editing.text_editor_caption": "Ekranda bir öğe seçin: içerdiği her metin düzenlenebilir veya yeniden çevrilebilir",
     "docs.editing.placeholders_title": "Dinamik değerler korunur",
     "docs.editing.placeholders_desc": "Oyun oynarken değişen sayılar (hasar, altın, sayaçlar) [!v*0], [!v*1]… yer tutucuları olarak görünür. Bunları metninizde koruyun: mod, canlı değerleri yeniden ekler ve düzenlemeniz onları bozarsa düzenleyici sizi uyarır.",
     "docs.editing.text_editor_limits_title": "Hızlı düzeltmeler için en iyisi",

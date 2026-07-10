@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Ouvrez le panneau du mod (Ctrl+F10) → Parameters → Tools, puis cliquez sur Start Text Editor.",
     "docs.editing.text_editor_step2": "Cliquez sur n'importe quel texte traduit dans le jeu pour l'ouvrir dans l'éditeur.",
     "docs.editing.text_editor_step3": "Modifiez la traduction et enregistrez — elle s'applique immédiatement à l'écran et passe en Humain (H). Vous pouvez aussi renvoyer la ligne à l'IA avec Retranslate.",
+    "docs.editing.text_editor_alt": "L'Element Inspector en jeu avec un élément sélectionné et ses textes éditables",
+    "docs.editing.text_editor_caption": "Sélectionnez un élément à l'écran : chacun de ses textes peut être édité ou retraduit",
     "docs.editing.placeholders_title": "Les valeurs dynamiques sont protégées",
     "docs.editing.placeholders_desc": "Les nombres qui changent en jouant (dégâts, or, minuteurs) apparaissent sous forme de placeholders [!v*0], [!v*1]… Conservez-les dans votre texte : le mod y réinjecte les valeurs en direct, et l'éditeur vous avertit si votre modification les casse.",
     "docs.editing.text_editor_limits_title": "Idéal pour les corrections rapides",

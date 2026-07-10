@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Open het mod-paneel (Ctrl+F10) → Parameters → Tools en klik op Start Text Editor.",
     "docs.editing.text_editor_step2": "Klik op een vertaalde tekst in het spel om die in de editor te openen.",
     "docs.editing.text_editor_step3": "Bewerk de vertaling en sla op — ze wordt meteen op het scherm toegepast en gemarkeerd als Human (H). Je kunt de regel ook terugsturen naar de AI met Retranslate.",
+    "docs.editing.text_editor_alt": "De in-game Element Inspector met een geselecteerd element en de bewerkbare teksten ervan",
+    "docs.editing.text_editor_caption": "Kies een element op het scherm: elke tekst die het bevat kan worden bewerkt of opnieuw vertaald",
     "docs.editing.placeholders_title": "Dynamische waarden zijn beschermd",
     "docs.editing.placeholders_desc": "Getallen die tijdens het spelen veranderen (schade, goud, timers) verschijnen als [!v*0], [!v*1]… placeholders. Houd ze in je tekst: de mod voegt de live waarden opnieuw in, en de editor waarschuwt je als je bewerking ze breekt.",
     "docs.editing.text_editor_limits_title": "Ideaal voor snelle correcties",

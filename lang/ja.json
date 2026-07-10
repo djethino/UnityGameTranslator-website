@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Modパネル（Ctrl+F10）→ Parameters → Tools を開き、Start Text Editor をクリックします。",
     "docs.editing.text_editor_step2": "ゲーム内の翻訳済みテキストをクリックすると、エディターで開きます。",
     "docs.editing.text_editor_step3": "翻訳を編集して保存すると、画面上に即座に反映され、Human (H) としてマークされます。Retranslate で行をAIに再送信することもできます。",
+    "docs.editing.text_editor_alt": "選択した要素とその編集可能なテキストが表示された、ゲーム内の Element Inspector",
+    "docs.editing.text_editor_caption": "画面上の要素を選択：その要素に含まれるすべてのテキストを編集または再翻訳できます",
     "docs.editing.placeholders_title": "動的な値は保護されます",
     "docs.editing.placeholders_desc": "プレイ中に変化する数値（ダメージ、ゴールド、タイマー）は [!v*0]、[!v*1]… というプレースホルダーとして表示されます。テキスト内にそのまま残してください：Modが実際の値を再挿入し、編集でそれらが壊れる場合はエディターが警告します。",
     "docs.editing.text_editor_limits_title": "手早い修正に最適",

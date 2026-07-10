@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "افتح لوحة التعديل (Ctrl+F10) → Parameters → Tools، وانقر على Start Text Editor.",
     "docs.editing.text_editor_step2": "انقر على أي نص مُترجَم في اللعبة لفتحه في المحرّر.",
     "docs.editing.text_editor_step3": "حرّر الترجمة واحفظها — تُطبَّق على الشاشة فورًا وتُوسَم بـ Human (H). يمكنك أيضًا إعادة إرسال السطر إلى الذكاء الاصطناعي باستخدام Retranslate.",
+    "docs.editing.text_editor_alt": "أداة Element Inspector داخل اللعبة مع عنصر محدد ونصوصه القابلة للتحرير",
+    "docs.editing.text_editor_caption": "اختر عنصرًا على الشاشة: يمكن تحرير أو إعادة ترجمة كل نص يحتويه",
     "docs.editing.placeholders_title": "القيم الديناميكية محميّة",
     "docs.editing.placeholders_desc": "تظهر الأرقام التي تتغيّر أثناء اللعب (الضرر، الذهب، المؤقّتات) كعناصر نائبة [!v*0]، [!v*1]… احتفظ بها في نصّك: يعيد التعديل حقن القيم الحيّة، ويحذّرك المحرّر إذا كان تعديلك يُفسدها.",
     "docs.editing.text_editor_limits_title": "الأنسب للتصحيحات السريعة",

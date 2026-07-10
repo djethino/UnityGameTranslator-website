@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Buka panel mod (Ctrl+F10) → Parameters → Tools, lalu klik Start Text Editor.",
     "docs.editing.text_editor_step2": "Klik teks terjemahan mana pun di dalam game untuk membukanya di editor.",
     "docs.editing.text_editor_step3": "Sunting terjemahan dan simpan — perubahan langsung diterapkan di layar dan ditandai Human (H). Anda juga dapat mengirim baris tersebut kembali ke AI dengan Retranslate.",
+    "docs.editing.text_editor_alt": "Element Inspector dalam game dengan elemen yang dipilih dan teks-teksnya yang dapat diedit",
+    "docs.editing.text_editor_caption": "Pilih elemen di layar: setiap teks yang dikandungnya dapat diedit atau diterjemahkan ulang",
     "docs.editing.placeholders_title": "Nilai dinamis terlindungi",
     "docs.editing.placeholders_desc": "Angka yang berubah saat bermain (kerusakan, emas, pengatur waktu) muncul sebagai placeholder [!v*0], [!v*1]… Pertahankan placeholder tersebut dalam teks Anda: mod menyuntikkan kembali nilai langsungnya, dan editor akan memperingatkan Anda jika suntingan Anda merusaknya.",
     "docs.editing.text_editor_limits_title": "Paling cocok untuk perbaikan cepat",

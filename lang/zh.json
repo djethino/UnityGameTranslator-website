@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "打开模组面板（Ctrl+F10）→ Parameters → Tools，然后点击 Start Text Editor。",
     "docs.editing.text_editor_step2": "点击游戏中任意已翻译的文本，即可在编辑器中打开它。",
     "docs.editing.text_editor_step3": "编辑翻译并保存 — 它会立即应用到屏幕上并标记为 Human (H)。您也可以通过 Retranslate 将该行重新发送给 AI。",
+    "docs.editing.text_editor_alt": "游戏内的 Element Inspector，显示选中的元素及其可编辑文本",
+    "docs.editing.text_editor_caption": "在屏幕上选择一个元素：其中包含的每段文本都可以编辑或重新翻译",
     "docs.editing.placeholders_title": "动态值受到保护",
     "docs.editing.placeholders_desc": "游玩时会变化的数字（伤害、金币、计时器）会显示为 [!v*0]、[!v*1]… 占位符。请在您的文本中保留它们：模组会重新注入实时数值，如果您的编辑破坏了它们，编辑器会向您发出警告。",
     "docs.editing.text_editor_limits_title": "最适合快速修正",

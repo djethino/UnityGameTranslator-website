@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "פתח את לוח המוד (Ctrl+F10) → Parameters → Tools, ולחץ על Start Text Editor.",
     "docs.editing.text_editor_step2": "לחץ על כל טקסט מתורגם במשחק כדי לפתוח אותו בעורך.",
     "docs.editing.text_editor_step3": "ערוך את התרגום ושמור — הוא מוחל על המסך מיד ומסומן כאנושי (H). אפשר גם לשלוח את השורה חזרה ל-AI באמצעות Retranslate.",
+    "docs.editing.text_editor_alt": "כלי Element Inspector בתוך המשחק עם אלמנט נבחר והטקסטים הניתנים לעריכה שלו",
+    "docs.editing.text_editor_caption": "בחר אלמנט על המסך: כל טקסט שהוא מכיל ניתן לעריכה או לתרגום מחדש",
     "docs.editing.placeholders_title": "ערכים דינמיים מוגנים",
     "docs.editing.placeholders_desc": "מספרים שמשתנים תוך כדי משחק (נזק, זהב, טיימרים) מופיעים כמצייני מקום [!v*0], [!v*1]… שמור אותם בטקסט שלך: המוד מזריק מחדש את הערכים החיים, והעורך מזהיר אותך אם העריכה שלך שוברת אותם.",
     "docs.editing.text_editor_limits_title": "מתאים ביותר לתיקונים מהירים",

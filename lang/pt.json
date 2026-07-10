@@ -273,6 +273,8 @@
     "docs.editing.text_editor_step1": "Abra o painel do mod (Ctrl+F10) → Parameters → Tools e clique em Start Text Editor.",
     "docs.editing.text_editor_step2": "Clique em qualquer texto traduzido no jogo para o abrir no editor.",
     "docs.editing.text_editor_step3": "Edite a tradução e guarde — é aplicada no ecrã imediatamente e marcada como Humana (H). Também pode reenviar a linha à IA com Retranslate.",
+    "docs.editing.text_editor_alt": "O Element Inspector integrado no jogo com um elemento selecionado e os seus textos editáveis",
+    "docs.editing.text_editor_caption": "Escolhe um elemento no ecrã: cada texto que contém pode ser editado ou traduzido novamente",
     "docs.editing.placeholders_title": "Os valores dinâmicos estão protegidos",
     "docs.editing.placeholders_desc": "Os números que mudam durante o jogo (dano, ouro, temporizadores) aparecem como marcadores [!v*0], [!v*1]… Mantenha-os no seu texto: o mod reinjeta os valores em direto e o editor avisa-o se a sua edição os danificar.",
     "docs.editing.text_editor_limits_title": "Ideal para correções rápidas",

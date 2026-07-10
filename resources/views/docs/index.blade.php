@@ -547,11 +547,24 @@
                     <i class="fas fa-i-cursor text-blue-400 mr-2"></i>{{ __('docs.editing.text_editor_title') }}
                 </h3>
                 <p class="text-gray-300 mb-4">{{ __('docs.editing.text_editor_intro') }}</p>
-                <ol class="text-gray-300 space-y-2 list-decimal list-inside mb-4">
-                    <li>{{ __('docs.editing.text_editor_step1') }}</li>
-                    <li>{{ __('docs.editing.text_editor_step2') }}</li>
-                    <li>{{ __('docs.editing.text_editor_step3') }}</li>
-                </ol>
+                <div class="grid md:grid-cols-2 gap-4 mb-4 items-start">
+                    <ol class="text-gray-300 space-y-2 list-decimal list-inside">
+                        <li>{{ __('docs.editing.text_editor_step1') }}</li>
+                        <li>{{ __('docs.editing.text_editor_step2') }}</li>
+                        <li>{{ __('docs.editing.text_editor_step3') }}</li>
+                    </ol>
+                    <figure class="text-center">
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/ModTextEditor.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/ModTextEditor.png') }}"
+                                 alt="{{ __('docs.editing.text_editor_alt') }}"
+                                 class="doc-img doc-img-mod mx-auto"
+                                 width="868" height="1175"
+                                 onclick="openLightbox(this.src)">
+                        </picture>
+                        <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.text_editor_caption') }}</figcaption>
+                    </figure>
+                </div>
                 <div class="callout callout-tip mb-4">
                     <p class="text-sm text-gray-300">
                         <i class="fas fa-hashtag text-blue-400 mr-2"></i>
