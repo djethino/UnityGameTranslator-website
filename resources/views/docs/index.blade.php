@@ -525,20 +525,21 @@
             <h2 class="text-2xl font-bold mb-6 flex items-center">
                 <i class="fas fa-pen-to-square mr-3 text-purple-400"></i>{{ __('docs.editing.title') }}
             </h2>
-            <p class="text-gray-300 mb-6">{{ __('docs.editing.intro') }}</p>
-
-            <!-- The mod's Tools tab: entry point of both in-game editors -->
-            <figure class="mb-6 text-center">
-                <picture>
-                    <source srcset="{{ asset('images/screenshots/ModToolsPanel.webp') }}" type="image/webp">
-                    <img src="{{ asset('images/screenshots/ModToolsPanel.png') }}"
-                         alt="{{ __('docs.editing.mod_tools_alt') }}"
-                         class="doc-img doc-img-mod mx-auto"
-                         width="1155" height="1231"
-                         onclick="openLightbox(this.src)">
-                </picture>
-                <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
-            </figure>
+            <!-- Intro + the mod's Tools tab: entry point of both in-game editors -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <p class="text-gray-300 mb-4">{{ __('docs.editing.intro') }}</p>
+                <figure class="text-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/ModToolsPanel.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/ModToolsPanel.png') }}"
+                             alt="{{ __('docs.editing.mod_tools_alt') }}"
+                             class="doc-img doc-img-mod mx-auto"
+                             width="1155" height="1231"
+                             onclick="openLightbox(this.src)">
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
+                </figure>
+            </div>
 
             <!-- In-game Text Editor -->
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
