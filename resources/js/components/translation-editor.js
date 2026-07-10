@@ -11,7 +11,9 @@
  *
  * Alpine CSP build constraints (apply to the PAGE templates, not here):
  *  - no property assignments in inline expressions (obj.prop = x throws)
- *  - x-model only on top-level identifiers (hence editModalValue)
+ *  - x-model only on top-level identifiers (hence editModalValue, replaceValue)
+ *  - x-html is prohibited entirely — use x-safe-html (custom directive in
+ *    app.js) with the highlight helpers below, which escape everything
  *  - nested mutations happen inside these JS methods, which is fine
  */
 
@@ -57,6 +59,9 @@ export function composeEditor(config, page) {
  *  - rowSortValue(key, column)      value for non-'key' sort columns, based
  *                                   on STORED values (rows must not jump
  *                                   around while an edit is pending)
+ *  - storedValue(key)               the row's STORED editable value (the one
+ *                                   the edit modal opens on) — used by
+ *                                   replace and the placeholder guard
  *  - allKeys                        array of keys to list
  */
 export function editorCore(config) {
@@ -102,6 +107,12 @@ export function editorCore(config) {
         sortColumn: 'key',
         sortDirection: 'asc',
 
+        // ── Search navigation + replace ───────────────────────────────────
+        currentMatchIndex: 0,
+        replaceOpen: false,
+        // Top-level on purpose (same CSP constraint as editModalValue)
+        replaceValue: '',
+
         // ── Windowed rendering (large files: thousands of rows) ──────────
         displayLimit: 500,
 
@@ -125,6 +136,8 @@ export function editorCore(config) {
                 }, 200);
             });
             this.$watch('searchScope', () => this.persistUiState());
+            // New search: the match cursor restarts from the first result
+            this.$watch('_debouncedQuery', () => { this.currentMatchIndex = 0; });
 
             // Alpine does NOT memoize getters: every template consumer of
             // filteredKeys (x-for, counters, ...) would re-run the full
@@ -253,6 +266,190 @@ export function editorCore(config) {
             this.displayLimit += 500;
         },
 
+        // ── Search navigation (prev/next through matching rows) ──────────
+        // Navigation is per ROW, not per occurrence: the unit of work in a
+        // translation editor is the line.
+
+        get hasQuery() {
+            return this._debouncedQuery.trim() !== '';
+        },
+
+        /**
+         * Rows matching the active search. The filter pipeline already
+         * includes the query, so when one is active the filtered rows ARE
+         * the matches.
+         */
+        get matchKeys() {
+            return this.hasQuery ? this.filteredKeys : [];
+        },
+
+        get matchCount() {
+            return this.matchKeys.length;
+        },
+
+        /** Clamped cursor: the list can shrink under it (filter change). */
+        get safeMatchIndex() {
+            return Math.min(this.currentMatchIndex, Math.max(0, this.matchCount - 1));
+        },
+
+        get matchCounterText() {
+            if (!this.hasQuery) return '';
+            return this.matchCount === 0 ? '0/0' : (this.safeMatchIndex + 1) + '/' + this.matchCount;
+        },
+
+        /** Stronger highlight on the row the match cursor points at. */
+        isCurrentMatchRow(index) {
+            return this.hasQuery && this.matchCount > 0 && index === this.safeMatchIndex;
+        },
+
+        /** Enter = next, Shift+Enter = previous (IDE convention). */
+        onSearchEnter(event) {
+            if (event.shiftKey) {
+                this.prevMatch();
+            } else {
+                this.nextMatch();
+            }
+        },
+
+        nextMatch() {
+            if (this.matchCount === 0) return;
+            this.currentMatchIndex = (this.safeMatchIndex + 1) % this.matchCount;
+            this.scrollToCurrentMatch();
+        },
+
+        prevMatch() {
+            if (this.matchCount === 0) return;
+            this.currentMatchIndex = (this.safeMatchIndex - 1 + this.matchCount) % this.matchCount;
+            this.scrollToCurrentMatch();
+        },
+
+        scrollToCurrentMatch() {
+            // Only displayLimit rows are rendered: extend the window when
+            // the cursor moves beyond it
+            if (this.safeMatchIndex >= this.displayLimit) {
+                this.displayLimit = this.safeMatchIndex + 500;
+            }
+            this.$nextTick(() => {
+                const row = document.querySelector('[data-row-index="' + this.safeMatchIndex + '"]');
+                if (row) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            });
+        },
+
+        // ── Search highlighting ───────────────────────────────────────────
+        // Values are arbitrary content: everything goes through escapeHtml
+        // and only our own <mark> tags are injected.
+
+        escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        },
+
+        _highlight(text) {
+            const value = String(text ?? '');
+            const query = this._debouncedQuery.toLowerCase().trim();
+            if (!query) return this.escapeHtml(value);
+            const lower = value.toLowerCase();
+            let html = '';
+            let pos = 0;
+            let idx = lower.indexOf(query);
+            while (idx !== -1) {
+                html += this.escapeHtml(value.slice(pos, idx))
+                    + '<mark class="search-mark">' + this.escapeHtml(value.slice(idx, idx + query.length)) + '</mark>';
+                pos = idx + query.length;
+                idx = lower.indexOf(query, pos);
+            }
+            return html + this.escapeHtml(value.slice(pos));
+        },
+
+        /** Highlight helpers honoring the search scope. */
+        highlightValue(text) {
+            return this.searchScope === 'keys' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
+        },
+
+        highlightKey(text) {
+            return this.searchScope === 'values' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
+        },
+
+        // ── Replace (single-row only, on purpose) ─────────────────────────
+        // A replacement is a HUMAN edit: the user navigates match by match
+        // with the row in front of them, so it stages through the same path
+        // as the edit modal (→ H on save, M/S preserved). Replace-all is
+        // deliberately absent: it would stamp H on rows nobody read.
+
+        get replaceDisabled() {
+            // Keys are the game's source texts — never replaceable
+            return !this.hasQuery || this.searchScope === 'keys' || this.matchCount === 0;
+        },
+
+        toggleReplace() {
+            this.replaceOpen = !this.replaceOpen;
+            this.persistUiState();
+        },
+
+        /**
+         * Replace every occurrence of the query in the current match row's
+         * VALUE (case-insensitive match, literal replacement), stage it as
+         * a manual edit, then advance. Rows matching on their key only, or
+         * marked for deletion, are skipped.
+         */
+        replaceCurrent() {
+            if (this.replaceDisabled) return;
+            const key = this.matchKeys[this.safeMatchIndex];
+            if (key === undefined) return;
+
+            if (this.isDeleted(key)) {
+                this.nextMatch();
+                return;
+            }
+
+            const query = this._debouncedQuery.toLowerCase().trim();
+            const stored = this.storedValue(key);
+            const base = String(this.editedValues[key] ?? stored);
+            if (!base.toLowerCase().includes(query)) {
+                this.nextMatch();
+                return;
+            }
+
+            const lower = base.toLowerCase();
+            let result = '';
+            let pos = 0;
+            let idx = lower.indexOf(query);
+            while (idx !== -1) {
+                result += base.slice(pos, idx) + this.replaceValue;
+                pos = idx + query.length;
+                idx = lower.indexOf(query, pos);
+            }
+            result += base.slice(pos);
+
+            this.stageEdit(key, result, stored);
+            this.nextMatch();
+        },
+
+        // ── Placeholder guard (non-blocking) ──────────────────────────────
+        // [!v*N] placeholders carry the game's dynamic numbers: an edit or
+        // replacement that alters them silently breaks those values
+        // in-game. Warn, never block.
+
+        _placeholderSignature(text) {
+            const matches = String(text ?? '').match(/\[!v\*\d+\]/g);
+            return matches ? matches.sort().join('') : '';
+        },
+
+        /** A pending edit changed the row's placeholders. */
+        hasPlaceholderWarning(key) {
+            if (!this.isEdited(key)) return false;
+            return this._placeholderSignature(this.storedValue(key))
+                !== this._placeholderSignature(this.editedValues[key]);
+        },
+
+        /** Live warning while typing in the edit modal. */
+        get editModalPlaceholderMismatch() {
+            if (!this.editModal.open) return false;
+            return this._placeholderSignature(this.editModal.originalValue)
+                !== this._placeholderSignature(this.editModalValue);
+        },
+
         // ── Value / tag accessors ({v, t} objects or legacy strings) ─────
 
         getValue(entry) {
@@ -325,7 +522,9 @@ export function editorCore(config) {
                     searchScope: this.searchScope,
                     filters: this.filters,
                     sortColumn: this.sortColumn,
-                    sortDirection: this.sortDirection
+                    sortDirection: this.sortDirection,
+                    replaceOpen: this.replaceOpen,
+                    replaceValue: this.replaceValue
                 }));
             } catch (e) { /* storage full/blocked: non-essential */ }
         },
@@ -346,6 +545,8 @@ export function editorCore(config) {
                 }
                 if (typeof state.sortColumn === 'string') this.sortColumn = state.sortColumn;
                 if (['asc', 'desc'].includes(state.sortDirection)) this.sortDirection = state.sortDirection;
+                if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
+                if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
             } catch (e) { /* corrupted state: keep defaults */ }
         },
 
@@ -369,9 +570,15 @@ export function editorCore(config) {
         },
 
         saveEditModal() {
-            const { key, originalValue } = this.editModal;
-            const value = this.editModalValue;
+            this.stageEdit(this.editModal.key, this.editModalValue, this.editModal.originalValue);
+            this.closeEditModal();
+        },
 
+        /**
+         * Stage an edit (shared by the modal and replace). Setting the
+         * value back to the stored original removes the pending edit.
+         */
+        stageEdit(key, value, originalValue) {
             if (value !== originalValue) {
                 this.editedValues[key] = value;
                 // Editing a key cancels a pending deletion of it
@@ -382,8 +589,6 @@ export function editorCore(config) {
                 this.onEditUnstaged(key);
             }
             this.persistPendingState();
-
-            this.closeEditModal();
         },
 
         /** Page hooks: an edit was staged / reverted to the original value. */

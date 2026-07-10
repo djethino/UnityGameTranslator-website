@@ -232,24 +232,57 @@
                 </label>
             </div>
 
-            {{-- Search --}}
-            <div class="mb-4 flex gap-2">
-                <div class="relative flex-1">
-                    <input type="text" x-model="searchQuery" placeholder="{{ __('merge.search_placeholder') }}"
-                        class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <button x-show="searchQuery" @click="searchQuery = ''" type="button"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                        <i class="fas fa-times"></i>
+            {{-- Search (Enter/Shift+Enter navigate matches) + replace --}}
+            <div class="mb-4 space-y-2">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
+                            placeholder="{{ __('merge.search_placeholder') }}"
+                            class="w-full px-4 py-2 pl-10 pr-32 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            <span x-show="hasQuery" x-cloak class="text-xs text-gray-500 tabular-nums" x-text="matchCounterText"></span>
+                            <button x-show="hasQuery" x-cloak @click="prevMatch()" type="button"
+                                class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_prev') }}">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <button x-show="hasQuery" x-cloak @click="nextMatch()" type="button"
+                                class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_next') }}">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <button x-show="searchQuery" x-cloak @click="searchQuery = ''" type="button"
+                                class="text-gray-500 hover:text-white transition">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <select x-model="searchScope"
+                        class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                        title="{{ __('merge.search_scope_title') }}">
+                        <option value="both">{{ __('merge.search_scope_both') }}</option>
+                        <option value="keys">{{ __('merge.search_scope_keys') }}</option>
+                        <option value="values">{{ __('merge.search_scope_values') }}</option>
+                    </select>
+                    <button type="button" @click="toggleReplace()"
+                        :class="replaceOpen ? 'bg-purple-700 text-white border-purple-500' : 'bg-gray-800 text-gray-300 border-gray-700 hover:text-white'"
+                        class="border rounded-lg px-3 py-2 text-sm transition" title="{{ __('merge.replace') }}">
+                        <i class="fas fa-right-left"></i>
                     </button>
                 </div>
-                <select x-model="searchScope"
-                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                    title="{{ __('merge.search_scope_title') }}">
-                    <option value="both">{{ __('merge.search_scope_both') }}</option>
-                    <option value="keys">{{ __('merge.search_scope_keys') }}</option>
-                    <option value="values">{{ __('merge.search_scope_values') }}</option>
-                </select>
+                {{-- Replace: single-row only, staged as a human edit (→ H), no replace-all.
+                     Applies to the Main column, the only editable one --}}
+                <div x-show="replaceOpen" x-cloak class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
+                            placeholder="{{ __('merge.replace_with') }}"
+                            class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                        <i class="fas fa-right-left absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    </div>
+                    <button type="button" @click="replaceCurrent()" :disabled="replaceDisabled"
+                        class="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white text-sm transition">
+                        {{ __('merge.replace') }}
+                    </button>
+                </div>
             </div>
 
             {{-- Table --}}
@@ -292,8 +325,10 @@
                     </thead>
                     <tbody>
                         {{-- Windowed rendering: huge files stay snappy --}}
-                        <template x-for="key in visibleKeys" :key="key">
-                            <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                        <template x-for="(key, idx) in visibleKeys" :key="key">
+                            <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                                :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
+                                :data-row-index="idx">
                                 {{-- Key + delete affordance --}}
                                 <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
                                     <div class="flex items-center gap-2">
@@ -306,7 +341,7 @@
                                                 <i class="fas fa-trash-alt text-xs"></i>
                                             </button>
                                         </template>
-                                        <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-text="key"></span>
+                                        <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
                                     </div>
                                 </td>
 
@@ -342,8 +377,14 @@
                                     <template x-if="mainData[key] !== undefined || isEdited(key)">
                                         <span class="break-words"
                                             :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
-                                            <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
-                                            <span x-show="!isEdited(key)" x-text="getValue(mainData[key]) !== '' ? getValue(mainData[key]) : @js(__('merge.empty_value'))"></span>
+                                            {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
+                                            <span x-show="hasPlaceholderWarning(key)" x-cloak
+                                                class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
+                                                title="{{ __('merge.placeholder_warning') }}">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
+                                            </span>
+                                            <span x-show="isEdited(key)" x-safe-html="highlightValue(editedValues[key])"></span>
+                                            <span x-show="!isEdited(key)" x-safe-html="mainValueHtml(key)"></span>
                                         </span>
                                     </template>
                                     <template x-if="mainData[key] === undefined && !isEdited(key)">
@@ -361,7 +402,7 @@
                                                 <span :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
                                                 <span class="break-words"
                                                     :class="branchTextTint(branch, key)"
-                                                    x-text="getValue(branch.content[key])"></span>
+                                                    x-safe-html="highlightValue(getValue(branch.content[key]))"></span>
                                             </div>
                                         </template>
                                         <template x-if="branch.content[key] === undefined">
@@ -487,6 +528,9 @@
                         class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                         placeholder="{{ __('merge.enter_translation') }}"
                     ></textarea>
+                    <p x-show="editModalPlaceholderMismatch" x-cloak class="mt-2 text-xs text-orange-400">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholder_warning') }}
+                    </p>
                     <p class="mt-2 text-xs text-gray-500">
                         <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge.save_shortcut') }} &bull;
                         <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge.cancel_shortcut') }}
@@ -734,6 +778,17 @@ document.addEventListener('alpine:init', () => {
             }
             // 'mainValue' — stored value so pending edits don't reorder rows
             return key in this.mainData ? this.getValue(this.mainData[key]).toLowerCase() : '';
+        },
+
+        /** Core hook: the stored editable value (replace, placeholder guard). */
+        storedValue(key) {
+            return this.getValue(this.mainData[key]);
+        },
+
+        /** Main value cell HTML: highlighted, or the empty-value marker. */
+        mainValueHtml(key) {
+            const value = this.getValue(this.mainData[key]);
+            return value !== '' ? this.highlightValue(value) : this.escapeHtml(@js(__('merge.empty_value')));
         },
 
         /** Core hook: a staged manual edit becomes a 'manual' selection.

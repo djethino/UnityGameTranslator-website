@@ -157,24 +157,56 @@
             </button>
         </div>
 
-        {{-- Search --}}
-        <div class="mb-4 flex gap-2">
-            <div class="relative flex-1">
-                <input type="text" x-model="searchQuery" placeholder="{{ __('merge_preview.search_placeholder') }}"
-                    class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <button x-show="searchQuery" @click="searchQuery = ''" type="button"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                    <i class="fas fa-times"></i>
+        {{-- Search (Enter/Shift+Enter navigate matches) + replace --}}
+        <div class="mb-4 space-y-2">
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
+                        placeholder="{{ __('merge_preview.search_placeholder') }}"
+                        class="w-full px-4 py-2 pl-10 pr-32 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        <span x-show="hasQuery" x-cloak class="text-xs text-gray-500 tabular-nums" x-text="matchCounterText"></span>
+                        <button x-show="hasQuery" x-cloak @click="prevMatch()" type="button"
+                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_prev') }}">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                        <button x-show="hasQuery" x-cloak @click="nextMatch()" type="button"
+                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_next') }}">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <button x-show="searchQuery" x-cloak @click="searchQuery = ''" type="button"
+                            class="text-gray-500 hover:text-white transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <select x-model="searchScope"
+                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                    title="{{ __('merge_preview.search_scope_title') }}">
+                    <option value="both">{{ __('merge_preview.search_scope_both') }}</option>
+                    <option value="keys">{{ __('merge_preview.search_scope_keys') }}</option>
+                    <option value="values">{{ __('merge_preview.search_scope_values') }}</option>
+                </select>
+                <button type="button" @click="toggleReplace()"
+                    :class="replaceOpen ? 'bg-purple-700 text-white border-purple-500' : 'bg-gray-800 text-gray-300 border-gray-700 hover:text-white'"
+                    class="border rounded-lg px-3 py-2 text-sm transition" title="{{ __('merge.replace') }}">
+                    <i class="fas fa-right-left"></i>
                 </button>
             </div>
-            <select x-model="searchScope"
-                class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                title="{{ __('merge_preview.search_scope_title') }}">
-                <option value="both">{{ __('merge_preview.search_scope_both') }}</option>
-                <option value="keys">{{ __('merge_preview.search_scope_keys') }}</option>
-                <option value="values">{{ __('merge_preview.search_scope_values') }}</option>
-            </select>
+            {{-- Replace: single-row only, staged as a human edit (→ H), no replace-all --}}
+            <div x-show="replaceOpen" x-cloak class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
+                        placeholder="{{ __('merge.replace_with') }}"
+                        class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                    <i class="fas fa-right-left absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                </div>
+                <button type="button" @click="replaceCurrent()" :disabled="replaceDisabled"
+                    class="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white text-sm transition">
+                    {{ __('merge.replace') }}
+                </button>
+            </div>
         </div>
 
         {{-- Table --}}
@@ -227,10 +259,12 @@
                 </thead>
                 <tbody>
                     {{-- Windowed rendering: huge files stay snappy --}}
-                    <template x-for="key in visibleKeys" :key="key">
-                        <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                    <template x-for="(key, idx) in visibleKeys" :key="key">
+                        <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                            :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
+                            :data-row-index="idx">
                             {{-- Key column --}}
-                            <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-text="key"></td>
+                            <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
 
                             {{-- Local Tag column (clickable for tag change) --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
@@ -264,8 +298,14 @@
                                 <template x-if="localData[key] !== undefined">
                                     <span class="break-words"
                                         :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
-                                        <span x-show="isEdited(key)" x-text="editedValues[key]"></span>
-                                        <span x-show="!isEdited(key)" x-text="getValue(localData[key])"></span>
+                                        {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
+                                        <span x-show="hasPlaceholderWarning(key)" x-cloak
+                                            class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
+                                            title="{{ __('merge.placeholder_warning') }}">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
+                                        </span>
+                                        <span x-show="isEdited(key)" x-safe-html="highlightValue(editedValues[key])"></span>
+                                        <span x-show="!isEdited(key)" x-safe-html="highlightValue(getValue(localData[key]))"></span>
                                     </span>
                                 </template>
                                 <template x-if="localData[key] === undefined">
@@ -290,7 +330,7 @@
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <span class="break-words" x-text="getValue(onlineData[key])"></span>
+                                    <span class="break-words" x-safe-html="highlightValue(getValue(onlineData[key]))"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
                                     <span class="text-gray-600 italic">—</span>
@@ -389,6 +429,9 @@
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                     placeholder="{{ __('merge_preview.enter_translation') }}"
                 ></textarea>
+                <p x-show="editModalPlaceholderMismatch" x-cloak class="mt-2 text-xs text-orange-400">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholder_warning') }}
+                </p>
                 <p class="mt-2 text-xs text-gray-500">
                     <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge_preview.to_save') }} &bull;
                     <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge_preview.to_cancel') }}
@@ -788,6 +831,11 @@ document.addEventListener('alpine:init', () => {
                 return key in this.onlineData ? this.getValue(this.onlineData[key]).toLowerCase() : '';
             }
             return '';
+        },
+
+        /** Core hook: the stored editable value (replace, placeholder guard). */
+        storedValue(key) {
+            return this.getValue(this.localData[key]);
         },
 
         /** Core hook: a staged manual edit selects the local side. */

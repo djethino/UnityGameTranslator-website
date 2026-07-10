@@ -14,6 +14,15 @@ Alpine.data('mergeTable', mergeTable);
 import { composeEditor, normalizeLineEndings } from './components/translation-editor.js';
 window.UGT = { composeEditor, normalizeLineEndings };
 
+// x-html is prohibited by the Alpine CSP build. The editors need to inject
+// their own search-highlight markup, so x-safe-html provides the same
+// semantics restricted to OUR trusted helpers: translation-editor.js
+// escapes every character of the content and only adds <mark> tags.
+Alpine.directive('safe-html', (el, { expression }, { evaluateLater, effect }) => {
+    const getHtml = evaluateLater(expression);
+    effect(() => getHtml(html => { el.innerHTML = html; }));
+});
+
 window.Alpine = Alpine;
 Alpine.start();
 
