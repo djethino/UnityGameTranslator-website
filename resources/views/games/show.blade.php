@@ -1,8 +1,26 @@
 @extends('layouts.app')
 
-@section('title', $game->name . ' Translation - UnityGameTranslator')
+@php
+    // SEO language lists: native names are what speakers actually search for
+    // ("traduction", "Übersetzung"...); the "Native (English)" combo also catches
+    // English-style queries like ":game french translation".
+    $seoLanguageNames = config('language-names', []);
+    $seoNativeLanguages = $targetLanguages->map(fn ($lang) => $seoLanguageNames[$lang] ?? $lang)->values();
+    $seoComboLanguages = $targetLanguages->map(function ($lang) use ($seoLanguageNames) {
+        $native = $seoLanguageNames[$lang] ?? $lang;
+        return $native === $lang ? $lang : $native . ' (' . $lang . ')';
+    })->values();
+    $seoTitleLanguages = $seoNativeLanguages->take(3)->implode(', ') . ($seoNativeLanguages->count() > 3 ? '…' : '');
+    $seoDescription = $targetLanguages->isEmpty()
+        ? __('seo.game_description_nolang', ['game' => $game->name])
+        : __('seo.game_description', ['game' => $game->name, 'languages' => $seoComboLanguages->take(5)->implode(', ')]);
+@endphp
 
-@section('description')Free {{ $game->name }} translation download. AI automatic translation available in {{ implode(', ', $targetLanguages->toArray()) }}. {{ count($translationGroups) }} community translations - play {{ $game->name }} in your language!@endsection
+@section('title', $targetLanguages->isEmpty()
+    ? __('seo.game_title_nolang', ['game' => $game->name])
+    : __('seo.game_title', ['game' => $game->name, 'languages' => $seoTitleLanguages]))
+
+@section('description', $seoDescription)
 
 @section('og_type', 'article')
 
@@ -13,9 +31,9 @@
 {
     "@@context": "https://schema.org",
     "@@type": "VideoGame",
-    "name": "{{ $game->name }}",
+    "name": {!! json_encode($game->name, JSON_UNESCAPED_UNICODE) !!},
     "image": "{{ $game->image_url ?? '' }}",
-    "description": "Community translations for {{ $game->name }}",
+    "description": {!! json_encode($seoDescription, JSON_UNESCAPED_UNICODE) !!},
     "url": "{{ route('games.show', $game) }}",
     "offers": {
         "@@type": "Offer",
@@ -45,7 +63,7 @@
         {
             "@@type": "ListItem",
             "position": 3,
-            "name": "{{ $game->name }}",
+            "name": {!! json_encode($game->name, JSON_UNESCAPED_UNICODE) !!},
             "item": "{{ route('games.show', $game) }}"
         }
     ]
@@ -95,6 +113,13 @@
         </a>
     @endauth
 </div>
+
+@if($targetLanguages->isNotEmpty())
+    {{-- Localized indexable intro: names the game and every available language natively --}}
+    <p class="text-gray-400 text-sm sm:text-base mb-8 max-w-3xl">
+        {{ __('seo.game_intro', ['game' => $game->name, 'languages' => $seoComboLanguages->implode(', ')]) }}
+    </p>
+@endif
 
 <!-- Filters -->
 <form action="{{ route('games.show', $game) }}" method="GET" class="bg-gray-800 rounded-lg p-4 mb-8 flex flex-wrap gap-4 items-end">

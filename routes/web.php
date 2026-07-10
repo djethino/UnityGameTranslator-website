@@ -21,6 +21,13 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
 Route::get('/sitemap-games-{page}.xml', [SitemapController::class, 'games'])->where('page', '[0-9]+')->name('sitemap.games');
 
+// IndexNow key file - lets Bing/Yandex/etc. verify pings sent by IndexNowService
+Route::get('/indexnow.txt', function () {
+    $key = config('services.indexnow.key');
+    abort_unless(!empty($key), 404);
+    return response($key, 200)->header('Content-Type', 'text/plain');
+})->name('indexnow.key');
+
 // Language switcher
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 

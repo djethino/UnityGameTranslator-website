@@ -63,4 +63,10 @@ return [
         'key' => env('RAWG_KEY'),
     ],
 
+    'indexnow' => [
+        // Any 8-128 char hex/alphanumeric string; served at /indexnow.txt and
+        // sent with each ping so search engines can verify we own the host.
+        'key' => env('INDEXNOW_KEY'),
+    ],
+
 ];

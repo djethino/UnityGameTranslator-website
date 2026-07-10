@@ -768,5 +768,14 @@
     "fonts.scale": "スケール",
     "fonts.disabled": "無効",
     "fonts.no_fallback": "フォールバックなし",
-    "fonts.tooltip": "この翻訳にはフォント設定が含まれています。お使いのシステムにフォントがインストールされていれば、Modが自動的にそれらのフォントを使用します。インストールされていない場合は、ゲームの元のフォントが使用されます。"
+    "fonts.tooltip": "この翻訳にはフォント設定が含まれています。お使いのシステムにフォントがインストールされていれば、Modが自動的にそれらのフォントを使用します。インストールされていない場合は、ゲームの元のフォントが使用されます。",
+    "seo.default_title": "UnityGameTranslator - コミュニティによるゲーム翻訳",
+    "seo.default_description": "Unityゲーム向けの無料AI自動翻訳。コミュニティの翻訳をダウンロードするか、ローカルAIで自分だけの翻訳を作成。API費用はかかりません。",
+    "seo.games_title": "ゲーム翻訳 - あらゆる言語で無料ダウンロード | UnityGameTranslator",
+    "seo.games_description": "Unityゲームの無料翻訳を閲覧・ダウンロード。AI自動翻訳に対応。API費用なしのコミュニティ主導のゲームローカライズ。",
+    "seo.game_title": ":game の翻訳（:languages）- 無料ダウンロード | UnityGameTranslator",
+    "seo.game_title_nolang": ":game の翻訳 - UnityGameTranslator",
+    "seo.game_description": ":game の翻訳を無料ダウンロード：:languages。コミュニティ製・AI製のゲーム翻訳で、無料MOD「UnityGameTranslator」を使って :game を自分の言語でプレイできます。",
+    "seo.game_description_nolang": ":game のコミュニティ翻訳。無料のオープンソースMOD「UnityGameTranslator」をインストールして、:game を自分の言語に翻訳（日本語化）する最初のユーザーになりましょう。",
+    "seo.game_intro": ":game のコミュニティ翻訳を :languages で無料ダウンロード。翻訳は人力・AI生成、またはその両方の組み合わせがあります。無料のオープンソースMOD「UnityGameTranslator」をインストールし、下記から翻訳をダウンロードして :game を自分の言語でプレイしましょう。"
 }

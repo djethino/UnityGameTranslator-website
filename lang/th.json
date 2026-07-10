@@ -768,5 +768,14 @@
     "fonts.scale": "ขนาด",
     "fonts.disabled": "ปิดใช้งาน",
     "fonts.no_fallback": "ไม่มีฟอนต์สำรอง",
-    "fonts.tooltip": "การกำหนดค่าฟอนต์ที่รวมอยู่กับการแปลนี้ ม็อดจะใช้ฟอนต์เหล่านี้โดยอัตโนมัติหากมีอยู่ในระบบของคุณ มิฉะนั้นจะใช้ฟอนต์เกมต้นฉบับ"
+    "fonts.tooltip": "การกำหนดค่าฟอนต์ที่รวมอยู่กับการแปลนี้ ม็อดจะใช้ฟอนต์เหล่านี้โดยอัตโนมัติหากมีอยู่ในระบบของคุณ มิฉะนั้นจะใช้ฟอนต์เกมต้นฉบับ",
+    "seo.default_title": "UnityGameTranslator - งานแปลเกมจากชุมชน",
+    "seo.default_description": "แปลเกม Unity อัตโนมัติด้วย AI ฟรี ดาวน์โหลดงานแปลจากชุมชนหรือสร้างเองด้วย AI ในเครื่อง ไม่มีค่าใช้จ่าย API",
+    "seo.games_title": "งานแปลเกม - ดาวน์โหลดฟรีทุกภาษา | UnityGameTranslator",
+    "seo.games_description": "เรียกดูและดาวน์โหลดงานแปลเกม Unity ฟรี รองรับการแปลอัตโนมัติด้วย AI งานแปลเกมโดยชุมชนโดยไม่มีค่าใช้จ่าย API",
+    "seo.game_title": "งานแปล :game (:languages) - ดาวน์โหลดฟรี | UnityGameTranslator",
+    "seo.game_title_nolang": "งานแปล :game - UnityGameTranslator",
+    "seo.game_description": "ดาวน์โหลดงานแปล :game ฟรี: :languages งานแปลจากชุมชนและ AI - เล่น :game ในภาษาของคุณด้วยม็อด UnityGameTranslator ฟรี",
+    "seo.game_description_nolang": "งานแปล :game จากชุมชน ติดตั้งม็อดโอเพนซอร์ส UnityGameTranslator ฟรี และเป็นคนแรกที่แปล :game เป็นภาษาของคุณ",
+    "seo.game_intro": "ดาวน์โหลดงานแปล :game จากชุมชนฟรีใน :languages งานแปลอาจทำโดยมนุษย์ สร้างด้วย AI หรือทั้งสองอย่างผสมกัน - ติดตั้งม็อดโอเพนซอร์ส UnityGameTranslator ฟรี ดาวน์โหลดงานแปลด้านล่าง แล้วเล่น :game ในภาษาของคุณ"
 }

@@ -768,5 +768,14 @@
     "fonts.scale": "Skalierung",
     "fonts.disabled": "Deaktiviert",
     "fonts.no_fallback": "Keine Ersatzschrift",
-    "fonts.tooltip": "Schriftartkonfiguration in dieser Übersetzung enthalten. Der Mod verwendet diese Schriftarten automatisch, wenn sie auf Ihrem System verfügbar sind, andernfalls werden die Original-Spielschriftarten verwendet."
+    "fonts.tooltip": "Schriftartkonfiguration in dieser Übersetzung enthalten. Der Mod verwendet diese Schriftarten automatisch, wenn sie auf Ihrem System verfügbar sind, andernfalls werden die Original-Spielschriftarten verwendet.",
+    "seo.default_title": "UnityGameTranslator - Community-Spieleübersetzungen",
+    "seo.default_description": "Kostenlose automatische KI-Übersetzung für Unity-Spiele. Lade Community-Übersetzungen herunter oder erstelle eigene mit lokaler KI. Keine API-Kosten.",
+    "seo.games_title": "Spieleübersetzungen - Kostenloser Download in jeder Sprache | UnityGameTranslator",
+    "seo.games_description": "Durchsuche und lade kostenlose Übersetzungen für Unity-Spiele herunter. Automatische KI-Übersetzung verfügbar. Community-Lokalisierung ohne API-Kosten.",
+    "seo.game_title": ":game Übersetzungen (:languages) - Kostenloser Download | UnityGameTranslator",
+    "seo.game_title_nolang": ":game Übersetzungen - UnityGameTranslator",
+    "seo.game_description": "Lade kostenlose :game-Übersetzungen herunter: :languages. Community- und KI-Übersetzungen - spiele :game in deiner Sprache mit dem kostenlosen Mod UnityGameTranslator.",
+    "seo.game_description_nolang": "Community-Übersetzungen für :game. Installiere den kostenlosen Open-Source-Mod UnityGameTranslator und übersetze :game als Erster in deine Sprache.",
+    "seo.game_intro": "Lade kostenlose Community-Übersetzungen für :game in :languages herunter. Übersetzungen können von Menschen, von KI oder gemischt erstellt sein - installiere den kostenlosen Open-Source-Mod UnityGameTranslator, lade unten eine Übersetzung herunter und spiele :game in deiner Sprache."
 }

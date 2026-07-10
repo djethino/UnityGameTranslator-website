@@ -768,5 +768,14 @@
     "fonts.scale": "缩放",
     "fonts.disabled": "已禁用",
     "fonts.no_fallback": "无备用字体",
-    "fonts.tooltip": "此翻译包含字体配置。模组将自动使用这些字体（如果您的系统中可用），否则使用游戏原始字体。"
+    "fonts.tooltip": "此翻译包含字体配置。模组将自动使用这些字体（如果您的系统中可用），否则使用游戏原始字体。",
+    "seo.default_title": "UnityGameTranslator - 社区游戏汉化与翻译",
+    "seo.default_description": "为 Unity 游戏提供免费 AI 自动翻译。下载社区翻译或使用本地 AI 生成自己的翻译。无需 API 费用。",
+    "seo.games_title": "游戏翻译 - 免费下载任意语言 | UnityGameTranslator",
+    "seo.games_description": "浏览并下载 Unity 游戏的免费翻译。支持 AI 自动翻译。社区驱动的游戏本地化，无需 API 费用。",
+    "seo.game_title": ":game 翻译 (:languages) - 免费下载 | UnityGameTranslator",
+    "seo.game_title_nolang": ":game 翻译 - UnityGameTranslator",
+    "seo.game_description": "免费下载 :game 翻译：:languages。社区制作和 AI 游戏翻译 - 使用免费的 UnityGameTranslator 模组用你的语言游玩 :game。",
+    "seo.game_description_nolang": ":game 的社区翻译。安装免费开源的 UnityGameTranslator 模组，成为第一个将 :game 翻译成你语言的人。",
+    "seo.game_intro": "免费下载 :game 的社区翻译，语言：:languages。翻译可以是人工制作、AI 生成或两者结合 - 安装免费开源的 UnityGameTranslator 模组，在下方下载翻译，用你的语言游玩 :game。"
 }

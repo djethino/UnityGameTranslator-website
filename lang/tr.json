@@ -768,5 +768,14 @@
     "fonts.scale": "Ölçek",
     "fonts.disabled": "Devre dışı",
     "fonts.no_fallback": "Yedek yok",
-    "fonts.tooltip": "Bu çeviriye dahil edilen yazı tipi yapılandırması. Mod, sisteminizde mevcutsa bu yazı tiplerini otomatik olarak kullanır, aksi takdirde orijinal oyun yazı tipleri kullanılır."
+    "fonts.tooltip": "Bu çeviriye dahil edilen yazı tipi yapılandırması. Mod, sisteminizde mevcutsa bu yazı tiplerini otomatik olarak kullanır, aksi takdirde orijinal oyun yazı tipleri kullanılır.",
+    "seo.default_title": "UnityGameTranslator - Topluluk Oyun Çevirileri",
+    "seo.default_description": "Unity oyunları için ücretsiz otomatik yapay zeka çevirisi. Topluluk çevirilerini indirin veya yerel yapay zeka ile kendinizinkini oluşturun. API maliyeti yok.",
+    "seo.games_title": "Oyun Çevirileri - Her Dilde Ücretsiz İndir | UnityGameTranslator",
+    "seo.games_description": "Unity oyunları için ücretsiz çevirilere göz atın ve indirin. Otomatik yapay zeka çevirisi mevcut. Topluluk destekli oyun yerelleştirmesi, API maliyeti yok.",
+    "seo.game_title": ":game Çevirisi (:languages) - Ücretsiz İndir | UnityGameTranslator",
+    "seo.game_title_nolang": ":game Çevirisi - UnityGameTranslator",
+    "seo.game_description": "Ücretsiz :game çevirilerini indirin: :languages. Topluluk ve yapay zeka çevirileri - ücretsiz UnityGameTranslator modu ile :game oyununu kendi dilinizde oynayın.",
+    "seo.game_description_nolang": ":game için topluluk çevirileri. Ücretsiz açık kaynaklı UnityGameTranslator modunu kurun ve :game oyununu kendi dilinize çeviren ilk kişi olun.",
+    "seo.game_intro": ":game için :languages dillerinde ücretsiz topluluk çevirilerini indirin. Çeviriler insan yapımı, yapay zeka üretimi veya ikisinin karışımı olabilir - ücretsiz açık kaynaklı UnityGameTranslator modunu kurun, aşağıdan bir çeviri indirin ve :game oyununu kendi dilinizde oynayın."
 }

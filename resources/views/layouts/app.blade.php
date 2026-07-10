@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'UnityGameTranslator - Community Game Translations')</title>
-    <meta name="description" content="@yield('description', 'Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.')">
+    <title>@yield('title', __('seo.default_title'))</title>
+    <meta name="description" content="@yield('description', __('seo.default_description'))">
     <meta name="keywords" content="Unity game translation, automatic game translation, AI game localization, free game translation, Unity mod, OpenAI compatible, local AI translation">
     <link rel="canonical" href="{{ url()->current() }}">
 
@@ -38,8 +38,8 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:title" content="@yield('title', 'UnityGameTranslator - Community Game Translations')">
-    <meta property="og:description" content="@yield('description', 'Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.')">
+    <meta property="og:title" content="@yield('title', __('seo.default_title'))">
+    <meta property="og:description" content="@yield('description', __('seo.default_description'))">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:site_name" content="UnityGameTranslator">
     <meta property="og:locale" content="{{ app()->getLocale() }}">
@@ -51,8 +51,8 @@
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'UnityGameTranslator - Community Game Translations')">
-    <meta name="twitter:description" content="@yield('description', 'Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.')">
+    <meta name="twitter:title" content="@yield('title', __('seo.default_title'))">
+    <meta name="twitter:description" content="@yield('description', __('seo.default_description'))">
     @hasSection('og_image')
     <meta name="twitter:image" content="@yield('og_image')">
     @else

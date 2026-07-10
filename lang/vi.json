@@ -768,5 +768,14 @@
     "fonts.scale": "Tỉ lệ",
     "fonts.disabled": "Đã tắt",
     "fonts.no_fallback": "Không có dự phòng",
-    "fonts.tooltip": "Cấu hình phông chữ được bao gồm trong bản dịch này. Mod sẽ tự động sử dụng các phông chữ này nếu có sẵn trên hệ thống của bạn, nếu không sẽ sử dụng phông chữ gốc của game."
+    "fonts.tooltip": "Cấu hình phông chữ được bao gồm trong bản dịch này. Mod sẽ tự động sử dụng các phông chữ này nếu có sẵn trên hệ thống của bạn, nếu không sẽ sử dụng phông chữ gốc của game.",
+    "seo.default_title": "UnityGameTranslator - Bản dịch game từ cộng đồng",
+    "seo.default_description": "Dịch tự động bằng AI miễn phí cho game Unity. Tải bản dịch từ cộng đồng hoặc tự tạo bằng AI cục bộ. Không tốn phí API.",
+    "seo.games_title": "Bản dịch game - Tải miễn phí mọi ngôn ngữ | UnityGameTranslator",
+    "seo.games_description": "Duyệt và tải bản dịch miễn phí cho game Unity. Hỗ trợ dịch tự động bằng AI. Việt hóa và bản địa hóa game bởi cộng đồng, không tốn phí API.",
+    "seo.game_title": "Bản dịch :game (:languages) - Tải miễn phí | UnityGameTranslator",
+    "seo.game_title_nolang": "Bản dịch :game - UnityGameTranslator",
+    "seo.game_description": "Tải bản dịch :game miễn phí: :languages. Bản dịch từ cộng đồng và AI - chơi :game bằng ngôn ngữ của bạn với mod UnityGameTranslator miễn phí.",
+    "seo.game_description_nolang": "Bản dịch :game từ cộng đồng. Cài mod mã nguồn mở miễn phí UnityGameTranslator và trở thành người đầu tiên dịch :game sang ngôn ngữ của bạn.",
+    "seo.game_intro": "Tải bản dịch :game miễn phí từ cộng đồng bằng :languages. Bản dịch có thể do con người thực hiện, tạo bằng AI hoặc kết hợp cả hai - cài mod mã nguồn mở miễn phí UnityGameTranslator, tải bản dịch bên dưới và chơi :game bằng ngôn ngữ của bạn."
 }

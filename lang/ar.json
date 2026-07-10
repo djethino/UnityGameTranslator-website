@@ -768,5 +768,14 @@
     "fonts.scale": "مقياس",
     "fonts.disabled": "معطّل",
     "fonts.no_fallback": "بدون بديل",
-    "fonts.tooltip": "إعدادات الخطوط مضمّنة مع هذه الترجمة. ستستخدم الإضافة هذه الخطوط تلقائياً إن كانت متوفرة على نظامك، وإلا ستُستخدم خطوط اللعبة الأصلية."
+    "fonts.tooltip": "إعدادات الخطوط مضمّنة مع هذه الترجمة. ستستخدم الإضافة هذه الخطوط تلقائياً إن كانت متوفرة على نظامك، وإلا ستُستخدم خطوط اللعبة الأصلية.",
+    "seo.default_title": "UnityGameTranslator - ترجمات الألعاب من المجتمع",
+    "seo.default_description": "ترجمة آلية مجانية بالذكاء الاصطناعي لألعاب Unity. نزّل ترجمات المجتمع أو أنشئ ترجمتك الخاصة بذكاء اصطناعي محلي. بدون تكاليف API.",
+    "seo.games_title": "ترجمات الألعاب - تنزيل مجاني بأي لغة | UnityGameTranslator",
+    "seo.games_description": "تصفّح ونزّل ترجمات مجانية لألعاب Unity. ترجمة آلية بالذكاء الاصطناعي متاحة. توطين مجتمعي للألعاب بدون تكاليف API.",
+    "seo.game_title": "ترجمات :game (:languages) - تنزيل مجاني | UnityGameTranslator",
+    "seo.game_title_nolang": "ترجمات :game - UnityGameTranslator",
+    "seo.game_description": "نزّل ترجمات مجانية للعبة :game: :languages. ترجمات من المجتمع وبالذكاء الاصطناعي - العب :game بلغتك مع مود UnityGameTranslator المجاني.",
+    "seo.game_description_nolang": "ترجمات المجتمع للعبة :game. ثبّت مود UnityGameTranslator المجاني مفتوح المصدر وكن أول من يترجم :game إلى لغتك.",
+    "seo.game_intro": "نزّل ترجمات مجانية من المجتمع للعبة :game باللغات :languages. يمكن أن تكون الترجمات بشرية أو مُنشأة بالذكاء الاصطناعي أو مزيجًا من الاثنين - ثبّت مود UnityGameTranslator المجاني مفتوح المصدر، ونزّل ترجمة أدناه، والعب :game بلغتك."
 }

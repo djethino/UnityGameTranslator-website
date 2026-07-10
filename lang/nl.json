@@ -768,5 +768,14 @@
     "fonts.scale": "Schaal",
     "fonts.disabled": "Uitgeschakeld",
     "fonts.no_fallback": "Geen terugval",
-    "fonts.tooltip": "Lettertypeconfiguratie meegeleverd met deze vertaling. De mod gebruikt deze lettertypen automatisch als ze beschikbaar zijn op je systeem, anders worden de originele spellettertypen gebruikt."
+    "fonts.tooltip": "Lettertypeconfiguratie meegeleverd met deze vertaling. De mod gebruikt deze lettertypen automatisch als ze beschikbaar zijn op je systeem, anders worden de originele spellettertypen gebruikt.",
+    "seo.default_title": "UnityGameTranslator - Game-vertalingen van de community",
+    "seo.default_description": "Gratis automatische AI-vertaling voor Unity-games. Download community-vertalingen of maak je eigen vertaling met lokale AI. Geen API-kosten.",
+    "seo.games_title": "Game-vertalingen - Gratis downloaden in elke taal | UnityGameTranslator",
+    "seo.games_description": "Blader door en download gratis vertalingen voor Unity-games. Automatische AI-vertaling beschikbaar. Game-lokalisatie door de community, zonder API-kosten.",
+    "seo.game_title": ":game-vertalingen (:languages) - Gratis download | UnityGameTranslator",
+    "seo.game_title_nolang": ":game-vertalingen - UnityGameTranslator",
+    "seo.game_description": "Download gratis :game-vertalingen: :languages. Game-vertalingen gemaakt door de community en AI - speel :game in jouw taal met de gratis UnityGameTranslator-mod.",
+    "seo.game_description_nolang": "Community-vertalingen voor :game. Installeer de gratis open-source UnityGameTranslator-mod en wees de eerste die :game naar jouw taal vertaalt.",
+    "seo.game_intro": "Download gratis community-vertalingen voor :game in :languages. Vertalingen kunnen door mensen gemaakt, door AI gegenereerd of een mix van beide zijn - installeer de gratis open-source UnityGameTranslator-mod, download hieronder een vertaling en speel :game in jouw taal."
 }

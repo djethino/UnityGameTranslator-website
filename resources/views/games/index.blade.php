@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Game Translations - Free AI Translation for Unity Games')
+@section('title', __('seo.games_title'))
 
-@section('description', 'Browse and download free translations for Unity games. Automatic AI translation available. Community-powered game localization with no API costs.')
+@section('description', __('seo.games_description'))
 
 @push('head')
 <script type="application/ld+json">
 {
     "@@context": "https://schema.org",
     "@@type": "ItemList",
-    "name": "Unity Games with Translations",
-    "description": "Browse and download free translations for Unity games",
+    "name": {!! json_encode(__('games.browse'), JSON_UNESCAPED_UNICODE) !!},
+    "description": {!! json_encode(__('seo.games_description'), JSON_UNESCAPED_UNICODE) !!},
     "numberOfItems": {{ $games->total() }},
     "itemListElement": [
         @foreach($games->take(10) as $index => $game)
@@ -19,7 +19,7 @@
             "position": {{ $index + 1 }},
             "item": {
                 "@@type": "VideoGame",
-                "name": "{{ $game->name }}",
+                "name": {!! json_encode($game->name, JSON_UNESCAPED_UNICODE) !!},
                 "url": "{{ route('games.show', $game) }}"
                 @if($game->image_url)
                 ,"image": "{{ $game->image_url }}"

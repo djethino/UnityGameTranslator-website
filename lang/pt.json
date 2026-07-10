@@ -768,5 +768,14 @@
     "fonts.scale": "Escala",
     "fonts.disabled": "Desativado",
     "fonts.no_fallback": "Sem alternativa",
-    "fonts.tooltip": "Configuração de fontes incluída nesta tradução. O mod usará automaticamente estas fontes se estiverem disponíveis no seu sistema, caso contrário as fontes originais do jogo serão usadas."
+    "fonts.tooltip": "Configuração de fontes incluída nesta tradução. O mod usará automaticamente estas fontes se estiverem disponíveis no seu sistema, caso contrário as fontes originais do jogo serão usadas.",
+    "seo.default_title": "UnityGameTranslator - Traduções de Jogos pela Comunidade",
+    "seo.default_description": "Tradução automática por IA gratuita para jogos Unity. Baixe traduções da comunidade ou gere a sua com IA local. Sem custos de API.",
+    "seo.games_title": "Traduções de Jogos - Download Grátis em Qualquer Idioma | UnityGameTranslator",
+    "seo.games_description": "Explore e baixe traduções gratuitas para jogos Unity. Tradução automática por IA disponível. Localização de jogos feita pela comunidade, sem custos de API.",
+    "seo.game_title": "Tradução de :game (:languages) - Download Grátis | UnityGameTranslator",
+    "seo.game_title_nolang": "Tradução de :game - UnityGameTranslator",
+    "seo.game_description": "Baixe traduções gratuitas de :game: :languages. Traduções feitas pela comunidade e por IA - jogue :game no seu idioma com o mod gratuito UnityGameTranslator.",
+    "seo.game_description_nolang": "Traduções da comunidade para :game. Instale o mod gratuito e open source UnityGameTranslator e seja o primeiro a traduzir :game para o seu idioma.",
+    "seo.game_intro": "Baixe traduções gratuitas da comunidade para :game em :languages. As traduções podem ser feitas por humanos, geradas por IA ou uma mistura de ambos - instale o mod gratuito e open source UnityGameTranslator, baixe uma tradução abaixo e jogue :game no seu idioma."
 }

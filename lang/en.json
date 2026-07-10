@@ -768,5 +768,15 @@
     "fonts.scale": "Scale",
     "fonts.disabled": "Disabled",
     "fonts.no_fallback": "No fallback",
-    "fonts.tooltip": "Font configuration included with this translation. The mod will automatically use these fonts if available on your system, otherwise original game fonts are used."
+    "fonts.tooltip": "Font configuration included with this translation. The mod will automatically use these fonts if available on your system, otherwise original game fonts are used.",
+
+    "seo.default_title": "UnityGameTranslator - Community Game Translations",
+    "seo.default_description": "Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.",
+    "seo.games_title": "Game Translations - Free Download in Any Language | UnityGameTranslator",
+    "seo.games_description": "Browse and download free translations for Unity games. Automatic AI translation available. Community-powered game localization with no API costs.",
+    "seo.game_title": ":game Translations (:languages) - Free Download | UnityGameTranslator",
+    "seo.game_title_nolang": ":game Translations - UnityGameTranslator",
+    "seo.game_description": "Download free :game translations: :languages. Community-made and AI game translations - play :game in your language with the free UnityGameTranslator mod.",
+    "seo.game_description_nolang": "Community translations for :game. Install the free open-source UnityGameTranslator mod and be the first to translate :game into your language.",
+    "seo.game_intro": "Download free community translations for :game in :languages. Translations can be human-made, AI-generated or a mix of both - install the free open-source UnityGameTranslator mod, download a translation below and play :game in your language."
 }

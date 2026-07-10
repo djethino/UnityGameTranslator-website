@@ -59,6 +59,39 @@ class Translation extends Model
                 $translation->reviewed_hash = null;
             }
         });
+
+        // When public content changes, refresh games.updated_at (sitemap <lastmod>)
+        // and ping IndexNow search engines. Covers every path: web upload, API
+        // upload, merge apply, edit/delete, admin delete.
+        $syncSearchEngines = function (Translation $translation) {
+            $game = $translation->game;
+            if ($game) {
+                $game->touch();
+                \App\Jobs\SubmitGameToIndexNow::dispatch($game->id);
+            }
+        };
+        static::created(function (Translation $translation) use ($syncSearchEngines) {
+            if ($translation->visibility === 'public') {
+                $syncSearchEngines($translation);
+            }
+        });
+        static::deleted(function (Translation $translation) use ($syncSearchEngines) {
+            if ($translation->visibility === 'public') {
+                $syncSearchEngines($translation);
+            }
+        });
+        static::updated(function (Translation $translation) use ($syncSearchEngines) {
+            // Only content-level changes matter to search engines - not vote or
+            // download counter increments, which fire 'updated' constantly.
+            // getOriginal() still holds pre-save values inside this event, so a
+            // public -> branch unpublish (page content changed too) is caught.
+            if (!$translation->wasChanged(['file_hash', 'notes', 'status', 'visibility'])) {
+                return;
+            }
+            if ($translation->visibility === 'public' || $translation->getOriginal('visibility') === 'public') {
+                $syncSearchEngines($translation);
+            }
+        });
     }
 
     /**

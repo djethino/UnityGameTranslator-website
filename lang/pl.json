@@ -768,5 +768,14 @@
     "fonts.scale": "Skala",
     "fonts.disabled": "Wyłączona",
     "fonts.no_fallback": "Brak czcionki zastępczej",
-    "fonts.tooltip": "Konfiguracja czcionek dołączona do tego tłumaczenia. Mod automatycznie użyje tych czcionek, jeśli są dostępne w twoim systemie, w przeciwnym razie zostaną użyte oryginalne czcionki gry."
+    "fonts.tooltip": "Konfiguracja czcionek dołączona do tego tłumaczenia. Mod automatycznie użyje tych czcionek, jeśli są dostępne w twoim systemie, w przeciwnym razie zostaną użyte oryginalne czcionki gry.",
+    "seo.default_title": "UnityGameTranslator - Społecznościowe tłumaczenia gier",
+    "seo.default_description": "Darmowe automatyczne tłumaczenie AI dla gier Unity. Pobierz tłumaczenia społeczności lub stwórz własne z lokalną AI. Bez kosztów API.",
+    "seo.games_title": "Tłumaczenia gier - Darmowe pobieranie w każdym języku | UnityGameTranslator",
+    "seo.games_description": "Przeglądaj i pobieraj darmowe tłumaczenia gier Unity. Dostępne automatyczne tłumaczenie AI. Społecznościowa lokalizacja gier bez kosztów API.",
+    "seo.game_title": "Tłumaczenia gry :game (:languages) - Darmowe pobieranie | UnityGameTranslator",
+    "seo.game_title_nolang": "Tłumaczenia gry :game - UnityGameTranslator",
+    "seo.game_description": "Pobierz darmowe tłumaczenia gry :game: :languages. Tłumaczenia gier tworzone przez społeczność i AI - graj w :game w swoim języku z darmowym modem UnityGameTranslator.",
+    "seo.game_description_nolang": "Społecznościowe tłumaczenia gry :game. Zainstaluj darmowy, otwartoźródłowy mod UnityGameTranslator i jako pierwszy przetłumacz :game na swój język (np. stwórz spolszczenie).",
+    "seo.game_intro": "Pobierz darmowe społecznościowe tłumaczenia gry :game w językach: :languages. Tłumaczenia mogą być tworzone przez ludzi, generowane przez AI lub stanowić połączenie obu - zainstaluj darmowy, otwartoźródłowy mod UnityGameTranslator, pobierz tłumaczenie poniżej i graj w :game w swoim języku."
 }

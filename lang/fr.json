@@ -768,5 +768,14 @@
     "fonts.scale": "Échelle",
     "fonts.disabled": "Désactivée",
     "fonts.no_fallback": "Pas de substitution",
-    "fonts.tooltip": "Configuration des polices incluse avec cette traduction. Le mod utilisera automatiquement ces polices si elles sont disponibles sur votre système, sinon les polices originales du jeu seront utilisées."
+    "fonts.tooltip": "Configuration des polices incluse avec cette traduction. Le mod utilisera automatiquement ces polices si elles sont disponibles sur votre système, sinon les polices originales du jeu seront utilisées.",
+    "seo.default_title": "UnityGameTranslator - Traductions de jeux par la communauté",
+    "seo.default_description": "Traduction automatique par IA gratuite pour les jeux Unity. Téléchargez des traductions communautaires ou générez les vôtres avec une IA locale. Sans frais d'API.",
+    "seo.games_title": "Traductions de jeux - Téléchargement gratuit dans toutes les langues | UnityGameTranslator",
+    "seo.games_description": "Parcourez et téléchargez des traductions gratuites pour les jeux Unity. Traduction automatique par IA disponible. Localisation communautaire sans frais d'API.",
+    "seo.game_title": "Traductions :game (:languages) - Téléchargement gratuit | UnityGameTranslator",
+    "seo.game_title_nolang": "Traductions :game - UnityGameTranslator",
+    "seo.game_description": "Téléchargez des traductions gratuites de :game : :languages. Traductions communautaires et par IA - jouez à :game dans votre langue avec le mod gratuit UnityGameTranslator.",
+    "seo.game_description_nolang": "Traductions communautaires pour :game. Installez le mod gratuit et open source UnityGameTranslator et soyez le premier à traduire :game dans votre langue.",
+    "seo.game_intro": "Téléchargez des traductions communautaires gratuites de :game en :languages. Les traductions peuvent être réalisées par des humains, générées par IA ou un mélange des deux - installez le mod gratuit et open source UnityGameTranslator, téléchargez une traduction ci-dessous et jouez à :game dans votre langue."
 }

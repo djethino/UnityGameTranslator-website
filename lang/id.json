@@ -768,5 +768,14 @@
     "fonts.scale": "Skala",
     "fonts.disabled": "Nonaktif",
     "fonts.no_fallback": "Tanpa cadangan",
-    "fonts.tooltip": "Konfigurasi font disertakan dengan terjemahan ini. Mod akan otomatis menggunakan font ini jika tersedia di sistemmu, jika tidak font asli game yang digunakan."
+    "fonts.tooltip": "Konfigurasi font disertakan dengan terjemahan ini. Mod akan otomatis menggunakan font ini jika tersedia di sistemmu, jika tidak font asli game yang digunakan.",
+    "seo.default_title": "UnityGameTranslator - Terjemahan Game dari Komunitas",
+    "seo.default_description": "Terjemahan AI otomatis gratis untuk game Unity. Unduh terjemahan komunitas atau buat sendiri dengan AI lokal. Tanpa biaya API.",
+    "seo.games_title": "Terjemahan Game - Unduh Gratis dalam Berbagai Bahasa | UnityGameTranslator",
+    "seo.games_description": "Jelajahi dan unduh terjemahan gratis untuk game Unity. Tersedia terjemahan AI otomatis. Lokalisasi game dari komunitas tanpa biaya API.",
+    "seo.game_title": "Terjemahan :game (:languages) - Unduh Gratis | UnityGameTranslator",
+    "seo.game_title_nolang": "Terjemahan :game - UnityGameTranslator",
+    "seo.game_description": "Unduh terjemahan :game gratis: :languages. Terjemahan game buatan komunitas dan AI - mainkan :game dalam bahasamu dengan mod gratis UnityGameTranslator.",
+    "seo.game_description_nolang": "Terjemahan komunitas untuk :game. Pasang mod open-source gratis UnityGameTranslator dan jadilah yang pertama menerjemahkan :game ke bahasamu.",
+    "seo.game_intro": "Unduh terjemahan komunitas gratis untuk :game dalam :languages. Terjemahan bisa dibuat manusia, dihasilkan AI, atau gabungan keduanya - pasang mod open-source gratis UnityGameTranslator, unduh terjemahan di bawah, dan mainkan :game dalam bahasamu."
 }

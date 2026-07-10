@@ -768,5 +768,14 @@
     "fonts.scale": "קנה מידה",
     "fonts.disabled": "מושבת",
     "fonts.no_fallback": "ללא חלופי",
-    "fonts.tooltip": "הגדרות גופנים כלולות בתרגום זה. המוד ישתמש אוטומטית בגופנים אלה אם הם זמינים במערכת שלכם, אחרת ייעשה שימוש בגופני המשחק המקוריים."
+    "fonts.tooltip": "הגדרות גופנים כלולות בתרגום זה. המוד ישתמש אוטומטית בגופנים אלה אם הם זמינים במערכת שלכם, אחרת ייעשה שימוש בגופני המשחק המקוריים.",
+    "seo.default_title": "UnityGameTranslator - תרגומי משחקים מהקהילה",
+    "seo.default_description": "תרגום אוטומטי חינמי בבינה מלאכותית למשחקי Unity. הורידו תרגומים מהקהילה או צרו משלכם עם בינה מלאכותית מקומית. ללא עלויות API.",
+    "seo.games_title": "תרגומי משחקים - הורדה חינם בכל שפה | UnityGameTranslator",
+    "seo.games_description": "עיינו והורידו תרגומים חינמיים למשחקי Unity. תרגום אוטומטי בבינה מלאכותית זמין. לוקליזציה קהילתית ללא עלויות API.",
+    "seo.game_title": "תרגומים ל-:game (:languages) - הורדה חינם | UnityGameTranslator",
+    "seo.game_title_nolang": "תרגומים ל-:game - UnityGameTranslator",
+    "seo.game_description": "הורידו תרגומים חינמיים ל-:game: :languages. תרגומי קהילה ובינה מלאכותית - שחקו ב-:game בשפה שלכם עם המוד החינמי UnityGameTranslator.",
+    "seo.game_description_nolang": "תרגומי קהילה ל-:game. התקינו את המוד החינמי בקוד פתוח UnityGameTranslator והיו הראשונים לתרגם את :game לשפה שלכם.",
+    "seo.game_intro": "הורידו תרגומים חינמיים מהקהילה ל-:game בשפות :languages. התרגומים יכולים להיות אנושיים, שנוצרו בבינה מלאכותית או שילוב של השניים - התקינו את המוד החינמי בקוד פתוח UnityGameTranslator, הורידו תרגום למטה ושחקו ב-:game בשפה שלכם."
 }
