@@ -2,7 +2,7 @@
 
 Community platform for sharing Unity game translation files with API for mod synchronization.
 
-**Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com)
+**Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com) — [browse available game translations](https://unitygametranslator.asymptomatikgames.com/games)
 
 ## Features
 
