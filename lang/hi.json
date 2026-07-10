@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "किसी AI अनुवाद को मान्य करने के लिए उस पर क्लिक करें:",
     "edit_session.retranslate": "गेम की AI से फिर से अनुवाद करें",
     "edit_session.retranslating": "फिर से अनुवाद हो रहा है…",
+    "edit_session.new_from_game": "गेम से नया",
+    "edit_session.click_to_view": "देखने के लिए क्लिक करें",
     "edit_session.instructions": "किसी अनुवाद को संपादित करने के लिए उस पर डबल-क्लिक करें — गेम में लागू करने के लिए सहेजें",
     "edit_session.save": "सेव करें और गेम में लागू करें",
     "edit_session.saved_ok": "सहेजा गया — मॉड इसे गेम में लागू कर रहा है।",

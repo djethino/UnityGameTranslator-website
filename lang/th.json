@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "คลิกคำแปล AI เพื่อยืนยัน:",
     "edit_session.retranslate": "แปลใหม่ด้วย AI ของเกม",
     "edit_session.retranslating": "กำลังแปลใหม่…",
+    "edit_session.new_from_game": "ใหม่จากเกม",
+    "edit_session.click_to_view": "คลิกเพื่อดู",
     "edit_session.instructions": "ดับเบิลคลิกคำแปลเพื่อแก้ไข — บันทึกเพื่อนำไปใช้ในเกม",
     "edit_session.save": "บันทึกและนำไปใช้ในเกม",
     "edit_session.saved_ok": "บันทึกแล้ว — ม็อดกำลังนำไปใช้ในเกม",

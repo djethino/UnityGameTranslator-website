@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Нажмите на перевод ИИ, чтобы подтвердить его:",
     "edit_session.retranslate": "Перевести заново с помощью ИИ игры",
     "edit_session.retranslating": "Повторный перевод…",
+    "edit_session.new_from_game": "Новое из игры",
+    "edit_session.click_to_view": "Нажмите, чтобы посмотреть",
     "edit_session.instructions": "Дважды щёлкните перевод, чтобы отредактировать его — сохраните, чтобы применить в игре",
     "edit_session.save": "Сохранить и применить в игре",
     "edit_session.saved_ok": "Сохранено — мод применяет изменение в игре.",

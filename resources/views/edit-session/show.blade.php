@@ -22,10 +22,12 @@
         </p>
     </div>
 
-    {{-- Live update toast (mod pushed changes from the game) --}}
-    <div x-show="refreshNotice" x-cloak
-        class="fixed top-4 right-4 z-50 bg-purple-900/90 border border-purple-600 rounded-lg px-4 py-3 text-purple-200 shadow-xl">
+    {{-- Live update toast (mod pushed changes from the game) — clicking it
+         filters the table down to the rows that just arrived --}}
+    <div x-show="refreshNotice" x-cloak @click="showSessionNew()"
+        class="fixed top-4 right-4 z-50 bg-purple-900/90 border border-purple-600 rounded-lg px-4 py-3 text-purple-200 shadow-xl cursor-pointer hover:bg-purple-800/90 transition">
         <i class="fas fa-gamepad mr-2"></i><span x-text="refreshNotice"></span>
+        <span class="block text-xs text-purple-300/80 mt-0.5">{{ __('edit_session.click_to_view') }}</span>
     </div>
 
     {{-- Loading state --}}
@@ -95,6 +97,16 @@
                 <input type="checkbox" :checked="filters.pendingOnly" @change="toggleFilter('pendingOnly')"
                     class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="text-purple-400">{{ __('edit_session.pending_changes') }}</span>
+            </label>
+
+            {{-- Rows received from the game during this page session --}}
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" :checked="sessionNewOnly" @change="toggleSessionNewOnly()"
+                    class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                <span class="text-blue-400">
+                    <i class="fas fa-gamepad mr-1"></i>{{ __('edit_session.new_from_game') }}
+                    (<span x-text="sessionNewCount"></span>)
+                </span>
             </label>
         </div>
 
@@ -241,6 +253,12 @@
                                 <span x-show="retranslating[key]" x-cloak
                                     class="inline-block mb-1 px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 text-xs">
                                     <i class="fas fa-spinner fa-spin mr-1"></i>{{ __('edit_session.retranslating') }}
+                                </span>
+                                {{-- Arrived from the game during this page session --}}
+                                <span x-show="sessionNew[key]" x-cloak
+                                    class="inline-block mb-1 text-blue-400 text-xs"
+                                    title="{{ __('edit_session.new_from_game') }}">
+                                    <i class="fas fa-gamepad"></i>
                                 </span>
                                 <span class="break-words"
                                     :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
@@ -493,6 +511,11 @@ document.addEventListener('alpine:init', () => {
         // through the normal mod push. No AI credential ever touches the site.
         aiAvailable: @js((bool) $editSession->ai_available),
         retranslating: {},      // key -> request timestamp (visual state)
+        // Keys received from the game during THIS page session (new AI
+        // translations, in-game edits, retranslations) — reviewable through
+        // a dedicated filter. Volatile on purpose: a refresh starts afresh.
+        sessionNew: {},
+        sessionNewOnly: false,  // not persisted: sessionNew dies with the page
 
         _sync: null,
 
@@ -526,6 +549,9 @@ document.addEventListener('alpine:init', () => {
         // ── Shared-core callbacks ────────────────────────────────────────
 
         rowPassesFilters(key) {
+            if (this.sessionNewOnly && !this.sessionNew[key]) {
+                return false;
+            }
             if (this.filters.pendingOnly && !this.isEdited(key) && !this.hasTagChange(key) && !this.isDeleted(key)) {
                 return false;
             }
@@ -563,6 +589,23 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.data[key]);
+        },
+
+        // ── "New from the game" review filter ─────────────────────────────
+
+        get sessionNewCount() {
+            return Object.keys(this.sessionNew).length;
+        },
+
+        toggleSessionNewOnly() {
+            this.sessionNewOnly = !this.sessionNewOnly;
+        },
+
+        /** Toast click: focus the table on what just arrived. */
+        showSessionNew() {
+            this.sessionNewOnly = true;
+            this.refreshNotice = '';
+            this.scrollToTop();
         },
 
         // ── Per-line AI retranslation (player's own backend, via the mod) ──
@@ -754,6 +797,8 @@ document.addEventListener('alpine:init', () => {
                     delete this.retranslating[key];
                     this._scheduleNextPoll();
                 }
+                // Reviewable through the "new from the game" filter
+                this.sessionNew[key] = true;
                 if (!(key in this.data)) keysChanged = true;
                 this.data[key] = value;
                 changedCount++;

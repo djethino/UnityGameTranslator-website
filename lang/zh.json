@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "点击 AI 翻译以验证：",
     "edit_session.retranslate": "使用游戏的 AI 重新翻译",
     "edit_session.retranslating": "正在重新翻译…",
+    "edit_session.new_from_game": "来自游戏的新内容",
+    "edit_session.click_to_view": "点击查看",
     "edit_session.instructions": "双击翻译进行编辑——保存后将在游戏中应用",
     "edit_session.save": "保存并应用到游戏中",
     "edit_session.saved_ok": "已保存 — 模组正在将其应用到游戏中。",

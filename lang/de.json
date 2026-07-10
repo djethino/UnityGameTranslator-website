@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Klicken Sie auf eine KI-Übersetzung, um sie zu validieren:",
     "edit_session.retranslate": "Mit der KI des Spiels neu übersetzen",
     "edit_session.retranslating": "Wird neu übersetzt…",
+    "edit_session.new_from_game": "Neu aus dem Spiel",
+    "edit_session.click_to_view": "Klicken zum Anzeigen",
     "edit_session.instructions": "Doppelklicken Sie auf eine Übersetzung, um sie zu bearbeiten — speichern Sie, um sie im Spiel anzuwenden",
     "edit_session.save": "Speichern & im Spiel anwenden",
     "edit_session.saved_ok": "Gespeichert — der Mod wendet es im Spiel an.",

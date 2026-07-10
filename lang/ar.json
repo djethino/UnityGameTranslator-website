@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "انقر على ترجمة ذكاء اصطناعي للتصديق عليها:",
     "edit_session.retranslate": "إعادة الترجمة باستخدام ذكاء اللعبة الاصطناعي",
     "edit_session.retranslating": "جارٍ إعادة الترجمة…",
+    "edit_session.new_from_game": "جديد من اللعبة",
+    "edit_session.click_to_view": "انقر لعرضها",
     "edit_session.instructions": "انقر نقرًا مزدوجًا على ترجمة لتعديلها — احفظ لتطبيقها في اللعبة",
     "edit_session.save": "حفظ وتطبيق في اللعبة",
     "edit_session.saved_ok": "تم الحفظ — يقوم الـ mod بتطبيقها داخل اللعبة.",

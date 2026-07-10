@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Clicca su una traduzione IA per convalidarla:",
     "edit_session.retranslate": "Ritraduci con l'IA del gioco",
     "edit_session.retranslating": "Ritraduzione in corso…",
+    "edit_session.new_from_game": "Nuove dal gioco",
+    "edit_session.click_to_view": "Clicca per visualizzarle",
     "edit_session.instructions": "Fai doppio clic su una traduzione per modificarla — salva per applicarla nel gioco",
     "edit_session.save": "Salva e applica nel gioco",
     "edit_session.saved_ok": "Salvato — il mod la sta applicando nel gioco.",

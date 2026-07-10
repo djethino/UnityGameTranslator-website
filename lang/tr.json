@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Doğrulamak için bir AI çevirisine tıklayın:",
     "edit_session.retranslate": "Oyunun yapay zekasıyla yeniden çevir",
     "edit_session.retranslating": "Yeniden çevriliyor…",
+    "edit_session.new_from_game": "Oyundan yeni",
+    "edit_session.click_to_view": "Görüntülemek için tıklayın",
     "edit_session.instructions": "Bir çeviriyi düzenlemek için çift tıklayın — oyunda uygulamak için kaydedin",
     "edit_session.save": "Kaydet ve oyunda uygula",
     "edit_session.saved_ok": "Kaydedildi — mod bunu oyun içinde uyguluyor.",

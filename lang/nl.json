@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Klik op een AI-vertaling om deze te valideren:",
     "edit_session.retranslate": "Opnieuw vertalen met de AI van het spel",
     "edit_session.retranslating": "Opnieuw vertalen…",
+    "edit_session.new_from_game": "Nieuw uit het spel",
+    "edit_session.click_to_view": "Klik om ze te bekijken",
     "edit_session.instructions": "Dubbelklik op een vertaling om deze te bewerken — sla op om deze in het spel toe te passen",
     "edit_session.save": "Opslaan en toepassen in game",
     "edit_session.saved_ok": "Opgeslagen — de mod past het in de game toe.",

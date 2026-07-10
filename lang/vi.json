@@ -696,6 +696,8 @@
     "edit_session.instructions_validate": "Nhấp vào bản dịch AI để xác nhận:",
     "edit_session.retranslate": "Dịch lại bằng AI của trò chơi",
     "edit_session.retranslating": "Đang dịch lại…",
+    "edit_session.new_from_game": "Mới từ trò chơi",
+    "edit_session.click_to_view": "Nhấp để xem",
     "edit_session.instructions": "Nhấp đúp vào bản dịch để chỉnh sửa — lưu để áp dụng trong trò chơi",
     "edit_session.save": "Lưu và áp dụng trong game",
     "edit_session.saved_ok": "Đã lưu — mod đang áp dụng trong game.",
