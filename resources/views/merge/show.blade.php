@@ -855,6 +855,13 @@ document.addEventListener('alpine:init', () => {
                 if (this.mainData[key] === undefined) return;
                 value = this.getValue(this.mainData[key]);
                 tag = this.getTag(this.mainData[key]);
+                // A click only ever produces a REAL change (see
+                // analyse/editors-gestures-parity.md): picking Main acts
+                // when it validates an A line, or when it replaces an
+                // existing selection (branch pick / manual edit) — on a
+                // V/H/M/S line with nothing selected it would rewrite the
+                // line identically and count a phantom modification
+                if (tag !== 'A' && !this.selections[key]) return;
             } else {
                 const branchId = parseInt(source.replace('branch_', ''), 10);
                 const branch = this.branches.find(b => b.id === branchId);

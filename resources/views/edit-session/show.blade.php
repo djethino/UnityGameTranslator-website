@@ -537,11 +537,11 @@ document.addEventListener('alpine:init', () => {
 
         /**
          * Single click on an AI-tagged line stages its validation (A → V)
-         * as a regular tag change; clicking again cancels it. Already-V
-         * lines can be marked the same way — same feedback, same counting
-         * and same rewrite-identical save as selecting a validated row in
-         * the merge view. H/M/S tags, pending edits and deleted rows are
-         * left alone.
+         * as a regular tag change; clicking again cancels it.
+         * A click only ever produces a REAL change (see
+         * analyse/editors-gestures-parity.md): already-V lines, H/M/S
+         * tags, pending edits and deleted rows are left alone —
+         * devalidating is an explicit tag-dropdown gesture, never a click.
          */
         toggleValidate(key) {
             if (this.isDeleted(key) || this.isEdited(key)) return;
@@ -550,7 +550,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             const tag = this.getTag(this.data[key]);
-            if (tag !== 'A' && tag !== 'V') return;
+            if (tag !== 'A') return;
             this.tagChanges[key] = { newTag: 'V', originalTag: tag, value: this.getValue(this.data[key]) };
             this.persistPendingState();
         },
