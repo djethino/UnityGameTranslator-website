@@ -316,6 +316,25 @@ class EditSessionFlowTest extends TestCase
             ->assertStatus(404);
     }
 
+    public function test_language_switch_from_edit_session_page_does_not_404(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+
+        // The language switcher redirects back with the new locale prefix:
+        // every BROWSED page must exist in prefixed form for EVERY supported
+        // locale (the rule that was missed when these pages were added)
+        foreach (array_keys(config('locales.supported')) as $locale) {
+            $this->get('/locale/' . $locale, ['referer' => url('/edit-session')])
+                ->assertRedirect(url('/' . $locale . '/edit-session'));
+
+            $this->get('/' . $locale . '/edit-session')
+                ->assertOk()
+                ->assertViewIs('edit-session.show');
+        }
+    }
+
     public function test_retranslate_relays_to_mod_when_ai_available(): void
     {
         // Session advertising the mod's AI backend

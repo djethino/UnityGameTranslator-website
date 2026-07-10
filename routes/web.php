@@ -45,10 +45,6 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-// Device Flow link page (no locale prefix - mod uses fixed URL)
-Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
-Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
-
 // API routes (no locale prefix)
 Route::get('/api/games/search', [GameController::class, 'search'])->name('games.search');
 Route::get('/api/games/search-external', [GameController::class, 'searchExternal'])->name('games.search.external');
@@ -56,15 +52,11 @@ Route::get('/api/games/search-external', [GameController::class, 'searchExternal
 // Download (no locale prefix - direct file access)
 Route::get('/download/{translation}', [TranslationController::class, 'download'])->name('translations.download');
 
-// Merge preview - supports token-based auth from mod (no locale prefix)
-Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
-Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
-
-// Live edit session - anonymous, token-based auth from mod (no locale prefix).
-// The entry route consumes the one-time token and redirects to the
-// session-bound token-less URL; save is AJAX (throttled: anonymous endpoint).
-Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->middleware('throttle:10,1')->name('edit-session.open');
-Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-session.show');
+// Live edit session AJAX endpoints — never NAVIGATED, so they stay out of
+// the locale group (the pages call them through route(), unprefixed).
+// RULE: any BROWSED page (a URL the language switcher can redirect back to)
+// must live in $localizableRoutes below, or switching language on it 404s —
+// the mod-given entry URLs keep working, the unprefixed form always exists.
 // Legitimate rhythm: state polls every 10s (6/min) and data only refetches
 // when the content hash changed — 30/min leaves a wide margin while capping
 // a runaway client or a flood on these anonymous endpoints
@@ -110,6 +102,22 @@ $localizableRoutes = function () {
     // Games
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+
+    // Device Flow link page. The mod displays the unprefixed URL (which
+    // always exists), but the page is browsed so it must be localizable
+    Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
+    Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
+
+    // Merge preview page — token-based auth from the mod; the tokenized
+    // entry URL is unprefixed (mod-generated) but browsed afterwards
+    Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
+    Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
+
+    // Live edit session pages — anonymous, token-based auth from the mod.
+    // The entry route consumes the one-time token and redirects to the
+    // session-bound token-less URL
+    Route::get('/edit-session/{token}', [EditSessionController::class, 'open'])->middleware('throttle:10,1')->name('edit-session.open');
+    Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-session.show');
 
     // Authenticated routes
     Route::middleware('auth')->group(function () {
