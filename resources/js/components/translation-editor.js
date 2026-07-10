@@ -114,7 +114,10 @@ export function editorCore(config) {
         replaceValue: '',
 
         // ── Windowed rendering (large files: thousands of rows) ──────────
-        displayLimit: 500,
+        // 200 rows ≈ 10+ screens of long text: re-rendering the window on
+        // filter/search changes is the dominant cost on real files, and it
+        // scales linearly with this number
+        displayLimit: 200,
 
         // ── filteredKeys memoization (see the getter) ─────────────────────
         _fkVersion: 0,
@@ -282,7 +285,7 @@ export function editorCore(config) {
         },
 
         showMore() {
-            this.displayLimit += 500;
+            this.displayLimit += 200;
         },
 
         // ── Search navigation (prev/next through matching rows) ──────────
@@ -346,7 +349,7 @@ export function editorCore(config) {
             // Only displayLimit rows are rendered: extend the window when
             // the cursor moves beyond it
             if (this.safeMatchIndex >= this.displayLimit) {
-                this.displayLimit = this.safeMatchIndex + 500;
+                this.displayLimit = this.safeMatchIndex + 200;
             }
             this.$nextTick(() => {
                 const row = document.querySelector('[data-row-index="' + this.safeMatchIndex + '"]');
