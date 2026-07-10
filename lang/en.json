@@ -491,6 +491,7 @@
     "merge.instructions_select": "Click a cell to select that version — AI-tagged texts get validated:",
     "merge.instructions_edit": "Double-click to edit",
     "merge.instructions_delete": "Click the trash icon to delete",
+    "merge.instructions_keyboard": "↑↓ navigate — V validate — E edit — Del delete",
     "merge.cancel_all": "Cancel",
     "merge.save_count": "Save (:count)",
     "merge.legend_human": "Human - manual translation",

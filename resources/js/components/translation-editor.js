@@ -116,6 +116,8 @@ export function editorCore(config) {
         // floating search (partials/editor-floating-search) shows instead,
         // so prev/next navigation never strands the user without controls
         searchBarOffscreen: false,
+        // Row cursor visible without a search (keyboard review via arrows)
+        cursorActive: false,
 
         // ── Windowed rendering (large files: thousands of rows) ──────────
         // 200 rows ≈ 10+ screens of long text: re-rendering the window on
@@ -301,9 +303,12 @@ export function editorCore(config) {
             this.displayLimit += 200;
         },
 
-        // ── Search navigation (prev/next through matching rows) ──────────
-        // Navigation is per ROW, not per occurrence: the unit of work in a
-        // translation editor is the line.
+        // ── Row cursor: search navigation + keyboard review ──────────────
+        // One cursor over the filtered rows. With a search active it is the
+        // match cursor (n/m counter, Enter/Shift+Enter); the arrow keys use
+        // the same cursor to review rows without a query. Navigation is per
+        // ROW, not per occurrence: the unit of work in a translation editor
+        // is the line.
 
         get hasQuery() {
             return this._debouncedQuery.trim() !== '';
@@ -324,7 +329,13 @@ export function editorCore(config) {
 
         /** Clamped cursor: the list can shrink under it (filter change). */
         get safeMatchIndex() {
-            return Math.min(this.currentMatchIndex, Math.max(0, this.matchCount - 1));
+            return Math.min(this.currentMatchIndex, Math.max(0, this.filteredKeys.length - 1));
+        },
+
+        /** The row the cursor points at, when the cursor is visible. */
+        get cursorKey() {
+            if (!this.hasQuery && !this.cursorActive) return undefined;
+            return this.filteredKeys[this.safeMatchIndex];
         },
 
         get matchCounterText() {
@@ -332,9 +343,10 @@ export function editorCore(config) {
             return this.matchCount === 0 ? '0/0' : (this.safeMatchIndex + 1) + '/' + this.matchCount;
         },
 
-        /** Stronger highlight on the row the match cursor points at. */
+        /** Stronger highlight on the row the cursor points at. */
         isCurrentMatchRow(index) {
-            return this.hasQuery && this.matchCount > 0 && index === this.safeMatchIndex;
+            if (this.filteredKeys.length === 0 || index !== this.safeMatchIndex) return false;
+            return (this.hasQuery && this.matchCount > 0) || this.cursorActive;
         },
 
         /** Enter = next, Shift+Enter = previous (IDE convention). */
@@ -347,16 +359,74 @@ export function editorCore(config) {
         },
 
         nextMatch() {
-            if (this.matchCount === 0) return;
-            this.currentMatchIndex = (this.safeMatchIndex + 1) % this.matchCount;
+            if (this.filteredKeys.length === 0) return;
+            this.cursorActive = true;
+            this.currentMatchIndex = (this.safeMatchIndex + 1) % this.filteredKeys.length;
             this.scrollToCurrentMatch();
         },
 
         prevMatch() {
-            if (this.matchCount === 0) return;
-            this.currentMatchIndex = (this.safeMatchIndex - 1 + this.matchCount) % this.matchCount;
+            if (this.filteredKeys.length === 0) return;
+            this.cursorActive = true;
+            this.currentMatchIndex = (this.safeMatchIndex - 1 + this.filteredKeys.length) % this.filteredKeys.length;
             this.scrollToCurrentMatch();
         },
+
+        /** Arrow keys: clamped at the edges (no wrap — more natural). */
+        moveCursor(delta) {
+            if (this.filteredKeys.length === 0) return;
+            if (!this.cursorActive && !this.hasQuery) {
+                // First arrow press reveals the cursor where it stands
+                // instead of skipping a row the user never saw selected
+                this.cursorActive = true;
+                this.scrollToCurrentMatch();
+                return;
+            }
+            this.cursorActive = true;
+            this.currentMatchIndex = Math.min(
+                Math.max(this.safeMatchIndex + delta, 0),
+                this.filteredKeys.length - 1
+            );
+            this.scrollToCurrentMatch();
+        },
+
+        /**
+         * Keyboard review (bound with @keydown.window on each editor's
+         * root): ↑↓ move the cursor, V = the page's validate action,
+         * E = edit, Delete = toggle deletion, Escape hides the cursor.
+         * Form fields and open overlays always keep their keys.
+         */
+        handleEditorKeydown(event) {
+            const tag = (event.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+            if (this.editModal.open || this.tagDropdown.open) return;
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                this.moveCursor(1);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                this.moveCursor(-1);
+            } else if (event.key === 'v' || event.key === 'V') {
+                const key = this.cursorKey;
+                if (key !== undefined) this.cursorPrimaryAction(key);
+            } else if (event.key === 'e' || event.key === 'E') {
+                const key = this.cursorKey;
+                if (key !== undefined) {
+                    event.preventDefault();
+                    this.editCell(key, this.storedValue(key));
+                }
+            } else if (event.key === 'Delete') {
+                const key = this.cursorKey;
+                if (key !== undefined) this.toggleDelete(key);
+            } else if (event.key === 'Escape') {
+                this.cursorActive = false;
+            }
+        },
+
+        /** Page hook: what V does on the cursor row (validate gestures). */
+        cursorPrimaryAction(key) {},
 
         scrollToCurrentMatch() {
             // Only displayLimit rows are rendered: extend the window when

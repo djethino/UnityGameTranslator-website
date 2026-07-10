@@ -3,7 +3,7 @@
 @section('title', __('merge_preview.title') . ' - ' . $translation->game->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="mergePreview">
+<div class="container mx-auto px-4 py-8" x-data="mergePreview" @keydown.window="handleEditorKeydown($event)">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -396,6 +396,7 @@
                     </p>
                     <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
                     <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                    <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                 </div>
             </div>
 

@@ -491,6 +491,7 @@
     "merge.instructions_select": "셀을 클릭하여 해당 버전을 선택 — AI 태그가 붙은 텍스트는 검증됩니다:",
     "merge.instructions_edit": "더블 클릭으로 편집",
     "merge.instructions_delete": "휴지통 아이콘을 클릭하여 삭제",
+    "merge.instructions_keyboard": "↑↓ 이동 — V 검증 — E 편집 — Del 삭제",
     "merge.cancel_all": "취소",
     "merge.save_count": "저장 (:count)",
     "merge.legend_human": "사람 - 수동 번역",

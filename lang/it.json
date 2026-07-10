@@ -491,6 +491,7 @@
     "merge.instructions_select": "Clicca su una cella per selezionare quella versione — i testi marcati IA vengono convalidati:",
     "merge.instructions_edit": "Doppio clic per modificare",
     "merge.instructions_delete": "Clicca sull'icona del cestino per eliminare",
+    "merge.instructions_keyboard": "↑↓ naviga — V convalida — E modifica — Canc elimina",
     "merge.cancel_all": "Annulla",
     "merge.save_count": "Salva (:count)",
     "merge.legend_human": "Umano - traduzione manuale",

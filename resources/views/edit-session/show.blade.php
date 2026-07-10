@@ -3,7 +3,7 @@
 @section('title', __('edit_session.title') . ($editSession->game_name ? ' - ' . $editSession->game_name : ''))
 
 @section('content')
-<div class="container mx-auto px-4 py-8" x-data="editSession">
+<div class="container mx-auto px-4 py-8" x-data="editSession" @keydown.window="handleEditorKeydown($event)">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-white">
@@ -315,6 +315,7 @@
                     </p>
                     <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('edit_session.instructions') }}</p>
                     <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                    <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                 </div>
                 <span x-show="saveMessage" class="text-green-400">
                     <i class="fas fa-check-circle mr-1"></i><span x-text="saveMessage"></span>
@@ -589,6 +590,11 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.data[key]);
+        },
+
+        /** Core hook: V on the cursor row = the click-to-validate gesture. */
+        cursorPrimaryAction(key) {
+            this.toggleValidate(key);
         },
 
         // ── "New from the game" review filter ─────────────────────────────

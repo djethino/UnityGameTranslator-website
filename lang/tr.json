@@ -491,6 +491,7 @@
     "merge.instructions_select": "Bir sürümü seçmek için hücreye tıklayın — AI etiketli metinler doğrulanır:",
     "merge.instructions_edit": "Düzenlemek için çift tıklayın",
     "merge.instructions_delete": "Silmek için çöp kutusu simgesine tıklayın",
+    "merge.instructions_keyboard": "↑↓ gezinme — V doğrula — E düzenle — Del sil",
     "merge.cancel_all": "İptal",
     "merge.save_count": "Kaydet (:count)",
     "merge.legend_human": "İnsan - manuel çeviri",

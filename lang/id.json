@@ -491,6 +491,7 @@
     "merge.instructions_select": "Klik sel untuk memilih versi itu — teks bertanda AI akan tervalidasi:",
     "merge.instructions_edit": "Klik dua kali untuk mengedit",
     "merge.instructions_delete": "Klik ikon tempat sampah untuk menghapus",
+    "merge.instructions_keyboard": "↑↓ navigasi — V validasi — E edit — Del hapus",
     "merge.cancel_all": "Batal",
     "merge.save_count": "Simpan (:count)",
     "merge.legend_human": "Manusia - terjemahan manual",

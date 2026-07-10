@@ -136,7 +136,7 @@
     @endif
 
     {{-- Client-side editor (shared translation-editor core) --}}
-    <div x-data="mergeView">
+    <div x-data="mergeView" @keydown.window="handleEditorKeydown($event)">
         {{-- Loading state --}}
         <div x-show="!loaded" class="text-center py-12">
             <i class="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
@@ -494,6 +494,7 @@
                             </p>
                             <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
                             <p><i class="fas fa-trash-alt w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
+                            <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                         </div>
                     </div>
                     <div class="flex gap-4 items-center shrink-0">
@@ -811,6 +812,12 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.mainData[key]);
+        },
+
+        /** Core hook: V on the cursor row = the click-Main validate gesture
+         *  (same real-change rules: A lines, or replacing a selection). */
+        cursorPrimaryAction(key) {
+            this.select(key, 'main');
         },
 
         /** Main value cell HTML: highlighted, or the empty-value marker. */

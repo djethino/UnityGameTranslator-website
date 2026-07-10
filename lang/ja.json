@@ -491,6 +491,7 @@
     "merge.instructions_select": "セルをクリックしてそのバージョンを選択 — AI タグ付きテキストは検証済みになります：",
     "merge.instructions_edit": "ダブルクリックで編集",
     "merge.instructions_delete": "ゴミ箱アイコンをクリックで削除",
+    "merge.instructions_keyboard": "↑↓ 移動 — V 検証 — E 編集 — Del 削除",
     "merge.cancel_all": "キャンセル",
     "merge.save_count": "保存 (:count)",
     "merge.legend_human": "Human - 手動翻訳",

@@ -491,6 +491,7 @@
     "merge.instructions_select": "คลิกเซลล์เพื่อเลือกเวอร์ชันนั้น — ข้อความที่ติดแท็ก AI จะได้รับการยืนยัน:",
     "merge.instructions_edit": "ดับเบิลคลิกเพื่อแก้ไข",
     "merge.instructions_delete": "คลิกไอคอนถังขยะเพื่อลบ",
+    "merge.instructions_keyboard": "↑↓ นำทาง — V ยืนยัน — E แก้ไข — Del ลบ",
     "merge.cancel_all": "ยกเลิก",
     "merge.save_count": "บันทึก (:count)",
     "merge.legend_human": "มนุษย์ - แปลด้วยตนเอง",

@@ -491,6 +491,7 @@
     "merge.instructions_select": "Cliquez sur une cellule pour sélectionner cette version — les textes marqués IA sont validés :",
     "merge.instructions_edit": "Double-cliquez pour éditer",
     "merge.instructions_delete": "Cliquez sur la poubelle pour supprimer",
+    "merge.instructions_keyboard": "↑↓ naviguer — V valider — E éditer — Suppr supprimer",
     "merge.cancel_all": "Annuler",
     "merge.save_count": "Sauvegarder (:count)",
     "merge.legend_human": "Human - traduction manuelle",
