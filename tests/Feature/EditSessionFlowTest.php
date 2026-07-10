@@ -354,11 +354,14 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJson(['ai_available' => true]);
 
         // Valid request: accepted (the SSE publish itself is fire-and-forget)
-        $this->postJson('/edit-session-retranslate', ['key' => 'Hello'])
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-1'])
             ->assertOk()->assertJson(['requested' => true]);
 
+        // The id is required (browser retries reuse it, the mod dedupes on it)
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello'])->assertStatus(422);
+
         // Metadata keys are never relayed
-        $this->postJson('/edit-session-retranslate', ['key' => '_uuid'])->assertStatus(422);
+        $this->postJson('/edit-session-retranslate', ['key' => '_uuid', 'id' => 'req-2'])->assertStatus(422);
     }
 
     public function test_retranslate_rejected_without_ai_backend(): void
@@ -367,7 +370,7 @@ class EditSessionFlowTest extends TestCase
         $session = EditSessionToken::first();
         $this->get('/edit-session/' . $session->token);
 
-        $this->postJson('/edit-session-retranslate', ['key' => 'Hello'])->assertStatus(422);
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-3'])->assertStatus(422);
     }
 
     public function test_mod_update_can_toggle_ai_availability(): void

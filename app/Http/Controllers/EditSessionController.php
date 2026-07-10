@@ -112,6 +112,10 @@ class EditSessionController extends Controller
 
         $request->validate([
             'key' => 'required|string|max:10000',
+            // Browser-generated, stable across the retries of one request —
+            // the mod deduplicates on it (SSE gaps lose events; the browser
+            // re-emits every ~30s while the row is still pending)
+            'id' => 'required|string|max:64',
         ]);
 
         $key = $request->input('key');
@@ -120,7 +124,7 @@ class EditSessionController extends Controller
             return response()->json(['error' => 'Invalid key.'], 422);
         }
 
-        SsePublisher::editSessionRetranslate($session->mod_key, $key);
+        SsePublisher::editSessionRetranslate($session->mod_key, $key, $request->input('id'));
 
         return response()->json(['requested' => true]);
     }

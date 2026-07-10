@@ -202,18 +202,21 @@ class SsePublisher
     /**
      * Ask the mod to re-translate one entry with ITS OWN AI backend
      * during a live edit session (the site never holds any AI credential).
-     * Fire-and-forget by design: no :result storage — a replayed request
-     * on reconnection would trigger ghost retranslations, and the browser
-     * button simply stays available if the request is lost.
+     * No :result storage (a replay on reconnection would ghost-retranslate);
+     * reliability comes from the BROWSER re-emitting the request every ~30s
+     * while pending, always with the same request id — the mod deduplicates
+     * by id, so a request lost in an SSE reconnection gap is simply caught
+     * by the next emission.
      *
      * @param string $modKey The session's mod key
      * @param string $key The translation key (source text) to re-translate
+     * @param string $requestId Browser-generated id, stable across retries
      */
-    public static function editSessionRetranslate(string $modKey, string $key): void
+    public static function editSessionRetranslate(string $modKey, string $key, string $requestId): void
     {
         self::safePublish("sse:edit:{$modKey}", json_encode([
             'event' => 'edit_retranslate',
-            'data' => ['key' => $key],
+            'data' => ['key' => $key, 'id' => $requestId],
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 

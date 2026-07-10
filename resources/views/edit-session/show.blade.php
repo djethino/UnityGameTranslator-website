@@ -629,11 +629,15 @@ document.addEventListener('alpine:init', () => {
         },
 
         /**
-         * Fire-and-forget: the site relays the key to the mod over SSE, the
-         * mod re-translates with the player's configured backend and pushes
-         * its file back — the result lands through the normal applyDiff.
-         * The visual pending state frees itself after 3 minutes if the mod
-         * never answers (AI error, session gap): the button simply returns.
+         * The site relays the key to the mod over SSE, the mod re-translates
+         * with the player's configured backend and pushes its file back —
+         * the result lands through the normal applyDiff. SSE delivery is not
+         * guaranteed (the mod's stream reconnects through gaps and events
+         * emitted during a gap are lost), so the request is RE-EMITTED every
+         * 30s while still pending, always with the same id: the mod
+         * deduplicates on it, and a lost emission is simply caught by the
+         * next one. The visual pending state frees itself after 3 minutes
+         * if the mod never answers.
          */
         requestRetranslate(key) {
             if (!this.canRetranslate(key)) return;
@@ -641,15 +645,18 @@ document.addEventListener('alpine:init', () => {
             this.retranslating[key] = Date.now();
             this._scheduleNextPoll(); // switch to the fast poll right away
 
-            fetch('{{ route("edit-session.retranslate") }}', {
+            const requestId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+            const emit = () => fetch('{{ route("edit-session.retranslate") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ key: key })
-            })
+                body: JSON.stringify({ key: key, id: requestId })
+            });
+
+            emit()
                 .then(response => {
                     if (!response.ok) throw new Error('request_failed');
                 })
@@ -658,7 +665,16 @@ document.addEventListener('alpine:init', () => {
                     this._scheduleNextPoll();
                 });
 
+            const retryTimer = setInterval(() => {
+                if (!this.retranslating[key]) {
+                    clearInterval(retryTimer);
+                    return;
+                }
+                emit().catch(() => { /* the next retry or the timeout handles it */ });
+            }, 30000);
+
             setTimeout(() => {
+                clearInterval(retryTimer);
                 if (this.retranslating[key]) {
                     delete this.retranslating[key];
                     this._scheduleNextPoll();
