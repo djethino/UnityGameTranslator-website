@@ -527,6 +527,8 @@
     "merge.main_only": "Tylko właściciel Main może unieważniać",
     "merge.cancel_tag_change": "Anuluj zmianę oznaczenia",
     "merge.revert_row": "Cofnij zmiany w tym wierszu",
+    "merge.scroll_top": "Przewiń na górę strony",
+    "merge.scroll_bottom": "Przewiń na dół strony",
     "auth.sign_in": "Zaloguj się, aby kontynuować",
     "auth.choose_method": "Wybierz metodę logowania:",
     "auth.continue_with": "Kontynuuj przez :provider",

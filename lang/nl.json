@@ -527,6 +527,8 @@
     "merge.main_only": "Alleen de Main-eigenaar kan ongeldig maken",
     "merge.cancel_tag_change": "Tagwijziging annuleren",
     "merge.revert_row": "Wijzigingen van deze rij ongedaan maken",
+    "merge.scroll_top": "Naar boven scrollen",
+    "merge.scroll_bottom": "Naar beneden scrollen",
     "auth.sign_in": "Log in om door te gaan",
     "auth.choose_method": "Kies je inlogmethode:",
     "auth.continue_with": "Doorgaan met :provider",

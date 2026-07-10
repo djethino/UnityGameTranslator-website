@@ -527,6 +527,8 @@
     "merge.main_only": "Solo el propietario del Main puede invalidar",
     "merge.cancel_tag_change": "Cancelar cambio de etiqueta",
     "merge.revert_row": "Deshacer los cambios de esta fila",
+    "merge.scroll_top": "Ir al inicio de la página",
+    "merge.scroll_bottom": "Ir al final de la página",
     "auth.sign_in": "Inicia sesión para continuar",
     "auth.choose_method": "Elige tu método de inicio de sesión:",
     "auth.continue_with": "Continuar con :provider",

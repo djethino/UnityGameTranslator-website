@@ -460,7 +460,17 @@
                 {{-- min-w-0 on the text + shrink-0 on the buttons: the
                      instructions wrap instead of squeezing the save button --}}
                 <div class="flex justify-between items-center gap-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
-                    <div class="text-sm text-gray-400 min-w-0">
+                    <div class="flex flex-col gap-1 shrink-0">
+                        <button type="button" @click="scrollToTop()"
+                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
+                            <i class="fas fa-angles-up"></i>
+                        </button>
+                        <button type="button" @click="scrollToBottom()"
+                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_bottom') }}">
+                            <i class="fas fa-angles-down"></i>
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-400 min-w-0 grow">
                         <span x-show="totalChanges > 0">
                             <span x-show="selectionCount > 0">
                                 <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
@@ -494,6 +504,16 @@
                             <i class="fas fa-save mr-2"></i>
                             {{ __('common.save') }} (<span x-text="totalChanges">0</span>)
                         </button>
+                        <div class="flex flex-col gap-1 shrink-0">
+                            <button type="button" @click="scrollToTop()"
+                                class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
+                                <i class="fas fa-angles-up"></i>
+                            </button>
+                            <button type="button" @click="scrollToBottom()"
+                                class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_bottom') }}">
+                                <i class="fas fa-angles-down"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -840,6 +860,8 @@ document.addEventListener('alpine:init', () => {
          * (A -> V server-side).
          */
         select(key, source) {
+            // Even on inert rows the click moves the search cursor (IDE caret)
+            this.setMatchCursor(key);
             if (this.isDeleted(key)) return;
 
             if (this.selections[key]?.source === source && source !== 'manual') {

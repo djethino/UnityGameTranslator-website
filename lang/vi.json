@@ -527,6 +527,8 @@
     "merge.main_only": "Chỉ chủ sở hữu Main mới có thể hủy xác thực",
     "merge.cancel_tag_change": "Hủy thay đổi nhãn",
     "merge.revert_row": "Hoàn tác các thay đổi của hàng này",
+    "merge.scroll_top": "Cuộn lên đầu trang",
+    "merge.scroll_bottom": "Cuộn xuống cuối trang",
     "auth.sign_in": "Đăng nhập để tiếp tục",
     "auth.choose_method": "Chọn phương thức đăng nhập:",
     "auth.continue_with": "Tiếp tục với :provider",

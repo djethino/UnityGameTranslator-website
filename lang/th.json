@@ -527,6 +527,8 @@
     "merge.main_only": "เฉพาะเจ้าของ Main เท่านั้นที่สามารถยกเลิกการรับรอง",
     "merge.cancel_tag_change": "ยกเลิกการเปลี่ยนแท็ก",
     "merge.revert_row": "เลิกทำการเปลี่ยนแปลงของแถวนี้",
+    "merge.scroll_top": "เลื่อนไปด้านบนสุดของหน้า",
+    "merge.scroll_bottom": "เลื่อนไปด้านล่างสุดของหน้า",
     "auth.sign_in": "เข้าสู่ระบบเพื่อดำเนินการต่อ",
     "auth.choose_method": "เลือกวิธีเข้าสู่ระบบของคุณ:",
     "auth.continue_with": "ดำเนินการต่อด้วย :provider",

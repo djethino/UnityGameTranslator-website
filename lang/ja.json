@@ -527,6 +527,8 @@
     "merge.main_only": "Mainオーナーのみが無効化できます",
     "merge.cancel_tag_change": "タグ変更をキャンセル",
     "merge.revert_row": "この行の変更を元に戻す",
+    "merge.scroll_top": "ページの先頭へ",
+    "merge.scroll_bottom": "ページの末尾へ",
     "auth.sign_in": "ログインして続ける",
     "auth.choose_method": "ログイン方法を選択：",
     "auth.continue_with": ":providerで続ける",

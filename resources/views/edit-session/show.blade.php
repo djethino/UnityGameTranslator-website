@@ -261,9 +261,20 @@
         </div>
 
         {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
-             buttons: the instructions wrap instead of squeezing the save button --}}
+             buttons: the instructions wrap instead of squeezing the save button.
+             ↑↓ shortcuts float at both ends of the bar --}}
         <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
-            <div class="text-sm text-gray-400 min-w-0">
+            <div class="flex flex-col gap-1 shrink-0">
+                <button type="button" @click="scrollToTop()"
+                    class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
+                    <i class="fas fa-angles-up"></i>
+                </button>
+                <button type="button" @click="scrollToBottom()"
+                    class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_bottom') }}">
+                    <i class="fas fa-angles-down"></i>
+                </button>
+            </div>
+            <div class="text-sm text-gray-400 min-w-0 grow">
                 <span x-show="totalChanges > 0">
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
                 </span>
@@ -302,6 +313,16 @@
                     <i class="fas fa-spinner fa-spin mr-2" x-show="saving"></i>
                     {{ __('edit_session.save') }} (<span x-text="totalChanges">0</span>)
                 </button>
+                <div class="flex flex-col gap-1 shrink-0">
+                    <button type="button" @click="scrollToTop()"
+                        class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
+                        <i class="fas fa-angles-up"></i>
+                    </button>
+                    <button type="button" @click="scrollToBottom()"
+                        class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_bottom') }}">
+                        <i class="fas fa-angles-down"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -544,6 +565,8 @@ document.addEventListener('alpine:init', () => {
          * devalidating is an explicit tag-dropdown gesture, never a click.
          */
         toggleValidate(key) {
+            // Even on inert rows the click moves the search cursor (IDE caret)
+            this.setMatchCursor(key);
             if (this.isDeleted(key) || this.isEdited(key)) return;
             if (this.isValidatedPending(key)) {
                 this.cancelTagChange(key);

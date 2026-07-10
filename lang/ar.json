@@ -527,6 +527,8 @@
     "merge.main_only": "فقط مالك Main يمكنه إلغاء الاعتماد",
     "merge.cancel_tag_change": "إلغاء تغيير العلامة",
     "merge.revert_row": "التراجع عن تعديلات هذا السطر",
+    "merge.scroll_top": "الانتقال إلى أعلى الصفحة",
+    "merge.scroll_bottom": "الانتقال إلى أسفل الصفحة",
     "auth.sign_in": "سجّل الدخول للمتابعة",
     "auth.choose_method": "اختر طريقة تسجيل الدخول:",
     "auth.continue_with": "المتابعة مع :provider",

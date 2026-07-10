@@ -527,6 +527,8 @@
     "merge.main_only": "只有Main所有者可以撤销验证",
     "merge.cancel_tag_change": "取消标签更改",
     "merge.revert_row": "撤销此行的更改",
+    "merge.scroll_top": "回到页面顶部",
+    "merge.scroll_bottom": "前往页面底部",
     "auth.sign_in": "登录以继续",
     "auth.choose_method": "选择登录方式：",
     "auth.continue_with": "使用 :provider 继续",

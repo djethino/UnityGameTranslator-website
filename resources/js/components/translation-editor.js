@@ -163,6 +163,7 @@ export function editorCore(config) {
         },
 
         toggleDelete(key) {
+            this.setMatchCursor(key);
             if (this.deletions[key]) {
                 delete this.deletions[key];
             } else {
@@ -355,6 +356,28 @@ export function editorCore(config) {
                 const row = document.querySelector('[data-row-index="' + this.safeMatchIndex + '"]');
                 if (row) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
             });
+        },
+
+        /**
+         * Move the search cursor onto a row the user just interacted with
+         * (click, edit, delete) — "next" then resumes from there, IDE
+         * style: clicking in the buffer moves the find caret. No scrolling,
+         * the row is already on screen.
+         */
+        setMatchCursor(key) {
+            if (!this.hasQuery) return;
+            const index = this.matchKeys.indexOf(key);
+            if (index !== -1) this.currentMatchIndex = index;
+        },
+
+        // ── Page-level scroll shortcuts (floating bar) ────────────────────
+
+        scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        scrollToBottom() {
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
         },
 
         // ── Search highlighting ───────────────────────────────────────────
@@ -575,6 +598,7 @@ export function editorCore(config) {
         // ── Edit modal ────────────────────────────────────────────────────
 
         editCell(key, currentValue) {
+            this.setMatchCursor(key);
             this.editModalValue = this.editedValues[key] ?? currentValue;
             this.editModal = {
                 open: true,

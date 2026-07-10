@@ -527,6 +527,8 @@
     "merge.main_only": "Только владелец Main может аннулировать",
     "merge.cancel_tag_change": "Отменить смену метки",
     "merge.revert_row": "Отменить изменения этой строки",
+    "merge.scroll_top": "Прокрутить к началу страницы",
+    "merge.scroll_bottom": "Прокрутить к концу страницы",
     "auth.sign_in": "Войдите для продолжения",
     "auth.choose_method": "Выберите способ входа:",
     "auth.continue_with": "Продолжить через :provider",

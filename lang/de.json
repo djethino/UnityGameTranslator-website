@@ -527,6 +527,8 @@
     "merge.main_only": "Nur der Hauptbesitzer kann entwerten",
     "merge.cancel_tag_change": "Tag-Änderung abbrechen",
     "merge.revert_row": "Änderungen dieser Zeile verwerfen",
+    "merge.scroll_top": "Zum Seitenanfang",
+    "merge.scroll_bottom": "Zum Seitenende",
     "auth.sign_in": "Anmelden um fortzufahren",
     "auth.choose_method": "Wählen Sie Ihre Anmeldemethode:",
     "auth.continue_with": "Weiter mit :provider",

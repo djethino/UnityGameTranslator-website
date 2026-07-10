@@ -527,6 +527,8 @@
     "merge.main_only": "Hanya pemilik Main yang bisa membatalkan validasi",
     "merge.cancel_tag_change": "Batalkan perubahan tag",
     "merge.revert_row": "Urungkan perubahan baris ini",
+    "merge.scroll_top": "Gulir ke atas halaman",
+    "merge.scroll_bottom": "Gulir ke bawah halaman",
     "auth.sign_in": "Masuk untuk melanjutkan",
     "auth.choose_method": "Pilih metode login:",
     "auth.continue_with": "Lanjutkan dengan :provider",

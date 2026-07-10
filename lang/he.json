@@ -527,6 +527,8 @@
     "merge.main_only": "רק בעל ה-Main יכול לבטל אימות",
     "merge.cancel_tag_change": "ביטול שינוי תגית",
     "merge.revert_row": "בטל את השינויים בשורה זו",
+    "merge.scroll_top": "גלול לראש הדף",
+    "merge.scroll_bottom": "גלול לתחתית הדף",
     "auth.sign_in": "התחברו להמשך",
     "auth.choose_method": "בחרו את שיטת ההתחברות שלכם:",
     "auth.continue_with": "המשך עם :provider",

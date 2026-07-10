@@ -527,6 +527,8 @@
     "merge.main_only": "Yalnızca Main sahibi geçersiz kılabilir",
     "merge.cancel_tag_change": "Etiket değişikliğini iptal et",
     "merge.revert_row": "Bu satırın değişikliklerini geri al",
+    "merge.scroll_top": "Sayfanın başına git",
+    "merge.scroll_bottom": "Sayfanın sonuna git",
     "auth.sign_in": "Devam etmek için giriş yapın",
     "auth.choose_method": "Giriş yönteminizi seçin:",
     "auth.continue_with": ":provider ile devam et",

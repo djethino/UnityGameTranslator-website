@@ -527,6 +527,8 @@
     "merge.main_only": "केवल मेन मालिक अमान्य कर सकता है",
     "merge.cancel_tag_change": "टैग बदलाव रद्द करें",
     "merge.revert_row": "इस पंक्ति के परिवर्तन पूर्ववत करें",
+    "merge.scroll_top": "पृष्ठ के शीर्ष पर जाएँ",
+    "merge.scroll_bottom": "पृष्ठ के नीचे जाएँ",
     "auth.sign_in": "जारी रखने के लिए साइन इन करें",
     "auth.choose_method": "अपनी लॉगिन विधि चुनें:",
     "auth.continue_with": ":provider के साथ जारी रखें",

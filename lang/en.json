@@ -527,6 +527,8 @@
     "merge.main_only": "Only the Main owner can invalidate",
     "merge.cancel_tag_change": "Cancel tag change",
     "merge.revert_row": "Undo this row's changes",
+    "merge.scroll_top": "Scroll to the top",
+    "merge.scroll_bottom": "Scroll to the bottom",
     "auth.sign_in": "Sign in to continue",
     "auth.choose_method": "Choose your login method:",
     "auth.continue_with": "Continue with :provider",
