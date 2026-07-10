@@ -112,6 +112,10 @@ export function editorCore(config) {
         replaceOpen: false,
         // Top-level on purpose (same CSP constraint as editModalValue)
         replaceValue: '',
+        // True when the main search bar scrolled off-screen — the compact
+        // floating search (partials/editor-floating-search) shows instead,
+        // so prev/next navigation never strands the user without controls
+        searchBarOffscreen: false,
 
         // ── Windowed rendering (large files: thousands of rows) ──────────
         // 200 rows ≈ 10+ screens of long text: re-rendering the window on
@@ -154,6 +158,14 @@ export function editorCore(config) {
                 this._fkCache = this._computeFilteredKeys();
                 this._fkVersion++;
             });
+
+            // Track whether the main search bar is on screen (pages mark it
+            // with x-ref="searchBar") to toggle the floating compact search
+            if (this.$refs.searchBar && 'IntersectionObserver' in window) {
+                new IntersectionObserver(entries => {
+                    this.searchBarOffscreen = !entries[0].isIntersecting;
+                }).observe(this.$refs.searchBar);
+            }
         },
 
         // ── Deletions (marked, applied by the page-specific save) ────────

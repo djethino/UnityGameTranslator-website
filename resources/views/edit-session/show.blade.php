@@ -98,8 +98,10 @@
             </label>
         </div>
 
+        @include('partials.editor-floating-search')
+
         {{-- Search (Enter/Shift+Enter navigate matches) + replace --}}
-        <div class="mb-4 space-y-2">
+        <div class="mb-4 space-y-2" x-ref="searchBar">
             <div class="flex gap-2">
                 <div class="relative flex-1">
                     <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
