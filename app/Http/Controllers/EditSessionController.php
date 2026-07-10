@@ -81,7 +81,48 @@ class EditSessionController extends Controller
             SsePublisher::editSessionBrowserJoined($session->mod_key);
         }
 
-        return response()->json(['content_hash' => $session->content_hash]);
+        return response()->json([
+            'content_hash' => $session->content_hash,
+            // The mod can toggle its AI backend mid-session (pushes refresh
+            // the flag) — the page shows/hides the retranslate buttons live
+            'ai_available' => $session->ai_available,
+        ]);
+    }
+
+    /**
+     * Ask the mod to re-translate one entry with ITS OWN AI backend.
+     * The site holds no AI credential: the request travels over the
+     * session's SSE channel and the translation runs on the player's
+     * machine, coming back through the normal mod → session push.
+     * Fire-and-forget: the mod ignores keys absent from its file.
+     *
+     * POST /edit-session-retranslate (AJAX)
+     */
+    public function retranslate(Request $request)
+    {
+        $session = $this->currentSession();
+
+        if (!$session) {
+            return response()->json(['error' => __('edit_session.error_expired')], 410);
+        }
+
+        if (!$session->ai_available) {
+            return response()->json(['error' => 'No AI backend available.'], 422);
+        }
+
+        $request->validate([
+            'key' => 'required|string|max:10000',
+        ]);
+
+        $key = $request->input('key');
+        // Metadata keys are never translatable content
+        if (str_starts_with($key, '_')) {
+            return response()->json(['error' => 'Invalid key.'], 422);
+        }
+
+        SsePublisher::editSessionRetranslate($session->mod_key, $key);
+
+        return response()->json(['requested' => true]);
     }
 
     /**

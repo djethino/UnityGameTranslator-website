@@ -694,6 +694,8 @@
     "edit_session.translation_column": "Перевод",
     "edit_session.no_entries": "Нет записей, соответствующих фильтрам.",
     "edit_session.instructions_validate": "Нажмите на перевод ИИ, чтобы подтвердить его:",
+    "edit_session.retranslate": "Перевести заново с помощью ИИ игры",
+    "edit_session.retranslating": "Повторный перевод…",
     "edit_session.instructions": "Дважды щёлкните перевод, чтобы отредактировать его — сохраните, чтобы применить в игре",
     "edit_session.save": "Сохранить и применить в игре",
     "edit_session.saved_ok": "Сохранено — мод применяет изменение в игре.",

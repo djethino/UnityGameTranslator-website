@@ -694,6 +694,8 @@
     "edit_session.translation_column": "الترجمة",
     "edit_session.no_entries": "لا توجد إدخالات تطابق عوامل التصفية.",
     "edit_session.instructions_validate": "انقر على ترجمة ذكاء اصطناعي للتصديق عليها:",
+    "edit_session.retranslate": "إعادة الترجمة باستخدام ذكاء اللعبة الاصطناعي",
+    "edit_session.retranslating": "جارٍ إعادة الترجمة…",
     "edit_session.instructions": "انقر نقرًا مزدوجًا على ترجمة لتعديلها — احفظ لتطبيقها في اللعبة",
     "edit_session.save": "حفظ وتطبيق في اللعبة",
     "edit_session.saved_ok": "تم الحفظ — يقوم الـ mod بتطبيقها داخل اللعبة.",

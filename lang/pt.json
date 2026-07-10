@@ -694,6 +694,8 @@
     "edit_session.translation_column": "Tradução",
     "edit_session.no_entries": "Nenhuma entrada corresponde aos seus filtros.",
     "edit_session.instructions_validate": "Clique numa tradução de IA para validá-la:",
+    "edit_session.retranslate": "Retraduzir com a IA do jogo",
+    "edit_session.retranslating": "A retraduzir…",
     "edit_session.instructions": "Faça duplo clique numa tradução para editá-la — guarde para aplicá-la no jogo",
     "edit_session.save": "Salvar e aplicar no jogo",
     "edit_session.saved_ok": "Salvo — o mod está aplicando no jogo.",

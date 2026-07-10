@@ -694,6 +694,8 @@
     "edit_session.translation_column": "翻訳",
     "edit_session.no_entries": "フィルターに一致するエントリがありません。",
     "edit_session.instructions_validate": "AI 翻訳をクリックして検証済みにする：",
+    "edit_session.retranslate": "ゲームの AI で再翻訳",
+    "edit_session.retranslating": "再翻訳中…",
     "edit_session.instructions": "翻訳をダブルクリックして編集 — 保存するとゲーム内に適用されます",
     "edit_session.save": "保存してゲームに適用",
     "edit_session.saved_ok": "保存しました — Modがゲーム内へ適用しています。",

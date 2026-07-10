@@ -34,6 +34,10 @@ class EditSessionController extends Controller
             'game_name' => 'nullable|string|max:255',
             'source_language' => 'nullable|string|max:16',
             'target_language' => 'nullable|string|max:16',
+            // The mod advertises its OWN AI backend so the browser can offer
+            // per-line retranslation — no AI credential ever reaches the site
+            'ai_available' => 'sometimes|boolean',
+            'ai_model' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -41,7 +45,9 @@ class EditSessionController extends Controller
                 $request->input('content'),
                 $request->input('game_name'),
                 $request->input('source_language'),
-                $request->input('target_language')
+                $request->input('target_language'),
+                $request->boolean('ai_available'),
+                $request->input('ai_model')
             );
         } catch (\InvalidArgumentException $e) {
             return response()->json(['error' => 'Content exceeds the size limit.'], 413);
@@ -72,12 +78,23 @@ class EditSessionController extends Controller
             return response()->json(['error' => 'Edit session expired or not found.'], 404);
         }
 
-        $request->validate(['content' => 'required|array']);
+        $request->validate([
+            'content' => 'required|array',
+            'ai_available' => 'sometimes|boolean',
+            'ai_model' => 'nullable|string|max:100',
+        ]);
 
         try {
             $contentHash = $session->writeContent($request->input('content'));
         } catch (\InvalidArgumentException $e) {
             return response()->json(['error' => 'Content exceeds the size limit.'], 413);
+        }
+        // The player can toggle AI mid-session: pushes refresh the flag
+        if ($request->has('ai_available')) {
+            $session->update([
+                'ai_available' => $request->boolean('ai_available'),
+                'ai_model' => $request->input('ai_model'),
+            ]);
         }
         $session->touchExpiry();
 

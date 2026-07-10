@@ -694,6 +694,8 @@
     "edit_session.translation_column": "Tłumaczenie",
     "edit_session.no_entries": "Żaden wpis nie pasuje do filtrów.",
     "edit_session.instructions_validate": "Kliknij tłumaczenie AI, aby je zatwierdzić:",
+    "edit_session.retranslate": "Przetłumacz ponownie za pomocą AI gry",
+    "edit_session.retranslating": "Ponowne tłumaczenie…",
     "edit_session.instructions": "Kliknij dwukrotnie tłumaczenie, aby je edytować — zapisz, aby zastosować je w grze",
     "edit_session.save": "Zapisz i zastosuj w grze",
     "edit_session.saved_ok": "Zapisano — mod stosuje zmiany w grze.",

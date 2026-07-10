@@ -71,6 +71,7 @@ Route::get('/edit-session', [EditSessionController::class, 'show'])->name('edit-
 Route::get('/edit-session-data', [EditSessionController::class, 'data'])->middleware('throttle:30,1')->name('edit-session.data');
 Route::get('/edit-session-state', [EditSessionController::class, 'state'])->middleware('throttle:30,1')->name('edit-session.state');
 Route::post('/edit-session-save', [EditSessionController::class, 'save'])->middleware('throttle:30,1')->name('edit-session.save');
+Route::post('/edit-session-retranslate', [EditSessionController::class, 'retranslate'])->middleware('throttle:20,1')->name('edit-session.retranslate');
 Route::post('/edit-session-leave', [EditSessionController::class, 'leave'])->middleware('throttle:30,1')->name('edit-session.leave');
 Route::post('/edit-session-end', [EditSessionController::class, 'end'])->middleware('throttle:10,1')->name('edit-session.end');
 

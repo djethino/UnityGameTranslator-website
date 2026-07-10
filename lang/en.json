@@ -694,6 +694,8 @@
     "edit_session.translation_column": "Translation",
     "edit_session.no_entries": "No entries match your filters.",
     "edit_session.instructions_validate": "Click an AI translation to validate it:",
+    "edit_session.retranslate": "Re-translate with the game's AI",
+    "edit_session.retranslating": "Re-translating…",
     "edit_session.instructions": "Double-click a translation to edit it — save to apply it in-game",
     "edit_session.save": "Save & apply in game",
     "edit_session.saved_ok": "Saved — the mod is applying it in-game.",
@@ -769,7 +771,6 @@
     "fonts.disabled": "Disabled",
     "fonts.no_fallback": "No fallback",
     "fonts.tooltip": "Font configuration included with this translation. The mod will automatically use these fonts if available on your system, otherwise original game fonts are used.",
-
     "seo.default_title": "UnityGameTranslator - Community Game Translations",
     "seo.default_description": "Free automatic AI translation for Unity games. Download community translations or generate your own with local AI. No API costs.",
     "seo.games_title": "Game Translations - Free Download in Any Language | UnityGameTranslator",

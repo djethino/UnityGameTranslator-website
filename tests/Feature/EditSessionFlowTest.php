@@ -316,6 +316,58 @@ class EditSessionFlowTest extends TestCase
             ->assertStatus(404);
     }
 
+    public function test_retranslate_relays_to_mod_when_ai_available(): void
+    {
+        // Session advertising the mod's AI backend
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'ai_available' => true,
+            'ai_model' => 'llama3',
+        ])->assertOk();
+        $session = EditSessionToken::first();
+        $this->assertTrue($session->ai_available);
+        $this->assertSame('llama3', $session->ai_model);
+
+        $this->get('/edit-session/' . $session->token);
+
+        // The state poll exposes the flag to the page
+        $this->get('/edit-session-state')->assertOk()->assertJson(['ai_available' => true]);
+
+        // Valid request: accepted (the SSE publish itself is fire-and-forget)
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello'])
+            ->assertOk()->assertJson(['requested' => true]);
+
+        // Metadata keys are never relayed
+        $this->postJson('/edit-session-retranslate', ['key' => '_uuid'])->assertStatus(422);
+    }
+
+    public function test_retranslate_rejected_without_ai_backend(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->get('/edit-session/' . $session->token);
+
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello'])->assertStatus(422);
+    }
+
+    public function test_mod_update_can_toggle_ai_availability(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->assertFalse($session->ai_available);
+
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/update', [
+            'content' => self::CONTENT,
+            'ai_available' => true,
+            'ai_model' => 'qwen2',
+        ])->assertOk();
+
+        $session->refresh();
+        $this->assertTrue($session->ai_available);
+        $this->assertSame('qwen2', $session->ai_model);
+    }
+
     public function test_mod_can_end_session_with_mod_key(): void
     {
         $this->initSession();

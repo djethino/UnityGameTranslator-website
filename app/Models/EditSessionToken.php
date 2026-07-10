@@ -64,6 +64,8 @@ class EditSessionToken extends Model
         'expires_at',
         'consumed_at',
         'content_hash',
+        'ai_available',
+        'ai_model',
         'browser_last_seen_at',
         'browser_left_at',
     ];
@@ -71,6 +73,7 @@ class EditSessionToken extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'consumed_at' => 'datetime',
+        'ai_available' => 'boolean',
         'browser_last_seen_at' => 'datetime',
         'browser_left_at' => 'datetime',
     ];
@@ -83,7 +86,9 @@ class EditSessionToken extends Model
         array $content,
         ?string $gameName,
         ?string $sourceLanguage,
-        ?string $targetLanguage
+        ?string $targetLanguage,
+        bool $aiAvailable = false,
+        ?string $aiModel = null
     ): self {
         self::cleanupExpired();
 
@@ -113,6 +118,8 @@ class EditSessionToken extends Model
             'target_language' => $targetLanguage,
             'expires_at' => now()->addMinutes(self::INITIAL_TTL_MINUTES),
             'content_hash' => hash('sha256', $json),
+            'ai_available' => $aiAvailable,
+            'ai_model' => $aiModel,
         ]);
     }
 

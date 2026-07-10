@@ -200,6 +200,24 @@ class SsePublisher
     }
 
     /**
+     * Ask the mod to re-translate one entry with ITS OWN AI backend
+     * during a live edit session (the site never holds any AI credential).
+     * Fire-and-forget by design: no :result storage — a replayed request
+     * on reconnection would trigger ghost retranslations, and the browser
+     * button simply stays available if the request is lost.
+     *
+     * @param string $modKey The session's mod key
+     * @param string $key The translation key (source text) to re-translate
+     */
+    public static function editSessionRetranslate(string $modKey, string $key): void
+    {
+        self::safePublish("sse:edit:{$modKey}", json_encode([
+            'event' => 'edit_retranslate',
+            'data' => ['key' => $key],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
      * Safely publish a message to a Redis channel.
      * Catches all exceptions so Redis failure never breaks core functionality.
      */

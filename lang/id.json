@@ -694,6 +694,8 @@
     "edit_session.translation_column": "Terjemahan",
     "edit_session.no_entries": "Tidak ada entri yang cocok dengan filter-mu.",
     "edit_session.instructions_validate": "Klik terjemahan AI untuk memvalidasinya:",
+    "edit_session.retranslate": "Terjemahkan ulang dengan AI game",
+    "edit_session.retranslating": "Menerjemahkan ulang…",
     "edit_session.instructions": "Klik dua kali terjemahan untuk mengeditnya — simpan untuk menerapkannya dalam game",
     "edit_session.save": "Simpan & terapkan dalam game",
     "edit_session.saved_ok": "Disimpan — mod sedang menerapkannya dalam game.",

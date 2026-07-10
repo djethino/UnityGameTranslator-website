@@ -215,6 +215,10 @@
                                 @click="toggleValidate(key)"
                                 @dblclick="editCell(key, getValue(data[key]))">
                                 <span class="edit-affordance">
+                                    {{-- Re-translate with the PLAYER's AI backend (request travels
+                                         to the mod over SSE — the site holds no AI credential) --}}
+                                    <button type="button" x-show="canRetranslate(key)" @click.stop="requestRetranslate(key)"
+                                        title="{{ __('edit_session.retranslate') }}{{ $editSession->ai_model ? ' — ' . $editSession->ai_model : '' }}"><i class="fas fa-wand-magic-sparkles"></i></button>
                                     <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
                                         title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
                                     <button type="button" @click.stop="editCell(key, getValue(data[key]))"
@@ -232,6 +236,11 @@
                                     class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
                                     title="{{ __('merge.placeholder_warning') }}">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
+                                </span>
+                                {{-- The player's AI is working on this line --}}
+                                <span x-show="retranslating[key]" x-cloak
+                                    class="inline-block mb-1 px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 text-xs">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>{{ __('edit_session.retranslating') }}
                                 </span>
                                 <span class="break-words"
                                     :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
@@ -479,6 +488,11 @@ document.addEventListener('alpine:init', () => {
         pollTimer: null,
         refreshNotice: '',
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
+        // Per-line AI retranslation, executed by the PLAYER's own backend:
+        // the request travels to the mod over SSE, the result comes back
+        // through the normal mod push. No AI credential ever touches the site.
+        aiAvailable: @js((bool) $editSession->ai_available),
+        retranslating: {},      // key -> request timestamp (visual state)
 
         _sync: null,
 
@@ -551,6 +565,51 @@ document.addEventListener('alpine:init', () => {
             return this.getValue(this.data[key]);
         },
 
+        // ── Per-line AI retranslation (player's own backend, via the mod) ──
+
+        canRetranslate(key) {
+            return this.aiAvailable && !this.isEdited(key) && !this.isDeleted(key)
+                && !this.retranslating[key];
+        },
+
+        /**
+         * Fire-and-forget: the site relays the key to the mod over SSE, the
+         * mod re-translates with the player's configured backend and pushes
+         * its file back — the result lands through the normal applyDiff.
+         * The visual pending state frees itself after 3 minutes if the mod
+         * never answers (AI error, session gap): the button simply returns.
+         */
+        requestRetranslate(key) {
+            if (!this.canRetranslate(key)) return;
+            this.setMatchCursor(key);
+            this.retranslating[key] = Date.now();
+            this._scheduleNextPoll(); // switch to the fast poll right away
+
+            fetch('{{ route("edit-session.retranslate") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ key: key })
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('request_failed');
+                })
+                .catch(() => {
+                    delete this.retranslating[key];
+                    this._scheduleNextPoll();
+                });
+
+            setTimeout(() => {
+                if (this.retranslating[key]) {
+                    delete this.retranslating[key];
+                    this._scheduleNextPoll();
+                }
+            }, 180000);
+        },
+
         // ── Click-to-validate (parity with the merge view's Main click) ──
 
         /** The row carries a pending validation (previewed V, green cell). */
@@ -595,7 +654,7 @@ document.addEventListener('alpine:init', () => {
         // endpoint doubles as the browser presence heartbeat.
 
         startLiveSync() {
-            this.pollTimer = setInterval(() => this.checkState(), 10000);
+            this._scheduleNextPoll();
             this.checkState(); // seed currentHash immediately
 
             // Tell the mod when the page goes away (close, navigation —
@@ -606,9 +665,22 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        /**
+         * Self-rescheduling poll: 2s while a retranslation is pending (the
+         * user is actively waiting on the mod's push), 10s otherwise.
+         */
+        _scheduleNextPoll() {
+            clearTimeout(this.pollTimer);
+            const delay = Object.keys(this.retranslating).length > 0 ? 2000 : 10000;
+            this.pollTimer = setTimeout(() => {
+                this.checkState();
+                this._scheduleNextPoll();
+            }, delay);
+        },
+
         stopLiveSync() {
             if (this.pollTimer) {
-                clearInterval(this.pollTimer);
+                clearTimeout(this.pollTimer);
                 this.pollTimer = null;
             }
         },
@@ -622,6 +694,10 @@ document.addEventListener('alpine:init', () => {
                     return response.json();
                 })
                 .then(state => {
+                    // The player can toggle the mod's AI backend mid-session
+                    if (typeof state.ai_available === 'boolean') {
+                        this.aiAvailable = state.ai_available;
+                    }
                     if (this.currentHash === null) {
                         this.currentHash = state.content_hash;
                         return;
@@ -672,6 +748,11 @@ document.addEventListener('alpine:init', () => {
                 if (pendingKeys.has(key) && key in this.data
                     && this.getValue(value) !== this.getValue(this.data[key])) {
                     this.underlyingChanged[key] = true;
+                }
+                // A requested retranslation came back through the mod's push
+                if (this.retranslating[key]) {
+                    delete this.retranslating[key];
+                    this._scheduleNextPoll();
                 }
                 if (!(key in this.data)) keysChanged = true;
                 this.data[key] = value;

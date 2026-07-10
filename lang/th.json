@@ -694,6 +694,8 @@
     "edit_session.translation_column": "การแปล",
     "edit_session.no_entries": "ไม่มีรายการที่ตรงกับตัวกรองของคุณ",
     "edit_session.instructions_validate": "คลิกคำแปล AI เพื่อยืนยัน:",
+    "edit_session.retranslate": "แปลใหม่ด้วย AI ของเกม",
+    "edit_session.retranslating": "กำลังแปลใหม่…",
     "edit_session.instructions": "ดับเบิลคลิกคำแปลเพื่อแก้ไข — บันทึกเพื่อนำไปใช้ในเกม",
     "edit_session.save": "บันทึกและนำไปใช้ในเกม",
     "edit_session.saved_ok": "บันทึกแล้ว — ม็อดกำลังนำไปใช้ในเกม",
