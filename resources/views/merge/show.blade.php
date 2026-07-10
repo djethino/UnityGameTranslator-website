@@ -392,8 +392,13 @@
                 </table>
             </div>
 
-            {{-- Apply form + footer --}}
-            <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm">
+            {{-- Apply form + footer. The sticky class must live on the FORM:
+                 sticky only works within the parent's bounds, and the form
+                 wraps nothing but this bar — sticky on the inner div would
+                 have no room to stick and the bar would sit at the very
+                 bottom of the page --}}
+            <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm"
+                class="mt-6 sticky bottom-4">
                 @csrf
                 {{-- Server needs mode + branches back for the redirect --}}
                 <input type="hidden" name="mode" value="{{ $mode }}">
@@ -405,7 +410,7 @@
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
                 <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
 
-                <div class="mt-6 flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700 sticky bottom-4">
+                <div class="flex justify-between items-center bg-gray-800 rounded-lg p-4 border border-gray-700">
                     <div class="text-sm text-gray-400">
                         <span x-show="totalChanges > 0">
                             <span x-show="selectionCount > 0">
