@@ -137,11 +137,7 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" @click.away="open = false" class="flex items-center space-x-2 text-gray-300 hover:text-white px-2 py-1 rounded transition">
                                 <div class="relative">
-                                    @if(auth()->user()->avatar)
-                                        <img src="{{ auth()->user()->avatar }}" alt="" class="w-8 h-8 rounded-full">
-                                    @else
-                                        <i class="fas fa-user-circle text-2xl"></i>
-                                    @endif
+                                    <x-avatar :user="auth()->user()" :size="32" />
                                     @if(auth()->user()->isAdmin() && $pendingReportsCount > 0)
                                         <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">{{ $pendingReportsCount }}</span>
                                     @endif

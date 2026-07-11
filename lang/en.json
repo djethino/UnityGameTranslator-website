@@ -899,5 +899,10 @@
     "profile.prompt_body": "You currently appear as \":name\" — a name that may come straight from your sign-in platform.",
     "profile.prompt_privacy": "If it exposes your real name, now is a good time to pick a pseudonym. You can also change it later in your account settings (once every 30 days).",
     "profile.prompt_keep": "Keep my username",
-    "profile.prompt_change": "Change it now"
+    "profile.prompt_change": "Change it now",
+    "profile.local_account": "Local account (no platform, no email)",
+    "profile.avatar_reroll": "New random avatar",
+    "profile.avatar_platform": "Use my platform avatar",
+    "profile.codes_regenerate": "Regenerate",
+    "profile.codes_regenerate_hint": "Generates a fresh set of 8 codes and invalidates the old ones. Requires your password."
 }

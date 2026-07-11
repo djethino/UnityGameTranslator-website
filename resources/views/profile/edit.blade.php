@@ -19,20 +19,37 @@
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <!-- Current info -->
         <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-700">
-            @if($user->avatar)
-                <img src="{{ $user->avatar }}" alt="" class="w-16 h-16 rounded-full">
-            @else
-                <div class="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
-                    <i class="fas fa-user text-2xl text-gray-500"></i>
-                </div>
-            @endif
-            <div>
+            <x-avatar :user="$user" :size="64" />
+            <div class="flex-1">
                 <p class="text-lg font-semibold">{{ $user->name }}</p>
-                <p class="text-sm text-gray-400">{{ $user->email }}</p>
+                @if($user->email)
+                    <p class="text-sm text-gray-400">{{ $user->email }}</p>
+                @endif
                 <p class="text-xs text-gray-500 mt-1">
-                    <i class="fab fa-{{ $user->provider }} mr-1"></i>
-                    {{ __('profile.connected_via', ['provider' => ucfirst($user->provider)]) }}
+                    @if($user->isLocalAccount())
+                        <i class="fas fa-user-shield mr-1"></i> {{ __('profile.local_account') }}
+                    @else
+                        <i class="fab fa-{{ $user->provider }} mr-1"></i>
+                        {{ __('profile.connected_via', ['provider' => ucfirst($user->provider)]) }}
+                    @endif
                 </p>
+                <div class="flex gap-3 mt-2">
+                    <form method="POST" action="{{ route('profile.avatar') }}">
+                        @csrf
+                        <button type="submit" class="text-xs text-purple-400 hover:text-purple-300 transition">
+                            <i class="fas fa-dice mr-1"></i>{{ __('profile.avatar_reroll') }}
+                        </button>
+                    </form>
+                    @if($user->avatar && $user->avatar_seed)
+                    <form method="POST" action="{{ route('profile.avatar') }}">
+                        @csrf
+                        <input type="hidden" name="action" value="platform">
+                        <button type="submit" class="text-xs text-gray-500 hover:text-gray-300 transition">
+                            {{ __('profile.avatar_platform') }}
+                        </button>
+                    </form>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -52,12 +69,14 @@
                 <p class="text-xs text-gray-500 mt-1">{{ __('profile.name_help') }}</p>
             </div>
 
+            @if(!$user->isLocalAccount())
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.email') }}</label>
                 <input type="email" value="{{ $user->email }}" disabled
                     class="w-full bg-gray-600 border border-gray-600 rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed">
                 <p class="text-xs text-gray-500 mt-1">{{ __('profile.email_managed', ['provider' => ucfirst($user->provider)]) }}</p>
             </div>
+            @endif
 
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.language') }}</label>
@@ -75,6 +94,23 @@
             </button>
         </form>
     </div>
+
+    @if($user->isLocalAccount())
+    <!-- Recovery codes (local accounts only) -->
+    <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h2 class="font-semibold mb-2"><i class="fas fa-key mr-2 text-yellow-400"></i>{{ __('auth.codes_title') }}</h2>
+        <p class="text-sm text-gray-400 mb-4">{{ __('profile.codes_regenerate_hint') }}</p>
+        <form method="POST" action="{{ route('local.recovery-codes.regenerate') }}" class="flex gap-3">
+            @csrf
+            <input type="password" name="password" required placeholder="{{ __('auth.password') }}" autocomplete="current-password"
+                   class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500">
+            <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                {{ __('profile.codes_regenerate') }}
+            </button>
+        </form>
+        @error('password')<p class="text-red-400 text-sm mt-2">{{ $message }}</p>@enderror
+    </div>
+    @endif
 
     <!-- Stats -->
     <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">

@@ -8,6 +8,28 @@ import mediumZoom from 'medium-zoom';
 import mergeTable from './components/merge-table.js';
 Alpine.data('mergeTable', mergeTable);
 
+// Locally-generated avatars (DiceBear "thumbs", CC0): the SVG is built in
+// the browser from a seed — no upload, no external request, no PII.
+// Placeholders: <span data-dicebear-seed="..." data-dicebear-size="32">
+import { createAvatar } from '@dicebear/core';
+import { thumbs } from '@dicebear/collection';
+
+function hydrateAvatars(root = document) {
+    root.querySelectorAll('[data-dicebear-seed]').forEach(el => {
+        if (el.dataset.dicebearDone) return;
+        el.dataset.dicebearDone = '1';
+        const size = parseInt(el.dataset.dicebearSize || '32', 10);
+        const avatar = createAvatar(thumbs, {
+            seed: el.dataset.dicebearSeed,
+            size,
+            radius: 50,
+        });
+        el.innerHTML = avatar.toString();
+    });
+}
+hydrateAvatars();
+window.UGT_hydrateAvatars = hydrateAvatars;
+
 // Site-wide announcement banner: dismissible per announcement id,
 // remembered in localStorage (works for guests too).
 Alpine.data('announceBanner', () => ({

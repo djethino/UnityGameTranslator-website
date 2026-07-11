@@ -899,5 +899,10 @@
     "profile.prompt_body": "Vous apparaissez actuellement comme « :name » — un nom qui peut venir directement de votre plateforme de connexion.",
     "profile.prompt_privacy": "S'il expose votre vrai nom, c'est le bon moment pour choisir un pseudonyme. Vous pourrez aussi le changer plus tard dans les paramètres de votre compte (une fois tous les 30 jours).",
     "profile.prompt_keep": "Garder mon pseudo",
-    "profile.prompt_change": "Le changer maintenant"
+    "profile.prompt_change": "Le changer maintenant",
+    "profile.local_account": "Compte local (sans plateforme, sans email)",
+    "profile.avatar_reroll": "Nouvel avatar aléatoire",
+    "profile.avatar_platform": "Utiliser mon avatar de plateforme",
+    "profile.codes_regenerate": "Régénérer",
+    "profile.codes_regenerate_hint": "Génère un nouveau jeu de 8 codes et invalide les anciens. Nécessite votre mot de passe."
 }

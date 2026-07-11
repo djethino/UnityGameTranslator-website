@@ -78,6 +78,23 @@ class ProfileController extends Controller
     }
 
     /**
+     * Generated avatar: reroll the seed, or clear it to return to the
+     * platform avatar (OAuth accounts only).
+     */
+    public function avatarReroll(Request $request)
+    {
+        $user = $request->user();
+
+        if ($request->input('action') === 'platform' && $user->avatar) {
+            $user->forceFill(['avatar_seed' => null])->save();
+        } else {
+            $user->forceFill(['avatar_seed' => \Illuminate\Support\Str::random(20)])->save();
+        }
+
+        return back();
+    }
+
+    /**
      * Export user data as JSON (GDPR)
      */
     public function export()
