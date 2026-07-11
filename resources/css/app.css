@@ -37,10 +37,13 @@
 .tag-changed-cell { background-color: rgba(88, 28, 135, 0.3) !important; }
 .deleted-cell { background-color: rgba(127, 29, 29, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(239 68 68); }
 
-/* Search: highlighted query occurrences + the row the match cursor is on */
-.search-mark { background-color: rgba(250, 204, 21, 0.35); color: inherit; border-radius: 0.125rem; padding: 0 0.0625rem; }
+/* Search: highlighted query occurrences + the row the match cursor is on.
+ * Dark text on a solid light background (browser-native find style): the
+ * columns underneath use anything from gray-100 to gray-500, so inheriting
+ * the text color made dim text (keys) unreadable inside the mark. */
+.search-mark { background-color: rgb(250 204 21); color: rgb(17 24 39); border-radius: 0.125rem; padding: 0 0.0625rem; }
 .current-match-row { box-shadow: inset 0 0 0 2px rgba(250, 204, 21, 0.6); }
-.current-match-row .search-mark { background-color: rgba(251, 146, 60, 0.55); }
+.current-match-row .search-mark { background-color: rgb(251 146 60); color: rgb(17 24 39); }
 
 /* Hover affordances: pencil (edit) and trash (delete) revealed on the cell,
  * because a double-click alone is never discoverable */
