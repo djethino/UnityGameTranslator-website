@@ -82,7 +82,7 @@ class User extends Authenticatable
         return $this->banned_at !== null;
     }
 
-    public function ban(string $reason = null): void
+    public function ban(?string $reason = null): void
     {
         $this->banned_at = now();
         $this->ban_reason = $reason;
