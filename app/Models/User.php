@@ -66,6 +66,15 @@ class User extends Authenticatable
         return (bool) $this->is_admin;
     }
 
+    /**
+     * Local (platform-less) account: logs in with username+password,
+     * may have no email at all.
+     */
+    public function isLocalAccount(): bool
+    {
+        return $this->provider === 'local';
+    }
+
     public function isBanned(): bool
     {
         return $this->banned_at !== null;

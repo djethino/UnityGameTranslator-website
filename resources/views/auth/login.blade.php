@@ -70,6 +70,32 @@
             </a>
         </div>
 
+        <!-- Local account (anonymity-first, no platform, no email) -->
+        <div class="flex items-center gap-3 my-6">
+            <div class="flex-1 border-t border-gray-700"></div>
+            <span class="text-gray-500 text-xs uppercase">{{ __('auth.or_local') }}</span>
+            <div class="flex-1 border-t border-gray-700"></div>
+        </div>
+
+        <form method="POST" action="{{ route('local.login') }}" class="text-left space-y-3">
+            @csrf
+            <input type="text" name="username" required maxlength="24" value="{{ old('username') }}"
+                   placeholder="{{ __('auth.username') }}" autocomplete="username"
+                   class="w-full bg-gray-800/80 border border-gray-600/50 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+            <input type="password" name="password" required maxlength="200"
+                   placeholder="{{ __('auth.password') }}" autocomplete="current-password"
+                   class="w-full bg-gray-800/80 border border-gray-600/50 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+            @error('username')<p class="text-red-400 text-sm">{{ $message }}</p>@enderror
+            <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2.5 rounded-lg transition">
+                <i class="fas fa-user-shield mr-1"></i> {{ __('auth.sign_in_local') }}
+            </button>
+        </form>
+
+        <div class="flex justify-between text-sm mt-3">
+            <a href="{{ route('local.register') }}" class="text-purple-400 hover:text-purple-300 transition">{{ __('auth.create_local') }}</a>
+            <a href="{{ route('local.recover') }}" class="text-gray-500 hover:text-gray-300 transition">{{ __('auth.lost_password') }}</a>
+        </div>
+
         <p class="text-gray-500 text-sm mt-8">
             <a href="{{ route('home') }}" class="text-purple-400 hover:text-purple-300 transition">
                 <i class="fas fa-arrow-left mr-1"></i> {{ __('auth.back_to_home') }}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Api\DeviceFlowController;
+use App\Http\Controllers\Auth\LocalAuthController;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
@@ -91,6 +92,15 @@ $localizableRoutes = function () {
     Route::get('/login', function () {
         return view('auth.login');
     })->name('login');
+
+    // Local (platform-less) accounts — anonymity first, no email required
+    Route::get('/register', [LocalAuthController::class, 'showRegister'])->name('local.register');
+    Route::post('/register', [LocalAuthController::class, 'register'])->middleware('throttle:5,60')->name('local.register.post');
+    Route::post('/login-local', [LocalAuthController::class, 'login'])->middleware('throttle:20,1')->name('local.login');
+    Route::get('/account-recovery', [LocalAuthController::class, 'showRecover'])->name('local.recover');
+    Route::post('/account-recovery', [LocalAuthController::class, 'recover'])->middleware('throttle:10,60')->name('local.recover.post');
+    Route::get('/recovery-codes', [LocalAuthController::class, 'showRecoveryCodes'])->name('local.recovery-codes');
+    Route::post('/recovery-codes/regenerate', [LocalAuthController::class, 'regenerateCodes'])->middleware(['auth', 'throttle:5,60'])->name('local.recovery-codes.regenerate');
 
     // Documentation
     Route::get('/docs', function () {
