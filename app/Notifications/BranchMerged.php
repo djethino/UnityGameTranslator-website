@@ -30,7 +30,7 @@ class BranchMerged extends Notification
             'game_name' => $this->main->game?->name,
             'game_slug' => $this->main->game?->slug,
             'target_language' => $this->main->target_language,
-            'owner_username' => $this->main->user?->username,
+            'owner_username' => $this->main->user?->name,
             'merged_count' => $this->mergedCount,
         ];
     }

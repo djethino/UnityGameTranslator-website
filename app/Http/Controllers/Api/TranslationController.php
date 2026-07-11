@@ -606,7 +606,7 @@ class TranslationController extends Controller
         }
 
         $contributor = User::find($contributorId);
-        BranchSubmitted::sendGrouped($main->user, $main, $contributor?->username ?? 'someone');
+        BranchSubmitted::sendGrouped($main->user, $main, $contributor?->name ?? 'someone');
     }
 
     private function findOrCreateGame(Request $request): ?Game

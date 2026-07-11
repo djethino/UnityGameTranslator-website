@@ -107,7 +107,8 @@ class NotificationFlowTest extends TestCase
         $data = $contributor->unreadNotifications()->first()->data;
         $this->assertSame('branch_merged', $data['type']);
         $this->assertSame(1, $data['merged_count']);
-        $this->assertSame($owner->username, $data['owner_username']);
+        $this->assertNotNull($owner->name);
+        $this->assertSame($owner->name, $data['owner_username']);
 
         // The owner merging their own view does not notify themselves
         $this->assertSame(0, $owner->unreadNotifications()->count());
