@@ -849,5 +849,15 @@
     "seo.game_title_nolang": ":game Translations - UnityGameTranslator",
     "seo.game_description": "Download free :game translations: :languages. Community-made and AI game translations - play :game in your language with the free UnityGameTranslator mod.",
     "seo.game_description_nolang": "Community translations for :game. Install the free open-source UnityGameTranslator mod and be the first to translate :game into your language.",
-    "seo.game_intro": "Download free community translations for :game in :languages. Translations can be human-made, AI-generated or a mix of both - install the free open-source UnityGameTranslator mod, download a translation below and play :game in your language."
+    "seo.game_intro": "Download free community translations for :game in :languages. Translations can be human-made, AI-generated or a mix of both - install the free open-source UnityGameTranslator mod, download a translation below and play :game in your language.",
+    "notif.bell_title": "Notifications",
+    "notif.page_title": "Notifications",
+    "notif.mark_all_read": "Mark all as read",
+    "notif.mark_read": "Mark as read",
+    "notif.empty": "Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": ":count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "Review now",
+    "notif.branch_merged": "@:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "See the translation",
+    "notif.learn_more": "Learn more"
 }

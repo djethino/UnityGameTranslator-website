@@ -8,6 +8,8 @@ use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Models\User;
+use App\Notifications\BranchSubmitted;
 use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
@@ -465,6 +467,11 @@ class TranslationController extends Controller
             ]);
             SsePublisher::uuidChanged($fileUuid);
 
+            // Updated Branch → tell the Main owner there is fresh work to review
+            if ($existingTranslation->visibility === 'branch') {
+                $this->notifyMainOwnerOfBranch($fileUuid, $userId);
+            }
+
             return response()->json([
                 'success' => true,
                 'translation' => [
@@ -516,6 +523,11 @@ class TranslationController extends Controller
             'updated_at' => $translation->updated_at->toIso8601String(),
         ]);
         SsePublisher::uuidChanged($fileUuid);
+
+        // New Branch → tell the Main owner there is work to review
+        if ($visibility === 'branch') {
+            $this->notifyMainOwnerOfBranch($fileUuid, $userId);
+        }
 
         return response()->json([
             'success' => true,
@@ -577,6 +589,26 @@ class TranslationController extends Controller
      * Find or create a game from API request.
      * Uses Steam → IGDB → RAWG to get game details.
      */
+    /**
+     * Notify the Main owner of a lineage that a Branch was submitted/updated.
+     * Grouped per lineage (see BranchSubmitted::sendGrouped) to avoid spam.
+     */
+    private function notifyMainOwnerOfBranch(string $fileUuid, int $contributorId): void
+    {
+        $main = Translation::where('file_uuid', $fileUuid)
+            ->whereNull('parent_id')
+            ->where('visibility', 'public')
+            ->with(['user', 'game'])
+            ->first();
+
+        if (!$main || !$main->user || $main->user_id === $contributorId) {
+            return;
+        }
+
+        $contributor = User::find($contributorId);
+        BranchSubmitted::sendGrouped($main->user, $main, $contributor?->username ?? 'someone');
+    }
+
     private function findOrCreateGame(Request $request): ?Game
     {
         $steamId = $request->filled('steam_id') ? $request->steam_id : null;

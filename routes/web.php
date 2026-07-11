@@ -8,6 +8,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MergeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SitemapController;
@@ -66,6 +67,14 @@ Route::post('/edit-session-save', [EditSessionController::class, 'save'])->middl
 Route::post('/edit-session-retranslate', [EditSessionController::class, 'retranslate'])->middleware('throttle:20,1')->name('edit-session.retranslate');
 Route::post('/edit-session-leave', [EditSessionController::class, 'leave'])->middleware('throttle:30,1')->name('edit-session.leave');
 Route::post('/edit-session-end', [EditSessionController::class, 'end'])->middleware('throttle:10,1')->name('edit-session.end');
+
+// Notification AJAX endpoints — polled by the header bell (60s) and used by
+// the mark-read buttons; never navigated, so they stay out of the locale group
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications-count', [NotificationController::class, 'count'])->middleware('throttle:120,1')->name('notifications.count');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->middleware('throttle:60,1')->name('notifications.read');
+    Route::post('/notifications-read-all', [NotificationController::class, 'markAllRead'])->middleware('throttle:20,1')->name('notifications.read-all');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +140,9 @@ $localizableRoutes = function () {
         Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
         Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
         Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
+
+        // Notifications page (browsed → localizable)
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -8,6 +8,40 @@ import mediumZoom from 'medium-zoom';
 import mergeTable from './components/merge-table.js';
 Alpine.data('mergeTable', mergeTable);
 
+// Header notification bell: unread badge, light poll (count only, 60s,
+// paused while the tab is hidden). URLs come from data-attributes.
+Alpine.data('notifBell', () => ({
+    count: 0,
+    _timer: null,
+
+    init() {
+        this.count = parseInt(this.$el.dataset.initialCount || '0', 10) || 0;
+        const url = this.$el.dataset.countUrl;
+        if (!url) return;
+
+        const poll = async () => {
+            if (document.hidden) return;
+            try {
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.count = data.unread ?? 0;
+                }
+            } catch { /* transient network error: keep the last known count */ }
+        };
+        this._timer = setInterval(poll, 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+    },
+
+    get badge() {
+        return this.count > 99 ? '99+' : String(this.count);
+    },
+
+    get hasUnread() {
+        return this.count > 0;
+    },
+}));
+
 // Shared editor core for the client-side translation editors (merge-preview,
 // edit-session). Their Alpine components stay inline in the Blade views
 // (they need @js() strings and route() URLs), so the factory is exposed

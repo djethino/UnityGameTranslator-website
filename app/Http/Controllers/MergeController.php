@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Notifications\BranchMerged;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
@@ -292,6 +293,27 @@ class MergeController extends Controller
             fn($k) => !str_starts_with($k, '_')
         ));
         $main->save();
+
+        // Tell each contributor whose lines were actually merged (per-branch counts
+        // from the selections' source markers: 'branch_{id}')
+        $mergedPerBranch = [];
+        foreach ($selections as $sel) {
+            if (preg_match('/^branch_(\d+)$/', $sel['source'] ?? '', $m)) {
+                $branchId = (int) $m[1];
+                $mergedPerBranch[$branchId] = ($mergedPerBranch[$branchId] ?? 0) + 1;
+            }
+        }
+        if (!empty($mergedPerBranch)) {
+            $branches = Translation::whereIn('id', array_keys($mergedPerBranch))
+                ->where('file_uuid', $uuid)
+                ->with('user')
+                ->get();
+            foreach ($branches as $branch) {
+                if ($branch->user && $branch->user_id !== $user->id) {
+                    $branch->user->notify(new BranchMerged($main, $mergedPerBranch[$branch->id]));
+                }
+            }
+        }
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         $activeTokens = MergePreviewToken::where('translation_id', $main->id)

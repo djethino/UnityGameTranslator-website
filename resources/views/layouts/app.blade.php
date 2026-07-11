@@ -121,6 +121,18 @@
                             <i class="fas fa-sign-in-alt mr-1"></i> {{ __('nav.login') }}
                         </a>
                     @else
+                        <!-- Notification bell -->
+                        <a href="{{ route('notifications.index') }}"
+                           x-data="notifBell"
+                           data-count-url="{{ route('notifications.count') }}"
+                           data-initial-count="{{ auth()->user()->unreadNotifications()->count() }}"
+                           class="relative text-gray-300 hover:text-white px-2 py-1 transition"
+                           title="{{ __('notif.bell_title') }}">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span x-show="hasUnread" x-cloak x-text="badge"
+                                  class="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full"></span>
+                        </a>
+
                         <!-- User Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" @click.away="open = false" class="flex items-center space-x-2 text-gray-300 hover:text-white px-2 py-1 rounded transition">
@@ -211,6 +223,11 @@
                 </a>
                 <a href="{{ route('translations.mine') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
                     <i class="fas fa-folder mr-3 w-5 text-center"></i> {{ __('nav.my_translations') }}
+                </a>
+                <a href="{{ route('notifications.index') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-bell mr-3 w-5 text-center"></i> {{ __('notif.bell_title') }}
+                    @php $__unreadNotifs = auth()->user()->unreadNotifications()->count(); @endphp
+                    @if($__unreadNotifs > 0) <span class="bg-purple-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-2">{{ $__unreadNotifs }}</span>@endif
                 </a>
                 @if(auth()->user()->isAdmin())
                 <a href="{{ route('admin.dashboard') }}" class="block text-yellow-400 hover:text-yellow-300 hover:bg-gray-700 px-4 py-3 rounded-lg transition">

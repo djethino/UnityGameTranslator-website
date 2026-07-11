@@ -849,5 +849,15 @@
     "seo.game_title_nolang": "Traductions :game - UnityGameTranslator",
     "seo.game_description": "Téléchargez des traductions gratuites de :game : :languages. Traductions communautaires et par IA - jouez à :game dans votre langue avec le mod gratuit UnityGameTranslator.",
     "seo.game_description_nolang": "Traductions communautaires pour :game. Installez le mod gratuit et open source UnityGameTranslator et soyez le premier à traduire :game dans votre langue.",
-    "seo.game_intro": "Téléchargez des traductions communautaires gratuites de :game en :languages. Les traductions peuvent être réalisées par des humains, générées par IA ou un mélange des deux - installez le mod gratuit et open source UnityGameTranslator, téléchargez une traduction ci-dessous et jouez à :game dans votre langue."
+    "seo.game_intro": "Téléchargez des traductions communautaires gratuites de :game en :languages. Les traductions peuvent être réalisées par des humains, générées par IA ou un mélange des deux - installez le mod gratuit et open source UnityGameTranslator, téléchargez une traduction ci-dessous et jouez à :game dans votre langue.",
+    "notif.bell_title": "Notifications",
+    "notif.page_title": "Notifications",
+    "notif.mark_all_read": "Tout marquer comme lu",
+    "notif.mark_read": "Marquer comme lu",
+    "notif.empty": "Rien pour l'instant — les contributions à relire et les annonces apparaîtront ici.",
+    "notif.branch_submitted": ":count contribution(s) en attente de relecture sur votre traduction :game (:lang) — dernière de @:user",
+    "notif.review_now": "Relire maintenant",
+    "notif.branch_merged": "@:owner a fusionné :count de vos ligne(s) dans la traduction :game (:lang)",
+    "notif.see_translation": "Voir la traduction",
+    "notif.learn_more": "En savoir plus"
 }
