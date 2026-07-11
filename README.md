@@ -2,7 +2,9 @@
 
 Community platform for sharing Unity game translation files with API for mod synchronization.
 
-**Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com) — [browse available game translations](https://unitygametranslator.asymptomatikgames.com/games)
+**Live site:** [unitygametranslator.asymptomatikgames.com](https://unitygametranslator.asymptomatikgames.com) — [browse game translations](https://unitygametranslator.asymptomatikgames.com/games) · [user documentation](https://unitygametranslator.asymptomatikgames.com/docs)
+
+> This README covers the technical side (stack, architecture, installation, configuration). For the user guide — what the mod does, editors, collaboration — see the [documentation on the website](https://unitygametranslator.asymptomatikgames.com/docs).
 
 ## Features
 
@@ -13,6 +15,8 @@ Community platform for sharing Unity game translation files with API for mod syn
 - **Merge contributions** — Main owners review and merge Branches
 - **Branch rating** — Main owners rate contributor quality
 - **Inline editing** — edit translations directly on the website with tag selection
+- **Live edit sessions** — edit your LOCAL translation file in the browser while playing: search & replace, filters, quality bar, keyboard review; saves are hot-reloaded in-game via SSE, no account needed
+- **Private AI retranslation** — the browser asks the mod (through the session stream) to retranslate a line with the player's own backend; no API key or LLM config is ever stored on the site
 - **Merge preview** — visual diff between local (mod) and server translations
 - **Vote system** to highlight quality translations
 - **Report system** for moderation
@@ -24,9 +28,9 @@ Community platform for sharing Unity game translation files with API for mod syn
 
 | Term | Description |
 |------|-------------|
-| **Main** | The original translation. First uploader becomes the owner. |
-| **Branch** | A contributor's version, linked to the Main. One per user per UUID. |
-| **Fork** | Copying a translation to create your own Branch. |
+| **Main** | The reference translation, owned by its creator and public on the website. |
+| **Branch** | A contributor's improvements, linked to the Main and reviewed by its owner. One per user per UUID. |
+| **Fork** | An independent translation (new lineage): its creator becomes Main owner, no longer linked to the original. |
 
 **Workflow:**
 1. User A uploads → becomes **Main** owner
@@ -107,6 +111,7 @@ Unity Mod ──► Laravel API (PHP)  ◄──► Redis pub/sub ◄──► S
 | `GET /auth/device/:code/stream` | None | Device Flow: streams auth result |
 | `GET /sync/stream?uuid=xxx&hash=yyy` | Bearer | Multi-device sync: streams translation updates |
 | `GET /merge-preview/:token/stream` | Token | Merge completion notification |
+| `GET /edit-session/:token/stream` | Token | Live edit session: browser saves and retranslate requests streamed to the mod |
 | `GET /health` | None | Health check |
 
 ## Requirements
