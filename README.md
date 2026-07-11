@@ -77,7 +77,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 
 ### Authentication
 
-**OAuth providers:** Google, GitHub, Discord, Twitch, Steam, Epic Games
+**OAuth providers:** Google, GitHub, Discord, Twitch, Steam. Epic Games is wired in code but disabled on the live site (no API credentials — pending Epic developer approval); self-hosters with their own Epic credentials can enable it.
 
 **Device Flow** for Unity mod: mod displays a code, user enters it at `/link`, mod receives API token via SSE stream.
 
@@ -168,6 +168,7 @@ TWITCH_CLIENT_SECRET=
 
 STEAM_API_KEY=
 
+# Optional — provider wired in code but disabled without credentials
 EPICGAMES_CLIENT_ID=
 EPICGAMES_CLIENT_SECRET=
 ```
