@@ -148,4 +148,28 @@ class NotificationFlowTest extends TestCase
         $this->get('/notifications')->assertRedirect();
         $this->getJson('/notifications-count')->assertUnauthorized();
     }
+
+    public function test_mod_api_returns_summary_and_marks_read(): void
+    {
+        $owner = User::factory()->create();
+        $main = $this->makeTranslation($owner, ['Hello' => ['v' => 'Bonjour', 't' => 'H']]);
+        BranchSubmitted::sendGrouped($owner, $main, 'alice');
+        BranchSubmitted::sendGrouped($owner, $main, 'bob');
+
+        $apiToken = \App\Models\ApiToken::createForUser($owner);
+        $headers = ['Authorization' => 'Bearer ' . $apiToken->plain_token];
+
+        $response = $this->getJson('/api/v1/me/notifications', $headers);
+        $response->assertOk()
+            ->assertJson(['unread' => 1])
+            ->assertJsonPath('items.0.type', 'branch_submitted');
+        $this->assertStringContainsString('2 contribution(s)', $response->json('items.0.text'));
+        $this->assertStringContainsString('/merge', $response->json('items.0.url'));
+
+        $this->postJson('/api/v1/me/notifications/read', [], $headers)->assertOk();
+        $this->assertSame(0, $owner->unreadNotifications()->count());
+
+        // Unauthenticated mod calls are rejected
+        $this->getJson('/api/v1/me/notifications')->assertUnauthorized();
+    }
 }

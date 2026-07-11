@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Api\EditSessionController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MergePreviewController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SyncStateController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UserController;
@@ -78,6 +79,12 @@ Route::prefix('v1')->group(function () {
         // User info
         Route::get('me', [UserController::class, 'me']);
         Route::get('me/translations', [UserController::class, 'translations']);
+
+        // Notifications relay for the mod's status overlay
+        Route::get('me/notifications', [NotificationController::class, 'index'])
+            ->middleware('throttle:30,1');
+        Route::post('me/notifications/read', [NotificationController::class, 'markRead'])
+            ->middleware('throttle:30,1');
 
         // Check if UUID exists before upload (to detect UPDATE/FORK/NEW)
         Route::get('translations/check-uuid', [TranslationController::class, 'checkUuid']);
