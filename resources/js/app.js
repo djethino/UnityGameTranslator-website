@@ -8,6 +8,22 @@ import mediumZoom from 'medium-zoom';
 import mergeTable from './components/merge-table.js';
 Alpine.data('mergeTable', mergeTable);
 
+// Site-wide announcement banner: dismissible per announcement id,
+// remembered in localStorage (works for guests too).
+Alpine.data('announceBanner', () => ({
+    visible: false,
+
+    init() {
+        const id = this.$el.dataset.bannerId;
+        this.visible = id && localStorage.getItem('ugt_banner_dismissed') !== id;
+    },
+
+    dismiss() {
+        localStorage.setItem('ugt_banner_dismissed', this.$el.dataset.bannerId);
+        this.visible = false;
+    },
+}));
+
 // Header notification bell: unread badge, light poll (count only, 60s,
 // paused while the tab is hidden). URLs come from data-attributes.
 Alpine.data('notifBell', () => ({

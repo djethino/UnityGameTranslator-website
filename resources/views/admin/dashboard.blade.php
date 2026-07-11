@@ -5,9 +5,14 @@
 @section('content')
 <div class="mb-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold"><i class="fas fa-shield-alt mr-2"></i> {{ __('admin.dashboard') }}</h1>
-    <a href="{{ route('admin.analytics') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-        <i class="fas fa-chart-line mr-2"></i> Analytics
-    </a>
+    <div class="flex gap-3">
+        <a href="{{ route('admin.announcements') }}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-bullhorn mr-2"></i> Announcements
+        </a>
+        <a href="{{ route('admin.analytics') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-chart-line mr-2"></i> Analytics
+        </a>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

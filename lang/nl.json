@@ -849,5 +849,16 @@
     "seo.game_title_nolang": ":game-vertalingen - UnityGameTranslator",
     "seo.game_description": "Download gratis :game-vertalingen: :languages. Game-vertalingen gemaakt door de community en AI - speel :game in jouw taal met de gratis UnityGameTranslator-mod.",
     "seo.game_description_nolang": "Community-vertalingen voor :game. Installeer de gratis open-source UnityGameTranslator-mod en wees de eerste die :game naar jouw taal vertaalt.",
-    "seo.game_intro": "Download gratis community-vertalingen voor :game in :languages. Vertalingen kunnen door mensen gemaakt, door AI gegenereerd of een mix van beide zijn - installeer de gratis open-source UnityGameTranslator-mod, download hieronder een vertaling en speel :game in jouw taal."
+    "seo.game_intro": "Download gratis community-vertalingen voor :game in :languages. Vertalingen kunnen door mensen gemaakt, door AI gegenereerd of een mix van beide zijn - installeer de gratis open-source UnityGameTranslator-mod, download hieronder een vertaling en speel :game in jouw taal.",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }

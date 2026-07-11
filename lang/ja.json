@@ -849,5 +849,16 @@
     "seo.game_title_nolang": ":game の翻訳 - UnityGameTranslator",
     "seo.game_description": ":game の翻訳を無料ダウンロード：:languages。コミュニティ製・AI製のゲーム翻訳で、無料MOD「UnityGameTranslator」を使って :game を自分の言語でプレイできます。",
     "seo.game_description_nolang": ":game のコミュニティ翻訳。無料のオープンソースMOD「UnityGameTranslator」をインストールして、:game を自分の言語に翻訳（日本語化）する最初のユーザーになりましょう。",
-    "seo.game_intro": ":game のコミュニティ翻訳を :languages で無料ダウンロード。翻訳は人力・AI生成、またはその両方の組み合わせがあります。無料のオープンソースMOD「UnityGameTranslator」をインストールし、下記から翻訳をダウンロードして :game を自分の言語でプレイしましょう。"
+    "seo.game_intro": ":game のコミュニティ翻訳を :languages で無料ダウンロード。翻訳は人力・AI生成、またはその両方の組み合わせがあります。無料のオープンソースMOD「UnityGameTranslator」をインストールし、下記から翻訳をダウンロードして :game を自分の言語でプレイしましょう。",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }

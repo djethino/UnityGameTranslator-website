@@ -173,6 +173,9 @@ $localizableRoutes = function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
         Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
+        Route::get('/announcements', [AdminController::class, 'announcements'])->name('announcements');
+        Route::post('/announcements', [AdminController::class, 'storeAnnouncement'])->name('announcements.store');
+        Route::post('/announcements/{announcement}/expire', [AdminController::class, 'expireAnnouncement'])->name('announcements.expire');
         Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
         Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
         Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');

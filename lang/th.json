@@ -849,5 +849,16 @@
     "seo.game_title_nolang": "งานแปล :game - UnityGameTranslator",
     "seo.game_description": "ดาวน์โหลดงานแปล :game ฟรี: :languages งานแปลจากชุมชนและ AI - เล่น :game ในภาษาของคุณด้วยม็อด UnityGameTranslator ฟรี",
     "seo.game_description_nolang": "งานแปล :game จากชุมชน ติดตั้งม็อดโอเพนซอร์ส UnityGameTranslator ฟรี และเป็นคนแรกที่แปล :game เป็นภาษาของคุณ",
-    "seo.game_intro": "ดาวน์โหลดงานแปล :game จากชุมชนฟรีใน :languages งานแปลอาจทำโดยมนุษย์ สร้างด้วย AI หรือทั้งสองอย่างผสมกัน - ติดตั้งม็อดโอเพนซอร์ส UnityGameTranslator ฟรี ดาวน์โหลดงานแปลด้านล่าง แล้วเล่น :game ในภาษาของคุณ"
+    "seo.game_intro": "ดาวน์โหลดงานแปล :game จากชุมชนฟรีใน :languages งานแปลอาจทำโดยมนุษย์ สร้างด้วย AI หรือทั้งสองอย่างผสมกัน - ติดตั้งม็อดโอเพนซอร์ส UnityGameTranslator ฟรี ดาวน์โหลดงานแปลด้านล่าง แล้วเล่น :game ในภาษาของคุณ",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }

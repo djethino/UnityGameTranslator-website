@@ -849,5 +849,16 @@
     "seo.game_title_nolang": "Terjemahan :game - UnityGameTranslator",
     "seo.game_description": "Unduh terjemahan :game gratis: :languages. Terjemahan game buatan komunitas dan AI - mainkan :game dalam bahasamu dengan mod gratis UnityGameTranslator.",
     "seo.game_description_nolang": "Terjemahan komunitas untuk :game. Pasang mod open-source gratis UnityGameTranslator dan jadilah yang pertama menerjemahkan :game ke bahasamu.",
-    "seo.game_intro": "Unduh terjemahan komunitas gratis untuk :game dalam :languages. Terjemahan bisa dibuat manusia, dihasilkan AI, atau gabungan keduanya - pasang mod open-source gratis UnityGameTranslator, unduh terjemahan di bawah, dan mainkan :game dalam bahasamu."
+    "seo.game_intro": "Unduh terjemahan komunitas gratis untuk :game dalam :languages. Terjemahan bisa dibuat manusia, dihasilkan AI, atau gabungan keduanya - pasang mod open-source gratis UnityGameTranslator, unduh terjemahan di bawah, dan mainkan :game dalam bahasamu.",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }

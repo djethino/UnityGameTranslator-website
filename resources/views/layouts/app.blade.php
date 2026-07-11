@@ -288,6 +288,26 @@
         </div>
     </nav>
 
+    @php $siteBanner = \App\Models\Announcement::currentBanner(); @endphp
+    @if($siteBanner)
+    <div x-data="announceBanner" data-banner-id="{{ $siteBanner->id }}" x-show="visible" x-cloak
+         class="bg-purple-900/80 border-b border-purple-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm">
+            <i class="fas fa-bullhorn text-purple-300"></i>
+            <p class="flex-1 text-purple-100 min-w-0">
+                <span class="font-semibold">{{ $siteBanner->title }}</span>
+                <span class="text-purple-200"> — {{ $siteBanner->body }}</span>
+                @if($siteBanner->link)
+                    <a href="{{ $siteBanner->link }}" class="underline text-white hover:text-purple-200 ml-1" rel="noopener">{{ __('notif.learn_more') }}</a>
+                @endif
+            </p>
+            <button @click="dismiss" class="text-purple-300 hover:text-white transition" aria-label="{{ __('notif.dismiss') }}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
     <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         @if(session('success'))
             <div class="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">

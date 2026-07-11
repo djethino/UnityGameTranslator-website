@@ -849,5 +849,16 @@
     "seo.game_title_nolang": ":game 翻译 - UnityGameTranslator",
     "seo.game_description": "免费下载 :game 翻译：:languages。社区制作和 AI 游戏翻译 - 使用免费的 UnityGameTranslator 模组用你的语言游玩 :game。",
     "seo.game_description_nolang": ":game 的社区翻译。安装免费开源的 UnityGameTranslator 模组，成为第一个将 :game 翻译成你语言的人。",
-    "seo.game_intro": "免费下载 :game 的社区翻译，语言：:languages。翻译可以是人工制作、AI 生成或两者结合 - 安装免费开源的 UnityGameTranslator 模组，在下方下载翻译，用你的语言游玩 :game。"
+    "seo.game_intro": "免费下载 :game 的社区翻译，语言：:languages。翻译可以是人工制作、AI 生成或两者结合 - 安装免费开源的 UnityGameTranslator 模组，在下方下载翻译，用你的语言游玩 :game。",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }

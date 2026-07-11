@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendAnnouncementNotifications;
 use App\Models\AnalyticsDaily;
 use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
+use App\Models\Announcement;
 use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Report;
@@ -29,6 +31,47 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.dashboard', compact('pendingReports', 'totalTranslations', 'totalUsers', 'bannedUsers', 'recentReports'));
+    }
+
+    public function announcements()
+    {
+        $announcements = Announcement::with('author')->latest('published_at')->paginate(15);
+
+        return view('admin.announcements', compact('announcements'));
+    }
+
+    public function storeAnnouncement(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:150',
+            'body' => 'required|string|max:2000',
+            'link' => 'nullable|url|max:500',
+            'show_banner' => 'nullable|boolean',
+        ]);
+
+        $announcement = Announcement::create([
+            'title' => $validated['title'],
+            'body' => $validated['body'],
+            'link' => $validated['link'] ?? null,
+            'show_banner' => (bool) ($validated['show_banner'] ?? false),
+            'created_by' => $request->user()->id,
+            'published_at' => now(),
+        ]);
+        Announcement::clearBannerCache();
+
+        SendAnnouncementNotifications::dispatch($announcement);
+
+        return redirect()->route('admin.announcements')
+            ->with('success', 'Announcement published and sent to all users.');
+    }
+
+    public function expireAnnouncement(Announcement $announcement)
+    {
+        $announcement->update(['expires_at' => now()]);
+        Announcement::clearBannerCache();
+
+        return redirect()->route('admin.announcements')
+            ->with('success', 'Announcement expired (banner hidden, notifications remain).');
     }
 
     public function reports(Request $request)

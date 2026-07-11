@@ -859,5 +859,6 @@
     "notif.review_now": "Review now",
     "notif.branch_merged": "@:owner merged :count of your line(s) into the :game translation (:lang)",
     "notif.see_translation": "See the translation",
-    "notif.learn_more": "Learn more"
+    "notif.learn_more": "Learn more",
+    "notif.dismiss": "Dismiss"
 }

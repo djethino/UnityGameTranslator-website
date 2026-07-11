@@ -849,5 +849,16 @@
     "seo.game_title_nolang": "Bản dịch :game - UnityGameTranslator",
     "seo.game_description": "Tải bản dịch :game miễn phí: :languages. Bản dịch từ cộng đồng và AI - chơi :game bằng ngôn ngữ của bạn với mod UnityGameTranslator miễn phí.",
     "seo.game_description_nolang": "Bản dịch :game từ cộng đồng. Cài mod mã nguồn mở miễn phí UnityGameTranslator và trở thành người đầu tiên dịch :game sang ngôn ngữ của bạn.",
-    "seo.game_intro": "Tải bản dịch :game miễn phí từ cộng đồng bằng :languages. Bản dịch có thể do con người thực hiện, tạo bằng AI hoặc kết hợp cả hai - cài mod mã nguồn mở miễn phí UnityGameTranslator, tải bản dịch bên dưới và chơi :game bằng ngôn ngữ của bạn."
+    "seo.game_intro": "Tải bản dịch :game miễn phí từ cộng đồng bằng :languages. Bản dịch có thể do con người thực hiện, tạo bằng AI hoặc kết hợp cả hai - cài mod mã nguồn mở miễn phí UnityGameTranslator, tải bản dịch bên dưới và chơi :game bằng ngôn ngữ của bạn.",
+    "notif.bell_title": "[MISSING] Notifications",
+    "notif.page_title": "[MISSING] Notifications",
+    "notif.mark_all_read": "[MISSING] Mark all as read",
+    "notif.mark_read": "[MISSING] Mark as read",
+    "notif.empty": "[MISSING] Nothing here yet — contributions to review and announcements will show up here.",
+    "notif.branch_submitted": "[MISSING] :count contribution(s) waiting for review on your :game translation (:lang) — latest from @:user",
+    "notif.review_now": "[MISSING] Review now",
+    "notif.branch_merged": "[MISSING] @:owner merged :count of your line(s) into the :game translation (:lang)",
+    "notif.see_translation": "[MISSING] See the translation",
+    "notif.learn_more": "[MISSING] Learn more",
+    "notif.dismiss": "[MISSING] Dismiss"
 }
