@@ -636,10 +636,29 @@ export function editorCore(config) {
                 if (this.isDeleted(key)) continue;
                 const tag = this.rowQualityTag(key);
                 if (!tag || counts[tag] === undefined) continue;
+                // Captured-only entries (H + empty value, the mod's "collect
+                // texts without translating" mode) are reserved for a future
+                // human translation: the server excludes them from quality
+                // scoring, so must the editors
+                if (tag === 'H') {
+                    const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
+                    if (value === '' || value === null || value === undefined) continue;
+                }
                 counts[tag]++;
                 counts.total++;
             }
             return counts;
+        },
+
+        /**
+         * Captured-only row: tag H with an empty (projected) value — typing a
+         * translation immediately un-captures it. Used to render the H badge
+         * differently so these rows don't read as human-translated.
+         */
+        isCaptureRow(key) {
+            if (this.rowQualityTag(key) !== 'H') return false;
+            const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
+            return value === '' || value === null || value === undefined;
         },
 
         get tagCounts() {

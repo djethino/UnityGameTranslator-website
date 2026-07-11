@@ -284,7 +284,7 @@
                                         @click.stop="openTagDropdown($event, key, displayLocalTag(key), getValue(localData[key]))"
                                         class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
                                         title="{{ __('merge.click_to_change_tag') }}">
-                                        <span :class="'tag-' + displayLocalTag(key)" x-text="displayLocalTag(key)"></span>
+                                        <span :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayLocalTag(key)"></span>
                                     </button>
                                 </template>
                                 <template x-if="localData[key] === undefined">

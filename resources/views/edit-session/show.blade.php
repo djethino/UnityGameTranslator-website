@@ -216,7 +216,7 @@
                                     @click.stop="openTagDropdown($event, key, displayTag(key, getTag(data[key])), getValue(data[key]))"
                                     class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
                                     title="{{ __('merge.click_to_change_tag') }}">
-                                    <span :class="'tag-' + displayTag(key, getTag(data[key]))" x-text="displayTag(key, getTag(data[key]))"></span>
+                                    <span :class="'tag-' + displayTag(key, getTag(data[key])) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayTag(key, getTag(data[key]))"></span>
                                 </button>
                             </td>
 

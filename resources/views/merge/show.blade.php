@@ -354,7 +354,7 @@
                                             :disabled="isDeleted(key)"
                                             class="transition rounded"
                                             title="{{ __('merge.click_to_change_tag') }}">
-                                            <span :class="'tag-' + displayMainTag(key)" x-text="displayMainTag(key)"></span>
+                                            <span :class="'tag-' + displayMainTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayMainTag(key)"></span>
                                         </button>
                                     </template>
                                     <template x-if="mainData[key] === undefined">
