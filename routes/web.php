@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications-count', [NotificationController::class, 'count'])->middleware('throttle:120,1')->name('notifications.count');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->middleware('throttle:60,1')->name('notifications.read');
     Route::post('/notifications-read-all', [NotificationController::class, 'markAllRead'])->middleware('throttle:20,1')->name('notifications.read-all');
+    Route::post('/username-prompt-seen', [ProfileController::class, 'usernamePromptSeen'])->middleware('throttle:10,1')->name('profile.username-prompt-seen');
 });
 
 /*

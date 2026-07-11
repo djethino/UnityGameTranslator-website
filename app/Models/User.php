@@ -38,6 +38,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'banned_at' => 'datetime',
+            'name_changed_at' => 'datetime',
+            'username_prompt_seen_at' => 'datetime',
         ];
     }
 

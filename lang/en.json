@@ -893,5 +893,11 @@
     "auth.new_password": "New password",
     "auth.recover_button": "Recover my account",
     "auth.recover_note": "Recovery codes only exist for local accounts. If you signed in with Steam, Discord, Google... just use that platform's button.",
-    "auth.recovered": "Welcome back! Your password has been updated — consider regenerating your recovery codes from your profile."
+    "auth.recovered": "Welcome back! Your password has been updated — consider regenerating your recovery codes from your profile.",
+    "profile.name_cooldown": "You changed your username recently — next change possible on :date.",
+    "profile.prompt_title": "Want to change your username?",
+    "profile.prompt_body": "You currently appear as \":name\" — a name that may come straight from your sign-in platform.",
+    "profile.prompt_privacy": "If it exposes your real name, now is a good time to pick a pseudonym. You can also change it later in your account settings (once every 30 days).",
+    "profile.prompt_keep": "Keep my username",
+    "profile.prompt_change": "Change it now"
 }

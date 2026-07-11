@@ -50,6 +50,8 @@ class LocalAuthController extends Controller
             'password' => Hash::make($validated['password']),
             'provider' => 'local',
             'locale' => app()->getLocale(),
+            // They just chose their name — no need for the one-shot rename prompt
+            'username_prompt_seen_at' => now(),
         ])->save();
 
         $codes = RecoveryCode::generateFor($user);

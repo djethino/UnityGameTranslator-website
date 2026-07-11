@@ -893,5 +893,11 @@
     "auth.new_password": "Nouveau mot de passe",
     "auth.recover_button": "Récupérer mon compte",
     "auth.recover_note": "Les codes de récupération n'existent que pour les comptes locaux. Si vous vous connectiez via Steam, Discord, Google... utilisez simplement le bouton de cette plateforme.",
-    "auth.recovered": "Bon retour ! Votre mot de passe a été mis à jour — pensez à régénérer vos codes de récupération depuis votre profil."
+    "auth.recovered": "Bon retour ! Votre mot de passe a été mis à jour — pensez à régénérer vos codes de récupération depuis votre profil.",
+    "profile.name_cooldown": "Vous avez changé de pseudo récemment — prochain changement possible le :date.",
+    "profile.prompt_title": "Envie de changer de pseudo ?",
+    "profile.prompt_body": "Vous apparaissez actuellement comme « :name » — un nom qui peut venir directement de votre plateforme de connexion.",
+    "profile.prompt_privacy": "S'il expose votre vrai nom, c'est le bon moment pour choisir un pseudonyme. Vous pourrez aussi le changer plus tard dans les paramètres de votre compte (une fois tous les 30 jours).",
+    "profile.prompt_keep": "Garder mon pseudo",
+    "profile.prompt_change": "Le changer maintenant"
 }

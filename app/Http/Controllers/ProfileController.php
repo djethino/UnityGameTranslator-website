@@ -2,11 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UsernameHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
+    /**
+     * One-shot username prompt (shown once to existing users after the
+     * rename feature ships): mark seen, optionally jump to the profile.
+     */
+    public function usernamePromptSeen(Request $request)
+    {
+        $request->user()->forceFill(['username_prompt_seen_at' => now()])->save();
+
+        if ($request->input('action') === 'change') {
+            return redirect()->route('profile.edit');
+        }
+
+        return back();
+    }
+
     public function edit()
     {
         return view('profile.edit', [
@@ -26,6 +42,26 @@ class ProfileController extends Controller
         ]);
 
         $user = auth()->user();
+
+        // Display-name change: 30-day cooldown + admin-only history
+        // (anti-impersonation; the ASCII charset above blocks homoglyphs)
+        if ($request->name !== $user->name) {
+            if ($user->name_changed_at && $user->name_changed_at->addDays(30)->isFuture()) {
+                return back()->withErrors([
+                    'name' => __('profile.name_cooldown', [
+                        'date' => $user->name_changed_at->addDays(30)->toDateString(),
+                    ]),
+                ]);
+            }
+
+            UsernameHistory::create([
+                'user_id' => $user->id,
+                'old_name' => $user->name,
+                'changed_at' => now(),
+            ]);
+            $user->forceFill(['name_changed_at' => now()])->save();
+        }
+
         $user->update([
             'name' => $request->name,
             'locale' => $request->locale,

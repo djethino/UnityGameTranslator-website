@@ -308,6 +308,33 @@
     </div>
     @endif
 
+    @auth
+        @if(is_null(auth()->user()->username_prompt_seen_at))
+        <!-- One-shot username prompt: OAuth usernames sometimes expose real
+             names; offer a rename once, then it lives in the profile settings -->
+        <div class="fixed inset-0 z-[90] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.65);">
+            <div class="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-w-md w-full p-6">
+                <h2 class="text-lg font-bold text-white mb-2">
+                    <i class="fas fa-user-pen text-purple-400 mr-2"></i>{{ __('profile.prompt_title') }}
+                </h2>
+                <p class="text-gray-300 text-sm mb-2">{{ __('profile.prompt_body', ['name' => auth()->user()->name]) }}</p>
+                <p class="text-gray-400 text-xs mb-5">{{ __('profile.prompt_privacy') }}</p>
+                <form method="POST" action="{{ route('profile.username-prompt-seen') }}" class="flex gap-3 justify-end">
+                    @csrf
+                    <button type="submit" name="action" value="keep"
+                            class="px-4 py-2 text-sm text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                        {{ __('profile.prompt_keep') }}
+                    </button>
+                    <button type="submit" name="action" value="change"
+                            class="px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition">
+                        {{ __('profile.prompt_change') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        @endif
+    @endauth
+
     <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         @if(session('success'))
             <div class="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">
