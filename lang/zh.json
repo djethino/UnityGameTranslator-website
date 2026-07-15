@@ -778,6 +778,8 @@
     "edit_session.expired_help": "此编辑会话已不存在。请从模组中开始一个新的会话（Tools 标签页，\"Edit in browser\"）。",
     "edit_session.updated_from_game": "已从游戏更新",
     "edit_session.changed_in_game": "游戏内已更改",
+    "editor.capture_order": "捕获顺序",
+    "editor.capture_order_hint": "文本在游戏中被捕获的先后顺序。旧版本模组保存的条目为空。",
     "dashboard.title": "控制面板",
     "dashboard.back_to_translations": "返回我的翻译",
     "dashboard.main_owner": "主版本",

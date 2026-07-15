@@ -837,7 +837,8 @@ class TranslationController extends Controller
                 }
             }
 
-            $content[$key] = ['v' => $value, 't' => $tag];
+            // rebuildEntry keeps the ordering index "i" of the existing entry
+            $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);
             $modifiedCount++;
         }
 

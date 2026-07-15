@@ -778,6 +778,8 @@
     "edit_session.expired_help": "Bu düzenleme oturumu artık mevcut değil. Moddan yeni bir tane başlatın (Tools sekmesi, \"Edit in browser\").",
     "edit_session.updated_from_game": "Oyundan güncellendi",
     "edit_session.changed_in_game": "Oyunda değiştirildi",
+    "editor.capture_order": "Yakalama sırası",
+    "editor.capture_order_hint": "Metinlerin oyun içinde yakalandığı sıra. Eski mod sürümlerinden gelen kayıtlarda boştur.",
     "dashboard.title": "Kontrol Paneli",
     "dashboard.back_to_translations": "Çevirilerime Dön",
     "dashboard.main_owner": "Main",

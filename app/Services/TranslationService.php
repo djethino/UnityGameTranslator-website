@@ -9,6 +9,9 @@ class TranslationService
 {
     private const VALID_TAGS = ['H', 'V', 'A', 'M', 'S'];
 
+    /** Max value for the optional per-entry ordering index "i" (JS Number.MAX_SAFE_INTEGER). */
+    public const MAX_ORDER_INDEX = 9007199254740991;
+
     /**
      * Normalize line endings to Unix format (\n).
      * Converts \r\n (Windows) and \r (old Mac) to \n.
@@ -66,7 +69,7 @@ class TranslationService
             throw new \InvalidArgumentException(json_encode([
                 'error' => "Invalid translation format: {$errorCount} entries have errors",
                 'details' => $sample,
-                'hint' => 'Each entry must be: {"key": {"v": "value" or null, "t": "H|V|A|M|S"}}',
+                'hint' => 'Each entry must be: {"key": {"v": "value" or null, "t": "H|V|A|M|S", "i": optional positive integer}}',
             ]));
         }
 
@@ -120,6 +123,15 @@ class TranslationService
             if (!is_string($value['t']) || !in_array($value['t'], self::VALID_TAGS, true)) {
                 $errors[] = "Key '$key': 't' must be one of H, V, A, M, S, got '{$value['t']}'";
             }
+
+            // 'i' (ordering index) is optional; when present it must be a
+            // positive integer within JavaScript's safe range — the web
+            // editor is the consumer. Larger values decode as float in PHP
+            // and fail is_int, which is intended.
+            if (array_key_exists('i', $value)
+                && (!is_int($value['i']) || $value['i'] < 1 || $value['i'] > self::MAX_ORDER_INDEX)) {
+                $errors[] = "Key '$key': 'i' must be a positive integer <= 2^53-1 when present";
+            }
         }
 
         return $errors;
@@ -163,6 +175,39 @@ class TranslationService
     }
 
     /**
+     * Reduce a translation entry to its content fields (v/t) for hashing.
+     * Presentation metadata like the ordering index "i" must NOT affect the
+     * content hash: mods compare hashes to detect real content changes, and
+     * "i" legitimately differs across devices for identical content.
+     * Must match C# ComputeContentHash(), which hashes {"v", "t"} only.
+     * Strictly neutral for entries without extra fields (order preserved).
+     */
+    public static function hashableEntry(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_intersect_key($value, ['v' => true, 't' => true]);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Build a rewritten {v, t} entry, carrying over the ordering index "i"
+     * from the previous entry when present. Server-side rewrites must never
+     * silently drop "i": the mod assigns it at capture time and the editors
+     * use it to sort entries chronologically.
+     */
+    public static function rebuildEntry(mixed $previous, ?string $value, string $tag): array
+    {
+        $entry = ['v' => $value, 't' => $tag];
+        if (is_array($previous) && isset($previous['i'])) {
+            $entry['i'] = $previous['i'];
+        }
+
+        return $entry;
+    }
+
+    /**
      * Compute normalized SHA256 hash for a translation file.
      * Used to detect changes between versions.
      * Keys and values are normalized for cross-platform consistency.
@@ -183,7 +228,7 @@ class TranslationService
                     $value = $this->normalizeLineEndings($value);
                 }
 
-                $hashData[$normalizedKey] = $value;
+                $hashData[$normalizedKey] = self::hashableEntry($value);
             }
         }
         ksort($hashData);

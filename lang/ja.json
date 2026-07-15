@@ -778,6 +778,8 @@
     "edit_session.expired_help": "この編集セッションは存在しません。Modから新しいセッションを開始してください（Toolsタブの「Edit in browser」）。",
     "edit_session.updated_from_game": "ゲームから更新されました",
     "edit_session.changed_in_game": "ゲーム内で変更されました",
+    "editor.capture_order": "取得順",
+    "editor.capture_order_hint": "ゲーム内でテキストが取得された順番です。旧バージョンのModで保存された項目は空欄になります。",
     "dashboard.title": "ダッシュボード",
     "dashboard.back_to_translations": "マイ翻訳に戻る",
     "dashboard.main_owner": "Main",

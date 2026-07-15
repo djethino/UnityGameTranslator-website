@@ -778,6 +778,8 @@
     "edit_session.expired_help": "Эта сессия редактирования больше не существует. Запустите новую из мода (вкладка Tools, «Edit in browser»).",
     "edit_session.updated_from_game": "Обновлено из игры",
     "edit_session.changed_in_game": "Изменено в игре",
+    "editor.capture_order": "Порядок захвата",
+    "editor.capture_order_hint": "Порядок, в котором тексты были захвачены в игре. Пусто для записей из старых версий мода.",
     "dashboard.title": "Панель управления",
     "dashboard.back_to_translations": "Назад к моим переводам",
     "dashboard.main_owner": "Основной",

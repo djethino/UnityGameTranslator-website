@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -162,7 +163,9 @@ class Translation extends Model
         foreach ($data as $key => $value) {
             // Include _uuid and non-metadata keys (translations)
             if ($key === '_uuid' || !str_starts_with($key, '_')) {
-                $hashData[$key] = $value;
+                // Only v/t are content — the ordering index "i" must not
+                // affect the hash (see TranslationService::hashableEntry)
+                $hashData[$key] = TranslationService::hashableEntry($value);
             }
         }
 

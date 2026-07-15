@@ -110,6 +110,13 @@
                     (<span x-text="sessionNewCount"></span>)
                 </span>
             </label>
+
+            {{-- Capture-order index column (mod-assigned "i") --}}
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.capture_order_hint') }}">
+                <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
+                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
+            </label>
         </div>
 
         @include('partials.editor-floating-search')
@@ -171,6 +178,15 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
+                        {{-- Capture-order index (toggleable, sortable) --}}
+                        <th x-show="showIndexColumn" x-cloak
+                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
+                            <div class="flex items-center justify-end gap-1">
+                                <span class="text-xs">#</span>
+                                <i class="fas text-xs" :class="getSortIcon('index')"></i>
+                            </div>
+                        </th>
                         <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
                             @click="toggleSort('key')">
                             <div class="flex items-center gap-2">
@@ -204,6 +220,11 @@
                         <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                             :data-row-index="idx">
+                            {{-- Capture-order index --}}
+                            <td x-show="showIndexColumn" x-cloak
+                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                x-text="displayIndex(data[key])"></td>
+
                             {{-- Key --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
 
@@ -272,14 +293,14 @@
                     </template>
 
                     <tr x-show="filteredKeys.length === 0">
-                        <td colspan="3" class="px-4 py-12 text-center text-gray-500">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-filter text-4xl mb-3 text-gray-600"></i>
                             <p>{{ __('edit_session.no_entries') }}</p>
                         </td>
                     </tr>
 
                     <tr x-show="hiddenCount > 0">
-                        <td colspan="3" class="px-4 py-3 text-center">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-3 text-center">
                             <button type="button" @click="showMore()"
                                 class="text-purple-400 hover:text-purple-300 text-sm transition">
                                 <i class="fas fa-chevron-down mr-1"></i>
@@ -581,6 +602,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         rowSortValue(key, column) {
+            if (column === 'index') {
+                return this.getOrderIndex(this.data[key]);
+            }
             if (column === 'tag') {
                 return this.getTag(this.data[key]);
             }
@@ -909,7 +933,14 @@ document.addEventListener('alpine:init', () => {
                         if (tag !== 'M' && tag !== 'S' && sel.source === 'manual') {
                             tag = 'H';
                         }
-                        this.data[sel.key] = { v: sel.value, t: tag };
+                        // Keep the ordering index "i" of the previous entry
+                        // (the server-side save preserves it the same way)
+                        const prevEntry = this.data[sel.key];
+                        const newEntry = { v: sel.value, t: tag };
+                        if (prevEntry && typeof prevEntry === 'object' && Number.isInteger(prevEntry.i)) {
+                            newEntry.i = prevEntry.i;
+                        }
+                        this.data[sel.key] = newEntry;
                         // Conflict resolved by this save: the user's version won
                         delete this.underlyingChanged[sel.key];
                     }

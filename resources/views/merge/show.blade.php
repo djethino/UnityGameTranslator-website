@@ -232,6 +232,13 @@
                         class="rounded bg-gray-700 border-gray-600 text-purple-600">
                     <span class="text-purple-400">{{ __('merge.modifications') }}</span>
                 </label>
+
+                {{-- Capture-order index column (mod-assigned "i") --}}
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.capture_order_hint') }}">
+                    <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
+                        class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                    <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
+                </label>
             </div>
 
             @include('partials.editor-floating-search')
@@ -294,6 +301,15 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-900 sticky top-0 z-10">
                         <tr>
+                            {{-- Capture-order index (toggleable, sortable) --}}
+                            <th x-show="showIndexColumn" x-cloak
+                                class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                                @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
+                                <div class="flex items-center justify-end gap-1">
+                                    <span class="text-xs">#</span>
+                                    <i class="fas text-xs" :class="getSortIcon('index')"></i>
+                                </div>
+                            </th>
                             <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
                                 @click="toggleSort('key')">
                                 <div class="flex items-center gap-2">
@@ -337,6 +353,11 @@
                             <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                                 :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                                 :data-row-index="idx">
+                                {{-- Capture-order index --}}
+                                <td x-show="showIndexColumn" x-cloak
+                                    class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                    x-text="indexCellText(key)"></td>
+
                                 {{-- Key --}}
                                 <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
                                     <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
@@ -415,14 +436,14 @@
                         </template>
 
                         <tr x-show="filteredKeys.length === 0">
-                            <td :colspan="3 + branches.length" class="px-4 py-12 text-center text-gray-500">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length" class="px-4 py-12 text-center text-gray-500">
                                 <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
                                 <p>{{ __('merge.no_keys_found') }}</p>
                             </td>
                         </tr>
 
                         <tr x-show="hiddenCount > 0">
-                            <td :colspan="3 + branches.length" class="px-4 py-3 text-center">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length" class="px-4 py-3 text-center">
                                 <button type="button" @click="showMore()"
                                     class="text-purple-400 hover:text-purple-300 text-sm transition">
                                     <i class="fas fa-chevron-down mr-1"></i>
@@ -795,6 +816,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         rowSortValue(key, column) {
+            if (column === 'index') {
+                return this.orderIndexFor(key);
+            }
             if (column === 'mainTag') {
                 return key in this.mainData ? this.getTag(this.mainData[key]) : '';
             }
@@ -805,6 +829,22 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the stored editable value (replace, placeholder guard). */
         storedValue(key) {
             return this.getValue(this.mainData[key]);
+        },
+
+        /** Capture-order index: Main first, branches as fallback (branch-only keys). */
+        orderIndexFor(key) {
+            const mainIdx = this.getOrderIndex(this.mainData[key]);
+            if (mainIdx !== Infinity) return mainIdx;
+            for (const branch of this.branches) {
+                const idx = this.getOrderIndex(branch.content[key]);
+                if (idx !== Infinity) return idx;
+            }
+            return Infinity;
+        },
+
+        indexCellText(key) {
+            const idx = this.orderIndexFor(key);
+            return idx === Infinity ? '' : String(idx);
         },
 
         /** Core hook: projected Main tag for the quality bar (rows the

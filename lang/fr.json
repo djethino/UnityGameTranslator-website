@@ -778,6 +778,8 @@
     "edit_session.expired_help": "Cette session d'édition n'existe plus. Démarrez-en une nouvelle depuis le mod (onglet Tools, « Edit in browser »).",
     "edit_session.updated_from_game": "Mis à jour depuis le jeu",
     "edit_session.changed_in_game": "Modifié en jeu",
+    "editor.capture_order": "Ordre de capture",
+    "editor.capture_order_hint": "Ordre dans lequel chaque texte a été capturé en jeu. Vide pour les entrées issues d'anciennes versions du mod.",
     "dashboard.title": "Tableau de bord",
     "dashboard.back_to_translations": "Retour à mes traductions",
     "dashboard.main_owner": "Principal",

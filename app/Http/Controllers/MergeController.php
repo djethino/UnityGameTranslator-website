@@ -235,7 +235,8 @@ class MergeController extends Controller
                     // H and V from branches keep their original tag
                 }
 
-                $content[$key] = ['v' => $value, 't' => $tag];
+                // rebuildEntry keeps the ordering index "i" of the existing entry
+                $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);
                 $modifiedCount++;
             }
         }
@@ -270,8 +271,8 @@ class MergeController extends Controller
                         ? ($content[$key]['v'] ?? '')
                         : $content[$key];
 
-                    // Update with new tag, keep the value
-                    $content[$key] = ['v' => $currentValue, 't' => $newTag];
+                    // Update with new tag, keep the value (and the ordering index "i")
+                    $content[$key] = TranslationService::rebuildEntry($content[$key], $currentValue, $newTag);
                     $tagChangedCount++;
                 }
             }

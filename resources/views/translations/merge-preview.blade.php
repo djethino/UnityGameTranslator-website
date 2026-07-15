@@ -148,6 +148,13 @@
                 <span class="text-purple-400">{{ __('merge_preview.modifications') }}</span>
             </label>
 
+            {{-- Capture-order index column (mod-assigned "i") --}}
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.capture_order_hint') }}">
+                <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
+                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
+            </label>
+
             <span class="text-gray-600">|</span>
 
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
@@ -218,6 +225,15 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-900 sticky top-0 z-10">
                     <tr>
+                        {{-- Capture-order index (toggleable, sortable) --}}
+                        <th x-show="showIndexColumn" x-cloak
+                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
+                            <div class="flex items-center justify-end gap-1">
+                                <span class="text-xs">#</span>
+                                <i class="fas text-xs" :class="getSortIcon('index')"></i>
+                            </div>
+                        </th>
                         {{-- Key column with sort --}}
                         <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
                             @click="toggleSort('key')">
@@ -271,6 +287,11 @@
                         <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                             :data-row-index="idx">
+                            {{-- Capture-order index --}}
+                            <td x-show="showIndexColumn" x-cloak
+                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                x-text="indexCellText(key)"></td>
+
                             {{-- Key column --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
 
@@ -350,14 +371,14 @@
                     </template>
 
                     <tr x-show="filteredKeys.length === 0">
-                        <td colspan="5" class="px-4 py-12 text-center text-gray-500">
+                        <td :colspan="showIndexColumn ? 6 : 5" class="px-4 py-12 text-center text-gray-500">
                             <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
                             <p>{{ __('merge_preview.no_differences') }}</p>
                         </td>
                     </tr>
 
                     <tr x-show="hiddenCount > 0">
-                        <td colspan="5" class="px-4 py-3 text-center">
+                        <td :colspan="showIndexColumn ? 6 : 5" class="px-4 py-3 text-center">
                             <button type="button" @click="showMore()"
                                 class="text-purple-400 hover:text-purple-300 text-sm transition">
                                 <i class="fas fa-chevron-down mr-1"></i>
@@ -850,6 +871,10 @@ document.addEventListener('alpine:init', () => {
         rowSortValue(key, column) {
             // Sort on STORED values: a pending edit must not make the row
             // jump around while the user is still working
+            if (column === 'index') {
+                const idx = this.orderIndexFor(key);
+                return idx === undefined ? Infinity : idx;
+            }
             if (column === 'localTag') {
                 return key in this.localData ? this.getTag(this.localData[key]) : '';
             }
@@ -1080,9 +1105,31 @@ document.addEventListener('alpine:init', () => {
                     }
                     merged[key] = { v: this.getValue(this.onlineData[key]), t: tag };
                 }
+
+                // Carry over the ordering index "i" — presentation metadata
+                // that must survive the rebuild (local file is the authority)
+                if (merged[key]) {
+                    const idx = this.orderIndexFor(key);
+                    if (idx !== undefined) merged[key].i = idx;
+                }
             }
 
             return merged;
+        },
+
+        orderIndexFor(key) {
+            for (const src of [this.localData[key], this.onlineData[key]]) {
+                if (src && typeof src === 'object' && Number.isInteger(src.i) && src.i > 0) {
+                    return src.i;
+                }
+            }
+            return undefined;
+        },
+
+        /** Index cell text (local file is the authority, online fallback). */
+        indexCellText(key) {
+            const idx = this.orderIndexFor(key);
+            return idx === undefined ? '' : String(idx);
         },
 
         saveToServer() {

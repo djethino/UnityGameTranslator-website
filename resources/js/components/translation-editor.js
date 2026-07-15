@@ -106,6 +106,11 @@ export function editorCore(config) {
         searchScope: 'both', // 'both' | 'keys' | 'values'
         sortColumn: 'key',
         sortDirection: 'asc',
+        // Capture-order index column visibility — a durable preference
+        // shared by ALL editors (localStorage, unlike the per-page
+        // sessionStorage UI state). Hidden by default; sorting by index
+        // works either way.
+        showIndexColumn: false,
 
         // ── Search navigation + replace ───────────────────────────────────
         currentMatchIndex: 0,
@@ -137,6 +142,9 @@ export function editorCore(config) {
         initEditorCore() {
             this.restoreUiState();
             this.restorePendingState();
+            try {
+                this.showIndexColumn = localStorage.getItem('ugt_editor_show_index') === '1';
+            } catch (e) { /* storage blocked: keep default */ }
             this._debouncedQuery = this.searchQuery;
             this.$watch('searchQuery', () => {
                 this.persistUiState();
@@ -593,6 +601,31 @@ export function editorCore(config) {
             if (entry === null || entry === undefined) return 'A';
             if (typeof entry === 'object') return entry.t || 'A';
             return 'A';
+        },
+
+        /**
+         * Ordering index "i": capture order assigned by the mod. Entries
+         * without one (legacy files, older mod versions) sort LAST in
+         * both directions — they carry no chronological information.
+         */
+        getOrderIndex(entry) {
+            if (entry && typeof entry === 'object' && Number.isInteger(entry.i) && entry.i > 0) {
+                return entry.i;
+            }
+            return Infinity;
+        },
+
+        /** Cell text for the index column ('' for entries without one). */
+        displayIndex(entry) {
+            const idx = this.getOrderIndex(entry);
+            return idx === Infinity ? '' : String(idx);
+        },
+
+        toggleIndexColumn() {
+            this.showIndexColumn = !this.showIndexColumn;
+            try {
+                localStorage.setItem('ugt_editor_show_index', this.showIndexColumn ? '1' : '0');
+            } catch (e) { /* non-essential */ }
         },
 
         isEdited(key) {

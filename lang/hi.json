@@ -778,6 +778,8 @@
     "edit_session.expired_help": "यह एडिट सत्र अब मौजूद नहीं है। मॉड से एक नया शुरू करें (Tools टैब, \"Edit in browser\")।",
     "edit_session.updated_from_game": "गेम से अपडेट किया गया",
     "edit_session.changed_in_game": "गेम में बदला गया",
+    "editor.capture_order": "कैप्चर क्रम",
+    "editor.capture_order_hint": "वह क्रम जिसमें गेम में टेक्स्ट कैप्चर किए गए। पुराने मॉड संस्करणों की प्रविष्टियों के लिए खाली।",
     "dashboard.title": "डैशबोर्ड",
     "dashboard.back_to_translations": "मेरे अनुवादों पर वापस",
     "dashboard.main_owner": "मेन",

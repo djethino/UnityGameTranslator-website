@@ -778,6 +778,8 @@
     "edit_session.expired_help": "Phiên chỉnh sửa này không còn tồn tại. Hãy bắt đầu phiên mới từ mod (tab Tools, \"Edit in browser\").",
     "edit_session.updated_from_game": "Đã cập nhật từ game",
     "edit_session.changed_in_game": "Đã thay đổi trong game",
+    "editor.capture_order": "Thứ tự thu thập",
+    "editor.capture_order_hint": "Thứ tự các đoạn văn bản được thu thập trong game. Để trống với các mục từ phiên bản mod cũ hơn.",
     "dashboard.title": "Bảng điều khiển",
     "dashboard.back_to_translations": "Quay lại Bản dịch của tôi",
     "dashboard.main_owner": "Main",
