@@ -104,13 +104,18 @@ export function editorCore(config) {
         _debouncedQuery: '',
         _debounceTimer: null,
         searchScope: 'both', // 'both' | 'keys' | 'values'
-        sortColumn: 'key',
+        // Default sort: capture order, ascending. For existing files the
+        // backfilled index IS alphabetical order (deterministic backfill),
+        // so nothing jumps for current users — new captures then append in
+        // the order they appeared in-game (the point of the feature).
+        // Entries without an index sort last; per-session choice persists.
+        sortColumn: 'index',
         sortDirection: 'asc',
         // Capture-order index column visibility — a durable preference
         // shared by ALL editors (localStorage, unlike the per-page
-        // sessionStorage UI state). Hidden by default; sorting by index
-        // works either way.
-        showIndexColumn: false,
+        // sessionStorage UI state). Visible by default (discoverability);
+        // sorting by index works either way.
+        showIndexColumn: true,
 
         // ── Search navigation + replace ───────────────────────────────────
         currentMatchIndex: 0,
@@ -143,7 +148,10 @@ export function editorCore(config) {
             this.restoreUiState();
             this.restorePendingState();
             try {
-                this.showIndexColumn = localStorage.getItem('ugt_editor_show_index') === '1';
+                const storedIndexPref = localStorage.getItem('ugt_editor_show_index');
+                if (storedIndexPref !== null) {
+                    this.showIndexColumn = storedIndexPref === '1';
+                }
             } catch (e) { /* storage blocked: keep default */ }
             this._debouncedQuery = this.searchQuery;
             this.$watch('searchQuery', () => {
