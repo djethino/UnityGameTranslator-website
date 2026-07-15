@@ -817,7 +817,7 @@ document.addEventListener('alpine:init', () => {
 
         rowSortValue(key, column) {
             if (column === 'index') {
-                return this.orderIndexFor(key);
+                return this.indexSortValue(this.orderIndexFor(key));
             }
             if (column === 'mainTag') {
                 return key in this.mainData ? this.getTag(this.mainData[key]) : '';

@@ -603,7 +603,7 @@ document.addEventListener('alpine:init', () => {
 
         rowSortValue(key, column) {
             if (column === 'index') {
-                return this.getOrderIndex(this.data[key]);
+                return this.indexSortValue(this.getOrderIndex(this.data[key]));
             }
             if (column === 'tag') {
                 return this.getTag(this.data[key]);

@@ -621,6 +621,18 @@ export function editorCore(config) {
             return idx === Infinity ? '' : String(idx);
         },
 
+        /**
+         * Sort value for the index column. Index-less entries must sort LAST
+         * in BOTH directions (they carry no chronological information, and in
+         * descending order — "newest first" — a block of legacy rows on top
+         * would bury the very entries the sort is for), so their sentinel
+         * flips with the direction.
+         */
+        indexSortValue(idx) {
+            if (idx !== Infinity && idx !== undefined) return idx;
+            return this.sortDirection === 'desc' ? -Infinity : Infinity;
+        },
+
         toggleIndexColumn() {
             this.showIndexColumn = !this.showIndexColumn;
             try {

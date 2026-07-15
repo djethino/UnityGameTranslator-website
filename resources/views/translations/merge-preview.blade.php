@@ -872,8 +872,7 @@ document.addEventListener('alpine:init', () => {
             // Sort on STORED values: a pending edit must not make the row
             // jump around while the user is still working
             if (column === 'index') {
-                const idx = this.orderIndexFor(key);
-                return idx === undefined ? Infinity : idx;
+                return this.indexSortValue(this.orderIndexFor(key));
             }
             if (column === 'localTag') {
                 return key in this.localData ? this.getTag(this.localData[key]) : '';
