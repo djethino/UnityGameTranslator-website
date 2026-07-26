@@ -87,6 +87,11 @@ class User extends Authenticatable
         $this->banned_at = now();
         $this->ban_reason = $reason;
         $this->save();
+
+        // Cut the mod off straight away. A banned account keeps its website session (it must be
+        // able to read why it was banned) but loses every API token: the plugin is a granted
+        // access, not a place to display a notice. Re-linking is refused while the ban stands.
+        $this->apiTokens()->delete();
     }
 
     public function unban(): void
