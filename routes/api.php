@@ -33,8 +33,10 @@ Route::prefix('v1')->group(function () {
     // Can: browse, download translations
     // ===========================================
     Route::middleware('throttle:60,1')->group(function () {
-        // Browse translations and games
-        Route::get('translations', [TranslationController::class, 'search']);
+        // Browse translations and games. Search stays public, but reads the token when the
+        // caller sends one so the response can carry that user's own vote.
+        Route::get('translations', [TranslationController::class, 'search'])
+            ->middleware('auth.api.optional');
         Route::get('games', [GameController::class, 'index']);
         Route::get('games/{game}', [GameController::class, 'show']);
     });

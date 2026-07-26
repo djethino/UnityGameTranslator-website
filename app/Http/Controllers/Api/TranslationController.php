@@ -73,9 +73,20 @@ class TranslationController extends Controller
             ->limit(50)
             ->get();
 
+        // The caller's own votes, in ONE query for the whole page (auth.api.optional resolves the
+        // user only when a valid token was sent; voting requires an account, so anonymous callers
+        // simply get null). Without this the mod cannot colour the arrows until the user votes
+        // again — it only ever learned its vote from the POST response.
+        $user = $request->user();
+        $userVotes = $user
+            ? \App\Models\Vote::where('user_id', $user->id)
+                ->whereIn('translation_id', $translations->pluck('id'))
+                ->pluck('value', 'translation_id')
+            : collect();
+
         return response()->json([
             'count' => $translations->count(),
-            'translations' => $translations->map(function ($t) {
+            'translations' => $translations->map(function ($t) use ($userVotes) {
                 return [
                     'id' => $t->id,
                     'game' => [
@@ -94,6 +105,7 @@ class TranslationController extends Controller
                     'notes' => $t->notes,
                     'resources_url' => $t->getEffectiveResourcesUrl(),
                     'vote_count' => $t->vote_count,
+                    'user_vote' => $userVotes[$t->id] ?? null,
                     'download_count' => $t->download_count,
                     'human_count' => $t->human_count,
                     'validated_count' => $t->validated_count,
