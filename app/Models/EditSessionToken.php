@@ -28,8 +28,8 @@ use Illuminate\Support\Str;
  * Lifecycle:
  *  - init (API, unauthenticated): row + content file created, 15 min to open
  *  - page load with the token: markConsumed(), inactivity window starts
- *  - any sign of life on EITHER side pushes the expiry back (sliding TTL):
- *    the mod's keepalive, a mod push, a browser save, the browser heartbeat
+ *  - any sign of life pushes the expiry back (sliding TTL): the mod's
+ *    keepalive, a mod push, a browser save, the browser heartbeat
  *  - end (browser button, mod side) or expiration cleanup: row and file deleted
  *
  * The expiry is an INACTIVITY window, never a cap on how long a session may
@@ -37,6 +37,12 @@ use Illuminate\Support\Str;
  * change a thousand lines before saving, or walk away for hours with the game
  * running. Only a session both sides have abandoned is collected — which is
  * what keeps MAX_ACTIVE_SESSIONS from filling up with ghosts.
+ *
+ * The two sides are not symmetric, though. The game renews the session on its
+ * own; the browser only renews it while the game answers. A game can crash or
+ * be killed without ever sending its DELETE, and a tab left open on such a
+ * session would keep it — and its concurrency slot — for ever, while every
+ * save it accepts goes nowhere.
  */
 class EditSessionToken extends Model
 {
@@ -71,6 +77,19 @@ class EditSessionToken extends Model
      */
     private const INACTIVITY_TTL_MINUTES = 1440; // 24 h
 
+    /**
+     * How long the game may stay silent before the page says so.
+     *
+     * The mod pings keepalive every 10 minutes, so this tolerates three missed
+     * pings: a session in normal use never trips it. Deliberately generous,
+     * because a missed ping does NOT prove the game is gone — Unity freezes
+     * Update() in games that run with runInBackground disabled, which is
+     * precisely what happens while the player edits in the browser. The page
+     * therefore states a fact ("no sign of the game since ...") and never
+     * concludes on the player's behalf.
+     */
+    public const GAME_SILENT_AFTER_MINUTES = 30;
+
     protected $fillable = [
         'token',
         'mod_key',
@@ -84,6 +103,7 @@ class EditSessionToken extends Model
         'ai_model',
         'browser_last_seen_at',
         'browser_left_at',
+        'game_last_seen_at',
     ];
 
     protected $casts = [
@@ -92,6 +112,7 @@ class EditSessionToken extends Model
         'ai_available' => 'boolean',
         'browser_last_seen_at' => 'datetime',
         'browser_left_at' => 'datetime',
+        'game_last_seen_at' => 'datetime',
     ];
 
     /**
@@ -136,6 +157,8 @@ class EditSessionToken extends Model
             'content_hash' => hash('sha256', $json),
             'ai_available' => $aiAvailable,
             'ai_model' => $aiModel,
+            // The mod is the caller: the game is present, by definition
+            'game_last_seen_at' => now(),
         ]);
     }
 
@@ -197,13 +220,17 @@ class EditSessionToken extends Model
     }
 
     /**
-     * Sliding TTL: any sign of life keeps the session alive for another window.
-     * Called by the mod (keepalive, content push) AND by the browser (save,
-     * presence heartbeat) — either side alone is enough to keep it.
+     * Game presence heartbeat: stamped by every mod-side call (keepalive,
+     * content push, content download). Slides the expiry unconditionally —
+     * a running game is reason enough to keep the session, whether or not
+     * anyone has the page open.
      */
-    public function touchExpiry(): void
+    public function touchGameSeen(): void
     {
-        $this->update(['expires_at' => self::inactivityDeadline()]);
+        $this->update([
+            'game_last_seen_at' => now(),
+            'expires_at' => self::inactivityDeadline(),
+        ]);
     }
 
     /** End of the inactivity window, counted from now. */
@@ -263,19 +290,28 @@ class EditSessionToken extends Model
      * load; also clears a pending "left" mark (page reload / bfcache return).
      * Returns true when the browser was marked away (caller may signal rejoin).
      *
-     * Pushes the expiry back too: an open editor is a live session even when
-     * the game is gone. Without this the session died on the server's clock
-     * while the user was editing — the browser signalled presence but had no
-     * say in its own survival. Free: same UPDATE, one more column.
+     * Pushes the expiry back too — an open editor is a live session, and
+     * without this the session died on the server's clock while the user was
+     * editing — but ONLY while the game still answers. A tab left open on a
+     * game that crashed would otherwise renew the session for ever, and it
+     * holds one of the few concurrent slots the host allows. When the game has
+     * gone silent the session simply runs out its window from the game's last
+     * sign of life: a wide bound (24 h), not a guillotine, and the page warns
+     * the whole time so ending it stays the user's call.
      */
     public function touchBrowserSeen(): bool
     {
         $wasAway = $this->browser_left_at !== null;
-        $this->update([
+
+        $attributes = [
             'browser_last_seen_at' => now(),
             'browser_left_at' => null,
-            'expires_at' => self::inactivityDeadline(),
-        ]);
+        ];
+        if ($this->isGameResponding() !== false) {
+            $attributes['expires_at'] = self::inactivityDeadline();
+        }
+
+        $this->update($attributes);
 
         return $wasAway;
     }
@@ -299,6 +335,31 @@ class EditSessionToken extends Model
         return $this->browser_last_seen_at
             ? (int) abs(now()->diffInSeconds($this->browser_last_seen_at))
             : null;
+    }
+
+    /**
+     * Seconds since the game last called, or null for a session created before
+     * the column existed (never stamped yet).
+     */
+    public function gameSeenSecondsAgo(): ?int
+    {
+        return $this->game_last_seen_at
+            ? (int) abs(now()->diffInSeconds($this->game_last_seen_at))
+            : null;
+    }
+
+    /**
+     * Whether the game is still calling in, or null when we have never heard
+     * from it — never conclude on missing information: an unknown state must
+     * behave exactly like a live one (no warning, session kept).
+     */
+    public function isGameResponding(): ?bool
+    {
+        $secondsAgo = $this->gameSeenSecondsAgo();
+
+        return $secondsAgo === null
+            ? null
+            : $secondsAgo < self::GAME_SILENT_AFTER_MINUTES * 60;
     }
 
     /**

@@ -22,6 +22,20 @@
         </p>
     </div>
 
+    {{-- The game stopped calling in. Saves keep working, but nothing applies
+         them in-game until it answers, so say it rather than let the user
+         edit into the void. Amber, not red: nothing is broken, and the game
+         may simply be frozen in the background while the player edits here —
+         switching back to it fires the keepalive on the very next frame. --}}
+    <div x-show="gameSilent" x-cloak
+        class="mb-6 flex items-start gap-3 bg-amber-900/40 border border-amber-600/70 rounded-lg px-4 py-3">
+        <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+        <div>
+            <p class="text-amber-200 font-semibold">{{ __('edit_session.game_silent') }}</p>
+            <p class="text-amber-100/80 text-sm mt-0.5" x-text="gameSilentHint"></p>
+        </div>
+    </div>
+
     {{-- Live update toast (mod pushed changes from the game) — clicking it
          filters the table down to the rows that just arrived --}}
     <div x-show="refreshNotice" x-cloak @click="showSessionNew()"
@@ -340,8 +354,10 @@
                     <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
                     <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                 </div>
-                <span x-show="saveMessage" class="text-green-400">
-                    <i class="fas fa-check-circle mr-1"></i><span x-text="saveMessage"></span>
+                {{-- Turns amber while the game is silent: the save landed on
+                     the site, but "applied in-game" would be a lie --}}
+                <span x-show="saveMessage" :class="gameSilent ? 'text-amber-300' : 'text-green-400'">
+                    <i class="fas mr-1" :class="gameSilent ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
                 </span>
             </div>
 
@@ -529,6 +545,10 @@ document.addEventListener('alpine:init', () => {
         currentHash: null,
         pollTimer: null,
         refreshNotice: '',
+        // Game presence, from the state poll. A crashed or killed game never
+        // sends its DELETE, so silence is the only clue the page gets.
+        gameSilent: false,
+        gameSeenSecondsAgo: null,
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
         // Per-line AI retranslation, executed by the PLAYER's own backend:
         // the request travels to the mod over SSE, the result comes back
@@ -749,6 +769,27 @@ document.addEventListener('alpine:init', () => {
         // (new AI translations while playing, in-game edits). The state
         // endpoint doubles as the browser presence heartbeat.
 
+        /**
+         * "3 minutes ago" in the page's own language — Intl handles every
+         * locale we ship, so no translated duration strings to maintain.
+         */
+        get gameSilentAgo() {
+            const seconds = this.gameSeenSecondsAgo;
+            if (seconds === null) return '';
+
+            const rtf = new Intl.RelativeTimeFormat(
+                document.documentElement.lang || 'en',
+                { numeric: 'auto' }
+            );
+            if (seconds < 3600) return rtf.format(-Math.round(seconds / 60), 'minute');
+            if (seconds < 86400) return rtf.format(-Math.round(seconds / 3600), 'hour');
+            return rtf.format(-Math.round(seconds / 86400), 'day');
+        },
+
+        get gameSilentHint() {
+            return @js(__('edit_session.game_silent_hint')).replace(':when', this.gameSilentAgo);
+        },
+
         startLiveSync() {
             this._scheduleNextPoll();
             this.checkState(); // seed currentHash immediately
@@ -793,6 +834,12 @@ document.addEventListener('alpine:init', () => {
                     // The player can toggle the mod's AI backend mid-session
                     if (typeof state.ai_available === 'boolean') {
                         this.aiAvailable = state.ai_available;
+                    }
+                    // null means the server never heard from this game (session
+                    // opened before the column existed): claim nothing
+                    if (typeof state.game_responding === 'boolean') {
+                        this.gameSilent = !state.game_responding;
+                        this.gameSeenSecondsAgo = state.game_seen_seconds_ago;
                     }
                     if (this.currentHash === null) {
                         this.currentHash = state.content_hash;
@@ -955,7 +1002,9 @@ document.addEventListener('alpine:init', () => {
                     this.savedCount += (result.saved || 0) + (result.deleted || 0);
                     // Our own save changed the session hash — don't refetch on next poll
                     this.currentHash = result.content_hash;
-                    this.saveMessage = @js(__('edit_session.saved_ok'));
+                    this.saveMessage = this.gameSilent
+                        ? @js(__('edit_session.saved_pending_game'))
+                        : @js(__('edit_session.saved_ok'));
                     setTimeout(() => { this.saveMessage = ''; }, 5000);
                 })
                 .catch(e => {

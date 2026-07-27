@@ -444,8 +444,81 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk();
         $this->get('/edit-session-data')->assertOk();
 
-        // Each heartbeat restarts the whole inactivity window
-        $this->assertTrue($session->fresh()->expires_at->gt(now()->addHours(20)));
+        // Six hours in, with the game silent throughout: still fully usable
+        $this->postJson('/edit-session-save', [
+            'selections' => [['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual']],
+        ])->assertOk();
+    }
+
+    public function test_browser_keeps_renewing_the_window_while_the_game_answers(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        // Game and browser both alive: each heartbeat restarts the whole window
+        $this->travel(3)->hours();
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/keepalive')->assertOk();
+        $this->get('/edit-session-state')->assertOk();
+
+        $this->assertTrue($session->fresh()->expires_at->gt(now()->addHours(23)));
+    }
+
+    public function test_a_forgotten_tab_stops_renewing_a_session_whose_game_is_gone(): void
+    {
+        // A crashed or killed game never sends its DELETE. The browser must not
+        // renew such a session for ever: it holds one of the few concurrent
+        // slots the host allows, and every save it accepts goes nowhere.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        // The tab polls faithfully for a full day; the game never calls back
+        foreach ([6, 6, 6, 7] as $hours) {
+            $this->travel($hours)->hours();
+            $this->get('/edit-session-state');
+        }
+
+        // Collected on the window counted from the GAME's last sign of life
+        $this->get('/edit-session-state')->assertStatus(410);
+        $this->get('/edit-session-data')->assertStatus(410);
+    }
+
+    public function test_state_reports_the_game_going_silent_and_coming_back(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
+
+        // Past the tolerance (three missed keepalives), the page says so
+        $this->travel(EditSessionToken::GAME_SILENT_AFTER_MINUTES + 1)->minutes();
+        $response = $this->get('/edit-session-state')->assertOk();
+        $this->assertFalse($response->json('game_responding'));
+        $this->assertGreaterThanOrEqual(
+            EditSessionToken::GAME_SILENT_AFTER_MINUTES * 60,
+            $response->json('game_seen_seconds_ago')
+        );
+
+        // One keepalive — the player switched back to the game — clears it
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/keepalive')->assertOk();
+        $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
+    }
+
+    public function test_mod_content_download_counts_as_game_presence(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->travel(EditSessionToken::GAME_SILENT_AFTER_MINUTES + 1)->minutes();
+        $this->assertFalse($session->fresh()->isGameResponding());
+
+        // Fetching the file is the game applying a save: it is alive
+        $this->get('/api/v1/edit-session/' . $session->mod_key . '/content')->assertOk();
+
+        $this->assertTrue($session->fresh()->isGameResponding());
     }
 
     public function test_session_survives_the_loss_of_the_web_session(): void

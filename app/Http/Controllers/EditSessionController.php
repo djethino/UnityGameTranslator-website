@@ -105,6 +105,13 @@ class EditSessionController extends Controller
             // The mod can toggle its AI backend mid-session (pushes refresh
             // the flag) — the page shows/hides the retranslate buttons live
             'ai_available' => $session->ai_available,
+            // Game presence. A game that crashed never sends its DELETE, and
+            // the page would otherwise let the user edit into the void: saves
+            // are accepted but nothing applies them in-game. null = we have
+            // never heard from the game (pre-migration session) — say nothing
+            // rather than guess.
+            'game_responding' => $session->isGameResponding(),
+            'game_seen_seconds_ago' => $session->gameSeenSecondsAgo(),
         ]);
     }
 
@@ -270,7 +277,11 @@ class EditSessionController extends Controller
         } catch (\InvalidArgumentException $e) {
             return response()->json(['error' => 'Content exceeds the size limit.'], 413);
         }
-        $session->touchExpiry();
+        // A save is browser presence, and browser presence only renews the
+        // session while the game answers (see touchBrowserSeen)
+        if ($session->touchBrowserSeen()) {
+            SsePublisher::editSessionBrowserJoined($session->mod_key);
+        }
 
         $lineCount = count(array_filter(
             array_keys($content),

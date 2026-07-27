@@ -96,7 +96,7 @@ class EditSessionController extends Controller
                 'ai_model' => $request->input('ai_model'),
             ]);
         }
-        $session->touchExpiry();
+        $session->touchGameSeen();
 
         return response()->json([
             'content_hash' => $contentHash,
@@ -122,7 +122,7 @@ class EditSessionController extends Controller
             return response()->json(['error' => 'Edit session expired or not found.'], 404);
         }
 
-        $session->touchExpiry();
+        $session->touchGameSeen();
 
         return response()->json([
             'expires_at' => $session->expires_at->toIso8601String(),
@@ -162,6 +162,10 @@ class EditSessionController extends Controller
         if (!$path) {
             return response()->json(['error' => 'Edit session expired or not found.'], 404);
         }
+
+        // Counts as game presence: only the mod holds the key, and it only
+        // fetches when it is running and applying a save in-game
+        $session->touchGameSeen();
 
         return response()->stream(function () use ($path) {
             readfile($path);
