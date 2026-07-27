@@ -18,8 +18,15 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const LARAVEL_API_URL = (process.env.LARAVEL_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 15000;
 
-// Security: connection limits
-const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 1000;
+// Security: connection limits.
+// An SSE connection stays open, so it holds one of the host's concurrent
+// request slots for its whole life. The default is sized for shared hosting,
+// where that budget is a few dozen slots for the WHOLE account: overshooting it
+// does not fail here, it starves every other site on the account (the main
+// website included) with 503/508 errors. Refusing a stream is a far better
+// outcome than taking the storefront down with it.
+// Raise it on a host that has room to spare (dedicated server, container).
+const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 60;
 const PER_IP_LIMIT = parseInt(process.env.PER_IP_LIMIT, 10) || 10;
 
 // Security: CORS — restrict to the main website origin

@@ -205,7 +205,7 @@ For Unix socket: set `REDIS_SOCKET=/path/to/redis.sock` (overrides host/port).
 | `LARAVEL_API_URL` | `http://localhost:8000/api/v1` | Laravel API for token validation |
 | `ALLOWED_ORIGIN` | — | CORS origin |
 | `PER_IP_LIMIT` | `10` | Max SSE connections per IP |
-| `MAX_CONNECTIONS` | `1000` | Global connection limit |
+| `MAX_CONNECTIONS` | `60` | Global connection limit. An SSE connection holds one of the host's concurrent request slots for its whole life, and shared hosting grants only a few dozen per account — exceeding that budget takes down every site on the account, not just this one. Raise it on a host with room to spare. |
 
 ## Development
 
