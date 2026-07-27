@@ -19,4 +19,18 @@ return [
 
     'max_active' => (int) env('EDIT_SESSION_MAX_ACTIVE', 200),
 
+    /*
+    |--------------------------------------------------------------------------
+    | SSE server health endpoint
+    |--------------------------------------------------------------------------
+    |
+    | Read by the admin analytics page to show how many streams are open. Only
+    | the SSE server knows that figure — Laravel talks to it through Redis and
+    | never over HTTP otherwise. Leave empty to hide the stream counter; the
+    | page works without it.
+    |
+    */
+
+    'sse_health_url' => env('SSE_HEALTH_URL'),
+
 ];

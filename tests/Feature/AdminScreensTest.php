@@ -59,4 +59,27 @@ class AdminScreensTest extends TestCase
             ->get(route('admin.users'))
             ->assertOk();
     }
+
+    public function test_analytics_renders_with_live_capacity(): void
+    {
+        // The live-edit capacity panel reaches out to the SSE server for its
+        // stream count. That server is absent here, exactly as it can be in
+        // production — the page must render anyway rather than 500 on a figure
+        // that is only nice to have.
+        config(['edit_session.sse_health_url' => 'http://127.0.0.1:9/health']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.analytics'))
+            ->assertOk()
+            ->assertSee('Live edit sessions');
+    }
+
+    public function test_analytics_renders_without_sse_health_url(): void
+    {
+        config(['edit_session.sse_health_url' => null]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.analytics'))
+            ->assertOk();
+    }
 }

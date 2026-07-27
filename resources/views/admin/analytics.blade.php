@@ -51,6 +51,71 @@
     </div>
 </div>
 
+<!-- Live edit capacity: the one metric that scales with CONCURRENCY, not traffic.
+     An open stream holds one of the host's concurrent request slots for its whole
+     life, so this saturates long before bandwidth or storage — and it takes the
+     rest of the site with it. Watch the headroom, not the raw number. -->
+@php
+    $capBar = function (?int $used, ?int $max) {
+        if ($max === null || $max <= 0 || $used === null) {
+            return null;
+        }
+        $pct = min(100, (int) round($used / $max * 100));
+        return [
+            'pct' => $pct,
+            'color' => $pct >= 80 ? 'bg-red-500' : ($pct >= 50 ? 'bg-yellow-500' : 'bg-green-500'),
+        ];
+    };
+    $sessionBar = $capBar($liveCapacity['sessions'], $liveCapacity['sessions_max']);
+    $streamBar = $capBar($liveCapacity['streams'], $liveCapacity['streams_max']);
+@endphp
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="flex items-baseline justify-between">
+            <p class="text-gray-400 text-sm">Live edit sessions</p>
+            <p class="text-xs text-gray-500">{{ $sessionBar['pct'] ?? 0 }}% of cap</p>
+        </div>
+        <p class="text-2xl font-bold text-cyan-400">
+            {{ number_format($liveCapacity['sessions']) }}
+            <span class="text-base font-normal text-gray-500">/ {{ number_format($liveCapacity['sessions_max']) }}</span>
+        </p>
+        @if ($sessionBar)
+            <div class="mt-2 h-1.5 w-full bg-gray-700 rounded overflow-hidden">
+                <div class="h-full {{ $sessionBar['color'] }}" style="width: {{ $sessionBar['pct'] }}%"></div>
+            </div>
+        @endif
+        <p class="text-xs text-gray-500 mt-2">Sessions alive server-side. At the cap, new ones are refused.</p>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="flex items-baseline justify-between">
+            <p class="text-gray-400 text-sm">Open SSE streams</p>
+            @if ($streamBar)
+                <p class="text-xs text-gray-500">{{ $streamBar['pct'] }}% of cap</p>
+            @endif
+        </div>
+        @if ($liveCapacity['streams'] === null)
+            <p class="text-2xl font-bold text-gray-600">—</p>
+            <p class="text-xs text-gray-500 mt-2">
+                Stream server unreachable, or SSE_HEALTH_URL not set.
+            </p>
+        @else
+            <p class="text-2xl font-bold text-cyan-400">
+                {{ number_format($liveCapacity['streams']) }}
+                <span class="text-base font-normal text-gray-500">/ {{ number_format($liveCapacity['streams_max']) }}</span>
+            </p>
+            @if ($streamBar)
+                <div class="mt-2 h-1.5 w-full bg-gray-700 rounded overflow-hidden">
+                    <div class="h-full {{ $streamBar['color'] }}" style="width: {{ $streamBar['pct'] }}%"></div>
+                </div>
+            @endif
+            <p class="text-xs text-gray-500 mt-2">
+                Each one holds a host request slot. Sustained above half means it is time to move this server.
+            </p>
+        @endif
+    </div>
+</div>
+
 <!-- Period Stats -->
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">

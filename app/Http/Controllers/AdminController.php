@@ -8,12 +8,14 @@ use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
 use App\Models\Announcement;
 use App\Models\AuditLog;
+use App\Models\EditSessionToken;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -515,7 +517,10 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
+        $liveCapacity = $this->liveEditCapacity();
+
         return view('admin.analytics', compact(
+            'liveCapacity',
             'period',
             'dailyStats',
             'todayStats',
@@ -532,5 +537,47 @@ class AdminController extends Controller
             'globalStats',
             'recentUploads'
         ));
+    }
+
+    /**
+     * Live-edit capacity, the one metric that scales with CONCURRENCY rather
+     * than traffic.
+     *
+     * An open SSE stream holds one of the host's concurrent request slots for
+     * its whole life, and shared hosting grants a few dozen for the entire
+     * account — so this saturates long before bandwidth or storage do, and it
+     * takes the rest of the site down with it. Watching the headroom here is
+     * what turns "the site broke" into "time to move the stream server".
+     *
+     * The stream count comes from the SSE server itself (it alone knows how
+     * many sockets are open); it is optional and never blocks the page.
+     */
+    private function liveEditCapacity(): array
+    {
+        $capacity = [
+            'sessions' => EditSessionToken::where('expires_at', '>', now())->count(),
+            'sessions_max' => EditSessionToken::maxActiveSessions(),
+            'streams' => null,
+            'streams_max' => null,
+        ];
+
+        $healthUrl = config('edit_session.sse_health_url');
+        if (!$healthUrl) {
+            return $capacity;
+        }
+
+        try {
+            // Short timeout: a stream server that is down or slow must not
+            // hold the admin page hostage — the figure is nice to have.
+            $response = Http::timeout(2)->get($healthUrl);
+            if ($response->successful()) {
+                $capacity['streams'] = $response->json('connections');
+                $capacity['streams_max'] = $response->json('max_connections');
+            }
+        } catch (\Throwable $e) {
+            // Unreachable: leave the figures null, the view says so
+        }
+
+        return $capacity;
     }
 }
