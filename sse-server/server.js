@@ -6,6 +6,11 @@ const Redis = require('ioredis');
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
+// Bind to the loopback by default: this server is meant to sit behind a reverse
+// proxy that terminates TLS. Binding every interface would expose it directly.
+// Set HOST=0.0.0.0 when the proxy lives elsewhere (containers, separate host).
+// Under Passenger this is moot — it replaces listen() with its own Unix socket.
+const HOST = process.env.HOST || '127.0.0.1';
 const REDIS_SOCKET = process.env.REDIS_SOCKET || null;
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD && process.env.REDIS_PASSWORD !== 'null'
     ? process.env.REDIS_PASSWORD : null;
@@ -603,8 +608,8 @@ const server = http.createServer(async (req, res) => {
 
 async function start() {
     await redis.connect();
-    server.listen(PORT, () => {
-        console.log(`[SSE Server] Listening on port ${PORT}`);
+    server.listen(PORT, HOST, () => {
+        console.log(`[SSE Server] Listening on ${HOST}:${PORT} (set HOST=0.0.0.0 to bind every interface)`);
         console.log(`[SSE Server] Redis: ${REDIS_SOCKET ? `socket ${REDIS_SOCKET}` : REDIS_URL}`);
         console.log(`[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
         console.log(`[SSE Server] CORS origin: ${ALLOWED_ORIGIN}`);

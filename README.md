@@ -199,6 +199,7 @@ For Unix socket: set `REDIS_SOCKET=/path/to/redis.sock` (overrides host/port).
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Listening port |
+| `HOST` | `127.0.0.1` | Bind address. Loopback by default — this server belongs behind a TLS-terminating reverse proxy. Set `0.0.0.0` when the proxy is on another host or in a container. |
 | `REDIS_URL` | `redis://127.0.0.1:6379` | Redis connection (TCP) |
 | `REDIS_SOCKET` | — | Redis Unix socket (overrides URL) |
 | `LARAVEL_API_URL` | `http://localhost:8000/api/v1` | Laravel API for token validation |
