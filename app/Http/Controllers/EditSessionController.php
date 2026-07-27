@@ -105,11 +105,15 @@ class EditSessionController extends Controller
             // The mod can toggle its AI backend mid-session (pushes refresh
             // the flag) — the page shows/hides the retranslate buttons live
             'ai_available' => $session->ai_available,
-            // Game presence. A game that crashed never sends its DELETE, and
-            // the page would otherwise let the user edit into the void: saves
-            // are accepted but nothing applies them in-game. null = we have
-            // never heard from the game (pre-migration session) — say nothing
-            // rather than guess.
+            // Game presence, so the page can show a live connection indicator
+            // instead of letting the user edit into the void — saves are
+            // accepted, but nothing applies them in-game.
+            //
+            // The mod's open stream is the authoritative signal (seconds, and
+            // it cannot be faked away by a game that exits without warning);
+            // the timestamp is the fallback for when Redis cannot answer. Both
+            // are null-safe: an unknown state must never read as "gone".
+            'game_connected' => SsePublisher::isGameStreamConnected($session->mod_key),
             'game_responding' => $session->isGameResponding(),
             'game_seen_seconds_ago' => $session->gameSeenSecondsAgo(),
         ]);

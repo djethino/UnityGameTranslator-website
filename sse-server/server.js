@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const crypto = require('crypto');
 const { URL } = require('url');
 const Redis = require('ioredis');
 
@@ -36,6 +37,31 @@ const DEVICE_FLOW_TIMEOUT_MS = 15 * 60 * 1000;  // 15 min
 const SYNC_TIMEOUT_MS = 60 * 60 * 1000;          // 1 hour
 const MERGE_TIMEOUT_MS = 15 * 60 * 1000;         // 15 min
 const EDIT_SESSION_TIMEOUT_MS = 60 * 60 * 1000;  // 1 hour (mod auto-reconnects)
+
+// Live edit sessions: the mod's own stream doubles as a presence signal, read
+// by the website to tell the editor whether the game is still there.
+//
+// It is the only reliable one. The mod cannot promise to announce its
+// departure: OnApplicationQuit simply does not fire in every Unity game, so a
+// perfectly normal game exit can leave the session behind (observed in the
+// field, 2026-07-28). An open TCP connection cannot lie the same way — the
+// kernel tears it down when the process dies, however it dies. It also stays
+// up when the game is merely frozen in the background, which is exactly the
+// case a keepalive-based guess gets wrong.
+//
+// Written with a TTL rather than kept in memory so that a crash of THIS server
+// expires on its own instead of pinning every session to "connected" forever.
+const GAME_PRESENCE_TTL_S = Math.max(45, Math.ceil((HEARTBEAT_INTERVAL_MS * 3) / 1000));
+
+// Release the presence key only if it is still ours. A reconnecting mod opens
+// its new stream before the old one finishes closing, so an unconditional DELETE
+// in the old connection's cleanup would wipe the fresh connection's key and
+// report a live game as gone.
+const RELEASE_PRESENCE_LUA = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("del", KEYS[1])
+end
+return 0`;
 
 /**
  * Build ioredis client with Unix socket or TCP URL.
@@ -457,6 +483,16 @@ async function handleEditSession(req, res, modKey) {
     let closed = false;
     const releaseConnection = trackConnection(req);
 
+    // Presence: this connection IS the game being here (see GAME_PRESENCE_TTL_S)
+    const presenceKey = `sse:edit:${modKey}:game`;
+    const presenceToken = crypto.randomUUID();
+    const markGamePresent = () => {
+        redis.set(presenceKey, presenceToken, 'EX', GAME_PRESENCE_TTL_S).catch(() => {});
+    };
+    const releaseGamePresence = () => {
+        redis.eval(RELEASE_PRESENCE_LUA, 1, presenceKey, presenceToken).catch(() => {});
+    };
+
     // let (not const like the other handlers): cleanup can fire from a Redis
     // message during the awaited replay read below, BEFORE these are assigned —
     // a const would throw a TDZ ReferenceError inside the ioredis listener
@@ -470,10 +506,12 @@ async function handleEditSession(req, res, modKey) {
         clearInterval(heartbeatId);
         sub.unsubscribe().catch(() => {});
         sub.quit().catch(() => {});
+        releaseGamePresence();
         releaseConnection();
     };
 
     setupSSE(res);
+    markGamePresent();
 
     sub.subscribe(`sse:edit:${modKey}`, (err) => {
         if (err) {
@@ -520,6 +558,9 @@ async function handleEditSession(req, res, modKey) {
 
     heartbeatId = setInterval(() => {
         if (!res.writableEnded) res.write(': heartbeat\n\n');
+        // Same beat renews the presence key: as long as we can still write to
+        // this socket, the game is there
+        markGamePresent();
     }, HEARTBEAT_INTERVAL_MS);
 
     timeoutId = setTimeout(() => {

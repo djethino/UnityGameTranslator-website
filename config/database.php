@@ -180,6 +180,12 @@ return [
 
         // SSE pub/sub connection — NO prefix to avoid coupling with Node.js SSE server.
         // Node.js subscribes to the same channels without any prefix.
+        //
+        // Tight timeouts on purpose: every call on this connection is made
+        // while serving a web request, and every caller treats failure as
+        // "unknown" and carries on. Redis lives on a local socket, so half a
+        // second is already generous — whereas the default (no timeout) makes
+        // an unreachable Redis hang the page instead of degrading it.
         'sse' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_SOCKET', env('REDIS_HOST', '127.0.0.1')),
@@ -188,6 +194,10 @@ return [
             'port' => env('REDIS_SOCKET') ? 0 : env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
             'prefix' => '',
+            'timeout' => env('REDIS_SSE_TIMEOUT', 0.5),
+            'read_timeout' => env('REDIS_SSE_TIMEOUT', 0.5),
+            'retry_interval' => 0,
+            'max_retries' => 1,
         ],
 
     ],

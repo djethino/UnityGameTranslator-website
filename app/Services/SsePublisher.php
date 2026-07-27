@@ -221,6 +221,31 @@ class SsePublisher
     }
 
     /**
+     * Is the mod's stream for this session currently connected?
+     *
+     * The SSE server writes a short-lived key while it holds the mod's stream
+     * open (see GAME_PRESENCE_TTL_S in sse-server/server.js). That connection is
+     * the only trustworthy sign the game is running: the mod cannot promise to
+     * announce its own exit — OnApplicationQuit does not fire in every Unity
+     * game — whereas a TCP connection dies with the process no matter how it
+     * dies. A game merely frozen in the background keeps it, which is precisely
+     * where a keepalive-based guess would cry wolf.
+     *
+     * Returns null when Redis cannot answer: an unknown state must never be
+     * shown as a disconnection.
+     */
+    public static function isGameStreamConnected(string $modKey): ?bool
+    {
+        try {
+            return Redis::connection(self::REDIS_CONNECTION)->exists("sse:edit:{$modKey}:game") > 0;
+        } catch (\Exception $e) {
+            Log::warning("[SsePublisher] Redis presence check failed: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
      * Safely publish a message to a Redis channel.
      * Catches all exceptions so Redis failure never breaks core functionality.
      */

@@ -506,6 +506,26 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
     }
 
+    public function test_state_exposes_the_game_connection_state(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $state = $this->get('/edit-session-state')->assertOk()->json();
+
+        // Presence comes from the mod's open stream, which only the SSE server
+        // knows about. There is none here — and no Redis either — so the field
+        // must be present and null: the page shows nothing rather than
+        // declaring a running game dead because the infrastructure is missing.
+        $this->assertArrayHasKey('game_connected', $state);
+        $this->assertNull($state['game_connected']);
+
+        // ...and the timestamp fallback still answers, which is what the page
+        // falls back on in exactly this situation
+        $this->assertTrue($state['game_responding']);
+    }
+
     public function test_mod_content_download_counts_as_game_presence(): void
     {
         $this->initSession();

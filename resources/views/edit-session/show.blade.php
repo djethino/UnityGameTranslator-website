@@ -20,19 +20,27 @@
         <p class="text-sm text-purple-300 mt-1">
             <i class="fas fa-gamepad mr-1"></i> {{ __('edit_session.subtitle') }}
         </p>
+
+        {{-- Link state, permanently on screen: whether the game is listening
+             decides whether saving means anything, so it must never be
+             something the user has to go and find out. Hidden entirely while
+             unknown — an absence of information is not a diagnosis. --}}
+        <p x-show="gameConnected !== null" x-cloak class="text-sm mt-2 flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full"
+                :class="gameConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'"></span>
+            <span :class="gameConnected ? 'text-green-400' : 'text-red-400'"
+                x-text="gameConnected ? @js(__('edit_session.game_connected')) : @js(__('edit_session.game_disconnected'))"></span>
+        </p>
     </div>
 
-    {{-- The game stopped calling in. Saves keep working, but nothing applies
-         them in-game until it answers, so say it rather than let the user
-         edit into the void. Amber, not red: nothing is broken, and the game
-         may simply be frozen in the background while the player edits here —
-         switching back to it fires the keepalive on the very next frame. --}}
-    <div x-show="gameSilent" x-cloak
+    {{-- The dot says WHAT, this says SO WHAT: saves still work and are kept
+         here, they simply have nowhere to land until the game is back. --}}
+    <div x-show="gameConnected === false" x-cloak
         class="mb-6 flex items-start gap-3 bg-amber-900/40 border border-amber-600/70 rounded-lg px-4 py-3">
         <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5"></i>
         <div>
-            <p class="text-amber-200 font-semibold">{{ __('edit_session.game_silent') }}</p>
-            <p class="text-amber-100/80 text-sm mt-0.5" x-text="gameSilentHint"></p>
+            <p class="text-amber-200 font-semibold">{{ __('edit_session.game_disconnected') }}</p>
+            <p class="text-amber-100/80 text-sm mt-0.5">{{ __('edit_session.game_disconnected_hint') }}</p>
         </div>
     </div>
 
@@ -354,10 +362,10 @@
                     <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
                     <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
                 </div>
-                {{-- Turns amber while the game is silent: the save landed on
-                     the site, but "applied in-game" would be a lie --}}
-                <span x-show="saveMessage" :class="gameSilent ? 'text-amber-300' : 'text-green-400'">
-                    <i class="fas mr-1" :class="gameSilent ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
+                {{-- Amber while the game is away: the save landed on the site,
+                     but "applied in-game" would be a lie --}}
+                <span x-show="saveMessage" :class="gameConnected === false ? 'text-amber-300' : 'text-green-400'">
+                    <i class="fas mr-1" :class="gameConnected === false ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
                 </span>
             </div>
 
@@ -545,10 +553,10 @@ document.addEventListener('alpine:init', () => {
         currentHash: null,
         pollTimer: null,
         refreshNotice: '',
-        // Game presence, from the state poll. A crashed or killed game never
-        // sends its DELETE, so silence is the only clue the page gets.
-        gameSilent: false,
-        gameSeenSecondsAgo: null,
+        // Game presence, from the state poll. null until the first answer, and
+        // whenever the server cannot tell — never rendered as a disconnection.
+        gameConnected: null,
+        _gameDownStreak: 0,
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
         // Per-line AI retranslation, executed by the PLAYER's own backend:
         // the request travels to the mod over SSE, the result comes back
@@ -770,24 +778,37 @@ document.addEventListener('alpine:init', () => {
         // endpoint doubles as the browser presence heartbeat.
 
         /**
-         * "3 minutes ago" in the page's own language — Intl handles every
-         * locale we ship, so no translated duration strings to maintain.
+         * Read the game's presence out of a state poll.
+         *
+         * The mod's open stream is authoritative — a game that dies takes its
+         * connection with it, whatever it did or failed to do on the way out.
+         * When the server cannot tell (Redis down), fall back on the last call
+         * the mod made, so an infrastructure hiccup never paints a running game
+         * as gone.
          */
-        get gameSilentAgo() {
-            const seconds = this.gameSeenSecondsAgo;
-            if (seconds === null) return '';
+        applyGamePresence(state) {
+            const connected = typeof state.game_connected === 'boolean'
+                ? state.game_connected
+                : (typeof state.game_responding === 'boolean' ? state.game_responding : null);
 
-            const rtf = new Intl.RelativeTimeFormat(
-                document.documentElement.lang || 'en',
-                { numeric: 'auto' }
-            );
-            if (seconds < 3600) return rtf.format(-Math.round(seconds / 60), 'minute');
-            if (seconds < 86400) return rtf.format(-Math.round(seconds / 3600), 'hour');
-            return rtf.format(-Math.round(seconds / 86400), 'day');
-        },
+            if (connected === null) {
+                this.gameConnected = null;
+                return;
+            }
 
-        get gameSilentHint() {
-            return @js(__('edit_session.game_silent_hint')).replace(':when', this.gameSilentAgo);
+            if (connected) {
+                this._gameDownStreak = 0;
+                this.gameConnected = true;
+                return;
+            }
+
+            // The mod reconnects on its own within seconds, and is briefly
+            // absent while it does. Two readings in a row before calling it
+            // disconnected, so a reconnection does not flash the light red.
+            this._gameDownStreak++;
+            if (this._gameDownStreak >= 2) {
+                this.gameConnected = false;
+            }
         },
 
         startLiveSync() {
@@ -835,12 +856,7 @@ document.addEventListener('alpine:init', () => {
                     if (typeof state.ai_available === 'boolean') {
                         this.aiAvailable = state.ai_available;
                     }
-                    // null means the server never heard from this game (session
-                    // opened before the column existed): claim nothing
-                    if (typeof state.game_responding === 'boolean') {
-                        this.gameSilent = !state.game_responding;
-                        this.gameSeenSecondsAgo = state.game_seen_seconds_ago;
-                    }
+                    this.applyGamePresence(state);
                     if (this.currentHash === null) {
                         this.currentHash = state.content_hash;
                         return;
@@ -1002,7 +1018,7 @@ document.addEventListener('alpine:init', () => {
                     this.savedCount += (result.saved || 0) + (result.deleted || 0);
                     // Our own save changed the session hash — don't refetch on next poll
                     this.currentHash = result.content_hash;
-                    this.saveMessage = this.gameSilent
+                    this.saveMessage = this.gameConnected === false
                         ? @js(__('edit_session.saved_pending_game'))
                         : @js(__('edit_session.saved_ok'));
                     setTimeout(() => { this.saveMessage = ''; }, 5000);
