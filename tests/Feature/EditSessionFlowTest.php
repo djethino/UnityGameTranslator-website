@@ -34,6 +34,25 @@ class EditSessionFlowTest extends TestCase
         'Play' => ['v' => 'Jouer', 't' => 'H'],
     ];
 
+    private const SESSION_COOKIE = 'ugt_edit_session';
+
+    /**
+     * Open the session in the "browser" and keep its cookie for the requests
+     * that follow: the test client does not carry response cookies over on its
+     * own. The value goes in as PLAIN TEXT — withCookie() encrypts it the way
+     * the middleware expects, so replaying the encrypted value from the
+     * response would encrypt it twice and never decrypt back to the token.
+     */
+    private function openInBrowser(EditSessionToken $session): void
+    {
+        $this->get('/edit-session/' . $session->token);
+        $this->withCookie(self::SESSION_COOKIE, $session->token);
+        // postJson() sends NO cookie unless credentials are enabled — it mimics
+        // a fetch() without them. Real browsers send same-origin cookies by
+        // default, which is what the page relies on.
+        $this->withCredentials();
+    }
+
     private function initSession(array $content = self::CONTENT)
     {
         return $this->postJson('/api/v1/edit-session/init', [
@@ -108,7 +127,7 @@ class EditSessionFlowTest extends TestCase
         $this->initSession();
         $session = EditSessionToken::first();
 
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
         $response = $this->get('/edit-session-data');
 
         $response->assertOk();
@@ -120,7 +139,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         $expiryAfterConsume = $session->fresh()->expires_at;
         $this->travel(5)->minutes();
@@ -159,7 +178,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
         $this->postJson('/edit-session-save', [
             'selections' => [
                 ['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual'],
@@ -188,7 +207,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
         $filePath = $session->getContentFilePath();
 
         $this->post('/edit-session-end')->assertRedirect(route('home'));
@@ -201,9 +220,10 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
-        $this->travel(3)->hours();
+        // Past the inactivity window with no sign of life from either side
+        $this->travel(25)->hours();
 
         $this->get('/edit-session-data')->assertStatus(410);
         $this->postJson('/edit-session-save', [
@@ -222,7 +242,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         $this->postJson('/edit-session-save', [
             'selections' => [
@@ -241,7 +261,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
         // Browser heartbeat
         $this->get('/edit-session-state')->assertOk();
 
@@ -267,7 +287,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         $response = $this->get('/edit-session-state');
 
@@ -280,7 +300,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         // sendBeacon carries no CSRF token — the route is exempt
         $this->post('/edit-session-leave')->assertNoContent();
@@ -300,7 +320,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
         $expiryBefore = $session->fresh()->expires_at;
 
         $this->travel(30)->minutes();
@@ -320,7 +340,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         // The language switcher redirects back with the new locale prefix:
         // every BROWSED page must exist in prefixed form for EVERY supported
@@ -348,7 +368,7 @@ class EditSessionFlowTest extends TestCase
         $this->assertTrue($session->ai_available);
         $this->assertSame('llama3', $session->ai_model);
 
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         // The state poll exposes the flag to the page
         $this->get('/edit-session-state')->assertOk()->assertJson(['ai_available' => true]);
@@ -368,7 +388,7 @@ class EditSessionFlowTest extends TestCase
     {
         $this->initSession();
         $session = EditSessionToken::first();
-        $this->get('/edit-session/' . $session->token);
+        $this->openInBrowser($session);
 
         $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-3'])->assertStatus(422);
     }
@@ -405,5 +425,71 @@ class EditSessionFlowTest extends TestCase
         // Idempotent on an already-gone session
         $this->deleteJson('/api/v1/edit-session/' . $session->mod_key)
             ->assertOk()->assertJson(['ended' => true]);
+    }
+
+    public function test_browser_alone_keeps_the_session_alive_past_the_old_window(): void
+    {
+        // The bug this replaces: the expiry was tied to SESSION_LIFETIME
+        // (120 min) and only the game's keepalive pushed it back, so an open
+        // editor with the game closed died on the server's clock mid-edit.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        // No keepalive from the mod at any point — only the page heartbeat
+        $this->travel(3)->hours();
+        $this->get('/edit-session-state')->assertOk();
+
+        $this->travel(3)->hours();
+        $this->get('/edit-session-state')->assertOk();
+        $this->get('/edit-session-data')->assertOk();
+
+        // Each heartbeat restarts the whole inactivity window
+        $this->assertTrue($session->fresh()->expires_at->gt(now()->addHours(20)));
+    }
+
+    public function test_session_survives_the_loss_of_the_web_session(): void
+    {
+        // The token no longer lives in the web session: a sleeping machine or
+        // a break past SESSION_LIFETIME must not cost the user pending edits,
+        // which are keyed on the session id and cannot be restored elsewhere.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->flushSession();
+
+        $this->get('/edit-session-state')->assertOk();
+        $this->get('/edit-session')->assertOk()->assertViewIs('edit-session.show');
+        $this->postJson('/edit-session-save', [
+            'selections' => [['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual']],
+        ])->assertOk();
+    }
+
+    public function test_session_cookie_is_http_only_and_cleared_on_end(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+
+        $opened = $this->get('/edit-session/' . $session->token);
+        $cookie = collect($opened->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === self::SESSION_COOKIE);
+
+        $this->assertNotNull($cookie, 'The session cookie must be set when the link is opened.');
+        // Unreadable from JS: the token is the only credential the page holds
+        $this->assertTrue($cookie->isHttpOnly());
+        // Outlives the web session cookie — that is the whole point
+        $this->assertGreaterThan(
+            now()->addMinutes((int) config('session.lifetime'))->getTimestamp(),
+            $cookie->getExpiresTime()
+        );
+
+        $this->withCookie(self::SESSION_COOKIE, $session->token);
+        $ended = $this->post('/edit-session-end');
+
+        $cleared = collect($ended->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === self::SESSION_COOKIE);
+        $this->assertNotNull($cleared, 'Ending the session must clear its cookie.');
+        $this->assertLessThan(now()->getTimestamp(), $cleared->getExpiresTime());
     }
 }

@@ -52,6 +52,7 @@
             <ul class="text-gray-300 list-disc list-inside space-y-1">
                 <li><strong>laravel_session:</strong> {{ __('legal.cookie_session') }}</li>
                 <li><strong>XSRF-TOKEN:</strong> {{ __('legal.cookie_csrf') }}</li>
+                <li><strong>ugt_edit_session:</strong> {{ __('legal.cookie_edit_session') }}</li>
             </ul>
         </section>
 

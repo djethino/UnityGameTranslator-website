@@ -6,17 +6,36 @@ use App\Models\EditSessionToken;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 
 /**
  * Browser side of the anonymous live-edit session (see EditSessionToken).
  *
  * No auth() anywhere: the browser is authenticated by the one-time token,
- * then by its (guest) web session. Save is AJAX so the page stays open for
+ * then by a DEDICATED cookie. Save is AJAX so the page stays open for
  * repeated edit → save → check-in-game cycles.
+ *
+ * Why a dedicated cookie rather than the web session: the session cookie
+ * lives for SESSION_LIFETIME (120 min), which governs the whole site and has
+ * no reason to match how long someone edits. A sleeping machine or a long
+ * break past that window killed the page while the edit session itself was
+ * still alive server-side, and pending edits — keyed on the session id — were
+ * unrecoverable. This cookie carries the same value, is encrypted like every
+ * Laravel cookie, and slides on the session's own inactivity window.
+ *
+ * It is strictly necessary to a service the user explicitly requested (they
+ * clicked "Edit in browser" in the mod), so it needs no consent banner — but
+ * it MUST stay listed in the privacy page, which names every cookie.
  */
 class EditSessionController extends Controller
 {
-    private const SESSION_KEY = 'edit_session_token';
+    /**
+     * Holds the session token. Flags (secure, domain, same_site) are inherited
+     * from config/session.php so this cookie can never be laxer than the site's
+     * own session cookie; host-only when SESSION_DOMAIN is null, which keeps it
+     * away from the SSE subdomain.
+     */
+    private const COOKIE_NAME = 'ugt_edit_session';
 
     /**
      * Entry point from the mod: consume the one-time token, bind the
@@ -37,7 +56,7 @@ class EditSessionController extends Controller
         // Fresh session id at the trust boundary (anti session fixation),
         // same spirit as the login-based merge-preview flow
         session()->regenerate();
-        session([self::SESSION_KEY => $session->token]);
+        $this->rememberSession($session);
 
         return redirect()->route('edit-session.show', [], 303);
     }
@@ -286,15 +305,37 @@ class EditSessionController extends Controller
             $session->deleteWithFile();
         }
 
-        session()->forget(self::SESSION_KEY);
+        Cookie::queue(Cookie::forget(self::COOKIE_NAME));
 
         return redirect()->route('home')->with('success', __('edit_session.ended'));
     }
 
+    /**
+     * Bind the session to this browser, and slide the cookie forward on every
+     * request that finds it: the cookie must never outlive nor die before the
+     * server-side inactivity window it mirrors.
+     */
+    private function rememberSession(EditSessionToken $session): void
+    {
+        Cookie::queue(
+            self::COOKIE_NAME,
+            $session->token,
+            EditSessionToken::cookieLifetimeMinutes()
+        );
+    }
+
     private function currentSession(): ?EditSessionToken
     {
-        $token = session(self::SESSION_KEY);
+        $token = request()->cookie(self::COOKIE_NAME);
+        if (!is_string($token) || $token === '') {
+            return null;
+        }
 
-        return $token ? EditSessionToken::findForSession($token) : null;
+        $session = EditSessionToken::findForSession($token);
+        if ($session) {
+            $this->rememberSession($session);
+        }
+
+        return $session;
     }
 }

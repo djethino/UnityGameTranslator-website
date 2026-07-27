@@ -27,9 +27,16 @@ use Illuminate\Support\Str;
  *
  * Lifecycle:
  *  - init (API, unauthenticated): row + content file created, 15 min to open
- *  - page load with the token: markConsumed(), session extended to 120 min
- *  - each save: file rewritten, expiry pushed back (sliding TTL)
- *  - end (browser button) or expiration cleanup: row and file deleted
+ *  - page load with the token: markConsumed(), inactivity window starts
+ *  - any sign of life on EITHER side pushes the expiry back (sliding TTL):
+ *    the mod's keepalive, a mod push, a browser save, the browser heartbeat
+ *  - end (browser button, mod side) or expiration cleanup: row and file deleted
+ *
+ * The expiry is an INACTIVITY window, never a cap on how long a session may
+ * live. A session in use never dies, whatever the editing rhythm: a player can
+ * change a thousand lines before saving, or walk away for hours with the game
+ * running. Only a session both sides have abandoned is collected — which is
+ * what keeps MAX_ACTIVE_SESSIONS from filling up with ghosts.
  */
 class EditSessionToken extends Model
 {
@@ -43,17 +50,26 @@ class EditSessionToken extends Model
      * Hard cap on concurrently active sessions. Init is unauthenticated:
      * without this, 6 inits/min/IP × 15 min TTL × 20 MB is an unbounded
      * multi-IP disk-exhaustion vector on the shared private disk.
+     *
+     * Configurable because the right value depends on the disk available to
+     * the instance: the worst case is this count × MAX_CONTENT_BYTES.
      */
-    public const MAX_ACTIVE_SESSIONS = 200;
+    public static function maxActiveSessions(): int
+    {
+        return (int) config('edit_session.max_active', 200);
+    }
 
     /** Validity window to open the link from the mod. */
     private const INITIAL_TTL_MINUTES = 15;
 
     /**
-     * Validity window of the browsing session, renewed on every save
-     * (sliding TTL). Matches SESSION_LIFETIME (120 min).
+     * INACTIVITY window, pushed back by any sign of life from either side.
+     * Deliberately long: it is a garbage collector for sessions both the game
+     * and the browser have abandoned, NOT a limit on how long someone may
+     * work. A shorter window would kill sessions mid-edit — which is exactly
+     * the bug this replaces (it used to be 120 min, tied to SESSION_LIFETIME).
      */
-    private const SESSION_TTL_MINUTES = 120;
+    private const INACTIVITY_TTL_MINUTES = 1440; // 24 h
 
     protected $fillable = [
         'token',
@@ -92,7 +108,7 @@ class EditSessionToken extends Model
     ): self {
         self::cleanupExpired();
 
-        if (self::where('expires_at', '>', now())->count() >= self::MAX_ACTIVE_SESSIONS) {
+        if (self::where('expires_at', '>', now())->count() >= self::maxActiveSessions()) {
             throw new \OverflowException('Too many active edit sessions.');
         }
 
@@ -176,16 +192,34 @@ class EditSessionToken extends Model
     {
         $this->update([
             'consumed_at' => now(),
-            'expires_at' => now()->addMinutes(self::SESSION_TTL_MINUTES),
+            'expires_at' => self::inactivityDeadline(),
         ]);
     }
 
     /**
-     * Sliding TTL: every save keeps the session alive for another window.
+     * Sliding TTL: any sign of life keeps the session alive for another window.
+     * Called by the mod (keepalive, content push) AND by the browser (save,
+     * presence heartbeat) — either side alone is enough to keep it.
      */
     public function touchExpiry(): void
     {
-        $this->update(['expires_at' => now()->addMinutes(self::SESSION_TTL_MINUTES)]);
+        $this->update(['expires_at' => self::inactivityDeadline()]);
+    }
+
+    /** End of the inactivity window, counted from now. */
+    public static function inactivityDeadline(): \Illuminate\Support\Carbon
+    {
+        return now()->addMinutes(self::INACTIVITY_TTL_MINUTES);
+    }
+
+    /**
+     * Lifetime of the browser cookie holding the token. Same window as the
+     * server-side expiry so both slide together: the page can never claim a
+     * session the server has collected, nor lose one the server still holds.
+     */
+    public static function cookieLifetimeMinutes(): int
+    {
+        return self::INACTIVITY_TTL_MINUTES;
     }
 
     /**
@@ -228,6 +262,11 @@ class EditSessionToken extends Model
      * Browser presence heartbeat: stamped by the page's state poll and data
      * load; also clears a pending "left" mark (page reload / bfcache return).
      * Returns true when the browser was marked away (caller may signal rejoin).
+     *
+     * Pushes the expiry back too: an open editor is a live session even when
+     * the game is gone. Without this the session died on the server's clock
+     * while the user was editing — the browser signalled presence but had no
+     * say in its own survival. Free: same UPDATE, one more column.
      */
     public function touchBrowserSeen(): bool
     {
@@ -235,6 +274,7 @@ class EditSessionToken extends Model
         $this->update([
             'browser_last_seen_at' => now(),
             'browser_left_at' => null,
+            'expires_at' => self::inactivityDeadline(),
         ]);
 
         return $wasAway;
