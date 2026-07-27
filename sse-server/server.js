@@ -549,10 +549,18 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Health check (also serves as root for cPanel Passenger availability check)
+    // Health check (also serves as root for cPanel Passenger availability check).
+    // Reports live connection usage: each open stream holds one of the host's
+    // concurrent request slots, so this is the number to watch to know when the
+    // server outgrows its hosting — long before users start being refused.
+    // Counts only, nothing about who is connected.
     if (method === 'GET' && (pathname === '/health' || pathname === '/')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok' }));
+        res.end(JSON.stringify({
+            status: 'ok',
+            connections: activeConnections,
+            max_connections: MAX_CONNECTIONS,
+        }));
         return;
     }
 
