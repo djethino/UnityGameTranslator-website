@@ -820,10 +820,7 @@ document.addEventListener('alpine:init', () => {
                 } else if (!hasLocal && hasOnline) {
                     this.selections[key] = 'online';
                 } else if (hasLocal && hasOnline) {
-                    const localVal = this.getValue(this.localData[key]);
-                    const onlineVal = this.getValue(this.onlineData[key]);
-
-                    if (localVal !== onlineVal) {
+                    if (this.entriesDiffer(key)) {
                         const localTag = this.getTag(this.localData[key]);
                         const onlineTag = this.getTag(this.onlineData[key]);
                         const localPriority = tagPriority[localTag] || 0;
@@ -835,6 +832,25 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             }
+        },
+
+        /**
+         * Do the local and online entries for this key differ?
+         *
+         * Value OR tag: validating an AI line (A → V) leaves the wording
+         * untouched yet is a change worth publishing, and the mod counts it as
+         * one. Callers must have checked that the key exists on both sides.
+         *
+         * SINGLE SOURCE OF TRUTH — this comparison was previously rewritten in
+         * five places (stats, filter, smart defaults, modified check, save).
+         * Fixing some of them left the page counting a difference it then
+         * filtered out as identical, and offering rows it would have refused to
+         * send: exactly the "no differences found" on a file the mod was
+         * offering to upload.
+         */
+        entriesDiffer(key) {
+            return this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key])
+                || this.getTag(this.localData[key]) !== this.getTag(this.onlineData[key]);
         },
 
         calculateStats() {
@@ -851,16 +867,10 @@ document.addEventListener('alpine:init', () => {
                 } else if (!hasLocal && hasOnline) {
                     this.stats.onlineOnly++;
                 } else if (hasLocal && hasOnline) {
-                    // Tag included, not just the text: validating an AI line
-                    // (A → V) leaves the wording untouched yet is a change worth
-                    // publishing. Comparing values alone reported "no
-                    // differences" on a file the mod was offering to upload.
-                    const sameValue = this.getValue(this.localData[key]) === this.getValue(this.onlineData[key]);
-                    const sameTag = this.getTag(this.localData[key]) === this.getTag(this.onlineData[key]);
-                    if (sameValue && sameTag) {
-                        this.stats.same++;
-                    } else {
+                    if (this.entriesDiffer(key)) {
                         this.stats.different++;
+                    } else {
+                        this.stats.same++;
                     }
                 }
             }
@@ -883,9 +893,7 @@ document.addEventListener('alpine:init', () => {
             } else if (!hasLocal && hasOnline) {
                 passesCategory = this.filters.onlineOnly;
             } else if (hasLocal && hasOnline) {
-                const localVal = this.getValue(this.localData[key]);
-                const onlineVal = this.getValue(this.onlineData[key]);
-                passesCategory = (localVal !== onlineVal) ? this.filters.different : this.filters.same;
+                passesCategory = this.entriesDiffer(key) ? this.filters.different : this.filters.same;
             }
             if (!passesCategory) return false;
 
@@ -994,7 +1002,7 @@ document.addEventListener('alpine:init', () => {
             if (key in this.tagChanges) return true;
             if (hasLocal && !hasOnline && source === 'local') return true;
             if (hasLocal && hasOnline && source === 'local') {
-                return this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key]);
+                return this.entriesDiffer(key);
             }
             return false;
         },
@@ -1043,7 +1051,9 @@ document.addEventListener('alpine:init', () => {
             }
             if (this.selections[key] === 'local' && key in this.localData) {
                 const hasOnline = key in this.onlineData;
-                if (!hasOnline || this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key])) {
+                // Same condition as "will actually be sent" (see entriesDiffer),
+                // so the previewed tag never promises a promotion the save drops
+                if (!hasOnline || this.entriesDiffer(key)) {
                     const tag = this.getTag(this.localData[key]);
                     return tag === 'A' ? 'V' : tag;
                 }
@@ -1222,12 +1232,9 @@ document.addEventListener('alpine:init', () => {
                     // differs. Tag-only differences are real changes to publish
                     // (a validated line), and dropping them here would silently
                     // discard exactly what the row was showing.
-                    const localValue = this.getValue(this.localData[key]);
-                    const localTag = this.getTag(this.localData[key]);
-                    if (localValue !== this.getValue(this.onlineData[key])
-                        || localTag !== this.getTag(this.onlineData[key])) {
-                        value = localValue;
-                        tag = localTag;
+                    if (this.entriesDiffer(key)) {
+                        value = this.getValue(this.localData[key]);
+                        tag = this.getTag(this.localData[key]);
                         sourceType = 'local';
                         isRealChange = true;
                     }
