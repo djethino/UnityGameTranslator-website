@@ -402,13 +402,16 @@
             <span class="text-green-400">{{ __('edit_session.game_connected') }}</span>
         </div>
 
+        {{-- One line, not two stacked: this sits in a sticky bar, where every
+             pixel of height is taken from the rows being edited. The wording
+             stays at a readable size and the amber does the shouting; wrapping
+             only kicks in on narrow windows. --}}
         <div x-show="gameConnected === false" x-cloak
-            class="mt-3 flex items-start gap-3 bg-amber-900/40 border border-amber-600/70 rounded-lg px-3 py-2">
-            <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5"></i>
-            <div class="min-w-0">
-                <p class="text-amber-200 font-semibold text-sm">{{ __('edit_session.game_disconnected') }}</p>
-                <p class="text-amber-100/80 text-xs mt-0.5">{{ __('edit_session.game_disconnected_hint') }}</p>
-            </div>
+            class="mt-3 flex flex-wrap items-baseline gap-x-2 bg-amber-900/40 border border-amber-600/70 rounded-lg px-3 py-1.5">
+            <span class="text-amber-200 font-semibold text-sm shrink-0">
+                <i class="fas fa-triangle-exclamation text-amber-400 mr-1.5"></i>{{ __('edit_session.game_disconnected') }}
+            </span>
+            <span class="text-amber-100/80 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
         </div>
         </div>
     </div>
