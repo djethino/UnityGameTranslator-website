@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Game terhubung",
     "edit_session.game_disconnected": "Game terputus",
     "edit_session.game_disconnected_hint": "Perubahanmu tersimpan di sini, tapi belum sampai ke game selama game belum kembali. Jalankan ulang, atau kembali ke game kalau masih terbuka.",
+    "edit_session.abandoned_warning": "Kalau kamu menutup tab ini saat game tidak ada, sesi akan dihapus setelah satu jam.",
     "edit_session.save_failed": "Gagal menyimpan. Silakan coba lagi.",
     "edit_session.end_session": "Akhiri sesi",
     "edit_session.end_confirm": "Akhiri sesi edit ini? Perubahan yang belum disimpan akan hilang dan mod akan berhenti mendengarkan.",

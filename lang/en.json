@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Game connected",
     "edit_session.game_disconnected": "Game disconnected",
     "edit_session.game_disconnected_hint": "Your changes are saved here, but nothing reaches the game until it is back. Restart it, or switch back to it if it is still running.",
+    "edit_session.abandoned_warning": "Close this tab while the game is away and the session is deleted after an hour.",
     "edit_session.save_failed": "Save failed. Please try again.",
     "edit_session.end_session": "End session",
     "edit_session.end_confirm": "End this edit session? Unsaved changes will be lost and the mod will stop listening.",

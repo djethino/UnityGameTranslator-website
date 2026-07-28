@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Game đã kết nối",
     "edit_session.game_disconnected": "Game đã ngắt kết nối",
     "edit_session.game_disconnected_hint": "Các thay đổi vẫn được lưu ở đây, nhưng chưa đến được game cho tới khi game trở lại. Hãy khởi động lại game, hoặc quay lại game nếu nó vẫn đang chạy.",
+    "edit_session.abandoned_warning": "Nếu bạn đóng thẻ này khi game vắng mặt, phiên sẽ bị xoá sau một giờ.",
     "edit_session.save_failed": "Lưu thất bại. Vui lòng thử lại.",
     "edit_session.end_session": "Kết thúc phiên",
     "edit_session.end_confirm": "Kết thúc phiên chỉnh sửa này? Các thay đổi chưa lưu sẽ bị mất và mod sẽ ngừng lắng nghe.",

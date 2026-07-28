@@ -418,6 +418,10 @@
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></span>
             <span class="text-amber-200 font-semibold text-sm shrink-0">{{ __('edit_session.game_disconnected') }}</span>
             <span class="text-amber-100/90 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
+            {{-- Said here and only here: leaving is only destructive while the
+                 game is gone too. With the game connected, closing the tab
+                 costs nothing. --}}
+            <span class="text-amber-200/70 text-xs leading-snug italic">{{ __('edit_session.abandoned_warning') }}</span>
         </div>
         </div>
     </div>

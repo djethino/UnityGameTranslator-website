@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Jogo conectado",
     "edit_session.game_disconnected": "Jogo desconectado",
     "edit_session.game_disconnected_hint": "Suas alterações ficam salvas aqui, mas não chegam ao jogo enquanto ele não voltar. Reinicie-o, ou volte para ele se ainda estiver aberto.",
+    "edit_session.abandoned_warning": "Se você fechar esta aba enquanto o jogo está ausente, a sessão é excluída após uma hora.",
     "edit_session.save_failed": "Falha ao salvar. Tente novamente.",
     "edit_session.end_session": "Encerrar sessão",
     "edit_session.end_confirm": "Encerrar esta sessão de edição? As alterações não salvas serão perdidas e o mod deixará de escutar.",

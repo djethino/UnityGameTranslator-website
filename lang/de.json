@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Spiel verbunden",
     "edit_session.game_disconnected": "Spiel getrennt",
     "edit_session.game_disconnected_hint": "Ihre Änderungen werden hier gespeichert, erreichen das Spiel aber erst, wenn es wieder da ist. Starten Sie es neu, oder wechseln Sie zurück, falls es noch läuft.",
+    "edit_session.abandoned_warning": "Schließen Sie diesen Tab, während das Spiel weg ist, wird die Sitzung nach einer Stunde gelöscht.",
     "edit_session.save_failed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "edit_session.end_session": "Sitzung beenden",
     "edit_session.end_confirm": "Diese Bearbeitungssitzung beenden? Nicht gespeicherte Änderungen gehen verloren und der Mod hört auf zuzuhören.",

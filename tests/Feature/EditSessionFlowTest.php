@@ -506,6 +506,50 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
     }
 
+    public function test_a_session_both_sides_left_is_collected_early(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+        $filePath = $session->getContentFilePath();
+
+        // Both sides say goodbye: the game stops calling in, the page fires its
+        // pagehide beacon. Nobody is coming back for this one, and it would
+        // otherwise hold a concurrency slot and a multi-MB file for a full day.
+        $this->post('/edit-session-leave')->assertNoContent();
+
+        $this->travel(EditSessionToken::ABANDONED_TTL_MINUTES + 1)->minutes();
+        EditSessionToken::cleanupExpired();
+
+        $this->assertDatabaseCount('edit_session_tokens', 0);
+        $this->assertFileDoesNotExist($filePath);
+    }
+
+    public function test_a_session_is_kept_while_either_side_may_return(): void
+    {
+        // Browser gone, but the game is still calling in: someone is playing
+        // and will save again. Nothing may be collected here.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+        $this->post('/edit-session-leave')->assertNoContent();
+
+        $this->travel(EditSessionToken::ABANDONED_TTL_MINUTES + 1)->minutes();
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/keepalive')->assertOk();
+
+        EditSessionToken::cleanupExpired();
+        $this->assertDatabaseCount('edit_session_tokens', 1);
+
+        // And the mirror case: the game is long gone, but the tab never sent a
+        // beacon (browser crash, killed tab). Silence is not a goodbye — the
+        // full window applies, because the work may still be wanted.
+        $session->fresh()->update(['browser_left_at' => null]);
+        $this->travel(EditSessionToken::ABANDONED_TTL_MINUTES + 1)->minutes();
+
+        EditSessionToken::cleanupExpired();
+        $this->assertDatabaseCount('edit_session_tokens', 1);
+    }
+
     public function test_connection_labels_are_rendered_as_readable_text(): void
     {
         $this->initSession();

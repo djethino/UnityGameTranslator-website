@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Jeu connecté",
     "edit_session.game_disconnected": "Jeu déconnecté",
     "edit_session.game_disconnected_hint": "Vos modifications sont enregistrées ici, mais rien n'atteint le jeu tant qu'il n'est pas revenu. Relancez-le, ou repassez dessus s'il tourne encore.",
+    "edit_session.abandoned_warning": "Si vous fermez cet onglet alors que le jeu est absent, la session est supprimée au bout d'une heure.",
     "edit_session.save_failed": "Échec de l'enregistrement. Veuillez réessayer.",
     "edit_session.end_session": "Terminer la session",
     "edit_session.end_confirm": "Terminer cette session d'édition ? Les modifications non enregistrées seront perdues et le mod cessera d'écouter.",

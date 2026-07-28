@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Spel verbonden",
     "edit_session.game_disconnected": "Spel niet verbonden",
     "edit_session.game_disconnected_hint": "Je wijzigingen worden hier bewaard, maar bereiken het spel pas als het terug is. Start het opnieuw, of ga terug als het nog draait.",
+    "edit_session.abandoned_warning": "Sluit je dit tabblad terwijl het spel weg is, dan wordt de sessie na een uur verwijderd.",
     "edit_session.save_failed": "Opslaan mislukt. Probeer het opnieuw.",
     "edit_session.end_session": "Sessie beëindigen",
     "edit_session.end_confirm": "Deze bewerksessie beëindigen? Niet-opgeslagen wijzigingen gaan verloren en de mod stopt met luisteren.",

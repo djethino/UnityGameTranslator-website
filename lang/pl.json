@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Gra połączona",
     "edit_session.game_disconnected": "Gra rozłączona",
     "edit_session.game_disconnected_hint": "Zmiany są zapisywane tutaj, ale nie trafią do gry, dopóki ta nie wróci. Uruchom ją ponownie albo przełącz się na nią, jeśli wciąż działa.",
+    "edit_session.abandoned_warning": "Jeśli zamkniesz tę kartę pod nieobecność gry, sesja zostanie usunięta po godzinie.",
     "edit_session.save_failed": "Zapis nie powiódł się. Spróbuj ponownie.",
     "edit_session.end_session": "Zakończ sesję",
     "edit_session.end_confirm": "Zakończyć tę sesję edycji? Niezapisane zmiany zostaną utracone, a mod przestanie nasłuchiwać.",

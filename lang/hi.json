@@ -774,6 +774,7 @@
     "edit_session.game_connected": "गेम कनेक्टेड",
     "edit_session.game_disconnected": "गेम डिस्कनेक्टेड",
     "edit_session.game_disconnected_hint": "आपके बदलाव यहाँ सहेजे जा रहे हैं, लेकिन गेम के वापस आने तक उस तक नहीं पहुँचेंगे। गेम दोबारा चलाएँ, या अगर वह अब भी चल रहा है तो उस पर लौटें।",
+    "edit_session.abandoned_warning": "गेम की अनुपस्थिति में यह टैब बंद करने पर सत्र एक घंटे बाद हटा दिया जाएगा।",
     "edit_session.save_failed": "सेव विफल रहा। कृपया फिर से प्रयास करें।",
     "edit_session.end_session": "सत्र समाप्त करें",
     "edit_session.end_confirm": "यह एडिट सत्र समाप्त करें? असहेजे बदलाव खो जाएंगे और मॉड सुनना बंद कर देगा।",

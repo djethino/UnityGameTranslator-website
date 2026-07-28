@@ -774,6 +774,7 @@
     "edit_session.game_connected": "Oyun bağlı",
     "edit_session.game_disconnected": "Oyun bağlı değil",
     "edit_session.game_disconnected_hint": "Değişiklikleriniz burada saklanıyor, ancak oyun geri gelene kadar ona ulaşmaz. Oyunu yeniden başlatın veya hâlâ açıksa ona geri dönün.",
+    "edit_session.abandoned_warning": "Oyun yokken bu sekmeyi kapatırsanız oturum bir saat sonra silinir.",
     "edit_session.save_failed": "Kayıt başarısız. Lütfen tekrar deneyin.",
     "edit_session.end_session": "Oturumu sonlandır",
     "edit_session.end_confirm": "Bu düzenleme oturumu sonlandırılsın mı? Kaydedilmemiş değişiklikler kaybolur ve mod dinlemeyi durdurur.",

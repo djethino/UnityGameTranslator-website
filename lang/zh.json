@@ -774,6 +774,7 @@
     "edit_session.game_connected": "游戏已连接",
     "edit_session.game_disconnected": "游戏已断开",
     "edit_session.game_disconnected_hint": "您的修改会保存在这里，但在游戏回来之前不会传到游戏中。请重新启动游戏；若它仍在运行，切换回去即可。",
+    "edit_session.abandoned_warning": "若在游戏不在线时关闭此标签页，会话将在一小时后被删除。",
     "edit_session.save_failed": "保存失败。请重试。",
     "edit_session.end_session": "结束会话",
     "edit_session.end_confirm": "结束此编辑会话？未保存的更改将会丢失，模组将停止监听。",

@@ -383,12 +383,44 @@ class EditSessionToken extends Model
     }
 
     /**
-     * Delete expired rows (with their files) and orphan content files.
-     * Same sweep as MergePreviewToken::cleanupExpired.
+     * Sessions BOTH sides have explicitly left.
+     *
+     * The 24-hour window exists so that work is never lost while someone might
+     * still come back for it. Once the game has stopped calling in AND the page
+     * has said goodbye through its pagehide beacon, nobody is coming back —
+     * keeping the row for another day only holds one of the few concurrency
+     * slots the host allows, and a multi-MB file with it.
+     *
+     * Both conditions are required, and both are POSITIVE signals rather than
+     * mere silence: a browser that vanished without its beacon (crash, killed
+     * tab) never matches here and falls back to the full window. Erring towards
+     * keeping is the right way round — the cost is a slot, the alternative is
+     * someone's editing session.
+     */
+    public const ABANDONED_TTL_MINUTES = 60;
+
+    public static function abandoned(): \Illuminate\Database\Eloquent\Builder
+    {
+        $cutoff = now()->subMinutes(self::ABANDONED_TTL_MINUTES);
+
+        return self::query()
+            ->whereNotNull('browser_left_at')
+            ->where('browser_left_at', '<', $cutoff)
+            ->whereNotNull('game_last_seen_at')
+            ->where('game_last_seen_at', '<', $cutoff);
+    }
+
+    /**
+     * Delete expired rows (with their files), sessions both sides walked away
+     * from, and orphan content files. Same sweep as MergePreviewToken.
      */
     public static function cleanupExpired(): void
     {
         self::where('expires_at', '<', now())
+            ->get()
+            ->each(fn(self $session) => $session->deleteWithFile());
+
+        self::abandoned()
             ->get()
             ->each(fn(self $session) => $session->deleteWithFile());
 

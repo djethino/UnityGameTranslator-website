@@ -774,6 +774,7 @@
     "edit_session.game_connected": "اللعبة متصلة",
     "edit_session.game_disconnected": "اللعبة غير متصلة",
     "edit_session.game_disconnected_hint": "تُحفظ تعديلاتك هنا، لكنها لن تصل إلى اللعبة حتى تعود. أعد تشغيلها، أو انتقل إليها إن كانت ما تزال تعمل.",
+    "edit_session.abandoned_warning": "إذا أغلقت هذه العلامة واللعبة غائبة، ستُحذف الجلسة بعد ساعة.",
     "edit_session.save_failed": "فشل الحفظ. يرجى المحاولة مرة أخرى.",
     "edit_session.end_session": "إنهاء الجلسة",
     "edit_session.end_confirm": "إنهاء جلسة التعديل هذه؟ ستُفقد التغييرات غير المحفوظة وسيتوقف الـ mod عن الاستماع.",
