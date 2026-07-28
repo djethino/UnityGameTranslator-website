@@ -19,17 +19,21 @@ class HomeController extends Controller
 
         // Latest translations (6) - Only Main translations (exclude branches)
         $latestTranslations = Translation::with(['game', 'user'])
-            ->whereNull('parent_id') // Only Main translations, no branches
+            // Published translations only. NOT whereNull('parent_id'): a fork keeps its
+            // parent for traceability while being a Main of its own lineage, so that
+            // filter hid every fork from the storefront — and nowhere else, since the
+            // rest of the site asks for visibility.
+            ->where('visibility', 'public')
             ->latest()
             ->take(6)
             ->get();
 
         // Popular games (6) with available target languages
         $popularGames = Game::withCount(['translations' => function ($query) {
-                $query->whereNull('parent_id'); // Count only Main translations
+                $query->where('visibility', 'public'); // Count published translations, forks included
             }])
             ->whereHas('translations', function ($query) {
-                $query->whereNull('parent_id'); // Only games with at least one Main translation
+                $query->where('visibility', 'public'); // Games with at least one published translation
             })
             ->orderByDesc('translations_count')
             ->take(6)
@@ -38,7 +42,7 @@ class HomeController extends Controller
         // Load distinct target languages for each popular game (Main translations only)
         foreach ($popularGames as $game) {
             $game->target_languages = Translation::where('game_id', $game->id)
-                ->whereNull('parent_id')
+                ->where('visibility', 'public')
                 ->distinct()
                 ->pluck('target_language')
                 ->filter()

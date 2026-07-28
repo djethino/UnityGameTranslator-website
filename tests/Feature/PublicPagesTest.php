@@ -39,4 +39,39 @@ class PublicPagesTest extends TestCase
             ->assertSee('XSRF-TOKEN')
             ->assertSee('ugt_edit_session');
     }
+
+    public function test_the_home_page_shows_forks_and_hides_branches(): void
+    {
+        $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $visibility, ?int $parentId, string $language) use ($game, $author) {
+            $translation = new \App\Models\Translation();
+            $translation->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => $language,
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => $visibility,
+                'parent_id' => $parentId,
+                'line_count' => 1,
+            ])->save();
+
+            return $translation;
+        };
+
+        $main = $make('public', null, 'French');
+        // A fork keeps its parent for traceability but IS a Main of its own lineage.
+        // Filtering the storefront on parent_id made it disappear from the latest
+        // translations, the popular-games count and the language list.
+        $make('public', $main->id, 'German');
+        $make('branch', $main->id, 'Spanish');
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringContainsString('German', $html, 'A fork must be visible on the storefront.');
+        $this->assertStringNotContainsString('Spanish', $html, 'A branch must stay private.');
+    }
 }
