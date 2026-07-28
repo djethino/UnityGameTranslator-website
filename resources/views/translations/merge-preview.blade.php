@@ -348,8 +348,7 @@
                                             title="{{ __('merge.placeholder_warning') }}">
                                             <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
                                         </span>
-                                        <span x-show="isEdited(key)" x-safe-html="highlightValue(editedValues[key])"></span>
-                                        <span x-show="!isEdited(key)" x-safe-html="highlightValue(getValue(localData[key]))"></span>
+                                        <span x-safe-html="localValueHtml(key)"></span>
                                     </span>
                                 </template>
                                 <template x-if="localData[key] === undefined">
@@ -375,7 +374,7 @@
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
                                     <span class="break-words" :class="valueUnchanged(key) ? 'opacity-50' : ''"
-                                        x-safe-html="highlightValue(getValue(onlineData[key]))"></span>
+                                        x-safe-html="onlineValueHtml(key)"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
                                     <span class="text-gray-600 italic">—</span>
@@ -886,6 +885,30 @@ document.addEventListener('alpine:init', () => {
 
         tagChangedBetweenSides(key) {
             return key in this.localData && key in this.onlineData && this.tagDiffers(key);
+        },
+
+        // ── Cell rendering with the difference underlined ─────────────────
+        // One method per side rather than an expression in the template: the
+        // CSP build of Alpine evaluates a restricted subset, and "which text
+        // am I compared against" is a question worth naming anyway.
+        //
+        // A pending edit is what the user sees, so it is what gets compared —
+        // otherwise the underline would describe a value no longer on screen.
+        // A key present on one side only passes null: nothing is underlined,
+        // because underlining a whole new line tells the reader nothing.
+
+        localValueHtml(key) {
+            const mine = this.isEdited(key) ? this.editedValues[key] : this.getValue(this.localData[key]);
+            const other = key in this.onlineData ? this.getValue(this.onlineData[key]) : null;
+            return this.highlightDifference(mine, other);
+        },
+
+        onlineValueHtml(key) {
+            const mine = this.getValue(this.onlineData[key]);
+            const other = key in this.localData
+                ? (this.isEdited(key) ? this.editedValues[key] : this.getValue(this.localData[key]))
+                : null;
+            return this.highlightDifference(mine, other);
         },
 
         calculateStats() {

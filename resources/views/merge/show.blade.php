@@ -420,7 +420,7 @@
                                                 <span :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
                                                 <span class="break-words"
                                                     :class="branchTextTint(branch, key)"
-                                                    x-safe-html="highlightValue(getValue(branch.content[key]))"></span>
+                                                    x-safe-html="branchValueHtml(branch, key)"></span>
                                             </div>
                                         </template>
                                         <template x-if="branch.content[key] === undefined">
@@ -865,6 +865,21 @@ document.addEventListener('alpine:init', () => {
          *  (same real-change rules: A lines, or replacing a selection). */
         cursorPrimaryAction(key) {
             this.select(key, 'main');
+        },
+
+        /**
+         * A branch cell, with what it changes relative to MAIN underlined.
+         *
+         * Main is the reference and stays unmarked: with several branches side
+         * by side, marking every column against every other would leave nothing
+         * readable. Each branch answers one question — what does it propose
+         * that Main does not say? A key Main does not have passes null: the
+         * whole line is new, and underlining all of it would say nothing.
+         */
+        branchValueHtml(branch, key) {
+            const mine = this.getValue(branch.content[key]);
+            const other = key in this.mainData ? this.getValue(this.mainData[key]) : null;
+            return this.highlightDifference(mine, other);
         },
 
         /** Main value cell HTML: highlighted, or the empty-value marker. */

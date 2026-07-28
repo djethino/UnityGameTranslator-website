@@ -45,6 +45,23 @@
 .current-match-row { box-shadow: inset 0 0 0 2px rgba(250, 204, 21, 0.6); }
 .current-match-row .search-mark { background-color: rgb(251 146 60); color: rgb(17 24 39); }
 
+/* Words that differ from the other side of the comparison.
+ *
+ * A SEPARATE CHANNEL from search on purpose: search owns the background, the
+ * difference owns the underline, so a word that is both searched and changed
+ * shows both instead of one hiding the other. Underline rather than a colour
+ * swap, because the tag colours (H/V/A/S/M) already carry meaning in these
+ * tables and must keep it.
+ *
+ * text-decoration survives inside <mark>, which a background could not. */
+.diff-word {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: rgb(168 85 247);
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+}
+
 /* Hover affordances: pencil (edit) and trash (delete) revealed on the cell,
  * because a double-click alone is never discoverable */
 .edit-affordance { position: absolute; top: 0.25rem; right: 0.25rem; display: none; gap: 0.25rem; }

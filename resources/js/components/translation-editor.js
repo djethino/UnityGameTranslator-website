@@ -520,6 +520,99 @@ export function editorCore(config) {
             return this.searchScope === 'keys' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
         },
 
+        // ── Difference highlighting ───────────────────────────────────────
+        // Two lines that differ by one word looked exactly like two lines that
+        // differ entirely: the reader had to compare them character by
+        // character to find out what changed.
+        //
+        // Word-level, never character-level: values are sentences, often
+        // carrying markup like <color=#ff0000>, and a character diff would
+        // shred both into confetti. Whitespace stays attached to the token
+        // before it, so rebuilding the string is exact.
+        //
+        // Search and difference are DIFFERENT QUESTIONS, so they get different
+        // visual channels rather than competing: search keeps the background
+        // (<mark>), difference takes the underline. A word that is both
+        // searched and changed shows both — which is why the search pass runs
+        // INSIDE each segment rather than over the finished string.
+
+        _tokenize(text) {
+            // Keep the separators: "a  b" and "a b" must not compare equal
+            return String(text ?? '').split(/(\s+)/).filter(t => t !== '');
+        },
+
+        /**
+         * Longest common subsequence over tokens, returned as segments.
+         * Each segment is {text, same}. O(n*m) — fine for one line of dialogue,
+         * and guarded by a length cap below.
+         */
+        _diffSegments(mine, theirs) {
+            const a = this._tokenize(mine);
+            const b = this._tokenize(theirs);
+
+            // Pathological lines (a whole paragraph in one key) would make the
+            // table crawl. Beyond the cap, say nothing rather than freeze.
+            if (a.length > 400 || b.length > 400) {
+                return [{ text: String(mine ?? ''), same: true }];
+            }
+
+            const lengths = Array.from({ length: a.length + 1 }, () => new Uint16Array(b.length + 1));
+            for (let i = a.length - 1; i >= 0; i--) {
+                for (let j = b.length - 1; j >= 0; j--) {
+                    lengths[i][j] = a[i] === b[j]
+                        ? lengths[i + 1][j + 1] + 1
+                        : Math.max(lengths[i + 1][j], lengths[i][j + 1]);
+                }
+            }
+
+            const segments = [];
+            const push = (text, same) => {
+                const last = segments[segments.length - 1];
+                if (last && last.same === same) last.text += text;
+                else segments.push({ text, same });
+            };
+
+            let i = 0;
+            let j = 0;
+            while (i < a.length && j < b.length) {
+                if (a[i] === b[j]) {
+                    push(a[i], true);
+                    i++; j++;
+                } else if (lengths[i + 1][j] >= lengths[i][j + 1]) {
+                    push(a[i], false);
+                    i++;
+                } else {
+                    // Present only on the other side: nothing of ours to mark
+                    j++;
+                }
+            }
+            while (i < a.length) { push(a[i], false); i++; }
+
+            return segments;
+        },
+
+        /**
+         * Render `text` with the words that differ from `other` underlined,
+         * search matches still highlighted inside.
+         *
+         * `other` null or undefined means the line exists on one side only —
+         * then NOTHING is marked. Marking every word of a brand new line says
+         * nothing: a marker that applies everywhere stops marking.
+         */
+        highlightDifference(text, other) {
+            const value = String(text ?? '');
+            if (other === null || other === undefined) return this.highlightValue(text);
+
+            const otherValue = String(other);
+            if (value === otherValue) return this.highlightValue(text);
+
+            return this._diffSegments(value, otherValue)
+                .map(seg => seg.same
+                    ? this.highlightValue(seg.text)
+                    : '<span class="diff-word">' + this.highlightValue(seg.text) + '</span>')
+                .join('');
+        },
+
         highlightKey(text) {
             return this.searchScope === 'values' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
         },
