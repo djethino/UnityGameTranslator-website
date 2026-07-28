@@ -25,27 +25,6 @@
              decides whether saving means anything, so it must never be
              something the user has to go and find out. Hidden entirely while
              unknown — an absence of information is not a diagnosis. --}}
-        {{-- Translated text is rendered by Blade and switched with x-show, never
-             passed through an Alpine expression: this project runs the CSP build
-             of Alpine, whose restricted evaluator returns string literals as-is
-             and leaves @js escapes like é undecoded on screen. --}}
-        <p x-show="gameConnected !== null" x-cloak class="text-sm mt-2 flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 rounded-full"
-                :class="gameConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'"></span>
-            <span x-show="gameConnected" class="text-green-400">{{ __('edit_session.game_connected') }}</span>
-            <span x-show="!gameConnected" class="text-red-400">{{ __('edit_session.game_disconnected') }}</span>
-        </p>
-    </div>
-
-    {{-- The dot says WHAT, this says SO WHAT: saves still work and are kept
-         here, they simply have nowhere to land until the game is back. --}}
-    <div x-show="gameConnected === false" x-cloak
-        class="mb-6 flex items-start gap-3 bg-amber-900/40 border border-amber-600/70 rounded-lg px-4 py-3">
-        <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5"></i>
-        <div>
-            <p class="text-amber-200 font-semibold">{{ __('edit_session.game_disconnected') }}</p>
-            <p class="text-amber-100/80 text-sm mt-0.5">{{ __('edit_session.game_disconnected_hint') }}</p>
-        </div>
     </div>
 
     {{-- Live update toast (mod pushed changes from the game) — clicking it
@@ -341,7 +320,8 @@
         {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
              buttons: the instructions wrap instead of squeezing the save button.
              ↑↓ shortcuts float at both ends of the bar --}}
-        <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
+        <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
+        <div class="flex flex-wrap gap-4 justify-between items-center">
             <div class="flex flex-col gap-1 shrink-0">
                 <button type="button" @click="scrollToTop()"
                     class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
@@ -405,6 +385,21 @@
                     </button>
                 </div>
             </div>
+        </div>
+
+        {{-- Link state, inside the sticky bar rather than up in the header:
+             whether the game is listening decides whether saving means
+             anything, so it has to stay in view — the header version scrolled
+             away exactly when the user was deep in a long file. Same reason
+             the explanation lives here now instead of in a banner on top. --}}
+        <div x-show="gameConnected !== null" x-cloak
+            class="mt-3 pt-3 border-t border-gray-700 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                :class="gameConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'"></span>
+            <span x-show="gameConnected" class="text-green-400">{{ __('edit_session.game_connected') }}</span>
+            <span x-show="!gameConnected" class="text-red-400 font-semibold">{{ __('edit_session.game_disconnected') }}</span>
+            <span x-show="!gameConnected" class="text-amber-100/70 text-xs">{{ __('edit_session.game_disconnected_hint') }}</span>
+        </div>
         </div>
     </div>
 

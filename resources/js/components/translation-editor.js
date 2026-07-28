@@ -184,9 +184,15 @@ export function editorCore(config) {
             // Track whether the main search bar is on screen (pages mark it
             // with x-ref="searchBar") to toggle the floating compact search
             if (this.$refs.searchBar && 'IntersectionObserver' in window) {
+                // threshold 1, not the default 0: the handover must happen as
+                // soon as the bar STARTS leaving, not once its last pixel is
+                // gone. Replacing in series scrolls the page under the user,
+                // and with the default the prev/next/replace buttons slid out
+                // of reach while the observer still called the bar "visible" —
+                // a dead zone with no controls at either end.
                 new IntersectionObserver(entries => {
                     this.searchBarOffscreen = !entries[0].isIntersecting;
-                }).observe(this.$refs.searchBar);
+                }, { threshold: 1 }).observe(this.$refs.searchBar);
             }
         },
 
