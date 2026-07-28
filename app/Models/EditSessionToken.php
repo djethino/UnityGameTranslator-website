@@ -130,6 +130,10 @@ class EditSessionToken extends Model
         self::cleanupExpired();
 
         if (self::where('expires_at', '>', now())->count() >= self::maxActiveSessions()) {
+            // Counted, because this is the only number that proves the cap
+            // actually turned someone away — sampled peaks can miss it
+            AnalyticsDaily::countEditSession(refused: true);
+
             throw new \OverflowException('Too many active edit sessions.');
         }
 
@@ -146,6 +150,8 @@ class EditSessionToken extends Model
         if (!Storage::disk('local')->put(self::contentFileName($modKey), $json)) {
             throw new \RuntimeException('Failed to write edit session content file.');
         }
+
+        AnalyticsDaily::countEditSession();
 
         return self::create([
             'token' => $token,

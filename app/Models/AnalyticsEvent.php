@@ -32,6 +32,42 @@ class AnalyticsEvent extends Model
     }
 
     /**
+     * How one day's events break down over a column, as [value => count],
+     * biggest first.
+     *
+     * Counted by the database, never hydrated into models: a busy day holds
+     * hundreds of thousands of rows, and grouping them in PHP costs more the
+     * more the site succeeds — the one kind of slowdown that shows up exactly
+     * when it hurts. Used by the nightly aggregation and by the admin page for
+     * the day it cannot read from the aggregates yet.
+     */
+    public static function breakdownFor(string $date, string $column, ?int $limit = null): array
+    {
+        $query = self::whereDate('created_at', $date)
+            ->whereNotNull($column)
+            ->where($column, '!=', '')
+            ->select($column, \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->groupBy($column)
+            ->orderByDesc('total');
+
+        if ($limit) {
+            $query->limit($limit);
+        }
+
+        return $query->pluck('total', $column)
+            ->map(fn($count) => (int) $count)
+            ->toArray();
+    }
+
+    /** Distinct visitors on a given day, counted in SQL. */
+    public static function uniqueVisitorsOn(string $date): int
+    {
+        return self::whereDate('created_at', $date)
+            ->distinct('visitor_hash')
+            ->count('visitor_hash');
+    }
+
+    /**
      * Parse User-Agent to detect device type
      */
     public static function detectDevice(string $userAgent): string

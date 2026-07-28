@@ -8,14 +8,13 @@ use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
 use App\Models\Announcement;
 use App\Models\AuditLog;
-use App\Models\EditSessionToken;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
+use App\Services\LiveEditCapacity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -397,19 +396,24 @@ class AdminController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Get today's live stats from events (not yet aggregated)
+        // Today is not aggregated yet, so it is counted live from the events.
+        //
+        // Counted in SQL, never loaded into PHP: this page used to hydrate every
+        // event of the day into models on each visit, which costs more the more
+        // the site succeeds — the one kind of slowdown that arrives exactly when
+        // it hurts most. The breakdowns below follow the same rule.
         $today = now()->toDateString();
-        $todayEvents = AnalyticsEvent::whereDate('created_at', $today)->get();
-        $todayDownloads = $todayEvents->filter(fn($e) => str_ends_with($e->route, 'translations.download'))->count();
-        $todayUploads = Translation::whereDate('created_at', $today)->count();
-        $todayRegistrations = User::whereDate('created_at', $today)->count();
+        $todayEventsQuery = fn() => AnalyticsEvent::whereDate('created_at', $today);
+
         $todayStats = [
-            'page_views' => $todayEvents->count(),
-            'unique_visitors' => $todayEvents->pluck('visitor_hash')->unique()->count(),
-            'downloads' => $todayDownloads,
-            'uploads' => $todayUploads,
-            'registrations' => $todayRegistrations,
+            'page_views' => $todayEventsQuery()->count(),
+            'unique_visitors' => AnalyticsEvent::uniqueVisitorsOn($today),
+            'downloads' => $todayEventsQuery()->where('route', 'like', '%translations.download')->count(),
+            'uploads' => Translation::whereDate('created_at', $today)->count(),
+            'registrations' => User::whereDate('created_at', $today)->count(),
         ];
+
+        $todayBreakdown = fn(string $column, ?int $limit = null) => AnalyticsEvent::breakdownFor($today, $column, $limit);
 
         // Calculate totals (aggregated days + today's live stats)
         $totals = [
@@ -438,10 +442,8 @@ class AdminController extends Controller
             }
         }
         // Add today's countries
-        foreach ($todayEvents->groupBy('country') as $country => $events) {
-            if ($country !== '' && $country !== null) {
-                $allCountries[$country] = ($allCountries[$country] ?? 0) + $events->count();
-            }
+        foreach ($todayBreakdown('country', 50) as $country => $count) {
+            $allCountries[$country] = ($allCountries[$country] ?? 0) + $count;
         }
         arsort($allCountries);
         $topCountries = array_slice($allCountries, 0, 10, true);
@@ -457,10 +459,8 @@ class AdminController extends Controller
                 }
             }
         }
-        foreach ($todayEvents->groupBy('referrer_domain') as $ref => $events) {
-            if ($ref !== '' && $ref !== null) {
-                $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $events->count();
-            }
+        foreach ($todayBreakdown('referrer_domain', 20) as $ref => $count) {
+            $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $count;
         }
         arsort($allReferrers);
         $topReferrers = array_slice($allReferrers, 0, 10, true);
@@ -474,8 +474,8 @@ class AdminController extends Controller
                 }
             }
         }
-        foreach ($todayEvents->groupBy('device') as $device => $events) {
-            $allDevices[$device] = ($allDevices[$device] ?? 0) + $events->count();
+        foreach ($todayBreakdown('device') as $device => $count) {
+            $allDevices[$device] = ($allDevices[$device] ?? 0) + $count;
         }
 
         // Aggregate browsers
@@ -487,10 +487,8 @@ class AdminController extends Controller
                 }
             }
         }
-        foreach ($todayEvents->groupBy('browser') as $browser => $events) {
-            if ($browser) {
-                $allBrowsers[$browser] = ($allBrowsers[$browser] ?? 0) + $events->count();
-            }
+        foreach ($todayBreakdown('browser', 10) as $browser => $count) {
+            $allBrowsers[$browser] = ($allBrowsers[$browser] ?? 0) + $count;
         }
         arsort($allBrowsers);
 
@@ -517,10 +515,30 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        $liveCapacity = $this->liveEditCapacity();
+        $liveCapacity = LiveEditCapacity::current();
+
+        // Concurrency peaks over the period. Free: $dailyStats is already
+        // loaded, and this is the history the instant gauge above cannot give —
+        // nobody watches a dashboard at the moment it saturates.
+        $peaks = [
+            'sessions' => (int) $dailyStats->max('peak_edit_sessions'),
+            'streams' => (int) $dailyStats->max('peak_edit_streams'),
+            'started' => (int) $dailyStats->sum('edit_sessions_started'),
+            'refused' => (int) $dailyStats->sum('edit_sessions_refused'),
+        ];
+        $peakSessionsDay = $dailyStats->sortByDesc('peak_edit_sessions')->first();
+        $peakStreamsDay = $dailyStats->sortByDesc('peak_edit_streams')->first();
+        $peaks['sessions_at'] = $peaks['sessions'] > 0 ? $peakSessionsDay?->peak_edit_sessions_at : null;
+        $peaks['streams_at'] = $peaks['streams'] > 0 ? $peakStreamsDay?->peak_edit_streams_at : null;
+
+        $chartPeakSessions = $dailyStats->pluck('peak_edit_sessions')->toArray();
+        $chartPeakStreams = $dailyStats->pluck('peak_edit_streams')->toArray();
 
         return view('admin.analytics', compact(
             'liveCapacity',
+            'peaks',
+            'chartPeakSessions',
+            'chartPeakStreams',
             'period',
             'dailyStats',
             'todayStats',
@@ -539,45 +557,4 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Live-edit capacity, the one metric that scales with CONCURRENCY rather
-     * than traffic.
-     *
-     * An open SSE stream holds one of the host's concurrent request slots for
-     * its whole life, and shared hosting grants a few dozen for the entire
-     * account — so this saturates long before bandwidth or storage do, and it
-     * takes the rest of the site down with it. Watching the headroom here is
-     * what turns "the site broke" into "time to move the stream server".
-     *
-     * The stream count comes from the SSE server itself (it alone knows how
-     * many sockets are open); it is optional and never blocks the page.
-     */
-    private function liveEditCapacity(): array
-    {
-        $capacity = [
-            'sessions' => EditSessionToken::where('expires_at', '>', now())->count(),
-            'sessions_max' => EditSessionToken::maxActiveSessions(),
-            'streams' => null,
-            'streams_max' => null,
-        ];
-
-        $healthUrl = config('edit_session.sse_health_url');
-        if (!$healthUrl) {
-            return $capacity;
-        }
-
-        try {
-            // Short timeout: a stream server that is down or slow must not
-            // hold the admin page hostage — the figure is nice to have.
-            $response = Http::timeout(2)->get($healthUrl);
-            if ($response->successful()) {
-                $capacity['streams'] = $response->json('connections');
-                $capacity['streams_max'] = $response->json('max_connections');
-            }
-        } catch (\Throwable $e) {
-            // Unreachable: leave the figures null, the view says so
-        }
-
-        return $capacity;
-    }
 }

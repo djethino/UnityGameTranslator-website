@@ -8,31 +8,21 @@
         <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
     </a>
 </div>
-<div class="mb-6 flex justify-between items-center">
+<div class="mb-6">
     <h1 class="text-3xl font-bold"><i class="fas fa-chart-line mr-2"></i> Analytics</h1>
-
-    <div class="flex gap-2">
-        <a href="{{ route('admin.analytics', ['period' => 7]) }}"
-           class="px-4 py-2 rounded {{ $period == 7 ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-            7 days
-        </a>
-        <a href="{{ route('admin.analytics', ['period' => 30]) }}"
-           class="px-4 py-2 rounded {{ $period == 30 ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-            30 days
-        </a>
-        <a href="{{ route('admin.analytics', ['period' => 90]) }}"
-           class="px-4 py-2 rounded {{ $period == 90 ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-            90 days
-        </a>
-        <a href="{{ route('admin.analytics', ['period' => 365]) }}"
-           class="px-4 py-2 rounded {{ $period == 365 ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-            1 year
-        </a>
-    </div>
+    <p class="text-gray-500 text-sm mt-1">
+        Times are UTC — a "day" here starts and ends at midnight UTC, whatever your visitors' clocks say.
+    </p>
 </div>
 
-<!-- Global Stats -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+{{-- Three sections, three different clocks. They used to look identical, which
+     made it anyone's guess whether a number was all-time, live, or windowed. --}}
+
+<!-- ─── All time ─────────────────────────────────────────────────────────── -->
+<h2 class="text-lg font-semibold text-gray-300 mb-3">
+    <i class="fas fa-infinity mr-2 text-gray-500"></i> All time
+</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Total Users</p>
         <p class="text-2xl font-bold text-blue-400">{{ number_format($globalStats['total_users']) }}</p>
@@ -46,15 +36,24 @@
         <p class="text-2xl font-bold text-purple-400">{{ number_format($globalStats['total_games']) }}</p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <p class="text-gray-400 text-sm">Total Downloads (All Time)</p>
+        <p class="text-gray-400 text-sm">Total Downloads</p>
         <p class="text-2xl font-bold text-yellow-400">{{ number_format($globalStats['total_downloads']) }}</p>
+        {{-- Counter carried by each translation, not a sum of tracked events:
+             it predates analytics and counts downloads the events never saw,
+             so it will not match the period figure below. --}}
+        <p class="text-xs text-gray-500 mt-1">From translation counters, not from tracked events.</p>
     </div>
 </div>
 
+<!-- ─── Right now ────────────────────────────────────────────────────────── -->
 <!-- Live edit capacity: the one metric that scales with CONCURRENCY, not traffic.
      An open stream holds one of the host's concurrent request slots for its whole
      life, so this saturates long before bandwidth or storage — and it takes the
      rest of the site with it. Watch the headroom, not the raw number. -->
+<h2 class="text-lg font-semibold text-gray-300 mb-3">
+    <i class="fas fa-bolt mr-2 text-cyan-500"></i> Right now
+    <span class="text-sm font-normal text-gray-500 ml-2">— at the moment this page was loaded</span>
+</h2>
 @php
     $capBar = function (?int $used, ?int $max) {
         if ($max === null || $max <= 0 || $used === null) {
@@ -116,29 +115,102 @@
     </div>
 </div>
 
-<!-- Period Stats -->
+<!-- ─── Over a period ────────────────────────────────────────────────────── -->
+{{-- The selector sits HERE, not next to the page title: it drives this section
+     and everything below it, and nothing above. --}}
+<div class="mt-8 mb-3 flex flex-wrap gap-3 justify-between items-center">
+    <h2 class="text-lg font-semibold text-gray-300">
+        <i class="fas fa-calendar-days mr-2 text-purple-500"></i> Last {{ $period }} days
+        <span class="text-sm font-normal text-gray-500 ml-2">— today included, counted live</span>
+    </h2>
+
+    <div class="flex gap-2">
+        @foreach ([7 => '7 days', 30 => '30 days', 90 => '90 days', 365 => '1 year'] as $days => $label)
+            <a href="{{ route('admin.analytics', ['period' => $days]) }}"
+               class="px-4 py-2 rounded {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+</div>
+
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <p class="text-gray-400 text-sm">Page Views ({{ $period }}d)</p>
+        <p class="text-gray-400 text-sm">Page Views</p>
         <p class="text-2xl font-bold">{{ number_format($totals['page_views']) }}</p>
-        <p class="text-xs text-green-400">+{{ $todayStats['page_views'] }} today</p>
+        <p class="text-xs text-green-400">+{{ number_format($todayStats['page_views']) }} today</p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <p class="text-gray-400 text-sm">Unique Visitors</p>
+        {{-- NOT unique visitors over the period: this adds up each day's unique
+             count, so a daily regular is counted once per day. Naming it what it
+             is beats quietly overstating the audience. A true period-unique
+             count is only possible over the 90 days of raw events we keep. --}}
+        <p class="text-gray-400 text-sm">Daily Visitors <span class="text-gray-600">(summed)</span></p>
         <p class="text-2xl font-bold">{{ number_format($totals['unique_visitors']) }}</p>
-        <p class="text-xs text-green-400">+{{ $todayStats['unique_visitors'] }} today</p>
+        <p class="text-xs text-green-400">+{{ number_format($todayStats['unique_visitors']) }} today</p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Downloads</p>
         <p class="text-2xl font-bold">{{ number_format($totals['downloads']) }}</p>
+        <p class="text-xs text-green-400">+{{ number_format($todayStats['downloads']) }} today</p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Uploads</p>
         <p class="text-2xl font-bold">{{ number_format($totals['uploads']) }}</p>
+        <p class="text-xs text-green-400">+{{ number_format($todayStats['uploads']) }} today</p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">New Users</p>
         <p class="text-2xl font-bold">{{ number_format($totals['registrations']) }}</p>
+        <p class="text-xs text-green-400">+{{ number_format($todayStats['registrations']) }} today</p>
+    </div>
+</div>
+
+{{-- Concurrency history. The live gauge above only tells the truth to whoever
+     happens to be looking; this is what answers "did I ever come close?" --}}
+@php
+    $peakPct = fn(int $used, ?int $max) => ($max && $max > 0) ? min(100, (int) round($used / $max * 100)) : null;
+    $sessionsPeakPct = $peakPct($peaks['sessions'], $liveCapacity['sessions_max']);
+    $streamsPeakPct = $peakPct($peaks['streams'], $liveCapacity['streams_max']);
+@endphp
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Peak edit sessions</p>
+        <p class="text-2xl font-bold text-cyan-400">
+            {{ number_format($peaks['sessions']) }}
+            @if ($sessionsPeakPct !== null)
+                <span class="text-base font-normal text-gray-500">/ {{ number_format($liveCapacity['sessions_max']) }}</span>
+            @endif
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+            {{ $peaks['sessions_at'] ? $peaks['sessions_at']->format('d/m H:i') . ' UTC' : 'No reading yet' }}
+        </p>
+    </div>
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Peak SSE streams</p>
+        <p class="text-2xl font-bold {{ ($streamsPeakPct ?? 0) >= 80 ? 'text-red-400' : (($streamsPeakPct ?? 0) >= 50 ? 'text-yellow-400' : 'text-cyan-400') }}">
+            {{ number_format($peaks['streams']) }}
+            @if ($streamsPeakPct !== null)
+                <span class="text-base font-normal text-gray-500">/ {{ number_format($liveCapacity['streams_max']) }}</span>
+            @endif
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+            {{ $peaks['streams_at'] ? $peaks['streams_at']->format('d/m H:i') . ' UTC' : 'No reading yet' }}
+        </p>
+    </div>
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Edit sessions started</p>
+        <p class="text-2xl font-bold">{{ number_format($peaks['started']) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Counted exactly, as they happen.</p>
+    </div>
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 {{ $peaks['refused'] > 0 ? 'border-red-600' : '' }}">
+        <p class="text-gray-400 text-sm">Sessions refused</p>
+        <p class="text-2xl font-bold {{ $peaks['refused'] > 0 ? 'text-red-400' : 'text-gray-500' }}">
+            {{ number_format($peaks['refused']) }}
+        </p>
+        <p class="text-xs {{ $peaks['refused'] > 0 ? 'text-red-400' : 'text-gray-500' }} mt-1">
+            {{ $peaks['refused'] > 0 ? 'The cap turned users away — raise it or move the server.' : 'Nobody was turned away.' }}
+        </p>
     </div>
 </div>
 
@@ -168,6 +240,24 @@
         @else
             <div class="h-64 flex items-center justify-center">
                 <p class="text-gray-500 text-sm">No downloads yet for this period.</p>
+            </div>
+        @endif
+    </div>
+
+    <!-- Concurrency: daily peaks against the ceiling -->
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 lg:col-span-2">
+        <h2 class="text-lg font-semibold mb-1"><i class="fas fa-gauge-high mr-2 text-cyan-400"></i> Live edit concurrency</h2>
+        <p class="text-xs text-gray-500 mb-4">
+            Daily peaks against the stream ceiling. Sampled every 10 minutes, so a shorter spike can slip
+            through — "Sessions refused" above is the exact count.
+        </p>
+        @if(count($chartLabels) > 0 && (array_sum($chartPeakSessions) > 0 || array_sum($chartPeakStreams) > 0))
+            <div class="h-64">
+                <canvas id="concurrencyChart"></canvas>
+            </div>
+        @else
+            <div class="h-64 flex items-center justify-center">
+                <p class="text-gray-500 text-sm">No concurrency readings yet — the first one lands within 10 minutes.</p>
             </div>
         @endif
     </div>
@@ -302,11 +392,19 @@
 </div>
 
 <!-- Info box -->
-<div class="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-    <p class="text-sm text-gray-400">
-        <i class="fas fa-info-circle mr-2"></i>
-        Data is aggregated daily at 2 AM. Today's stats are live from events. Historical data kept forever, individual events purged after 90 days.
-        No IP addresses stored, GDPR compliant.
+<div class="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm text-gray-400 space-y-2">
+    <p>
+        <i class="fas fa-clock mr-2"></i>
+        <strong>Where the numbers come from.</strong>
+        Past days are aggregated once a night, at 02:00 UTC, from the raw events of the day before.
+        Today is counted live on every load, so the period totals always include it.
+        Concurrency peaks are sampled every 10 minutes; sessions started and refused are counted one by one.
+    </p>
+    <p>
+        <i class="fas fa-shield-halved mr-2"></i>
+        <strong>What is kept.</strong>
+        Daily aggregates are kept indefinitely, individual events for 90 days.
+        No IP address is ever stored — visitors are counted through a salted daily hash that cannot be reversed.
     </p>
 </div>
 
@@ -327,6 +425,12 @@
         hasBrowserData: {{ $hasBrowserData ? 'true' : 'false' }},
         browserLabels: @json(array_keys($allBrowsers)),
         browserValues: @json(array_values($allBrowsers)),
+        hasConcurrencyData: {{ (count($chartLabels) > 0 && (array_sum($chartPeakSessions) > 0 || array_sum($chartPeakStreams) > 0)) ? 'true' : 'false' }},
+        peakSessions: @json($chartPeakSessions),
+        peakStreams: @json($chartPeakStreams),
+        // Drawn as a flat line so the headroom is visible at a glance, rather
+        // than left for the reader to work out from the axis
+        streamCeiling: {{ $liveCapacity['streams_max'] !== null ? (int) $liveCapacity['streams_max'] : 'null' }},
     };
 </script>
 @vite('resources/js/admin-charts.js')

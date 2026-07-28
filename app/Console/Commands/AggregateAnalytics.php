@@ -52,43 +52,20 @@ class AggregateAnalytics extends Command
      */
     protected function aggregateDailyStats(string $date): void
     {
-        $events = AnalyticsEvent::whereDate('created_at', $date)->get();
+        // Everything below is counted by the database rather than hydrated into
+        // models: this job runs unattended on a shared host, where a busy day's
+        // events would otherwise be loaded into memory all at once.
+        $pageViews = AnalyticsEvent::whereDate('created_at', $date)->count();
 
-        if ($events->isEmpty()) {
+        if ($pageViews === 0) {
             $this->warn("No events found for {$date}");
         }
 
-        // Count unique visitors
-        $uniqueVisitors = $events->pluck('visitor_hash')->unique()->count();
-
-        // Count by country
-        $countries = $events->groupBy('country')
-            ->map(fn($group) => $group->count())
-            ->filter(fn($count, $key) => $key !== null)
-            ->sortDesc()
-            ->take(50)
-            ->toArray();
-
-        // Count by referrer
-        $referrers = $events->groupBy('referrer_domain')
-            ->map(fn($group) => $group->count())
-            ->filter(fn($count, $key) => $key !== null)
-            ->sortDesc()
-            ->take(20)
-            ->toArray();
-
-        // Count by device
-        $devices = $events->groupBy('device')
-            ->map(fn($group) => $group->count())
-            ->toArray();
-
-        // Count by browser
-        $browsers = $events->groupBy('browser')
-            ->map(fn($group) => $group->count())
-            ->filter(fn($count, $key) => $key !== null)
-            ->sortDesc()
-            ->take(10)
-            ->toArray();
+        $uniqueVisitors = AnalyticsEvent::uniqueVisitorsOn($date);
+        $countries = AnalyticsEvent::breakdownFor($date, 'country', 50);
+        $referrers = AnalyticsEvent::breakdownFor($date, 'referrer_domain', 20);
+        $devices = AnalyticsEvent::breakdownFor($date, 'device');
+        $browsers = AnalyticsEvent::breakdownFor($date, 'browser', 10);
 
         // Count downloads from events (web + API/mod)
         $downloads = AnalyticsEvent::whereDate('created_at', $date)
@@ -104,7 +81,7 @@ class AggregateAnalytics extends Command
         AnalyticsDaily::updateOrCreate(
             ['date' => $date],
             [
-                'page_views' => $events->count(),
+                'page_views' => $pageViews,
                 'unique_visitors' => $uniqueVisitors,
                 'downloads' => $downloads,
                 'uploads' => $uploads,
@@ -116,7 +93,7 @@ class AggregateAnalytics extends Command
             ]
         );
 
-        $this->info("  Global stats: {$events->count()} views, {$uniqueVisitors} unique visitors");
+        $this->info("  Global stats: {$pageViews} views, {$uniqueVisitors} unique visitors");
     }
 
     /**

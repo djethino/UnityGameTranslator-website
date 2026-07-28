@@ -61,7 +61,9 @@ if (!data) {
                         tension: 0.3
                     },
                     {
-                        label: 'Unique Visitors',
+                        // Sum of each day's unique count, not unique over the
+                        // range — the label says so, as does the card above
+                        label: 'Daily Visitors',
                         data: data.chartVisitors,
                         borderColor: colors.blue,
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -87,6 +89,56 @@ if (!data) {
                 }]
             },
             options: lineBarOptions
+        });
+    }
+
+    // Concurrency Chart — daily peaks with the ceiling drawn in.
+    // The ceiling matters more than the peaks: the question this answers is
+    // "how much headroom is left", not "how many people edited".
+    if (data.hasConcurrencyData) {
+        const datasets = [
+            {
+                label: 'Peak sessions',
+                data: data.peakSessions,
+                borderColor: colors.cyan,
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                fill: true,
+                tension: 0.3
+            },
+            {
+                label: 'Peak SSE streams',
+                data: data.peakStreams,
+                borderColor: colors.purple,
+                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                fill: true,
+                tension: 0.3
+            }
+        ];
+
+        if (data.streamCeiling) {
+            datasets.push({
+                label: `Stream ceiling (${data.streamCeiling})`,
+                data: data.chartLabels.map(() => data.streamCeiling),
+                borderColor: colors.red,
+                borderDash: [6, 4],
+                borderWidth: 1.5,
+                pointRadius: 0,
+                fill: false
+            });
+        }
+
+        new Chart(document.getElementById('concurrencyChart'), {
+            type: 'line',
+            data: { labels: data.chartLabels, datasets },
+            options: {
+                ...lineBarOptions,
+                scales: {
+                    ...lineBarOptions.scales,
+                    // Start at zero: a truncated axis would make a quiet day
+                    // look like a saturated one
+                    y: { ...lineBarOptions.scales.y, beginAtZero: true }
+                }
+            }
         });
     }
 
