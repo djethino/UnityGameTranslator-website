@@ -314,7 +314,7 @@
                                         @click.stop="openTagDropdown($event, key, displayLocalTag(key), getValue(localData[key]))"
                                         class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
                                         title="{{ __('merge.click_to_change_tag') }}">
-                                        <span :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayLocalTag(key)"></span>
+                                        <span :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '') + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="displayLocalTag(key)"></span>
                                     </button>
                                 </template>
                                 <template x-if="localData[key] === undefined">
@@ -337,7 +337,7 @@
                                 </span>
                                 <template x-if="localData[key] !== undefined">
                                     <span class="break-words"
-                                        :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
+                                        :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '', valueUnchanged(key) ? 'opacity-50' : '']">
                                         {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
                                         <span x-show="hasPlaceholderWarning(key)" x-cloak
                                             class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
@@ -358,7 +358,7 @@
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <span :class="'tag-' + getTag(onlineData[key])" x-text="getTag(onlineData[key])"></span>
+                                    <span :class="'tag-' + getTag(onlineData[key]) + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="getTag(onlineData[key])"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
                                     <span class="text-gray-600">—</span>
@@ -370,7 +370,8 @@
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <span class="break-words" x-safe-html="highlightValue(getValue(onlineData[key]))"></span>
+                                    <span class="break-words" :class="valueUnchanged(key) ? 'opacity-50' : ''"
+                                        x-safe-html="highlightValue(getValue(onlineData[key]))"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
                                     <span class="text-gray-600 italic">—</span>
@@ -586,6 +587,10 @@
         <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge_preview.selection_local') }}</span>
         <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge_preview.selection_online') }}</span>
         <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge_preview.manual_edit') }}</span>
+        <span class="text-gray-600">|</span>
+        {{-- The visual code for "what changed", as opposed to "which side wins" --}}
+        <span><span class="tag-V ring-2 ring-amber-400/80 mr-1">V</span> {{ __('merge_preview.legend_tag_differs') }}</span>
+        <span><span class="opacity-50 mr-1">Abc</span> {{ __('merge_preview.legend_same_text') }}</span>
     </div>
 </div>
 
@@ -849,8 +854,34 @@ document.addEventListener('alpine:init', () => {
          * offering to upload.
          */
         entriesDiffer(key) {
-            return this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key])
-                || this.getTag(this.localData[key]) !== this.getTag(this.onlineData[key]);
+            return this.valueDiffers(key) || this.tagDiffers(key);
+        },
+
+        /** Halves of the rule above. Both assume the key exists on both sides. */
+        valueDiffers(key) {
+            return this.getValue(this.localData[key]) !== this.getValue(this.onlineData[key]);
+        },
+
+        tagDiffers(key) {
+            return this.getTag(this.localData[key]) !== this.getTag(this.onlineData[key]);
+        },
+
+        /**
+         * Display helpers — a row carries TWO pieces of information, and the
+         * selection highlight only ever said which SIDE was kept, never which of
+         * the two actually changed. A tag-only change left the text highlighted
+         * as though the wording were at stake.
+         *
+         * So: dim what is identical, ring what differs. Nothing is added to the
+         * screen; the eye simply lands on what matters. Safe on one-sided rows
+         * (added or removed lines), where everything is relevant by definition.
+         */
+        valueUnchanged(key) {
+            return key in this.localData && key in this.onlineData && !this.valueDiffers(key);
+        },
+
+        tagChangedBetweenSides(key) {
+            return key in this.localData && key in this.onlineData && this.tagDiffers(key);
         },
 
         calculateStats() {

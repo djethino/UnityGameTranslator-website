@@ -727,6 +727,8 @@
     "merge_preview.online_version": "Online versie",
     "merge_preview.no_differences": "Geen verschillen gevonden tussen lokale en online versies.",
     "merge_preview.settings_differ": "Ook de vertaalinstellingen (lettertypen, afbeeldingen, uitsluitingen, variabelen) verschillen. Ze worden hier niet vergeleken — pas ze aan in de mod, een volledige upload publiceert ze.",
+    "merge_preview.legend_tag_differs": "tag gewijzigd",
+    "merge_preview.legend_same_text": "identieke tekst",
     "merge_preview.selections_made": "selecties gemaakt",
     "merge_preview.modifications": "wijzigingen",
     "merge_preview.edited_manually": "handmatig bewerkt",

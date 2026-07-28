@@ -727,6 +727,8 @@
     "merge_preview.online_version": "Phiên bản online",
     "merge_preview.no_differences": "Không tìm thấy khác biệt giữa phiên bản cục bộ và online.",
     "merge_preview.settings_differ": "Cài đặt dịch (phông chữ, hình ảnh, loại trừ, biến) cũng khác nhau. Chúng không được so sánh ở đây — hãy đổi trong mod, bản tải lên đầy đủ sẽ công bố chúng.",
+    "merge_preview.legend_tag_differs": "tag đã đổi",
+    "merge_preview.legend_same_text": "văn bản giống nhau",
     "merge_preview.selections_made": "lựa chọn đã thực hiện",
     "merge_preview.modifications": "thay đổi",
     "merge_preview.edited_manually": "chỉnh sửa thủ công",

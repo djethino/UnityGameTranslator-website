@@ -727,6 +727,8 @@
     "merge_preview.online_version": "النسخة المتصلة",
     "merge_preview.no_differences": "لم يتم العثور على اختلافات بين النسختين المحلية والمتصلة.",
     "merge_preview.settings_differ": "تختلف أيضًا إعدادات الترجمة (الخطوط، الصور، الاستثناءات، المتغيرات). لا تُقارَن هنا — غيّرها من الـ mod، وسينشرها الرفع الكامل.",
+    "merge_preview.legend_tag_differs": "تغيّر الوسم",
+    "merge_preview.legend_same_text": "نص مطابق",
     "merge_preview.selections_made": "اختيارات تمت",
     "merge_preview.modifications": "تعديلات",
     "merge_preview.edited_manually": "معدل يدوياً",

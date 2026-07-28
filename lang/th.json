@@ -727,6 +727,8 @@
     "merge_preview.online_version": "เวอร์ชันออนไลน์",
     "merge_preview.no_differences": "ไม่พบความแตกต่างระหว่างเวอร์ชันในเครื่องและออนไลน์",
     "merge_preview.settings_differ": "การตั้งค่าการแปล (ฟอนต์ รูปภาพ รายการยกเว้น ตัวแปร) ก็ต่างกันด้วย ที่นี่ไม่ได้เปรียบเทียบส่วนนั้น — แก้ไขในม็อด แล้วการอัปโหลดแบบเต็มจะเผยแพร่ให้",
+    "merge_preview.legend_tag_differs": "แท็กเปลี่ยน",
+    "merge_preview.legend_same_text": "ข้อความเหมือนกัน",
     "merge_preview.selections_made": "การเลือกที่ทำ",
     "merge_preview.modifications": "การแก้ไข",
     "merge_preview.edited_manually": "แก้ไขด้วยตนเอง",

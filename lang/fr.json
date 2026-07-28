@@ -727,6 +727,8 @@
     "merge_preview.online_version": "Version en ligne",
     "merge_preview.no_differences": "Aucune différence trouvée entre les versions locale et en ligne.",
     "merge_preview.settings_differ": "Les réglages de traduction (polices, images, exclusions, variables) diffèrent aussi. Ils ne se comparent pas ici : modifiez-les depuis le mod, un envoi complet les publiera.",
+    "merge_preview.legend_tag_differs": "tag modifié",
+    "merge_preview.legend_same_text": "texte identique",
     "merge_preview.selections_made": "sélections faites",
     "merge_preview.modifications": "modifications",
     "merge_preview.edited_manually": "éditées manuellement",

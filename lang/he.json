@@ -727,6 +727,8 @@
     "merge_preview.online_version": "גרסה מקוונת",
     "merge_preview.no_differences": "לא נמצאו הבדלים בין הגרסאות המקומית והמקוונת.",
     "merge_preview.settings_differ": "גם הגדרות התרגום (גופנים, תמונות, החרגות, משתנים) שונות. הן אינן מושוות כאן — שנו אותן במוד, והעלאה מלאה תפרסם אותן.",
+    "merge_preview.legend_tag_differs": "התג השתנה",
+    "merge_preview.legend_same_text": "טקסט זהה",
     "merge_preview.selections_made": "בחירות שנעשו",
     "merge_preview.modifications": "שינויים",
     "merge_preview.edited_manually": "נערך ידנית",

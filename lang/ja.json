@@ -727,6 +727,8 @@
     "merge_preview.online_version": "オンラインバージョン",
     "merge_preview.no_differences": "ローカルバージョンとオンラインバージョン間に違いはありません。",
     "merge_preview.settings_differ": "翻訳設定（フォント、画像、除外、変数）にも違いがあります。ここでは比較しません — Mod側で変更すれば、通常のアップロードで反映されます。",
+    "merge_preview.legend_tag_differs": "タグ変更",
+    "merge_preview.legend_same_text": "同じテキスト",
     "merge_preview.selections_made": "件の選択",
     "merge_preview.modifications": "件の変更",
     "merge_preview.edited_manually": "手動編集済み",

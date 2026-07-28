@@ -727,6 +727,8 @@
     "merge_preview.online_version": "온라인 버전",
     "merge_preview.no_differences": "로컬 버전과 온라인 버전 간에 차이가 없습니다.",
     "merge_preview.settings_differ": "번역 설정(글꼴, 이미지, 제외 항목, 변수)도 다릅니다. 여기서는 비교하지 않습니다 — 모드에서 변경하면 전체 업로드로 게시됩니다.",
+    "merge_preview.legend_tag_differs": "태그 변경",
+    "merge_preview.legend_same_text": "동일한 텍스트",
     "merge_preview.selections_made": "개의 선택",
     "merge_preview.modifications": "개의 수정",
     "merge_preview.edited_manually": "수동 편집됨",

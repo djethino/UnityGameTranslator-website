@@ -727,6 +727,8 @@
     "merge_preview.online_version": "在线版本",
     "merge_preview.no_differences": "本地版本与在线版本之间没有发现差异。",
     "merge_preview.settings_differ": "翻译设置（字体、图片、排除项、变量）也存在差异。此处不作比较——请在模组中修改，完整上传时会一并发布。",
+    "merge_preview.legend_tag_differs": "标记已变",
+    "merge_preview.legend_same_text": "文本相同",
     "merge_preview.selections_made": "个选择",
     "merge_preview.modifications": "处修改",
     "merge_preview.edited_manually": "处手动编辑",

@@ -727,6 +727,8 @@
     "merge_preview.online_version": "ऑनलाइन वर्शन",
     "merge_preview.no_differences": "लोकल और ऑनलाइन वर्शन के बीच कोई अंतर नहीं मिला।",
     "merge_preview.settings_differ": "अनुवाद सेटिंग्स (फ़ॉन्ट, चित्र, अपवाद, वेरिएबल) भी अलग हैं। इनकी तुलना यहाँ नहीं होती — इन्हें मॉड में बदलें, पूरा अपलोड इन्हें प्रकाशित कर देगा।",
+    "merge_preview.legend_tag_differs": "टैग बदला",
+    "merge_preview.legend_same_text": "समान पाठ",
     "merge_preview.selections_made": "चयन किए गए",
     "merge_preview.modifications": "संशोधन",
     "merge_preview.edited_manually": "मैन्युअली एडिट किया गया",
