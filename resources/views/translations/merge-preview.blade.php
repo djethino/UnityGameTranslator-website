@@ -412,7 +412,10 @@
                     </span>
                 </span>
                 {{-- One line per gesture, with the same icons as the table --}}
-                <div x-show="totalChanges === 0" class="text-gray-500 space-y-1">
+                {{-- Small type: read once, then only glanced at, in a bar
+                     pinned over the rows being edited (parity with the
+                     edit-session and merge editors) --}}
+                <div x-show="totalChanges === 0" class="text-gray-500 text-xs leading-snug space-y-0.5">
                     <p>
                         <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('merge.instructions_select') }}
                         <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>

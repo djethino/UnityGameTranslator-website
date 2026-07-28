@@ -337,7 +337,11 @@
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
                 </span>
                 {{-- One line per gesture, with the same icons as the table --}}
-                <div x-show="totalChanges === 0 && !saveMessage" class="text-gray-500 space-y-1">
+                {{-- Smaller than the rest of the bar on purpose: these are
+                     read once and then only glanced at, while the bar they sit
+                     in is pinned over the rows being edited. Same treatment in
+                     the merge and merge-preview editors. --}}
+                <div x-show="totalChanges === 0 && !saveMessage" class="text-gray-500 text-xs leading-snug space-y-0.5">
                     <p>
                         <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('edit_session.instructions_validate') }}
                         <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
