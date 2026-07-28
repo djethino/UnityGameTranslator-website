@@ -304,9 +304,13 @@
                             {{-- Key column --}}
                             <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
 
-                            {{-- Local Tag column (clickable for tag change) --}}
+                            {{-- Local Tag column (clickable for tag change).
+                                 Carries the selection colour like its online
+                                 counterpart: both cells of a side belong to that
+                                 side, and colouring only one of the two made the
+                                 local pick look half-selected. --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="hasTagChange(key) ? 'tag-changed-cell' : ''">
+                                :class="[getCellClass(key, 'local'), hasTagChange(key) ? 'tag-changed-cell' : '']">
                                 <template x-if="localData[key] !== undefined">
                                     {{-- Shows the tag the save will PRODUCE (edit → H,
                                          sent local selection → A promoted to V), not just the stored one --}}
