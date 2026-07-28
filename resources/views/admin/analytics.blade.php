@@ -182,8 +182,9 @@
                 <span class="text-base font-normal text-gray-500">/ {{ number_format($liveCapacity['sessions_max']) }}</span>
             @endif
         </p>
+        {{-- A zero peak is a measurement, not a missing one --}}
         <p class="text-xs text-gray-500 mt-1">
-            {{ $peaks['sessions_at'] ? $peaks['sessions_at']->format('d/m H:i') . ' UTC' : 'No reading yet' }}
+            {{ $peaks['sessions_at'] ? $peaks['sessions_at']->format('d/m H:i') . ' UTC' : 'No session in this period' }}
         </p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -195,7 +196,7 @@
             @endif
         </p>
         <p class="text-xs text-gray-500 mt-1">
-            {{ $peaks['streams_at'] ? $peaks['streams_at']->format('d/m H:i') . ' UTC' : 'No reading yet' }}
+            {{ $peaks['streams_at'] ? $peaks['streams_at']->format('d/m H:i') . ' UTC' : 'No stream in this period' }}
         </p>
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -251,13 +252,17 @@
             Daily peaks against the stream ceiling. Sampled every 5 minutes, so a shorter spike can slip
             through — "Sessions refused" above is the exact count.
         </p>
-        @if(count($chartLabels) > 0 && (array_sum($chartPeakSessions) > 0 || array_sum($chartPeakStreams) > 0))
+        {{-- Drawn even when every reading is zero: a flat line under the ceiling
+             is the answer to "am I close to saturating", and a far better one
+             than a message claiming nothing was measured. The empty state below
+             means there is no day to plot at all, not a quiet period. --}}
+        @if(count($chartLabels) > 0)
             <div class="h-64">
                 <canvas id="concurrencyChart"></canvas>
             </div>
         @else
             <div class="h-64 flex items-center justify-center">
-                <p class="text-gray-500 text-sm">No concurrency readings yet — the first one lands within 5 minutes.</p>
+                <p class="text-gray-500 text-sm">Nothing to plot yet — readings start within 5 minutes.</p>
             </div>
         @endif
     </div>
@@ -425,7 +430,7 @@
         hasBrowserData: {{ $hasBrowserData ? 'true' : 'false' }},
         browserLabels: @json(array_keys($allBrowsers)),
         browserValues: @json(array_values($allBrowsers)),
-        hasConcurrencyData: {{ (count($chartLabels) > 0 && (array_sum($chartPeakSessions) > 0 || array_sum($chartPeakStreams) > 0)) ? 'true' : 'false' }},
+        hasConcurrencyData: {{ count($chartLabels) > 0 ? 'true' : 'false' }},
         peakSessions: @json($chartPeakSessions),
         peakStreams: @json($chartPeakStreams),
         // Drawn as a flat line so the headroom is visible at a glance, rather
