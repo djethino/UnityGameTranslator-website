@@ -85,9 +85,41 @@ class SyncStateController extends Controller
             ];
 
             if ($role === 'main') {
-                $state['branches_count'] = Translation::where('file_uuid', $uuid)
+                $branches = Translation::where('file_uuid', $uuid)
                     ->where('visibility', 'branch')
+                    ->get(['id', 'file_hash', 'reviewed_hash']);
+
+                $state['branches_count'] = $branches->count();
+
+                // A count alone says nothing: it does not move when a contributor
+                // pushes new work to a branch already counted. What the Main owner
+                // needs to hear about is what has NOT been reviewed yet — never
+                // reviewed, or changed since the last review.
+                $state['branches_pending_review'] = $branches
+                    ->filter(fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)
                     ->count();
+            } else {
+                // A branch used to learn nothing about the Main it derives from:
+                // this block stopped here, so `main` stayed null and the branch
+                // diverged in silence, however long the Main kept moving.
+                // Additive field: an older mod simply ignores it.
+                $main = Translation::where('file_uuid', $uuid)
+                    ->where('visibility', 'public')
+                    ->with('user:id,name')
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+
+                if ($main) {
+                    $state['main'] = [
+                        'id' => $main->id,
+                        'uploader' => $main->user->name ?? '',
+                        'source_language' => $main->source_language,
+                        'target_language' => $main->target_language,
+                        'line_count' => $main->line_count,
+                        'file_hash' => $main->file_hash,
+                        'updated_at' => $main->updated_at->toIso8601String(),
+                    ];
+                }
             }
 
             if ($clientHash) {
