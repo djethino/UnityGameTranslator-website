@@ -116,6 +116,10 @@ class EditSessionController extends Controller
             'game_connected' => SsePublisher::isGameStreamConnected($session->mod_key),
             'game_responding' => $session->isGameResponding(),
             'game_seen_seconds_ago' => $session->gameSeenSecondsAgo(),
+            // Edits saved here that the game has not fetched yet. "Saved" is not
+            // "applied in-game", and the difference is exactly what the user
+            // stands to lose if they walk away from a game that never comes back.
+            'pending_changes' => $session->pending_changes,
         ]);
     }
 
@@ -286,6 +290,11 @@ class EditSessionController extends Controller
         if ($session->touchBrowserSeen()) {
             SsePublisher::editSessionBrowserJoined($session->mod_key);
         }
+
+        // Saved here is not applied in-game: count it as owed to the game until
+        // the mod fetches the file. Guards the editor's honesty AND the early
+        // collection of abandoned sessions.
+        $session->addPendingChanges($modifiedCount + $deletedCount);
 
         $lineCount = count(array_filter(
             array_keys($content),

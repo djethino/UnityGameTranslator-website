@@ -767,9 +767,15 @@ document.addEventListener('alpine:init', () => {
                 }
                 return 'other';
             }
+            // Tag included, not just the text: a branch that only validated a
+            // line (A → V) has genuinely diverged from Main, and treating it as
+            // identical hides the very change the branch was made for.
             const mainValue = this.getValue(this.mainData[key]);
+            const mainTag = this.getTag(this.mainData[key]);
             for (const branch of this.branches) {
-                if (key in branch.content && this.getValue(branch.content[key]) !== mainValue) {
+                if (!(key in branch.content)) continue;
+                if (this.getValue(branch.content[key]) !== mainValue
+                    || this.getTag(branch.content[key]) !== mainTag) {
                     return 'diff';
                 }
             }

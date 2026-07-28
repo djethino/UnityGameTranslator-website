@@ -401,9 +401,17 @@
              so it keeps the amber panel the top banner used to have. Dressing
              both the same way makes the one that matters invisible. --}}
         <div x-show="gameConnected === true" x-cloak
-            class="mt-3 pt-3 border-t border-gray-700 flex items-center gap-2 text-sm">
+            class="mt-3 pt-3 border-t border-gray-700 flex flex-wrap items-center gap-x-3 text-sm">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
             <span class="text-green-400">{{ __('edit_session.game_connected') }}</span>
+            {{-- Shown even when connected: the game fetches within seconds, so
+                 this normally flashes by — and if it lingers, that is worth
+                 seeing. The number is bound separately from the wording:
+                 translated text must never go through an Alpine expression. --}}
+            <span x-show="pendingChanges > 0" x-cloak class="text-gray-400">
+                <i class="fas fa-clock mr-1"></i><span x-text="pendingChanges"></span>
+                {{ __('edit_session.pending_for_game') }}
+            </span>
         </div>
 
         {{-- One line, not two stacked: this sits in a sticky bar, where every
@@ -418,10 +426,14 @@
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></span>
             <span class="text-amber-200 font-semibold text-sm shrink-0">{{ __('edit_session.game_disconnected') }}</span>
             <span class="text-amber-100/90 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
-            {{-- Said here and only here: leaving is only destructive while the
-                 game is gone too. With the game connected, closing the tab
-                 costs nothing. --}}
-            <span class="text-amber-200/70 text-xs leading-snug italic">{{ __('edit_session.abandoned_warning') }}</span>
+            {{-- What is actually at stake, in figures --}}
+            <span x-show="pendingChanges > 0" x-cloak class="text-amber-100 text-xs font-semibold">
+                <i class="fas fa-clock mr-1"></i><span x-text="pendingChanges"></span>
+                {{ __('edit_session.pending_for_game') }}
+            </span>
+            {{-- Only true once everything has reached the game: while edits are
+                 still waiting, the session is kept for the full day instead. --}}
+            <span x-show="pendingChanges === 0" x-cloak class="text-amber-200/70 text-xs leading-snug italic">{{ __('edit_session.abandoned_warning') }}</span>
         </div>
         </div>
     </div>
@@ -579,6 +591,8 @@ document.addEventListener('alpine:init', () => {
         // whenever the server cannot tell — never rendered as a disconnection.
         gameConnected: null,
         _gameDownStreak: 0,
+        // Edits saved here that the game has not fetched yet
+        pendingChanges: 0,
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
         // Per-line AI retranslation, executed by the PLAYER's own backend:
         // the request travels to the mod over SSE, the result comes back
@@ -879,6 +893,9 @@ document.addEventListener('alpine:init', () => {
                         this.aiAvailable = state.ai_available;
                     }
                     this.applyGamePresence(state);
+                    if (typeof state.pending_changes === 'number') {
+                        this.pendingChanges = state.pending_changes;
+                    }
                     if (this.currentHash === null) {
                         this.currentHash = state.content_hash;
                         return;

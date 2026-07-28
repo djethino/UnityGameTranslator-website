@@ -99,6 +99,7 @@ class EditSessionToken extends Model
         'expires_at',
         'consumed_at',
         'content_hash',
+        'pending_changes',
         'ai_available',
         'ai_model',
         'browser_last_seen_at',
@@ -109,6 +110,7 @@ class EditSessionToken extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'consumed_at' => 'datetime',
+        'pending_changes' => 'integer',
         'ai_available' => 'boolean',
         'browser_last_seen_at' => 'datetime',
         'browser_left_at' => 'datetime',
@@ -237,6 +239,32 @@ class EditSessionToken extends Model
             'game_last_seen_at' => now(),
             'expires_at' => self::inactivityDeadline(),
         ]);
+    }
+
+    /**
+     * Count edits the browser just saved but the game has not read yet.
+     * "Saved" is not "applied in-game": until the mod fetches the file, this
+     * session is the only place that work exists.
+     */
+    public function addPendingChanges(int $count): void
+    {
+        if ($count <= 0) {
+            return;
+        }
+
+        $this->increment('pending_changes', $count);
+    }
+
+    /**
+     * The game has just read the whole file: nothing is waiting any more.
+     * Called from the mod's content download, which is the only proof that
+     * edits actually reached the player's machine.
+     */
+    public function clearPendingChanges(): void
+    {
+        if ($this->pending_changes > 0) {
+            $this->update(['pending_changes' => 0]);
+        }
     }
 
     /** End of the inactivity window, counted from now. */
@@ -391,11 +419,18 @@ class EditSessionToken extends Model
      * keeping the row for another day only holds one of the few concurrency
      * slots the host allows, and a multi-MB file with it.
      *
-     * Both conditions are required, and both are POSITIVE signals rather than
-     * mere silence: a browser that vanished without its beacon (crash, killed
-     * tab) never matches here and falls back to the full window. Erring towards
-     * keeping is the right way round — the cost is a slot, the alternative is
-     * someone's editing session.
+     * Three conditions, and none of them is mere silence:
+     *  - the game stopped calling in
+     *  - the page said goodbye through its pagehide beacon (a tab that vanished
+     *    without it — browser crash, killed tab — falls back to the full window)
+     *  - AND the game has read everything the browser saved
+     *
+     * That last one is what makes this safe at all. Saving in the browser does
+     * not put the work on the player's machine; until the mod fetches the file,
+     * this session is the only place it exists. Collecting such a session an
+     * hour later would destroy work the player was told was saved — the very
+     * opposite of what the long window is for. Erring towards keeping is the
+     * right way round: the cost is one slot, the alternative is someone's work.
      */
     public const ABANDONED_TTL_MINUTES = 60;
 
@@ -404,6 +439,7 @@ class EditSessionToken extends Model
         $cutoff = now()->subMinutes(self::ABANDONED_TTL_MINUTES);
 
         return self::query()
+            ->where('pending_changes', 0)
             ->whereNotNull('browser_left_at')
             ->where('browser_left_at', '<', $cutoff)
             ->whereNotNull('game_last_seen_at')

@@ -77,6 +77,15 @@
             </div>
         </div>
 
+        {{-- Settings are part of the file but not of this comparison: there is no
+             row to show and no side to pick for a font or an exclusion list. Say
+             they differ, say where they are edited, and leave it at that. --}}
+        <div x-show="settingsDiffer" x-cloak
+            class="mb-4 flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm">
+            <i class="fas fa-sliders text-gray-500"></i>
+            <span class="text-gray-400">{{ __('merge_preview.settings_differ') }}</span>
+        </div>
+
         @include('partials.editor-quality-bar')
 
         {{-- Filters --}}
@@ -621,6 +630,8 @@ document.addEventListener('alpine:init', () => {
         localData: {},
         onlineData: {},
         onlineMetadata: {},
+        // Fonts, images, exclusions, variables: reported, never merged here
+        settingsDiffer: false,
         allKeys: [],
         selections: {},
         stats: {
@@ -719,7 +730,11 @@ document.addEventListener('alpine:init', () => {
 
             // Filter out metadata keys from local and normalize line endings
             this.localData = {};
+            const localMetadata = {};
             for (const [key, value] of Object.entries(content)) {
+                if (key.startsWith('_')) {
+                    localMetadata[key] = value;
+                }
                 if (!key.startsWith('_')) {
                     const normalizedKey = normalizeLineEndings(key);
                     let normalizedValue = value;
@@ -754,9 +769,33 @@ document.addEventListener('alpine:init', () => {
                 ...Object.keys(this.onlineData)
             ])].sort();
 
+            this.settingsDiffer = this.compareSettings(localMetadata, this.onlineMetadata);
+
             this.calculateStats();
             this.applySmartDefaults();
             this.loaded = true;
+        },
+
+        /**
+         * Do the translation SETTINGS differ between local and online?
+         *
+         * Fonts, images, exclusions and variables travel in the file alongside
+         * the lines, but they are not lines: there is no row to show, no side to
+         * pick. They are edited in the mod and published by a full upload, never
+         * from this page — which is why this only reports that they differ.
+         *
+         * Sync bookkeeping (_uuid, _source, _local_changes...) is excluded: it
+         * differs by construction and would cry wolf on every comparison.
+         */
+        compareSettings(local, online) {
+            const SETTINGS_KEYS = [
+                '_fonts', '_font_overrides', '_image_replacements',
+                '_exclusions', '_variables', '_settings',
+            ];
+
+            return SETTINGS_KEYS.some(key =>
+                JSON.stringify(local[key] ?? null) !== JSON.stringify(online[key] ?? null)
+            );
         },
 
         /**
@@ -812,12 +851,16 @@ document.addEventListener('alpine:init', () => {
                 } else if (!hasLocal && hasOnline) {
                     this.stats.onlineOnly++;
                 } else if (hasLocal && hasOnline) {
-                    const localVal = this.getValue(this.localData[key]);
-                    const onlineVal = this.getValue(this.onlineData[key]);
-                    if (localVal !== onlineVal) {
-                        this.stats.different++;
-                    } else {
+                    // Tag included, not just the text: validating an AI line
+                    // (A → V) leaves the wording untouched yet is a change worth
+                    // publishing. Comparing values alone reported "no
+                    // differences" on a file the mod was offering to upload.
+                    const sameValue = this.getValue(this.localData[key]) === this.getValue(this.onlineData[key]);
+                    const sameTag = this.getTag(this.localData[key]) === this.getTag(this.onlineData[key]);
+                    if (sameValue && sameTag) {
                         this.stats.same++;
+                    } else {
+                        this.stats.different++;
                     }
                 }
             }
@@ -1175,12 +1218,16 @@ document.addEventListener('alpine:init', () => {
                     sourceType = 'local';
                     isRealChange = true;
                 } else if (hasLocal && hasOnline && source === 'local') {
-                    // Both exist, local selected - only send if value differs
+                    // Both exist, local selected — send if the value OR the tag
+                    // differs. Tag-only differences are real changes to publish
+                    // (a validated line), and dropping them here would silently
+                    // discard exactly what the row was showing.
                     const localValue = this.getValue(this.localData[key]);
-                    const onlineValue = this.getValue(this.onlineData[key]);
-                    if (localValue !== onlineValue) {
+                    const localTag = this.getTag(this.localData[key]);
+                    if (localValue !== this.getValue(this.onlineData[key])
+                        || localTag !== this.getTag(this.onlineData[key])) {
                         value = localValue;
-                        tag = this.getTag(this.localData[key]);
+                        tag = localTag;
                         sourceType = 'local';
                         isRealChange = true;
                     }

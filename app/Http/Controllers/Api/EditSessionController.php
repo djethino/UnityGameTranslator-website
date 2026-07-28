@@ -164,8 +164,13 @@ class EditSessionController extends Controller
         }
 
         // Counts as game presence: only the mod holds the key, and it only
-        // fetches when it is running and applying a save in-game
+        // fetches when it is running and applying a save in-game.
+        //
+        // This is also the ONLY proof that browser edits reached the player's
+        // machine, so it is where the pending counter is cleared — and what
+        // makes it safe to collect an abandoned session early.
         $session->touchGameSeen();
+        $session->clearPendingChanges();
 
         return response()->stream(function () use ($path) {
             readfile($path);

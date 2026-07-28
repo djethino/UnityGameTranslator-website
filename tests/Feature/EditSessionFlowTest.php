@@ -506,6 +506,39 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
     }
 
+    public function test_unfetched_edits_survive_the_early_collection(): void
+    {
+        // Saving in the browser does NOT put the work on the player's machine.
+        // Until the mod fetches the file, this session is the only place it
+        // exists — collecting it an hour later would destroy work the user was
+        // told was saved.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->postJson('/edit-session-save', [
+            'selections' => [['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual']],
+        ])->assertOk();
+        $this->assertSame(1, $session->fresh()->pending_changes);
+
+        $this->post('/edit-session-leave')->assertNoContent();
+        $this->travel(EditSessionToken::ABANDONED_TTL_MINUTES + 1)->minutes();
+        EditSessionToken::cleanupExpired();
+
+        $this->assertDatabaseCount('edit_session_tokens', 1);
+
+        // The game comes back and reads the file: nothing is owed any more, and
+        // only now does the session become disposable
+        $this->get('/api/v1/edit-session/' . $session->mod_key . '/content')->assertOk();
+        $this->assertSame(0, $session->fresh()->pending_changes);
+
+        $this->post('/edit-session-leave')->assertNoContent();
+        $this->travel(EditSessionToken::ABANDONED_TTL_MINUTES + 1)->minutes();
+        EditSessionToken::cleanupExpired();
+
+        $this->assertDatabaseCount('edit_session_tokens', 0);
+    }
+
     public function test_a_session_both_sides_left_is_collected_early(): void
     {
         $this->initSession();
