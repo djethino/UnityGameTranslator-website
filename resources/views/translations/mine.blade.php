@@ -85,11 +85,14 @@
                 </div>
                 @php $branchCount = $branchCounts[$translation->file_uuid] ?? 0; @endphp
                 <div class="flex gap-2">
-                    @if($translation->isMain())
-                    {{-- Edit translations (always available for Main) --}}
+                    {{-- Correcting one's own lines is not a Main privilege: a branch
+                         author edits their work from the site like anyone else, without
+                         the game running. Only the MERGE view below stays Main-only,
+                         since a branch never sees another branch. --}}
                     <a href="{{ route('translations.merge', ['uuid' => $translation->file_uuid, 'mode' => 'edit']) }}" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_translations') }}">
                         <i class="fas fa-pen"></i>
                     </a>
+                    @if($translation->isMain())
                     {{-- Merge branches (highlighted when branches exist) --}}
                     @if($branchCount > 0)
                     <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded inline-flex items-center gap-1.5" title="{{ __('my_translations.merge_branches', ['count' => $branchCount]) }}">

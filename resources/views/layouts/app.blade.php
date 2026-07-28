@@ -337,6 +337,13 @@
                 {{ session('success') }}
             </div>
         @endif
+        {{-- Neither a success nor a failure: something was deliberately NOT
+             done, and the user has to know which part. --}}
+        @if(session('warning'))
+            <div class="bg-amber-900 border border-amber-700 text-amber-100 px-4 py-3 rounded mb-6">
+                <i class="fas fa-triangle-exclamation mr-2"></i>{{ session('warning') }}
+            </div>
+        @endif
         @if(session('error'))
             <div class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-6">
                 {{ session('error') }}

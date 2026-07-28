@@ -532,6 +532,7 @@
     "merge.title": "मर्ज",
     "merge.heading": "मर्ज व्यू",
     "merge.edit_heading": "अनुवाद संपादित करें",
+    "merge.conflicts_skipped": "आपके संपादन के दौरान सर्वर पर :count पंक्ति(यों) में बदलाव हुआ और उन्हें अधिलेखित नहीं किया गया: :keys",
     "merge.mode_edit": "संपादित करें",
     "merge.mode_merge": "मर्ज",
     "merge.keys_count": ":count कीज़",

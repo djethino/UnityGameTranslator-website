@@ -16,25 +16,40 @@ class MergeController extends Controller
     ) {}
 
     /**
-     * Show the merge view for a Main translation.
-     * Only the Main owner can access this page.
+     * The caller's own translation in this lineage, Main or branch alike.
+     *
+     * Correcting one's own lines from the site has nothing to do with owning
+     * the Main: a branch author edits their work exactly like anyone else.
+     * What stays reserved to the Main is the MERGE view, because branches are
+     * only ever visible to the Main they contribute to — a branch never sees
+     * another branch. (file_uuid, user_id) is unique, so this matches one row.
+     */
+    private function ownTranslation(string $uuid): Translation
+    {
+        return Translation::where('file_uuid', $uuid)
+            ->where('user_id', auth()->id())
+            ->with(['game', 'user'])
+            ->firstOrFail();
+    }
+
+    /**
+     * Show the editor for the caller's own translation in this lineage.
+     * Branches get the edit mode only; merge is the Main's view.
      */
     public function show(Request $request, string $uuid)
     {
-        $user = auth()->user();
+        $main = $this->ownTranslation($uuid);
+        // Visibility, not isMain(): that helper also requires being the oldest
+        // row of the lineage, which says nothing about who owns the Main here
+        // (and ties the answer to creation-timestamp ordering).
+        $isMain = $main->visibility === 'public';
 
-        // Verify that the user is the Main owner
-        $main = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'public')
-            ->where('user_id', $user->id)
-            ->with(['game', 'user'])
-            ->firstOrFail();
-
-        // Mode: 'edit' = focus on Main only, 'merge' = show branches
-        $mode = $request->input('mode', 'merge');
+        // Mode: 'edit' = my own lines only, 'merge' = with branches (Main only).
+        // A branch has nothing to merge, so it never leaves edit mode.
+        $mode = $isMain ? $request->input('mode', 'merge') : 'edit';
 
         // Check if branches exist (lightweight count for switcher visibility)
-        $hasBranches = Translation::where('file_uuid', $uuid)
+        $hasBranches = $isMain && Translation::where('file_uuid', $uuid)
             ->where('visibility', 'branch')
             ->exists();
 
@@ -75,7 +90,8 @@ class MergeController extends Controller
             'selectedBranches',
             'uuid',
             'mode',
-            'hasBranches'
+            'hasBranches',
+            'isMain'
         ));
     }
 
@@ -87,15 +103,10 @@ class MergeController extends Controller
      */
     public function data(Request $request, string $uuid)
     {
-        $user = auth()->user();
+        $main = $this->ownTranslation($uuid);
 
-        $main = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'public')
-            ->where('user_id', $user->id)
-            ->with('user:id,name')
-            ->firstOrFail();
-
-        $mode = $request->input('mode', 'merge');
+        // Same rule as show(): a branch only ever gets its own content
+        $mode = $main->visibility === 'public' ? $request->input('mode', 'merge') : 'edit';
 
         $branchesPayload = [];
         if ($mode !== 'edit') {
@@ -140,12 +151,7 @@ class MergeController extends Controller
     public function apply(Request $request, string $uuid)
     {
         $user = auth()->user();
-
-        // Verify ownership
-        $main = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'public')
-            ->where('user_id', $user->id)
-            ->firstOrFail();
+        $main = $this->ownTranslation($uuid);
 
         // Decode JSON-encoded data (sent as JSON strings to avoid Laravel TrimStrings
         // corrupting translation keys that contain leading/trailing whitespace)
@@ -213,6 +219,7 @@ class MergeController extends Controller
 
         // Apply modifications
         $modifiedCount = 0;
+        $conflicts = [];
         if (!empty($selections)) {
             foreach ($selections as $sel) {
                 // Normalize line endings: \r\n -> \n (forms may convert line endings)
@@ -220,6 +227,31 @@ class MergeController extends Controller
                 $value = $this->translationService->normalizeContent($sel['value']);
                 $tag = $sel['tag'];
                 $source = $sel['source'];
+
+                // Concurrent change guard.
+                //
+                // The file is re-read at save time, so untouched lines already
+                // keep whatever arrived meanwhile — but a line edited on BOTH
+                // sides used to be overwritten in silence. That is the normal
+                // multi-device case: correcting on a laptop while the game
+                // uploads captures from the desktop.
+                //
+                // The page sends the value it loaded ("base"), which is exactly
+                // the common ancestor: if the file no longer holds it, someone
+                // else wrote there first. Such lines are left alone and
+                // reported; everything else still applies, so a conflict on one
+                // line never costs the work done on the others.
+                if (array_key_exists('base', $sel)) {
+                    $base = $this->translationService->normalizeContent((string) $sel['base']);
+                    $current = isset($content[$key])
+                        ? (is_array($content[$key]) ? ($content[$key]['v'] ?? '') : $content[$key])
+                        : null;
+
+                    if ($current !== null && $current !== $base && $current !== $value) {
+                        $conflicts[] = $key;
+                        continue;
+                    }
+                }
 
                 // Tag rules:
                 // - M (Mod UI) and S (Skipped) are preserved as-is (never changed)
@@ -345,7 +377,9 @@ class MergeController extends Controller
         if ($tagChangedCount > 0) {
             $messages[] = "{$tagChangedCount} changement(s) de tag";
         }
-        $successMessage = implode(' et ', $messages) . ' appliquée(s).';
+        $successMessage = $messages
+            ? implode(' et ', $messages) . ' appliquée(s).'
+            : null;
 
         // Preserve query parameters (sort, search, page, filters, branches)
         $queryParams = $request->only([
@@ -354,9 +388,24 @@ class MergeController extends Controller
             'human', 'validated', 'ai', 'skipped', 'mod_ui',
         ]);
 
-        return redirect()
-            ->route('translations.merge', array_merge(['uuid' => $uuid], array_filter($queryParams, fn($v) => $v !== null)))
-            ->with('success', $successMessage);
+        $redirect = redirect()
+            ->route('translations.merge', array_merge(['uuid' => $uuid], array_filter($queryParams, fn($v) => $v !== null)));
+
+        if ($successMessage) {
+            $redirect->with('success', $successMessage);
+        }
+
+        // Named, not just counted: knowing WHICH lines were left alone is the
+        // difference between "check everything again" and "look at these three"
+        if ($conflicts) {
+            $redirect->with('warning', __('merge.conflicts_skipped', [
+                'count' => count($conflicts),
+                'keys' => collect($conflicts)->take(5)->implode(', ')
+                    . (count($conflicts) > 5 ? '…' : ''),
+            ]));
+        }
+
+        return $redirect;
     }
 
     /**

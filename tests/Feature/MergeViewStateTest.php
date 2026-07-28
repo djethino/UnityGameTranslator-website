@@ -197,4 +197,118 @@ class MergeViewStateTest extends TestCase
         $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
         $this->assertSame(['v' => 'Main only', 't' => 'V'], $stored['MainOnly']);
     }
+
+    // ── Branch authors edit their own work too ───────────────────────────
+    // Correcting one's own lines from the site is not a Main privilege. What
+    // stays Main-only is the merge view: a branch never sees another branch.
+
+    /** The branch author, not the Main owner. */
+    private function branchAuthor(Translation $branch): User
+    {
+        return User::findOrFail($branch->user_id);
+    }
+
+    public function test_a_branch_author_can_edit_their_own_translation(): void
+    {
+        [, $uuid, , $branch] = $this->makeMergeView();
+
+        $response = $this->actingAs($this->branchAuthor($branch))
+            ->get(route('translations.merge', ['uuid' => $uuid, 'mode' => 'edit']));
+
+        $response->assertOk();
+        $this->assertStringContainsString('x-data="mergeView"', $response->getContent());
+    }
+
+    public function test_a_branch_author_never_reaches_the_merge_mode(): void
+    {
+        [, $uuid, , $branch] = $this->makeMergeView();
+        $author = $this->branchAuthor($branch);
+
+        // Asking for it explicitly must not leak the Main's other contributors
+        $html = html_entity_decode(
+            $this->actingAs($author)
+                ->get(route('translations.merge', ['uuid' => $uuid, 'mode' => 'merge']))
+                ->assertOk()
+                ->getContent()
+        );
+        $this->assertStringContainsString('mode=edit', $html);
+        $this->assertStringNotContainsString('mode=merge', $html);
+
+        $payload = $this->actingAs($author)
+            ->getJson(route('translations.merge.data', ['uuid' => $uuid, 'mode' => 'merge']))
+            ->assertOk()
+            ->json();
+        $this->assertSame([], $payload['branches']);
+        // And the content served is the branch's own, never the Main's
+        $this->assertArrayHasKey('BranchOnly', $payload['main']);
+    }
+
+    public function test_a_branch_author_saves_into_their_own_file(): void
+    {
+        [, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $this->actingAs($this->branchAuthor($branch))
+            ->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+                'mode' => 'edit',
+                'selections_json' => json_encode([
+                    ['key' => 'BranchOnly', 'value' => 'Corrected', 'tag' => 'A', 'source' => 'manual'],
+                ]),
+            ])
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors();
+
+        $branchContent = json_decode(file_get_contents($branch->fresh()->getSafeFilePath()), true);
+        $mainContent = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+
+        $this->assertSame('Corrected', $branchContent['BranchOnly']['v']);
+        $this->assertArrayNotHasKey('BranchOnly', $mainContent);
+        $this->assertSame('Main value', $mainContent['Shared']['v']);
+    }
+
+    // ── Concurrent edits ─────────────────────────────────────────────────
+    // The normal multi-device case: correcting on a laptop while the game
+    // uploads captures from the desktop.
+
+    public function test_a_line_changed_on_the_server_is_not_overwritten(): void
+    {
+        [$owner, $uuid, $main] = $this->makeMergeView();
+
+        // The game uploaded while the page was open
+        $path = $main->getSafeFilePath();
+        $content = json_decode(file_get_contents($path), true);
+        $content['Shared'] = ['v' => 'Uploaded by the game', 't' => 'A'];
+        file_put_contents($path, json_encode($content, JSON_UNESCAPED_UNICODE));
+
+        $response = $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'edit',
+            'selections_json' => json_encode([
+                // base = what the page loaded, now stale
+                ['key' => 'Shared', 'value' => 'My edit', 'tag' => 'H', 'source' => 'manual', 'base' => 'Main value'],
+                // untouched by the game: must still apply
+                ['key' => 'MainOnly', 'value' => 'Also mine', 'tag' => 'H', 'source' => 'manual', 'base' => 'Main only'],
+            ]),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('warning');
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+        $this->assertSame('Uploaded by the game', $stored['Shared']['v'], 'The concurrent change must survive.');
+        $this->assertSame('Also mine', $stored['MainOnly']['v'], 'One conflict must not cost the other lines.');
+    }
+
+    public function test_an_unchanged_line_still_applies_with_its_base(): void
+    {
+        [$owner, $uuid, $main] = $this->makeMergeView();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'edit',
+            'selections_json' => json_encode([
+                ['key' => 'Shared', 'value' => 'My edit', 'tag' => 'H', 'source' => 'manual', 'base' => 'Main value'],
+            ]),
+        ])->assertRedirect()->assertSessionMissing('warning');
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+        $this->assertSame('My edit', $stored['Shared']['v']);
+    }
 }

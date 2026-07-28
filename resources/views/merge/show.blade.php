@@ -46,12 +46,8 @@
         </p>
     </div>
 
-    {{-- Success message --}}
-    @if(session('success'))
-    <div class="mb-6 bg-green-900/50 border border-green-600 rounded-lg p-4 text-green-300">
-        <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-    </div>
-    @endif
+    {{-- Success and warning banners come from the layout: rendering success
+         here too showed it twice, which reads as two separate saves. --}}
 
     {{-- Error messages --}}
     @if($errors->any())
@@ -1041,7 +1037,12 @@ document.addEventListener('alpine:init', () => {
                 key,
                 value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
                 tag: data.tag,
-                source: data.source
+                source: data.source,
+                // The value this page loaded — the common ancestor. The server
+                // refuses to overwrite a line whose stored value no longer
+                // matches it, which is how a save from here stops clobbering
+                // captures the game uploaded while the page was open.
+                base: this.getValue(this.mainData[key]) ?? ''
             }));
             const deletionsArr = Object.keys(this.deletions);
             const tagChangesArr = Object.entries(this.tagChanges).map(([key, data]) => ({

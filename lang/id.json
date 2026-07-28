@@ -532,6 +532,7 @@
     "merge.title": "Gabungkan",
     "merge.heading": "Tampilan Gabungan",
     "merge.edit_heading": "Edit Terjemahan",
+    "merge.conflicts_skipped": ":count baris berubah di server saat Anda mengedit dan TIDAK ditimpa: :keys",
     "merge.mode_edit": "Edit",
     "merge.mode_merge": "Gabungkan",
     "merge.keys_count": ":count kunci",

@@ -532,6 +532,7 @@
     "merge.title": "Hợp nhất",
     "merge.heading": "Giao diện hợp nhất",
     "merge.edit_heading": "Chỉnh sửa bản dịch",
+    "merge.conflicts_skipped": ":count dòng đã thay đổi trên máy chủ trong khi bạn chỉnh sửa và KHÔNG bị ghi đè: :keys",
     "merge.mode_edit": "Chỉnh sửa",
     "merge.mode_merge": "Hợp nhất",
     "merge.keys_count": ":count khóa",

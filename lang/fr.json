@@ -532,6 +532,7 @@
     "merge.title": "Fusion",
     "merge.heading": "Vue de fusion",
     "merge.edit_heading": "Éditer les traductions",
+    "merge.conflicts_skipped": ":count ligne(s) ont changé sur le serveur pendant votre édition et n'ont PAS été écrasées : :keys",
     "merge.mode_edit": "Éditer",
     "merge.mode_merge": "Fusionner",
     "merge.keys_count": ":count clés",

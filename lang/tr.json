@@ -532,6 +532,7 @@
     "merge.title": "Birleştir",
     "merge.heading": "Birleştirme Görünümü",
     "merge.edit_heading": "Çevirileri düzenle",
+    "merge.conflicts_skipped": "Siz düzenlerken sunucuda :count satır değişti ve ÜZERİNE YAZILMADI: :keys",
     "merge.mode_edit": "Düzenle",
     "merge.mode_merge": "Birleştir",
     "merge.keys_count": ":count anahtar",

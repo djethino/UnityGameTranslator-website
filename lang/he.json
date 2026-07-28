@@ -532,6 +532,7 @@
     "merge.title": "מיזוג",
     "merge.heading": "תצוגת מיזוג",
     "merge.edit_heading": "עריכת תרגומים",
+    "merge.conflicts_skipped": ":count שורות השתנו בשרת בזמן העריכה ולא נדרסו: :keys",
     "merge.mode_edit": "עריכה",
     "merge.mode_merge": "מיזוג",
     "merge.keys_count": ":count מפתחות",

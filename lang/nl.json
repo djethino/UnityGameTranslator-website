@@ -532,6 +532,7 @@
     "merge.title": "Merge",
     "merge.heading": "Merge-weergave",
     "merge.edit_heading": "Vertalingen bewerken",
+    "merge.conflicts_skipped": ":count regel(s) zijn op de server gewijzigd tijdens het bewerken en zijn NIET overschreven: :keys",
     "merge.mode_edit": "Bewerken",
     "merge.mode_merge": "Samenvoegen",
     "merge.keys_count": ":count sleutels",

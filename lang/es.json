@@ -532,6 +532,7 @@
     "merge.title": "Fusionar",
     "merge.heading": "Vista de fusión",
     "merge.edit_heading": "Editar traducciones",
+    "merge.conflicts_skipped": ":count línea(s) cambiaron en el servidor mientras editabas y NO se sobrescribieron: :keys",
     "merge.mode_edit": "Editar",
     "merge.mode_merge": "Fusionar",
     "merge.keys_count": ":count claves",

@@ -532,6 +532,7 @@
     "merge.title": "دمج",
     "merge.heading": "عرض الدمج",
     "merge.edit_heading": "تعديل الترجمات",
+    "merge.conflicts_skipped": "تغيّر :count سطر على الخادم أثناء التحرير ولم تتم الكتابة فوقها: :keys",
     "merge.mode_edit": "تعديل",
     "merge.mode_merge": "دمج",
     "merge.keys_count": ":count مفتاح",

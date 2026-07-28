@@ -532,6 +532,7 @@
     "merge.title": "合并",
     "merge.heading": "合并视图",
     "merge.edit_heading": "编辑翻译",
+    "merge.conflicts_skipped": "编辑期间服务器上有 :count 行发生变化，未被覆盖：:keys",
     "merge.mode_edit": "编辑",
     "merge.mode_merge": "合并",
     "merge.keys_count": ":count 个键",

@@ -532,6 +532,7 @@
     "merge.title": "병합",
     "merge.heading": "병합 보기",
     "merge.edit_heading": "번역 편집",
+    "merge.conflicts_skipped": "편집하는 동안 서버에서 :count개 줄이 변경되어 덮어쓰지 않았습니다: :keys",
     "merge.mode_edit": "편집",
     "merge.mode_merge": "병합",
     "merge.keys_count": ":count개 키",

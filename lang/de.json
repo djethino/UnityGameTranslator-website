@@ -532,6 +532,7 @@
     "merge.title": "Zusammenführen",
     "merge.heading": "Zusammenführungsansicht",
     "merge.edit_heading": "Übersetzungen bearbeiten",
+    "merge.conflicts_skipped": ":count Zeile(n) wurden während Ihrer Bearbeitung auf dem Server geändert und NICHT überschrieben: :keys",
     "merge.mode_edit": "Bearbeiten",
     "merge.mode_merge": "Zusammenführen",
     "merge.keys_count": ":count Schlüssel",

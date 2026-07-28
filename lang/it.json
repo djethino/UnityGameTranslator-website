@@ -532,6 +532,7 @@
     "merge.title": "Unisci",
     "merge.heading": "Vista Fusione",
     "merge.edit_heading": "Modifica traduzioni",
+    "merge.conflicts_skipped": ":count riga/righe sono cambiate sul server durante la modifica e NON sono state sovrascritte: :keys",
     "merge.mode_edit": "Modifica",
     "merge.mode_merge": "Fusione",
     "merge.keys_count": ":count chiavi",

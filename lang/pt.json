@@ -532,6 +532,7 @@
     "merge.title": "Mesclar",
     "merge.heading": "Vista de Mesclagem",
     "merge.edit_heading": "Editar traduções",
+    "merge.conflicts_skipped": ":count linha(s) mudaram no servidor enquanto você editava e NÃO foram sobrescritas: :keys",
     "merge.mode_edit": "Editar",
     "merge.mode_merge": "Mesclar",
     "merge.keys_count": ":count chaves",

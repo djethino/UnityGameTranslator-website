@@ -532,6 +532,7 @@
     "merge.title": "Merge",
     "merge.heading": "Merge View",
     "merge.edit_heading": "Edit Translations",
+    "merge.conflicts_skipped": ":count line(s) changed on the server while you were editing and were NOT overwritten: :keys",
     "merge.mode_edit": "Edit",
     "merge.mode_merge": "Merge",
     "merge.keys_count": ":count keys",

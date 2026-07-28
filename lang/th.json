@@ -532,6 +532,7 @@
     "merge.title": "รวม",
     "merge.heading": "หน้าจอการรวม",
     "merge.edit_heading": "แก้ไขคำแปล",
+    "merge.conflicts_skipped": ":count บรรทัดเปลี่ยนแปลงบนเซิร์ฟเวอร์ขณะที่คุณแก้ไข และไม่ถูกเขียนทับ: :keys",
     "merge.mode_edit": "แก้ไข",
     "merge.mode_merge": "รวม",
     "merge.keys_count": ":count คีย์",

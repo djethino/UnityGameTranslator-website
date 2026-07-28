@@ -532,6 +532,7 @@
     "merge.title": "Scalanie",
     "merge.heading": "Widok scalania",
     "merge.edit_heading": "Edytuj tłumaczenia",
+    "merge.conflicts_skipped": ":count wiersz(y) zmieniło się na serwerze podczas edycji i NIE zostało nadpisanych: :keys",
     "merge.mode_edit": "Edycja",
     "merge.mode_merge": "Scalanie",
     "merge.keys_count": ":count kluczy",

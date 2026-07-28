@@ -532,6 +532,7 @@
     "merge.title": "Слияние",
     "merge.heading": "Просмотр слияния",
     "merge.edit_heading": "Редактировать переводы",
+    "merge.conflicts_skipped": ":count строк(и) изменились на сервере во время редактирования и НЕ были перезаписаны: :keys",
     "merge.mode_edit": "Редактировать",
     "merge.mode_merge": "Слияние",
     "merge.keys_count": ":count ключей",

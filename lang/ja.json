@@ -532,6 +532,7 @@
     "merge.title": "マージ",
     "merge.heading": "マージビュー",
     "merge.edit_heading": "翻訳を編集",
+    "merge.conflicts_skipped": "編集中にサーバー側で :count 行が変更されたため、上書きしませんでした: :keys",
     "merge.mode_edit": "編集",
     "merge.mode_merge": "マージ",
     "merge.keys_count": ":countキー",
