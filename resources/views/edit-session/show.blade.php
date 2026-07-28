@@ -363,7 +363,7 @@
                     <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
                 </button>
 
-                <form method="POST" action="{{ route('edit-session.end') }}"
+                <form method="POST" action="{{ route('edit-session.end', ['s' => $editSession->id]) }}"
                     onsubmit="return confirm(@js(__('edit_session.end_confirm')))">
                     @csrf
                     <button type="submit"
@@ -616,7 +616,7 @@ document.addEventListener('alpine:init', () => {
             // doing them here froze the main thread ~200ms on every mod
             // push (translation files can be tens of MB), stalling cursor
             // and clicks while the game translates
-            this._sync = window.UGT.createLiveSync('{{ route("edit-session.data") }}');
+            this._sync = window.UGT.createLiveSync('{{ route("edit-session.data", ["s" => $editSession->id]) }}');
             this._sync.fetch()
                 .then(result => {
                     // First fetch: the worker sends the full content,
@@ -734,7 +734,7 @@ document.addEventListener('alpine:init', () => {
             this._scheduleNextPoll(); // switch to the fast poll right away
 
             const requestId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
-            const emit = () => fetch('{{ route("edit-session.retranslate") }}', {
+            const emit = () => fetch('{{ route("edit-session.retranslate", ["s" => $editSession->id]) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -855,7 +855,7 @@ document.addEventListener('alpine:init', () => {
             // also fires on refresh, which the mod absorbs with its grace
             // period; the next state poll signals the rejoin)
             window.addEventListener('pagehide', () => {
-                navigator.sendBeacon('{{ route("edit-session.leave") }}');
+                navigator.sendBeacon('{{ route("edit-session.leave", ["s" => $editSession->id]) }}');
             });
         },
 
@@ -880,7 +880,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         checkState() {
-            fetch('{{ route("edit-session.state") }}', { headers: { 'Accept': 'application/json' } })
+            fetch('{{ route("edit-session.state", ["s" => $editSession->id]) }}', { headers: { 'Accept': 'application/json' } })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(response.status === 410 ? 'expired' : 'state_failed');
@@ -1013,7 +1013,7 @@ document.addEventListener('alpine:init', () => {
             }
             const deletions = Object.keys(this.deletions);
 
-            fetch('{{ route("edit-session.save") }}', {
+            fetch('{{ route("edit-session.save", ["s" => $editSession->id]) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

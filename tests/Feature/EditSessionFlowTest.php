@@ -99,8 +99,9 @@ class EditSessionFlowTest extends TestCase
 
         $response = $this->get('/edit-session/' . $session->token);
 
+        // The id pins the tab to ITS session, whatever the browser opens next
         $response->assertStatus(303)
-            ->assertRedirect(route('edit-session.show'));
+            ->assertRedirect(route('edit-session.show', ['s' => $session->id]));
 
         $session->refresh();
         $this->assertNotNull($session->consumed_at);
@@ -679,5 +680,111 @@ class EditSessionFlowTest extends TestCase
             ->first(fn ($c) => $c->getName() === self::SESSION_COOKIE);
         $this->assertNotNull($cleared, 'Ending the session must clear its cookie.');
         $this->assertLessThan(now()->getTimestamp(), $cleared->getExpiresTime());
+    }
+
+    // ── Several games edited at once, in one browser ──────────────────────
+    // One cookie held one token, so opening a second game's editor rebound
+    // every open tab to it: the older tab loaded the other game's file and
+    // its next save wrote into that game's session. The cookie now holds a
+    // list and each page states which session it means.
+
+    /**
+     * Put both sessions in the browser, as two consecutive "open" clicks do.
+     * The plain-text value mirrors what the controller writes (a JSON list);
+     * withCookie() encrypts it the way the middleware expects.
+     */
+    private function openBothInBrowser(EditSessionToken $first, EditSessionToken $second): void
+    {
+        $this->get('/edit-session/' . $first->token);
+        $this->get('/edit-session/' . $second->token);
+        $this->withCookie(self::SESSION_COOKIE, json_encode([$second->token, $first->token]));
+        $this->withCredentials();
+    }
+
+    /** Two live sessions, distinguishable by their content. */
+    private function initTwoSessions(): array
+    {
+        $this->initSession(['Hello' => ['v' => 'Bonjour', 't' => 'A']]);
+        $first = EditSessionToken::latest('id')->first();
+
+        $this->initSession(['Ciao' => ['v' => 'Salut', 't' => 'A']]);
+        $second = EditSessionToken::latest('id')->first();
+
+        return [$first, $second];
+    }
+
+    public function test_two_sessions_in_one_browser_read_their_own_content(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        $firstPayload = json_decode(
+            $this->get('/edit-session-data?s=' . $first->id)->streamedContent(),
+            true
+        );
+        $secondPayload = json_decode(
+            $this->get('/edit-session-data?s=' . $second->id)->streamedContent(),
+            true
+        );
+
+        $this->assertArrayHasKey('Hello', $firstPayload['content']);
+        $this->assertArrayNotHasKey('Ciao', $firstPayload['content']);
+        $this->assertArrayHasKey('Ciao', $secondPayload['content']);
+        $this->assertArrayNotHasKey('Hello', $secondPayload['content']);
+    }
+
+    public function test_a_save_never_lands_in_the_other_session(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        $this->postJson('/edit-session-save?s=' . $first->id, [
+            'selections' => [
+                ['key' => 'Hello', 'value' => 'Salutations', 'tag' => 'M', 'source' => 'manual'],
+            ],
+        ])->assertOk();
+
+        $firstContent = json_decode(file_get_contents($first->getContentFilePath()), true);
+        $secondContent = json_decode(file_get_contents($second->getContentFilePath()), true);
+
+        $this->assertSame('Salutations', $firstContent['Hello']['v']);
+        // The other game's file must not have gained a key it never had
+        $this->assertArrayNotHasKey('Hello', $secondContent);
+        $this->assertSame('Salut', $secondContent['Ciao']['v']);
+    }
+
+    public function test_an_ambiguous_request_is_refused_rather_than_guessed(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        // A tab from before the fix: no id, and two sessions to mean
+        $this->getJson('/edit-session-state')->assertStatus(410);
+
+        // A single remembered session stays unambiguous — old tabs keep working
+        $this->withCookie(self::SESSION_COOKIE, $first->token);
+        $this->getJson('/edit-session-state')->assertOk();
+    }
+
+    public function test_ending_one_session_leaves_the_other_usable(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        $this->post('/edit-session-end?s=' . $first->id)->assertRedirect();
+
+        $this->assertNull(EditSessionToken::find($first->id));
+        $this->getJson('/edit-session-state?s=' . $second->id)->assertOk();
+    }
+
+    public function test_the_bare_page_url_lands_on_the_latest_session(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        // Bookmark or old tab: never "expired" while a session is alive
+        $this->get('/edit-session')
+            ->assertStatus(303)
+            ->assertRedirect(route('edit-session.show', ['s' => $second->id]));
     }
 }

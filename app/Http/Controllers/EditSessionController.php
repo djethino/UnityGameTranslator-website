@@ -38,6 +38,13 @@ class EditSessionController extends Controller
     private const COOKIE_NAME = 'ugt_edit_session';
 
     /**
+     * How many live sessions one browser may hold at once. Someone running
+     * several games edits several of them; the ceiling only exists because a
+     * cookie is capped at 4 KB, and 12 × 64-char tokens stay far below it.
+     */
+    private const MAX_REMEMBERED = 12;
+
+    /**
      * Entry point from the mod: consume the one-time token, bind the
      * session, and redirect to a token-less URL (the token must not linger
      * in browser history, logs or Referer headers).
@@ -58,7 +65,9 @@ class EditSessionController extends Controller
         session()->regenerate();
         $this->rememberSession($session);
 
-        return redirect()->route('edit-session.show', [], 303);
+        // The id travels in the URL so the tab keeps pointing at ITS session
+        // across refreshes, whatever else the browser opens meanwhile
+        return redirect()->route('edit-session.show', ['s' => $session->id], 303);
     }
 
     /**
@@ -66,9 +75,20 @@ class EditSessionController extends Controller
      *
      * GET /edit-session
      */
-    public function show()
+    public function show(Request $request)
     {
         $session = $this->currentSession();
+
+        if (!$session && !$request->filled('s')) {
+            // Bare URL (bookmark, old tab) while several sessions are held:
+            // showing "expired" would be a lie. Pick the latest and pin the
+            // tab to it — choosing which page to display writes nothing.
+            $latest = $this->latestLiveSession();
+
+            if ($latest) {
+                return redirect()->route('edit-session.show', ['s' => $latest->id], 303);
+            }
+        }
 
         if (!$session) {
             return view('edit-session.expired');
@@ -329,7 +349,9 @@ class EditSessionController extends Controller
             $session->deleteWithFile();
         }
 
-        Cookie::queue(Cookie::forget(self::COOKIE_NAME));
+        // Drop THIS session only: ending one game's editor must not sign the
+        // browser out of the other games it still has open
+        $this->forgetSession($session);
 
         return redirect()->route('home')->with('success', __('edit_session.ended'));
     }
@@ -338,28 +360,143 @@ class EditSessionController extends Controller
      * Bind the session to this browser, and slide the cookie forward on every
      * request that finds it: the cookie must never outlive nor die before the
      * server-side inactivity window it mirrors.
+     *
+     * The session joins a LIST rather than replacing it. One token per cookie
+     * meant that opening a second game's editor silently rebound every open
+     * tab to it: the older tab polled, saw another file's hash, loaded that
+     * file, and its next save wrote its own keys into the other game's session.
      */
     private function rememberSession(EditSessionToken $session): void
     {
+        $tokens = array_values(array_filter(
+            $this->rememberedTokens(),
+            fn(string $token) => $token !== $session->token
+        ));
+        array_unshift($tokens, $session->token);
+
         Cookie::queue(
             self::COOKIE_NAME,
-            $session->token,
+            json_encode(array_slice($tokens, 0, self::MAX_REMEMBERED)),
             EditSessionToken::cookieLifetimeMinutes()
         );
     }
 
+    /**
+     * Remove one session from the cookie, keeping the others. A null session
+     * (already gone server-side) clears nothing: the sweep below drops it on
+     * the next request that finds it dead.
+     */
+    private function forgetSession(?EditSessionToken $session): void
+    {
+        $tokens = $this->rememberedTokens();
+
+        if ($session) {
+            $tokens = array_values(array_filter(
+                $tokens,
+                fn(string $token) => $token !== $session->token
+            ));
+        }
+
+        if (!$tokens) {
+            Cookie::queue(Cookie::forget(self::COOKIE_NAME));
+            return;
+        }
+
+        Cookie::queue(
+            self::COOKIE_NAME,
+            json_encode($tokens),
+            EditSessionToken::cookieLifetimeMinutes()
+        );
+    }
+
+    /**
+     * Session tokens this browser may act on. Also accepts the pre-list cookie
+     * (a bare token), so upgrading the site never logs an open editor out.
+     */
+    private function rememberedTokens(): array
+    {
+        $raw = request()->cookie(self::COOKIE_NAME);
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        // Legacy format: the cookie held the token itself
+        if (self::isValidTokenFormat($raw)) {
+            return [$raw];
+        }
+
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $decoded,
+            fn($token) => is_string($token) && self::isValidTokenFormat($token)
+        ));
+    }
+
+    /**
+     * The session THIS page is about — never "the last one opened".
+     *
+     * The page states which session it means through `s` (its row id, not a
+     * secret): authorization comes from the cookie, the id only picks one of
+     * the sessions the cookie already allows. A request without `s` is served
+     * only when there is exactly one session to mean — otherwise the answer is
+     * "gone", because guessing is how the wrong file gets written.
+     */
     private function currentSession(): ?EditSessionToken
     {
-        $token = request()->cookie(self::COOKIE_NAME);
-        if (!is_string($token) || $token === '') {
+        $tokens = $this->rememberedTokens();
+        if (!$tokens) {
             return null;
         }
 
-        $session = EditSessionToken::findForSession($token);
+        $requestedId = request()->input('s');
+        $session = null;
+
+        if ($requestedId !== null && $requestedId !== '' && ctype_digit((string) $requestedId)) {
+            $session = EditSessionToken::query()
+                ->whereIn('token', $tokens)
+                ->where('id', (int) $requestedId)
+                ->where('expires_at', '>', now())
+                ->first();
+        } elseif ($requestedId === null || $requestedId === '') {
+            // No id: tabs opened before this shipped, and the plain /edit-session
+            // URL. Unambiguous only while a single session is remembered.
+            if (count($tokens) === 1) {
+                $session = EditSessionToken::findForSession($tokens[0]);
+            }
+        }
+
         if ($session) {
             $this->rememberSession($session);
         }
 
         return $session;
+    }
+
+    /**
+     * The most recently bound session still alive, in cookie order (newest
+     * first). Used only to answer the bare page URL.
+     */
+    private function latestLiveSession(): ?EditSessionToken
+    {
+        foreach ($this->rememberedTokens() as $token) {
+            $session = EditSessionToken::findForSession($token);
+            if ($session) {
+                return $session;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Mirrors EditSessionToken's own format check: tokens are Str::random(64).
+     */
+    private static function isValidTokenFormat(string $value): bool
+    {
+        return preg_match('/^[A-Za-z0-9]{64}$/', $value) === 1;
     }
 }
