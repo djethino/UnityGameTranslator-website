@@ -506,6 +506,24 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
     }
 
+    public function test_connection_labels_are_rendered_as_readable_text(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $html = $this->get('/fr/edit-session')->assertOk()->getContent();
+
+        // Rendered by Blade, not handed to an Alpine expression: this project
+        // runs the CSP build of Alpine, whose evaluator returns string literals
+        // verbatim — a @js-escaped accent reached the screen as "du00e9connectu00e9".
+        // Present as readable text in the markup itself. Put them back into an
+        // Alpine expression and they leave the HTML altogether, so these two
+        // assertions are exactly the guard against the bug coming back.
+        $this->assertStringContainsString('Jeu déconnecté', $html);
+        $this->assertStringContainsString('Jeu connecté', $html);
+    }
+
     public function test_state_exposes_the_game_connection_state(): void
     {
         $this->initSession();

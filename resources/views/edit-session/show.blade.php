@@ -25,11 +25,15 @@
              decides whether saving means anything, so it must never be
              something the user has to go and find out. Hidden entirely while
              unknown — an absence of information is not a diagnosis. --}}
+        {{-- Translated text is rendered by Blade and switched with x-show, never
+             passed through an Alpine expression: this project runs the CSP build
+             of Alpine, whose restricted evaluator returns string literals as-is
+             and leaves @js escapes like é undecoded on screen. --}}
         <p x-show="gameConnected !== null" x-cloak class="text-sm mt-2 flex items-center gap-2">
             <span class="inline-block w-2.5 h-2.5 rounded-full"
                 :class="gameConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'"></span>
-            <span :class="gameConnected ? 'text-green-400' : 'text-red-400'"
-                x-text="gameConnected ? @js(__('edit_session.game_connected')) : @js(__('edit_session.game_disconnected'))"></span>
+            <span x-show="gameConnected" class="text-green-400">{{ __('edit_session.game_connected') }}</span>
+            <span x-show="!gameConnected" class="text-red-400">{{ __('edit_session.game_disconnected') }}</span>
         </p>
     </div>
 
