@@ -57,6 +57,35 @@ class AnalyticsCapacityTest extends TestCase
         $this->assertSame(9, $this->today()->peak_edit_streams);
     }
 
+    public function test_stream_refusals_are_kept_as_high_water_marks(): void
+    {
+        AnalyticsDaily::recordCapacitySample(1, 4, 3, 7);
+
+        // The SSE server counts from its own start, so a Passenger restart puts
+        // it back to zero. Keeping the maximum loses history at worst; summing
+        // would count the same refusals again on every sample.
+        AnalyticsDaily::recordCapacitySample(1, 4, 0, 0);
+
+        $row = $this->today();
+        $this->assertSame(3, $row->stream_refusals_capacity);
+        $this->assertSame(7, $row->stream_refusals_per_ip);
+
+        AnalyticsDaily::recordCapacitySample(1, 4, 9, 7);
+        $this->assertSame(9, $this->today()->stream_refusals_capacity);
+    }
+
+    public function test_an_sse_server_that_reports_no_refusals_leaves_them_untouched(): void
+    {
+        AnalyticsDaily::recordCapacitySample(1, 4, 5, 5);
+
+        // Older SSE server, or unreachable: null is "not reported", never zero
+        AnalyticsDaily::recordCapacitySample(1, 4, null, null);
+
+        $row = $this->today();
+        $this->assertSame(5, $row->stream_refusals_capacity);
+        $this->assertSame(5, $row->stream_refusals_per_ip);
+    }
+
     public function test_started_and_refused_sessions_are_counted_exactly(): void
     {
         // One slot, so the second attempt is turned away — the only figure that

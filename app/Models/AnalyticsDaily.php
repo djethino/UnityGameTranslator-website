@@ -27,6 +27,8 @@ class AnalyticsDaily extends Model
         'peak_edit_streams_at',
         'edit_sessions_started',
         'edit_sessions_refused',
+        'stream_refusals_capacity',
+        'stream_refusals_per_ip',
     ];
 
     protected $casts = [
@@ -46,6 +48,8 @@ class AnalyticsDaily extends Model
         'peak_edit_streams_at' => 'datetime',
         'edit_sessions_started' => 'integer',
         'edit_sessions_refused' => 'integer',
+        'stream_refusals_capacity' => 'integer',
+        'stream_refusals_per_ip' => 'integer',
     ];
 
     /**
@@ -63,8 +67,12 @@ class AnalyticsDaily extends Model
      * peak alone rather than record a zero that would read as "nobody
      * connected" instead of "we could not tell".
      */
-    public static function recordCapacitySample(int $sessions, ?int $streams): void
-    {
+    public static function recordCapacitySample(
+        int $sessions,
+        ?int $streams,
+        ?int $refusedAtCapacity = null,
+        ?int $refusedPerIp = null
+    ): void {
         try {
             $row = self::forDate(now()->toDateString());
 
@@ -76,6 +84,17 @@ class AnalyticsDaily extends Model
             if ($streams !== null && $streams > $row->peak_edit_streams) {
                 $updates['peak_edit_streams'] = $streams;
                 $updates['peak_edit_streams_at'] = now();
+            }
+
+            // Kept as high-water marks, not sums: the SSE server counts from
+            // its own start, and a Passenger restart puts it back to zero.
+            // Taking the maximum can lose history across a restart; adding
+            // would invent it by counting the same refusals twice.
+            if ($refusedAtCapacity !== null && $refusedAtCapacity > $row->stream_refusals_capacity) {
+                $updates['stream_refusals_capacity'] = $refusedAtCapacity;
+            }
+            if ($refusedPerIp !== null && $refusedPerIp > $row->stream_refusals_per_ip) {
+                $updates['stream_refusals_per_ip'] = $refusedPerIp;
             }
 
             if ($updates) {

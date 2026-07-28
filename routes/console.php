@@ -34,10 +34,17 @@ Schedule::call(function () {
 //
 // It cannot be finer than the cron driving `schedule:run` either: a task
 // scheduled more often than its cron simply never fires.
+// The SSE server now reports its OWN high-water mark and its refusals, so a
+// spike between two samples is no longer lost — sampling only has to read them
+// often enough to survive a Passenger restart, which resets those counters.
 Schedule::call(function () {
     $capacity = \App\Services\LiveEditCapacity::current();
     \App\Models\AnalyticsDaily::recordCapacitySample(
         $capacity['sessions'],
-        $capacity['streams']
+        // Prefer the server's own peak; fall back to the instant count when an
+        // older SSE server does not report one
+        $capacity['streams_peak'] ?? $capacity['streams'],
+        $capacity['refused_at_capacity'],
+        $capacity['refused_per_ip']
     );
 })->everyFiveMinutes()->name('sample-live-edit-capacity');

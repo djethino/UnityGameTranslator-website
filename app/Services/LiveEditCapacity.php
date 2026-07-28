@@ -29,6 +29,12 @@ class LiveEditCapacity
             'sessions_max' => EditSessionToken::maxActiveSessions(),
             'streams' => null,
             'streams_max' => null,
+            // Since the SSE process started. The peak is what the ten-minute
+            // sampling cannot see on its own, and the refusals are the only
+            // proof a ceiling ever bit — see sse-server/server.js.
+            'streams_peak' => null,
+            'refused_at_capacity' => null,
+            'refused_per_ip' => null,
         ];
 
         $healthUrl = config('edit_session.sse_health_url');
@@ -45,6 +51,11 @@ class LiveEditCapacity
             if ($response->successful()) {
                 $capacity['streams'] = $response->json('connections');
                 $capacity['streams_max'] = $response->json('max_connections');
+                // Absent from an older SSE server: stay null rather than zero,
+                // so "not reported" never reads as "never happened"
+                $capacity['streams_peak'] = $response->json('peak_connections');
+                $capacity['refused_at_capacity'] = $response->json('refused_at_capacity');
+                $capacity['refused_per_ip'] = $response->json('refused_per_ip');
             }
         } catch (\Throwable $e) {
             // Leave both null: the page says so, the sampler skips the reading

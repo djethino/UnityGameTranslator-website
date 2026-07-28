@@ -20,15 +20,38 @@ const LARAVEL_API_URL = (process.env.LARAVEL_API_URL || 'http://localhost:8000/a
 const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 15000;
 
 // Security: connection limits.
-// An SSE connection stays open, so it holds one of the host's concurrent
-// request slots for its whole life. The default is sized for shared hosting,
-// where that budget is a few dozen slots for the WHOLE account: overshooting it
-// does not fail here, it starves every other site on the account (the main
-// website included) with 503/508 errors. Refusing a stream is a far better
-// outcome than taking the storefront down with it.
-// Raise it on a host that has room to spare (dedicated server, container).
-const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 60;
-const PER_IP_LIMIT = parseInt(process.env.PER_IP_LIMIT, 10) || 10;
+//
+// The previous defaults (60 / 10) came from a wrong premise: that each open
+// stream holds one of the account's "entry process" slots, as it would under
+// Apache + mod_hostinglimits. Measured on the actual host (LiteSpeed +
+// Passenger, 2026-07-28): two games plus a live edit session left the counter
+// at 2/80, memory at 86 MB of 48 GB, CPU and IOPS at zero. LiteSpeed serves
+// connections from a fixed pool OUTSIDE the account's container; what lives
+// inside it is the Node process — one, whatever the connection count.
+//
+// File descriptors were the next candidate — one per connection. Measured on
+// the running process the same day: `Max open files` 32768 (soft AND hard),
+// 20 in use. Not the ceiling either.
+//
+// So nothing measurable on this account caps concurrency in the low hundreds.
+// What remains is whatever the host may cap upstream, which it documents
+// nowhere; if such a limit exists, Node never sees those connections and
+// counts no refusal — the symptom is the PEAK flattening at a round number
+// while refusals stay at zero. That is precisely what the analytics now
+// record, and it only works if this ceiling is well above the unknown one.
+//
+// 1000 is therefore a guard rail, not a prediction: 3% of the descriptors,
+// tens of MB of the 48 GB available, and still a real brake on a runaway
+// reconnection loop. Being generous costs nothing on a flat-rate plan; being
+// wrong the other way silently caps a free, open-source project.
+//
+// Read the peak and the refusal counters before touching this again.
+const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 1000;
+
+// Per-IP: one player running several games holds one sync stream per game,
+// plus one more per live edit session — 10 was already reached by a normal
+// multi-game setup, and shared NAT (campus, mobile carriers) made it worse.
+const PER_IP_LIMIT = parseInt(process.env.PER_IP_LIMIT, 10) || 30;
 
 // Security: CORS — restrict to the main website origin
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://unitygametranslator.asymptomatikgames.com';
@@ -79,6 +102,22 @@ function createRedisClient(extraOpts = {}) {
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let activeConnections = 0;
+
+// High-water mark and refusals SINCE THIS PROCESS STARTED.
+//
+// The website samples capacity every ten minutes, which is blind to anything
+// shorter — and the number worth knowing (how high concurrency actually goes
+// before something upstream refuses) is exactly the kind of spike that lives
+// for seconds. Keeping the maximum here means no peak is missed between two
+// samples. Refusals are counted the same way: a cap nobody can see biting is
+// indistinguishable from a cap that never bites.
+//
+// Passenger may stop an idle app and start it again on the next request, which
+// resets all three. The sampler therefore keeps the HIGHEST value it ever read
+// rather than the last one: a restart can only lose history, never invent it.
+let peakConnections = 0;
+let refusedAtCapacity = 0;
+let refusedPerIp = 0;
 const ipConnections = new Map(); // Track connections per IP
 
 // Redis client for GET/SET operations (checking stored results)
@@ -117,11 +156,13 @@ function getClientIp(req) {
  */
 function checkRateLimit(req) {
     if (activeConnections >= MAX_CONNECTIONS) {
+        refusedAtCapacity++;
         return 'Server at capacity';
     }
     const ip = getClientIp(req);
     const count = ipConnections.get(ip) || 0;
     if (count >= PER_IP_LIMIT) {
+        refusedPerIp++;
         return 'Too many connections from this IP';
     }
     return null;
@@ -134,6 +175,9 @@ function checkRateLimit(req) {
 function trackConnection(req) {
     const ip = getClientIp(req);
     activeConnections++;
+    if (activeConnections > peakConnections) {
+        peakConnections = activeConnections;
+    }
     ipConnections.set(ip, (ipConnections.get(ip) || 0) + 1);
 
     return () => {
@@ -601,6 +645,12 @@ const server = http.createServer(async (req, res) => {
             status: 'ok',
             connections: activeConnections,
             max_connections: MAX_CONNECTIONS,
+            // Since this process started — see the declarations above for why
+            // the instant count alone cannot answer "how high does it go?"
+            peak_connections: peakConnections,
+            refused_at_capacity: refusedAtCapacity,
+            refused_per_ip: refusedPerIp,
+            per_ip_limit: PER_IP_LIMIT,
         }));
         return;
     }

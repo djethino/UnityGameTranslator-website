@@ -108,8 +108,27 @@
                     <div class="h-full {{ $streamBar['color'] }}" style="width: {{ $streamBar['pct'] }}%"></div>
                 </div>
             @endif
+            @if ($liveCapacity['streams_peak'] !== null)
+                <p class="text-xs text-gray-500 mt-2">
+                    Peak since the stream server last started:
+                    <span class="text-gray-300">{{ number_format($liveCapacity['streams_peak']) }}</span>
+                </p>
+            @endif
+            @php
+                $refusedCap = (int) ($liveCapacity['refused_at_capacity'] ?? 0);
+                $refusedIp = (int) ($liveCapacity['refused_per_ip'] ?? 0);
+            @endphp
+            @if ($refusedCap > 0 || $refusedIp > 0)
+                {{-- Only shown once a ceiling has actually bitten: this is the
+                     signal the raised limits exist to produce. --}}
+                <p class="text-xs text-amber-400 mt-2">
+                    Refused: {{ number_format($refusedCap) }} at capacity,
+                    {{ number_format($refusedIp) }} per-IP
+                </p>
+            @endif
             <p class="text-xs text-gray-500 mt-2">
-                Each one holds a host request slot. Sustained above half means it is time to move this server.
+                The ceiling is deliberately roomy: the host documents no limit, so the real one has to
+                show itself here. Watch refusals, not the percentage.
             </p>
         @endif
     </div>
