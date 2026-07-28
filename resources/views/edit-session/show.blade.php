@@ -407,15 +407,17 @@
         </div>
 
         {{-- One line, not two stacked: this sits in a sticky bar, where every
-             pixel of height is taken from the rows being edited. The wording
-             stays at a readable size and the amber does the shouting; wrapping
-             only kicks in on narrow windows. --}}
+             pixel of height is taken from the rows being edited.
+
+             The amber is nearly opaque: at 40% it read fine against the page
+             background but vanished inside this grey card. And the dot stays —
+             it is the same indicator as the green one above, just red, so the
+             eye reads the link state in one place whatever it says. --}}
         <div x-show="gameConnected === false" x-cloak
-            class="mt-3 flex flex-wrap items-baseline gap-x-2 bg-amber-900/40 border border-amber-600/70 rounded-lg px-3 py-1.5">
-            <span class="text-amber-200 font-semibold text-sm shrink-0">
-                <i class="fas fa-triangle-exclamation text-amber-400 mr-1.5"></i>{{ __('edit_session.game_disconnected') }}
-            </span>
-            <span class="text-amber-100/80 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
+            class="mt-3 flex flex-wrap items-center gap-x-2 bg-amber-900/80 border border-amber-500 rounded-lg px-3 py-1.5">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></span>
+            <span class="text-amber-200 font-semibold text-sm shrink-0">{{ __('edit_session.game_disconnected') }}</span>
+            <span class="text-amber-100/90 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
         </div>
         </div>
     </div>
