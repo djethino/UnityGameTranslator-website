@@ -783,6 +783,7 @@
     "edit_session.save_failed": "השמירה נכשלה. אנא נסה שוב.",
     "edit_session.end_session": "סיים הפעלה",
     "edit_session.end_confirm": "לסיים את הפעלת העריכה הזו? שינויים שלא נשמרו יאבדו וה-mod יפסיק להאזין.",
+    "edit_session.end_stale": "הדף הזה כבר לא מפנה לפעילות פתוחה. רענן אותו, או התחל לערוך שוב מתוך המוד.",
     "edit_session.ended": "הפעלת העריכה הסתיימה.",
     "edit_session.error_expired": "פג תוקף הפעלת העריכה. אנא הפעל אותה מחדש מה-mod.",
     "edit_session.expired_title": "פג תוקף ההפעלה",

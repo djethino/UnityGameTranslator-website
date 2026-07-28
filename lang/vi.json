@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Lưu thất bại. Vui lòng thử lại.",
     "edit_session.end_session": "Kết thúc phiên",
     "edit_session.end_confirm": "Kết thúc phiên chỉnh sửa này? Các thay đổi chưa lưu sẽ bị mất và mod sẽ ngừng lắng nghe.",
+    "edit_session.end_stale": "Trang này không còn trỏ tới phiên đang hoạt động. Hãy tải lại, hoặc mở lại phần chỉnh sửa từ mod.",
     "edit_session.ended": "Đã kết thúc phiên chỉnh sửa.",
     "edit_session.error_expired": "Phiên chỉnh sửa đã hết hạn. Vui lòng khởi động lại từ mod.",
     "edit_session.expired_title": "Phiên đã hết hạn",

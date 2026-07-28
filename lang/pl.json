@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Zapis nie powiódł się. Spróbuj ponownie.",
     "edit_session.end_session": "Zakończ sesję",
     "edit_session.end_confirm": "Zakończyć tę sesję edycji? Niezapisane zmiany zostaną utracone, a mod przestanie nasłuchiwać.",
+    "edit_session.end_stale": "Ta strona nie wskazuje już aktywnej sesji. Odśwież ją albo uruchom edycję ponownie z moda.",
     "edit_session.ended": "Sesja edycji zakończona.",
     "edit_session.error_expired": "Sesja edycji wygasła. Uruchom ją ponownie z poziomu moda.",
     "edit_session.expired_title": "Sesja wygasła",

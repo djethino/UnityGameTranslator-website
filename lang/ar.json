@@ -783,6 +783,7 @@
     "edit_session.save_failed": "فشل الحفظ. يرجى المحاولة مرة أخرى.",
     "edit_session.end_session": "إنهاء الجلسة",
     "edit_session.end_confirm": "إنهاء جلسة التعديل هذه؟ ستُفقد التغييرات غير المحفوظة وسيتوقف الـ mod عن الاستماع.",
+    "edit_session.end_stale": "لم تعد هذه الصفحة تشير إلى جلسة نشطة. أعد تحميلها، أو ابدأ التحرير من جديد عبر التعديل.",
     "edit_session.ended": "انتهت جلسة التعديل.",
     "edit_session.error_expired": "انتهت صلاحية جلسة التعديل. يرجى إعادة تشغيلها من الـ mod.",
     "edit_session.expired_title": "انتهت صلاحية الجلسة",

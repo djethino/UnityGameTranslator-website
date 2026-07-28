@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Salvataggio non riuscito. Riprova.",
     "edit_session.end_session": "Termina sessione",
     "edit_session.end_confirm": "Terminare questa sessione di modifica? Le modifiche non salvate andranno perse e il mod smetterà di ascoltare.",
+    "edit_session.end_stale": "Questa pagina non punta più a una sessione attiva. Ricaricala oppure riavvia la modifica dal mod.",
     "edit_session.ended": "Sessione di modifica terminata.",
     "edit_session.error_expired": "Sessione di modifica scaduta. Riavviala dal mod.",
     "edit_session.expired_title": "Sessione scaduta",

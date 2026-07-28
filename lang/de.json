@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "edit_session.end_session": "Sitzung beenden",
     "edit_session.end_confirm": "Diese Bearbeitungssitzung beenden? Nicht gespeicherte Änderungen gehen verloren und der Mod hört auf zuzuhören.",
+    "edit_session.end_stale": "Diese Seite verweist auf keine aktive Sitzung mehr. Laden Sie sie neu oder starten Sie die Bearbeitung erneut über die Mod.",
     "edit_session.ended": "Bearbeitungssitzung beendet.",
     "edit_session.error_expired": "Bearbeitungssitzung abgelaufen. Bitte starten Sie sie erneut über den Mod.",
     "edit_session.expired_title": "Sitzung abgelaufen",

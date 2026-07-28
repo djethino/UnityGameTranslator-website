@@ -344,10 +344,17 @@ class EditSessionController extends Controller
     {
         $session = $this->currentSession();
 
-        if ($session) {
-            SsePublisher::editSessionEnded($session->mod_key);
-            $session->deleteWithFile();
+        // Nothing matched: this page names a session that is gone, or it predates
+        // the multi-session cookie and sends no id while the browser holds several
+        // — in which case picking one would be a guess. Ending nothing while
+        // announcing success is the worst of both: the session stays alive and the
+        // user believes it is closed. Say so instead.
+        if (!$session) {
+            return back()->withErrors(['error' => __('edit_session.end_stale')]);
         }
+
+        SsePublisher::editSessionEnded($session->mod_key);
+        $session->deleteWithFile();
 
         // Drop THIS session only: ending one game's editor must not sign the
         // browser out of the other games it still has open

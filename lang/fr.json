@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Échec de l'enregistrement. Veuillez réessayer.",
     "edit_session.end_session": "Terminer la session",
     "edit_session.end_confirm": "Terminer cette session d'édition ? Les modifications non enregistrées seront perdues et le mod cessera d'écouter.",
+    "edit_session.end_stale": "Cette page ne pointe plus vers une session active. Rechargez-la, ou relancez l'édition depuis le mod.",
     "edit_session.ended": "Session d'édition terminée.",
     "edit_session.error_expired": "La session d'édition a expiré. Veuillez la redémarrer depuis le mod.",
     "edit_session.expired_title": "Session expirée",

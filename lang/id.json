@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Gagal menyimpan. Silakan coba lagi.",
     "edit_session.end_session": "Akhiri sesi",
     "edit_session.end_confirm": "Akhiri sesi edit ini? Perubahan yang belum disimpan akan hilang dan mod akan berhenti mendengarkan.",
+    "edit_session.end_stale": "Halaman ini tidak lagi menunjuk ke sesi aktif. Muat ulang, atau mulai penyuntingan lagi dari mod.",
     "edit_session.ended": "Sesi edit berakhir.",
     "edit_session.error_expired": "Sesi edit telah berakhir. Silakan mulai ulang dari mod.",
     "edit_session.expired_title": "Sesi berakhir",

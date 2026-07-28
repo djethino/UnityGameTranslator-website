@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Save failed. Please try again.",
     "edit_session.end_session": "End session",
     "edit_session.end_confirm": "End this edit session? Unsaved changes will be lost and the mod will stop listening.",
+    "edit_session.end_stale": "This page no longer points to an active session. Reload it, or start editing again from the mod.",
     "edit_session.ended": "Edit session ended.",
     "edit_session.error_expired": "Edit session expired. Please restart it from the mod.",
     "edit_session.expired_title": "Session expired",

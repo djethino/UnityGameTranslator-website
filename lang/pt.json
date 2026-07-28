@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Falha ao salvar. Tente novamente.",
     "edit_session.end_session": "Encerrar sessão",
     "edit_session.end_confirm": "Encerrar esta sessão de edição? As alterações não salvas serão perdidas e o mod deixará de escutar.",
+    "edit_session.end_stale": "Esta página já não aponta para uma sessão ativa. Recarregue-a ou reinicie a edição a partir do mod.",
     "edit_session.ended": "Sessão de edição encerrada.",
     "edit_session.error_expired": "Sessão de edição expirada. Reinicie-a a partir do mod.",
     "edit_session.expired_title": "Sessão expirada",

@@ -783,6 +783,7 @@
     "edit_session.save_failed": "保存失败。请重试。",
     "edit_session.end_session": "结束会话",
     "edit_session.end_confirm": "结束此编辑会话？未保存的更改将会丢失，模组将停止监听。",
+    "edit_session.end_stale": "此页面已不再指向有效会话。请刷新页面，或从模组重新开始编辑。",
     "edit_session.ended": "编辑会话已结束。",
     "edit_session.error_expired": "编辑会话已过期。请从模组中重新开始。",
     "edit_session.expired_title": "会话已过期",

@@ -783,6 +783,7 @@
     "edit_session.save_failed": "保存に失敗しました。もう一度お試しください。",
     "edit_session.end_session": "セッションを終了",
     "edit_session.end_confirm": "この編集セッションを終了しますか？保存されていない変更は失われ、Modの待機が停止します。",
+    "edit_session.end_stale": "このページはもう有効なセッションを指していません。再読み込みするか、Modからもう一度編集を開始してください。",
     "edit_session.ended": "編集セッションを終了しました。",
     "edit_session.error_expired": "編集セッションの有効期限が切れました。Modからやり直してください。",
     "edit_session.expired_title": "セッションの有効期限切れ",

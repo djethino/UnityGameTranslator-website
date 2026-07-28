@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Kayıt başarısız. Lütfen tekrar deneyin.",
     "edit_session.end_session": "Oturumu sonlandır",
     "edit_session.end_confirm": "Bu düzenleme oturumu sonlandırılsın mı? Kaydedilmemiş değişiklikler kaybolur ve mod dinlemeyi durdurur.",
+    "edit_session.end_stale": "Bu sayfa artık etkin bir oturuma işaret etmiyor. Sayfayı yenileyin veya düzenlemeyi moddan yeniden başlatın.",
     "edit_session.ended": "Düzenleme oturumu sonlandırıldı.",
     "edit_session.error_expired": "Düzenleme oturumu sona erdi. Lütfen moddan yeniden başlatın.",
     "edit_session.expired_title": "Oturum sona erdi",

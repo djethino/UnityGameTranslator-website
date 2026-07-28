@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Opslaan mislukt. Probeer het opnieuw.",
     "edit_session.end_session": "Sessie beëindigen",
     "edit_session.end_confirm": "Deze bewerksessie beëindigen? Niet-opgeslagen wijzigingen gaan verloren en de mod stopt met luisteren.",
+    "edit_session.end_stale": "Deze pagina verwijst niet meer naar een actieve sessie. Herlaad de pagina of start het bewerken opnieuw vanuit de mod.",
     "edit_session.ended": "Bewerksessie beëindigd.",
     "edit_session.error_expired": "Bewerksessie verlopen. Start deze opnieuw vanuit de mod.",
     "edit_session.expired_title": "Sessie verlopen",

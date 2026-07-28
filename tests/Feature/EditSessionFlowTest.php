@@ -777,6 +777,21 @@ class EditSessionFlowTest extends TestCase
         $this->getJson('/edit-session-state?s=' . $second->id)->assertOk();
     }
 
+    public function test_ending_a_session_the_page_cannot_name_says_so(): void
+    {
+        [$first, $second] = $this->initTwoSessions();
+        $this->openBothInBrowser($first, $second);
+
+        // A tab opened before the multi-session cookie: it posts no id, and with
+        // two sessions held there is nothing to guess. Ending NOTHING while
+        // announcing success is the worst outcome — the session stays alive and
+        // the user believes it is closed.
+        $this->post('/edit-session-end')->assertSessionHasErrors('error');
+
+        $this->assertNotNull(EditSessionToken::find($first->id));
+        $this->assertNotNull(EditSessionToken::find($second->id));
+    }
+
     public function test_the_bare_page_url_lands_on_the_latest_session(): void
     {
         [$first, $second] = $this->initTwoSessions();

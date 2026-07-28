@@ -783,6 +783,7 @@
     "edit_session.save_failed": "Error al guardar. Inténtalo de nuevo.",
     "edit_session.end_session": "Finalizar sesión",
     "edit_session.end_confirm": "¿Finalizar esta sesión de edición? Los cambios sin guardar se perderán y el mod dejará de escuchar.",
+    "edit_session.end_stale": "Esta página ya no apunta a una sesión activa. Recárgala o vuelve a iniciar la edición desde el mod.",
     "edit_session.ended": "Sesión de edición finalizada.",
     "edit_session.error_expired": "La sesión de edición ha caducado. Reiníciala desde el mod.",
     "edit_session.expired_title": "Sesión caducada",
