@@ -27,12 +27,17 @@ Schedule::call(function () {
 // visitor request — and a history is what tells you whether the ceiling was
 // ever approached, which no live gauge can, since nobody is watching at 3am.
 //
-// Ten minutes, not five: it must line up with whatever grid `schedule:run`
-// itself runs on. A finer schedule than the cron behind it never fires at all.
+// Five minutes: fine enough that any edit session — they last tens of minutes —
+// is seen several times, cheap enough to be noise. A single active editor polls
+// 360 times an hour; this adds 12. Nothing finer would buy accuracy, since the
+// exact figure that matters (refusals) is counted as it happens.
+//
+// It cannot be finer than the cron driving `schedule:run` either: a task
+// scheduled more often than its cron simply never fires.
 Schedule::call(function () {
     $capacity = \App\Services\LiveEditCapacity::current();
     \App\Models\AnalyticsDaily::recordCapacitySample(
         $capacity['sessions'],
         $capacity['streams']
     );
-})->everyTenMinutes()->name('sample-live-edit-capacity');
+})->everyFiveMinutes()->name('sample-live-edit-capacity');

@@ -248,7 +248,7 @@
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 lg:col-span-2">
         <h2 class="text-lg font-semibold mb-1"><i class="fas fa-gauge-high mr-2 text-cyan-400"></i> Live edit concurrency</h2>
         <p class="text-xs text-gray-500 mb-4">
-            Daily peaks against the stream ceiling. Sampled every 10 minutes, so a shorter spike can slip
+            Daily peaks against the stream ceiling. Sampled every 5 minutes, so a shorter spike can slip
             through — "Sessions refused" above is the exact count.
         </p>
         @if(count($chartLabels) > 0 && (array_sum($chartPeakSessions) > 0 || array_sum($chartPeakStreams) > 0))
@@ -257,7 +257,7 @@
             </div>
         @else
             <div class="h-64 flex items-center justify-center">
-                <p class="text-gray-500 text-sm">No concurrency readings yet — the first one lands within 10 minutes.</p>
+                <p class="text-gray-500 text-sm">No concurrency readings yet — the first one lands within 5 minutes.</p>
             </div>
         @endif
     </div>
@@ -398,7 +398,7 @@
         <strong>Where the numbers come from.</strong>
         Past days are aggregated once a night, at 02:00 UTC, from the raw events of the day before.
         Today is counted live on every load, so the period totals always include it.
-        Concurrency peaks are sampled every 10 minutes; sessions started and refused are counted one by one.
+        Concurrency peaks are sampled every 5 minutes; sessions started and refused are counted one by one.
     </p>
     <p>
         <i class="fas fa-shield-halved mr-2"></i>
