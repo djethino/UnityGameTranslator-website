@@ -113,7 +113,7 @@
                         <i class="fas fa-sliders-h"></i>
                     </a>
                     @endif
-                    <form action="{{ route('translations.destroy', $translation) }}" method="POST" class="delete-form">
+                    <form action="{{ route('translations.destroy', $translation) }}" method="POST" class="delete-form" data-confirm="{{ __('my_translations.delete_confirm') }}">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded" title="{{ __('translation.delete') }}">
@@ -124,15 +124,5 @@
             </div>
         @endforeach
     </div>
-
-<script nonce="{{ $cspNonce }}">
-document.querySelectorAll('.delete-form').forEach(function(form) {
-    form.addEventListener('submit', function(e) {
-        if (!confirm(@js(__('my_translations.delete_confirm')))) {
-            e.preventDefault();
-        }
-    });
-});
-</script>
 @endif
 @endsection

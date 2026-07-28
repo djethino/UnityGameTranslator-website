@@ -411,3 +411,28 @@ mediumZoom('[data-zoomable]', {
     // effect without waiting for the random schedule.
     window.testGlitch = fireGlitchPing;
 })();
+
+/**
+ * Confirmation before a destructive submit, without inline handlers.
+ *
+ * `onsubmit="return confirm(...)"` looks harmless but never runs on this site:
+ * the CSP carries a nonce, and a nonce makes the browser ignore 'unsafe-inline'
+ * entirely. Every inline handler was therefore blocked as script-src-attr —
+ * silently, since a blocked handler produces no visible failure. "End session"
+ * simply did nothing, with no request ever leaving the page.
+ *
+ * Delegated on the document so it also covers markup added after load, and put
+ * here rather than in a per-view <script nonce>: the same five lines had been
+ * copied into three templates already.
+ *
+ * Usage: <form data-confirm="{{ __('...') }}">
+ */
+document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[data-confirm]');
+    if (!form) return;
+
+    const message = form.getAttribute('data-confirm');
+    if (message && !window.confirm(message)) {
+        event.preventDefault();
+    }
+}, true);

@@ -84,7 +84,7 @@
                     <td class="px-4 py-3 text-right">
                         @if($announcement->isActive())
                         <form method="POST" action="{{ route('admin.announcements.expire', $announcement) }}"
-                              onsubmit="return confirm('Expire this announcement? The banner disappears; already-sent notifications remain.');">
+                              data-confirm="Expire this announcement? The banner disappears; already-sent notifications remain.">
                             @csrf
                             <button type="submit" class="text-red-400 hover:text-red-300 text-xs">Expire</button>
                         </form>

@@ -364,7 +364,7 @@
                 </button>
 
                 <form method="POST" action="{{ route('edit-session.end', ['s' => $editSession->id]) }}"
-                    onsubmit="return confirm(@js(__('edit_session.end_confirm')))">
+                    data-confirm="{{ __('edit_session.end_confirm') }}">
                     @csrf
                     <button type="submit"
                         class="text-red-400 hover:text-red-300 text-sm transition">

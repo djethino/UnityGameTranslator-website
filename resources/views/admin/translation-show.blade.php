@@ -126,7 +126,7 @@
             <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-edit mr-1"></i> {{ __('common.edit') }}
             </a>
-            <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline delete-form">
+            <form action="{{ route('admin.translations.destroy', $translation) }}" method="POST" class="inline delete-form" data-confirm="{{ __('admin.delete_confirm') }}">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
@@ -412,21 +412,4 @@
     }
 </style>
 @endpush
-
-<script nonce="{{ $cspNonce }}">
-document.querySelectorAll('.delete-form').forEach(function(form) {
-    form.addEventListener('submit', function(e) {
-        if (!confirm(@js(__('admin.delete_confirm')))) {
-            e.preventDefault();
-        }
-    });
-});
-
-// Auto-submit filter checkboxes
-document.querySelectorAll('.filter-checkbox').forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-});
-</script>
 @endsection
