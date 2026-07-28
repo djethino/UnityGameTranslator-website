@@ -390,15 +390,25 @@
         {{-- Link state, inside the sticky bar rather than up in the header:
              whether the game is listening decides whether saving means
              anything, so it has to stay in view — the header version scrolled
-             away exactly when the user was deep in a long file. Same reason
-             the explanation lives here now instead of in a banner on top. --}}
-        <div x-show="gameConnected !== null" x-cloak
-            class="mt-3 pt-3 border-t border-gray-700 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-            <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                :class="gameConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'"></span>
-            <span x-show="gameConnected" class="text-green-400">{{ __('edit_session.game_connected') }}</span>
-            <span x-show="!gameConnected" class="text-red-400 font-semibold">{{ __('edit_session.game_disconnected') }}</span>
-            <span x-show="!gameConnected" class="text-amber-100/70 text-xs">{{ __('edit_session.game_disconnected_hint') }}</span>
+             away exactly when the user was deep in a long file.
+
+             The two states are deliberately NOT symmetric. Connected is the
+             normal case and stays a quiet line; disconnected has to be seen,
+             so it keeps the amber panel the top banner used to have. Dressing
+             both the same way makes the one that matters invisible. --}}
+        <div x-show="gameConnected === true" x-cloak
+            class="mt-3 pt-3 border-t border-gray-700 flex items-center gap-2 text-sm">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
+            <span class="text-green-400">{{ __('edit_session.game_connected') }}</span>
+        </div>
+
+        <div x-show="gameConnected === false" x-cloak
+            class="mt-3 flex items-start gap-3 bg-amber-900/40 border border-amber-600/70 rounded-lg px-3 py-2">
+            <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+            <div class="min-w-0">
+                <p class="text-amber-200 font-semibold text-sm">{{ __('edit_session.game_disconnected') }}</p>
+                <p class="text-amber-100/80 text-xs mt-0.5">{{ __('edit_session.game_disconnected_hint') }}</p>
+            </div>
         </div>
         </div>
     </div>
