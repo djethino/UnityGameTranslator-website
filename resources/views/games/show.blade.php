@@ -218,22 +218,17 @@
                                     <span>{{ $translation->target_language }}</span>
                                 </span>
 
+                                {{-- Review stage rather than the old type badge. "AI corrected"
+                                     covered everything from one reviewed line to all of them,
+                                     and "Human" demanded that more than half be TYPED by hand —
+                                     a measure of method, when the reader is asking whether
+                                     anyone has read the thing. --}}
                                 @if($translation->effective_lines === 0 && ($translation->capture_count ?? 0) > 0)
                                     <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" title="{{ __('progress.capture_only_desc') }}">
                                         <i class="fas fa-camera"></i> {{ __('progress.capture_only') }}
                                     </span>
-                                @elseif($translation->type === 'ai')
-                                    <span class="bg-blue-800 text-blue-200 px-2 py-1 rounded text-xs" title="{{ __('translation.type.ai') }}">
-                                        <i class="fas fa-robot"></i> {{ __('translation.type.ai_short') }}
-                                    </span>
-                                @elseif($translation->type === 'ai_corrected')
-                                    <span class="bg-purple-800 text-purple-200 px-2 py-1 rounded text-xs" title="{{ __('translation.type.ai_corrected') }}">
-                                        <i class="fas fa-user-edit"></i> {{ __('translation.type.ai_corrected_short') }}
-                                    </span>
-                                @elseif($translation->type === 'human')
-                                    <span class="bg-green-800 text-green-200 px-2 py-1 rounded text-xs" title="{{ __('translation.type.human') }}">
-                                        <i class="fas fa-user"></i> {{ __('translation.type.human_short') }}
-                                    </span>
+                                @else
+                                    <x-review-stage :translation="$translation" class="px-2 py-1" />
                                 @endif
 
                                 @if($translation->isComplete())

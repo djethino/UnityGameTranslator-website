@@ -219,6 +219,64 @@ class TranslationCardContentTest extends TestCase
             ->assertSee(__('file_settings.resources'));
     }
 
+    public function test_a_fully_reviewed_file_says_so_whatever_its_score(): void
+    {
+        // The case this whole rework started from: reviewed line by line, no unreviewed AI left,
+        // yet the old score gave 2.49 — one hundredth short of its top label, because reaching
+        // it required retyping by hand what the AI had already got right.
+        $translation = $this->makeTranslation([
+            'human_count' => 336,
+            'validated_count' => 352,
+            'ai_count' => 0,
+        ]);
+
+        $this->assertSame('reviewed', $translation->reviewStage());
+        $this->assertSame(1.0, $translation->reviewCoverage());
+
+        $this->get(route('games.show', $translation->game))
+            ->assertOk()
+            ->assertSee(__('progress.stage.reviewed'));
+    }
+
+    public function test_untouched_machine_output_is_named_a_stage_not_a_verdict(): void
+    {
+        $translation = $this->makeTranslation([
+            'human_count' => 0,
+            'validated_count' => 0,
+            'ai_count' => 900,
+        ]);
+
+        // Where every translation starts, since the mod translates first and one reviews after.
+        // Naming that a failure would tell every newcomer their starting point is worthless.
+        $this->assertSame('machine', $translation->reviewStage());
+        $this->assertSame(0.0, $translation->reviewCoverage());
+    }
+
+    public function test_a_file_with_nothing_translated_has_no_stage_at_all(): void
+    {
+        $translation = $this->makeTranslation([
+            'human_count' => 0,
+            'validated_count' => 0,
+            'ai_count' => 0,
+            'capture_count' => 500,
+        ]);
+
+        // No coverage, rather than a coverage of zero: there is nothing to have reviewed
+        $this->assertNull($translation->reviewStage());
+        $this->assertNull($translation->reviewCoverage());
+    }
+
+    public function test_half_reviewed_lands_between_the_two(): void
+    {
+        $translation = $this->makeTranslation([
+            'human_count' => 100,
+            'validated_count' => 100,
+            'ai_count' => 300,
+        ]);
+
+        $this->assertSame('advanced', $translation->reviewStage());
+    }
+
     public function test_lines_kept_as_is_are_named_in_the_legend(): void
     {
         $translation = $this->makeTranslation(['skipped_count' => 312]);

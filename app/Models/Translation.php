@@ -802,6 +802,56 @@ class Translation extends Model
     }
 
     /**
+     * How much of the file a human has actually read: (H+V) / translated lines.
+     *
+     * Null when nothing is translated yet — a capture-only file has no coverage, not a coverage
+     * of zero, and the difference matters to whoever sees the result.
+     */
+    public function reviewCoverage(): ?float
+    {
+        $translated = $this->effective_lines;
+
+        return $translated > 0 ? ($this->human_count + $this->validated_count) / $translated : null;
+    }
+
+    /**
+     * Where the file stands, as a STEP rather than a mark.
+     *
+     * Replaces the 0-3 score for display, and the reason is arithmetic rather than taste. That
+     * score answers "where does each line come from", when what a downloader asks is "has anyone
+     * read this". It also cannot be read: 100% of unreviewed AI scores 1.0 — a third of a scale
+     * shown out of 3 — while a file reviewed line by line stops at 2.0 unless its author retyped
+     * by hand what the AI had already got right. In practice everything lands between 1.0 and
+     * 2.5, and three quarters of the real catalogue sit in a single band.
+     *
+     * Steps also carry no verdict. Every translation starts as raw machine output, since that is
+     * how the mod works; naming that "Raw AI" on a scale ending at "Excellent" tells every
+     * newcomer their starting point is worthless.
+     *
+     * Thresholds: nothing / started / well under way / finished. Deliberately coarse — the real
+     * catalogue is far too small to justify finer ones, and 75-99% was empty.
+     */
+    public function reviewStage(): ?string
+    {
+        $coverage = $this->reviewCoverage();
+        if ($coverage === null) {
+            return null;
+        }
+
+        if ($coverage >= 1.0) {
+            return 'reviewed';
+        }
+        if ($coverage >= 0.4) {
+            return 'advanced';
+        }
+        if ($coverage > 0) {
+            return 'started';
+        }
+
+        return 'machine';
+    }
+
+    /**
      * Get fork bonus multiplier.
      * Active forks of abandoned translations get a +20% boost.
      *
