@@ -76,6 +76,8 @@
     "games.target_language": "Doeltaal",
     "games.source_language": "Brontaal",
     "games.type": "Type",
+    "games.filter_group": "Beperken",
+    "games.sort_group": "Volgorde",
     "games.sort_by": "Sorteren op",
     "games.sort.score": "Beste totaal",
     "games.sort.name": "Naam (A-Z)",

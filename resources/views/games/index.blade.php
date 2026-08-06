@@ -36,64 +36,73 @@
 <div class="mb-8">
     <h1 class="glitch-text text-3xl font-bold mb-6">{{ __('games.browse') }}</h1>
 
-    <form action="{{ route('games.index') }}" method="GET" class="bg-gray-800 rounded-lg p-6 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.search_game') }}</label>
-                <input type="text" name="q" value="{{ request('q') }}"
-                    placeholder="{{ __('games.game_name_placeholder') }}"
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
+    {{-- Filtering and sorting do opposite things — one removes games, the other reorders them —
+         so they sit in two groups instead of one row where nothing said which was which.
+
+         Selects and checkboxes apply on change, like the filters in the editors: one gesture,
+         one result. Only the text field waits for Enter, since reloading on every keystroke
+         would be absurd. The submit button stays for anyone without JavaScript. --}}
+    <form action="{{ route('games.index') }}" method="GET" class="bg-gray-800 rounded-lg p-6 mb-8"
+        data-auto-submit>
+
+        <div class="mb-4">
+            <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">{{ __('games.filter_group') }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.search_game') }}</label>
+                    {{-- Typing must not reload: this one is submitted by Enter or the button --}}
+                    <input type="text" name="q" value="{{ request('q') }}"
+                        placeholder="{{ __('games.game_name_placeholder') }}"
+                        data-no-auto-submit
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.target_language') }}</label>
+                    <select name="target" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                        <option value="">{{ __('games.all') }}</option>
+                        @foreach($targetLanguages as $lang)
+                            <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.source_language') }}</label>
+                    <select name="source" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                        <option value="">{{ __('games.all') }}</option>
+                        @foreach($sourceLanguages as $lang)
+                            <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.target_language') }}</label>
-                <select name="target" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
-                    <option value="">{{ __('games.all') }}</option>
-                    @foreach($targetLanguages as $lang)
-                        <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.source_language') }}</label>
-                <select name="source" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
-                    <option value="">{{ __('games.all') }}</option>
-                    @foreach($sourceLanguages as $lang)
-                        <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">{{ __('games.sort_by') }}</label>
-                <select name="sort" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+        </div>
+
+        <div class="border-t border-gray-700 pt-4">
+            <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">{{ __('games.sort_group') }}</p>
+            <div class="flex flex-wrap items-center gap-4">
+                <select name="sort" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     <option value="name" {{ $sort === 'name' ? 'selected' : '' }}>{{ __('games.sort.name') }}</option>
                     <option value="downloads" {{ $sort === 'downloads' ? 'selected' : '' }}>{{ __('games.sort.downloads') }}</option>
                     <option value="updated" {{ $sort === 'updated' ? 'selected' : '' }}>{{ __('games.sort.updated') }}</option>
                     <option value="new" {{ $sort === 'new' ? 'selected' : '' }}>{{ __('games.sort.new') }}</option>
                     <option value="translations" {{ $sort === 'translations' ? 'selected' : '' }}>{{ __('games.sort.translations') }}</option>
                 </select>
+
+                @if($highlightLanguage)
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                        {{-- An unchecked box sends nothing at all, so without this the option
+                             could be turned on but never off --}}
+                        <input type="hidden" name="lang_first" value="0">
+                        <input type="checkbox" name="lang_first" value="1" {{ $languageFirst ? 'checked' : '' }}
+                            class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                        <span>{{ __('games.sort.language_first', ['language' => $highlightLanguage]) }}</span>
+                    </label>
+                @endif
+
+                <button type="submit" class="ml-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">
+                    <i class="fas fa-search mr-2"></i> {{ __('common.search') }}
+                </button>
             </div>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-            {{-- On by default. The value travels in the URL rather than in a cookie: a sort
-                 order that is remembered becomes invisible, and a shared link would show
-                 something else to whoever opens it. --}}
-            @if($highlightLanguage)
-                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                    {{-- An unchecked box sends nothing at all, so without this the option could
-                         be turned on but never off --}}
-                    <input type="hidden" name="lang_first" value="0">
-                    <input type="checkbox" name="lang_first" value="1" {{ $languageFirst ? 'checked' : '' }}
-                        class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                    <span>{{ __('games.sort.language_first', ['language' => $highlightLanguage]) }}</span>
-                </label>
-            @else
-                <span></span>
-            @endif
-
-            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">
-                <i class="fas fa-search mr-2"></i> {{ __('common.search') }}
-            </button>
         </div>
     </form>
 

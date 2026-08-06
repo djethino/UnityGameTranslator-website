@@ -76,6 +76,8 @@
     "games.target_language": "Hedef dil",
     "games.source_language": "Kaynak dil",
     "games.type": "Tür",
+    "games.filter_group": "Daralt",
+    "games.sort_group": "Sıralama",
     "games.sort_by": "Sırala",
     "games.sort.score": "En İyi Genel",
     "games.sort.name": "Ad (A-Z)",

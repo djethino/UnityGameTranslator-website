@@ -76,6 +76,8 @@
     "games.target_language": "Bahasa Target",
     "games.source_language": "Bahasa Sumber",
     "games.type": "Tipe",
+    "games.filter_group": "Persempit",
+    "games.sort_group": "Urutan",
     "games.sort_by": "Urutkan",
     "games.sort.score": "Terbaik Keseluruhan",
     "games.sort.name": "Nama (A-Z)",

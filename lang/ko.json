@@ -76,6 +76,8 @@
     "games.target_language": "번역 언어",
     "games.source_language": "원본 언어",
     "games.type": "유형",
+    "games.filter_group": "좁히기",
+    "games.sort_group": "정렬",
     "games.sort_by": "정렬",
     "games.sort.score": "종합 최고",
     "games.sort.name": "이름순",

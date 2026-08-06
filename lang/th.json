@@ -76,6 +76,8 @@
     "games.target_language": "ภาษาเป้าหมาย",
     "games.source_language": "ภาษาต้นฉบับ",
     "games.type": "ประเภท",
+    "games.filter_group": "จำกัดผลลัพธ์",
+    "games.sort_group": "ลำดับ",
     "games.sort_by": "เรียงตาม",
     "games.sort.score": "คะแนนรวมดีที่สุด",
     "games.sort.name": "ชื่อ (A-Z)",

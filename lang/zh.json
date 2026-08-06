@@ -76,6 +76,8 @@
     "games.target_language": "目标语言",
     "games.source_language": "源语言",
     "games.type": "类型",
+    "games.filter_group": "缩小范围",
+    "games.sort_group": "排序",
     "games.sort_by": "排序",
     "games.sort.score": "综合最佳",
     "games.sort.name": "名称 (A-Z)",

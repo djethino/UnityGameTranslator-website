@@ -436,3 +436,22 @@ document.addEventListener('submit', (event) => {
         event.preventDefault();
     }
 }, true);
+
+/**
+ * Forms that apply on change.
+ *
+ * A dropdown or a checkbox should give its result in one gesture — that is how the editors'
+ * filters already behave, and asking for a second click to confirm a filter protects nothing.
+ * The submit button stays for text fields (reloading on every keystroke would be absurd) and
+ * for anyone without JavaScript.
+ *
+ * Delegated from the document rather than bound inline: the site's CSP forbids inline handlers,
+ * and this works whatever the framework build does with expressions.
+ */
+document.addEventListener('change', (event) => {
+    const field = event.target;
+    if (!field || field.hasAttribute('data-no-auto-submit')) return;
+
+    const form = field.closest('form[data-auto-submit]');
+    if (form) form.submit();
+});

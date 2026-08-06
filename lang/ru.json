@@ -76,6 +76,8 @@
     "games.target_language": "Язык перевода",
     "games.source_language": "Исходный язык",
     "games.type": "Тип",
+    "games.filter_group": "Сузить",
+    "games.sort_group": "Порядок",
     "games.sort_by": "Сортировка",
     "games.sort.score": "Лучшие в целом",
     "games.sort.name": "Название (А-Я)",

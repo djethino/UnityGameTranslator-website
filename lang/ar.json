@@ -76,6 +76,8 @@
     "games.target_language": "اللغة الهدف",
     "games.source_language": "اللغة المصدر",
     "games.type": "النوع",
+    "games.filter_group": "تضييق",
+    "games.sort_group": "الترتيب",
     "games.sort_by": "ترتيب حسب",
     "games.sort.score": "الأفضل عموماً",
     "games.sort.name": "الاسم (أ-ي)",
