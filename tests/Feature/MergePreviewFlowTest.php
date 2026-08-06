@@ -152,6 +152,48 @@ class MergePreviewFlowTest extends TestCase
         $this->assertSame(self::ONLINE_CONTENT, $json['online']);
     }
 
+    public function test_settings_endpoint_serves_both_sides_as_comparable_rows(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT + [
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+        ]);
+
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT + [
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'Roboto']],
+        ])->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $settings = $this->get(route('translations.merge-preview.settings', $translation));
+        $settings->assertOk();
+
+        $json = $settings->json();
+        $this->assertStringContainsString('Roboto', $json['local']['fonts:Title']['value']);
+        $this->assertStringContainsString('NotoSans', $json['online']['fonts:Title']['value']);
+    }
+
+    public function test_settings_endpoint_refuses_a_stranger(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $stranger = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($owner, self::ONLINE_CONTENT);
+
+        // Same rule as the data endpoint: reading one side of someone else's comparison means
+        // reading their unpublished local file
+        $this->actingAs($stranger)
+            ->get(route('translations.merge-preview.settings', $translation))
+            ->assertForbidden();
+    }
+
+    public function test_settings_endpoint_refuses_an_anonymous_visitor(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($owner, self::ONLINE_CONTENT);
+
+        $this->get(route('translations.merge-preview.settings', $translation))
+            ->assertUnauthorized();
+    }
+
     public function test_consumed_token_cannot_authenticate_again(): void
     {
         $user = User::factory()->create()->refresh();

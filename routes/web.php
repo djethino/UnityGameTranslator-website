@@ -132,6 +132,8 @@ $localizableRoutes = function () {
     // entry URL is unprefixed (mod-generated) but browsed afterwards
     Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');
     Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
+    // Settings travel apart from the lines: see TranslationController::mergePreviewSettings
+    Route::get('/translations/{translation}/merge-preview/settings', [TranslationController::class, 'mergePreviewSettings'])->name('translations.merge-preview.settings');
 
     // Live edit session pages — anonymous, token-based auth from the mod.
     // The entry route consumes the one-time token and redirects to the

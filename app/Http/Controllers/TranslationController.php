@@ -709,7 +709,15 @@ class TranslationController extends Controller
      * "local" is the mod-flow content file (null in the web upload flow,
      * where the local file lives in the browser's sessionStorage).
      */
-    public function mergePreviewData(Request $request, Translation $translation)
+    /**
+     * Who may read the two sides of a comparison, and where they are.
+     *
+     * Extracted so every endpoint serving comparison data enforces the SAME rule. Two copies of
+     * an access check drift, and the one that drifts is the one nobody re-reads.
+     *
+     * @return array{0: ?string, 1: string} [local file path or null, online file path]
+     */
+    private function resolveMergePreviewPaths(Translation $translation): array
     {
         $localPath = null;
 
@@ -740,6 +748,44 @@ class TranslationController extends Controller
         if (!$onlinePath || !file_exists($onlinePath)) {
             abort(404, 'Translation file not found.');
         }
+
+        return [$localPath, $onlinePath];
+    }
+
+    /**
+     * The file settings of both sides, as rows that can be compared one by one.
+     *
+     * Served apart from the lines rather than inside them: mergePreviewData streams both files
+     * without ever decoding them, which is what keeps a large translation cheap to load. Settings
+     * are a handful of rows, so they are extracted here — once, in PHP — instead of being
+     * re-derived in JavaScript, which would leave two definitions of "what a setting is" to keep
+     * in step with the mod.
+     */
+    public function mergePreviewSettings(Request $request, Translation $translation, TranslationService $service)
+    {
+        [$localPath, $onlinePath] = $this->resolveMergePreviewPaths($translation);
+
+        return response()->json([
+            'local' => $localPath ? $this->comparableSettingsOf($localPath, $service) : null,
+            'online' => $this->comparableSettingsOf($onlinePath, $service),
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * Comparable settings of one file, or an empty set when it cannot be read. Unreadable is not
+     * an error here: the lines are the subject of the page, and failing the whole comparison
+     * because a settings block is malformed would be a poor trade.
+     */
+    private function comparableSettingsOf(string $path, TranslationService $service): array
+    {
+        $json = json_decode(file_get_contents($path), true);
+
+        return is_array($json) ? $service->extractComparableSettings($json) : [];
+    }
+
+    public function mergePreviewData(Request $request, Translation $translation)
+    {
+        [$localPath, $onlinePath] = $this->resolveMergePreviewPaths($translation);
 
         return response()->stream(function () use ($localPath, $onlinePath) {
             echo '{"local":';
