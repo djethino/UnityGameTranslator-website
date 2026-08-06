@@ -947,6 +947,7 @@
     "auth.codes_saved": "שמרתי את הקודים שלי",
     "auth.recover_title": "שחזור חשבון",
     "auth.recover_intro": "השתמש באחד מקודי השחזור שלך כדי להגדיר סיסמה חדשה. הקוד ינוצל.",
+    "auth.recovery_failed": "שם משתמש או קוד שחזור אינם תקינים.",
     "auth.recovery_code": "קוד שחזור",
     "auth.new_password": "סיסמה חדשה",
     "auth.recover_button": "שחזור החשבון שלי",

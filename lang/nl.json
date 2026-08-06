@@ -947,6 +947,7 @@
     "auth.codes_saved": "Ik heb mijn codes opgeslagen",
     "auth.recover_title": "Accountherstel",
     "auth.recover_intro": "Gebruik een van je herstelcodes om een nieuw wachtwoord in te stellen. De code wordt daarbij verbruikt.",
+    "auth.recovery_failed": "Ongeldige gebruikersnaam of herstelcode.",
     "auth.recovery_code": "Herstelcode",
     "auth.new_password": "Nieuw wachtwoord",
     "auth.recover_button": "Mijn account herstellen",

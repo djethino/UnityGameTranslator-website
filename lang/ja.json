@@ -947,6 +947,7 @@
     "auth.codes_saved": "コードを保存しました",
     "auth.recover_title": "アカウントの復旧",
     "auth.recover_intro": "リカバリーコードの1つを使って新しいパスワードを設定します。コードは消費されます。",
+    "auth.recovery_failed": "ユーザー名または復旧コードが正しくありません。",
     "auth.recovery_code": "リカバリーコード",
     "auth.new_password": "新しいパスワード",
     "auth.recover_button": "アカウントを復旧",

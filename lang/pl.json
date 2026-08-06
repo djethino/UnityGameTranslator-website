@@ -947,6 +947,7 @@
     "auth.codes_saved": "Zapisałem swoje kody",
     "auth.recover_title": "Odzyskiwanie konta",
     "auth.recover_intro": "Użyj jednego ze swoich kodów odzyskiwania, aby ustawić nowe hasło. Kod zostanie zużyty.",
+    "auth.recovery_failed": "Nieprawidłowa nazwa użytkownika lub kod odzyskiwania.",
     "auth.recovery_code": "Kod odzyskiwania",
     "auth.new_password": "Nowe hasło",
     "auth.recover_button": "Odzyskaj moje konto",

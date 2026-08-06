@@ -208,6 +208,35 @@ class EditSessionController extends Controller
      *
      * GET /edit-session/data
      */
+    /**
+     * What the edited file carries besides its lines: fonts, image replacements, exclusions,
+     * variables, game options.
+     *
+     * Read-only, and no side to pick: an edit session has a single source, so there is nothing
+     * to arbitrate — only something to KNOW. Someone editing a file that swaps twenty images
+     * should not have to open the mod to find out.
+     *
+     * Served apart from the content, which is streamed without ever being decoded so that a
+     * large translation stays cheap to load.
+     *
+     * GET /edit-session-settings (AJAX)
+     */
+    public function settings(TranslationService $service)
+    {
+        $session = $this->currentSession();
+        $path = $session?->getContentFilePath();
+
+        if (!$path) {
+            abort(410, 'Edit session expired. Please restart it from the mod.');
+        }
+
+        $json = json_decode($service->normalizeContent(file_get_contents($path)), true);
+
+        return response()->json([
+            'settings' => is_array($json) ? $service->extractComparableSettings($json) : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
     public function data()
     {
         $session = $this->currentSession();

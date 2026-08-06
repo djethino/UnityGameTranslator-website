@@ -947,6 +947,7 @@
     "auth.codes_saved": "ฉันบันทึกรหัสแล้ว",
     "auth.recover_title": "การกู้คืนบัญชี",
     "auth.recover_intro": "ใช้รหัสกู้คืนของคุณหนึ่งรหัสเพื่อตั้งรหัสผ่านใหม่ รหัสนี้จะถูกใช้ไป",
+    "auth.recovery_failed": "ชื่อผู้ใช้หรือรหัสกู้คืนไม่ถูกต้อง",
     "auth.recovery_code": "รหัสกู้คืน",
     "auth.new_password": "รหัสผ่านใหม่",
     "auth.recover_button": "กู้คืนบัญชีของฉัน",

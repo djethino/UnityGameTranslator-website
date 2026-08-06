@@ -947,6 +947,7 @@
     "auth.codes_saved": "لقد حفظت رموزي",
     "auth.recover_title": "استرداد الحساب",
     "auth.recover_intro": "استخدم أحد رموز الاسترداد لتعيين كلمة مرور جديدة. سيتم استهلاك الرمز.",
+    "auth.recovery_failed": "اسم المستخدم أو رمز الاسترداد غير صالح.",
     "auth.recovery_code": "رمز الاسترداد",
     "auth.new_password": "كلمة مرور جديدة",
     "auth.recover_button": "استرداد حسابي",

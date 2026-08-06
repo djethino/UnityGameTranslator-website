@@ -947,6 +947,7 @@
     "auth.codes_saved": "코드를 저장했습니다",
     "auth.recover_title": "계정 복구",
     "auth.recover_intro": "복구 코드 중 하나를 사용하여 새 비밀번호를 설정하세요. 코드는 소모됩니다.",
+    "auth.recovery_failed": "사용자 이름 또는 복구 코드가 올바르지 않습니다.",
     "auth.recovery_code": "복구 코드",
     "auth.new_password": "새 비밀번호",
     "auth.recover_button": "계정 복구",

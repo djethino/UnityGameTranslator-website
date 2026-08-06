@@ -947,6 +947,7 @@
     "auth.codes_saved": "Tôi đã lưu mã của mình",
     "auth.recover_title": "Khôi phục tài khoản",
     "auth.recover_intro": "Dùng một trong các mã khôi phục của bạn để đặt mật khẩu mới. Mã sẽ bị dùng hết.",
+    "auth.recovery_failed": "Tên người dùng hoặc mã khôi phục không hợp lệ.",
     "auth.recovery_code": "Mã khôi phục",
     "auth.new_password": "Mật khẩu mới",
     "auth.recover_button": "Khôi phục tài khoản của tôi",

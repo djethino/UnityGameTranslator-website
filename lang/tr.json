@@ -947,6 +947,7 @@
     "auth.codes_saved": "Kodlarımı kaydettim",
     "auth.recover_title": "Hesap kurtarma",
     "auth.recover_intro": "Yeni bir parola belirlemek için kurtarma kodlarınızdan birini kullanın. Kod tükenir.",
+    "auth.recovery_failed": "Kullanıcı adı veya kurtarma kodu geçersiz.",
     "auth.recovery_code": "Kurtarma kodu",
     "auth.new_password": "Yeni parola",
     "auth.recover_button": "Hesabımı kurtar",

@@ -947,6 +947,7 @@
     "auth.codes_saved": "我已保存我的恢复码",
     "auth.recover_title": "账户找回",
     "auth.recover_intro": "使用你的一个恢复码来设置新密码。该码将被消耗。",
+    "auth.recovery_failed": "用户名或恢复代码无效。",
     "auth.recovery_code": "恢复码",
     "auth.new_password": "新密码",
     "auth.recover_button": "找回我的账户",

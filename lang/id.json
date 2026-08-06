@@ -947,6 +947,7 @@
     "auth.codes_saved": "Saya sudah menyimpan kode saya",
     "auth.recover_title": "Pemulihan akun",
     "auth.recover_intro": "Gunakan salah satu kode pemulihan Anda untuk menyetel kata sandi baru. Kode akan terpakai.",
+    "auth.recovery_failed": "Nama pengguna atau kode pemulihan tidak valid.",
     "auth.recovery_code": "Kode pemulihan",
     "auth.new_password": "Kata sandi baru",
     "auth.recover_button": "Pulihkan akun saya",

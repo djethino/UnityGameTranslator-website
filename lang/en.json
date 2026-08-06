@@ -947,6 +947,7 @@
     "auth.codes_saved": "I saved my codes",
     "auth.recover_title": "Account recovery",
     "auth.recover_intro": "Use one of your recovery codes to set a new password. The code is consumed.",
+    "auth.recovery_failed": "Invalid username or recovery code.",
     "auth.recovery_code": "Recovery code",
     "auth.new_password": "New password",
     "auth.recover_button": "Recover my account",

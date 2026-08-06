@@ -26,7 +26,7 @@
             <div>
                 <p class="font-semibold text-lg">{{ $translation->game->name }}</p>
                 <p class="text-sm text-gray-400">
-                    {{ __('upload.upload') }} {{ $translation->created_at->format('M d, Y') }}
+                    {{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}
                 </p>
                 <p class="text-sm text-gray-500">
                     {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} &bull; {{ $translation->download_count }} {{ __('my_translations.downloads') }}

@@ -136,6 +136,30 @@ class EditSessionFlowTest extends TestCase
         $this->assertSame('Bonjour', $payload['content']['Hello']['v']);
     }
 
+    public function test_settings_endpoint_lists_what_the_file_carries(): void
+    {
+        $this->initSession([
+            '_uuid' => 'session-uuid',
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+            '_exclusions' => ["Qapla'"],
+            'Hello' => ['v' => 'Bonjour', 't' => 'H'],
+        ]);
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $response = $this->getJson('/edit-session-settings');
+
+        $response->assertOk();
+        // One source, nothing to arbitrate: the point is only to KNOW what the file carries
+        $this->assertStringContainsString('NotoSans', $response->json('settings.fonts:Title.value'));
+        $this->assertArrayHasKey("exclusions:Qapla'", $response->json('settings'));
+    }
+
+    public function test_settings_endpoint_refuses_without_a_session(): void
+    {
+        $this->getJson('/edit-session-settings')->assertStatus(410);
+    }
+
     public function test_save_applies_selections_preserves_metadata_and_extends_expiry(): void
     {
         $this->initSession();

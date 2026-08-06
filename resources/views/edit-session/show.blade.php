@@ -67,6 +67,36 @@
 
         @include('partials.editor-quality-bar')
 
+        {{-- What the file carries besides its lines. Collapsed by default: this page is about
+             the lines, and the panel answers a question you only ask sometimes — "why is this
+             font different in game?", "which images does this translation replace?".
+             Read-only: these are edited in the mod, the only side that sees the game. --}}
+        <div x-show="hasSettings" x-cloak class="mb-4">
+            <button type="button" @click="toggleSettingsPanel()"
+                class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
+                <i class="fas fa-sliders text-gray-500"></i>
+                <span>{{ __('file_settings.section_title') }}</span>
+                <i class="fas fa-chevron-down text-xs" x-show="showSettings" x-cloak></i>
+                <i class="fas fa-chevron-right text-xs" x-show="hideSettings" x-cloak></i>
+            </button>
+
+            <div x-show="showSettings" x-cloak
+                class="mt-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <tbody>
+                        <template x-for="row in settingsRows" :key="row.key">
+                            <tr class="border-t border-gray-750 first:border-t-0">
+                                <td class="px-2 py-1 align-top text-gray-500 whitespace-nowrap" x-text="row.sectionLabel"></td>
+                                <td class="px-2 py-1 align-top text-gray-300 font-mono" x-text="row.label"></td>
+                                <td class="px-2 py-1 align-top text-gray-400" x-text="row.value"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <p class="mt-2 text-xs text-gray-500 italic">{{ __('file_settings.section_hint') }}</p>
+            </div>
+        </div>
+
         {{-- Filters --}}
         <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
             <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
@@ -577,6 +607,12 @@ document.addEventListener('alpine:init', () => {
         }
     }, {
         loaded: false,
+        // What the file carries besides its lines — read-only, one source, nothing to arbitrate.
+        // hideSettings mirrors showSettings: the CSP evaluator reads properties, it cannot negate.
+        settingsRows: [],
+        hasSettings: false,
+        showSettings: false,
+        hideSettings: true,
         error: null,
         saving: false,
         saveMessage: '',
@@ -625,6 +661,7 @@ document.addEventListener('alpine:init', () => {
                     this.allKeys = Object.keys(result.full).sort();
                     this.loaded = true;
                     this.startLiveSync();
+                    this.loadSettings();
                 })
                 .catch(e => {
                     this.error = e.message === 'expired'
@@ -632,6 +669,51 @@ document.addEventListener('alpine:init', () => {
                         : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
+        },
+
+        /**
+         * What the file carries besides its lines.
+         *
+         * Read-only and no side to pick: an edit session has ONE source, so there is nothing to
+         * arbitrate — only something to know. Someone editing a file that swaps twenty images
+         * should not have to open the mod to discover it.
+         *
+         * Silent on failure: the lines are the subject of this page, and losing this panel must
+         * never cost the edit session.
+         */
+        loadSettings() {
+            fetch('{{ route("edit-session.settings") }}', { headers: { 'Accept': 'application/json' } })
+                .then(response => response.ok ? response.json() : null)
+                .then(payload => {
+                    if (!payload || !payload.settings) return;
+
+                    const labels = @js([
+                        'fonts' => __('file_settings.label.fonts'),
+                        'font_rules' => __('file_settings.label.font_rules'),
+                        'images' => __('file_settings.label.images'),
+                        'exclusions' => __('file_settings.label.exclusions'),
+                        'variables' => __('file_settings.label.variables'),
+                        'game_settings' => __('file_settings.game_settings'),
+                    ]);
+
+                    const rows = Object.entries(payload.settings).map(([key, entry]) => ({
+                        key,
+                        sectionLabel: labels[entry.section] || entry.section,
+                        label: entry.label,
+                        value: entry.value,
+                    }));
+                    rows.sort((a, b) => a.sectionLabel.localeCompare(b.sectionLabel)
+                        || a.label.localeCompare(b.label));
+
+                    this.settingsRows = rows;
+                    this.hasSettings = rows.length > 0;
+                })
+                .catch(() => {});
+        },
+
+        toggleSettingsPanel() {
+            this.showSettings = !this.showSettings;
+            this.hideSettings = !this.showSettings;
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────

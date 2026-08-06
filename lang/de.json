@@ -947,6 +947,7 @@
     "auth.codes_saved": "Ich habe meine Codes gespeichert",
     "auth.recover_title": "Kontowiederherstellung",
     "auth.recover_intro": "Verwende einen deiner Wiederherstellungscodes, um ein neues Passwort festzulegen. Der Code wird dabei verbraucht.",
+    "auth.recovery_failed": "Benutzername oder Wiederherstellungscode ungültig.",
     "auth.recovery_code": "Wiederherstellungscode",
     "auth.new_password": "Neues Passwort",
     "auth.recover_button": "Mein Konto wiederherstellen",

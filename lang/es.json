@@ -947,6 +947,7 @@
     "auth.codes_saved": "He guardado mis códigos",
     "auth.recover_title": "Recuperación de cuenta",
     "auth.recover_intro": "Usa uno de tus códigos de recuperación para establecer una nueva contraseña. El código se consume.",
+    "auth.recovery_failed": "Nombre de usuario o código de recuperación no válido.",
     "auth.recovery_code": "Código de recuperación",
     "auth.new_password": "Nueva contraseña",
     "auth.recover_button": "Recuperar mi cuenta",
