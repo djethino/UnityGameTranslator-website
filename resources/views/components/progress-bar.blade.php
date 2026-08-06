@@ -1,24 +1,24 @@
 @props(['translation'])
 
 @php
-    $effective = $translation->effective_lines;
+    // What the file is MADE OF, not how far it has come: a game's total line count
+    // is unknowable (text is captured as it is met), so there is no progress to
+    // measure. The denominator is everything that WAS captured — including lines
+    // marked as not to translate, which were met, looked at, and settled.
     $captureCount = $translation->capture_count ?? 0;
-    $totalWithCaptures = $effective + $captureCount;
+    $skippedCount = $translation->skipped_count ?? 0;
+    $effective = $translation->effective_lines;
+    $total = $effective + $captureCount + $skippedCount;
     $isCaptureOnly = $effective === 0 && $captureCount > 0;
 
-    // Lines marked as "do not translate" are outside both the segments and the
-    // denominator: counting them would make the author who carefully excluded a
-    // fictional language look less complete than the one who translated it by
-    // mistake. Stated as a separate fact below, never as a share of the bar.
-    $skippedCount = $translation->skipped_count ?? 0;
-
-    if ($totalWithCaptures > 0) {
-        $humanPercent = ($translation->human_count / $totalWithCaptures) * 100;
-        $validatedPercent = ($translation->validated_count / $totalWithCaptures) * 100;
-        $aiPercent = ($translation->ai_count / $totalWithCaptures) * 100;
-        $capturePercent = ($captureCount / $totalWithCaptures) * 100;
+    if ($total > 0) {
+        $humanPercent = ($translation->human_count / $total) * 100;
+        $validatedPercent = ($translation->validated_count / $total) * 100;
+        $aiPercent = ($translation->ai_count / $total) * 100;
+        $skippedPercent = ($skippedCount / $total) * 100;
+        $capturePercent = ($captureCount / $total) * 100;
     } else {
-        $humanPercent = $validatedPercent = $aiPercent = $capturePercent = 0;
+        $humanPercent = $validatedPercent = $aiPercent = $skippedPercent = $capturePercent = 0;
     }
 
     // Quality score (0-3 scale, show as percentage of max)
@@ -26,7 +26,7 @@
 @endphp
 
 <div {{ $attributes->merge(['class' => 'progress-bar-wrapper']) }}>
-    {{-- Progress bar --}}
+    {{-- Composition bar --}}
     <div class="h-2 bg-gray-700 rounded-full overflow-hidden flex"
          title="{{ __('progress.tooltip', [
              'human' => $translation->human_count,
@@ -44,19 +44,16 @@
         @if($aiPercent > 0)
             <div class="bg-orange-500 h-full" style="width: {{ $aiPercent }}%"></div>
         @endif
+        {{-- Settled, not missing: the author met these lines and decided they stay
+             as they are. Its own colour, before the grey, because a filled bar must
+             mean "everything met has been dealt with". --}}
+        @if($skippedPercent > 0)
+            <div class="bg-purple-500 h-full" style="width: {{ $skippedPercent }}%"></div>
+        @endif
         @if($capturePercent > 0)
             <div class="bg-gray-500 h-full" style="width: {{ $capturePercent }}%"></div>
         @endif
     </div>
-
-    {{-- A deliberate choice by the author, worth seeing when comparing translations.
-         Factual wording: an S can also mean "I will deal with it later", and we
-         cannot tell the two apart. --}}
-    @if($skippedCount > 0)
-        <p class="text-xs text-gray-400 mt-1">
-            {{ __('progress.skipped_marked', ['count' => number_format($skippedCount)]) }}
-        </p>
-    @endif
 
     {{-- Legend (optional, shown when slot has content) --}}
     @if($slot->isNotEmpty())

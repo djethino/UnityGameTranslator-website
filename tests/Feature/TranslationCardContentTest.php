@@ -183,22 +183,39 @@ class TranslationCardContentTest extends TestCase
             ]));
     }
 
-    public function test_lines_marked_as_not_to_translate_are_stated_next_to_the_bar(): void
+    public function test_lines_kept_as_is_are_named_in_the_legend(): void
     {
         $translation = $this->makeTranslation(['skipped_count' => 312]);
 
+        // A coloured band with no name in the key would be unreadable
         $this->get(route('games.show', $translation->game))
             ->assertOk()
-            ->assertSee(__('progress.skipped_marked', ['count' => '312']));
+            ->assertSee(__('progress.skipped') . ': 312');
     }
 
-    public function test_a_file_without_marked_lines_says_nothing_about_them(): void
+    public function test_a_file_without_kept_lines_says_nothing_about_them(): void
     {
         $translation = $this->makeTranslation(['skipped_count' => 0]);
 
-        // "Marked as not to translate: 0" is noise: the absence IS the information
+        // "Kept as is: 0" is noise: the absence IS the information
         $this->get(route('games.show', $translation->game))
             ->assertOk()
-            ->assertDontSee(__('progress.skipped_marked', ['count' => '0']));
+            ->assertDontSee(__('progress.skipped') . ': 0');
+    }
+
+    public function test_kept_lines_take_their_share_of_the_bar_rather_than_the_grey(): void
+    {
+        // 100 translated, 100 kept as is, nothing left to do
+        $translation = $this->makeTranslation([
+            'human_count' => 100,
+            'capture_count' => 0,
+            'skipped_count' => 100,
+        ]);
+
+        $html = $this->get(route('games.show', $translation->game))->assertOk()->getContent();
+
+        // Half the bar purple, and not one pixel of grey: nothing is pending here
+        $this->assertStringContainsString('bg-purple-500 h-full" style="width: 50%', $html);
+        $this->assertStringNotContainsString('bg-gray-500 h-full', $html);
     }
 }

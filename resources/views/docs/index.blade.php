@@ -539,11 +539,13 @@
                         <div class="text-sm text-gray-400">{{ __('docs.quality_system.ai_desc') }}</div>
                         <div class="text-xs text-orange-400 mt-2">1 {{ __('docs.quality_system.point') }}</div>
                     </div>
-                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-gray-500">
-                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-gray-600 text-white mb-2">S</span>
+                    {{-- Purple, like its segment in the composition bar: a line kept as it is
+                         has been dealt with, and must not be mistaken for one still waiting. --}}
+                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-purple-500">
+                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-purple-600 text-white mb-2">S</span>
                         <div class="font-semibold text-white">{{ __('docs.quality_system.skip') }}</div>
                         <div class="text-sm text-gray-400">{{ __('docs.quality_system.skip_desc') }}</div>
-                        <div class="text-xs text-gray-400 mt-2">{{ __('docs.quality_system.not_counted') }}</div>
+                        <div class="text-xs text-purple-300 mt-2">{{ __('docs.quality_system.skip_note') }}</div>
                     </div>
                 </div>
 

@@ -272,26 +272,7 @@
                             <!-- Progress bar -->
                             <div class="mt-2 mb-3">
                                 <x-progress-bar :translation="$translation" />
-                                <div class="flex items-center gap-4 text-xs text-gray-400 mt-1 flex-wrap">
-                                    <span class="flex items-center gap-1">
-                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        {{ __('progress.human') }}: {{ $translation->human_count }}
-                                    </span>
-                                    <span class="flex items-center gap-1">
-                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                        {{ __('progress.validated') }}: {{ $translation->validated_count }}
-                                    </span>
-                                    <span class="flex items-center gap-1">
-                                        <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                        {{ __('progress.ai') }}: {{ $translation->ai_count }}
-                                    </span>
-                                    @if(($translation->capture_count ?? 0) > 0)
-                                        <span class="flex items-center gap-1">
-                                            <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
-                                            {{ __('progress.capture') }}: {{ $translation->capture_count }}
-                                        </span>
-                                    @endif
-                                </div>
+                                <x-quality-legend :translation="$translation" />
                             </div>
 
                             <!-- Notes -->

@@ -8,13 +8,15 @@ use PHPUnit\Framework\TestCase;
 /**
  * How a file's tags become the numbers shown on a card.
  *
- * The rule worth protecting is the one about S (marked as not to translate). It is
- * a human decision — leaving a fictional language untouched in a game translated
- * into another one — so it must NOT count as missing work: keeping it in the bar's
- * denominator would make the careful author look less complete than the one who
- * let the AI translate everything, which is the opposite of the truth. It is
- * reported on its own instead, and never feeds the quality score (a score that
- * rose by marking lines would be trivial to inflate).
+ * The rule worth protecting is the one about S (kept as is). It is a human decision —
+ * leaving a fictional language untouched in a game translated into another one — so
+ * the line was met, read and settled. It therefore belongs to the bar, with its own
+ * segment and inside the denominator: excluding it would make the bar describe only
+ * part of the file while claiming to describe all of it, and dropping it into the
+ * grey would count care as work still to do.
+ *
+ * What it must never do is feed the quality score, which measures translations: a
+ * score that rose by marking lines would be trivial to inflate.
  *
  * M (mod UI) is technical noise and is counted nowhere.
  */
@@ -44,20 +46,21 @@ class TagCountsTest extends TestCase
         $this->assertSame(1, $counts['skipped_count']);
     }
 
-    public function test_skipped_lines_stay_out_of_the_bar_denominator(): void
+    public function test_kept_lines_are_counted_apart_from_the_ones_left_to_do(): void
     {
         $careful = $this->counts(array_merge(
             array_fill_keys(range('a', 'j'), ['v' => 'Bonjour', 't' => 'H']),
             array_fill_keys(range('k', 't'), ['v' => 'Qapla\'', 't' => 'S']),
+            array_fill_keys(range('u', 'y'), ['v' => '', 't' => 'H']),
         ));
 
-        // 10 human + 10 marked. The bar is built from H+V+A+capture, so the ten
-        // marked lines must not dilute it: this file reads as fully translated.
-        $barTotal = $careful['human_count'] + $careful['validated_count']
-            + $careful['ai_count'] + $careful['capture_count'];
-
-        $this->assertSame(10, $barTotal);
+        // The bar covers everything captured — 10 translated, 10 kept as is, 5 still
+        // to do — but the kept ones have their own bucket. Were they folded into
+        // capture_count, the grey would claim there are 15 lines left to translate
+        // when the author has already settled ten of them.
+        $this->assertSame(10, $careful['human_count']);
         $this->assertSame(10, $careful['skipped_count']);
+        $this->assertSame(5, $careful['capture_count']);
     }
 
     public function test_marking_lines_cannot_inflate_the_quality_score(): void

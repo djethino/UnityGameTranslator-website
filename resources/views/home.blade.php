@@ -366,22 +366,10 @@
                         </div>
                         <div class="mt-2">
                             <x-progress-bar :translation="$translation" />
-                            <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                <span class="flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                                    {{ $translation->human_count }}
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                    {{ $translation->validated_count }}
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                                    {{ $translation->ai_count }}
-                                </span>
+                            <x-quality-legend :translation="$translation" compact>
                                 <span class="text-gray-600">•</span>
                                 <span>{{ number_format($translation->line_count) }} {{ __('my_translations.lines') }}</span>
-                            </div>
+                            </x-quality-legend>
                         </div>
                     </div>
                 </div>
