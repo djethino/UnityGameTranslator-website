@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "두 버전의 설정이 다릅니다",
     "file_settings.section_hint": "이 설정은 번역과 함께 전달되며 모드가 적용합니다. 변경은 이 사이트가 아니라 모드에서 합니다.",
     "file_settings.fonts": "글꼴 :count개",
+    "file_settings.fonts_detected": "게임에서 발견된, 별도 설정이 없는 글꼴 :count개 더",
     "file_settings.font_rules": "글꼴 규칙 :count개",
     "file_settings.font_rules_desc": "패턴에 맞는 모든 텍스트에 적용되는 글꼴 교체입니다.",
     "file_settings.images": "교체된 이미지 :count개",

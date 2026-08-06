@@ -15,6 +15,11 @@
         App\Models\Translation::SETTINGS_SECTIONS,
         fn ($section) => $leftCounts[$section] !== $rightCounts[$section]
     ));
+    // Counts alone miss a swap: replacing one fallback font with another
+    // leaves the number untouched but is a real difference
+    if (!in_array('fonts', $differing, true) && $left->configuredFonts() != $right->configuredFonts()) {
+        array_unshift($differing, 'fonts');
+    }
     $sectionLabels = [
         'fonts' => __('file_settings.label.fonts'),
         'font_rules' => __('file_settings.label.font_rules'),

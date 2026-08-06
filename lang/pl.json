@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Ustawienia różnią się między wersjami",
     "file_settings.section_hint": "Te ustawienia podróżują razem z tłumaczeniem i stosuje je mod. Zmienia się je w modzie, nie na tej stronie.",
     "file_settings.fonts": ":count czcionka|:count czcionki|:count czcionek",
+    "file_settings.fonts_detected": ":count kolejna czcionka wykryta w grze, bez własnych ustawień|:count kolejne czcionki wykryte w grze, bez własnych ustawień|:count kolejnych czcionek wykrytych w grze, bez własnych ustawień",
     "file_settings.font_rules": ":count reguła czcionek|:count reguły czcionek|:count reguł czcionek",
     "file_settings.font_rules_desc": "Podmiany czcionek stosowane do każdego tekstu pasującego do wzorca.",
     "file_settings.images": ":count obraz zastąpiony|:count obrazy zastąpione|:count obrazów zastąpionych",

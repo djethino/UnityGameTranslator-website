@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "De instellingen van beide versies verschillen",
     "file_settings.section_hint": "Deze instellingen reizen mee met de vertaling en worden door de mod toegepast. Je wijzigt ze in de mod, niet op deze site.",
     "file_settings.fonts": ":count lettertype|:count lettertypen",
+    "file_settings.fonts_detected": ":count ander lettertype in het spel gevonden, zonder eigen instelling|:count andere lettertypen in het spel gevonden, zonder eigen instellingen",
     "file_settings.font_rules": ":count lettertyperegel|:count lettertyperegels",
     "file_settings.font_rules_desc": "Lettertypevervangingen voor elke tekst die op een patroon past.",
     "file_settings.images": ":count afbeelding vervangen|:count afbeeldingen vervangen",

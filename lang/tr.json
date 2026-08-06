@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "İki sürümün ayarları farklı",
     "file_settings.section_hint": "Bu ayarlar çeviriyle birlikte gelir ve mod tarafından uygulanır. Bu sitede değil, modda değiştirilir.",
     "file_settings.fonts": ":count yazı tipi|:count yazı tipi",
+    "file_settings.fonts_detected": "Oyunda saptanan, kendine ait ayarı olmayan :count yazı tipi daha|Oyunda saptanan, kendine ait ayarı olmayan :count yazı tipi daha",
     "file_settings.font_rules": ":count yazı tipi kuralı|:count yazı tipi kuralı",
     "file_settings.font_rules_desc": "Bir kalıba uyan her metne uygulanan yazı tipi değişimleri.",
     "file_settings.images": ":count görsel değiştirildi|:count görsel değiştirildi",

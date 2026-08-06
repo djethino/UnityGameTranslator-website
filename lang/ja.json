@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "2 つの版で設定が異なります",
     "file_settings.section_hint": "これらの設定は翻訳と一緒に配布され、MOD が適用します。変更はこのサイトではなく MOD 側で行います。",
     "file_settings.fonts": "フォント :count 件",
+    "file_settings.fonts_detected": "ゲーム内で検出された、個別設定のないフォントが他に :count 件",
     "file_settings.font_rules": "フォントルール :count 件",
     "file_settings.font_rules_desc": "パターンに一致するすべてのテキストに適用されるフォント置換です。",
     "file_settings.images": "差し替え画像 :count 件",

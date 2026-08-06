@@ -384,10 +384,42 @@ class Translation extends Model
      *
      * @return array<string,int> section => count (0 when absent)
      */
+    /**
+     * Is this font entry a deliberate setting, or just a font the mod happened
+     * to meet in-game?
+     *
+     * FontManager records EVERY font it encounters, with default values. So
+     * font_config is part settings, part discovery inventory — and the
+     * inventory depends only on which screens the player walked through.
+     * Counting it whole overstates what the author actually configured, and
+     * makes two copies of the same translation look different for no reason.
+     */
+    public static function isDeliberateFontSetting(array $settings): bool
+    {
+        return ($settings['enabled'] ?? true) === false
+            || !empty($settings['fallback'])
+            || abs(($settings['scale'] ?? 1.0) - 1.0) > 0.001;
+    }
+
+    /** Fonts the author actually configured (see isDeliberateFontSetting). */
+    public function configuredFonts(): array
+    {
+        return array_filter(
+            $this->font_config ?? [],
+            fn ($settings) => is_array($settings) && self::isDeliberateFontSetting($settings)
+        );
+    }
+
+    /** Fonts merely met in-game, carrying no setting of their own. */
+    public function detectedFontCount(): int
+    {
+        return count($this->font_config ?? []) - count($this->configuredFonts());
+    }
+
     public function settingsSectionCounts(): array
     {
         return [
-            'fonts' => count($this->font_config ?? []),
+            'fonts' => count($this->configuredFonts()),
             'font_rules' => $this->settingsCount('font_overrides'),
             'images' => $this->settingsCount('image_replacements'),
             'exclusions' => $this->settingsCount('exclusions'),
@@ -403,6 +435,20 @@ class Translation extends Model
     public function hasSettings(): bool
     {
         return !empty($this->font_config) || !empty($this->settings_summary);
+    }
+
+    /**
+     * Do the two translations carry different settings? Section counts alone
+     * would miss a swap (one font replaced by another keeps the count), so
+     * fonts are compared on their configured entries, not just their number.
+     */
+    public function settingsDifferFrom(self $other): bool
+    {
+        if ($this->configuredFonts() != $other->configuredFonts()) {
+            return true;
+        }
+
+        return $this->settingsSectionCounts() !== $other->settingsSectionCounts();
     }
 
     /**

@@ -9,7 +9,9 @@
     Requires: $translation
 --}}
 @php
-    $fontCount = count($translation->font_config ?? []);
+    // Configured fonts only: font_config also holds every font the mod merely
+    // met in-game, which says nothing about what the author set up
+    $fontCount = count($translation->configuredFonts());
     $ruleCount = $translation->settingsCount('font_overrides');
     $imageCount = $translation->settingsCount('image_replacements');
     $exclusionCount = $translation->settingsCount('exclusions');

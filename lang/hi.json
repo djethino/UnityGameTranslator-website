@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "दोनों संस्करणों की सेटिंग्स अलग हैं",
     "file_settings.section_hint": "ये सेटिंग्स अनुवाद के साथ आती हैं और मॉड इन्हें लागू करता है। इन्हें मॉड में बदला जाता है, इस साइट पर नहीं।",
     "file_settings.fonts": ":count फ़ॉन्ट|:count फ़ॉन्ट",
+    "file_settings.fonts_detected": "गेम में मिले :count और फ़ॉन्ट, जिनकी अपनी कोई सेटिंग नहीं|गेम में मिले :count और फ़ॉन्ट, जिनकी अपनी कोई सेटिंग नहीं",
     "file_settings.font_rules": ":count फ़ॉन्ट नियम|:count फ़ॉन्ट नियम",
     "file_settings.font_rules_desc": "किसी पैटर्न से मेल खाते हर टेक्स्ट पर लागू फ़ॉन्ट बदलाव।",
     "file_settings.images": ":count छवि बदली गई|:count छवियाँ बदली गईं",

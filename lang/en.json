@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Settings differ between the two versions",
     "file_settings.section_hint": "These settings ship with the translation and are applied by the mod. They are changed in the mod, not on this site.",
     "file_settings.fonts": ":count font|:count fonts",
+    "file_settings.fonts_detected": ":count more font detected in-game, with no setting of its own|:count more fonts detected in-game, with no settings of their own",
     "file_settings.font_rules": ":count font rule|:count font rules",
     "file_settings.font_rules_desc": "Font swaps applied to any text matching a pattern.",
     "file_settings.images": ":count image replaced|:count images replaced",

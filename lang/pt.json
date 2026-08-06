@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "As definições diferem entre as duas versões",
     "file_settings.section_hint": "Estas definições viajam com a tradução e são aplicadas pelo mod. Alteram-se no mod, não neste site.",
     "file_settings.fonts": ":count tipo de letra|:count tipos de letra",
+    "file_settings.fonts_detected": ":count outro tipo de letra detetado no jogo, sem definições próprias|:count outros tipos de letra detetados no jogo, sem definições próprias",
     "file_settings.font_rules": ":count regra de tipo de letra|:count regras de tipo de letra",
     "file_settings.font_rules_desc": "Substituições de tipo de letra aplicadas a qualquer texto que corresponda a um padrão.",
     "file_settings.images": ":count imagem substituída|:count imagens substituídas",

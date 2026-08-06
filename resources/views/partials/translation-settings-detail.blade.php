@@ -12,7 +12,10 @@
 --}}
 @php
     $summary = $translation->settings_summary ?? [];
-    $fonts = $translation->font_config ?? [];
+    // Only fonts carrying an actual setting are listed; the ones the mod merely
+    // met in-game are reported as a count, since they configure nothing
+    $fonts = $translation->configuredFonts();
+    $detectedFonts = $translation->detectedFontCount();
     $rules = $summary['font_overrides'] ?? null;
     $images = $summary['image_replacements'] ?? null;
     $exclusions = $summary['exclusions'] ?? null;
@@ -55,7 +58,7 @@
     @endif
 
     {{-- Fonts --}}
-    @if(!empty($fonts))
+    @if(!empty($fonts) || $detectedFonts > 0)
         <div>
             <h4 class="text-sm font-medium text-gray-400 mb-1">
                 <i class="fas fa-font mr-2"></i>{{ trans_choice('file_settings.fonts', count($fonts), ['count' => count($fonts)]) }}
@@ -85,6 +88,11 @@
                     </div>
                 @endforeach
             </div>
+            @if($detectedFonts > 0)
+                <p class="text-xs text-gray-500 mt-2">
+                    {{ trans_choice('file_settings.fonts_detected', $detectedFonts, ['count' => $detectedFonts]) }}
+                </p>
+            @endif
         </div>
     @endif
 

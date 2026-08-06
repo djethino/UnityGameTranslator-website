@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Thiết lập của hai phiên bản khác nhau",
     "file_settings.section_hint": "Các thiết lập này đi kèm bản dịch và được mod áp dụng. Bạn thay đổi chúng trong mod, không phải trên trang này.",
     "file_settings.fonts": ":count phông chữ",
+    "file_settings.fonts_detected": "Còn :count phông chữ được phát hiện trong game, không có thiết lập riêng",
     "file_settings.font_rules": ":count quần thể quy tắc phông chữ",
     "file_settings.font_rules_desc": "Thay thế phông chữ cho mọi văn bản khớp với một mẫu.",
     "file_settings.images": ":count hình ảnh được thay",

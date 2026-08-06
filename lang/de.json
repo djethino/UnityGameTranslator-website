@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Die Einstellungen der beiden Versionen unterscheiden sich",
     "file_settings.section_hint": "Diese Einstellungen gehören zur Übersetzung und werden vom Mod angewendet. Geändert werden sie im Mod, nicht auf dieser Seite.",
     "file_settings.fonts": ":count Schriftart|:count Schriftarten",
+    "file_settings.fonts_detected": ":count weitere im Spiel erkannte Schriftart, ohne eigene Einstellung|:count weitere im Spiel erkannte Schriftarten, ohne eigene Einstellungen",
     "file_settings.font_rules": ":count Schriftregel|:count Schriftregeln",
     "file_settings.font_rules_desc": "Schriftersetzungen für jeden Text, der auf ein Muster passt.",
     "file_settings.images": ":count Bild ersetzt|:count Bilder ersetzt",

@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Pengaturan kedua versi berbeda",
     "file_settings.section_hint": "Pengaturan ini ikut bersama terjemahan dan diterapkan oleh mod. Ubahnya di mod, bukan di situs ini.",
     "file_settings.fonts": ":count fon",
+    "file_settings.fonts_detected": ":count fon lain terdeteksi dalam gim, tanpa pengaturan sendiri",
     "file_settings.font_rules": ":count aturan fon",
     "file_settings.font_rules_desc": "Penggantian fon untuk setiap teks yang cocok dengan sebuah pola.",
     "file_settings.images": ":count gambar diganti",

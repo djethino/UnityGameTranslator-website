@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "الإعدادات مختلفة بين النسختين",
     "file_settings.section_hint": "تنتقل هذه الإعدادات مع الترجمة ويطبّقها المود، وتُعدّل من داخل المود لا من هذا الموقع.",
     "file_settings.fonts": ":count خط|:count خطوط",
+    "file_settings.fonts_detected": "تم اكتشاف :count خط آخر داخل اللعبة دون إعدادات خاصة|تم اكتشاف :count خطوط أخرى داخل اللعبة دون إعدادات خاصة",
     "file_settings.font_rules": ":count قاعدة خطوط|:count قواعد خطوط",
     "file_settings.font_rules_desc": "استبدال للخطوط يُطبّق على كل نص يطابق نمطًا معيّنًا.",
     "file_settings.images": "تم استبدال :count صورة|تم استبدال :count صور",

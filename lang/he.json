@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "ההגדרות של שתי הגרסאות שונות",
     "file_settings.section_hint": "ההגדרות האלו נוסעות עם התרגום והמוד מחיל אותן. משנים אותן במוד, לא באתר הזה.",
     "file_settings.fonts": "גופן אחד|:count גופנים",
+    "file_settings.fonts_detected": "זוהה במשחק גופן נוסף ללא הגדרה משלו|זוהו במשחק עוד :count גופנים ללא הגדרות משלהם",
     "file_settings.font_rules": "כלל גופן אחד|:count כללי גופן",
     "file_settings.font_rules_desc": "החלפת גופנים המוחלת על כל טקסט שמתאים לתבנית.",
     "file_settings.images": "תמונה אחת הוחלפה|:count תמונות הוחלפו",

@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "การตั้งค่าของสองเวอร์ชันต่างกัน",
     "file_settings.section_hint": "การตั้งค่าเหล่านี้เดินทางมากับคำแปลและถูกนำไปใช้โดยมอด แก้ไขได้ในมอด ไม่ใช่บนเว็บไซต์นี้",
     "file_settings.fonts": "ฟอนต์ :count แบบ",
+    "file_settings.fonts_detected": "พบฟอนต์อีก :count แบบในเกม ที่ไม่มีการตั้งค่าเฉพาะ",
     "file_settings.font_rules": "กฎฟอนต์ :count ข้อ",
     "file_settings.font_rules_desc": "การสลับฟอนต์กับข้อความทุกชิ้นที่ตรงกับรูปแบบ",
     "file_settings.images": "แทนที่ภาพแล้ว :count ภาพ",

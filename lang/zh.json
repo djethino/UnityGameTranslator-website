@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "两个版本的设置不同",
     "file_settings.section_hint": "这些设置随翻译一起分发，由模组应用。修改在模组里进行，而不是在本站。",
     "file_settings.fonts": ":count 个字体",
+    "file_settings.fonts_detected": "另有 :count 个在游戏中发现、未做任何设置的字体",
     "file_settings.font_rules": ":count 条字体规则",
     "file_settings.font_rules_desc": "对所有匹配某个模式的文本应用的字体替换。",
     "file_settings.images": "已替换 :count 张图片",

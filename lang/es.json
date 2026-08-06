@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Los ajustes difieren entre las dos versiones",
     "file_settings.section_hint": "Estos ajustes viajan con la traducción y los aplica el mod. Se modifican en el mod, no en este sitio.",
     "file_settings.fonts": ":count fuente|:count fuentes",
+    "file_settings.fonts_detected": ":count fuente más detectada en el juego, sin ajustes propios|:count fuentes más detectadas en el juego, sin ajustes propios",
     "file_settings.font_rules": ":count regla de fuente|:count reglas de fuente",
     "file_settings.font_rules_desc": "Sustituciones de fuente aplicadas a cualquier texto que coincida con un patrón.",
     "file_settings.images": ":count imagen reemplazada|:count imágenes reemplazadas",

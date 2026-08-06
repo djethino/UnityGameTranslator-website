@@ -100,6 +100,46 @@ class TranslationCardContentTest extends TestCase
         $this->assertFalse($translation->hasUnreachableImageAssets());
     }
 
+    public function test_fonts_merely_met_in_game_do_not_count_as_configured(): void
+    {
+        $translation = $this->makeTranslation([
+            'font_config' => [
+                // Recorded by FontManager on sight, configures nothing
+                'ArialSDF' => ['enabled' => true, 'fallback' => null, 'type' => 'Unknown', 'scale' => 1.0],
+                'LiberationSans' => ['enabled' => true, 'fallback' => null, 'type' => 'TMP', 'scale' => 1.0],
+                // Actually configured by the author
+                'PixelFont' => ['enabled' => false, 'fallback' => null, 'type' => 'TMP', 'scale' => 1.0],
+                'TitleFont' => ['enabled' => true, 'fallback' => 'NotoSans', 'type' => 'TMP', 'scale' => 1.0],
+                'BodyFont' => ['enabled' => true, 'fallback' => null, 'type' => 'TMP', 'scale' => 1.4],
+            ],
+        ]);
+
+        $this->assertCount(3, $translation->configuredFonts());
+        $this->assertSame(2, $translation->detectedFontCount());
+        $this->assertSame(3, $translation->settingsSectionCounts()['fonts']);
+    }
+
+    public function test_two_copies_differing_only_by_discovered_fonts_are_not_reported_as_different(): void
+    {
+        $shared = ['PixelFont' => ['enabled' => false, 'scale' => 1.0]];
+
+        // Same translation, two players: one walked through more screens
+        $a = $this->makeTranslation(['font_config' => $shared]);
+        $b = $this->makeTranslation([
+            'font_config' => $shared + ['SeenOnceFont' => ['enabled' => true, 'scale' => 1.0]],
+        ]);
+
+        $this->assertFalse($a->settingsDifferFrom($b));
+    }
+
+    public function test_swapping_a_fallback_is_reported_even_though_the_count_holds(): void
+    {
+        $a = $this->makeTranslation(['font_config' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']]]);
+        $b = $this->makeTranslation(['font_config' => ['Title' => ['enabled' => true, 'fallback' => 'Roboto']]]);
+
+        $this->assertTrue($a->settingsDifferFrom($b));
+    }
+
     public function test_content_updated_at_is_stamped_on_creation(): void
     {
         $translation = $this->makeTranslation();

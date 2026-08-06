@@ -867,6 +867,7 @@
     "merge_preview.settings_differ_title": "Les réglages diffèrent entre les deux versions",
     "file_settings.section_hint": "Ces réglages voyagent avec la traduction et sont appliqués par le mod. Ils se modifient dans le mod, pas sur ce site.",
     "file_settings.fonts": ":count police|:count polices",
+    "file_settings.fonts_detected": ":count autre police détectée en jeu, sans réglage particulier|:count autres polices détectées en jeu, sans réglage particulier",
     "file_settings.font_rules": ":count règle de police|:count règles de police",
     "file_settings.font_rules_desc": "Substitutions de police appliquées à tout texte correspondant à un motif.",
     "file_settings.images": ":count image remplacée|:count images remplacées",
