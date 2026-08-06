@@ -104,16 +104,43 @@
                             </div>
                         </div>
                         <!-- Overlay gradient bottom -->
-                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex justify-between items-end">
-                            <span class="text-xs bg-purple-600 px-2 py-0.5 rounded" title="{{ trans_choice('home.translations_count', $game->translations_count, ['count' => $game->translations_count]) }}">
-                                <i class="fas fa-language text-[10px] mr-0.5"></i> {{ $game->translations_count }}
-                            </span>
-                            @if(($game->translations_sum_download_count ?? 0) > 0)
-                                <span class="text-xs text-gray-300" title="{{ __('my_translations.downloads') }}">
-                                    <i class="fas fa-download text-[10px]"></i>
-                                    <span data-counter="{{ $game->translations_sum_download_count }}">{{ number_format($game->translations_sum_download_count) }}</span>
-                                </span>
+                        @php
+                            // Target languages this game is available in. Deduplicated upstream:
+                            // five French translations of the same game are one answer to
+                            // "is it in my language?", not five.
+                            $gameLanguages = $languagesByGame[$game->id] ?? collect();
+                            // Flags only: a popular game can carry dozens of languages, and their
+                            // names would fill the card several times over. The name stays one
+                            // hover away, and the whole list is on the game's own page.
+                            $shownLanguages = $gameLanguages->take(8);
+                            $extraLanguages = $gameLanguages->count() - $shownLanguages->count();
+                        @endphp
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                            @if($shownLanguages->isNotEmpty())
+                                {{-- Above the counters: which languages exist decides whether the
+                                     rest is worth reading at all --}}
+                                <div class="flex flex-wrap gap-1 mb-1.5">
+                                    @foreach($shownLanguages as $language)
+                                        <span class="text-[11px] bg-black/60 px-1 py-0.5 rounded leading-none"
+                                            title="{{ $language }}">@langflag($language)</span>
+                                    @endforeach
+                                    @if($extraLanguages > 0)
+                                        <span class="text-[10px] bg-black/60 text-gray-300 px-1.5 py-0.5 rounded leading-none"
+                                            title="{{ $gameLanguages->implode(', ') }}">+{{ $extraLanguages }}</span>
+                                    @endif
+                                </div>
                             @endif
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs bg-purple-600 px-2 py-0.5 rounded" title="{{ trans_choice('home.translations_count', $game->translations_count, ['count' => $game->translations_count]) }}">
+                                    <i class="fas fa-language text-[10px] mr-0.5"></i> {{ $game->translations_count }}
+                                </span>
+                                @if(($game->translations_sum_download_count ?? 0) > 0)
+                                    <span class="text-xs text-gray-300" title="{{ __('my_translations.downloads') }}">
+                                        <i class="fas fa-download text-[10px]"></i>
+                                        <span data-counter="{{ $game->translations_sum_download_count }}">{{ number_format($game->translations_sum_download_count) }}</span>
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="p-3">

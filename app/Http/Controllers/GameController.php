@@ -44,11 +44,27 @@ class GameController extends Controller
 
         $games = $query->orderBy('name')->paginate(24);
 
-        // Get available languages for filters
-        $targetLanguages = Translation::distinct()->pluck('target_language')->sort();
-        $sourceLanguages = Translation::distinct()->pluck('source_language')->sort();
+        // Which languages each listed game is available in — the first thing anyone browsing
+        // this page wants to know, and the card only said HOW MANY translations existed.
+        //
+        // One query for the whole page rather than one per card, and PUBLIC translations only:
+        // a branch is someone's unpublished contribution, and listing its language here would
+        // announce work its author has not published.
+        $languagesByGame = Translation::whereIn('game_id', $games->pluck('id'))
+            ->where('visibility', 'public')
+            ->select('game_id', 'target_language')
+            ->distinct()
+            ->get()
+            ->groupBy('game_id')
+            ->map(fn ($rows) => $rows->pluck('target_language')->unique()->sort()->values());
 
-        return view('games.index', compact('games', 'targetLanguages', 'sourceLanguages'));
+        // Get available languages for filters. Public only, same reason as above: a filter
+        // offering a language that exists solely in an unpublished branch both announces that
+        // work and returns nothing when picked.
+        $targetLanguages = Translation::where('visibility', 'public')->distinct()->pluck('target_language')->sort();
+        $sourceLanguages = Translation::where('visibility', 'public')->distinct()->pluck('source_language')->sort();
+
+        return view('games.index', compact('games', 'targetLanguages', 'sourceLanguages', 'languagesByGame'));
     }
 
     public function show(Game $game, Request $request)

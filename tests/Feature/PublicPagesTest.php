@@ -40,6 +40,45 @@ class PublicPagesTest extends TestCase
             ->assertSee('ugt_edit_session');
     }
 
+    public function test_the_game_list_shows_which_languages_exist_without_duplicates(): void
+    {
+        $game = \App\Models\Game::forceCreate(['name' => 'Listed Game', 'slug' => 'listed-game']);
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $visibility, string $language) use ($game, $author) {
+            $t = new \App\Models\Translation();
+            $t->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => $language,
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => $visibility,
+                'line_count' => 1,
+            ])->save();
+        };
+
+        // Two French translations of the same game are ONE answer to "is it in my language?"
+        $make('public', 'French');
+        $make('public', 'French');
+        $make('public', 'German');
+        // A branch is unpublished work: listing its language would announce it
+        $make('branch', 'Japanese');
+
+        $html = $this->get(route('games.index'))->assertOk()->getContent();
+
+        // Counting the language BADGES rather than the word: the language names also appear in
+        // the filter dropdown, where their presence means something else entirely.
+        $this->assertSame(
+            2,
+            substr_count($html, 'bg-black/60'),
+            'One badge per language available, not one per translation'
+        );
+        // Japanese exists only as an unpublished branch: neither badge nor filter option
+        $this->assertStringNotContainsString('Japanese', $html);
+    }
+
     public function test_the_home_page_shows_forks_and_hides_branches(): void
     {
         $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);
