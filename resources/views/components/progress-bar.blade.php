@@ -9,7 +9,6 @@
     $skippedCount = $translation->skipped_count ?? 0;
     $effective = $translation->effective_lines;
     $total = $effective + $captureCount + $skippedCount;
-    $isCaptureOnly = $effective === 0 && $captureCount > 0;
 
     if ($total > 0) {
         $humanPercent = ($translation->human_count / $total) * 100;

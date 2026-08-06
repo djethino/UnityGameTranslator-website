@@ -112,9 +112,19 @@
                     <span class="text-yellow-400 text-xs"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                 @endif
             </div>
-            <span class="text-xs text-gray-400" title="{{ __('progress.quality_tooltip') }}">
-                {{ __('progress.quality_score') }}: {{ number_format($translation->quality_score, 1) }}/3.0
-            </span>
+            {{-- A file with nothing translated yet has no quality to report. The formula
+                 returns 0.0/3.0, which reads as "your work is worthless" to someone who has
+                 simply captured the game's text and not started — the very first thing they
+                 see about their own upload. --}}
+            @if($translation->effective_lines > 0)
+                <span class="text-xs text-gray-400" title="{{ __('progress.quality_tooltip') }}">
+                    {{ __('progress.quality_score') }}: {{ number_format($translation->quality_score, 1) }}/3.0
+                </span>
+            @else
+                <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
+                    <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
+                </span>
+            @endif
         </div>
         <x-progress-bar :translation="$translation" class="mb-2" />
         <x-quality-legend :translation="$translation" />
