@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Geen verschillen gevonden tussen lokale en online versies.",
     "merge_preview.settings_show_detail": "Per instelling bekijken",
     "merge_preview.settings_hide_detail": "Details verbergen",
+    "merge_preview.direction_to_game": "Deze vergelijking gaat terug naar je spel. Er wordt niets gepubliceerd en de online versie blijft ongewijzigd — Verwijderen haalt een regel uit JOUW bestand.",
     "merge_preview.local_apply_success": "Teruggestuurd naar het spel. Er is niets gepubliceerd.",
     "merge_preview.settings_column": "Instelling",
     "merge_preview.settings_absent": "niet ingesteld",

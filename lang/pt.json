@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Nenhuma diferença encontrada entre as versões local e online.",
     "merge_preview.settings_show_detail": "Ver ajuste a ajuste",
     "merge_preview.settings_hide_detail": "Ocultar o detalhe",
+    "merge_preview.direction_to_game": "Esta comparação volta para o seu jogo. Nada é publicado e a versão online não é alterada — Eliminar remove uma linha do SEU ficheiro.",
     "merge_preview.local_apply_success": "Devolvido ao jogo. Nada foi publicado.",
     "merge_preview.settings_column": "Ajuste",
     "merge_preview.settings_absent": "não definido",

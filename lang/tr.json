@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Yerel ve çevrimiçi sürümler arasında fark bulunamadı.",
     "merge_preview.settings_show_detail": "Ayar ayar göster",
     "merge_preview.settings_hide_detail": "Ayrıntıyı gizle",
+    "merge_preview.direction_to_game": "Bu karşılaştırma oyununuza geri döner. Hiçbir şey yayımlanmaz ve çevrimiçi sürüm değişmez — Sil, SİZİN dosyanızdan bir satır kaldırır.",
     "merge_preview.local_apply_success": "Oyuna geri gönderildi. Hiçbir şey yayımlanmadı.",
     "merge_preview.settings_column": "Ayar",
     "merge_preview.settings_absent": "ayarlanmamış",

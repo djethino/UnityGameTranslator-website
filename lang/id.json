@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Tidak ada perbedaan ditemukan antara versi lokal dan online.",
     "merge_preview.settings_show_detail": "Lihat per pengaturan",
     "merge_preview.settings_hide_detail": "Sembunyikan detail",
+    "merge_preview.direction_to_game": "Perbandingan ini kembali ke gim Anda. Tidak ada yang dipublikasikan dan versi daring tidak diubah — Hapus menghilangkan baris dari berkas ANDA.",
     "merge_preview.local_apply_success": "Dikirim kembali ke gim. Tidak ada yang dipublikasikan.",
     "merge_preview.settings_column": "Pengaturan",
     "merge_preview.settings_absent": "tidak diatur",

@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "ไม่พบความแตกต่างระหว่างเวอร์ชันในเครื่องและออนไลน์",
     "merge_preview.settings_show_detail": "ดูทีละการตั้งค่า",
     "merge_preview.settings_hide_detail": "ซ่อนรายละเอียด",
+    "merge_preview.direction_to_game": "การเปรียบเทียบนี้จะกลับไปยังเกมของคุณ ไม่มีการเผยแพร่ และเวอร์ชันออนไลน์ไม่ถูกแก้ไข — ลบ จะเอาบรรทัดออกจากไฟล์ของคุณ",
     "merge_preview.local_apply_success": "ส่งกลับไปยังเกมแล้ว ไม่มีการเผยแพร่ใด ๆ",
     "merge_preview.settings_column": "การตั้งค่า",
     "merge_preview.settings_absent": "ไม่ได้ตั้งค่า",

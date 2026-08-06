@@ -77,6 +77,18 @@
             </div>
         </div>
 
+        {{-- Which way this comparison runs, said plainly and permanently.
+
+             The same buttons do opposite things in the two directions — most of all Delete,
+             which removes a line from the server when publishing and from the player's own file
+             when comparing into the game. Someone who believes they are tidying up the Main
+             would be erasing their own work, and nothing else on this page would tell them. --}}
+        @if($toLocal)
+            <div class="mb-4 bg-blue-900/30 border border-blue-700 rounded-lg px-4 py-3 text-sm text-blue-200">
+                <i class="fas fa-download mr-2"></i>{{ __('merge_preview.direction_to_game') }}
+            </div>
+        @endif
+
         {{-- Settings are part of the file but not of this comparison: there is no
              row to show and no side to pick for a font or an exclusion list.
              What CAN be said is which sections differ and by how much — the
@@ -550,7 +562,7 @@
         </div>
 
         {{-- Hidden form for saving to server --}}
-        <form method="POST" action="{{ route('translations.merge-preview.apply', $translation) }}" id="saveForm" class="hidden">
+        <form method="POST" action="{{ $toLocal ? route('translations.merge-preview.apply-local', $translation) : route('translations.merge-preview.apply', $translation) }}" id="saveForm" class="hidden">
             @csrf
             <div id="selectionsContainer"></div>
         </form>
@@ -727,6 +739,9 @@ document.addEventListener('alpine:init', () => {
         settingsOnline: {},
         // Setting-by-setting comparison. Only filled when the server holds both sides
         // (mod flow) — see the template for why the web flow keeps the summary only.
+        // Which way this comparison runs. Reverses what counts as a change to send, and what
+        // Delete means — see buildSaveForm.
+        toLocal: @json($toLocal ?? false),
         settingsRows: [],
         settingsRowsReady: false,
         settingsSelections: {},
@@ -1495,6 +1510,17 @@ document.addEventListener('alpine:init', () => {
                     tag = this.getTag(this.localData[key]);
                     sourceType = 'manual';
                     isRealChange = true;
+                } else if (this.toLocal) {
+                    // Comparing INTO the game: what has to travel is what comes from the online
+                    // side, since the result starts from the player's own file. The publishing
+                    // branch below sends the mirror image of this, and sending its version here
+                    // would import nothing at all.
+                    if (source === 'online' && hasOnline && (!hasLocal || this.entriesDiffer(key))) {
+                        value = this.getValue(this.onlineData[key]);
+                        tag = this.getTag(this.onlineData[key]);
+                        sourceType = 'online';
+                        isRealChange = true;
+                    }
                 } else if (hasLocal && !hasOnline && source === 'local') {
                     // Local-only key = addition
                     value = this.getValue(this.localData[key]);
@@ -1550,16 +1576,20 @@ document.addEventListener('alpine:init', () => {
             // Settings: only the winning SIDE is sent. The entry itself is copied server-side
             // from the file it belongs to — what this page displays is a readable summary that
             // drops fields it does not render, so rebuilding from it would strip them.
+            //
+            // Which side needs sending depends on where the result is built: publishing starts
+            // from the server file, so only 'local' picks change anything; comparing into the
+            // game starts from the player's file, so only 'online' picks do.
+            const settingSideToSend = this.toLocal ? 'online' : 'local';
             let s = 0;
             for (const row of this.settingsRows) {
                 const side = this.settingsSelections[row.key];
-                // Online is the default and the server file already holds it
-                if (side !== 'local') continue;
+                if (side !== settingSideToSend) continue;
 
                 const el = document.createElement('input');
                 el.type = 'hidden';
                 el.name = `settings[${row.key}]`;
-                el.value = 'local';
+                el.value = settingSideToSend;
                 container.appendChild(el);
                 s++;
             }

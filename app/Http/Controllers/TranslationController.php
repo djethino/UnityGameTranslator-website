@@ -698,10 +698,19 @@ class TranslationController extends Controller
             abort(404, 'Translation file not found.');
         }
 
+        // Which way this comparison runs. It decides far more than a form action: what counts
+        // as a change to send is reversed, and Delete stops meaning "remove it from the server"
+        // to mean "remove it from my file".
+        $toLocal = session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id
+            && (MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
+                ?->isLocalDestination() ?? false);
+
         return view('translations.merge-preview', compact(
             'translation',
             'hasTokenContent',
-            'tokenError'
+            'tokenError',
+            'toLocal'
         ));
     }
 

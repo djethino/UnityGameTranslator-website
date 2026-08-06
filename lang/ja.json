@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "ローカルバージョンとオンラインバージョン間に違いはありません。",
     "merge_preview.settings_show_detail": "設定ごとに表示",
     "merge_preview.settings_hide_detail": "詳細を隠す",
+    "merge_preview.direction_to_game": "この比較はあなたのゲームに戻ります。公開はされず、オンライン版も変更されません。「削除」はあなたのファイルから行を取り除きます。",
     "merge_preview.local_apply_success": "ゲームに戻しました。公開はされていません。",
     "merge_preview.settings_column": "設定",
     "merge_preview.settings_absent": "未設定",

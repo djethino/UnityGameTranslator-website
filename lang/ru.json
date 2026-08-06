@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Различий между локальной и онлайн версиями не найдено.",
     "merge_preview.settings_show_detail": "Показать по каждой настройке",
     "merge_preview.settings_hide_detail": "Скрыть подробности",
+    "merge_preview.direction_to_game": "Это сравнение возвращается в вашу игру. Ничего не публикуется, версия на сайте не меняется — «Удалить» убирает строку из ВАШЕГО файла.",
     "merge_preview.local_apply_success": "Отправлено обратно в игру. Ничего не опубликовано.",
     "merge_preview.settings_column": "Настройка",
     "merge_preview.settings_absent": "не задано",

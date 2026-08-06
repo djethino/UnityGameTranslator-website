@@ -172,6 +172,37 @@ class MergePreviewLocalFlowTest extends TestCase
         $this->assertSame(['hash' => 'mine'], $result['_source']);
     }
 
+    public function test_the_page_states_which_way_the_comparison_runs(): void
+    {
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE);
+
+        $token = $this->init($contributor, $main, self::LOCAL)->json('token');
+        $this->get("/translations/{$main->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        // Delete means the opposite here than when publishing; leaving that unsaid is how
+        // someone erases their own work believing they are tidying up the Main
+        $this->get(route('translations.merge-preview', $main))
+            ->assertOk()
+            ->assertSee(__('merge_preview.direction_to_game'))
+            ->assertSee(route('translations.merge-preview.apply-local', $main));
+    }
+
+    public function test_a_publishing_comparison_says_nothing_about_going_to_the_game(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($owner, self::ONLINE);
+
+        $token = $this->init($owner, $translation, self::LOCAL, 'server')->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $this->get(route('translations.merge-preview', $translation))
+            ->assertOk()
+            ->assertDontSee(__('merge_preview.direction_to_game'))
+            ->assertSee(route('translations.merge-preview.apply', $translation));
+    }
+
     public function test_a_token_meant_for_the_mod_cannot_publish(): void
     {
         $owner = User::factory()->create()->refresh();
