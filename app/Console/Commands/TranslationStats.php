@@ -169,6 +169,22 @@ class TranslationStats extends Command
         ]);
         $this->newLine();
 
+        // Age since the last CONTENT change — the only thing that separates a translation still
+        // being worked on from an abandoned one. Age since publication cannot: a translation
+        // maintained for a year is old and alive.
+        $idle = $translations
+            ->map(fn ($t) => $t->contentChangedAt()?->diffInDays(now()))
+            ->filter(fn ($d) => $d !== null);
+
+        $this->line('  Time since the last content change');
+        $this->histogram($idle, [
+            '0-29 days     (being worked on)' => fn ($d) => $d < 30,
+            '30-89 days' => fn ($d) => $d >= 30 && $d < 90,
+            '90-179 days' => fn ($d) => $d >= 90 && $d < 180,
+            '180 days and over (likely abandoned)' => fn ($d) => $d >= 180,
+        ]);
+        $this->newLine();
+
         $this->line('  Maintenance span (first publication to last content change)');
         $this->histogram($spans, [
             'same day   (never reopened)' => fn ($s) => $s < 1,
