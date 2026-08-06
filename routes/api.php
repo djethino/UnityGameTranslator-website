@@ -102,6 +102,11 @@ Route::prefix('v1')->group(function () {
         Route::post('merge-preview/init', [MergePreviewController::class, 'init'])
             ->middleware('throttle:10,1');
 
+        // Collect the result of a comparison that ends in the game (nothing was published,
+        // so there is no download to read it back from)
+        Route::get('merge-preview/{token}/result', [MergePreviewController::class, 'result'])
+            ->middleware('throttle:30,1');
+
         // Vote on translation
         Route::post('translations/{translation}/vote', [TranslationController::class, 'vote'])
             ->middleware('throttle:30,1');

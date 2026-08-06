@@ -133,6 +133,24 @@ class MergePreviewToken extends Model
      * Used by the post-redirect page load and the data endpoint, where the
      * token comes from the server-side session (not from user input).
      */
+    /**
+     * Find a token whose result the mod may collect.
+     *
+     * Unlike findValid, a CONSUMED token is expected here: the browser consumed it when it
+     * opened the comparison, and the result only exists afterwards. Expiry still applies —
+     * the window is the one the session itself lives in.
+     */
+    public static function findForResult(string $token): ?self
+    {
+        if (!self::isValidTokenFormat($token)) {
+            return null;
+        }
+
+        return self::where('token', $token)
+            ->where('expires_at', '>', now())
+            ->first();
+    }
+
     public static function findForSession(string $token, int $translationId): ?self
     {
         if (!self::isValidTokenFormat($token)) {

@@ -172,6 +172,70 @@ class MergePreviewLocalFlowTest extends TestCase
         $this->assertSame(['hash' => 'mine'], $result['_source']);
     }
 
+    public function test_the_mod_can_collect_the_result_it_asked_for(): void
+    {
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE);
+
+        $apiToken = ApiToken::createForUser($contributor);
+        $token = $this->postJson('/api/v1/merge-preview/init', [
+            'translation_id' => $main->id,
+            'local_content' => self::LOCAL,
+            'destination' => 'local',
+        ], ['Authorization' => 'Bearer ' . $apiToken->plain_token])->json('token');
+
+        $this->get("/translations/{$main->id}/merge-preview?token={$token}")->assertStatus(303);
+        $this->post(route('translations.merge-preview.apply-local', $main), [
+            'selections' => [
+                ['key' => 'Hello', 'value' => 'Bonjour du serveur', 'tag' => 'H', 'source' => 'online'],
+            ],
+        ])->assertRedirect();
+
+        $result = $this->getJson("/api/v1/merge-preview/{$token}/result", [
+            'Authorization' => 'Bearer ' . $apiToken->plain_token,
+        ]);
+
+        $result->assertOk();
+        $this->assertSame('Bonjour du serveur', $result->json('content.Hello.v'));
+    }
+
+    public function test_holding_the_token_is_not_enough_to_read_someone_elses_result(): void
+    {
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $stranger = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE);
+
+        $token = $this->init($contributor, $main, self::LOCAL)->json('token');
+
+        // The token identifies the comparison, not its owner: a leaked one must not open
+        // someone's unpublished file
+        $strangerToken = ApiToken::createForUser($stranger);
+        $this->getJson("/api/v1/merge-preview/{$token}/result", [
+            'Authorization' => 'Bearer ' . $strangerToken->plain_token,
+        ])->assertNotFound();
+    }
+
+    public function test_a_published_comparison_has_no_result_to_collect(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($owner, self::ONLINE);
+
+        $apiToken = ApiToken::createForUser($owner);
+        $token = $this->postJson('/api/v1/merge-preview/init', [
+            'translation_id' => $translation->id,
+            'local_content' => self::LOCAL,
+            'destination' => 'server',
+        ], ['Authorization' => 'Bearer ' . $apiToken->plain_token])->json('token');
+
+        // It became the online version: reading it back through here would be a second,
+        // needless way to the same bytes
+        $this->getJson("/api/v1/merge-preview/{$token}/result", [
+            'Authorization' => 'Bearer ' . $apiToken->plain_token,
+        ])->assertStatus(409);
+    }
+
     public function test_the_page_states_which_way_the_comparison_runs(): void
     {
         $mainOwner = User::factory()->create()->refresh();

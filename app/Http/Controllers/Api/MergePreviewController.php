@@ -63,4 +63,41 @@ class MergePreviewController extends Controller
             'expires_at' => $token->expires_at->toIso8601String(),
         ]);
     }
+
+    /**
+     * Hand the arbitrated result back to the mod.
+     *
+     * GET /api/v1/merge-preview/{token}/result
+     *
+     * Only exists for comparisons that end in the game: a published one is read back through the
+     * ordinary download, since it became the online version. Here nothing was published, so the
+     * result lives in the token's own file and this is the only way to it.
+     *
+     * The token is not a credential on its own — it is checked against the authenticated caller,
+     * so holding a leaked token is not enough to read someone's file.
+     */
+    public function result(Request $request, string $token): JsonResponse
+    {
+        $mergeToken = MergePreviewToken::findForResult($token);
+
+        if (!$mergeToken || (int) $mergeToken->user_id !== (int) $request->user()->id) {
+            return response()->json(['error' => 'Merge result not found or expired.'], 404);
+        }
+
+        if (!$mergeToken->isLocalDestination()) {
+            return response()->json([
+                'error' => 'This comparison was published; download the translation instead.',
+            ], 409);
+        }
+
+        $path = $mergeToken->getContentFilePath();
+        if (!$path) {
+            return response()->json(['error' => 'Merge result not found or expired.'], 404);
+        }
+
+        return response()->json([
+            'translation_id' => $mergeToken->translation_id,
+            'content' => json_decode(file_get_contents($path), true),
+        ]);
+    }
 }
