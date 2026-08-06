@@ -539,6 +539,8 @@
     "merge.mode_merge": "Слияние",
     "merge.keys_count": ":count ключей",
     "merge.branches": "Ветки:",
+    "merge.settings_from_branches": "Настройки файла, отличающиеся в этих вкладах",
+    "merge.settings_pick_hint": "Отметьте то, что хотите взять. Неотмеченные настройки останутся вашими — их меняют в моде, а не здесь.",
     "merge.settings_yours": "Ваша версия",
     "merge.filter": "Фильтр",
     "merge.all": "Все",

@@ -85,6 +85,76 @@ class MergeViewStateTest extends TestCase
         return [$owner, $uuid, $main, $branch];
     }
 
+    public function test_the_merge_serves_the_settings_of_the_main_and_of_each_branch(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $main->forceFill(['file_path' => $main->file_path])->save();
+        file_put_contents(storage_path('app/private/' . $main->file_path), json_encode([
+            '_uuid' => $uuid,
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+            'Shared' => ['v' => 'Main value', 't' => 'H'],
+        ]));
+        file_put_contents(storage_path('app/private/' . $branch->file_path), json_encode([
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'Roboto']],
+            'Shared' => ['v' => 'Branch value', 't' => 'H'],
+        ]));
+
+        $data = $this->actingAs($owner)->getJson(
+            route('translations.merge.data', ['uuid' => $uuid]) . '?branches=' . $branch->id
+        );
+
+        $data->assertOk();
+        // The Main could see THAT the fonts differed, never which one
+        $this->assertStringContainsString('NotoSans', $data->json('main_settings.fonts:Title.value'));
+        $this->assertStringContainsString('Roboto', $data->json('branches.0.settings.fonts:Title.value'));
+    }
+
+    public function test_a_setting_taken_from_a_branch_is_copied_into_the_main(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        file_put_contents(storage_path('app/private/' . $main->file_path), json_encode([
+            '_uuid' => $uuid,
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+            'Shared' => ['v' => 'Main value', 't' => 'H'],
+        ]));
+        file_put_contents(storage_path('app/private/' . $branch->file_path), json_encode([
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'Roboto', 'type' => 'TMP']],
+            'Shared' => ['v' => 'Branch value', 't' => 'H'],
+        ]));
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'settings_json' => json_encode([$branch->id => ['fonts:Title' => true]]),
+        ])->assertRedirect();
+
+        $saved = json_decode(file_get_contents(storage_path('app/private/' . $main->file_path)), true);
+
+        // Copied whole from the branch, including what the comparison never displayed
+        $this->assertSame('Roboto', $saved['_fonts']['Title']['fallback']);
+        $this->assertSame('TMP', $saved['_fonts']['Title']['type']);
+        // ...and the lines are untouched, since none were selected
+        $this->assertSame('Main value', $saved['Shared']['v']);
+    }
+
+    public function test_settings_of_a_translation_outside_this_lineage_are_ignored(): void
+    {
+        [$owner, $uuid, $main] = $this->makeMergeView();
+        $stranger = User::factory()->create()->refresh();
+        $otherGame = Game::forceCreate(['name' => 'Other', 'slug' => 'other-' . uniqid()]);
+        $foreign = $this->makeTranslation($stranger, $otherGame, (string) \Illuminate\Support\Str::uuid(), 'branch', [
+            '_fonts' => ['Title' => ['enabled' => false]],
+        ]);
+
+        // A branch id is a number in a form: it must be checked against THIS lineage
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'settings_json' => json_encode([$foreign->id => ['fonts:Title' => true]]),
+        ]);
+
+        $saved = json_decode(file_get_contents(storage_path('app/private/' . $main->file_path)), true);
+        $this->assertArrayNotHasKey('_fonts', $saved);
+    }
+
     public function test_show_renders_for_owner_and_keeps_mode_in_switcher(): void
     {
         [$owner, $uuid] = $this->makeMergeView();

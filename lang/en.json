@@ -539,6 +539,8 @@
     "merge.mode_merge": "Merge",
     "merge.keys_count": ":count keys",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "File settings held differently by these contributions",
+    "merge.settings_pick_hint": "Tick what you want to take. Untouched settings stay yours — they are edited in the mod, not here.",
     "merge.settings_yours": "Your version",
     "merge.filter": "Filter",
     "merge.all": "All",

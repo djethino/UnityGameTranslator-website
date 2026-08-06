@@ -131,6 +131,11 @@ class MergeController extends Controller
                         'validated_count' => $branch->validated_count,
                         'ai_count' => $branch->ai_count,
                         'content' => $this->loadTranslationContent($branch),
+                        // Settings live in the metadata keys that loadTranslationContent strips,
+                        // so they travel apart. Until now a Main could see THAT a branch's fonts
+                        // differed but never which one, and accepting every line accepted none
+                        // of them — the merge silently kept the Main's own settings.
+                        'settings' => $this->comparableSettingsOf($branch),
                     ];
                 }
             }
@@ -139,6 +144,7 @@ class MergeController extends Controller
         return response()->json([
             'main' => $this->loadTranslationContent($main),
             'main_owner' => $main->user->name ?? '',
+            'main_settings' => $this->comparableSettingsOf($main),
             'branches' => $branchesPayload,
         ], 200, [
             'Cache-Control' => 'no-store, private',
@@ -198,8 +204,19 @@ class MergeController extends Controller
             }
         }
 
+        // Settings taken from a branch: { "<branchId>": { "fonts:Title": true, ... } }.
+        // Keyed by branch because a merge can carry several at once, and two of them may hold
+        // the same setting with different values — the Main has to say WHOSE it takes.
+        $settingChoices = [];
+        if ($request->filled('settings_json')) {
+            $settingChoices = json_decode($request->input('settings_json'), true);
+            if (!is_array($settingChoices)) {
+                return back()->withErrors(['error' => 'Invalid settings data.']);
+            }
+        }
+
         // Must have at least one change
-        if (empty($selections) && empty($deletions) && empty($tagChanges)) {
+        if (empty($selections) && empty($deletions) && empty($tagChanges) && empty($settingChoices)) {
             return back()->withErrors(['error' => 'No changes to apply.']);
         }
 
@@ -297,6 +314,48 @@ class MergeController extends Controller
                     $tagChangedCount++;
                 }
             }
+        }
+
+        // Settings taken from branches. Each winning entry is COPIED from the branch's own file
+        // — what the page showed is a readable summary that drops fields it never renders.
+        // Branches are applied in the order the Main picked them; two branches offering the same
+        // setting resolve by that order, which is the only one the Main expressed.
+        $settingsTaken = 0;
+        foreach ($settingChoices as $branchId => $keys) {
+            if (!is_array($keys) || empty($keys)) {
+                continue;
+            }
+
+            // Only a branch of THIS translation, and only one the Main owns the lineage of
+            $branch = Translation::where('file_uuid', $uuid)
+                ->where('visibility', 'branch')
+                ->where('id', (int) $branchId)
+                ->first();
+            if (!$branch) {
+                continue;
+            }
+
+            $branchPath = $branch->getSafeFilePath();
+            if (!$branchPath || !file_exists($branchPath)) {
+                continue;
+            }
+
+            $branchJson = json_decode(
+                $this->translationService->normalizeContent(file_get_contents($branchPath)),
+                true
+            );
+            if (!is_array($branchJson)) {
+                continue;
+            }
+
+            // applySettingSelections copies from its second argument when told 'local'
+            $picks = [];
+            foreach (array_keys($keys) as $settingKey) {
+                $picks[$settingKey] = 'local';
+            }
+
+            $content = $this->translationService->applySettingSelections($content, $branchJson, $picks);
+            $settingsTaken += count($picks);
         }
 
         // Save the file
@@ -401,6 +460,24 @@ class MergeController extends Controller
     /**
      * Load translation content from file, excluding metadata keys.
      */
+    /**
+     * The file settings of a translation, as rows that can be compared and picked one by one.
+     *
+     * Same extraction as the mod comparison uses — one definition of what a setting is, shared
+     * with what the mod itself writes.
+     */
+    private function comparableSettingsOf(Translation $translation): array
+    {
+        $path = $translation->getSafeFilePath();
+        if (!$path || !file_exists($path)) {
+            return [];
+        }
+
+        $json = json_decode($this->translationService->normalizeContent(file_get_contents($path)), true);
+
+        return is_array($json) ? $this->translationService->extractComparableSettings($json) : [];
+    }
+
     private function loadTranslationContent(Translation $translation): array
     {
         $path = $translation->getSafeFilePath();

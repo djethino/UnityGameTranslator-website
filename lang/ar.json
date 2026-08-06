@@ -539,6 +539,8 @@
     "merge.mode_merge": "دمج",
     "merge.keys_count": ":count مفتاح",
     "merge.branches": "الفروع:",
+    "merge.settings_from_branches": "إعدادات الملف المختلفة في هذه المساهمات",
+    "merge.settings_pick_hint": "أشِّر على ما تريد أخذه. تبقى الإعدادات غير المؤشَّرة لك — تُعدَّل في المود لا هنا.",
     "merge.settings_yours": "إصدارك",
     "merge.filter": "تصفية",
     "merge.all": "الكل",

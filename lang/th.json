@@ -539,6 +539,8 @@
     "merge.mode_merge": "รวม",
     "merge.keys_count": ":count คีย์",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "การตั้งค่าไฟล์ที่ต่างกันในผลงานเหล่านี้",
+    "merge.settings_pick_hint": "ติ๊กสิ่งที่คุณต้องการรับมา การตั้งค่าที่ไม่ได้ติ๊กยังเป็นของคุณ แก้ไขได้ในม็อด ไม่ใช่ที่นี่",
     "merge.settings_yours": "เวอร์ชันของคุณ",
     "merge.filter": "กรอง",
     "merge.all": "ทั้งหมด",

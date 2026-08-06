@@ -539,6 +539,8 @@
     "merge.mode_merge": "Hợp nhất",
     "merge.keys_count": ":count khóa",
     "merge.branches": "Nhánh:",
+    "merge.settings_from_branches": "Thiết lập tệp khác biệt trong các đóng góp này",
+    "merge.settings_pick_hint": "Đánh dấu những gì bạn muốn lấy. Thiết lập không đánh dấu vẫn là của bạn — chúng được sửa trong mod, không phải ở đây.",
     "merge.settings_yours": "Phiên bản của bạn",
     "merge.filter": "Lọc",
     "merge.all": "Tất cả",

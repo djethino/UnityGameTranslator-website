@@ -539,6 +539,8 @@
     "merge.mode_merge": "マージ",
     "merge.keys_count": ":countキー",
     "merge.branches": "Branch：",
+    "merge.settings_from_branches": "これらの貢献で異なるファイル設定",
+    "merge.settings_pick_hint": "取り込みたいものにチェックを入れてください。チェックしない設定はあなたのまま。設定はMod側で編集します。",
     "merge.settings_yours": "あなたの版",
     "merge.filter": "フィルター",
     "merge.all": "すべて",

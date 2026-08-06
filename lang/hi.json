@@ -539,6 +539,8 @@
     "merge.mode_merge": "मर्ज",
     "merge.keys_count": ":count कीज़",
     "merge.branches": "ब्रांचें:",
+    "merge.settings_from_branches": "इन योगदानों में भिन्न फ़ाइल सेटिंग्स",
+    "merge.settings_pick_hint": "जो लेना चाहते हैं उसे चुनें। बिना चुनी सेटिंग्स आपकी ही रहती हैं — वे मॉड में बदली जाती हैं, यहाँ नहीं।",
     "merge.settings_yours": "आपका संस्करण",
     "merge.filter": "फ़िल्टर",
     "merge.all": "सभी",

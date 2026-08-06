@@ -539,6 +539,8 @@
     "merge.mode_merge": "Zusammenführen",
     "merge.keys_count": ":count Schlüssel",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "Dateieinstellungen, die in diesen Beiträgen abweichen",
+    "merge.settings_pick_hint": "Haken Sie an, was Sie übernehmen möchten. Nicht angehakte Einstellungen bleiben Ihre — sie werden im Mod bearbeitet, nicht hier.",
     "merge.settings_yours": "Ihre Version",
     "merge.filter": "Filtern",
     "merge.all": "Alle",

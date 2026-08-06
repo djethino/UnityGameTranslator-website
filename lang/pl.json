@@ -539,6 +539,8 @@
     "merge.mode_merge": "Scalanie",
     "merge.keys_count": ":count kluczy",
     "merge.branches": "Gałęzi:",
+    "merge.settings_from_branches": "Ustawienia pliku różniące się w tych wkładach",
+    "merge.settings_pick_hint": "Zaznacz to, co chcesz przejąć. Niezaznaczone ustawienia pozostają Twoje — zmienia się je w modzie, nie tutaj.",
     "merge.settings_yours": "Twoja wersja",
     "merge.filter": "Filtruj",
     "merge.all": "Wszystkie",

@@ -539,6 +539,8 @@
     "merge.mode_merge": "Samenvoegen",
     "merge.keys_count": ":count sleutels",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "Bestandsinstellingen die in deze bijdragen afwijken",
+    "merge.settings_pick_hint": "Vink aan wat je wilt overnemen. Niet aangevinkte instellingen blijven van jou — je wijzigt ze in de mod, niet hier.",
     "merge.settings_yours": "Jouw versie",
     "merge.filter": "Filter",
     "merge.all": "Alle",

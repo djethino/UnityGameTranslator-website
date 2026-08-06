@@ -539,6 +539,8 @@
     "merge.mode_merge": "מיזוג",
     "merge.keys_count": ":count מפתחות",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "הגדרות קובץ ששונות בתרומות האלה",
+    "merge.settings_pick_hint": "סמנו את מה שתרצו לקחת. הגדרות שלא סומנו נשארות שלכם — עורכים אותן במוד, לא כאן.",
     "merge.settings_yours": "הגרסה שלך",
     "merge.filter": "סינון",
     "merge.all": "הכל",

@@ -539,6 +539,8 @@
     "merge.mode_merge": "병합",
     "merge.keys_count": ":count개 키",
     "merge.branches": "브랜치:",
+    "merge.settings_from_branches": "이 기여들에서 다른 파일 설정",
+    "merge.settings_pick_hint": "가져올 항목을 선택하세요. 선택하지 않은 설정은 그대로 유지됩니다 — 설정은 모드에서 편집합니다.",
     "merge.settings_yours": "내 버전",
     "merge.filter": "필터",
     "merge.all": "전체",

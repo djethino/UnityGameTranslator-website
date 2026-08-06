@@ -539,6 +539,8 @@
     "merge.mode_merge": "Gabungkan",
     "merge.keys_count": ":count kunci",
     "merge.branches": "Branch:",
+    "merge.settings_from_branches": "Pengaturan berkas yang berbeda pada kontribusi ini",
+    "merge.settings_pick_hint": "Centang yang ingin Anda ambil. Pengaturan yang tidak dicentang tetap milik Anda — diubah di mod, bukan di sini.",
     "merge.settings_yours": "Versi Anda",
     "merge.filter": "Filter",
     "merge.all": "Semua",

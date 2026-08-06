@@ -183,6 +183,50 @@
                 </div>
             </div>
 
+            {{-- Settings a branch holds differently. Read-only values: a font or an exclusion is
+                 edited in the mod, and the only decision a merge needs is whether to take it.
+                 Nothing is ticked by default — the Main's own settings stay unless asked. --}}
+            <div x-show="hasSettingsRows" x-cloak
+                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                    <i class="fas fa-sliders text-gray-500"></i>
+                    <span>{{ __('merge.settings_from_branches') }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="text-gray-500">
+                            <tr>
+                                <th class="text-left font-normal px-2 py-1"></th>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="row in settingsRows" :key="row.id">
+                                <tr class="border-t border-gray-750" :class="settingRowClass(row.id)">
+                                    <td class="px-2 py-1 align-top">
+                                        <input type="checkbox" :checked="settingsTaken[row.id]"
+                                            @change="toggleSettingRow(row.id)"
+                                            class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                                    </td>
+                                    <td class="px-2 py-1 align-top">
+                                        <span class="text-gray-500" x-text="row.sectionLabel"></span>
+                                        <span class="font-mono" x-text="row.label"></span>
+                                    </td>
+                                    <td class="px-2 py-1 align-top text-gray-400" x-text="row.mineValue"></td>
+                                    <td class="px-2 py-1 align-top">
+                                        <span class="text-gray-500" x-text="row.branchName"></span>
+                                        <span x-text="row.theirsValue"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
+            </div>
+
             @include('partials.editor-quality-bar')
 
             {{-- Filters (checked = visible, same model as the other editors) --}}
@@ -483,6 +527,7 @@
                 <input type="hidden" id="selectionsJson" name="selections_json" value="">
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
                 <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
+                <input type="hidden" id="settingsJson" name="settings_json" value="">
 
                 {{-- min-w-0 on the text + shrink-0 on the buttons: the
                      instructions wrap instead of squeezing the save button --}}
@@ -705,6 +750,11 @@ document.addEventListener('alpine:init', () => {
         // Merge selections: key -> {source: 'main'|'branch_{id}'|'manual', value, tag}
         // (selecting main = validate it: the apply endpoint promotes A -> V)
         selections: {},
+        // Settings a branch holds differently, and which of them the Main takes.
+        // Keyed "<branchId>|<settingKey>": the same setting can come from several branches.
+        settingsRows: [],
+        settingsTaken: {},
+        hasSettingsRows: false,
         stats: { newKeys: 0, different: 0 },
 
         init() {
@@ -721,6 +771,7 @@ document.addEventListener('alpine:init', () => {
 
         loadContent(payload) {
             this.mainOwner = payload.main_owner || '';
+            this.settingsTaken = {};
 
             this.mainData = {};
             for (const [key, value] of Object.entries(payload.main || {})) {
@@ -741,8 +792,70 @@ document.addEventListener('alpine:init', () => {
             }
             this.allKeys = [...keys].sort();
 
+            this.buildSettingsRows(payload);
+
             this.calculateStats();
             this.loaded = true;
+        },
+
+        /**
+         * Settings a branch holds differently from the Main.
+         *
+         * Applying a merge rewrites the Main's file, so a branch's fonts or exclusions never
+         * travelled upstream: the page could say a section differed, never which entry, and
+         * accepting every line accepted none of them. One row per differing setting, per branch,
+         * because two branches may hold the same setting with different values — the Main has to
+         * say whose it takes.
+         */
+        buildSettingsRows(payload) {
+            const labels = @js([
+                'fonts' => __('file_settings.label.fonts'),
+                'font_rules' => __('file_settings.label.font_rules'),
+                'images' => __('file_settings.label.images'),
+                'exclusions' => __('file_settings.label.exclusions'),
+                'variables' => __('file_settings.label.variables'),
+                'game_settings' => __('file_settings.game_settings'),
+            ]);
+            const absent = @js(__('merge_preview.settings_absent'));
+            const mainSettings = payload.main_settings || {};
+            const rows = [];
+
+            for (const branch of (payload.branches || [])) {
+                const branchSettings = branch.settings || {};
+                for (const key of Object.keys(branchSettings)) {
+                    const mine = mainSettings[key];
+                    const theirs = branchSettings[key];
+                    // Identical on both sides: nothing to decide, and a row per agreeing
+                    // setting would bury the few that actually differ
+                    if (mine && mine.value === theirs.value) continue;
+
+                    rows.push({
+                        id: branch.id + '|' + key,
+                        branchId: branch.id,
+                        branchName: branch.name,
+                        key,
+                        sectionLabel: labels[theirs.section] || theirs.section,
+                        label: theirs.label,
+                        mineValue: mine ? mine.value : absent,
+                        theirsValue: theirs.value,
+                    });
+                }
+            }
+
+            rows.sort((a, b) => a.branchName.localeCompare(b.branchName)
+                || a.sectionLabel.localeCompare(b.sectionLabel)
+                || a.label.localeCompare(b.label));
+
+            this.settingsRows = rows;
+            this.hasSettingsRows = rows.length > 0;
+        },
+
+        toggleSettingRow(id) {
+            this.settingsTaken = { ...this.settingsTaken, [id]: !this.settingsTaken[id] };
+        },
+
+        settingRowClass(id) {
+            return this.settingsTaken[id] ? 'bg-purple-900/40 text-purple-100' : 'text-gray-400';
         },
 
         normalizeEntry(value) {
@@ -1047,8 +1160,14 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.tagChanges).length;
         },
 
+        get settingsTakenCount() {
+            return Object.values(this.settingsTaken).filter(Boolean).length;
+        },
+
         get totalChanges() {
-            return this.selectionCount + this.deleteCount + this.tagChangeCount;
+            // Settings count as changes: taking a branch's font without touching a single line
+            // is a merge, and the Apply button must not stay disabled on it
+            return this.selectionCount + this.deleteCount + this.tagChangeCount + this.settingsTakenCount;
         },
 
         clearAll() {
@@ -1080,6 +1199,18 @@ document.addEventListener('alpine:init', () => {
                 tag: data.newTag,
                 value: data.value
             }));
+
+            // Settings: only WHICH branch entry is taken. The entry itself is copied server-side
+            // from that branch's file — the page shows a readable summary that drops fields it
+            // never renders, so rebuilding from it would strip them.
+            const settingsByBranch = {};
+            for (const row of this.settingsRows) {
+                if (!this.settingsTaken[row.id]) continue;
+                if (!settingsByBranch[row.branchId]) settingsByBranch[row.branchId] = {};
+                settingsByBranch[row.branchId][row.key] = true;
+            }
+            document.getElementById('settingsJson').value = Object.keys(settingsByBranch).length > 0
+                ? JSON.stringify(settingsByBranch) : '';
 
             document.getElementById('selectionsJson').value = selectionsArr.length > 0 ? JSON.stringify(selectionsArr) : '';
             document.getElementById('deletionsJson').value = deletionsArr.length > 0 ? JSON.stringify(deletionsArr) : '';

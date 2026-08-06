@@ -539,6 +539,8 @@
     "merge.mode_merge": "Fusionar",
     "merge.keys_count": ":count claves",
     "merge.branches": "Ramas:",
+    "merge.settings_from_branches": "Ajustes del archivo distintos en estas contribuciones",
+    "merge.settings_pick_hint": "Marca lo que quieras tomar. Los ajustes sin marcar siguen siendo los tuyos: se editan en el mod, no aquí.",
     "merge.settings_yours": "Tu versión",
     "merge.filter": "Filtrar",
     "merge.all": "Todas",

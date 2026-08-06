@@ -539,6 +539,8 @@
     "merge.mode_merge": "Birleştir",
     "merge.keys_count": ":count anahtar",
     "merge.branches": "Dallar:",
+    "merge.settings_from_branches": "Bu katkılarda farklı olan dosya ayarları",
+    "merge.settings_pick_hint": "Almak istediklerinizi işaretleyin. İşaretlenmeyen ayarlar sizinki kalır — onlar modda düzenlenir, burada değil.",
     "merge.settings_yours": "Sürümünüz",
     "merge.filter": "Filtrele",
     "merge.all": "Tümü",

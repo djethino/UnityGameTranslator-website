@@ -539,6 +539,8 @@
     "merge.mode_merge": "Mesclar",
     "merge.keys_count": ":count chaves",
     "merge.branches": "Branches:",
+    "merge.settings_from_branches": "Ajustes do ficheiro diferentes nestas contribuições",
+    "merge.settings_pick_hint": "Marque o que quiser levar. Os ajustes não marcados continuam a ser os seus: editam-se no mod, não aqui.",
     "merge.settings_yours": "A sua versão",
     "merge.filter": "Filtrar",
     "merge.all": "Todas",
