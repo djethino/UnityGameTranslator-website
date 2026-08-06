@@ -847,6 +847,7 @@
     "progress.capture": "कैप्चर किया गया",
     "progress.capture_only": "केवल कैप्चर",
     "progress.capture_only_desc": "इस फ़ाइल में केवल कैप्चर किया गया टेक्स्ट है, अभी तक कोई अनुवाद नहीं",
+    "progress.skipped_marked": "अनुवाद न करने के लिए चिह्नित: :count",
     "progress.tooltip": "मानव: :human | मान्य: :validated | AI: :ai | कैप्चर: :capture | क्वालिटी: :quality/3",
     "rating.not_main_owner": "केवल मेन मालिक ब्रांचों को रेट कर सकता है।",
     "rating.cannot_rate_main": "मेन अनुवाद को रेट नहीं किया जा सकता।",

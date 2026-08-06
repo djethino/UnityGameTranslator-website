@@ -7,18 +7,22 @@ use App\Services\TranslationService;
 use Illuminate\Console\Command;
 
 /**
- * Fill settings_summary (and refresh font_config) from the stored files.
+ * Rebuild every column derived from a translation file: font config, settings
+ * summary and tag counts.
  *
- * Needed once after the settings_summary migration: every translation
- * uploaded before it has the column at null, so game pages would show
- * nothing for files that do carry settings. Re-running it is harmless —
- * the summary is derived from the file, never from previous values.
+ * Needed after any migration that adds such a column, since translations
+ * uploaded before it carry the default (null, or 0 for counts) and the pages
+ * would state something false about them — "no settings" for a file that has
+ * some, "0 lines marked as not to translate" for a file full of them.
+ *
+ * Re-running it is harmless: every value is recomputed from the file, never
+ * from the previous column value.
  */
-class BackfillSettingsSummary extends Command
+class BackfillDerivedColumns extends Command
 {
-    protected $signature = 'translations:backfill-settings {--dry-run : Report what would change without writing}';
+    protected $signature = 'translations:backfill-derived {--dry-run : Report what would change without writing}';
 
-    protected $description = 'Rebuild font_config and settings_summary from each translation file';
+    protected $description = 'Rebuild the columns derived from each translation file (fonts, settings, tag counts)';
 
     public function handle(TranslationService $service): int
     {
@@ -27,7 +31,7 @@ class BackfillSettingsSummary extends Command
 
         $this->info($dryRun
             ? "Inspecting {$count} translations (dry run, nothing will be written)..."
-            : "Rebuilding settings for {$count} translations...");
+            : "Rebuilding derived columns for {$count} translations...");
 
         $bar = $this->output->createProgressBar($count);
         $bar->start();
@@ -48,12 +52,26 @@ class BackfillSettingsSummary extends Command
                     continue;
                 }
 
-                $fontConfig = $service->extractFontConfig($json);
-                $settings = $service->extractSettingsSummary($json);
+                $fresh = array_merge(
+                    [
+                        'line_count' => $service->countLines($json),
+                        'font_config' => $service->extractFontConfig($json),
+                        'settings_summary' => $service->extractSettingsSummary($json),
+                    ],
+                    Translation::extractTagCounts($json)
+                );
 
                 // Compare decoded values, not JSON text: key order and float
                 // formatting differ harmlessly between PHP and the stored column
-                if ($translation->font_config == $fontConfig && $translation->settings_summary == $settings) {
+                $differs = false;
+                foreach ($fresh as $column => $value) {
+                    if ($translation->{$column} != $value) {
+                        $differs = true;
+                        break;
+                    }
+                }
+
+                if (!$differs) {
                     $unchanged++;
                     continue;
                 }
@@ -66,10 +84,7 @@ class BackfillSettingsSummary extends Command
                 // saveQuietly: this is a derived-data repair, not new content.
                 // A regular save would fire the 'updated' event and ping
                 // IndexNow once per row for pages that did not change.
-                $translation->forceFill([
-                    'font_config' => $fontConfig,
-                    'settings_summary' => $settings,
-                ])->saveQuietly();
+                $translation->forceFill($fresh)->saveQuietly();
             }
         });
 

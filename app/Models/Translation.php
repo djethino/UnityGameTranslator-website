@@ -16,6 +16,7 @@ class Translation extends Model
         'target_language',
         'line_count',
         'capture_count',
+        'skipped_count',
         'human_count',
         'validated_count',
         'ai_count',
@@ -40,6 +41,7 @@ class Translation extends Model
         'parent_id' => 'integer',
         'line_count' => 'integer',
         'capture_count' => 'integer',
+        'skipped_count' => 'integer',
         'human_count' => 'integer',
         'validated_count' => 'integer',
         'ai_count' => 'integer',
@@ -678,8 +680,12 @@ class Translation extends Model
      * H entries with empty/null value are "capture only" and counted separately.
      * They are excluded from quality scoring as they represent untranslated captures.
      *
+     * S entries (marked as not to translate) are counted on their own: they belong to
+     * neither the composition bar nor the score, but they say something about the care
+     * put into the file. M entries (mod UI) are technical noise and counted nowhere.
+     *
      * @param array $json Parsed translation JSON
-     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int, 'capture_count' => int]
+     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int, 'capture_count' => int, 'skipped_count' => int]
      */
     public static function extractTagCounts(array $json): array
     {
@@ -687,6 +693,7 @@ class Translation extends Model
         $validated = 0;
         $ai = 0;
         $capture = 0;
+        $skipped = 0;
 
         foreach ($json as $key => $value) {
             // Skip metadata keys
@@ -707,8 +714,9 @@ class Translation extends Model
                         'H' => $human++,
                         'V' => $validated++,
                         'A' => $ai++,
-                        'M', 'S' => null, // Mod UI and Skipped are not counted
-                        default => $ai++, // Fallback to AI
+                        'S' => $skipped++,  // reported on its own, never in the bar or the score
+                        'M' => null,        // mod UI: technical noise, counted nowhere
+                        default => $ai++,   // Fallback to AI
                     };
                 }
             } else {
@@ -722,6 +730,7 @@ class Translation extends Model
             'validated_count' => $validated,
             'ai_count' => $ai,
             'capture_count' => $capture,
+            'skipped_count' => $skipped,
         ];
     }
 

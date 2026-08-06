@@ -182,4 +182,23 @@ class TranslationCardContentTest extends TestCase
                 'date' => $translation->contentChangedAt()->isoFormat('LL'),
             ]));
     }
+
+    public function test_lines_marked_as_not_to_translate_are_stated_next_to_the_bar(): void
+    {
+        $translation = $this->makeTranslation(['skipped_count' => 312]);
+
+        $this->get(route('games.show', $translation->game))
+            ->assertOk()
+            ->assertSee(__('progress.skipped_marked', ['count' => '312']));
+    }
+
+    public function test_a_file_without_marked_lines_says_nothing_about_them(): void
+    {
+        $translation = $this->makeTranslation(['skipped_count' => 0]);
+
+        // "Marked as not to translate: 0" is noise: the absence IS the information
+        $this->get(route('games.show', $translation->game))
+            ->assertOk()
+            ->assertDontSee(__('progress.skipped_marked', ['count' => '0']));
+    }
 }

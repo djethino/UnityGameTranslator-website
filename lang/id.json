@@ -847,6 +847,7 @@
     "progress.capture": "Ditangkap",
     "progress.capture_only": "Hanya tangkap",
     "progress.capture_only_desc": "File ini hanya berisi teks yang ditangkap, belum ada terjemahan",
+    "progress.skipped_marked": "Ditandai untuk tidak diterjemahkan: :count",
     "progress.tooltip": "Manusia: :human | Tervalidasi: :validated | AI: :ai | Tangkap: :capture | Kualitas: :quality/3",
     "rating.not_main_owner": "Hanya pemilik Main yang bisa menilai branch.",
     "rating.cannot_rate_main": "Tidak dapat menilai terjemahan Main.",

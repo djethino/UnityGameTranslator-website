@@ -847,6 +847,7 @@
     "progress.capture": "캡처됨",
     "progress.capture_only": "캡처만",
     "progress.capture_only_desc": "이 파일은 캡처된 텍스트만 포함하고 있으며, 아직 번역이 없습니다",
+    "progress.skipped_marked": "번역 제외로 표시: :count",
     "progress.tooltip": "사람: :human | 검증됨: :validated | AI: :ai | 캡처: :capture | 품질: :quality/3",
     "rating.not_main_owner": "메인 소유자만 브랜치를 평가할 수 있습니다.",
     "rating.cannot_rate_main": "메인 번역은 평가할 수 없습니다.",

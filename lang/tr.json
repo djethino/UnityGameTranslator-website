@@ -847,6 +847,7 @@
     "progress.capture": "Yakalandı",
     "progress.capture_only": "Sadece yakalama",
     "progress.capture_only_desc": "Bu dosya yalnızca yakalanan metinleri içeriyor, henüz çeviri yapılmamış",
+    "progress.skipped_marked": "Çevrilmeyecek olarak işaretlendi: :count",
     "progress.tooltip": "İnsan: :human | Doğrulanmış: :validated | Yapay Zekâ: :ai | Yakalama: :capture | Kalite: :quality/3",
     "rating.not_main_owner": "Yalnızca Main sahibi branch'leri derecelendirebilir.",
     "rating.cannot_rate_main": "Main çeviri derecelendirilemez.",

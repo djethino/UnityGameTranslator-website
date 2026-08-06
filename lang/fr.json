@@ -847,6 +847,7 @@
     "progress.capture": "Captures",
     "progress.capture_only": "Capture seul.",
     "progress.capture_only_desc": "Ce fichier contient uniquement des textes capturés, pas encore de traductions",
+    "progress.skipped_marked": "Marquées à ne pas traduire : :count",
     "progress.tooltip": "Humain: :human | Validé: :validated | IA: :ai | Capture: :capture | Qualité: :quality/3",
     "rating.not_main_owner": "Seul le propriétaire principal peut noter les branches.",
     "rating.cannot_rate_main": "Impossible de noter la traduction principale.",

@@ -847,6 +847,7 @@
     "progress.capture": "Đã thu thập",
     "progress.capture_only": "Chỉ thu thập",
     "progress.capture_only_desc": "File này chỉ chứa văn bản đã thu thập, chưa có bản dịch nào",
+    "progress.skipped_marked": "Được đánh dấu không dịch: :count",
     "progress.tooltip": "Thủ công: :human | Đã xác thực: :validated | AI: :ai | Thu thập: :capture | Chất lượng: :quality/3",
     "rating.not_main_owner": "Chỉ chủ sở hữu Main mới có thể đánh giá branch.",
     "rating.cannot_rate_main": "Không thể đánh giá bản dịch Main.",

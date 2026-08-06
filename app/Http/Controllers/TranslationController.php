@@ -125,6 +125,7 @@ class TranslationController extends Controller
                 'validated_count' => $parsed['tag_counts']['validated_count'],
                 'ai_count' => $parsed['tag_counts']['ai_count'],
                 'capture_count' => $parsed['tag_counts']['capture_count'],
+                'skipped_count' => $parsed['tag_counts']['skipped_count'],
                 'status' => $status,
                 'notes' => $request->notes,
                 'file_path' => $fileName,
@@ -159,6 +160,7 @@ class TranslationController extends Controller
             'validated_count' => $parsed['tag_counts']['validated_count'],
             'ai_count' => $parsed['tag_counts']['ai_count'],
             'capture_count' => $parsed['tag_counts']['capture_count'],
+            'skipped_count' => $parsed['tag_counts']['skipped_count'],
             'status' => $status,
             'notes' => $request->notes,
             'file_path' => $fileName,
@@ -865,6 +867,7 @@ class TranslationController extends Controller
         $translation->validated_count = $tagCounts['validated_count'];
         $translation->ai_count = $tagCounts['ai_count'];
         $translation->capture_count = $tagCounts['capture_count'];
+        $translation->skipped_count = $tagCounts['skipped_count'];
         $translation->line_count = count(array_filter(
             array_keys($content),
             fn($k) => !str_starts_with($k, '_')

@@ -6,6 +6,12 @@
     $totalWithCaptures = $effective + $captureCount;
     $isCaptureOnly = $effective === 0 && $captureCount > 0;
 
+    // Lines marked as "do not translate" are outside both the segments and the
+    // denominator: counting them would make the author who carefully excluded a
+    // fictional language look less complete than the one who translated it by
+    // mistake. Stated as a separate fact below, never as a share of the bar.
+    $skippedCount = $translation->skipped_count ?? 0;
+
     if ($totalWithCaptures > 0) {
         $humanPercent = ($translation->human_count / $totalWithCaptures) * 100;
         $validatedPercent = ($translation->validated_count / $totalWithCaptures) * 100;
@@ -42,6 +48,15 @@
             <div class="bg-gray-500 h-full" style="width: {{ $capturePercent }}%"></div>
         @endif
     </div>
+
+    {{-- A deliberate choice by the author, worth seeing when comparing translations.
+         Factual wording: an S can also mean "I will deal with it later", and we
+         cannot tell the two apart. --}}
+    @if($skippedCount > 0)
+        <p class="text-xs text-gray-400 mt-1">
+            {{ __('progress.skipped_marked', ['count' => number_format($skippedCount)]) }}
+        </p>
+    @endif
 
     {{-- Legend (optional, shown when slot has content) --}}
     @if($slot->isNotEmpty())

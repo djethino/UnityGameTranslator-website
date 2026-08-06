@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * Fonts keep their own column (font_config), already rendered on game pages.
  *
- * Existing rows stay null until `php artisan translations:backfill-settings`
+ * Existing rows stay null until `php artisan translations:backfill-derived`
  * runs — the pages treat null as "nothing to show", never as an error.
  */
 return new class extends Migration

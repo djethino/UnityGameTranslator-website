@@ -847,6 +847,7 @@
     "progress.capture": "Vastgelegd",
     "progress.capture_only": "Alleen capture",
     "progress.capture_only_desc": "Dit bestand bevat alleen vastgelegde tekst, nog geen vertalingen",
+    "progress.skipped_marked": "Gemarkeerd om niet te vertalen: :count",
     "progress.tooltip": "Menselijk: :human | Gevalideerd: :validated | AI: :ai | Capture: :capture | Kwaliteit: :quality/3",
     "rating.not_main_owner": "Alleen de Main-eigenaar kan branches beoordelen.",
     "rating.cannot_rate_main": "Kan de Main-vertaling niet beoordelen.",

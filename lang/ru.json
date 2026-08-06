@@ -847,6 +847,7 @@
     "progress.capture": "Захвачено",
     "progress.capture_only": "Только захват",
     "progress.capture_only_desc": "Этот файл содержит только захваченный текст, переводов пока нет",
+    "progress.skipped_marked": "Отмечено как не подлежащее переводу: :count",
     "progress.tooltip": "Человек: :human | Проверено: :validated | ИИ: :ai | Захват: :capture | Качество: :quality/3",
     "rating.not_main_owner": "Только владелец основной версии может оценивать ветки.",
     "rating.cannot_rate_main": "Невозможно оценить основной перевод.",

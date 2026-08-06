@@ -847,6 +847,7 @@
     "progress.capture": "נלכד",
     "progress.capture_only": "לכידה בלבד",
     "progress.capture_only_desc": "קובץ זה מכיל רק טקסט שנלכד, ללא תרגומים עדיין",
+    "progress.skipped_marked": "מסומנות כלא לתרגום: :count",
     "progress.tooltip": "אנושי: :human | מאומת: :validated | AI: :ai | לכידה: :capture | איכות: :quality/3",
     "rating.not_main_owner": "רק בעל ה-Main יכול לדרג branches.",
     "rating.cannot_rate_main": "לא ניתן לדרג את תרגום ה-Main.",
