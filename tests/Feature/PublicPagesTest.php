@@ -179,6 +179,41 @@ class PublicPagesTest extends TestCase
         );
     }
 
+    public function test_a_games_page_lists_the_visitors_language_first(): void
+    {
+        $game = \App\Models\Game::forceCreate(['name' => 'Sorted Game', 'slug' => 'sorted-game']);
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $language, int $downloads) use ($game, $author) {
+            $t = new \App\Models\Translation();
+            $t->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => $language,
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => 'public',
+                'line_count' => 1,
+                'download_count' => $downloads,
+                'human_count' => 1,
+            ])->save();
+        };
+
+        // The German one wins on every other measure — it must still come second for a
+        // French-reading visitor, who cannot use it at all
+        $make('German', 5000);
+        $make('French', 1);
+
+        $html = $this->get('/fr/games/sorted-game')->assertOk()->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'German'),
+            strpos($html, 'French'),
+            'A translation the visitor can actually read comes first'
+        );
+    }
+
     public function test_the_home_page_shows_forks_and_hides_branches(): void
     {
         $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);

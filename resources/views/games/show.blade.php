@@ -122,7 +122,10 @@
 @endif
 
 <!-- Filters -->
-<form action="{{ route('games.show', $game) }}" method="GET" class="bg-gray-800 rounded-lg p-4 mb-8 flex flex-wrap gap-4 items-end">
+{{-- Selects apply on change, like the game list and the editors' filters: one gesture, one
+     result. The button stays for anyone without JavaScript. --}}
+<form action="{{ route('games.show', $game) }}" method="GET" class="bg-gray-800 rounded-lg p-4 mb-8 flex flex-wrap gap-4 items-end"
+    data-auto-submit>
     <div>
         <label class="block text-sm text-gray-400 mb-1">{{ __('games.target_language') }}</label>
         <select name="target" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
@@ -153,6 +156,17 @@
             <option value="downloads" {{ request('sort') == 'downloads' ? 'selected' : '' }}>{{ __('games.sort.downloads') }}</option>
         </select>
     </div>
+    @if($highlightLanguage)
+        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer whitespace-nowrap pb-2">
+            {{-- An unchecked box sends nothing at all, so without this the option could be
+                 turned on but never off --}}
+            <input type="hidden" name="lang_first" value="0">
+            <input type="checkbox" name="lang_first" value="1" {{ $languageFirst ? 'checked' : '' }}
+                class="rounded bg-gray-700 border-gray-600 text-purple-600">
+            <span>{{ __('games.sort.language_first', ['language' => $highlightLanguage]) }}</span>
+        </label>
+    @endif
+
     <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
         <i class="fas fa-filter"></i> {{ __('games.filter') }}
     </button>

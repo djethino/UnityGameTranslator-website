@@ -214,13 +214,30 @@ class GameController extends Controller
             default => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->ranking_score ?? 0), // score (default)
         };
 
+        // The visitor's language first — same rule as the game list, and the same reason: a
+        // translation into a language they do not read is not a candidate, however good it is.
+        // Applied AFTER the chosen sort and never instead of it: PHP sorts are stable, so the
+        // order picked above still decides between translations of the same language.
+        $highlightLanguage = $request->filled('target')
+            ? $request->target
+            : (config('locales.supported.' . app()->getLocale() . '.name') ?: null);
+        $languageFirst = $request->input('lang_first', '1') !== '0';
+
+        if ($highlightLanguage && $languageFirst) {
+            $groupsCollection = $groupsCollection->sortByDesc(
+                fn ($g) => $g['primary']?->target_language === $highlightLanguage ? 1 : 0
+            );
+        }
+
         $translationGroups = $groupsCollection->values()->all();
 
         // Get available languages for this game
         $targetLanguages = $game->translations()->distinct()->pluck('target_language')->sort();
         $sourceLanguages = $game->translations()->distinct()->pluck('source_language')->sort();
 
-        return view('games.show', compact('game', 'translationGroups', 'targetLanguages', 'sourceLanguages'));
+        return view('games.show', compact('game', 'translationGroups', 'targetLanguages', 'sourceLanguages',
+            'highlightLanguage',
+            'languageFirst'));
     }
 
     public function search(Request $request)
