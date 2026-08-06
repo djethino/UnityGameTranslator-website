@@ -253,19 +253,8 @@ class MergeController extends Controller
                     }
                 }
 
-                // Tag rules:
-                // - M (Mod UI) and S (Skipped) are preserved as-is (never changed)
-                // - Manual edit → becomes H
-                // - Tag A (from Main or branch) → becomes V (human validated this AI translation)
-                // - Tag H and V stay the same (already human/validated)
-                if ($tag !== 'M' && $tag !== 'S') {
-                    if ($source === 'manual') {
-                        $tag = 'H';
-                    } elseif ($tag === 'A') {
-                        $tag = 'V';
-                    }
-                    // H and V from branches keep their original tag
-                }
+                // Shared rule — see TranslationService::resolveMergedTag
+                $tag = TranslationService::resolveMergedTag($tag, $source);
 
                 // rebuildEntry keeps the ordering index "i" of the existing entry
                 $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);

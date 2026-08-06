@@ -451,6 +451,35 @@ class TranslationService
         return $entries;
     }
 
+    /**
+     * The tag a merged line ends up carrying, given the tag shown and how it was picked.
+     *
+     * Three rules, and each exists for a reason worth stating:
+     * - an explicit tag change is written AS-IS, because promoting it would undo the very
+     *   thing the user just asked for (marking an AI line back as unreviewed);
+     * - M and S are never rewritten: they are states, not translation quality;
+     * - a hand edit becomes H, and picking a line tagged A becomes V — a human just read it,
+     *   which is exactly what V means.
+     *
+     * Written out at every merge endpoint until now: three copies of the same paragraph, which
+     * is three chances for them to stop agreeing on what a validated line is.
+     *
+     * The live edit session deliberately does NOT use this: there, ticking a line is editing,
+     * not reviewing a merge, so an A stays an A.
+     */
+    public static function resolveMergedTag(string $tag, string $source): string
+    {
+        if ($source === 'tagchange' || $tag === 'M' || $tag === 'S') {
+            return $tag;
+        }
+
+        if ($source === 'manual') {
+            return 'H';
+        }
+
+        return $tag === 'A' ? 'V' : $tag;
+    }
+
     /** Where each comparable section lives in the file. */
     private const SETTING_SECTION_KEYS = [
         'fonts' => '_fonts',

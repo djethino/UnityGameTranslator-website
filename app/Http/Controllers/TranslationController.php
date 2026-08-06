@@ -936,14 +936,7 @@ class TranslationController extends Controller
                 continue;
             }
 
-            $tag = $sel['tag'];
-            if ($sel['source'] !== 'tagchange' && $tag !== 'M' && $tag !== 'S') {
-                if ($sel['source'] === 'manual') {
-                    $tag = 'H';
-                } elseif ($tag === 'A') {
-                    $tag = 'V';
-                }
-            }
+            $tag = TranslationService::resolveMergedTag($sel['tag'], $sel['source']);
 
             $result[$key] = TranslationService::rebuildEntry(
                 $result[$key] ?? null,
@@ -1045,20 +1038,8 @@ class TranslationController extends Controller
             $tag = $sel['tag'];
             $source = $sel['source'];
 
-            // Tag rules (same as MergeController):
-            // - source 'tagchange' (explicit V/A/S from the tag dropdown) is
-            //   written AS-IS — promoting it would undo an Invalidate (A)
-            // - M (Mod UI) and S (Skipped) are preserved as-is
-            // - Manual edit → becomes H
-            // - Tag A selected → becomes V (human validated this AI translation)
-            // - Tag H and V stay the same
-            if ($source !== 'tagchange' && $tag !== 'M' && $tag !== 'S') {
-                if ($source === 'manual') {
-                    $tag = 'H';
-                } elseif ($tag === 'A') {
-                    $tag = 'V';
-                }
-            }
+            // Shared rule — see TranslationService::resolveMergedTag
+            $tag = TranslationService::resolveMergedTag($tag, $source);
 
             // rebuildEntry keeps the ordering index "i" of the existing entry
             $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);
