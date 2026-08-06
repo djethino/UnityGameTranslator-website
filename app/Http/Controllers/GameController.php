@@ -100,8 +100,13 @@ class GameController extends Controller
         $targetLanguages = Translation::where('visibility', 'public')->distinct()->pluck('target_language')->sort();
         $sourceLanguages = Translation::where('visibility', 'public')->distinct()->pluck('source_language')->sort();
 
+        // Language names in the language itself ("Français", not "French"), like the site's own
+        // language switcher: a name shown to someone is written the way they write it.
+        $languageNames = config('language-names', []);
+
         return view('games.index', compact(
             'games',
+            'languageNames',
             'targetLanguages',
             'sourceLanguages',
             'languagesByGame',

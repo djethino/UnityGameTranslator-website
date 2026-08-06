@@ -207,9 +207,13 @@ class PublicPagesTest extends TestCase
 
         $html = $this->get('/fr/games/sorted-game')->assertOk()->getContent();
 
+        // Only what comes AFTER the filter form: the language names also appear in its option
+        // values, in alphabetical order, which would make this pass whatever the cards do
+        $cards = substr($html, strpos($html, '</form>'));
+
         $this->assertLessThan(
-            strpos($html, 'German'),
-            strpos($html, 'French'),
+            strpos($cards, 'German'),
+            strpos($cards, 'French'),
             'A translation the visitor can actually read comes first'
         );
     }

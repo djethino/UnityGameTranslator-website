@@ -131,7 +131,7 @@
         <select name="target" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
             <option value="">{{ __('games.all') }}</option>
             @foreach($targetLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $seoLanguageNames[$lang] ?? $lang }}</option>
             @endforeach
         </select>
     </div>
@@ -140,7 +140,7 @@
         <select name="source" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
             <option value="">{{ __('games.all') }}</option>
             @foreach($sourceLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $seoLanguageNames[$lang] ?? $lang }}</option>
             @endforeach
         </select>
     </div>
@@ -163,7 +163,7 @@
             <input type="hidden" name="lang_first" value="0">
             <input type="checkbox" name="lang_first" value="1" {{ $languageFirst ? 'checked' : '' }}
                 class="rounded bg-gray-700 border-gray-600 text-purple-600">
-            <span>{{ __('games.sort.language_first', ['language' => $highlightLanguage]) }}</span>
+            <span>{{ __('games.sort.language_first', ['language' => $seoLanguageNames[$highlightLanguage] ?? $highlightLanguage]) }}</span>
         </label>
     @endif
 

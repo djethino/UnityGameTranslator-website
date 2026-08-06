@@ -66,7 +66,7 @@
             class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
             <option value="">{{ __('games.target_language') }}: {{ __('games.all') }}</option>
             @foreach($targetLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $languageNames[$lang] ?? $lang }}</option>
             @endforeach
         </select>
 
@@ -74,7 +74,7 @@
             class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
             <option value="">{{ __('games.source_language') }}: {{ __('games.all') }}</option>
             @foreach($sourceLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $languageNames[$lang] ?? $lang }}</option>
             @endforeach
         </select>
 
@@ -96,7 +96,7 @@
                     <input type="hidden" name="lang_first" value="0">
                     <input type="checkbox" name="lang_first" value="1" {{ $languageFirst ? 'checked' : '' }}
                         class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                    <span>{{ __('games.sort.language_first', ['language' => $highlightLanguage]) }}</span>
+                    <span>{{ __('games.sort.language_first', ['language' => $languageNames[$highlightLanguage] ?? $highlightLanguage]) }}</span>
                 </label>
             @endif
         </div>
@@ -165,11 +165,11 @@
                                 <div class="flex flex-wrap gap-1 mb-1.5">
                                     @foreach($shownLanguages as $language)
                                         <span class="text-[11px] px-1 py-0.5 rounded leading-none {{ $language === $highlightLanguage ? 'bg-purple-600 ring-1 ring-purple-300' : 'bg-black/60' }}"
-                                            title="{{ $language }}">@langflag($language)</span>
+                                            title="{{ $languageNames[$language] ?? $language }}">@langflag($language)</span>
                                     @endforeach
                                     @if($extraLanguages > 0)
                                         <span class="text-[10px] bg-black/60 text-gray-300 px-1.5 py-0.5 rounded leading-none"
-                                            title="{{ $gameLanguages->implode(', ') }}">+{{ $extraLanguages }}</span>
+                                            title="{{ $gameLanguages->map(fn ($l) => $languageNames[$l] ?? $l)->implode(', ') }}">+{{ $extraLanguages }}</span>
                                     @endif
                                 </div>
                             @endif
