@@ -455,3 +455,11 @@ document.addEventListener('change', (event) => {
     const form = field.closest('form[data-auto-submit]');
     if (form) form.submit();
 });
+
+// A submit button that only existed to apply those fields has nothing left to do. It is hidden
+// HERE, by the very code that makes it redundant: the two can never fall out of step, and a
+// visitor without JavaScript keeps the only control that works for them.
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form[data-auto-submit] [data-hide-when-auto]')
+        .forEach((button) => button.remove());
+});

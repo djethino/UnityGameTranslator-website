@@ -167,7 +167,11 @@
         </label>
     @endif
 
-    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+    {{-- Nothing left to click once the selects apply on change. Kept in the markup and hidden
+         by the script that makes it redundant: without JavaScript it is the only way to
+         filter, so removing it outright would strand those visitors. --}}
+    <button type="submit" data-hide-when-auto
+        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
         <i class="fas fa-filter"></i> {{ __('games.filter') }}
     </button>
 </form>
