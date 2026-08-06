@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Định dạng file bản dịch không hợp lệ.",
     "dashboard.external_resources": "Tài nguyên bên ngoài",
     "dashboard.external_resources_disclaimer": "Liên kết này dẫn đến nội dung của bên thứ ba. Chúng tôi không chịu trách nhiệm về các file bên ngoài hoặc tính khả dụng của chúng.",
+    "progress.left_to_review": "còn :count dòng cần rà soát",
     "progress.stage.machine": "Dịch máy",
     "progress.stage.started": "Đã bắt đầu rà soát",
     "progress.stage.advanced": "Rà soát đã tiến xa",

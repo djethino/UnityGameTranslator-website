@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Nieprawidłowy format pliku tłumaczenia.",
     "dashboard.external_resources": "Zasoby zewnętrzne",
     "dashboard.external_resources_disclaimer": "Ten link prowadzi do treści stron trzecich. Nie ponosimy odpowiedzialności za zewnętrzne pliki ani ich dostępność.",
+    "progress.left_to_review": "pozostało :count wierszy do sprawdzenia",
     "progress.stage.machine": "Tłumaczenie maszynowe",
     "progress.stage.started": "Korekta rozpoczęta",
     "progress.stage.advanced": "Korekta zaawansowana",

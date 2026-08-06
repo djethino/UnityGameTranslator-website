@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Ungültiges Übersetzungsdateiformat.",
     "dashboard.external_resources": "Externe Ressourcen",
     "dashboard.external_resources_disclaimer": "Dieser Link führt zu Drittanbieterinhalten. Wir übernehmen keine Verantwortung für externe Dateien oder deren Verfügbarkeit.",
+    "progress.left_to_review": "noch :count Zeilen durchzusehen",
     "progress.stage.machine": "Maschinelle Übersetzung",
     "progress.stage.started": "Durchsicht begonnen",
     "progress.stage.advanced": "Durchsicht weit fortgeschritten",

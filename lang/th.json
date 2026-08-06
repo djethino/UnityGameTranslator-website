@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "รูปแบบไฟล์การแปลไม่ถูกต้อง",
     "dashboard.external_resources": "ทรัพยากรภายนอก",
     "dashboard.external_resources_disclaimer": "ลิงก์นี้นำไปยังเนื้อหาของบุคคลที่สาม เราไม่รับผิดชอบต่อไฟล์ภายนอกหรือความพร้อมใช้งานของไฟล์",
+    "progress.left_to_review": "เหลือ :count บรรทัดให้ตรวจทาน",
     "progress.stage.machine": "แปลด้วยเครื่อง",
     "progress.stage.started": "เริ่มตรวจทานแล้ว",
     "progress.stage.advanced": "ตรวจทานคืบหน้ามาก",

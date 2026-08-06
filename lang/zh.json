@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "翻译文件格式无效。",
     "dashboard.external_resources": "外部资源",
     "dashboard.external_resources_disclaimer": "此链接指向第三方内容。我们对外部文件及其可用性不承担责任。",
+    "progress.left_to_review": "还有 :count 行待校对",
     "progress.stage.machine": "机器翻译",
     "progress.stage.started": "已开始校对",
     "progress.stage.advanced": "校对进展良好",

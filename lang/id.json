@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Format file terjemahan tidak valid.",
     "dashboard.external_resources": "Sumber Daya Eksternal",
     "dashboard.external_resources_disclaimer": "Tautan ini mengarah ke konten pihak ketiga. Kami tidak bertanggung jawab atas file eksternal atau ketersediaannya.",
+    "progress.left_to_review": ":count baris menunggu ditinjau",
     "progress.stage.machine": "Terjemahan mesin",
     "progress.stage.started": "Peninjauan dimulai",
     "progress.stage.advanced": "Peninjauan lanjut",

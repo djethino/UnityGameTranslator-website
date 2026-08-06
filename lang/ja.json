@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "翻訳ファイルの形式が無効です。",
     "dashboard.external_resources": "外部リソース",
     "dashboard.external_resources_disclaimer": "このリンクはサードパーティのコンテンツに移動します。外部ファイルやその利用可能性について当社は責任を負いません。",
+    "progress.left_to_review": "未見直し :count 行",
     "progress.stage.machine": "機械翻訳",
     "progress.stage.started": "見直し開始",
     "progress.stage.advanced": "見直しが進行中",

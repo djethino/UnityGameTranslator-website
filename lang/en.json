@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Invalid translation file format.",
     "dashboard.external_resources": "External Resources",
     "dashboard.external_resources_disclaimer": "This link leads to third-party content. We are not responsible for external files or their availability.",
+    "progress.left_to_review": ":count lines left to review",
     "progress.stage.machine": "Machine translation",
     "progress.stage.started": "Review started",
     "progress.stage.advanced": "Review well under way",

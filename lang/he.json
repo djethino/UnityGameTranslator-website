@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "פורמט קובץ תרגום לא תקין.",
     "dashboard.external_resources": "משאבים חיצוניים",
     "dashboard.external_resources_disclaimer": "קישור זה מוביל לתוכן של צד שלישי. איננו אחראים לקבצים חיצוניים או לזמינותם.",
+    "progress.left_to_review": "נותרו :count שורות להגהה",
     "progress.stage.machine": "תרגום מכונה",
     "progress.stage.started": "ההגהה החלה",
     "progress.stage.advanced": "ההגהה מתקדמת",

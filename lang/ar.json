@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "صيغة ملف الترجمة غير صالحة.",
     "dashboard.external_resources": "موارد خارجية",
     "dashboard.external_resources_disclaimer": "هذا الرابط يؤدي إلى محتوى طرف ثالث. نحن غير مسؤولين عن الملفات الخارجية أو توفرها.",
+    "progress.left_to_review": "بقي :count سطرًا للمراجعة",
     "progress.stage.machine": "ترجمة آلية",
     "progress.stage.started": "بدأت المراجعة",
     "progress.stage.advanced": "المراجعة متقدمة",

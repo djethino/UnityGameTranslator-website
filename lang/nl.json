@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Ongeldig vertaalbestandsformaat.",
     "dashboard.external_resources": "Externe bronnen",
     "dashboard.external_resources_disclaimer": "Deze link leidt naar inhoud van derden. Wij zijn niet verantwoordelijk voor externe bestanden of hun beschikbaarheid.",
+    "progress.left_to_review": "nog :count regels na te kijken",
     "progress.stage.machine": "Machinevertaling",
     "progress.stage.started": "Nakijken begonnen",
     "progress.stage.advanced": "Nakijken ver gevorderd",

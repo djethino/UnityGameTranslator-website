@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Geçersiz çeviri dosyası formatı.",
     "dashboard.external_resources": "Harici Kaynaklar",
     "dashboard.external_resources_disclaimer": "Bu bağlantı üçüncü taraf içeriğine yönlendirir. Harici dosyalardan veya erişilebilirliklerinden sorumlu değiliz.",
+    "progress.left_to_review": "gözden geçirilecek :count satır",
     "progress.stage.machine": "Makine çevirisi",
     "progress.stage.started": "Gözden geçirme başladı",
     "progress.stage.advanced": "Gözden geçirme ilerledi",

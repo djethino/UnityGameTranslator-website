@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "Formato del file di traduzione non valido.",
     "dashboard.external_resources": "Risorse Esterne",
     "dashboard.external_resources_disclaimer": "Questo link rimanda a contenuti di terze parti. Non siamo responsabili dei file esterni né della loro disponibilità.",
+    "progress.left_to_review": ":count righe da rivedere",
     "progress.stage.machine": "Traduzione automatica",
     "progress.stage.started": "Revisione avviata",
     "progress.stage.advanced": "Revisione avanzata",

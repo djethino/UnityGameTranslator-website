@@ -849,6 +849,7 @@
     "dashboard.invalid_file": "अमान्य अनुवाद फ़ाइल फॉर्मेट।",
     "dashboard.external_resources": "बाहरी रिसोर्सेज़",
     "dashboard.external_resources_disclaimer": "यह लिंक तृतीय-पक्ष सामग्री की ओर ले जाता है। हम बाहरी फ़ाइलों या उनकी उपलब्धता के लिए जिम्मेदार नहीं हैं।",
+    "progress.left_to_review": ":count पंक्तियाँ समीक्षा हेतु शेष",
     "progress.stage.machine": "मशीनी अनुवाद",
     "progress.stage.started": "समीक्षा शुरू",
     "progress.stage.advanced": "समीक्षा काफ़ी आगे",

@@ -112,19 +112,24 @@
                     <span class="text-yellow-400 text-xs"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                 @endif
             </div>
-            {{-- A file with nothing translated yet has no quality to report. The formula
-                 returns 0.0/3.0, which reads as "your work is worthless" to someone who has
-                 simply captured the game's text and not started — the very first thing they
-                 see about their own upload. --}}
-            @if($translation->effective_lines > 0)
-                <span class="text-xs text-gray-400" title="{{ __('progress.quality_tooltip') }}">
-                    {{ __('progress.quality_score') }}: {{ number_format($translation->quality_score, 1) }}/3.0
-                </span>
-            @else
-                <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
-                    <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
-                </span>
-            @endif
+            {{-- The step, and what is left to read. No mark: this is the author's own screen,
+                 and a grade motivates nobody — the remaining count does, because it moves as
+                 they work and tells them what to do next. A file with nothing translated yet
+                 has no stage at all, which is what its author needs to hear instead of 0.0/3. --}}
+            <div class="flex items-center gap-2">
+                @if($translation->effective_lines > 0)
+                    <x-review-stage :translation="$translation" />
+                    @if($translation->ai_count > 0)
+                        <span class="text-xs text-gray-400">
+                            {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
+                        </span>
+                    @endif
+                @else
+                    <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
+                        <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
+                    </span>
+                @endif
+            </div>
         </div>
         <x-progress-bar :translation="$translation" class="mb-2" />
         <x-quality-legend :translation="$translation" />
