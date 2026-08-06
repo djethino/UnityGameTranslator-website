@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "لم يتم العثور على اختلافات بين النسختين المحلية والمتصلة.",
     "merge_preview.settings_show_detail": "عرض إعدادًا بإعداد",
     "merge_preview.settings_hide_detail": "إخفاء التفاصيل",
+    "merge_preview.local_apply_success": "أُعيد إلى اللعبة. لم يُنشر أي شيء.",
     "merge_preview.settings_column": "إعداد",
     "merge_preview.settings_absent": "غير محدد",
     "merge_preview.settings_pick_hint": "انقر على أحد الجانبين لاختياره. تُعدَّل الإعدادات في المود — هنا تختار فقط أي إصدار يفوز.",

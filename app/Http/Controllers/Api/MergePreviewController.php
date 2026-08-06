@@ -23,13 +23,24 @@ class MergePreviewController extends Controller
         $request->validate([
             'translation_id' => 'required|integer|exists:translations,id',
             'local_content' => 'required|array',
+            'destination' => 'sometimes|in:server,local',
         ]);
 
         $user = $request->user();
         $translation = Translation::findOrFail($request->translation_id);
+        $destination = $request->input('destination', MergePreviewToken::DESTINATION_SERVER);
 
-        // Verify the user owns this translation
-        if ((int) $translation->user_id !== (int) $user->id) {
+        // Ownership is what publishing requires — not what comparing requires. A comparison
+        // whose result only goes back to the mod writes nothing here, so it is allowed against
+        // any translation the caller could already download; that is how a branch gets to
+        // compare itself with its Main, which ownership made impossible.
+        if ($destination === MergePreviewToken::DESTINATION_LOCAL) {
+            if (!$translation->isReadableBy($user)) {
+                return response()->json([
+                    'error' => 'This translation is not available for comparison.',
+                ], 403);
+            }
+        } elseif ((int) $translation->user_id !== (int) $user->id) {
             return response()->json([
                 'error' => 'You can only merge preview your own translations.',
             ], 403);
@@ -39,7 +50,8 @@ class MergePreviewController extends Controller
         $token = MergePreviewToken::createForUser(
             $user->id,
             $translation->id,
-            $request->local_content
+            $request->local_content,
+            $destination
         );
 
         return response()->json([

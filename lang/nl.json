@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Geen verschillen gevonden tussen lokale en online versies.",
     "merge_preview.settings_show_detail": "Per instelling bekijken",
     "merge_preview.settings_hide_detail": "Details verbergen",
+    "merge_preview.local_apply_success": "Teruggestuurd naar het spel. Er is niets gepubliceerd.",
     "merge_preview.settings_column": "Instelling",
     "merge_preview.settings_absent": "niet ingesteld",
     "merge_preview.settings_pick_hint": "Klik op een kant om die te kiezen. Instellingen wijzig je in de mod — hier kies je alleen welke versie wint.",

@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "ไม่พบความแตกต่างระหว่างเวอร์ชันในเครื่องและออนไลน์",
     "merge_preview.settings_show_detail": "ดูทีละการตั้งค่า",
     "merge_preview.settings_hide_detail": "ซ่อนรายละเอียด",
+    "merge_preview.local_apply_success": "ส่งกลับไปยังเกมแล้ว ไม่มีการเผยแพร่ใด ๆ",
     "merge_preview.settings_column": "การตั้งค่า",
     "merge_preview.settings_absent": "ไม่ได้ตั้งค่า",
     "merge_preview.settings_pick_hint": "คลิกด้านใดด้านหนึ่งเพื่อเลือก การตั้งค่าแก้ไขในม็อด ที่นี่คุณเลือกเพียงว่าเวอร์ชันใดชนะ",

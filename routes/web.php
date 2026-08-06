@@ -153,6 +153,9 @@ $localizableRoutes = function () {
         Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
         Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
         Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
+        // Separate route on purpose: this one never writes the translation file, it hands the
+        // result back to the mod. See TranslationController::applyMergePreviewLocally.
+        Route::post('/translations/{translation}/merge-preview/local', [TranslationController::class, 'applyMergePreviewLocally'])->name('translations.merge-preview.apply-local');
 
         // Notifications page (browsed → localizable)
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "לא נמצאו הבדלים בין הגרסאות המקומית והמקוונת.",
     "merge_preview.settings_show_detail": "הצג הגדרה אחר הגדרה",
     "merge_preview.settings_hide_detail": "הסתר את הפירוט",
+    "merge_preview.local_apply_success": "נשלח בחזרה למשחק. שום דבר לא פורסם.",
     "merge_preview.settings_column": "הגדרה",
     "merge_preview.settings_absent": "לא הוגדר",
     "merge_preview.settings_pick_hint": "לחצו על צד כדי לבחור בו. ההגדרות נערכות במוד — כאן בוחרים רק איזו גרסה גוברת.",

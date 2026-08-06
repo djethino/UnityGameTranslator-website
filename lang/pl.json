@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Nie znaleziono różnic między wersjami lokalną i online.",
     "merge_preview.settings_show_detail": "Pokaż ustawienie po ustawieniu",
     "merge_preview.settings_hide_detail": "Ukryj szczegóły",
+    "merge_preview.local_apply_success": "Odesłano do gry. Nic nie zostało opublikowane.",
     "merge_preview.settings_column": "Ustawienie",
     "merge_preview.settings_absent": "nie ustawiono",
     "merge_preview.settings_pick_hint": "Kliknij stronę, aby ją wybrać. Ustawienia zmienia się w modzie — tutaj wybierasz tylko, która wersja wygrywa.",

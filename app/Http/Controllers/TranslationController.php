@@ -605,8 +605,15 @@ class TranslationController extends Controller
                 abort(403, 'Token does not match this translation.');
             }
 
-            // Verify the token's user owns this translation
-            if ((int) $mergeToken->user_id !== (int) $translation->user_id) {
+            // Ownership is required to PUBLISH. A comparison whose result goes back to the mod
+            // writes nothing here, so it only needs the translation to be readable — which is
+            // how a branch gets to compare itself with its Main. Re-checked rather than trusted
+            // from the init call: this is the request that opens the file.
+            if ($mergeToken->isLocalDestination()) {
+                if (!$translation->isReadableBy($mergeToken->user)) {
+                    abort(403, 'This translation is not available for comparison.');
+                }
+            } elseif ((int) $mergeToken->user_id !== (int) $translation->user_id) {
                 abort(403, 'You can only preview your own translations.');
             }
 
@@ -852,6 +859,123 @@ class TranslationController extends Controller
      * Apply merge preview selections to the user's translation.
      * Same rules as MergeController::apply for tag handling.
      */
+    /**
+     * Send the arbitrated result back to the mod, WITHOUT publishing anything.
+     *
+     * A comparison could previously only end by writing the server file, so reviewing changes
+     * without publishing them was impossible — and so was comparing against a translation one
+     * does not own, since publishing there is forbidden and the comparison was refused upfront.
+     * That is the case this route exists for: a branch measuring itself against its Main.
+     *
+     * Deliberately a route of its own rather than a flag on applyMergePreview. A flag is a thing
+     * one forgets to check; two routes cannot be confused, and each one refuses a token that
+     * does not belong to it.
+     */
+    public function applyMergePreviewLocally(Request $request, Translation $translation, TranslationService $service)
+    {
+        $token = session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id
+                ? MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
+                : null;
+
+        if (!$token || !$token->getContentFilePath()) {
+            return back()->withErrors(['error' => __('merge_preview.error_session_expired')]);
+        }
+
+        if (!$token->isLocalDestination()) {
+            // This token was opened to publish. Letting it end here instead would quietly do
+            // something other than what the mod asked for.
+            abort(403, 'This comparison was not opened to return its result to the mod.');
+        }
+
+        $request->validate([
+            'selections' => 'sometimes|array',
+            'selections.*.key' => 'required|string',
+            'selections.*.value' => 'present|string',
+            'selections.*.tag' => 'required|in:H,A,V,M,S',
+            'selections.*.source' => 'required|string',
+            'deletions' => 'sometimes|array',
+            'deletions.*' => 'string',
+            'settings' => 'sometimes|array',
+            'settings.*' => 'in:local,online',
+        ]);
+
+        $localPath = $token->getContentFilePath();
+        $local = json_decode($service->normalizeContent(file_get_contents($localPath)), true);
+        if (!is_array($local)) {
+            return back()->withErrors(['error' => __('merge_preview.error_invalid_json')]);
+        }
+
+        $onlinePath = $translation->getSafeFilePath();
+        $online = $onlinePath && file_exists($onlinePath)
+            ? json_decode($service->normalizeContent(file_get_contents($onlinePath)), true)
+            : null;
+        if (!is_array($online)) {
+            return back()->withErrors(['error' => __('merge_preview.error_file_not_found')]);
+        }
+
+        // The result starts from what the player HAS, not from the server file: this is their
+        // own file coming back to them, and everything they never arbitrated must survive
+        // untouched — including the metadata that carries its lineage.
+        $result = $local;
+
+        foreach ($request->input('selections', []) as $sel) {
+            $key = $service->normalizeContent($sel['key']);
+            // Metadata keys are never written through selections — same guard as the edit
+            // session: a forged {v,t} object there would corrupt the file's lineage
+            if (str_starts_with($key, '_')) {
+                continue;
+            }
+
+            $tag = $sel['tag'];
+            if ($sel['source'] !== 'tagchange' && $tag !== 'M' && $tag !== 'S') {
+                if ($sel['source'] === 'manual') {
+                    $tag = 'H';
+                } elseif ($tag === 'A') {
+                    $tag = 'V';
+                }
+            }
+
+            $result[$key] = TranslationService::rebuildEntry(
+                $result[$key] ?? null,
+                $service->normalizeContent($sel['value']),
+                $tag
+            );
+        }
+
+        foreach ($request->input('deletions', []) as $delKey) {
+            $delKey = $service->normalizeContent($delKey);
+            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $result)) {
+                unset($result[$delKey]);
+            }
+        }
+
+        // Settings choices are relative to the online side here: "online" means take theirs
+        $settingChoices = [];
+        foreach ($request->input('settings', []) as $key => $side) {
+            // Reversed on purpose: applySettingSelections copies from its second argument when
+            // told 'local', and the side being pulled in here is the online one
+            $settingChoices[$key] = $side === 'online' ? 'local' : 'online';
+        }
+        if (!empty($settingChoices)) {
+            $result = $service->applySettingSelections($result, $online, $settingChoices);
+        }
+
+        // Hand it to the mod through the file it already knows how to fetch
+        $token->replaceContent($result);
+
+        SsePublisher::mergeCompleted($token->token, [
+            'translation_id' => $translation->id,
+            'destination' => MergePreviewToken::DESTINATION_LOCAL,
+            'line_count' => count(array_filter(
+                array_keys($result),
+                fn ($k) => !str_starts_with($k, '_')
+            )),
+        ]);
+
+        return $this->finishMergePreviewSession(__('merge_preview.local_apply_success'));
+    }
+
     public function applyMergePreview(Request $request, Translation $translation, TranslationService $service)
     {
         $user = auth()->user();
@@ -859,6 +983,15 @@ class TranslationController extends Controller
         // Verify user owns this translation
         if ((int) $translation->user_id !== (int) $user->id) {
             abort(403, 'You can only modify your own translations.');
+        }
+
+        // A token opened to return its result to the mod must not end up publishing instead
+        if (session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id) {
+            $sessionToken = MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id);
+            if ($sessionToken && $sessionToken->isLocalDestination()) {
+                abort(403, 'This comparison was opened to return its result to the mod.');
+            }
         }
 
         // Validate selections and deletions
@@ -989,26 +1122,35 @@ class TranslationController extends Controller
             $mergeToken->deleteWithFile();
         }
 
-        // If this was a token-based merge preview session, invalidate it
-        // to prevent the scoped session from being used for other actions
-        if (session('merge_preview_only')) {
-            session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
+        return $this->finishMergePreviewSession(
+            __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount])
+        );
+    }
+
+    /**
+     * Close a comparison and send the visitor somewhere sensible.
+     *
+     * A session opened by a mod token is scoped to that one comparison: it is logged out and
+     * destroyed, so it can never serve for anything else. A regular web session merely loses its
+     * reference to the token, so a stale one cannot be recovered by revisiting the URL.
+     *
+     * Shared by both apply routes — the one that publishes and the one that answers the mod —
+     * because a session left half-closed is exactly the kind of thing one route forgets.
+     */
+    private function finishMergePreviewSession(string $message)
+    {
+        $scoped = (bool) session('merge_preview_only');
+        session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
+
+        if ($scoped) {
             Auth::logout();
             session()->invalidate();
             session()->regenerateToken();
 
-            return redirect()
-                ->route('home')
-                ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount]));
+            return redirect()->route('home')->with('success', $message);
         }
 
-        // Regular web session: clear the merge reference so a stale token
-        // can't be recovered on a later visit to the merge-preview URL
-        session()->forget(['merge_preview_only', 'merge_preview_translation_id', 'merge_preview_token']);
-
-        return redirect()
-            ->route('translations.mine')
-            ->with('success', __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount]));
+        return redirect()->route('translations.mine')->with('success', $message);
     }
 
     /**

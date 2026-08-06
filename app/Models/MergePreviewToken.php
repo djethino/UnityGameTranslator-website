@@ -38,9 +38,16 @@ class MergePreviewToken extends Model
      */
     private const CONSUMED_TTL_MINUTES = 120;
 
+    /** The comparison is published to the server when validated (historical behaviour). */
+    public const DESTINATION_SERVER = 'server';
+
+    /** The result goes back to the mod only; the server file is never touched. */
+    public const DESTINATION_LOCAL = 'local';
+
     protected $fillable = [
         'token',
         'translation_id',
+        'destination',
         'user_id',
         'expires_at',
         'consumed_at',
@@ -61,13 +68,23 @@ class MergePreviewToken extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** Does this token end in the mod rather than on the server? */
+    public function isLocalDestination(): bool
+    {
+        return $this->destination === self::DESTINATION_LOCAL;
+    }
+
     /**
      * Create a new merge preview token for a user.
      * Writes the local content to the private disk; throws RuntimeException
      * if the file cannot be written (never fail silently).
      */
-    public static function createForUser(int $userId, int $translationId, array $localContent): self
-    {
+    public static function createForUser(
+        int $userId,
+        int $translationId,
+        array $localContent,
+        string $destination = self::DESTINATION_SERVER
+    ): self {
         // Replace any previous token for this user/translation combo
         self::where('user_id', $userId)
             ->where('translation_id', $translationId)
@@ -90,6 +107,7 @@ class MergePreviewToken extends Model
             'token' => $token,
             'user_id' => $userId,
             'translation_id' => $translationId,
+            'destination' => $destination,
             'expires_at' => now()->addMinutes(self::INITIAL_TTL_MINUTES),
         ]);
     }
@@ -153,6 +171,24 @@ class MergePreviewToken extends Model
     /**
      * Delete the row and its content file together.
      */
+    /**
+     * Replace the stored content with an arbitrated result, for the mod to pick up.
+     *
+     * The file goes from "what the player sent" to "what they decided": same channel, same
+     * fetch on the mod side, nothing new to expose.
+     */
+    public function replaceContent(array $content): void
+    {
+        $json = json_encode($content, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            throw new \RuntimeException('Failed to encode merge result: ' . json_last_error_msg());
+        }
+
+        if (!Storage::disk('local')->put(self::contentFileName($this->token), $json)) {
+            throw new \RuntimeException('Failed to write merge result file.');
+        }
+    }
+
     public function deleteWithFile(): void
     {
         Storage::disk('local')->delete(self::contentFileName($this->token));

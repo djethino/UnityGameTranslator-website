@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "लोकल और ऑनलाइन वर्शन के बीच कोई अंतर नहीं मिला।",
     "merge_preview.settings_show_detail": "सेटिंग दर सेटिंग देखें",
     "merge_preview.settings_hide_detail": "विवरण छिपाएँ",
+    "merge_preview.local_apply_success": "गेम में वापस भेजा गया। कुछ भी प्रकाशित नहीं हुआ।",
     "merge_preview.settings_column": "सेटिंग",
     "merge_preview.settings_absent": "सेट नहीं",
     "merge_preview.settings_pick_hint": "चुनने के लिए किसी एक पक्ष पर क्लिक करें। सेटिंग्स मॉड में बदली जाती हैं — यहाँ आप केवल यह चुनते हैं कि कौन-सा संस्करण रहेगा।",

@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Nenhuma diferença encontrada entre as versões local e online.",
     "merge_preview.settings_show_detail": "Ver ajuste a ajuste",
     "merge_preview.settings_hide_detail": "Ocultar o detalhe",
+    "merge_preview.local_apply_success": "Devolvido ao jogo. Nada foi publicado.",
     "merge_preview.settings_column": "Ajuste",
     "merge_preview.settings_absent": "não definido",
     "merge_preview.settings_pick_hint": "Clique num lado para o escolher. Os ajustes editam-se no mod: aqui só escolhe qual versão prevalece.",

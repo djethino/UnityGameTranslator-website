@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "No differences found between local and online versions.",
     "merge_preview.settings_show_detail": "Show setting by setting",
     "merge_preview.settings_hide_detail": "Hide the detail",
+    "merge_preview.local_apply_success": "Sent back to the game. Nothing was published.",
     "merge_preview.settings_column": "Setting",
     "merge_preview.settings_absent": "not set",
     "merge_preview.settings_pick_hint": "Click a side to choose it. Settings are edited in the mod — here you only choose which version wins.",

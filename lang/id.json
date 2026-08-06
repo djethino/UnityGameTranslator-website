@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Tidak ada perbedaan ditemukan antara versi lokal dan online.",
     "merge_preview.settings_show_detail": "Lihat per pengaturan",
     "merge_preview.settings_hide_detail": "Sembunyikan detail",
+    "merge_preview.local_apply_success": "Dikirim kembali ke gim. Tidak ada yang dipublikasikan.",
     "merge_preview.settings_column": "Pengaturan",
     "merge_preview.settings_absent": "tidak diatur",
     "merge_preview.settings_pick_hint": "Klik satu sisi untuk memilihnya. Pengaturan diubah di mod — di sini Anda hanya memilih versi mana yang menang.",

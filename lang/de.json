@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Keine Unterschiede zwischen lokaler und Online-Version gefunden.",
     "merge_preview.settings_show_detail": "Einstellung für Einstellung anzeigen",
     "merge_preview.settings_hide_detail": "Details ausblenden",
+    "merge_preview.local_apply_success": "An das Spiel zurückgesendet. Nichts wurde veröffentlicht.",
     "merge_preview.settings_column": "Einstellung",
     "merge_preview.settings_absent": "nicht gesetzt",
     "merge_preview.settings_pick_hint": "Klicken Sie auf eine Seite, um sie zu wählen. Einstellungen werden im Mod bearbeitet — hier wählen Sie nur, welche Version gewinnt.",

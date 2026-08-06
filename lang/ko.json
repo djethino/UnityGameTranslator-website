@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "로컬 버전과 온라인 버전 간에 차이가 없습니다.",
     "merge_preview.settings_show_detail": "설정별로 보기",
     "merge_preview.settings_hide_detail": "세부 정보 숨기기",
+    "merge_preview.local_apply_success": "게임으로 되돌려 보냈습니다. 게시된 것은 없습니다.",
     "merge_preview.settings_column": "설정",
     "merge_preview.settings_absent": "설정 없음",
     "merge_preview.settings_pick_hint": "한쪽을 클릭해 선택하세요. 설정은 모드에서 편집합니다. 여기서는 어느 버전을 적용할지만 고릅니다.",

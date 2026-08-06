@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "ローカルバージョンとオンラインバージョン間に違いはありません。",
     "merge_preview.settings_show_detail": "設定ごとに表示",
     "merge_preview.settings_hide_detail": "詳細を隠す",
+    "merge_preview.local_apply_success": "ゲームに戻しました。公開はされていません。",
     "merge_preview.settings_column": "設定",
     "merge_preview.settings_absent": "未設定",
     "merge_preview.settings_pick_hint": "いずれかの側をクリックして選びます。設定はMod側で編集します。ここではどちらのバージョンを採用するかだけを選びます。",

@@ -732,6 +732,7 @@
     "merge_preview.no_differences": "Không tìm thấy khác biệt giữa phiên bản cục bộ và online.",
     "merge_preview.settings_show_detail": "Xem từng thiết lập",
     "merge_preview.settings_hide_detail": "Ẩn chi tiết",
+    "merge_preview.local_apply_success": "Đã gửi lại vào trò chơi. Không có gì được đăng.",
     "merge_preview.settings_column": "Thiết lập",
     "merge_preview.settings_absent": "chưa đặt",
     "merge_preview.settings_pick_hint": "Nhấp vào một bên để chọn. Thiết lập được chỉnh trong mod — ở đây bạn chỉ chọn phiên bản nào thắng.",
