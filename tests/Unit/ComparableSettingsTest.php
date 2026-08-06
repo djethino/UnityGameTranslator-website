@@ -40,6 +40,44 @@ class ComparableSettingsTest extends TestCase
         $this->assertArrayHasKey('fonts:PixelFont', $entries);
     }
 
+    public function test_a_font_the_mod_rescaled_on_its_own_is_not_a_configured_one(): void
+    {
+        $entries = $this->service->extractComparableSettings([
+            '_fonts' => [
+                // scale_auto is switched on by the mod the first time it meets a TMP font, and
+                // "scale" is the materialized product of that automatic scaling. Nobody chose
+                // 1.3 here — reading it as a setting counted every font ever seen as configured.
+                'AutoScaled' => ['enabled' => true, 'scale' => 1.3, 'scale_auto' => true],
+            ],
+        ]);
+
+        $this->assertSame([], $entries);
+    }
+
+    public function test_a_size_the_author_chose_counts_even_next_to_automatic_scaling(): void
+    {
+        $entries = $this->service->extractComparableSettings([
+            '_fonts' => [
+                'Chosen' => ['enabled' => true, 'scale' => 1.82, 'scale_auto' => true, 'size_percent' => 1.4],
+            ],
+        ]);
+
+        // size_percent is the only field carrying a human decision
+        $this->assertArrayHasKey('fonts:Chosen', $entries);
+    }
+
+    public function test_an_old_file_still_reports_its_deliberate_size(): void
+    {
+        $entries = $this->service->extractComparableSettings([
+            '_fonts' => [
+                // Before the split, "scale" held the deliberate percent
+                'Legacy' => ['enabled' => true, 'scale' => 1.5],
+            ],
+        ]);
+
+        $this->assertArrayHasKey('fonts:Legacy', $entries);
+    }
+
     public function test_a_font_row_states_what_was_configured(): void
     {
         $entries = $this->service->extractComparableSettings([

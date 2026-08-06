@@ -398,9 +398,26 @@ class Translation extends Model
      */
     public static function isDeliberateFontSetting(array $settings): bool
     {
-        return ($settings['enabled'] ?? true) === false
-            || !empty($settings['fallback'])
-            || abs(($settings['scale'] ?? 1.0) - 1.0) > 0.001;
+        // Turned off, or given a fallback: unambiguously someone's decision
+        if (($settings['enabled'] ?? true) === false || !empty($settings['fallback'])) {
+            return true;
+        }
+
+        // Size is the subtle one. "scale" is the MATERIALIZED product — the automatic
+        // design-scale times the deliberate percent — so a font the mod rescaled on its own
+        // carries a scale != 1 that nobody chose. Only "size_percent" records the human choice.
+        if (array_key_exists('size_percent', $settings)) {
+            return abs(((float) $settings['size_percent']) - 1.0) > 0.001;
+        }
+
+        // Older files predate that split. Back then "scale" DID hold the deliberate percent —
+        // but only when the automatic scaling was off, otherwise it is polluted by it and says
+        // nothing about intent.
+        if (!empty($settings['scale_auto'])) {
+            return false;
+        }
+
+        return abs(((float) ($settings['scale'] ?? 1.0)) - 1.0) > 0.001;
     }
 
     /** Fonts the author actually configured (see isDeliberateFontSetting). */
