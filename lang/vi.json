@@ -76,8 +76,6 @@
     "games.target_language": "Ngôn ngữ đích",
     "games.source_language": "Ngôn ngữ nguồn",
     "games.type": "Loại",
-    "games.filter_group": "Thu hẹp",
-    "games.sort_group": "Thứ tự",
     "games.sort_by": "Sắp xếp theo",
     "games.sort.score": "Tổng thể tốt nhất",
     "games.sort.name": "Tên (A-Z)",

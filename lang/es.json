@@ -76,8 +76,6 @@
     "games.target_language": "Idioma destino",
     "games.source_language": "Idioma origen",
     "games.type": "Tipo",
-    "games.filter_group": "Acotar",
-    "games.sort_group": "Orden",
     "games.sort_by": "Ordenar por",
     "games.sort.score": "Mejor General",
     "games.sort.name": "Nombre (A-Z)",

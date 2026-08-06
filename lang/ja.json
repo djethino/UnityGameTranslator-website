@@ -76,8 +76,6 @@
     "games.target_language": "翻訳先言語",
     "games.source_language": "翻訳元言語",
     "games.type": "タイプ",
-    "games.filter_group": "絞り込む",
-    "games.sort_group": "並び順",
     "games.sort_by": "並び替え",
     "games.sort.score": "総合ベスト",
     "games.sort.name": "名前順",

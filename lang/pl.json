@@ -76,8 +76,6 @@
     "games.target_language": "Język docelowy",
     "games.source_language": "Język źródłowy",
     "games.type": "Typ",
-    "games.filter_group": "Zawęź",
-    "games.sort_group": "Kolejność",
     "games.sort_by": "Sortuj",
     "games.sort.score": "Najlepsze Ogólnie",
     "games.sort.name": "Nazwa (A-Z)",

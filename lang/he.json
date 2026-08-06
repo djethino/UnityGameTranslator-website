@@ -76,8 +76,6 @@
     "games.target_language": "שפת יעד",
     "games.source_language": "שפת מקור",
     "games.type": "סוג",
-    "games.filter_group": "צמצום",
-    "games.sort_group": "סדר",
     "games.sort_by": "מיון לפי",
     "games.sort.score": "הטוב ביותר",
     "games.sort.name": "שם (א-ת)",
