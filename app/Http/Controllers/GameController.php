@@ -48,16 +48,37 @@ class GameController extends Controller
             ? $request->target
             : (config('locales.supported.' . app()->getLocale() . '.name') ?: null);
 
+        // On by default, and turned off through the URL rather than remembered. A sort order
+        // kept in a cookie is invisible: the list comes back in an order the visitor no longer
+        // remembers choosing, a shared link shows something else to whoever opens it, and the
+        // site would carry one more cookie to declare on its privacy page. The URL says it all.
+        $languageFirst = $request->input('lang_first', '1') !== '0';
+
         // Games available in that language come first — WITHOUT hiding the others, which is
         // what a filter would do. Someone browsing in French wants French translations at the
         // top, not a page that pretends nothing else exists.
-        if ($highlightLanguage) {
+        if ($highlightLanguage && $languageFirst) {
             $query->withExists(['translations as has_highlight_language' => function ($q) use ($highlightLanguage) {
                 $q->where('visibility', 'public')->where('target_language', $highlightLanguage);
             }])->orderByDesc('has_highlight_language');
         }
 
-        $games = $query->orderBy('name')->paginate(24);
+        // Sorting. "Updated" reads content_updated_at, not updated_at: a vote or a download
+        // must not float a translation back to the top of a "recently updated" list.
+        $sort = $request->input('sort', 'name');
+        match ($sort) {
+            'downloads' => $query->orderByDesc('translations_sum_download_count'),
+            'translations' => $query->orderByDesc('translations_count'),
+            'new' => $query->orderByDesc('created_at'),
+            'updated' => $query->withMax(
+                ['translations as last_content_update' => fn ($q) => $q->where('visibility', 'public')],
+                'content_updated_at'
+            )->orderByDesc('last_content_update'),
+            default => null,
+        };
+
+        // Name last, always: it breaks ties in a way anyone can predict
+        $games = $query->orderBy('name')->paginate(24)->withQueryString();
 
         // Which languages each listed game is available in — the first thing anyone browsing
         // this page wants to know, and the card only said HOW MANY translations existed.
@@ -84,7 +105,9 @@ class GameController extends Controller
             'targetLanguages',
             'sourceLanguages',
             'languagesByGame',
-            'highlightLanguage'
+            'highlightLanguage',
+            'languageFirst',
+            'sort'
         ));
     }
 

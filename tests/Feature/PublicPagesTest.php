@@ -114,6 +114,71 @@ class PublicPagesTest extends TestCase
         $this->assertLessThan($germanAt, $frenchAt, 'The visitor language must come first');
     }
 
+    public function test_the_language_first_option_can_be_turned_off(): void
+    {
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $gameName, string $slug, string $language) use ($author) {
+            $game = \App\Models\Game::forceCreate(['name' => $gameName, 'slug' => $slug]);
+            $t = new \App\Models\Translation();
+            $t->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => $language,
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => 'public',
+                'line_count' => 1,
+            ])->save();
+        };
+
+        $make('Alpha Game', 'alpha-game', 'German');
+        $make('Zeta Game', 'zeta-game', 'French');
+
+        // Turned off through the URL: an unchecked box sends nothing, so the form carries a
+        // hidden 0 — without it the option could be switched on but never off
+        $html = $this->get('/fr/games?lang_first=0')->assertOk()->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'Zeta Game'),
+            strpos($html, 'Alpha Game'),
+            'With the option off, plain alphabetical order applies'
+        );
+    }
+
+    public function test_games_can_be_sorted_by_downloads(): void
+    {
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $gameName, string $slug, int $downloads) use ($author) {
+            $game = \App\Models\Game::forceCreate(['name' => $gameName, 'slug' => $slug]);
+            $t = new \App\Models\Translation();
+            $t->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => 'French',
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => 'public',
+                'line_count' => 1,
+                'download_count' => $downloads,
+            ])->save();
+        };
+
+        $make('Alpha Game', 'alpha-game', 3);
+        $make('Zeta Game', 'zeta-game', 500);
+
+        $html = $this->get(route('games.index', ['sort' => 'downloads']))->assertOk()->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'Alpha Game'),
+            strpos($html, 'Zeta Game'),
+            'The most downloaded game comes first whatever its name'
+        );
+    }
+
     public function test_the_home_page_shows_forks_and_hides_branches(): void
     {
         $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);
