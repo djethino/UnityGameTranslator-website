@@ -12,6 +12,12 @@ class TranslationService
     /** Max value for the optional per-entry ordering index "i" (JS Number.MAX_SAFE_INTEGER). */
     public const MAX_ORDER_INDEX = 9007199254740991;
 
+    /** How many entries of each settings section are previewed in the summary. */
+    public const SETTINGS_PREVIEW_LIMIT = 40;
+
+    /** Max length of a single label stored in the settings summary. */
+    public const SETTINGS_LABEL_MAX_LENGTH = 120;
+
     /**
      * Normalize line endings to Unix format (\n).
      * Converts \r\n (Windows) and \r (old Mac) to \n.
@@ -80,6 +86,7 @@ class TranslationService
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
             'font_config' => $this->extractFontConfig($json),
+            'settings_summary' => $this->extractSettingsSummary($json),
             'normalized_content' => $content,
         ];
     }
@@ -172,6 +179,145 @@ class TranslationService
         }
 
         return !empty($config) ? $config : null;
+    }
+
+    /**
+     * Summarize the translation settings that travel in the file alongside the
+     * lines but are NOT lines: font overrides, image replacements, exclusions,
+     * variables and game settings. Fonts have their own column (font_config).
+     *
+     * Why store a summary instead of reading the file on demand: a game page
+     * renders every translation of the game, and opening each file to count its
+     * exclusions would turn one page view into dozens of disk reads.
+     *
+     * The preview list is bounded (count is always exact): these lists can hold
+     * thousands of entries and the page only needs enough to say what the file
+     * carries. The full detail stays in the downloadable file.
+     *
+     * @return array|null null when the file carries no settings at all
+     */
+    public function extractSettingsSummary(array $json): ?array
+    {
+        $summary = [];
+
+        $overrides = $this->summarizeList($json['_font_overrides'] ?? null, function ($rule) {
+            if (!is_array($rule) || empty($rule['match'])) {
+                return null;
+            }
+
+            return [
+                'match' => $this->shortenLabel($rule['match']),
+                'replacement' => isset($rule['replacement']) ? $this->shortenLabel($rule['replacement']) : null,
+                'size_multiplier' => isset($rule['size_multiplier']) ? (float) $rule['size_multiplier'] : null,
+                // Absent means enabled: the mod only writes the key when false
+                'enabled' => $rule['enabled'] ?? true,
+            ];
+        });
+        if ($overrides) {
+            $summary['font_overrides'] = $overrides;
+        }
+
+        $images = $this->summarizeList($json['_image_replacements'] ?? null, function ($entry) {
+            if (!is_array($entry) || empty($entry['sprite_name'])) {
+                return null;
+            }
+
+            return [
+                'name' => $this->shortenLabel($entry['sprite_name']),
+                'width' => isset($entry['original_width']) ? (int) $entry['original_width'] : null,
+                'height' => isset($entry['original_height']) ? (int) $entry['original_height'] : null,
+            ];
+        });
+        if ($images) {
+            $summary['image_replacements'] = $images;
+        }
+
+        $exclusions = $this->summarizeList($json['_exclusions'] ?? null, function ($pattern) {
+            if (!is_string($pattern) || $pattern === '') {
+                return null;
+            }
+
+            return $this->shortenLabel($pattern);
+        });
+        if ($exclusions) {
+            $summary['exclusions'] = $exclusions;
+        }
+
+        $variables = $this->summarizeList($json['_variables'] ?? null, function ($def) {
+            if (!is_array($def)) {
+                return null;
+            }
+
+            $source = trim(($def['class'] ?? '') . '.' . ($def['path'] ?? ''), '.');
+
+            return [
+                'name' => $this->shortenLabel($def['name'] ?? ''),
+                'source' => $source !== '' ? $this->shortenLabel($source) : null,
+            ];
+        });
+        if ($variables) {
+            $summary['variables'] = $variables;
+        }
+
+        // Game settings are a flat object the mod writes only when non-default,
+        // so its mere presence is the information. Values are copied as-is but
+        // filtered to the keys we know: an unknown key would render as raw text.
+        if (isset($json['_settings']) && is_array($json['_settings'])) {
+            $known = array_intersect_key($json['_settings'], array_flip([
+                'disable_eventsystem_override',
+                'typewriting_detection',
+                'concat_detection',
+                'ui_font',
+            ]));
+            if (!empty($known)) {
+                if (isset($known['ui_font'])) {
+                    $known['ui_font'] = $this->shortenLabel((string) $known['ui_font']);
+                }
+                $summary['game_settings'] = $known;
+            }
+        }
+
+        return !empty($summary) ? $summary : null;
+    }
+
+    /**
+     * Turn a raw metadata list into {count, items} with a bounded preview.
+     * The mapper returns null for malformed entries, which are skipped but
+     * still counted: the count reflects the file, not what we could read.
+     */
+    private function summarizeList(mixed $list, callable $mapper): ?array
+    {
+        if (!is_array($list) || empty($list)) {
+            return null;
+        }
+
+        $items = [];
+        foreach ($list as $raw) {
+            if (count($items) >= self::SETTINGS_PREVIEW_LIMIT) {
+                break;
+            }
+            $mapped = $mapper($raw);
+            if ($mapped !== null) {
+                $items[] = $mapped;
+            }
+        }
+
+        return ['count' => count($list), 'items' => $items];
+    }
+
+    /**
+     * Exclusion patterns and sprite names come from game text and can be long.
+     * Truncation happens at storage time so the column never grows unbounded.
+     */
+    private function shortenLabel(string $label): string
+    {
+        $label = $this->normalizeLineEndings(trim($label));
+        // A pattern spanning lines would break the single-line rows it renders in
+        $label = str_replace("\n", ' ', $label);
+
+        return mb_strlen($label) > self::SETTINGS_LABEL_MAX_LENGTH
+            ? mb_substr($label, 0, self::SETTINGS_LABEL_MAX_LENGTH) . '…'
+            : $label;
     }
 
     /**

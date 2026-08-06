@@ -183,8 +183,8 @@
             @endphp
 
             @if($translation)
-            @php $hasFontConfig = !empty($translation->font_config); @endphp
-            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden" x-data="{ showVersions: false, showForks: false, showFonts: false }">
+            @php $hasSettings = $translation->hasSettings() || $translation->getEffectiveResourcesUrl(); @endphp
+            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden" x-data="{ showVersions: false, showForks: false, showSettings: false }">
                 <!-- Main Translation Card -->
                 <div class="p-6">
                     <div class="flex justify-between items-start gap-4">
@@ -233,6 +233,17 @@
                                         <i class="fas fa-layer-group"></i> v{{ $versions->count() }}
                                     </span>
                                 @endif
+
+                                {{-- External assets: needed BEFORE downloading (custom fonts,
+                                     replacement images live outside this file), so it belongs
+                                     with the badges, not buried in a panel --}}
+                                @if($translation->getEffectiveResourcesUrl())
+                                    <button type="button" @click="showSettings = true"
+                                        class="bg-cyan-900/70 text-cyan-200 px-2 py-1 rounded text-xs hover:bg-cyan-800/70 transition"
+                                        title="{{ __('file_settings.resources_badge_title') }}">
+                                        <i class="fas fa-link"></i> {{ __('file_settings.resources_badge') }}
+                                    </button>
+                                @endif
                             </div>
 
                             <!-- Meta info -->
@@ -243,7 +254,17 @@
                                     @endif
                                     <span class="font-medium text-gray-300">{{ $translation->user->name }}</span>
                                 </span>
-                                <span><i class="fas fa-calendar mr-1"></i> {{ $translation->updated_at->format('M d, Y') }}</span>
+                                {{-- Two distinct facts: when it appeared, and whether it is
+                                     still being worked on. Showing only one of them made an
+                                     abandoned translation look like a fresh one. --}}
+                                <span title="{{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}">
+                                    <i class="fas fa-calendar mr-1"></i> {{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}
+                                </span>
+                                @if($translation->hasBeenUpdatedSincePublication())
+                                    <span title="{{ $translation->contentChangedAt()->isoFormat('LLL') }}">
+                                        <i class="fas fa-pen mr-1"></i> {{ __('translation.updated_on', ['date' => $translation->contentChangedAt()->isoFormat('LL')]) }}
+                                    </span>
+                                @endif
                                 <span><i class="fas fa-file-alt mr-1"></i> {{ number_format($translation->line_count) }} {{ __('translation.lines', ['count' => '']) }}</span>
                                 <span><i class="fas fa-download mr-1"></i> {{ $group['total_downloads'] }}</span>
                             </div>
@@ -333,14 +354,10 @@
                 </div>
 
                 <!-- Expandable Sections Toggle -->
-                @if($hasVersionHistory || $hasForks || $hasFontConfig)
+                @if($hasVersionHistory || $hasForks || $hasSettings)
                 <div class="border-t border-gray-700 px-6 py-3 bg-gray-750 flex gap-4 flex-wrap">
-                    @if($hasFontConfig)
-                        <button @click="showFonts = !showFonts" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition" title="{{ __('fonts.tooltip') }}">
-                            <i class="fas fa-font"></i>
-                            <span>{{ trans_choice('fonts.configured', count($translation->font_config)) }}</span>
-                            <i class="fas fa-chevron-down text-xs transition-transform" :class="showFonts && 'rotate-180'"></i>
-                        </button>
+                    @if($hasSettings)
+                        @include('partials.translation-settings-toggle', ['translation' => $translation])
                     @endif
                     @if($hasVersionHistory)
                         <button @click="showVersions = !showVersions" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
@@ -359,52 +376,18 @@
                 </div>
                 @endif
 
-                <!-- Font Configuration (Expandable) -->
-                @if($hasFontConfig)
-                <div x-show="showFonts" x-collapse class="border-t border-gray-700">
+                <!-- What this file carries beyond its lines (Expandable) -->
+                @if($hasSettings)
+                <div x-show="showSettings" x-collapse class="border-t border-gray-700">
                     <div class="px-6 py-4 bg-gray-850">
                         <div class="flex items-center gap-2 mb-3">
-                            <h4 class="text-sm font-medium text-gray-400">
-                                <i class="fas fa-font mr-2"></i>{{ trans_choice('fonts.configured', count($translation->font_config)) }}
-                            </h4>
-                            <span class="text-xs text-gray-500 italic" title="{{ __('fonts.tooltip') }}">
+                            <h4 class="text-sm font-medium text-gray-300">{{ __('file_settings.section_title') }}</h4>
+                            <span class="text-xs text-gray-500" title="{{ __('file_settings.section_hint') }}">
                                 <i class="fas fa-info-circle"></i>
                             </span>
                         </div>
-                        <div class="space-y-1.5">
-                            @foreach($translation->font_config as $fontName => $settings)
-                                <div class="flex items-center gap-3 p-2 bg-gray-800 rounded-lg border border-gray-700 text-sm {{ !($settings['enabled'] ?? true) ? 'opacity-50' : '' }}">
-                                    {{-- Font name --}}
-                                    <span class="font-medium text-gray-200 min-w-0 truncate" title="{{ $fontName }}">{{ $fontName }}</span>
-
-                                    {{-- Type badge --}}
-                                    @if(!empty($settings['type']))
-                                        <span class="bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded text-xs flex-shrink-0">{{ $settings['type'] }}</span>
-                                    @endif
-
-                                    {{-- Fallback arrow + name --}}
-                                    @if(!empty($settings['fallback']))
-                                        <span class="text-gray-500 flex-shrink-0"><i class="fas fa-arrow-right text-xs"></i></span>
-                                        <span class="text-cyan-400 truncate" title="{{ $settings['fallback'] }}">{{ $settings['fallback'] }}</span>
-                                    @endif
-
-                                    {{-- Scale if non-default --}}
-                                    @if(isset($settings['scale']) && abs($settings['scale'] - 1.0) > 0.001)
-                                        <span class="bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
-                                            {{ __('fonts.scale') }} &times;{{ number_format($settings['scale'], 1) }}
-                                        </span>
-                                    @endif
-
-                                    {{-- Disabled indicator --}}
-                                    @if(!($settings['enabled'] ?? true))
-                                        <span class="bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
-                                            <i class="fas fa-ban mr-1"></i>{{ __('fonts.disabled') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="mt-2 text-xs text-gray-500 italic">{{ __('fonts.tooltip') }}</p>
+                        @include('partials.translation-settings-detail', ['translation' => $translation])
+                        <p class="mt-3 text-xs text-gray-500 italic">{{ __('file_settings.section_hint') }}</p>
                     </div>
                 </div>
                 @endif
@@ -421,7 +404,12 @@
                                 <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700">
                                     <div class="flex items-center gap-4 text-sm">
                                         <span class="bg-gray-700 text-gray-400 px-2 py-1 rounded text-xs">v{{ $versions->count() - $vIndex - 1 }}</span>
-                                        <span class="text-gray-400">{{ $version->created_at->format('M d, Y') }}</span>
+                                        <span class="text-gray-400" title="{{ __('translation.published_on', ['date' => $version->created_at->isoFormat('LL')]) }}">{{ $version->created_at->isoFormat('LL') }}</span>
+                                        @if($version->hasBeenUpdatedSincePublication())
+                                            <span class="text-gray-400" title="{{ $version->contentChangedAt()->isoFormat('LLL') }}">
+                                                <i class="fas fa-pen text-xs mr-1"></i>{{ $version->contentChangedAt()->isoFormat('LL') }}
+                                            </span>
+                                        @endif
                                         <span class="text-gray-400">{{ number_format($version->line_count) }} lines</span>
                                         @if($version->type)
                                             <span class="text-gray-400">
@@ -470,7 +458,13 @@
                                             @endif
                                             <span class="text-gray-300">{{ $fork->user->name }}</span>
                                         </span>
-                                        <span class="text-gray-400">{{ $fork->created_at->format('M d, Y') }}</span>
+                                        {{-- For a fork, "still alive?" matters more than "born when?" --}}
+                                        <span class="text-gray-400" title="{{ __('translation.published_on', ['date' => $fork->created_at->isoFormat('LL')]) }}">{{ $fork->created_at->isoFormat('LL') }}</span>
+                                        @if($fork->hasBeenUpdatedSincePublication())
+                                            <span class="text-gray-400" title="{{ $fork->contentChangedAt()->isoFormat('LLL') }}">
+                                                <i class="fas fa-pen text-xs mr-1"></i>{{ $fork->contentChangedAt()->isoFormat('LL') }}
+                                            </span>
+                                        @endif
                                         <span class="text-gray-400">{{ number_format($fork->line_count) }} lines</span>
                                         @if($fork->type)
                                             @if($fork->type === 'ai')

@@ -62,7 +62,9 @@
                         @if($forkCount > 0)
                             {{ $forkCount }} {{ __('my_translations.forks') }} •
                         @endif
-                        {{ $translation->updated_at->format('M d, Y') }}
+                        {{-- contentChangedAt, not updated_at: a vote or a download must
+                             not make a translation look freshly worked on --}}
+                        {{ $translation->contentChangedAt()->isoFormat('LL') }}
                     </div>
                     <div class="mt-2">
                         <x-progress-bar :translation="$translation" />

@@ -78,12 +78,42 @@
         </div>
 
         {{-- Settings are part of the file but not of this comparison: there is no
-             row to show and no side to pick for a font or an exclusion list. Say
-             they differ, say where they are edited, and leave it at that. --}}
+             row to show and no side to pick for a font or an exclusion list.
+             What CAN be said is which sections differ and by how much — the
+             previous banner only said "something differs", which is unusable.
+
+             Labels are rendered by Blade and picked with x-show, never through
+             x-text: the CSP build of Alpine renders string literals verbatim,
+             so a translated string inside an expression prints its escapes. --}}
         <div x-show="settingsDiffer" x-cloak
-            class="mb-4 flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm">
-            <i class="fas fa-sliders text-gray-500"></i>
-            <span class="text-gray-400">{{ __('merge_preview.settings_differ') }}</span>
+            class="mb-4 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm">
+            <div class="flex items-center gap-2 text-gray-300 mb-2">
+                <i class="fas fa-sliders text-gray-500"></i>
+                <span>{{ __('merge_preview.settings_differ_title') }}</span>
+            </div>
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-gray-400">
+                @foreach([
+                    'fonts' => __('file_settings.label.fonts'),
+                    'font_rules' => __('file_settings.label.font_rules'),
+                    'images' => __('file_settings.label.images'),
+                    'exclusions' => __('file_settings.label.exclusions'),
+                    'variables' => __('file_settings.label.variables'),
+                    'game_settings' => __('file_settings.game_settings'),
+                ] as $section => $label)
+                    {{-- Flat two-level paths only: the CSP evaluator accepts
+                         property access, not operators or expressions --}}
+                    <span x-show="settingsDiffFlags.{{ $section }}" x-cloak>
+                        {{ $label }} :
+                        <span class="text-gray-300" x-text="settingsLocal.{{ $section }}"></span>
+                        <span class="text-gray-600">/</span>
+                        <span class="text-gray-300" x-text="settingsOnline.{{ $section }}"></span>
+                    </span>
+                @endforeach
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+                {{ __('merge_preview.local_file') }} <span class="text-gray-600">/</span> {{ __('merge_preview.online_version') }}
+                &bull; {{ __('merge_preview.settings_differ') }}
+            </p>
         </div>
 
         @include('partials.editor-quality-bar')
@@ -638,8 +668,13 @@ document.addEventListener('alpine:init', () => {
         localData: {},
         onlineData: {},
         onlineMetadata: {},
-        // Fonts, images, exclusions, variables: reported, never merged here
+        // Fonts, images, exclusions, variables: reported, never merged here.
+        // Split into three flat objects so the CSP-safe template can read
+        // them with plain property paths (no expressions allowed there).
         settingsDiffer: false,
+        settingsDiffFlags: {},
+        settingsLocal: {},
+        settingsOnline: {},
         allKeys: [],
         selections: {},
         stats: {
@@ -785,25 +820,59 @@ document.addEventListener('alpine:init', () => {
         },
 
         /**
-         * Do the translation SETTINGS differ between local and online?
+         * Which translation SETTINGS differ between local and online, and by
+         * how many entries?
          *
          * Fonts, images, exclusions and variables travel in the file alongside
-         * the lines, but they are not lines: there is no row to show, no side to
-         * pick. They are edited in the mod and published by a full upload, never
-         * from this page — which is why this only reports that they differ.
+         * the lines, but they are not lines: there is no row to show, no side
+         * to pick. They are edited in the mod and published by a full upload,
+         * never from this page — so this reports, it never merges.
+         *
+         * It reports per SECTION though: "settings differ" alone gave the
+         * reader nothing to act on. Sections mirror
+         * Translation::SETTINGS_SECTIONS so both comparison screens speak the
+         * same language, even though this one reads a file the mod just
+         * uploaded while the merge view reads database columns.
          *
          * Sync bookkeeping (_uuid, _source, _local_changes...) is excluded: it
          * differs by construction and would cry wolf on every comparison.
          */
         compareSettings(local, online) {
-            const SETTINGS_KEYS = [
-                '_fonts', '_font_overrides', '_image_replacements',
-                '_exclusions', '_variables', '_settings',
-            ];
+            const SECTIONS = {
+                fonts: '_fonts',
+                font_rules: '_font_overrides',
+                images: '_image_replacements',
+                exclusions: '_exclusions',
+                variables: '_variables',
+                game_settings: '_settings',
+            };
 
-            return SETTINGS_KEYS.some(key =>
-                JSON.stringify(local[key] ?? null) !== JSON.stringify(online[key] ?? null)
-            );
+            const size = (value) => {
+                if (Array.isArray(value)) return value.length;
+                if (value && typeof value === 'object') return Object.keys(value).length;
+                return 0;
+            };
+
+            const flags = {};
+            const localCounts = {};
+            const onlineCounts = {};
+            let any = false;
+
+            for (const [section, key] of Object.entries(SECTIONS)) {
+                localCounts[section] = size(local[key]);
+                onlineCounts[section] = size(online[key]);
+                // Compare CONTENT, not just counts: swapping one font for
+                // another leaves the count identical but is a real change
+                const differs = JSON.stringify(local[key] ?? null) !== JSON.stringify(online[key] ?? null);
+                flags[section] = differs;
+                any = any || differs;
+            }
+
+            this.settingsDiffFlags = flags;
+            this.settingsLocal = localCounts;
+            this.settingsOnline = onlineCounts;
+
+            return any;
         },
 
         /**

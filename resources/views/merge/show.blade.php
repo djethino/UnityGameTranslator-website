@@ -129,6 +129,21 @@
             </p>
         </div>
         @endif
+
+        {{-- Settings gap with the branches being merged. Applying a merge
+             rewrites the MAIN's file, so a branch's fonts, images or
+             exclusions never travel upstream — worth stating before the owner
+             assumes accepting every line accepted everything. --}}
+        @foreach($selectedBranches as $branch)
+            <div class="mb-4">
+                @include('partials.translation-settings-diff', [
+                    'left' => $main,
+                    'right' => $branch,
+                    'leftLabel' => __('merge.settings_yours'),
+                    'rightLabel' => $branch->user->name,
+                ])
+            </div>
+        @endforeach
     @endif
 
     {{-- Client-side editor (shared translation-editor core) --}}

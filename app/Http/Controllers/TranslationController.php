@@ -130,6 +130,7 @@ class TranslationController extends Controller
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'font_config' => $parsed['font_config'],
+                'settings_summary' => $parsed['settings_summary'],
             ]);
 
             AuditLog::logTranslationUpload($userId, $existingTranslation->id, [
@@ -164,6 +165,7 @@ class TranslationController extends Controller
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
             'font_config' => $parsed['font_config'],
+            'settings_summary' => $parsed['settings_summary'],
         ]);
 
         AuditLog::logTranslationUpload($userId, $translation->id, [

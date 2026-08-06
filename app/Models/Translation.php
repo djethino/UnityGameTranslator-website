@@ -30,6 +30,7 @@ class Translation extends Model
         'file_uuid',
         'file_hash',
         'font_config',
+        'settings_summary',
     ];
 
     protected $casts = [
@@ -46,6 +47,8 @@ class Translation extends Model
         'download_count' => 'integer',
         'vote_count' => 'integer',
         'font_config' => 'array',
+        'settings_summary' => 'array',
+        'content_updated_at' => 'datetime',
     ];
 
     /**
@@ -53,6 +56,16 @@ class Translation extends Model
      */
     protected static function booted(): void
     {
+        // Stamp when the translation itself changed. Deliberately keyed on
+        // file_hash and not on updated_at: increment('vote_count') and
+        // increment('download_count') touch updated_at, and a vote is not a
+        // change to the translation.
+        static::saving(function (Translation $translation) {
+            if ($translation->isDirty('file_hash')) {
+                $translation->content_updated_at = now();
+            }
+        });
+
         // Reset main_rating when a branch's file_hash changes (content was modified)
         static::updating(function (Translation $translation) {
             if ($translation->isDirty('file_hash') && $translation->main_rating !== null) {
@@ -278,6 +291,131 @@ class Translation extends Model
             return $this->parent->resources_url;
         }
         return null;
+    }
+
+    /**
+     * When the translation itself last changed. Falls back to updated_at for
+     * rows written before the column existed.
+     */
+    public function contentChangedAt(): \Illuminate\Support\Carbon
+    {
+        return $this->content_updated_at ?? $this->updated_at;
+    }
+
+    /**
+     * Has this translation been worked on since it was first published?
+     * A minute of slack absorbs the gap between the row's creation and the
+     * stamp written in the same request.
+     */
+    public function hasBeenUpdatedSincePublication(): bool
+    {
+        if (!$this->created_at) {
+            return false;
+        }
+
+        // Raw timestamps, not diffInSeconds(): Carbon 3 returns a SIGNED
+        // difference, so the intuitive reading of a->diffInSeconds(b) is
+        // negative here and the check silently never fired.
+        return $this->contentChangedAt()->getTimestamp() - $this->created_at->getTimestamp() > 60;
+    }
+
+    /**
+     * Decode this translation's stored file, or null when it is missing or
+     * unreadable. Deliberately separate from computeHash(), which keeps its
+     * own reading path: its output is compared against hashes already stored
+     * in the wild and must not shift.
+     */
+    public function decodeFileContent(): ?array
+    {
+        $safePath = $this->getSafeFilePath();
+        if (!$safePath || !file_exists($safePath)) {
+            return null;
+        }
+
+        $content = file_get_contents($safePath);
+        if ($content === false) {
+            return null;
+        }
+
+        $data = json_decode($content, true);
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * Host of the effective resources URL, for showing where a link leads
+     * without making the reader parse a long URL. Null when there is no link.
+     */
+    public function getResourcesHost(): ?string
+    {
+        $url = $this->getEffectiveResourcesUrl();
+        if (!$url) {
+            return null;
+        }
+
+        return parse_url($url, PHP_URL_HOST) ?: null;
+    }
+
+    /**
+     * Number of entries in one settings section of the summary, 0 when absent.
+     * Reads the stored count, which is exact even when the preview is bounded.
+     */
+    public function settingsCount(string $section): int
+    {
+        return (int) ($this->settings_summary[$section]['count'] ?? 0);
+    }
+
+    /**
+     * The settings sections, in display order. Shared by every screen that
+     * lists or compares them so they never drift apart.
+     */
+    public const SETTINGS_SECTIONS = [
+        'fonts',
+        'font_rules',
+        'images',
+        'exclusions',
+        'variables',
+        'game_settings',
+    ];
+
+    /**
+     * How many entries this translation carries in each settings section.
+     * Reads the stored columns only — never the file.
+     *
+     * @return array<string,int> section => count (0 when absent)
+     */
+    public function settingsSectionCounts(): array
+    {
+        return [
+            'fonts' => count($this->font_config ?? []),
+            'font_rules' => $this->settingsCount('font_overrides'),
+            'images' => $this->settingsCount('image_replacements'),
+            'exclusions' => $this->settingsCount('exclusions'),
+            'variables' => $this->settingsCount('variables'),
+            'game_settings' => count($this->settings_summary['game_settings'] ?? []),
+        ];
+    }
+
+    /**
+     * Does this translation carry anything beyond its lines? Fonts live in
+     * their own column, the rest in the summary.
+     */
+    public function hasSettings(): bool
+    {
+        return !empty($this->font_config) || !empty($this->settings_summary);
+    }
+
+    /**
+     * Image replacements point at PNG files that do NOT travel in the JSON:
+     * the mod reads them from <mod folder>/images/. So a file declaring
+     * replacements without a resources link is incomplete for whoever
+     * downloads it — worth saying plainly rather than letting them find out
+     * in-game.
+     */
+    public function hasUnreachableImageAssets(): bool
+    {
+        return $this->settingsCount('image_replacements') > 0
+            && empty($this->getEffectiveResourcesUrl());
     }
 
     /**

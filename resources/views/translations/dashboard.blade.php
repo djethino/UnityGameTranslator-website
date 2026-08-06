@@ -167,7 +167,8 @@
                     <div>
                         <span class="font-medium text-white">{{ $branch->user->name }}</span>
                         <span class="text-gray-500 text-sm ml-2">
-                            {{ $branch->updated_at->diffForHumans() }}
+                            {{-- When this branch last changed, not when it was last voted on --}}
+                            {{ $branch->contentChangedAt()->diffForHumans() }}
                         </span>
                     </div>
                     <div class="flex items-center gap-4 text-sm">
