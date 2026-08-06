@@ -114,7 +114,10 @@ class TranslationController extends Controller
                     'quality_score' => $t->quality_score,
                     'file_hash' => $t->file_hash,
                     'file_uuid' => $t->file_uuid,
+                    // Kept for mods that already read it, but it moves on a vote
+                    // or a download — content_updated_at is the honest one
                     'updated_at' => $t->updated_at->toIso8601String(),
+                    'content_updated_at' => $t->contentChangedAt()->toIso8601String(),
                 ];
             }),
         ]);
