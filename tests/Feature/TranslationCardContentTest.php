@@ -183,6 +183,42 @@ class TranslationCardContentTest extends TestCase
             ]));
     }
 
+    public function test_the_owner_is_not_told_less_than_a_visitor(): void
+    {
+        $translation = $this->makeTranslation([
+            'resources_url' => 'https://example.com/my-pack',
+            'font_config' => ['PixelFont' => ['enabled' => false]],
+            'settings_summary' => [
+                'image_replacements' => ['count' => 2, 'items' => [['name' => 'ui_logo']]],
+                'exclusions' => ['count' => 3, 'items' => ['Qapla\'']],
+            ],
+        ]);
+
+        // The one screen where the author can act on their translation used to carry less than
+        // the public game page an anonymous visitor sees
+        $this->actingAs($translation->user)
+            ->get(route('translations.dashboard', $translation))
+            ->assertOk()
+            ->assertSee(__('file_settings.section_title'))
+            ->assertSee('ui_logo')
+            ->assertSee('https://example.com/my-pack');
+    }
+
+    public function test_the_list_of_my_translations_signals_what_a_file_carries(): void
+    {
+        $translation = $this->makeTranslation([
+            'resources_url' => 'https://example.com/my-pack',
+            'settings_summary' => ['image_replacements' => ['count' => 2, 'items' => []]],
+        ]);
+
+        // A translation that replaces images does not work without its link: its author has to
+        // see that it exists, even in a list
+        $this->actingAs($translation->user)
+            ->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('file_settings.resources'));
+    }
+
     public function test_lines_kept_as_is_are_named_in_the_legend(): void
     {
         $translation = $this->makeTranslation(['skipped_count' => 312]);

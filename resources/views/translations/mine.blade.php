@@ -66,6 +66,31 @@
                              not make a translation look freshly worked on --}}
                         {{ $translation->contentChangedAt()->isoFormat('LL') }}
                     </div>
+
+                    {{-- What the file carries besides its lines. The game page shows this to
+                         anonymous visitors; its own author had no sign of it here, and the
+                         external link matters most to them — a translation that replaces images
+                         does not work without it. Counts only: the detail lives on the
+                         dashboard, this is a list. --}}
+                    @if($translation->hasSettings())
+                        <div class="text-xs text-gray-500 mt-1 flex items-center gap-3 flex-wrap">
+                            @if($translation->getEffectiveResourcesUrl())
+                                <span class="text-cyan-400"><i class="fas fa-link"></i> {{ __('file_settings.resources') }}</span>
+                            @endif
+                            @php $fontCount = count($translation->configuredFonts()); @endphp
+                            @if($fontCount > 0)
+                                <span><i class="fas fa-font"></i> {{ trans_choice('file_settings.fonts', $fontCount, ['count' => $fontCount]) }}</span>
+                            @endif
+                            @php $imageCount = $translation->settingsCount('image_replacements'); @endphp
+                            @if($imageCount > 0)
+                                <span><i class="fas fa-image"></i> {{ trans_choice('file_settings.images', $imageCount, ['count' => $imageCount]) }}</span>
+                            @endif
+                            @php $exclusionCount = $translation->settingsCount('exclusions'); @endphp
+                            @if($exclusionCount > 0)
+                                <span><i class="fas fa-ban"></i> {{ trans_choice('file_settings.exclusions', $exclusionCount, ['count' => $exclusionCount]) }}</span>
+                            @endif
+                        </div>
+                    @endif
                     <div class="mt-2">
                         <x-progress-bar :translation="$translation" />
                         <x-quality-legend :translation="$translation" />

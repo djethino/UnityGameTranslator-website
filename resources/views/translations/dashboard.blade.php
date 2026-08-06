@@ -100,8 +100,18 @@
 
     {{-- Quality Progress Bar --}}
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-8">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-white">{{ __('progress.quality_distribution') }}</h3>
+        <div class="flex items-center justify-between mb-2 gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <h3 class="text-sm font-medium text-white">{{ __('progress.quality_distribution') }}</h3>
+                {{-- Next to the bar, because a full bar does NOT mean finished: the bar says what
+                     the file is made of, only this says the author considers it done. Shown on
+                     the game page and in the list, missing exactly here. --}}
+                @if($translation->isComplete())
+                    <span class="text-green-400 text-xs"><i class="fas fa-check"></i> {{ __('translation.complete') }}</span>
+                @else
+                    <span class="text-yellow-400 text-xs"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
+                @endif
+            </div>
             <span class="text-xs text-gray-400" title="{{ __('progress.quality_tooltip') }}">
                 {{ __('progress.quality_score') }}: {{ number_format($translation->quality_score, 1) }}/3.0
             </span>
@@ -109,6 +119,24 @@
         <x-progress-bar :translation="$translation" class="mb-2" />
         <x-quality-legend :translation="$translation" />
     </div>
+
+    {{-- What this file carries beyond its lines.
+         Read-only here, deliberately: fonts, image replacements and exclusions are edited in
+         the mod, which is the only place that can see the game they apply to. The owner still
+         had LESS information than an anonymous visitor, who gets all of this on the game page
+         — the one screen where you can act on your translation was the poorest of them all. --}}
+    @if($translation->hasSettings())
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-8">
+        <div class="flex items-center gap-2 mb-3">
+            <h3 class="text-sm font-medium text-white">{{ __('file_settings.section_title') }}</h3>
+            <span class="text-xs text-gray-500" title="{{ __('file_settings.section_hint') }}">
+                <i class="fas fa-info-circle"></i>
+            </span>
+        </div>
+        @include('partials.translation-settings-detail', ['translation' => $translation])
+        <p class="mt-3 text-xs text-gray-500 italic">{{ __('file_settings.section_hint') }}</p>
+    </div>
+    @endif
 
     @if($isMain)
         {{-- ========== MAIN VIEW ========== --}}
