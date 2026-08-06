@@ -219,6 +219,93 @@ class TranslationCardContentTest extends TestCase
             ->assertSee(__('file_settings.resources'));
     }
 
+    public function test_my_translations_leads_with_the_one_i_last_worked_on(): void
+    {
+        $user = User::factory()->create();
+        $old = Game::firstOrCreate(['slug' => 'older-game'], ['name' => 'Older Game']);
+        $recent = Game::firstOrCreate(['slug' => 'recent-game'], ['name' => 'Recent Game']);
+
+        $first = $this->makeTranslation(['user_id' => $user->id, 'game_id' => $old->id]);
+        $this->travel(2)->days();
+        $this->makeTranslation(['user_id' => $user->id, 'game_id' => $recent->id]);
+
+        // Uploaded first, worked on last: the reason to open this page is to carry on, so the
+        // file you carried on with is the one that must be waiting at the top.
+        $this->travel(1)->days();
+        $first->update(['file_hash' => 'worked-on-again']);
+
+        $this->actingAs($user)
+            ->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSeeInOrder(['Older Game', 'Recent Game']);
+    }
+
+    public function test_my_translations_can_lead_with_what_is_left_to_review(): void
+    {
+        $user = User::factory()->create();
+        $done = Game::firstOrCreate(['slug' => 'done-game'], ['name' => 'Done Game']);
+        $todo = Game::firstOrCreate(['slug' => 'todo-game'], ['name' => 'Todo Game']);
+
+        $this->makeTranslation([
+            'user_id' => $user->id, 'game_id' => $done->id,
+            'human_count' => 500, 'ai_count' => 0,
+        ]);
+        $this->makeTranslation([
+            'user_id' => $user->id, 'game_id' => $todo->id,
+            'human_count' => 0, 'ai_count' => 800,
+        ]);
+
+        // The sort an author actually works from, and one no visitor has any use for
+        $this->actingAs($user)
+            ->get(route('translations.mine', ['sort' => 'review']))
+            ->assertOk()
+            ->assertSeeInOrder(['Todo Game', 'Done Game']);
+    }
+
+    public function test_my_translations_tells_publication_from_maintenance(): void
+    {
+        $translation = $this->makeTranslation();
+        $published = $translation->created_at->isoFormat('LL');
+
+        // Fresh upload: one date, because there is only one fact to tell
+        $this->actingAs($translation->user)
+            ->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('translation.published_on', ['date' => $published]))
+            ->assertDontSee(__('translation.updated_on', ['date' => $published]));
+
+        $this->travel(40)->days();
+        $translation->update(['file_hash' => 'still-being-maintained']);
+        $translation->refresh();
+
+        // Maintained since: both dates, so a year-old translation still being worked on does not
+        // read like an upload nobody has touched
+        $this->actingAs($translation->user)
+            ->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('translation.published_on', ['date' => $published]))
+            ->assertSee(__('translation.updated_on', [
+                'date' => $translation->contentChangedAt()->isoFormat('LL'),
+            ]));
+    }
+
+    public function test_my_translations_says_where_the_review_stands(): void
+    {
+        $translation = $this->makeTranslation([
+            'human_count' => 0,
+            'validated_count' => 0,
+            'ai_count' => 400,
+        ]);
+
+        // Same words as the dashboard and the public page: one screen must not describe a file
+        // differently from the next
+        $this->actingAs($translation->user)
+            ->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('progress.stage.machine'))
+            ->assertSee(__('progress.left_to_review', ['count' => '400']));
+    }
+
     public function test_a_fully_reviewed_file_says_so_whatever_its_score(): void
     {
         // The case this whole rework started from: reviewed line by line, no unreviewed AI left,

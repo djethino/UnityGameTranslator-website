@@ -280,12 +280,32 @@ class TranslationController extends Controller
         ]);
     }
 
-    public function myTranslations()
+    public function myTranslations(Request $request)
     {
-        $translations = auth()->user()->translations()
-            ->with(['game', 'forks'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // Sorting, same vocabulary as the games list — with one option that only makes sense on
+        // your own files: what is left to read. That is the list an author actually works from.
+        //
+        // Default is "recently worked on" rather than "recently uploaded": the reason to open
+        // this page is to carry on, and the file you touched last is the one you carry on with.
+        // It reads content_updated_at, never updated_at — a vote or a download on someone's
+        // translation must not float it back to the top as if its author had just worked on it.
+        $sort = $request->input('sort', 'updated');
+
+        $query = auth()->user()->translations()->with(['game', 'forks']);
+
+        match ($sort) {
+            'new' => $query->orderByDesc('created_at'),
+            'downloads' => $query->orderByDesc('download_count'),
+            'review' => $query->orderByDesc('ai_count'),
+            'game' => $query->orderBy(
+                Game::select('name')->whereColumn('games.id', 'translations.game_id')
+            ),
+            default => $query->orderByRaw('COALESCE(content_updated_at, updated_at) DESC'),
+        };
+
+        // Two files differing only by language must not swap places between page loads, and
+        // sorting by game puts a game's languages in an order anyone can predict.
+        $translations = $query->orderBy('target_language')->orderByDesc('id')->get();
 
         // Load unreviewed branch counts for Main translations (single query)
         // A branch needs merging if: never reviewed OR modified since last review
@@ -304,7 +324,7 @@ class TranslationController extends Controller
                 ->toArray();
         }
 
-        return view('translations.mine', compact('translations', 'branchCounts'));
+        return view('translations.mine', compact('translations', 'branchCounts', 'sort'));
     }
 
     public function edit(Translation $translation)

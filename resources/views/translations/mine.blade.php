@@ -19,6 +19,31 @@
         </a>
     </div>
 @else
+    {{-- Only worth showing once there is something to reorder: a sort control above a single
+         translation is furniture. Same auto-submit and same wording as the games list, so the
+         same gesture works on both screens. --}}
+    @if($translations->count() > 1)
+        <form action="{{ route('translations.mine') }}" method="GET"
+            class="flex items-center justify-end gap-2 mb-4" data-auto-submit>
+            <label for="sort" class="text-sm text-gray-400">{{ __('games.sort_by') }}</label>
+            <select name="sort" id="sort"
+                class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm">
+                <option value="updated" {{ $sort === 'updated' ? 'selected' : '' }}>{{ __('my_translations.sort.updated') }}</option>
+                <option value="new" {{ $sort === 'new' ? 'selected' : '' }}>{{ __('my_translations.sort.new') }}</option>
+                <option value="game" {{ $sort === 'game' ? 'selected' : '' }}>{{ __('my_translations.sort.game') }}</option>
+                <option value="downloads" {{ $sort === 'downloads' ? 'selected' : '' }}>{{ __('my_translations.sort.downloads') }}</option>
+                <option value="review" {{ $sort === 'review' ? 'selected' : '' }}>{{ __('my_translations.sort.review') }}</option>
+            </select>
+            {{-- Nothing left to click once the select applies on change. Kept in the markup and
+                 removed by the script that makes it redundant: without JavaScript it is the only
+                 way to reorder anything. --}}
+            <button type="submit" data-hide-when-auto
+                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm">
+                <i class="fas fa-sort"></i>
+            </button>
+        </form>
+    @endif
+
     <div class="space-y-4">
         @foreach($translations as $translation)
             <div class="bg-gray-800 rounded-lg p-5 border border-gray-700 flex justify-between items-center">
@@ -62,9 +87,19 @@
                         @if($forkCount > 0)
                             {{ $forkCount }} {{ __('my_translations.forks') }} •
                         @endif
-                        {{-- contentChangedAt, not updated_at: a vote or a download must
-                             not make a translation look freshly worked on --}}
-                        {{ $translation->contentChangedAt()->isoFormat('LL') }}
+                        {{-- Two distinct facts, as on the game page: when you published it, and
+                             whether you have touched it since. One date alone could not tell an
+                             upload from this morning apart from one you have been maintaining
+                             for a year. contentChangedAt, never updated_at: a vote or a download
+                             must not make a translation look freshly worked on. --}}
+                        <span title="{{ $translation->created_at->isoFormat('LLL') }}">
+                            <i class="fas fa-calendar mr-1"></i>{{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}
+                        </span>
+                        @if($translation->hasBeenUpdatedSincePublication())
+                            <span class="ml-2" title="{{ $translation->contentChangedAt()->isoFormat('LLL') }}">
+                                <i class="fas fa-pen mr-1"></i>{{ __('translation.updated_on', ['date' => $translation->contentChangedAt()->isoFormat('LL')]) }}
+                            </span>
+                        @endif
                     </div>
 
                     {{-- What the file carries besides its lines. The game page shows this to
@@ -92,6 +127,23 @@
                         </div>
                     @endif
                     <div class="mt-2">
+                        {{-- The step and what is left to read, above the bar that details it —
+                             same order and same wording as the dashboard, so one screen does not
+                             describe a file differently from the next. --}}
+                        <div class="flex items-center gap-2 mb-1">
+                            @if($translation->effective_lines > 0)
+                                <x-review-stage :translation="$translation" />
+                                @if($translation->ai_count > 0)
+                                    <span class="text-xs text-gray-400">
+                                        {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
+                                    </span>
+                                @endif
+                            @else
+                                <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
+                                    <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
+                                </span>
+                            @endif
+                        </div>
                         <x-progress-bar :translation="$translation" />
                         <x-quality-legend :translation="$translation" />
                     </div>
