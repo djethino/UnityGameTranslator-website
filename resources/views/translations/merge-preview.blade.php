@@ -1547,7 +1547,24 @@ document.addEventListener('alpine:init', () => {
                 d++;
             }
 
-            if (i === 0 && d === 0) {
+            // Settings: only the winning SIDE is sent. The entry itself is copied server-side
+            // from the file it belongs to — what this page displays is a readable summary that
+            // drops fields it does not render, so rebuilding from it would strip them.
+            let s = 0;
+            for (const row of this.settingsRows) {
+                const side = this.settingsSelections[row.key];
+                // Online is the default and the server file already holds it
+                if (side !== 'local') continue;
+
+                const el = document.createElement('input');
+                el.type = 'hidden';
+                el.name = `settings[${row.key}]`;
+                el.value = 'local';
+                container.appendChild(el);
+                s++;
+            }
+
+            if (i === 0 && d === 0 && s === 0) {
                 this.saving = false;
                 return;
             }

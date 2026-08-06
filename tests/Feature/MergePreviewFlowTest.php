@@ -172,6 +172,50 @@ class MergePreviewFlowTest extends TestCase
         $this->assertStringContainsString('NotoSans', $json['online']['fonts:Title']['value']);
     }
 
+    public function test_applying_a_setting_choice_copies_the_entry_from_the_local_file(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT + [
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+        ]);
+
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT + [
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'Roboto', 'type' => 'TMP']],
+        ])->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $this->post(route('translations.merge-preview.apply', $translation), [
+            'settings' => ['fonts:Title' => 'local'],
+        ])->assertRedirect();
+
+        $saved = json_decode(file_get_contents(storage_path('app/private/' . $translation->file_path)), true);
+
+        // Copied whole, including the field the comparison never displayed
+        $this->assertSame('Roboto', $saved['_fonts']['Title']['fallback']);
+        $this->assertSame('TMP', $saved['_fonts']['Title']['type']);
+    }
+
+    public function test_a_settings_choice_alone_is_enough_to_save(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT + [
+            '_exclusions' => ['keep'],
+        ]);
+
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT + [
+            '_exclusions' => ['keep', 'added'],
+        ])->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        // No line selection, no deletion: the save must not be refused as "nothing to apply"
+        $this->post(route('translations.merge-preview.apply', $translation), [
+            'settings' => ['exclusions:added' => 'local'],
+        ])->assertSessionHasNoErrors();
+
+        $saved = json_decode(file_get_contents(storage_path('app/private/' . $translation->file_path)), true);
+        $this->assertContains('added', $saved['_exclusions']);
+    }
+
     public function test_settings_endpoint_refuses_a_stranger(): void
     {
         $owner = User::factory()->create()->refresh();

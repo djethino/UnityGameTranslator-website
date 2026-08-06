@@ -783,6 +783,31 @@ class TranslationController extends Controller
         return is_array($json) ? $service->extractComparableSettings($json) : [];
     }
 
+    /**
+     * The local side of an ongoing comparison, decoded, or null when it is no longer available.
+     *
+     * It only exists for the mod flow, where the file was uploaded with the token — and it
+     * expires. The web flow keeps its file in the browser, which is why the settings comparison
+     * is not offered there in the first place.
+     */
+    private function localMergeContent(Translation $translation, TranslationService $service): ?array
+    {
+        if (!session('merge_preview_token')
+            || (int) session('merge_preview_translation_id') !== (int) $translation->id) {
+            return null;
+        }
+
+        $path = MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
+            ?->getContentFilePath();
+        if (!$path || !file_exists($path)) {
+            return null;
+        }
+
+        $json = json_decode($service->normalizeContent(file_get_contents($path)), true);
+
+        return is_array($json) ? $json : null;
+    }
+
     public function mergePreviewData(Request $request, Translation $translation)
     {
         [$localPath, $onlinePath] = $this->resolveMergePreviewPaths($translation);
@@ -845,9 +870,15 @@ class TranslationController extends Controller
             'selections.*.source' => 'required|string', // 'local', 'online', or 'manual'
             'deletions' => 'sometimes|array',
             'deletions.*' => 'string',
+            // Only a side is accepted per setting: the entry itself is copied server-side from
+            // the file it comes from, so nothing the browser sends decides what gets written
+            'settings' => 'sometimes|array',
+            'settings.*' => 'in:local,online',
         ]);
 
-        if (empty($request->input('selections')) && empty($request->input('deletions'))) {
+        if (empty($request->input('selections'))
+            && empty($request->input('deletions'))
+            && empty($request->input('settings'))) {
             return back()->withErrors(['error' => 'No changes to apply.']);
         }
 
@@ -900,6 +931,20 @@ class TranslationController extends Controller
                 unset($content[$delKey]);
                 $deletedCount++;
             }
+        }
+
+        // Apply settings choices. Each winning entry is COPIED from the file it belongs to —
+        // the browser only says which side wins.
+        $settingChoices = $request->input('settings', []);
+        if (!empty($settingChoices)) {
+            $localContent = $this->localMergeContent($translation, $service);
+            if ($localContent === null) {
+                // The local file lives in the token's storage and expires. Saying so is the only
+                // honest answer: applying half the choices would leave a file nobody asked for.
+                return back()->withErrors(['error' => __('merge_preview.error_session_expired')]);
+            }
+
+            $content = $service->applySettingSelections($content, $localContent, $settingChoices);
         }
 
         // Save the file

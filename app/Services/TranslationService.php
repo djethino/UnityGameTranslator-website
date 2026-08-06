@@ -451,6 +451,196 @@ class TranslationService
         return $entries;
     }
 
+    /** Where each comparable section lives in the file. */
+    private const SETTING_SECTION_KEYS = [
+        'fonts' => '_fonts',
+        'font_rules' => '_font_overrides',
+        'images' => '_image_replacements',
+        'exclusions' => '_exclusions',
+        'variables' => '_variables',
+        'game_settings' => '_settings',
+    ];
+
+    /** Sections stored as an object keyed by name; the others are ordered lists. */
+    private const SETTING_OBJECT_SECTIONS = ['fonts', 'game_settings'];
+
+    /**
+     * Apply per-setting choices, taking each winning entry FROM ITS SOURCE FILE.
+     *
+     * The entries are copied, never rebuilt: what the browser displayed is a readable summary
+     * ("fallback: NotoSans · size 140%") that has dropped fields it does not show — type, origin,
+     * scale_auto. Reconstructing from it would quietly strip them. So the caller hands over both
+     * decoded files and only the DECISIONS travel from the browser, which is also why nothing the
+     * client sends can dictate what gets written.
+     *
+     * A choice on an entry only one side has means "keep it" or "drop it": picking the side that
+     * does not have it removes it, exactly as choosing an empty side does for a translation line.
+     *
+     * @param array $target Destination content (modified copy is returned)
+     * @param array $local The other side's content, as decoded from its own file
+     * @param array $selections ['fonts:Title' => 'local'|'online', ...]
+     */
+    public function applySettingSelections(array $target, array $local, array $selections): array
+    {
+        foreach (self::SETTING_SECTION_KEYS as $section => $jsonKey) {
+            $sectionChoices = [];
+            foreach ($selections as $key => $side) {
+                if (str_starts_with((string) $key, $section . ':')) {
+                    $sectionChoices[substr((string) $key, strlen($section) + 1)] = $side;
+                }
+            }
+
+            if (empty($sectionChoices)) {
+                continue;
+            }
+
+            $target[$jsonKey] = in_array($section, self::SETTING_OBJECT_SECTIONS, true)
+                ? $this->mergeSettingObject($section, $target[$jsonKey] ?? [], $local[$jsonKey] ?? [], $sectionChoices)
+                : $this->mergeSettingList($section, $target[$jsonKey] ?? [], $local[$jsonKey] ?? [], $sectionChoices);
+
+            if ($target[$jsonKey] === [] || $target[$jsonKey] === null) {
+                unset($target[$jsonKey]);
+            }
+        }
+
+        return $target;
+    }
+
+    /**
+     * Sections stored as an object (fonts, game settings). Untouched keys survive: _fonts doubles
+     * as an inventory of every font met in game, and rebuilding it from the choices alone would
+     * erase everything the two players simply never configured.
+     */
+    private function mergeSettingObject(string $section, mixed $target, mixed $local, array $choices): array
+    {
+        $result = is_array($target) ? $target : [];
+        $local = is_array($local) ? $local : [];
+
+        foreach ($choices as $id => $side) {
+            if ($side === 'local') {
+                if (array_key_exists($id, $local)) {
+                    $result[$id] = $local[$id];
+                } else {
+                    unset($result[$id]);
+                }
+            } elseif (!array_key_exists($id, $target ?: [])) {
+                // Online was chosen but does not have it: the entry goes away
+                unset($result[$id]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Sections stored as an ordered list.
+     *
+     * Order matters for font rules — the first one that matches wins, which is how a specific
+     * rule is made to take precedence over a general one. So the result is not concatenated at
+     * random: it follows the ONLINE order, and entries kept from the local side are re-inserted
+     * behind the neighbour they followed locally. Deterministic, and it preserves the
+     * "specific before general" intent on both sides.
+     */
+    private function mergeSettingList(string $section, mixed $target, mixed $local, array $choices): array
+    {
+        $target = is_array($target) ? array_values($target) : [];
+        $local = is_array($local) ? array_values($local) : [];
+
+        $byIdOnline = $this->indexSettingEntries($section, $target);
+        $byIdLocal = $this->indexSettingEntries($section, $local);
+
+        // What survives, and where its content comes from
+        $kept = [];
+        foreach ($choices as $id => $side) {
+            $source = $side === 'local' ? $byIdLocal : $byIdOnline;
+            if (array_key_exists($id, $source)) {
+                $kept[$id] = $source[$id];
+            }
+        }
+        // Entries nobody had to arbitrate (identical on both sides) stay as they are
+        foreach ($byIdOnline as $id => $entry) {
+            if (!array_key_exists($id, $choices)) {
+                $kept[$id] = $entry;
+            }
+        }
+
+        $result = [];
+        $placed = [];
+        foreach (array_keys($byIdOnline) as $id) {
+            if (array_key_exists($id, $kept)) {
+                $result[] = $kept[$id];
+                $placed[$id] = true;
+            }
+        }
+
+        // Local-only survivors, anchored after the entry they followed locally
+        foreach (array_keys($byIdLocal) as $position => $id) {
+            if (!array_key_exists($id, $kept) || isset($placed[$id])) {
+                continue;
+            }
+
+            $anchor = null;
+            for ($i = $position - 1; $i >= 0; $i--) {
+                $previous = array_keys($byIdLocal)[$i];
+                if (isset($placed[$previous])) {
+                    $anchor = $previous;
+                    break;
+                }
+            }
+
+            $at = 0;
+            if ($anchor !== null) {
+                foreach ($result as $index => $entry) {
+                    if ($this->settingIdentifier($section, $entry, $index) === $anchor) {
+                        $at = $index + 1;
+                        break;
+                    }
+                }
+            }
+
+            array_splice($result, $at, 0, [$kept[$id]]);
+            $placed[$id] = true;
+        }
+
+        return $result;
+    }
+
+    /** Entries of a list section, keyed by the identifier used in the comparison. */
+    private function indexSettingEntries(string $section, array $entries): array
+    {
+        $indexed = [];
+        foreach ($entries as $index => $entry) {
+            $id = $this->settingIdentifier($section, $entry, $index);
+            if ($id !== null) {
+                $indexed[$id] = $entry;
+            }
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * What identifies an entry across two files. Must agree with the keys built by
+     * extractComparableSettings — they name the same things on both ends of the round trip.
+     */
+    private function settingIdentifier(string $section, mixed $entry, int|string $index): ?string
+    {
+        if ($section === 'exclusions') {
+            return $this->asLabel($entry);
+        }
+
+        if (!is_array($entry)) {
+            return null;
+        }
+
+        return match ($section) {
+            'font_rules' => $this->asLabel($entry['match'] ?? null),
+            'images' => $this->asLabel($entry['sprite_name'] ?? null),
+            'variables' => $this->asLabel($entry['name'] ?? null),
+            default => null,
+        };
+    }
+
     /**
      * Turn a raw metadata list into {count, items} with a bounded preview.
      * The mapper returns null for malformed entries, which are skipped but
