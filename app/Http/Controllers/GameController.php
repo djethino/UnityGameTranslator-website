@@ -42,6 +42,21 @@ class GameController extends Controller
             });
         }
 
+        // The language the visitor is most likely looking for: the one they filtered on, or
+        // failing that the one they are reading the site in.
+        $highlightLanguage = $request->filled('target')
+            ? $request->target
+            : (config('locales.supported.' . app()->getLocale() . '.name') ?: null);
+
+        // Games available in that language come first — WITHOUT hiding the others, which is
+        // what a filter would do. Someone browsing in French wants French translations at the
+        // top, not a page that pretends nothing else exists.
+        if ($highlightLanguage) {
+            $query->withExists(['translations as has_highlight_language' => function ($q) use ($highlightLanguage) {
+                $q->where('visibility', 'public')->where('target_language', $highlightLanguage);
+            }])->orderByDesc('has_highlight_language');
+        }
+
         $games = $query->orderBy('name')->paginate(24);
 
         // Which languages each listed game is available in — the first thing anyone browsing
@@ -64,7 +79,13 @@ class GameController extends Controller
         $targetLanguages = Translation::where('visibility', 'public')->distinct()->pluck('target_language')->sort();
         $sourceLanguages = Translation::where('visibility', 'public')->distinct()->pluck('source_language')->sort();
 
-        return view('games.index', compact('games', 'targetLanguages', 'sourceLanguages', 'languagesByGame'));
+        return view('games.index', compact(
+            'games',
+            'targetLanguages',
+            'sourceLanguages',
+            'languagesByGame',
+            'highlightLanguage'
+        ));
     }
 
     public function show(Game $game, Request $request)

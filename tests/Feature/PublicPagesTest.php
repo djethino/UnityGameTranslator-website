@@ -79,6 +79,41 @@ class PublicPagesTest extends TestCase
         $this->assertStringNotContainsString('Japanese', $html);
     }
 
+    public function test_games_in_the_visitors_language_come_first_without_hiding_the_others(): void
+    {
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $make = function (string $gameName, string $slug, string $language) use ($author) {
+            $game = \App\Models\Game::forceCreate(['name' => $gameName, 'slug' => $slug]);
+            $t = new \App\Models\Translation();
+            $t->forceFill([
+                'game_id' => $game->id,
+                'user_id' => $author->id,
+                'source_language' => 'English',
+                'target_language' => $language,
+                'file_path' => 'translations/none.json',
+                'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'visibility' => 'public',
+                'line_count' => 1,
+            ])->save();
+        };
+
+        // Alphabetically "Alpha" comes first, but only "Zeta" is in the visitor's language
+        $make('Alpha Game', 'alpha-game', 'German');
+        $make('Zeta Game', 'zeta-game', 'French');
+
+        // Browsing the site IN French — no filter applied
+        $html = $this->get('/fr/games')->assertOk()->getContent();
+
+        $frenchAt = strpos($html, 'Zeta Game');
+        $germanAt = strpos($html, 'Alpha Game');
+
+        $this->assertNotFalse($frenchAt);
+        // Sorting, not filtering: the game without French must stay on the page
+        $this->assertNotFalse($germanAt, 'A game without the visitor language must not disappear');
+        $this->assertLessThan($germanAt, $frenchAt, 'The visitor language must come first');
+    }
+
     public function test_the_home_page_shows_forks_and_hides_branches(): void
     {
         $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);

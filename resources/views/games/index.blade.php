@@ -109,6 +109,17 @@
                             // five French translations of the same game are one answer to
                             // "is it in my language?", not five.
                             $gameLanguages = $languagesByGame[$game->id] ?? collect();
+
+                            // The visitor's language leads, and is never the one cut off by the
+                            // "+N": on a card showing eight flags, finding your own should not
+                            // take a scan — and it is the whole reason this card is being read.
+                            if ($highlightLanguage && $gameLanguages->contains($highlightLanguage)) {
+                                $gameLanguages = $gameLanguages
+                                    ->reject(fn ($l) => $l === $highlightLanguage)
+                                    ->prepend($highlightLanguage)
+                                    ->values();
+                            }
+
                             // Flags only: a popular game can carry dozens of languages, and their
                             // names would fill the card several times over. The name stays one
                             // hover away, and the whole list is on the game's own page.
@@ -121,7 +132,7 @@
                                      rest is worth reading at all --}}
                                 <div class="flex flex-wrap gap-1 mb-1.5">
                                     @foreach($shownLanguages as $language)
-                                        <span class="text-[11px] bg-black/60 px-1 py-0.5 rounded leading-none"
+                                        <span class="text-[11px] px-1 py-0.5 rounded leading-none {{ $language === $highlightLanguage ? 'bg-purple-600 ring-1 ring-purple-300' : 'bg-black/60' }}"
                                             title="{{ $language }}">@langflag($language)</span>
                                     @endforeach
                                     @if($extraLanguages > 0)
