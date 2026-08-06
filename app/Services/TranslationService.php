@@ -201,16 +201,22 @@ class TranslationService
         $summary = [];
 
         $overrides = $this->summarizeList($json['_font_overrides'] ?? null, function ($rule) {
-            if (!is_array($rule) || empty($rule['match'])) {
+            if (!is_array($rule)) {
+                return null;
+            }
+            $match = $this->asLabel($rule['match'] ?? null);
+            if ($match === null) {
                 return null;
             }
 
             return [
-                'match' => $this->shortenLabel($rule['match']),
-                'replacement' => isset($rule['replacement']) ? $this->shortenLabel($rule['replacement']) : null,
-                'size_multiplier' => isset($rule['size_multiplier']) ? (float) $rule['size_multiplier'] : null,
+                'match' => $match,
+                'replacement' => $this->asLabel($rule['replacement'] ?? null),
+                'size_multiplier' => isset($rule['size_multiplier']) && is_numeric($rule['size_multiplier'])
+                    ? (float) $rule['size_multiplier']
+                    : null,
                 // Absent means enabled: the mod only writes the key when false
-                'enabled' => $rule['enabled'] ?? true,
+                'enabled' => ($rule['enabled'] ?? true) == true,
             ];
         });
         if ($overrides) {
@@ -218,14 +224,18 @@ class TranslationService
         }
 
         $images = $this->summarizeList($json['_image_replacements'] ?? null, function ($entry) {
-            if (!is_array($entry) || empty($entry['sprite_name'])) {
+            if (!is_array($entry)) {
+                return null;
+            }
+            $name = $this->asLabel($entry['sprite_name'] ?? null);
+            if ($name === null) {
                 return null;
             }
 
             return [
-                'name' => $this->shortenLabel($entry['sprite_name']),
-                'width' => isset($entry['original_width']) ? (int) $entry['original_width'] : null,
-                'height' => isset($entry['original_height']) ? (int) $entry['original_height'] : null,
+                'name' => $name,
+                'width' => is_numeric($entry['original_width'] ?? null) ? (int) $entry['original_width'] : null,
+                'height' => is_numeric($entry['original_height'] ?? null) ? (int) $entry['original_height'] : null,
             ];
         });
         if ($images) {
@@ -248,10 +258,11 @@ class TranslationService
                 return null;
             }
 
-            $source = trim(($def['class'] ?? '') . '.' . ($def['path'] ?? ''), '.');
+            $source = trim(($this->asLabel($def['class'] ?? null) ?? '')
+                . '.' . ($this->asLabel($def['path'] ?? null) ?? ''), '.');
 
             return [
-                'name' => $this->shortenLabel($def['name'] ?? ''),
+                'name' => $this->asLabel($def['name'] ?? null) ?? '',
                 'source' => $source !== '' ? $this->shortenLabel($source) : null,
             ];
         });
@@ -269,10 +280,15 @@ class TranslationService
                 'concat_detection',
                 'ui_font',
             ]));
-            if (!empty($known)) {
-                if (isset($known['ui_font'])) {
-                    $known['ui_font'] = $this->shortenLabel((string) $known['ui_font']);
+            if (isset($known['ui_font'])) {
+                $uiFont = $this->asLabel($known['ui_font']);
+                if ($uiFont === null) {
+                    unset($known['ui_font']);
+                } else {
+                    $known['ui_font'] = $uiFont;
                 }
+            }
+            if (!empty($known)) {
                 $summary['game_settings'] = $known;
             }
         }
@@ -303,6 +319,26 @@ class TranslationService
         }
 
         return ['count' => count($list), 'items' => $items];
+    }
+
+    /**
+     * A displayable label, or null when the value is not one.
+     *
+     * The file is user-editable and can be hand-written, so a field the mod
+     * always fills with a string may arrive as an array. This summary is
+     * decoration: a malformed entry must be skipped, never turn a perfectly
+     * valid translation upload into a 500.
+     */
+    private function asLabel(mixed $value): ?string
+    {
+        // Scalars coerce cleanly (ints, floats); arrays and objects do not
+        if (!is_scalar($value)) {
+            return null;
+        }
+
+        $label = $this->shortenLabel((string) $value);
+
+        return $label === '' ? null : $label;
     }
 
     /**

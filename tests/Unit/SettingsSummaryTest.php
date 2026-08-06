@@ -129,6 +129,56 @@ class SettingsSummaryTest extends TestCase
         $this->assertCount(1, $summary['font_overrides']['items']);
     }
 
+    public function test_hand_written_nonsense_never_breaks_an_upload(): void
+    {
+        // translations.json is user-editable, and this summary runs on EVERY
+        // upload. A field the mod always writes as a string can arrive as an
+        // array — that must skip the entry, not 500 a valid translation.
+        $summary = $this->service->extractSettingsSummary([
+            '_font_overrides' => [
+                ['match' => ['not', 'a', 'string']],
+                ['match' => 'Arial*', 'replacement' => ['nope'], 'size_multiplier' => 'huge'],
+            ],
+            '_image_replacements' => [
+                ['sprite_name' => ['array'], 'original_width' => 512],
+                ['sprite_name' => 'ok', 'original_width' => 'wide', 'original_height' => null],
+            ],
+            '_variables' => [
+                ['name' => ['x'], 'class' => ['y'], 'path' => 'z'],
+            ],
+            '_settings' => ['ui_font' => ['a font']],
+            '_exclusions' => 'not-even-a-list',
+        ]);
+
+        $this->assertSame(2, $summary['font_overrides']['count']);
+        $this->assertCount(1, $summary['font_overrides']['items']);
+        $this->assertSame('Arial*', $summary['font_overrides']['items'][0]['match']);
+        $this->assertNull($summary['font_overrides']['items'][0]['replacement']);
+        $this->assertNull($summary['font_overrides']['items'][0]['size_multiplier']);
+
+        $this->assertCount(1, $summary['image_replacements']['items']);
+        $this->assertSame('ok', $summary['image_replacements']['items'][0]['name']);
+        $this->assertNull($summary['image_replacements']['items'][0]['width']);
+
+        $this->assertSame('', $summary['variables']['items'][0]['name']);
+        $this->assertSame('z', $summary['variables']['items'][0]['source']);
+
+        // ui_font was the only game setting, and it was unusable
+        $this->assertArrayNotHasKey('game_settings', $summary);
+        // A section that is not a list at all is simply absent
+        $this->assertArrayNotHasKey('exclusions', $summary);
+    }
+
+    public function test_numeric_labels_are_accepted(): void
+    {
+        // A sprite named "42" is legitimate; only arrays and objects are not
+        $summary = $this->service->extractSettingsSummary([
+            '_image_replacements' => [['sprite_name' => 42]],
+        ]);
+
+        $this->assertSame('42', $summary['image_replacements']['items'][0]['name']);
+    }
+
     public function test_unknown_game_settings_are_dropped(): void
     {
         $summary = $this->service->extractSettingsSummary([
