@@ -114,6 +114,56 @@
                 {{ __('merge_preview.local_file') }} <span class="text-gray-600">/</span> {{ __('merge_preview.online_version') }}
                 &bull; {{ __('merge_preview.settings_differ') }}
             </p>
+
+            {{-- Setting by setting, when both sides are known.
+
+                 Only the mod flow leaves the local file on the server; the web flow keeps it in
+                 sessionStorage, so there is nothing to compare against server-side and the
+                 summary above stays the whole story there. Extracting settings in JavaScript
+                 too would mean a second definition of "what a setting is" to keep in step with
+                 the mod — the counts above already cost us one such drift.
+
+                 Values are read-only: a font or an exclusion is edited in the mod, never here.
+                 The only decision offered is WHICH SIDE wins, which is exactly what a merge
+                 has to ask. --}}
+            <div x-show="settingsRowsReady" x-cloak class="mt-3 pt-3 border-t border-gray-700">
+                <button type="button" @click="toggleSettingsRows()"
+                    class="text-xs text-purple-300 hover:text-purple-200">
+                    <span x-show="showSettingsRows" x-cloak>{{ __('merge_preview.settings_hide_detail') }}</span>
+                    <span x-show="hideSettingsRows" x-cloak>{{ __('merge_preview.settings_show_detail') }}</span>
+                </button>
+
+                <div x-show="showSettingsRows" x-cloak class="mt-2 overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="text-gray-500">
+                            <tr>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.local_file') }}</th>
+                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.online_version') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="row in settingsRows" :key="row.key">
+                                <tr class="border-t border-gray-750">
+                                    <td class="px-2 py-1 align-top">
+                                        <span class="text-gray-500" x-text="row.sectionLabel"></span>
+                                        <span class="text-gray-300 font-mono" x-text="row.label"></span>
+                                    </td>
+                                    <td class="px-2 py-1 align-top cursor-pointer"
+                                        :class="settingCellClass(row.key, 'local')"
+                                        @click="selectSetting(row.key, 'local')"
+                                        x-text="row.localValue"></td>
+                                    <td class="px-2 py-1 align-top cursor-pointer"
+                                        :class="settingCellClass(row.key, 'online')"
+                                        @click="selectSetting(row.key, 'online')"
+                                        x-text="row.onlineValue"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <p class="text-xs text-gray-500 mt-2">{{ __('merge_preview.settings_pick_hint') }}</p>
+                </div>
+            </div>
         </div>
 
         @include('partials.editor-quality-bar')
@@ -675,6 +725,15 @@ document.addEventListener('alpine:init', () => {
         settingsDiffFlags: {},
         settingsLocal: {},
         settingsOnline: {},
+        // Setting-by-setting comparison. Only filled when the server holds both sides
+        // (mod flow) — see the template for why the web flow keeps the summary only.
+        settingsRows: [],
+        settingsRowsReady: false,
+        settingsSelections: {},
+        showSettingsRows: false,
+        // The CSP build evaluates property access, not expressions, so a template cannot
+        // negate a flag: it needs the opposite as its own property.
+        hideSettingsRows: true,
         allKeys: [],
         selections: {},
         stats: {
@@ -813,6 +872,11 @@ document.addEventListener('alpine:init', () => {
             ])].sort();
 
             this.settingsDiffer = this.compareSettings(localMetadata, this.onlineMetadata);
+            if (this.settingsDiffer) {
+                // Asked for only when something differs — the detail of settings that agree
+                // would be a request made to display nothing
+                this.loadSettingsRows();
+            }
 
             this.calculateStats();
             this.applySmartDefaults();
@@ -873,6 +937,89 @@ document.addEventListener('alpine:init', () => {
             this.settingsOnline = onlineCounts;
 
             return any;
+        },
+
+        /**
+         * Load the setting-by-setting comparison. Served apart from the lines because those are
+         * streamed without ever being decoded; settings are few, and extracting them server-side
+         * keeps a single definition of what a setting is (the mod holds the other half of it).
+         *
+         * Failure is silent on purpose: the lines are the subject of this page, and losing the
+         * settings detail must never cost the merge itself.
+         */
+        loadSettingsRows() {
+            fetch('{{ route("translations.merge-preview.settings", $translation) }}', {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(response => response.ok ? response.json() : null)
+                .then(data => {
+                    if (!data || !data.local) return;
+                    this.buildSettingsRows(data.local, data.online || {});
+                })
+                .catch(() => {});
+        },
+
+        buildSettingsRows(local, online) {
+            const labels = @js([
+                'fonts' => __('file_settings.label.fonts'),
+                'font_rules' => __('file_settings.label.font_rules'),
+                'images' => __('file_settings.label.images'),
+                'exclusions' => __('file_settings.label.exclusions'),
+                'variables' => __('file_settings.label.variables'),
+                'game_settings' => __('file_settings.game_settings'),
+            ]);
+            const absent = @js(__('merge_preview.settings_absent'));
+
+            const rows = [];
+            const keys = new Set([...Object.keys(local), ...Object.keys(online)]);
+
+            for (const key of keys) {
+                const l = local[key];
+                const o = online[key];
+                // Both sides identical: nothing to decide, and a row per unchanged setting would
+                // bury the handful that actually moved
+                if (l && o && l.value === o.value) continue;
+
+                const meta = l || o;
+                rows.push({
+                    key,
+                    section: meta.section,
+                    sectionLabel: labels[meta.section] || meta.section,
+                    label: meta.label,
+                    localValue: l ? l.value : absent,
+                    onlineValue: o ? o.value : absent,
+                });
+            }
+
+            // Grouped by section, then by name: the order of a Set is insertion order, which
+            // here means "whatever the JSON happened to hold"
+            rows.sort((a, b) => a.section.localeCompare(b.section) || a.label.localeCompare(b.label));
+
+            for (const row of rows) {
+                // Default to the online side, like every other default on this page: the server
+                // version is the one everybody else already has.
+                if (!(row.key in this.settingsSelections)) {
+                    this.settingsSelections[row.key] = 'online';
+                }
+            }
+
+            this.settingsRows = rows;
+            this.settingsRowsReady = rows.length > 0;
+        },
+
+        toggleSettingsRows() {
+            this.showSettingsRows = !this.showSettingsRows;
+            this.hideSettingsRows = !this.showSettingsRows;
+        },
+
+        selectSetting(key, side) {
+            this.settingsSelections[key] = side;
+        },
+
+        settingCellClass(key, side) {
+            return this.settingsSelections[key] === side
+                ? 'bg-purple-900/40 text-purple-200'
+                : 'text-gray-400 hover:bg-gray-750';
         },
 
         /**
