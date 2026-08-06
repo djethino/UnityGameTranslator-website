@@ -84,7 +84,15 @@ class BackfillDerivedColumns extends Command
                 // saveQuietly: this is a derived-data repair, not new content.
                 // A regular save would fire the 'updated' event and ping
                 // IndexNow once per row for pages that did not change.
+                //
+                // timestamps disabled for the same reason: recomputing a column from a file
+                // nobody touched must not make the translation look freshly worked on. Leaving
+                // them on moved updated_at to the day of the repair — which the ranking still
+                // reads as freshness, and which a translation with no content date of its own
+                // would show as its last change.
+                $translation->timestamps = false;
                 $translation->forceFill($fresh)->saveQuietly();
+                $translation->timestamps = true;
             }
         });
 
