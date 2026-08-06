@@ -297,6 +297,161 @@ class TranslationService
     }
 
     /**
+     * The settings of a file as COMPARABLE entries, keyed by a stable id.
+     *
+     * The editors could already say that a section differed; they could not say which font, or
+     * which exclusion, so nothing could be picked one by one the way translation lines are. This
+     * turns each setting into one row: a key that identifies it across two files, and a text
+     * value that shows what it is set to.
+     *
+     * Section names are Translation::SETTINGS_SECTIONS — the same six names, in the same order,
+     * as the mod's SettingsSection. Do not invent a third naming here.
+     *
+     * @return array<string, array{section: string, label: string, value: string}>
+     */
+    public function extractComparableSettings(array $json): array
+    {
+        $entries = [];
+
+        // Fonts: DELIBERATE ones only. _fonts doubles as an inventory — the mod records every
+        // font it meets in game — so comparing it whole would report a difference between two
+        // players of the same translation purely because they walked through different screens.
+        foreach (($json['_fonts'] ?? []) as $name => $settings) {
+            $label = $this->asLabel($name);
+            if ($label === null || !is_array($settings)) {
+                continue;
+            }
+            if (!Translation::isDeliberateFontSetting($settings)) {
+                continue;
+            }
+
+            $parts = [];
+            if (($settings['enabled'] ?? true) === false) {
+                $parts[] = 'not translated';
+            }
+            $fallback = $this->asLabel($settings['fallback'] ?? null);
+            if ($fallback !== null) {
+                $parts[] = 'fallback: ' . $fallback;
+            }
+            $scale = $settings['scale'] ?? 1.0;
+            if (is_numeric($scale) && abs((float) $scale - 1.0) > 0.001) {
+                $parts[] = 'size: ' . round((float) $scale * 100) . '%';
+            }
+
+            $entries['fonts:' . $label] = [
+                'section' => 'fonts',
+                'label' => $label,
+                'value' => implode(' · ', $parts),
+            ];
+        }
+
+        // Font rules are matched first-wins, so their POSITION is part of the setting. Keyed by
+        // the pattern rather than by index: an index would shift when a rule is inserted above,
+        // and every rule below would read as changed. The position travels in the value instead,
+        // so moving a rule shows up as a difference on that rule alone.
+        $position = 0;
+        foreach (($json['_font_overrides'] ?? []) as $rule) {
+            if (!is_array($rule)) {
+                continue;
+            }
+            $match = $this->asLabel($rule['match'] ?? null);
+            if ($match === null) {
+                continue;
+            }
+            $position++;
+
+            $parts = ['#' . $position];
+            $replacement = $this->asLabel($rule['replacement'] ?? null);
+            if ($replacement !== null) {
+                $parts[] = '→ ' . $replacement;
+            }
+            if (isset($rule['size_multiplier']) && is_numeric($rule['size_multiplier'])
+                && abs((float) $rule['size_multiplier'] - 1.0) > 0.001) {
+                $parts[] = 'size: ' . round((float) $rule['size_multiplier'] * 100) . '%';
+            }
+            if (($rule['enabled'] ?? true) == false) {
+                $parts[] = 'disabled';
+            }
+
+            $entries['font_rules:' . $match] = [
+                'section' => 'font_rules',
+                'label' => $match,
+                'value' => implode(' ', $parts),
+            ];
+        }
+
+        foreach (($json['_image_replacements'] ?? []) as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $name = $this->asLabel($entry['sprite_name'] ?? null);
+            if ($name === null) {
+                continue;
+            }
+
+            $size = is_numeric($entry['original_width'] ?? null) && is_numeric($entry['original_height'] ?? null)
+                ? ((int) $entry['original_width']) . '×' . ((int) $entry['original_height'])
+                : '';
+
+            $entries['images:' . $name] = [
+                'section' => 'images',
+                'label' => $name,
+                'value' => $size,
+            ];
+        }
+
+        // An exclusion IS its pattern: presence or absence is the whole setting
+        foreach (($json['_exclusions'] ?? []) as $pattern) {
+            $label = $this->asLabel($pattern);
+            if ($label === null) {
+                continue;
+            }
+
+            $entries['exclusions:' . $label] = [
+                'section' => 'exclusions',
+                'label' => $label,
+                'value' => 'excluded',
+            ];
+        }
+
+        foreach (($json['_variables'] ?? []) as $def) {
+            if (!is_array($def)) {
+                continue;
+            }
+            $name = $this->asLabel($def['name'] ?? null);
+            if ($name === null) {
+                continue;
+            }
+
+            $source = trim(($this->asLabel($def['class'] ?? null) ?? '')
+                . '.' . ($this->asLabel($def['path'] ?? null) ?? ''), '.');
+
+            $entries['variables:' . $name] = [
+                'section' => 'variables',
+                'label' => $name,
+                'value' => $source,
+            ];
+        }
+
+        // One row per option rather than one for the whole block: they are independent, and a
+        // single row would force an all-or-nothing choice on unrelated settings.
+        foreach (($json['_settings'] ?? []) as $key => $value) {
+            $label = $this->asLabel($key);
+            if ($label === null || is_array($value)) {
+                continue;
+            }
+
+            $entries['game_settings:' . $label] = [
+                'section' => 'game_settings',
+                'label' => $label,
+                'value' => is_bool($value) ? ($value ? 'on' : 'off') : (string) $value,
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
      * Turn a raw metadata list into {count, items} with a bounded preview.
      * The mapper returns null for malformed entries, which are skipped but
      * still counted: the count reflects the file, not what we could read.
