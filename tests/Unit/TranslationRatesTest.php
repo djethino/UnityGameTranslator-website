@@ -164,6 +164,21 @@ class TranslationRatesTest extends TestCase
         $this->assertSame(1.0, $reviewed->usefulness());
     }
 
+    public function test_the_yardstick_translation_says_nothing_about_its_own_coverage(): void
+    {
+        $game = Game::firstOrCreate(['slug' => 'silent-game'], ['name' => 'Silent Game']);
+        $this->make(['human_count' => 3000], $game);
+        $this->make(['human_count' => 900], $game);
+
+        // The yardstick is the furthest anyone HAS got, never the game's real size. A file that
+        // sets it would be claiming to cover a whole game on the strength of being alone at the
+        // front — which is also what every game with a single translation would show.
+        $this->get(route('games.show', $game))
+            ->assertOk()
+            ->assertSee(__('progress.game_coverage', ['percent' => 30]))
+            ->assertDontSee(__('progress.game_coverage', ['percent' => 100]));
+    }
+
     public function test_the_page_wide_maximum_is_fetched_once(): void
     {
         $game = Game::firstOrCreate(['slug' => 'hint-game'], ['name' => 'Hint Game']);

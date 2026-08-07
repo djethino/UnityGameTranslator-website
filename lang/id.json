@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Dibiarkan apa adanya",
     "progress.capture": "Ditangkap",
+    "progress.game_coverage": ":percent% dari permainan",
+    "progress.game_coverage_hint": "Bagian permainan yang dijangkau terjemahan ini, diukur terhadap terjemahan terjauh dari permainan yang sama, dalam bahasa apa pun.",
     "progress.capture_only": "Hanya tangkap",
     "progress.capture_only_desc": "File ini hanya berisi teks yang ditangkap, belum ada terjemahan",
     "progress.tooltip": "Manusia: :human | Divalidasi: :validated | AI: :ai | Terekam: :capture",

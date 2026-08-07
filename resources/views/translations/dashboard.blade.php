@@ -124,6 +124,7 @@
                             {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
                         </span>
                     @endif
+                    <x-game-coverage :translation="$translation" />
                 @else
                     <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
                         <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}

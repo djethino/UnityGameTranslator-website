@@ -878,6 +878,8 @@
     "progress.ai_short": "YZ",
     "progress.skipped": "Olduğu gibi bırakıldı",
     "progress.capture": "Yakalandı",
+    "progress.game_coverage": "oyunun %:percent'i",
+    "progress.game_coverage_hint": "Bu çevirinin oyunun ne kadarına ulaştığı; aynı oyunun en ileri çevirisiyle karşılaştırılır, hangi dilde olursa olsun.",
     "progress.capture_only": "Sadece yakalama",
     "progress.capture_only_desc": "Bu dosya yalnızca yakalanan metinleri içeriyor, henüz çeviri yapılmamış",
     "progress.tooltip": "İnsan: :human | Doğrulanan: :validated | YZ: :ai | Yakalanan: :capture",

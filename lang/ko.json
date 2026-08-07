@@ -878,6 +878,8 @@
     "progress.ai_short": "AI",
     "progress.skipped": "원문 유지",
     "progress.capture": "캡처됨",
+    "progress.game_coverage": "게임의 :percent%",
+    "progress.game_coverage_hint": "이 번역이 게임의 어디까지 닿는지를, 같은 게임에서 가장 멀리 나아간 번역과 견주어 나타냅니다(언어는 상관없습니다).",
     "progress.capture_only": "캡처만",
     "progress.capture_only_desc": "이 파일은 캡처된 텍스트만 포함하고 있으며, 아직 번역이 없습니다",
     "progress.tooltip": "사람: :human | 확인됨: :validated | AI: :ai | 수집됨: :capture",

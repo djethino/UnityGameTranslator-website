@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "تُرك كما هو",
     "progress.capture": "ملتقط",
+    "progress.game_coverage": ":percent٪ من اللعبة",
+    "progress.game_coverage_hint": "نسبة اللعبة التي تبلغها هذه الترجمة، مقيسةً على أبعد ترجمة للعبة نفسها، أيًّا كانت لغتها.",
     "progress.capture_only": "التقاط فقط",
     "progress.capture_only_desc": "هذا الملف يحتوي فقط على نصوص ملتقطة، بدون ترجمات بعد",
     "progress.tooltip": "بشري: :human | مُدقَّق: :validated | ذكاء اصطناعي: :ai | مُلتقَط: :capture",

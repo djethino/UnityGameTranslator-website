@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "यथावत रखा गया",
     "progress.capture": "कैप्चर किया गया",
+    "progress.game_coverage": "गेम का :percent%",
+    "progress.game_coverage_hint": "यह अनुवाद खेल के कितने हिस्से तक पहुँचता है — उसी खेल के सबसे आगे बढ़े अनुवाद के मुकाबले, वह किसी भी भाषा में हो।",
     "progress.capture_only": "केवल कैप्चर",
     "progress.capture_only_desc": "इस फ़ाइल में केवल कैप्चर किया गया टेक्स्ट है, अभी तक कोई अनुवाद नहीं",
     "progress.tooltip": "मानव: :human | सत्यापित: :validated | AI: :ai | संग्रहित: :capture",

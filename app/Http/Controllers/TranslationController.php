@@ -324,7 +324,12 @@ class TranslationController extends Controller
                 ->toArray();
         }
 
-        return view('translations.mine', compact('translations', 'branchCounts', 'sort'));
+        // How far the furthest translation of each listed game reaches, asked once for the whole
+        // page: the coverage badge needs it, and the model would otherwise run its own MAX per
+        // card.
+        $gameMaxes = Translation::maxResolvedLinesByGame($translations->pluck('game_id'));
+
+        return view('translations.mine', compact('translations', 'branchCounts', 'sort', 'gameMaxes'));
     }
 
     public function edit(Translation $translation)

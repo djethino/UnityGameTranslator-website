@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "נשמר כפי שהוא",
     "progress.capture": "נלכד",
+    "progress.game_coverage": ":percent% מהמשחק",
+    "progress.game_coverage_hint": "החלק מהמשחק שהתרגום הזה מגיע אליו, ביחס לתרגום שהגיע הכי רחוק באותו משחק, בכל שפה שהיא.",
     "progress.capture_only": "לכידה בלבד",
     "progress.capture_only_desc": "קובץ זה מכיל רק טקסט שנלכד, ללא תרגומים עדיין",
     "progress.tooltip": "אנושי: :human | אומת: :validated | ‏AI: :ai | נאסף: :capture",

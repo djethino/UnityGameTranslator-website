@@ -878,6 +878,8 @@
     "progress.ai_short": "K",
     "progress.skipped": "Unverändert belassen",
     "progress.capture": "Erfasst",
+    "progress.game_coverage": ":percent % des Spiels",
+    "progress.game_coverage_hint": "Anteil des Spiels, den diese Übersetzung erreicht, gemessen an der weitest fortgeschrittenen Übersetzung desselben Spiels, gleich in welcher Sprache.",
     "progress.capture_only": "Nur Erfassung",
     "progress.capture_only_desc": "Diese Datei enthält nur erfassten Text, noch keine Übersetzungen",
     "progress.tooltip": "Mensch: :human | Geprüft: :validated | KI: :ai | Erfasst: :capture",

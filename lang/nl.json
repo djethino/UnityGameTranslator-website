@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Ongewijzigd gelaten",
     "progress.capture": "Vastgelegd",
+    "progress.game_coverage": ":percent % van het spel",
+    "progress.game_coverage_hint": "Deel van het spel dat deze vertaling bereikt, afgemeten aan de verst gevorderde vertaling van hetzelfde spel, in welke taal dan ook.",
     "progress.capture_only": "Alleen capture",
     "progress.capture_only_desc": "Dit bestand bevat alleen vastgelegde tekst, nog geen vertalingen",
     "progress.tooltip": "Mens: :human | Gecontroleerd: :validated | AI: :ai | Vastgelegd: :capture",

@@ -878,6 +878,8 @@
     "progress.ai_short": "AI",
     "progress.skipped": "Pozostawione bez zmian",
     "progress.capture": "Przechwycone",
+    "progress.game_coverage": ":percent % gry",
+    "progress.game_coverage_hint": "Część gry, którą obejmuje to tłumaczenie, mierzona względem najdalej posuniętego tłumaczenia tej samej gry, w dowolnym języku.",
     "progress.capture_only": "Tylko przechwytywanie",
     "progress.capture_only_desc": "Ten plik zawiera tylko przechwycony tekst, bez tłumaczeń",
     "progress.tooltip": "Człowiek: :human | Zatwierdzone: :validated | SI: :ai | Przechwycone: :capture",

@@ -878,6 +878,8 @@
     "progress.ai_short": "ИИ",
     "progress.skipped": "Оставлено как есть",
     "progress.capture": "Захвачено",
+    "progress.game_coverage": ":percent % игры",
+    "progress.game_coverage_hint": "Доля игры, которую охватывает этот перевод, в сравнении с самым продвинутым переводом той же игры, на любом языке.",
     "progress.capture_only": "Только захват",
     "progress.capture_only_desc": "Этот файл содержит только захваченный текст, переводов пока нет",
     "progress.tooltip": "Человек: :human | Проверено: :validated | ИИ: :ai | Собрано: :capture",

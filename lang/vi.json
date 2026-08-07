@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Giữ nguyên",
     "progress.capture": "Đã thu thập",
+    "progress.game_coverage": ":percent% trò chơi",
+    "progress.game_coverage_hint": "Phần trò chơi mà bản dịch này chạm tới, so với bản dịch đi xa nhất của cùng trò chơi, bằng bất kỳ ngôn ngữ nào.",
     "progress.capture_only": "Chỉ thu thập",
     "progress.capture_only_desc": "File này chỉ chứa văn bản đã thu thập, chưa có bản dịch nào",
     "progress.tooltip": "Người: :human | Đã duyệt: :validated | AI: :ai | Đã thu: :capture",

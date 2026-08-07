@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "คงไว้ตามเดิม",
     "progress.capture": "บันทึกแล้ว",
+    "progress.game_coverage": ":percent% ของเกม",
+    "progress.game_coverage_hint": "สัดส่วนของเกมที่คำแปลนี้เข้าถึง วัดเทียบกับคำแปลที่ไปได้ไกลที่สุดของเกมเดียวกัน ไม่ว่าจะเป็นภาษาใด",
     "progress.capture_only": "บันทึกเท่านั้น",
     "progress.capture_only_desc": "ไฟล์นี้มีเฉพาะข้อความที่บันทึกไว้ ยังไม่มีการแปล",
     "progress.tooltip": "มนุษย์: :human | ตรวจแล้ว: :validated | AI: :ai | เก็บได้: :capture",

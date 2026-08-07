@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "そのまま維持",
     "progress.capture": "キャプチャ済み",
+    "progress.game_coverage": "ゲームの :percent %",
+    "progress.game_coverage_hint": "この翻訳がゲームのどこまで届いているか。同じゲームで最も先まで進んだ翻訳を基準にしています（言語は問いません）。",
     "progress.capture_only": "キャプチャのみ",
     "progress.capture_only_desc": "このファイルにはキャプチャされたテキストのみが含まれており、翻訳はまだありません",
     "progress.tooltip": "人手: :human | 確認済み: :validated | AI: :ai | 収集: :capture",

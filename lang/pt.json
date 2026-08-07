@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Mantido como está",
     "progress.capture": "Capturado",
+    "progress.game_coverage": ":percent % do jogo",
+    "progress.game_coverage_hint": "Parte do jogo que esta tradução alcança, medida face à tradução mais avançada do mesmo jogo, seja qual for a sua língua.",
     "progress.capture_only": "Apenas captura",
     "progress.capture_only_desc": "Este arquivo contém apenas texto capturado, sem traduções ainda",
     "progress.tooltip": "Humano: :human | Validado: :validated | IA: :ai | Capturado: :capture",
