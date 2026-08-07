@@ -197,7 +197,20 @@ class TranslationController extends Controller
         ]);
 
         $uuid = $request->uuid;
-        $userId = $request->user()->id;
+        $user = $request->user();
+        $userId = $user->id;
+
+        // The published translation of this lineage — the one the ranking ranks, and the one
+        // the mod's current-translation card lets a player vote on. Resolved for BOTH branches
+        // below: an author needs the count of their own work, a player needs to be able to
+        // thank the translation they are actually playing.
+        $publicTranslation = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'public')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        // Built by the model, so this endpoint and sync/state cannot describe a vote differently
+        $voteBlock = $publicTranslation?->voteStateFor($user);
 
         // Check if current user owns a translation with this UUID
         $ownTranslation = Translation::where('file_uuid', $uuid)
@@ -226,15 +239,12 @@ class TranslationController extends Controller
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
                 ],
                 'branches_count' => $branchesCount,
+                'vote' => $voteBlock,
             ]);
         }
 
         // Check if a Main exists with this UUID (user would become branch)
-        $mainTranslation = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'public')
-            ->with('user:id,name')
-            ->orderBy('created_at', 'asc')
-            ->first();
+        $mainTranslation = $publicTranslation?->loadMissing('user:id,name');
 
         if ($mainTranslation) {
             // Main exists, user would become a branch if they upload
@@ -249,6 +259,7 @@ class TranslationController extends Controller
                     'line_count' => $mainTranslation->line_count,
                     'updated_at' => $mainTranslation->updated_at->toIso8601String(),
                 ],
+                'vote' => $voteBlock,
             ]);
         }
 

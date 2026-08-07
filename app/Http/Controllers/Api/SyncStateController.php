@@ -28,7 +28,8 @@ class SyncStateController extends Controller
      *   "translation": { id, source_language, target_language, type, notes, line_count, file_hash, vote_count, updated_at } | null,
      *   "main": { id, uploader, source_language, target_language, line_count, file_hash, updated_at } | null,
      *   "branches_count": 0,
-     *   "has_update": false
+     *   "has_update": false,
+     *   "vote": { target_id, count, user_vote, can_vote } | null
      * }
      */
     public function show(Request $request): JsonResponse
@@ -39,10 +40,9 @@ class SyncStateController extends Controller
         ]);
 
         $uuid = $request->query('uuid');
-        $userId = $request->user()->id;
         $clientHash = $request->query('hash');
 
-        $state = $this->buildSyncState($uuid, $userId, $clientHash);
+        $state = $this->buildSyncState($uuid, $request->user(), $clientHash);
 
         return response()->json($state);
     }
@@ -51,7 +51,7 @@ class SyncStateController extends Controller
      * Build the combined sync state.
      * Extracted from SseController for reuse as REST endpoint.
      */
-    private function buildSyncState(string $uuid, int $userId, ?string $clientHash): array
+    private function buildSyncState(string $uuid, \App\Models\User $user, ?string $clientHash): array
     {
         $state = [
             'exists' => false,
@@ -60,11 +60,23 @@ class SyncStateController extends Controller
             'main' => null,
             'branches_count' => 0,
             'has_update' => false,
+            'vote' => null,
         ];
+
+        // Votes on the PUBLISHED translation of this lineage — the one the player is actually
+        // running, and the one the ranking ranks. Resolved whatever the caller's role: an
+        // author needs the count of their own work, a player needs to be able to thank it.
+        // Null when nothing of this lineage is published: no vote to show, not zero votes.
+        $publicTranslation = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'public')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        $state['vote'] = $publicTranslation?->voteStateFor($user);
 
         // Check if current user owns a translation with this UUID
         $ownTranslation = Translation::where('file_uuid', $uuid)
-            ->where('user_id', $userId)
+            ->where('user_id', $user->id)
             ->first();
 
         if ($ownTranslation) {
@@ -103,11 +115,7 @@ class SyncStateController extends Controller
                 // this block stopped here, so `main` stayed null and the branch
                 // diverged in silence, however long the Main kept moving.
                 // Additive field: an older mod simply ignores it.
-                $main = Translation::where('file_uuid', $uuid)
-                    ->where('visibility', 'public')
-                    ->with('user:id,name')
-                    ->orderBy('created_at', 'asc')
-                    ->first();
+                $main = $publicTranslation?->loadMissing('user:id,name');
 
                 if ($main) {
                     $state['main'] = [
@@ -130,11 +138,7 @@ class SyncStateController extends Controller
         }
 
         // Check if Main exists with this UUID (user would become branch)
-        $mainTranslation = Translation::where('file_uuid', $uuid)
-            ->where('visibility', 'public')
-            ->with('user:id,name')
-            ->orderBy('created_at', 'asc')
-            ->first();
+        $mainTranslation = $publicTranslation?->loadMissing('user:id,name');
 
         if ($mainTranslation) {
             $state['exists'] = true;

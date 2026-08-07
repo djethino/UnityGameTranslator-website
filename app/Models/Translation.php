@@ -551,6 +551,26 @@ class Translation extends Model
     }
 
     /**
+     * Everything the mod needs to show a vote on this translation, and nothing it should have
+     * to work out for itself.
+     *
+     * Two endpoints answer "what does the site know about this uuid" — sync/state, which feeds
+     * the mod's current-translation card, and check-uuid, which the upload flow asks. They must
+     * not describe a vote differently, so the block is built here once.
+     */
+    public function voteStateFor(?\App\Models\User $user): array
+    {
+        return [
+            'target_id' => $this->id,
+            'count' => $this->vote_count,
+            // Their own vote, so the arrow is already coloured when the panel opens rather
+            // than only after they vote a second time
+            'user_vote' => $user ? $this->userVoteFor($user)?->value : null,
+            'can_vote' => $this->canBeVotedBy($user),
+        ];
+    }
+
+    /**
      * Vote on this translation.
      * Accepts an optional user parameter for API context where auth() is not available.
      */
