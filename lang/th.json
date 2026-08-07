@@ -875,7 +875,7 @@
     "progress.capture": "บันทึกแล้ว",
     "progress.capture_only": "บันทึกเท่านั้น",
     "progress.capture_only_desc": "ไฟล์นี้มีเฉพาะข้อความที่บันทึกไว้ ยังไม่มีการแปล",
-    "progress.tooltip": "มนุษย์: :human | ตรวจสอบแล้ว: :validated | AI: :ai | บันทึก: :capture | คุณภาพ: :quality/3",
+    "progress.tooltip": "มนุษย์: :human | ตรวจแล้ว: :validated | AI: :ai | เก็บได้: :capture",
     "rating.not_main_owner": "เฉพาะเจ้าของ Main เท่านั้นที่สามารถให้คะแนน branches",
     "rating.cannot_rate_main": "ไม่สามารถให้คะแนนการแปล Main",
     "rating.rate_branch": "ให้ :stars ดาว",

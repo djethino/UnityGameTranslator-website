@@ -875,7 +875,7 @@
     "progress.capture": "Captures",
     "progress.capture_only": "Capture seul.",
     "progress.capture_only_desc": "Ce fichier contient uniquement des textes capturés, pas encore de traductions",
-    "progress.tooltip": "Humain: :human | Validé: :validated | IA: :ai | Capture: :capture | Qualité: :quality/3",
+    "progress.tooltip": "Humain : :human | Validé : :validated | IA : :ai | Capturé : :capture",
     "rating.not_main_owner": "Seul le propriétaire principal peut noter les branches.",
     "rating.cannot_rate_main": "Impossible de noter la traduction principale.",
     "rating.rate_branch": "Noter :stars étoile(s)",

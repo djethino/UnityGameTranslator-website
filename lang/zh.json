@@ -875,7 +875,7 @@
     "progress.capture": "已捕获",
     "progress.capture_only": "仅捕获",
     "progress.capture_only_desc": "此文件仅包含捕获的文本，尚无翻译",
-    "progress.tooltip": "人工: :human | 已验证: :validated | AI: :ai | 捕获: :capture | 质量: :quality/3",
+    "progress.tooltip": "人工：:human | 已确认：:validated | AI：:ai | 已采集：:capture",
     "rating.not_main_owner": "只有主翻译所有者可以评价分支。",
     "rating.cannot_rate_main": "无法评价主翻译。",
     "rating.rate_branch": "评价 :stars 星",

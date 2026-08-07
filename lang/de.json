@@ -875,7 +875,7 @@
     "progress.capture": "Erfasst",
     "progress.capture_only": "Nur Erfassung",
     "progress.capture_only_desc": "Diese Datei enthält nur erfassten Text, noch keine Übersetzungen",
-    "progress.tooltip": "Mensch: :human | Validiert: :validated | KI: :ai | Erfassung: :capture | Qualität: :quality/3",
+    "progress.tooltip": "Mensch: :human | Geprüft: :validated | KI: :ai | Erfasst: :capture",
     "rating.not_main_owner": "Nur der Hauptbesitzer kann Branches bewerten.",
     "rating.cannot_rate_main": "Die Hauptübersetzung kann nicht bewertet werden.",
     "rating.rate_branch": ":stars Stern(e) bewerten",

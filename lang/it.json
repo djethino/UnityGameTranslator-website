@@ -875,7 +875,7 @@
     "progress.capture": "Catturato",
     "progress.capture_only": "Solo cattura",
     "progress.capture_only_desc": "Questo file contiene solo testo catturato, ancora nessuna traduzione",
-    "progress.tooltip": "Umano: :human | Validato: :validated | IA: :ai | Cattura: :capture | Qualità: :quality/3",
+    "progress.tooltip": "Umano: :human | Convalidato: :validated | IA: :ai | Catturato: :capture",
     "rating.not_main_owner": "Solo il proprietario principale può valutare i branch.",
     "rating.cannot_rate_main": "Non è possibile valutare la traduzione principale.",
     "rating.rate_branch": "Valuta :stars stella/e",

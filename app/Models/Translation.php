@@ -819,6 +819,31 @@ class Translation extends Model
     // =========================================
 
     /**
+     * Lines whose final state a human settled: written (H), accepted (V), or deliberately kept
+     * as they were (S).
+     *
+     * S belongs here. In a Star Trek game translated to Japanese, the Klingon has to stay
+     * Klingon, and the author who took the trouble to rule on those lines did better work than
+     * the one who let the machine run over everything. Nothing else in the file records that
+     * effort — and since the mod stopped writing S for texts it simply could not handle, the
+     * tag has no non-human origin left in a default install.
+     */
+    public function getReviewedLinesAttribute(): int
+    {
+        return $this->human_count + $this->validated_count + $this->skipped_count;
+    }
+
+    /**
+     * Every line that has a settled state, human or machine. The denominator of both rates
+     * below. Captured-but-untouched lines stay out: the bar already shows them in grey, and
+     * folding them in here would turn a quality measure into a progress measure.
+     */
+    public function getResolvedLinesAttribute(): int
+    {
+        return $this->reviewed_lines + $this->ai_count;
+    }
+
+    /**
      * Get effective lines count (excludes capture, S, M).
      * These are the lines that actually have translations.
      */
@@ -831,6 +856,9 @@ class Translation extends Model
      * Get quality score based on translation source quality.
      * Formula: (H*3 + V*2 + A*1) / effective_lines
      * Returns 0-3 scale where 3 = all human translations.
+     *
+     * @deprecated Superseded by reviewRate(). Kept only until the API stops reporting it —
+     *             see the docs section on how the three algorithms work.
      */
     public function getQualityScoreAttribute(): float
     {
@@ -844,16 +872,134 @@ class Translation extends Model
     }
 
     /**
-     * How much of the file a human has actually read: (H+V) / translated lines.
+     * How much of the file a human settled, plainly: reviewed / resolved.
      *
-     * Null when nothing is translated yet — a capture-only file has no coverage, not a coverage
-     * of zero, and the difference matters to whoever sees the result.
+     * No weighting here on purpose — this is the number the STAGE is read from, and the stage is
+     * shown to everyone. It answers one question and states a fact.
+     *
+     * Null when nothing is translated: a capture-only file has no coverage, not a coverage of
+     * zero. A file made ENTIRELY of kept-as-is lines is the same case — every line was settled,
+     * but there is no translation to have an opinion about.
      */
     public function reviewCoverage(): ?float
     {
-        $translated = $this->effective_lines;
+        if ($this->effective_lines === 0) {
+            return null;
+        }
 
-        return $translated > 0 ? ($this->human_count + $this->validated_count) / $translated : null;
+        return $this->reviewed_lines / $this->resolved_lines;
+    }
+
+    /**
+     * Largest resolved-line count among this game's translations, when the caller already knows
+     * it. Set it before reading ranking_score on a page that lists several translations — the
+     * accessor takes no arguments, and without this each card asks the database its own MAX.
+     */
+    public ?int $gameMaxHint = null;
+
+    /** A validation counts at least this much, even with nothing to corroborate it. */
+    private const VALIDATION_FLOOR = 0.8;
+
+    /** One intervention in ten is enough to credit validations in full. */
+    private const INTERVENTION_TARGET = 0.10;
+
+    /**
+     * The same coverage, weighted by how well evidenced the validations are.
+     *
+     * Accepting the machine's output IS review, and a small game where the AI got everything
+     * right is a real case — nobody should have to retype correct text to score well. But
+     * bulk-validating a file without reading it produces exactly the same tags as reading it
+     * carefully, and something has to separate them.
+     *
+     * What separates them is the rest of the file: someone who genuinely read two thousand AI
+     * lines changed some of them. So validations count in full as soon as the file shows one
+     * intervention in ten, and never fall below VALIDATION_FLOOR otherwise. The floor is
+     * deliberately high: the formula is public and stays generous, and deliberate gaming — one
+     * token edit per ten lines buys full credit — is a matter for the admin anomaly detector,
+     * not for a number shown to people.
+     *
+     * Owner-facing and feeds the ranking; the public sees the stage, not this.
+     */
+    public function reviewRate(): ?float
+    {
+        if ($this->effective_lines === 0) {
+            return null;
+        }
+
+        $reviewed = $this->reviewed_lines;
+        $interventions = $this->human_count + $this->skipped_count;
+
+        $factor = self::VALIDATION_FLOOR;
+        if ($reviewed > 0) {
+            $rate = $interventions / $reviewed;
+            $factor += (1 - self::VALIDATION_FLOOR)
+                * min(1.0, $rate / self::INTERVENTION_TARGET);
+        }
+
+        $credited = $interventions + ($factor * $this->validated_count);
+
+        return $credited / $this->resolved_lines;
+    }
+
+    /**
+     * How much of the game this translation actually reaches, from 0 to 1.
+     *
+     * A game's real line count is unknowable — text is captured as it is met, and nobody walks
+     * every branch. But the OTHER translations of the same game know something about it: whatever
+     * the target language, the same keys turn up as players get further in. The largest of them
+     * is therefore an honest lower bound on the game's size, and it corrects itself upwards as
+     * people play further.
+     *
+     * Counts resolved lines, not the file's line count: five thousand captured-but-untranslated
+     * lines would otherwise claim to cover the whole game while translating none of it.
+     *
+     * Pass $gameMax when several translations are being measured at once — the caller has them
+     * all in hand, and asking the database once per card is how a game page ends up with fifty
+     * queries. Null when nothing anywhere is translated yet.
+     */
+    public function gameCoverage(?int $gameMax = null): ?float
+    {
+        $mine = $this->resolved_lines;
+        $max = $gameMax ?? $this->gameMaxHint ?? static::maxResolvedLinesForGame($this->game_id);
+
+        if ($max <= 0) {
+            return null;
+        }
+
+        return min(1.0, $mine / $max);
+    }
+
+    /**
+     * The largest resolved-line count among a game's PUBLISHED translations.
+     *
+     * Public only: a branch is someone's unfinished contribution, and letting it set the bar
+     * would measure everyone against work nobody has offered.
+     */
+    public static function maxResolvedLinesForGame(int $gameId): int
+    {
+        return (int) static::where('game_id', $gameId)
+            ->where('visibility', 'public')
+            ->selectRaw('MAX(human_count + validated_count + skipped_count + ai_count) as m')
+            ->value('m');
+    }
+
+    /**
+     * Same thing for a whole page of translations, in one query: game id => largest count.
+     */
+    public static function maxResolvedLinesByGame(iterable $gameIds): array
+    {
+        $ids = collect($gameIds)->filter()->unique()->values();
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return static::whereIn('game_id', $ids)
+            ->where('visibility', 'public')
+            ->groupBy('game_id')
+            ->selectRaw('game_id, MAX(human_count + validated_count + skipped_count + ai_count) as m')
+            ->pluck('m', 'game_id')
+            ->map(fn ($m) => (int) $m)
+            ->toArray();
     }
 
     /**
@@ -928,21 +1074,56 @@ class Translation extends Model
     }
 
     /**
-     * Get full ranking score for sorting translations.
-     * Combines quality, freshness, and engagement metrics.
+     * What "just being there" is worth against "having been reviewed", from 0 to 1.
      *
-     * Formula: (quality_score * 10 + engagement) * freshness * fork_bonus
+     * An editorial choice, not a technical one, which is why it is named and published rather
+     * than buried in an expression. At 0.5, a complete but unreviewed translation is worth half
+     * of a complete and reviewed one — and still ranks above a beautifully reviewed file that
+     * only covers a fifth of the game. Someone about to play the whole thing needs the text to
+     * exist first.
+     */
+    public const COVERAGE_BASE = 0.5;
+
+    /**
+     * How useful this translation is to someone about to play THIS game, from 0 to 1.
+     *
+     * Coverage sets the ceiling, review lifts within it. Deliberately not a product of the two:
+     * that would send a complete but unreviewed translation to zero, when raw machine output
+     * over a whole game is precisely what the mod exists to produce and is genuinely usable.
+     *
+     * This is the answer to "which one do I take", and it is the only place the two rates are
+     * combined. The stage answers "has anyone read it", the review rate answers "how well" —
+     * neither of them knows how much of the game is in the file.
+     */
+    public function usefulness(?int $gameMax = null): float
+    {
+        $coverage = $this->gameCoverage($gameMax) ?? 0.0;
+        $rate = $this->reviewRate() ?? 0.0;
+
+        return $coverage * (self::COVERAGE_BASE + (1 - self::COVERAGE_BASE) * $rate);
+    }
+
+    /**
+     * Get full ranking score for sorting translations.
+     *
+     * Formula: (usefulness * 30 + engagement) * freshness * fork_bonus
      *
      * Components:
-     * - quality_score: 0-3 based on H/V/A distribution
+     * - usefulness: how much of the game is covered, lifted by how much of it was reviewed
      * - engagement: vote_count + log(download_count + 1)
      * - freshness: 1.0 for recent, decays over time (90 day half-life)
      * - fork_bonus: 1.2 for active forks of abandoned translations
+     *
+     * The quality term used to be quality_score * 10, a 0-3 average of where each line came
+     * from. It could not see how much of the game a file reached: two hundred lines reviewed to
+     * the last comma outranked four thousand lines at sixty per cent, though the second is what
+     * someone playing the game actually needs.
      */
     public function getRankingScoreAttribute(): float
     {
-        // Base quality (0-30 range)
-        $quality = $this->quality_score * 10;
+        // Usefulness on the same 0-30 range the old quality term occupied, so the engagement
+        // and freshness terms keep the weight they were tuned against.
+        $quality = $this->usefulness() * 30;
 
         // Engagement: votes + logarithmic downloads
         $engagement = $this->vote_count + log10($this->download_count + 1);

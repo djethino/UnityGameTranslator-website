@@ -875,7 +875,7 @@
     "progress.capture": "ملتقط",
     "progress.capture_only": "التقاط فقط",
     "progress.capture_only_desc": "هذا الملف يحتوي فقط على نصوص ملتقطة، بدون ترجمات بعد",
-    "progress.tooltip": "بشري: :human | معتمد: :validated | آلي: :ai | التقاط: :capture | الجودة: :quality/3",
+    "progress.tooltip": "بشري: :human | مُدقَّق: :validated | ذكاء اصطناعي: :ai | مُلتقَط: :capture",
     "rating.not_main_owner": "فقط مالك Main يمكنه تقييم الفروع.",
     "rating.cannot_rate_main": "لا يمكن تقييم ترجمة Main.",
     "rating.rate_branch": "تقييم :stars نجمة(نجمات)",

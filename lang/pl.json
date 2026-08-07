@@ -875,7 +875,7 @@
     "progress.capture": "Przechwycone",
     "progress.capture_only": "Tylko przechwytywanie",
     "progress.capture_only_desc": "Ten plik zawiera tylko przechwycony tekst, bez tłumaczeń",
-    "progress.tooltip": "Człowiek: :human | Zweryfikowane: :validated | AI: :ai | Przechwytywanie: :capture | Jakość: :quality/3",
+    "progress.tooltip": "Człowiek: :human | Zatwierdzone: :validated | SI: :ai | Przechwycone: :capture",
     "rating.not_main_owner": "Tylko właściciel Main może oceniać gałęzi.",
     "rating.cannot_rate_main": "Nie można ocenić głównego tłumaczenia.",
     "rating.rate_branch": "Oceń :stars gwiazdka/gwiazdki",

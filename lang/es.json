@@ -875,7 +875,7 @@
     "progress.capture": "Capturado",
     "progress.capture_only": "Solo captura",
     "progress.capture_only_desc": "Este archivo solo contiene texto capturado, aún no hay traducciones",
-    "progress.tooltip": "Humano: :human | Validado: :validated | IA: :ai | Captura: :capture | Calidad: :quality/3",
+    "progress.tooltip": "Humano: :human | Validado: :validated | IA: :ai | Capturado: :capture",
     "rating.not_main_owner": "Solo el propietario principal puede calificar ramas.",
     "rating.cannot_rate_main": "No se puede calificar la traducción principal.",
     "rating.rate_branch": "Calificar :stars estrella(s)",

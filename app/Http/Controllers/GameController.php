@@ -139,6 +139,15 @@ class GameController extends Controller
 
         $allTranslations = $query->orderBy('created_at', 'desc')->get();
 
+        // How far the furthest translation of this game reaches, asked ONCE. Every card needs it
+        // to say what share of the game it covers, and the accessor would otherwise run its own
+        // MAX per translation. Taken from the whole game, never from $allTranslations: those are
+        // filtered by language, and a French-only view must not shrink the yardstick.
+        $gameMaxResolved = Translation::maxResolvedLinesForGame($game->id);
+        foreach ($allTranslations as $t) {
+            $t->gameMaxHint = $gameMaxResolved;
+        }
+
         // Group translations by file_uuid
         // Structure: [uuid => [primary, versions[], forks[]]]
         $translationGroups = [];
@@ -214,7 +223,11 @@ class GameController extends Controller
         $groupsCollection = collect($translationGroups);
 
         $groupsCollection = match ($sort) {
-            'quality' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->quality_score ?? 0),
+            // "Quality" now means usefulness: how much of the game is covered, lifted by how much
+            // of it was reviewed. On the old 0-3 average, two hundred lines polished to the last
+            // comma outranked four thousand at sixty per cent — the opposite of what someone
+            // about to play the game needs.
+            'quality' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->usefulness() ?? 0),
             'votes' => $groupsCollection->sortByDesc(fn($g) => $g['best_vote']),
             'lines' => $groupsCollection->sortByDesc(fn($g) => $g['primary']?->line_count ?? 0),
             'downloads' => $groupsCollection->sortByDesc(fn($g) => $g['total_downloads']),

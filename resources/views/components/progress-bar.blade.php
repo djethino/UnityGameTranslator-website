@@ -20,19 +20,25 @@
         $humanPercent = $validatedPercent = $aiPercent = $skippedPercent = $capturePercent = 0;
     }
 
-    // Quality score (0-3 scale, show as percentage of max)
-    $qualityPercent = ($translation->quality_score / 3) * 100;
 @endphp
 
 <div {{ $attributes->merge(['class' => 'progress-bar-wrapper']) }}>
-    {{-- Composition bar --}}
+    {{-- Composition bar.
+
+         The tooltip carries counts and nothing else. It used to end with "Quality: X/3", which
+         was the only place that score reached a visitor at all — it is an author-facing number,
+         and a scale nobody could read besides.
+
+         Kept-as-is is deliberately NOT listed here, though it owns a band in the bar: this
+         string has no way to drop a line when its count is zero, and "Kept as is: 0" on every
+         translation that has none is exactly the noise the legend avoids. The legend names it
+         where it exists. --}}
     <div class="h-2 bg-gray-700 rounded-full overflow-hidden flex"
          title="{{ __('progress.tooltip', [
              'human' => $translation->human_count,
              'validated' => $translation->validated_count,
              'ai' => $translation->ai_count,
              'capture' => $captureCount,
-             'quality' => number_format($translation->quality_score, 1)
          ]) }}">
         @if($humanPercent > 0)
             <div class="bg-green-500 h-full" style="width: {{ $humanPercent }}%"></div>
