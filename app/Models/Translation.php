@@ -1128,15 +1128,28 @@ class Translation extends Model
         // Engagement: votes + logarithmic downloads
         $engagement = $this->vote_count + log10($this->download_count + 1);
 
-        // Freshness decay (90-day half-life), on the date the TRANSLATION changed.
+        // Freshness decay (90-day half-life), on the date the TRANSLATION changed, and ONLY for
+        // work still declared in progress.
         //
-        // It read updated_at, which increment('vote_count') and incrementDownloads() both move.
-        // A downvote therefore reset the decay to 1.0 while costing a single engagement point:
-        // on a year-old abandoned file (freshness 0.06) the score went UP roughly sevenfold, and
-        // far more on an older one. Downvoting an abandoned capture-only upload promoted it —
-        // the exact opposite of what the vote is for.
-        $daysSinceUpdate = $this->contentChangedAt()->diffInDays(now());
-        $freshness = pow(0.5, $daysSinceUpdate / 90);
+        // "Finished" and "abandoned" have the same signature in time — nothing moves in either —
+        // so a decay applied to both drove a finished translation to 6% of its score within a
+        // year and out of sight, however good it was. The author's own declared status is what
+        // separates them, and it is the only thing that can.
+        //
+        // A finished translation is not left unranked for it: its rank follows its coverage, and
+        // that falls when another translation of the same game goes further. Which is a better
+        // measure of going stale than the calendar, because it is driven by text somebody
+        // actually met rather than by time passing over a game that may never have changed.
+        //
+        // The date read is contentChangedAt, never updated_at: increment('vote_count') and
+        // incrementDownloads() both move updated_at, so a downvote used to reset the decay to
+        // 1.0 for the price of one engagement point — on a year-old abandoned file that raised
+        // the score roughly sevenfold. Downvoting an abandoned upload promoted it.
+        $freshness = 1.0;
+        if (!$this->isComplete()) {
+            $daysSinceUpdate = $this->contentChangedAt()->diffInDays(now());
+            $freshness = pow(0.5, $daysSinceUpdate / 90);
+        }
 
         // Fork bonus
         $bonus = $this->fork_bonus;

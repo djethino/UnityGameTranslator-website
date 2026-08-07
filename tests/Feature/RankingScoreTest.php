@@ -112,6 +112,47 @@ class RankingScoreTest extends TestCase
         $this->assertGreaterThan($before * 5, $after);
     }
 
+    public function test_a_finished_translation_does_not_fade_with_time(): void
+    {
+        $done = $this->makeTranslation(['status' => 'complete']);
+        $this->backdate($done, 400);
+
+        // "Finished" and "abandoned" look identical in time — nothing moves in either — and a
+        // decay applied to both drove a finished translation to a fraction of its score within
+        // a year, out of sight however good it was. The author's declared status is the only
+        // thing that separates them.
+        $this->assertEqualsWithDelta(
+            $done->fresh()->usefulness() * 30 + log10(1),
+            $done->fresh()->ranking_score,
+            0.01
+        );
+    }
+
+    public function test_work_still_in_progress_and_standing_still_does_fade(): void
+    {
+        $stalled = $this->makeTranslation(['status' => 'in_progress']);
+        $this->backdate($stalled, 400);
+
+        // This is where "nothing has moved" really means abandoned
+        $this->assertLessThan($stalled->fresh()->usefulness() * 30 * 0.2, $stalled->fresh()->ranking_score);
+    }
+
+    public function test_a_finished_translation_still_falls_behind_one_that_goes_further(): void
+    {
+        $game = Game::firstOrCreate(['slug' => 'stale-game'], ['name' => 'Stale Game']);
+
+        $frozen = $this->makeTranslation(['status' => 'complete', 'human_count' => 1000, 'game_id' => $game->id]);
+        $this->backdate($frozen, 400);
+
+        $before = $frozen->fresh()->ranking_score;
+
+        // Someone plays the updated game further and captures what the frozen file never saw.
+        // Nothing about the frozen file changed, and yet its share of the game did.
+        $this->makeTranslation(['status' => 'in_progress', 'human_count' => 2000, 'game_id' => $game->id]);
+
+        $this->assertLessThan($before, $frozen->fresh()->ranking_score);
+    }
+
     public function test_a_fork_of_a_still_downloaded_but_abandoned_parent_gets_its_bonus(): void
     {
         $parent = $this->makeTranslation();
