@@ -66,12 +66,28 @@ class TranslationController extends Controller
         // Note: 'type' filter removed - type is now a computed accessor from HVASM stats
         // and cannot be filtered at the database level
 
-        // Order by votes (best first), then by downloads
-        $translations = $query
-            ->orderBy('vote_count', 'desc')
-            ->orderBy('download_count', 'desc')
-            ->limit(50)
-            ->get();
+        // Ordered like the website: how much of the game a translation reaches, lifted by how
+        // much of it was reviewed, then reception and freshness.
+        //
+        // It used to be votes then downloads, which meant the ONE screen where players actually
+        // choose a translation was ordered by the weakest signal we have — most translations
+        // have never been voted on at all, so in practice it was a download count. It ignored
+        // review, coverage and whether the file was still maintained.
+        //
+        // Sorted in PHP because usefulness reads the game's other translations and cannot be
+        // expressed in this query. The cap is applied AFTER sorting, so the top of the list is
+        // the real top: cutting first would have ranked an arbitrary fifty.
+        $candidates = $query->limit(300)->get();
+
+        $gameMaxes = Translation::maxResolvedLinesByGame($candidates->pluck('game_id'));
+        foreach ($candidates as $candidate) {
+            $candidate->gameMaxHint = $gameMaxes[$candidate->game_id] ?? 0;
+        }
+
+        $translations = $candidates
+            ->sortByDesc(fn (Translation $t) => $t->ranking_score)
+            ->take(50)
+            ->values();
 
         // The caller's own votes, in ONE query for the whole page (auth.api.optional resolves the
         // user only when a valid token was sent; voting requires an account, so anonymous callers
@@ -113,7 +129,13 @@ class TranslationController extends Controller
                     'capture_count' => $t->capture_count,
                     // Neither a translation nor missing work: shown on its own, never in the bar
                     'skipped_count' => $t->skipped_count,
+                    // Kept for mods already published that read it; superseded by the two below
                     'quality_score' => $t->quality_score,
+                    // Share of the file a human settled, and share of the game it reaches. The
+                    // mod cannot work the second one out on its own: it would need every other
+                    // translation of the game. Additive fields — an older mod ignores them.
+                    'review_coverage' => $t->reviewCoverage(),
+                    'game_coverage' => $t->gameCoverage(),
                     'file_hash' => $t->file_hash,
                     'file_uuid' => $t->file_uuid,
                     // Kept for mods that already read it, but it moves on a vote

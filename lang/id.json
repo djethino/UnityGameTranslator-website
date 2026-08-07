@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Dihitung sudah selesai, bukan pekerjaan tersisa",
     "docs.nav.algorithms": "Dari mana angkanya berasal",
     "docs.algorithms.title": "Dari mana angkanya berasal",
-    "docs.algorithms.intro": "Setiap angka yang situs ini tampilkan tentang sebuah terjemahan berasal dari rumus, dan semuanya diterbitkan di bawah. Angka-angka ini membantu Anda memilih terjemahan dan menunjukkan kepada penulis sejauh mana pekerjaannya — tidak ada yang disusun di sini untuk menahan perhatian Anda.",
+    "docs.algorithms.intro": "Setiap angka yang situs ini tampilkan tentang sebuah terjemahan berasal dari rumus, dan semuanya diterbitkan di bawah. Angka-angka ini membantu Anda memilih terjemahan dan menunjukkan kepada penulis sejauh mana pekerjaannya.",
     "docs.algorithms.stage_title": "Tahap peninjauan",
     "docs.algorithms.stage_desc": "Bagian berkas yang rumusannya ditetapkan manusia: ditulis, diterima, atau sengaja dibiarkan. Ditampilkan sebagai tahap, bukan nilai, karena setiap terjemahan bermula sebagai keluaran mesin — itu titik awal, bukan rapor buruk. Berkas tanpa satu pun terjemahan tidak punya tahap sama sekali.",
     "docs.algorithms.rate_title": "Tingkat peninjauan",

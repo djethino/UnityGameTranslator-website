@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Telt als afgehandeld, nooit als openstaand werk",
     "docs.nav.algorithms": "Waar de cijfers vandaan komen",
     "docs.algorithms.title": "Waar de cijfers vandaan komen",
-    "docs.algorithms.intro": "Elk cijfer dat deze site over een vertaling toont komt uit een formule, en ze staan hieronder allemaal. Ze zijn er om je te helpen kiezen en om een auteur te laten zien waar zijn werk staat — niets hier is bedoeld om je aandacht vast te houden.",
+    "docs.algorithms.intro": "Elk cijfer dat deze site over een vertaling toont komt uit een formule, en ze staan hieronder allemaal. Ze zijn er om je te helpen kiezen en om een auteur te laten zien waar zijn werk staat.",
     "docs.algorithms.stage_title": "Nakijkfase",
     "docs.algorithms.stage_desc": "Het deel van een bestand waarvan een mens de formulering heeft vastgelegd: geschreven, aanvaard of bewust ongewijzigd gelaten. Getoond als fase en niet als cijfer, want elke vertaling begint als machine-uitvoer — dat is een startpunt, geen onvoldoende. Een bestand zonder enige vertaling heeft helemaal geen fase.",
     "docs.algorithms.rate_title": "Nakijkgraad",

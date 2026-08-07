@@ -570,37 +570,63 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.algorithms.intro') }}</p>
 
-                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.stage_title') }}</h3>
-                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.stage_desc') }}</p>
-                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S) / (H + V + S + A)</pre>
-                <ul class="text-sm text-gray-400 mb-6 space-y-1">
-                    <li>100 % — {{ __('progress.stage.reviewed') }}</li>
-                    <li>40 % … 99 % — {{ __('progress.stage.advanced') }}</li>
-                    <li>1 % … 39 % — {{ __('progress.stage.started') }}</li>
-                    <li>0 % — {{ __('progress.stage.machine') }}</li>
-                </ul>
+                {{-- One card per algorithm, in reading order: what a file is worth on its own,
+                     then how far it reaches, then how the two decide the order. The dots on the
+                     thresholds carry the colours of the badges they describe. --}}
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-blue-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-list-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.stage_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.stage_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S) / (H + V + S + A)</pre>
+                    <ul class="text-sm text-gray-400 space-y-1">
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>100 % — {{ __('progress.stage.reviewed') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>40 % … 99 % — {{ __('progress.stage.advanced') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>1 % … 39 % — {{ __('progress.stage.started') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-600 mr-2"></span>0 % — {{ __('progress.stage.machine') }}</li>
+                    </ul>
+                </div>
 
-                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.rate_title') }}</h3>
-                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.rate_desc') }}</p>
-                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + S + c × V) / (H + V + S + A)
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-green-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-user-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.rate_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.rate_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + S + c × V) / (H + V + S + A)
 c = 0.8 → 1.0</pre>
-                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.rate_limit') }}</p>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.rate_limit') }}
+                    </p>
+                </div>
 
-                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.coverage_title') }}</h3>
-                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.coverage_desc') }}</p>
-                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / max(H + V + S + A)</pre>
-                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.coverage_caveat') }}</p>
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-cyan-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-map-location-dot mr-2 text-purple-400"></i>{{ __('docs.algorithms.coverage_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.coverage_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / max(H + V + S + A)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.coverage_caveat') }}
+                    </p>
+                </div>
 
-                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.order_title') }}</h3>
-                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.order_desc') }}</p>
-                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">coverage × (0.5 + 0.5 × rate)</pre>
-                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.order_base') }}</p>
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-purple-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-arrow-down-wide-short mr-2 text-purple-400"></i>{{ __('docs.algorithms.order_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.order_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">coverage × (0.5 + 0.5 × rate)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.order_base') }}
+                    </p>
+                </div>
 
-                <div class="p-4 bg-gray-900 rounded-lg">
-                    <h4 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-eye mr-2 text-purple-400"></i>{{ __('docs.algorithms.visibility_title') }}
-                    </h4>
-                    <p class="text-sm text-gray-300">{{ __('docs.algorithms.visibility_desc') }}</p>
+                <div class="callout callout-tip">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-eye text-blue-400 mr-2"></i>
+                        <strong>{{ __('docs.algorithms.visibility_title') }}</strong><br>
+                        {{ __('docs.algorithms.visibility_desc') }}
+                    </p>
                 </div>
             </div>
         </section>

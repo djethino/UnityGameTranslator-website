@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Zählt als erledigt, nie als offene Arbeit",
     "docs.nav.algorithms": "Woher die Zahlen kommen",
     "docs.algorithms.title": "Woher die Zahlen kommen",
-    "docs.algorithms.intro": "Jede Zahl, die diese Seite über eine Übersetzung zeigt, stammt aus einer Formel, und alle stehen unten. Sie sind dazu da, Ihnen die Wahl einer Übersetzung zu erleichtern und einem Autor zu zeigen, wo seine Arbeit steht — nichts hier ist darauf angelegt, Ihre Aufmerksamkeit zu binden.",
+    "docs.algorithms.intro": "Jede Zahl, die diese Seite über eine Übersetzung zeigt, stammt aus einer Formel, und alle stehen unten. Sie sind dazu da, Ihnen die Wahl einer Übersetzung zu erleichtern und einem Autor zu zeigen, wo seine Arbeit steht.",
     "docs.algorithms.stage_title": "Prüfstand",
     "docs.algorithms.stage_desc": "Der Anteil einer Datei, dessen Wortlaut ein Mensch festgelegt hat: geschrieben, angenommen oder bewusst so belassen. Als Stufe gezeigt und nicht als Note, denn jede Übersetzung beginnt als Maschinenausgabe — das ist ein Ausgangspunkt, kein schlechtes Zeugnis. Eine Datei ohne jede Übersetzung hat gar keine Stufe.",
     "docs.algorithms.rate_title": "Prüfquote",

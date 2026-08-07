@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Halledilmiş sayılır, kalan iş olarak değil",
     "docs.nav.algorithms": "Sayılar nereden geliyor",
     "docs.algorithms.title": "Sayılar nereden geliyor",
-    "docs.algorithms.intro": "Bu sitenin bir çeviri hakkında gösterdiği her sayı bir formülden gelir ve hepsi aşağıda yayımlanmıştır. Bir çeviri seçmenize yardım etmek ve bir yazarın işinin nerede olduğunu göstermek için vardır; burada hiçbir şey dikkatinizi tutmak üzere düzenlenmemiştir.",
+    "docs.algorithms.intro": "Bu sitenin bir çeviri hakkında gösterdiği her sayı bir formülden gelir ve hepsi aşağıda yayımlanmıştır. Bir çeviri seçmenize yardım etmek ve bir yazarın işinin nerede olduğunu göstermek için vardır.",
     "docs.algorithms.stage_title": "Gözden geçirme aşaması",
     "docs.algorithms.stage_desc": "Bir dosyanın, ifadesini bir insanın belirlediği kısmı: yazılmış, kabul edilmiş ya da bilerek olduğu gibi bırakılmış. Not olarak değil aşama olarak gösterilir, çünkü her çeviri makine çıktısı olarak başlar — bu bir başlangıç noktasıdır, kötü bir karne değil. Hiçbir şeyi çevrilmemiş bir dosyanın aşaması hiç yoktur.",
     "docs.algorithms.rate_title": "Gözden geçirme oranı",

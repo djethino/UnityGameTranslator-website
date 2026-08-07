@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "计为已处理，而非待办工作",
     "docs.nav.algorithms": "数字从何而来",
     "docs.algorithms.title": "数字从何而来",
-    "docs.algorithms.intro": "本站关于翻译显示的每一个数字都来自某个公式，全部公布于下。它们的用途是帮助你挑选翻译，以及让作者看到自己的工作进展到哪里——这里没有任何内容是为了留住你的注意力而安排的。",
+    "docs.algorithms.intro": "本站关于翻译显示的每一个数字都来自某个公式，全部公布于下。它们的用途是帮助你挑选翻译，以及让作者看到自己的工作进展到哪里。",
     "docs.algorithms.stage_title": "校对阶段",
     "docs.algorithms.stage_desc": "文件中由人确定最终措辞的比例：自己写的、采纳的，或有意保持原样的。以阶段而非分数呈现，因为任何翻译都始于机器输出——那是起点，不是不及格。没有任何译文的文件根本没有阶段。",
     "docs.algorithms.rate_title": "校对比例",

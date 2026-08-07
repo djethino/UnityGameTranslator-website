@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Counts as settled, never as work left to do",
     "docs.nav.algorithms": "How the numbers work",
     "docs.algorithms.title": "How the numbers work",
-    "docs.algorithms.intro": "Every figure this site shows about a translation comes from a formula, and all of them are published below. They exist to help you pick a translation and to let an author see where their work stands — nothing here is arranged to hold your attention.",
+    "docs.algorithms.intro": "Every figure this site shows about a translation comes from a formula, and all of them are published below. They exist to help you pick a translation and to let an author see where their work stands.",
     "docs.algorithms.stage_title": "Review stage",
     "docs.algorithms.stage_desc": "The share of a file whose wording a human settled: written, accepted, or deliberately kept. Shown as a step rather than a mark, because every translation begins as machine output — that is a starting point, not a failing grade. A file with nothing translated has no stage at all.",
     "docs.algorithms.rate_title": "Review rate",

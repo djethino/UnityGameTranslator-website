@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Compte comme réglée, jamais comme du travail restant",
     "docs.nav.algorithms": "D'où viennent les chiffres",
     "docs.algorithms.title": "D'où viennent les chiffres",
-    "docs.algorithms.intro": "Chaque chiffre affiché sur ce site à propos d'une traduction sort d'une formule, et toutes sont publiées ci-dessous. Elles servent à vous aider à choisir une traduction et à montrer à un auteur où en est son travail — rien n'est agencé ici pour capter votre attention.",
+    "docs.algorithms.intro": "Chaque chiffre affiché sur ce site à propos d'une traduction sort d'une formule, et toutes sont publiées ci-dessous. Elles servent à vous aider à choisir une traduction et à montrer à un auteur où en est son travail.",
     "docs.algorithms.stage_title": "Étape de relecture",
     "docs.algorithms.stage_desc": "La part du fichier dont la formulation a été arrêtée par un humain : écrite, acceptée, ou délibérément conservée. Présentée comme une étape et non comme une note, parce que toute traduction commence en sortie de machine — c'est un point de départ, pas un mauvais bulletin. Un fichier dont rien n'est traduit n'a pas d'étape du tout.",
     "docs.algorithms.rate_title": "Taux de relecture",

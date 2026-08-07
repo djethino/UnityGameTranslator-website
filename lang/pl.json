@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Liczy się jako załatwione, nigdy jako praca do zrobienia",
     "docs.nav.algorithms": "Skąd biorą się liczby",
     "docs.algorithms.title": "Skąd biorą się liczby",
-    "docs.algorithms.intro": "Każda liczba, którą ta witryna pokazuje o tłumaczeniu, pochodzi ze wzoru, a wszystkie wzory są poniżej. Służą temu, by pomóc ci wybrać tłumaczenie i by autor widział, na jakim etapie jest jego praca — nic tutaj nie jest ułożone tak, by przykuwać uwagę.",
+    "docs.algorithms.intro": "Każda liczba, którą ta witryna pokazuje o tłumaczeniu, pochodzi ze wzoru, a wszystkie wzory są poniżej. Służą temu, by pomóc ci wybrać tłumaczenie i by autor widział, na jakim etapie jest jego praca.",
     "docs.algorithms.stage_title": "Etap sprawdzenia",
     "docs.algorithms.stage_desc": "Część pliku, której brzmienie ustalił człowiek: napisane, przyjęte albo świadomie pozostawione bez zmian. Pokazywana jako etap, a nie ocena, bo każde tłumaczenie zaczyna się od wyjścia maszyny — to punkt startu, nie zła nota. Plik bez jednego przetłumaczonego wiersza nie ma etapu w ogóle.",
     "docs.algorithms.rate_title": "Wskaźnik sprawdzenia",

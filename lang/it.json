@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Conta come risolta, mai come lavoro da fare",
     "docs.nav.algorithms": "Da dove vengono i numeri",
     "docs.algorithms.title": "Da dove vengono i numeri",
-    "docs.algorithms.intro": "Ogni numero che questo sito mostra su una traduzione viene da una formula, e sono tutte pubblicate qui sotto. Servono ad aiutarti a scegliere una traduzione e a mostrare a un autore a che punto è il suo lavoro: nulla qui è disposto per trattenere la tua attenzione.",
+    "docs.algorithms.intro": "Ogni numero che questo sito mostra su una traduzione viene da una formula, e sono tutte pubblicate qui sotto. Servono ad aiutarti a scegliere una traduzione e a mostrare a un autore a che punto è il suo lavoro.",
     "docs.algorithms.stage_title": "Fase di revisione",
     "docs.algorithms.stage_desc": "La parte di un file la cui formulazione è stata fissata da una persona: scritta, accettata o lasciata com'era di proposito. Mostrata come fase e non come voto, perché ogni traduzione nasce come uscita della macchina: è un punto di partenza, non una bocciatura. Un file senza nulla di tradotto non ha alcuna fase.",
     "docs.algorithms.rate_title": "Tasso di revisione",

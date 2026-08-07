@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Cuenta como resuelta, nunca como trabajo pendiente",
     "docs.nav.algorithms": "De dónde salen las cifras",
     "docs.algorithms.title": "De dónde salen las cifras",
-    "docs.algorithms.intro": "Cada cifra que este sitio muestra sobre una traducción sale de una fórmula, y todas están publicadas más abajo. Sirven para ayudarte a elegir una traducción y para que un autor vea dónde está su trabajo: aquí nada está dispuesto para retener tu atención.",
+    "docs.algorithms.intro": "Cada cifra que este sitio muestra sobre una traducción sale de una fórmula, y todas están publicadas más abajo. Sirven para ayudarte a elegir una traducción y para que un autor vea dónde está su trabajo.",
     "docs.algorithms.stage_title": "Etapa de revisión",
     "docs.algorithms.stage_desc": "La parte de un archivo cuya redacción fijó una persona: escrita, aceptada o dejada tal cual a propósito. Se muestra como etapa y no como nota, porque toda traducción empieza siendo salida de máquina: eso es un punto de partida, no un suspenso. Un archivo sin nada traducido no tiene etapa alguna.",
     "docs.algorithms.rate_title": "Tasa de revisión",

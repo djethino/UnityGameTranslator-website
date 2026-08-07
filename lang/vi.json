@@ -410,7 +410,7 @@
     "docs.quality_system.skip_note": "Được tính là đã xử lý, không phải việc còn lại",
     "docs.nav.algorithms": "Các con số đến từ đâu",
     "docs.algorithms.title": "Các con số đến từ đâu",
-    "docs.algorithms.intro": "Mọi con số mà trang này hiển thị về một bản dịch đều đến từ một công thức, và tất cả được công bố bên dưới. Chúng giúp bạn chọn bản dịch và cho tác giả thấy công việc của mình đang ở đâu — không có gì ở đây được bố trí để giữ sự chú ý của bạn.",
+    "docs.algorithms.intro": "Mọi con số mà trang này hiển thị về một bản dịch đều đến từ một công thức, và tất cả được công bố bên dưới. Chúng giúp bạn chọn bản dịch và cho tác giả thấy công việc của mình đang ở đâu.",
     "docs.algorithms.stage_title": "Giai đoạn rà soát",
     "docs.algorithms.stage_desc": "Phần của tệp mà câu chữ đã được người quyết định: tự viết, chấp nhận, hoặc cố ý giữ nguyên. Hiển thị theo giai đoạn chứ không phải điểm số, vì mọi bản dịch đều khởi đầu từ đầu ra của máy — đó là điểm xuất phát, không phải điểm kém. Tệp chưa dịch gì thì không có giai đoạn nào cả.",
     "docs.algorithms.rate_title": "Tỉ lệ rà soát",
