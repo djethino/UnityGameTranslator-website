@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "そのまま維持",
     "progress.capture": "キャプチャ済み",
+    "progress.furthest": "最も先まで",
+    "progress.furthest_hint": "このゲームの翻訳で、これより先まで届いているものはありません。ゲーム全体を網羅したという意味ではありません。ゲームにどれだけの文章があるかは誰にも分からないからです。",
     "progress.game_coverage": "ゲームの :percent %",
     "progress.game_coverage_hint": "この翻訳がゲームのどこまで届いているか。同じゲームで最も先まで進んだ翻訳を基準にしています（言語は問いません）。",
     "progress.capture_only": "キャプチャのみ",

@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "यथावत रखा गया",
     "progress.capture": "कैप्चर किया गया",
+    "progress.furthest": "सबसे आगे तक",
+    "progress.furthest_hint": "इस खेल का कोई अनुवाद इससे आगे नहीं जाता। इसका अर्थ यह नहीं कि पूरा खेल ढका हुआ है — किसी को नहीं पता कि किसी खेल में कितना पाठ है।",
     "progress.game_coverage": "गेम का :percent%",
     "progress.game_coverage_hint": "यह अनुवाद खेल के कितने हिस्से तक पहुँचता है — उसी खेल के सबसे आगे बढ़े अनुवाद के मुकाबले, वह किसी भी भाषा में हो।",
     "progress.capture_only": "केवल कैप्चर",

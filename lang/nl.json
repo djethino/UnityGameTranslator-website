@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Ongewijzigd gelaten",
     "progress.capture": "Vastgelegd",
+    "progress.furthest": "Komt het verst",
+    "progress.furthest_hint": "Geen enkele vertaling van dit spel komt verder. Dat betekent niet dat het hele spel gedekt is — niemand weet hoeveel tekst een spel bevat.",
     "progress.game_coverage": ":percent % van het spel",
     "progress.game_coverage_hint": "Deel van het spel dat deze vertaling bereikt, afgemeten aan de verst gevorderde vertaling van hetzelfde spel, in welke taal dan ook.",
     "progress.capture_only": "Alleen capture",

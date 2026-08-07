@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "נשמר כפי שהוא",
     "progress.capture": "נלכד",
+    "progress.furthest": "מגיע הכי רחוק",
+    "progress.furthest_hint": "אף תרגום של המשחק הזה לא מגיע רחוק יותר. אין זה אומר שכל המשחק מכוסה — איש אינו יודע כמה טקסט יש במשחק.",
     "progress.game_coverage": ":percent% מהמשחק",
     "progress.game_coverage_hint": "החלק מהמשחק שהתרגום הזה מגיע אליו, ביחס לתרגום שהגיע הכי רחוק באותו משחק, בכל שפה שהיא.",
     "progress.capture_only": "לכידה בלבד",

@@ -878,6 +878,8 @@
     "progress.ai_short": "AI",
     "progress.skipped": "保持原样",
     "progress.capture": "已捕获",
+    "progress.furthest": "走得最远",
+    "progress.furthest_hint": "这款游戏没有哪份翻译走得更远。这不代表整部游戏都已覆盖——没有人知道一款游戏究竟有多少文本。",
     "progress.game_coverage": "游戏的 :percent%",
     "progress.game_coverage_hint": "这份翻译覆盖了游戏的多少，以同一款游戏中走得最远的翻译为基准，不论其语言。",
     "progress.capture_only": "仅捕获",

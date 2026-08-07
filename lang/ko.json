@@ -878,6 +878,8 @@
     "progress.ai_short": "AI",
     "progress.skipped": "원문 유지",
     "progress.capture": "캡처됨",
+    "progress.furthest": "가장 멀리",
+    "progress.furthest_hint": "이 게임의 번역 중 이보다 더 멀리 닿은 것은 없습니다. 게임 전체를 덮었다는 뜻은 아닙니다. 게임에 문장이 얼마나 있는지는 아무도 모르기 때문입니다.",
     "progress.game_coverage": "게임의 :percent%",
     "progress.game_coverage_hint": "이 번역이 게임의 어디까지 닿는지를, 같은 게임에서 가장 멀리 나아간 번역과 견주어 나타냅니다(언어는 상관없습니다).",
     "progress.capture_only": "캡처만",

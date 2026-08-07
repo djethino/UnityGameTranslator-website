@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Dibiarkan apa adanya",
     "progress.capture": "Ditangkap",
+    "progress.furthest": "Paling jauh",
+    "progress.furthest_hint": "Tidak ada terjemahan permainan ini yang menjangkau lebih jauh. Ini bukan berarti seluruh permainan tercakup — tak seorang pun tahu berapa banyak teks yang ada dalam sebuah permainan.",
     "progress.game_coverage": ":percent% dari permainan",
     "progress.game_coverage_hint": "Bagian permainan yang dijangkau terjemahan ini, diukur terhadap terjemahan terjauh dari permainan yang sama, dalam bahasa apa pun.",
     "progress.capture_only": "Hanya tangkap",

@@ -144,6 +144,13 @@ class GameController extends Controller
         // MAX per translation. Taken from the whole game, never from $allTranslations: those are
         // filtered by language, and a French-only view must not shrink the yardstick.
         $gameMaxResolved = Translation::maxResolvedLinesForGame($game->id);
+
+        // How many published translations this game has, for the badge that says nobody has gone
+        // further: being furthest is a race of one when there is nobody else, and saying so would
+        // dress up a lack of competition as an achievement.
+        $publicTranslationCount = Translation::where('game_id', $game->id)
+            ->where('visibility', 'public')
+            ->count();
         foreach ($allTranslations as $t) {
             $t->gameMaxHint = $gameMaxResolved;
         }
@@ -256,7 +263,8 @@ class GameController extends Controller
         $targetLanguages = $game->translations()->distinct()->pluck('target_language')->sort();
         $sourceLanguages = $game->translations()->distinct()->pluck('source_language')->sort();
 
-        return view('games.show', compact('game', 'translationGroups', 'targetLanguages', 'sourceLanguages',
+        return view('games.show', compact('gameMaxResolved', 'publicTranslationCount',
+            'game', 'translationGroups', 'targetLanguages', 'sourceLanguages',
             'highlightLanguage',
             'languageFirst'));
     }

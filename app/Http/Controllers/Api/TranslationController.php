@@ -136,6 +136,10 @@ class TranslationController extends Controller
                     // translation of the game. Additive fields — an older mod ignores them.
                     'review_coverage' => $t->reviewCoverage(),
                     'game_coverage' => $t->gameCoverage(),
+                    // When it was published, which updated_at cannot say: a vote moves that one.
+                    // The mod flags a newcomer from it — being noticed is a newcomer's one
+                    // advantage over a translation that has had months to gather downloads.
+                    'created_at' => $t->created_at->toIso8601String(),
                     'file_hash' => $t->file_hash,
                     'file_uuid' => $t->file_uuid,
                     // Kept for mods that already read it, but it moves on a vote

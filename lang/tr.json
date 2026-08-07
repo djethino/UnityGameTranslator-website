@@ -878,6 +878,8 @@
     "progress.ai_short": "YZ",
     "progress.skipped": "Olduğu gibi bırakıldı",
     "progress.capture": "Yakalandı",
+    "progress.furthest": "En ileri giden",
+    "progress.furthest_hint": "Bu oyunun hiçbir çevirisi daha ileri gitmiyor. Oyunun tamamının kapsandığı anlamına gelmez: bir oyunun ne kadar metin içerdiğini kimse bilmez.",
     "progress.game_coverage": "oyunun %:percent'i",
     "progress.game_coverage_hint": "Bu çevirinin oyunun ne kadarına ulaştığı; aynı oyunun en ileri çevirisiyle karşılaştırılır, hangi dilde olursa olsun.",
     "progress.capture_only": "Sadece yakalama",

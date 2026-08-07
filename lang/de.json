@@ -878,6 +878,8 @@
     "progress.ai_short": "K",
     "progress.skipped": "Unverändert belassen",
     "progress.capture": "Erfasst",
+    "progress.furthest": "Kommt am weitesten",
+    "progress.furthest_hint": "Keine Übersetzung dieses Spiels reicht weiter. Das heißt nicht, dass das ganze Spiel abgedeckt ist — niemand weiß, wie viel Text ein Spiel enthält.",
     "progress.game_coverage": ":percent % des Spiels",
     "progress.game_coverage_hint": "Anteil des Spiels, den diese Übersetzung erreicht, gemessen an der weitest fortgeschrittenen Übersetzung desselben Spiels, gleich in welcher Sprache.",
     "progress.capture_only": "Nur Erfassung",

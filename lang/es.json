@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "Conservado tal cual",
     "progress.capture": "Capturado",
+    "progress.furthest": "Llega más lejos",
+    "progress.furthest_hint": "Ninguna traducción de este juego llega más lejos. No significa que todo el juego esté cubierto: nadie sabe cuánto texto contiene un juego.",
     "progress.game_coverage": ":percent % del juego",
     "progress.game_coverage_hint": "Parte del juego que alcanza esta traducción, medida frente a la traducción más avanzada del mismo juego, sea cual sea su idioma.",
     "progress.capture_only": "Solo captura",

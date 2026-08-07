@@ -179,6 +179,42 @@ class TranslationRatesTest extends TestCase
             ->assertDontSee(__('progress.game_coverage', ['percent' => 100]));
     }
 
+    public function test_the_furthest_translation_is_named_when_it_has_rivals(): void
+    {
+        $game = Game::firstOrCreate(['slug' => 'race-game'], ['name' => 'Race Game']);
+        $this->make(['human_count' => 3000], $game);
+        $this->make(['human_count' => 900], $game);
+
+        // The coverage badge stays silent at 100% because the yardstick is not the game's real
+        // size. This one says the other true thing: nobody has gone further.
+        $this->get(route('games.show', $game))
+            ->assertOk()
+            ->assertSee(__('progress.furthest'));
+    }
+
+    public function test_being_furthest_alone_is_a_race_of_one(): void
+    {
+        $game = Game::firstOrCreate(['slug' => 'lonely-game'], ['name' => 'Lonely Game']);
+        $this->make(['human_count' => 3000], $game);
+
+        // Dressing up a lack of competition as an achievement
+        $this->get(route('games.show', $game))
+            ->assertOk()
+            ->assertDontSee(__('progress.furthest'));
+    }
+
+    public function test_a_translation_published_today_is_flagged_as_new(): void
+    {
+        $game = Game::firstOrCreate(['slug' => 'fresh-game'], ['name' => 'Fresh Game']);
+        $this->make(['human_count' => 500], $game);
+
+        // The date is on the card in words; a badge is what catches the eye, and a newcomer's
+        // one advantage is being noticed.
+        $this->get(route('games.show', $game))
+            ->assertOk()
+            ->assertSee(__('games.new'));
+    }
+
     public function test_the_page_wide_maximum_is_fetched_once(): void
     {
         $game = Game::firstOrCreate(['slug' => 'hint-game'], ['name' => 'Hint Game']);

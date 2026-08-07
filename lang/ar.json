@@ -878,6 +878,8 @@
     "progress.ai_short": "A",
     "progress.skipped": "تُرك كما هو",
     "progress.capture": "ملتقط",
+    "progress.furthest": "الأبعد مدى",
+    "progress.furthest_hint": "لا ترجمة لهذه اللعبة تمضي أبعد من ذلك. وهذا لا يعني أن اللعبة كلها مغطاة: لا أحد يعرف كم من النص تحتويه لعبة.",
     "progress.game_coverage": ":percent٪ من اللعبة",
     "progress.game_coverage_hint": "نسبة اللعبة التي تبلغها هذه الترجمة، مقيسةً على أبعد ترجمة للعبة نفسها، أيًّا كانت لغتها.",
     "progress.capture_only": "التقاط فقط",

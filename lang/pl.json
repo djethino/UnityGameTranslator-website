@@ -878,6 +878,8 @@
     "progress.ai_short": "AI",
     "progress.skipped": "Pozostawione bez zmian",
     "progress.capture": "Przechwycone",
+    "progress.furthest": "Sięga najdalej",
+    "progress.furthest_hint": "Żadne tłumaczenie tej gry nie sięga dalej. Nie znaczy to, że cała gra jest pokryta — nikt nie wie, ile tekstu zawiera gra.",
     "progress.game_coverage": ":percent % gry",
     "progress.game_coverage_hint": "Część gry, którą obejmuje to tłumaczenie, mierzona względem najdalej posuniętego tłumaczenia tej samej gry, w dowolnym języku.",
     "progress.capture_only": "Tylko przechwytywanie",
