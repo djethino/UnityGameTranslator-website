@@ -42,25 +42,32 @@ Community platform for sharing Unity game translation files with API for mod syn
 - One Branch per user per UUID (updating replaces your Branch)
 - Languages locked after first upload (source/target immutable)
 
-### Translation Quality System (H/V/A Tags)
+### Translation tags (H/V/A/S)
 
-| Tag | Name | Score | Description |
-|-----|------|-------|-------------|
-| **H** | Human | 3 pts | Written by a human |
-| **V** | Validated | 2 pts | AI translation approved by human |
-| **A** | AI | 1 pt | Translated by AI |
-| **S** | Skip | — | Intentionally not translated |
-| **M** | Mod | — | Mod UI translations (internal) |
+| Tag | Name | Description |
+|-----|------|-------------|
+| **H** | Human | Written by a human |
+| **V** | Validated | Machine wording a human read and accepted |
+| **A** | AI | Machine wording nobody has read yet |
+| **S** | Skip | A human ruled that this line stays as it is — a fictional language, a proper name, text that must not change. Counts as settled, never as work left to do |
+| **M** | Mod | Mod UI translations (internal, never counted) |
 
-**Quality Score** (0-3): `(H×3 + V×2 + A×1) / (H + V + A)`
+### The four measures
 
-| Score | Label |
-|-------|-------|
-| 2.5+ | Excellent |
-| 2.0+ | Good |
-| 1.5+ | Fair |
-| 1.0+ | Basic |
-| <1.0 | Raw AI |
+Published in full at `/docs`, formulas and constants included: every figure the site shows about a
+translation comes from one of these, and whoever is being measured is entitled to read the measure.
+
+| Measure | Formula | Answers | Shown to |
+|---------|---------|---------|----------|
+| Review stage | `(H + V + S) / (H + V + S + A)` | Has a human been through it? | Everyone |
+| Review rate | `(H + S + c × V) / (H + V + S + A)`, `c` from 0.8 to 1.0 | How well evidenced is that? | The author |
+| Game coverage | resolved lines ÷ largest of the game's translations | How much of the game does it reach? | Everyone |
+| Ordering | `coverage × (0.5 + 0.5 × rate)`, then reception and freshness | Which one first? | Nobody — it only sorts |
+
+The 0-3 average this replaced answered "where does each line come from" when the question is "has
+anyone read this": untouched machine output scored a third of the scale, a file reviewed line by
+line stopped at two thirds unless its author retyped what the machine had right, and it was blind
+to how much of the game a file reached.
 
 ### API for Unity Mod
 - **Search translations** by Steam ID, game name, or language
