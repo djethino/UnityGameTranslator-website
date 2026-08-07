@@ -9,9 +9,9 @@ class VoteController extends Controller
 {
     public function vote(Request $request, Translation $translation)
     {
-        // Voting only makes sense on public translations; branches are private
-        if ($translation->visibility !== 'public') {
-            abort(403, 'Voting is only allowed on public translations');
+        // Public translations only, and never your own — see Translation::canBeVotedBy()
+        if (!$translation->canBeVotedBy($request->user())) {
+            abort(403, 'You cannot vote on this translation');
         }
 
         $request->validate([

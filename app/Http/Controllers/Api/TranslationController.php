@@ -687,19 +687,18 @@ class TranslationController extends Controller
      */
     public function vote(Request $request, Translation $translation): JsonResponse
     {
-        // Voting only makes sense on public translations; branches are private
-        if ($translation->visibility !== 'public') {
+        // Public translations only, and never your own — see Translation::canBeVotedBy()
+        $user = $request->user();
+        if (!$translation->canBeVotedBy($user)) {
             return response()->json([
                 'error' => 'Forbidden',
-                'message' => 'Voting is only allowed on public translations',
+                'message' => 'You cannot vote on this translation',
             ], 403);
         }
 
         $request->validate([
             'value' => 'required|integer|in:-1,1',
         ]);
-
-        $user = $request->user();
         $translation->vote((int) $request->value, $user);
 
         return response()->json([

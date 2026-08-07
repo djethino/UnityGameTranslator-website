@@ -81,6 +81,17 @@
                     <div class="text-sm text-gray-400 mt-1">
                         {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} •
                         {{ $translation->download_count }} {{ __('my_translations.downloads') }} •
+                        {{-- The one number that says someone was GLAD to find it — downloads only
+                             say they tried. Hidden at zero, like the other counts on this line:
+                             a fresh upload does not need "+0" thrown at its author, and the
+                             dashboard carries the figure in full either way. --}}
+                        @if($translation->vote_count != 0)
+                            <span class="{{ $translation->vote_count > 0 ? 'text-green-400' : 'text-red-400' }}">
+                                {{ trans_choice('my_translations.votes', abs($translation->vote_count), [
+                                    'count' => ($translation->vote_count > 0 ? '+' : '') . $translation->vote_count,
+                                ]) }}
+                            </span> •
+                        @endif
                         @if($translation->isMain() && $branchTotal > 0)
                             {{ $branchTotal }} {{ __('my_translations.branches') }} •
                         @endif

@@ -299,34 +299,7 @@
                         <!-- Right: Actions -->
                         <div class="flex flex-col items-end gap-3">
                             <!-- Vote buttons -->
-                            <div class="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-2" id="vote-container-{{ $translation->id }}">
-                                @auth
-                                    @php $userVote = $translation->userVote(); @endphp
-                                    <button type="button"
-                                        data-vote-id="{{ $translation->id }}" data-vote-value="1"
-                                        class="vote-btn p-1 rounded hover:bg-gray-600 transition {{ $userVote && $userVote->value === 1 ? 'text-green-400' : 'text-gray-400' }}"
-                                        id="upvote-{{ $translation->id }}"
-                                        title="{{ __('translation.upvote') }}">
-                                        <i class="fas fa-arrow-up text-lg"></i>
-                                    </button>
-                                @else
-                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="p-1 text-gray-500 hover:text-green-400 transition" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-up text-lg"></i></a>
-                                @endauth
-                                <span class="text-lg font-bold min-w-[2.5rem] text-center {{ $translation->vote_count > 0 ? 'text-green-400' : ($translation->vote_count < 0 ? 'text-red-400' : 'text-gray-400') }}" id="vote-count-{{ $translation->id }}">
-                                    {{ $translation->vote_count >= 0 ? '+' : '' }}{{ $translation->vote_count }}
-                                </span>
-                                @auth
-                                    <button type="button"
-                                        data-vote-id="{{ $translation->id }}" data-vote-value="-1"
-                                        class="vote-btn p-1 rounded hover:bg-gray-600 transition {{ $userVote && $userVote->value === -1 ? 'text-red-400' : 'text-gray-400' }}"
-                                        id="downvote-{{ $translation->id }}"
-                                        title="{{ __('translation.downvote') }}">
-                                        <i class="fas fa-arrow-down text-lg"></i>
-                                    </button>
-                                @else
-                                    <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="p-1 text-gray-500 hover:text-red-400 transition" title="{{ __('translation.login_to_vote') }}"><i class="fas fa-arrow-down text-lg"></i></a>
-                                @endauth
-                            </div>
+                            <x-vote-buttons :translation="$translation" />
 
                             <!-- Action buttons -->
                             <div class="flex gap-2">
@@ -475,34 +448,7 @@
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <!-- Fork vote -->
-                                        <div class="flex items-center gap-1 text-sm" id="vote-container-{{ $fork->id }}">
-                                            @auth
-                                                @php $forkUserVote = $fork->userVote(); @endphp
-                                                <button type="button" data-vote-id="{{ $fork->id }}" data-vote-value="1"
-                                                    class="vote-btn hover:text-green-400 transition {{ $forkUserVote && $forkUserVote->value === 1 ? 'text-green-400' : 'text-gray-500' }}"
-                                                    id="upvote-{{ $fork->id }}">
-                                                    <i class="fas fa-arrow-up"></i>
-                                                </button>
-                                            @else
-                                                <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="text-gray-500 hover:text-green-400 transition">
-                                                    <i class="fas fa-arrow-up"></i>
-                                                </a>
-                                            @endauth
-                                            <span class="{{ $fork->vote_count > 0 ? 'text-green-400' : ($fork->vote_count < 0 ? 'text-red-400' : 'text-gray-500') }}" id="vote-count-{{ $fork->id }}">
-                                                {{ $fork->vote_count >= 0 ? '+' : '' }}{{ $fork->vote_count }}
-                                            </span>
-                                            @auth
-                                                <button type="button" data-vote-id="{{ $fork->id }}" data-vote-value="-1"
-                                                    class="vote-btn hover:text-red-400 transition {{ $forkUserVote && $forkUserVote->value === -1 ? 'text-red-400' : 'text-gray-500' }}"
-                                                    id="downvote-{{ $fork->id }}">
-                                                    <i class="fas fa-arrow-down"></i>
-                                                </button>
-                                            @else
-                                                <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=vote" class="text-gray-500 hover:text-red-400 transition">
-                                                    <i class="fas fa-arrow-down"></i>
-                                                </a>
-                                            @endauth
-                                        </div>
+                                        <x-vote-buttons :translation="$fork" size="sm" />
                                         @auth
                                             <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>

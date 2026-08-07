@@ -529,6 +529,28 @@ class Translation extends Model
     }
 
     /**
+     * May this user vote on this translation?
+     *
+     * Two refusals, and the second was missing entirely: nothing stopped an author from
+     * upvoting their own work. It costs one request, it is invisible, and it feeds
+     * ranking_score directly — in a catalogue whose highest score is a single vote, one
+     * self-vote outranks every translation nobody thought to vote for.
+     *
+     * Branches are refused because they are private contributions, not published work.
+     *
+     * Lives here rather than in the two controllers that had a copy each: the mod and the
+     * site must refuse the same things, and one of the two copies would drift.
+     */
+    public function canBeVotedBy(?\App\Models\User $user): bool
+    {
+        if (!$user || $this->visibility !== 'public') {
+            return false;
+        }
+
+        return $this->user_id !== $user->id;
+    }
+
+    /**
      * Vote on this translation.
      * Accepts an optional user parameter for API context where auth() is not available.
      */

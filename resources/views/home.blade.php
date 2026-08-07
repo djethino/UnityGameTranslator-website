@@ -362,7 +362,11 @@
                             <span>@langflag($translation->target_language)</span>
                         </div>
                         <div class="text-xs text-gray-400 mt-1">
-                            {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->updated_at->diffForHumans() }}
+                        {{-- created_at, not updated_at: this section lists what was published
+                             most recently and is ordered by that, so the date under each card
+                             has to be the same fact. updated_at said neither one nor the other —
+                             a vote or a download moves it. --}}
+                            {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->created_at->diffForHumans() }}
                         </div>
                         <div class="mt-2">
                             <x-progress-bar :translation="$translation" />
