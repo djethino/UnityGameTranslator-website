@@ -144,6 +144,9 @@
             <a href="#quality-system" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-star mr-2 w-4"></i>{{ __('docs.nav.quality_system') }}
             </a>
+            <a href="#algorithms" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-calculator mr-2 w-4"></i>{{ __('docs.nav.algorithms') }}
+            </a>
             <a href="#editing" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-pen-to-square mr-2 w-4"></i>{{ __('docs.nav.editing') }}
             </a>
@@ -525,19 +528,16 @@
                         <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-green-600 text-white mb-2">H</span>
                         <div class="font-semibold text-white">{{ __('docs.quality_system.human') }}</div>
                         <div class="text-sm text-gray-400">{{ __('docs.quality_system.human_desc') }}</div>
-                        <div class="text-xs text-green-400 mt-2">3 {{ __('docs.quality_system.points') }}</div>
                     </div>
                     <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-blue-500">
                         <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-blue-600 text-white mb-2">V</span>
                         <div class="font-semibold text-white">{{ __('docs.quality_system.validated') }}</div>
                         <div class="text-sm text-gray-400">{{ __('docs.quality_system.validated_desc') }}</div>
-                        <div class="text-xs text-blue-400 mt-2">2 {{ __('docs.quality_system.points') }}</div>
                     </div>
                     <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-orange-500">
                         <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-orange-600 text-white mb-2">A</span>
                         <div class="font-semibold text-white">{{ __('docs.quality_system.ai') }}</div>
                         <div class="text-sm text-gray-400">{{ __('docs.quality_system.ai_desc') }}</div>
-                        <div class="text-xs text-orange-400 mt-2">1 {{ __('docs.quality_system.point') }}</div>
                     </div>
                     {{-- Purple, like its segment in the composition bar: a line kept as it is
                          has been dealt with, and must not be mistaken for one still waiting. --}}
@@ -549,49 +549,58 @@
                     </div>
                 </div>
 
-                <!-- Quality Score -->
-                <h3 class="font-semibold mb-3 text-lg">{{ __('docs.quality_system.score_title') }}</h3>
-                <p class="text-gray-300 mb-4">{{ __('docs.quality_system.score_formula') }}</p>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-700">
-                            <tr>
-                                <th class="px-4 py-2 text-left">{{ __('docs.quality_system.score') }}</th>
-                                <th class="px-4 py-2 text-left">{{ __('docs.quality_system.label') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-300">
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2">2.5+</td>
-                                <td class="px-4 py-2"><span class="text-green-400">{{ __('docs.quality_system.excellent') }}</span></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2">2.0+</td>
-                                <td class="px-4 py-2"><span class="text-blue-400">{{ __('docs.quality_system.good') }}</span></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2">1.5+</td>
-                                <td class="px-4 py-2"><span class="text-yellow-400">{{ __('docs.quality_system.fair') }}</span></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2">1.0+</td>
-                                <td class="px-4 py-2"><span class="text-orange-400">{{ __('docs.quality_system.basic') }}</span></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2">&lt;1.0</td>
-                                <td class="px-4 py-2"><span class="text-red-400">{{ __('docs.quality_system.raw_ai') }}</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
                 <!-- Capture Mode -->
                 <div class="mt-6 p-4 bg-gray-900 rounded-lg">
                     <h4 class="font-semibold mb-2 text-white">
                         <i class="fas fa-camera mr-2 text-purple-400"></i>{{ __('docs.quality_system.capture_mode') }}
                     </h4>
                     <p class="text-sm text-gray-300">{{ __('docs.quality_system.capture_desc') }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How the numbers are computed. Published in full on purpose: every figure shown on
+             this site comes from a formula, and anyone whose work is being measured is entitled
+             to read the measure. -->
+        <section id="algorithms" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-calculator mr-3 text-purple-400"></i>{{ __('docs.algorithms.title') }}
+            </h2>
+
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <p class="text-gray-300 mb-6">{{ __('docs.algorithms.intro') }}</p>
+
+                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.stage_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.stage_desc') }}</p>
+                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S) / (H + V + S + A)</pre>
+                <ul class="text-sm text-gray-400 mb-6 space-y-1">
+                    <li>100 % — {{ __('progress.stage.reviewed') }}</li>
+                    <li>40 % … 99 % — {{ __('progress.stage.advanced') }}</li>
+                    <li>1 % … 39 % — {{ __('progress.stage.started') }}</li>
+                    <li>0 % — {{ __('progress.stage.machine') }}</li>
+                </ul>
+
+                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.rate_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.rate_desc') }}</p>
+                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + S + c × V) / (H + V + S + A)
+c = 0.8 → 1.0</pre>
+                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.rate_limit') }}</p>
+
+                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.coverage_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.coverage_desc') }}</p>
+                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / max(H + V + S + A)</pre>
+                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.coverage_caveat') }}</p>
+
+                <h3 class="font-semibold mb-2 text-lg">{{ __('docs.algorithms.order_title') }}</h3>
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.order_desc') }}</p>
+                <pre class="bg-gray-900 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">coverage × (0.5 + 0.5 × rate)</pre>
+                <p class="text-sm text-gray-400 mb-6">{{ __('docs.algorithms.order_base') }}</p>
+
+                <div class="p-4 bg-gray-900 rounded-lg">
+                    <h4 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-eye mr-2 text-purple-400"></i>{{ __('docs.algorithms.visibility_title') }}
+                    </h4>
+                    <p class="text-sm text-gray-300">{{ __('docs.algorithms.visibility_desc') }}</p>
                 </div>
             </div>
         </section>
