@@ -893,8 +893,12 @@ class Translation extends Model
             return 1.0;
         }
 
-        $parentInactive = $parent->updated_at->diffInDays(now()) > 180;
-        $selfActive = $this->updated_at->diffInDays(now()) < 30;
+        // contentChangedAt, not updated_at: a download or a vote touches updated_at, so the
+        // parent looked ALIVE simply because people were still downloading it — and the bonus
+        // was refused to the fork that had picked up an abandoned translation, which is the
+        // one case it exists for.
+        $parentInactive = $parent->contentChangedAt()->diffInDays(now()) > 180;
+        $selfActive = $this->contentChangedAt()->diffInDays(now()) < 30;
 
         if ($parentInactive && $selfActive) {
             return 1.2; // +20% bonus
@@ -923,8 +927,14 @@ class Translation extends Model
         // Engagement: votes + logarithmic downloads
         $engagement = $this->vote_count + log10($this->download_count + 1);
 
-        // Freshness decay (90-day half-life)
-        $daysSinceUpdate = $this->updated_at->diffInDays(now());
+        // Freshness decay (90-day half-life), on the date the TRANSLATION changed.
+        //
+        // It read updated_at, which increment('vote_count') and incrementDownloads() both move.
+        // A downvote therefore reset the decay to 1.0 while costing a single engagement point:
+        // on a year-old abandoned file (freshness 0.06) the score went UP roughly sevenfold, and
+        // far more on an older one. Downvoting an abandoned capture-only upload promoted it —
+        // the exact opposite of what the vote is for.
+        $daysSinceUpdate = $this->contentChangedAt()->diffInDays(now());
         $freshness = pow(0.5, $daysSinceUpdate / 90);
 
         // Fork bonus

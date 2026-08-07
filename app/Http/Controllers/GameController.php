@@ -118,8 +118,11 @@ class GameController extends Controller
 
     public function show(Game $game, Request $request)
     {
-        // Get ALL translations for this game (we'll group them ourselves)
-        $query = $game->translations()->with('user');
+        // Get ALL translations for this game (we'll group them ourselves).
+        // 'parent' is loaded because the default sort reads ranking_score, which reads
+        // fork_bonus, which reads $this->parent — one SQL query per fork otherwise, on the
+        // most visited page of the site.
+        $query = $game->translations()->with(['user', 'parent']);
 
         // Filter by target language
         if ($request->filled('target')) {
