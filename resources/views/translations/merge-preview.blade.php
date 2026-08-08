@@ -710,6 +710,10 @@ document.addEventListener('alpine:init', () => {
         // PENDING work is scoped to THIS translation — restored edits
         // from another file would be ghost modifications
         persistKey: 'merge_preview_ui',
+        // Column widths belong to THIS file's content, not to a way of reading: shared, a width
+        // measured on long source lines followed the reader to the next preview and pushed the
+        // columns after it off the screen. See translation-editor.js (_widthsKey).
+        widthsKey: 'merge_preview_{{ $translation->id }}_cols',
         pendingKey: 'merge_preview_{{ $translation->id }}_pending',
         filters: {
             localOnly: true,

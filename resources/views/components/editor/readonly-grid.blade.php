@@ -77,8 +77,14 @@
                                 <i class="fas text-xs" :class="getSortIcon('tag')"></i>
                             </div>
                         </th>
+                        {{-- min-w like the editors' value column, and for a reason this screen
+                             showed plainly: with automatic layout a column is as wide as its
+                             content, and a capture-only file has NO content here — so the source
+                             column swallowed the width and the translation column shrank to the
+                             word "Captures". The one thing a reader came for was the narrowest
+                             thing on screen. --}}
                         <th data-col="value"
-                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
                             @click="toggleSort('value')">
                             <div class="flex items-center gap-2">
                                 <span class="text-purple-400 font-medium">{{ $targetLabel ?? __('admin.translated') }}</span>

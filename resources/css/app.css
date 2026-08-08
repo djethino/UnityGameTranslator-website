@@ -47,6 +47,19 @@
  * <td> of three templates. */
 .editor-grid tbody td { border-top: 1px solid rgb(55 65 81); }
 
+/* No grab edge on the LAST column.
+ *
+ * A drag takes width from one column and gives it to those on its right, so that the grid never
+ * ends short of its box. The last column has nothing on its right: narrowing it left a gap
+ * between the table and the edge of the box, and the handle — pinned to the right edge, which
+ * cannot move — stayed still while the pointer walked away from it.
+ *
+ * Distributing leftwards instead would keep the total right and the handle just as stuck. The
+ * honest answer is that the last column's width is what the others leave it: widen it by
+ * narrowing its neighbour, which works and follows the cursor. An edge that cannot obey is worse
+ * than no edge at all. */
+.editor-grid thead th:last-child [data-resize-col] { display: none; }
+
 /* Content of a full-width row that must stay where the EYE is.
  *
  * A row spanning every column is as wide as the table, so its centred content

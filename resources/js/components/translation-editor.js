@@ -914,6 +914,21 @@ export function editorCore(config) {
             return this.sortDirection === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400';
         },
 
+        /**
+         * Where column widths are remembered.
+         *
+         * NOT with the rest of the UI state, and this is the whole point. Which tags to show,
+         * what to search for and how to sort are ways of READING, so screens share them on
+         * purpose. A column width is about one document's content: carried over to a file whose
+         * source lines are ten times longer, it pushed the tag and translation columns clean off
+         * the screen — with the grab edges out there too, so nothing could be dragged back.
+         *
+         * Pages that show a single fixed document can leave widthsKey unset.
+         */
+        _widthsKey() {
+            return config.widthsKey || config.persistKey + '_cols';
+        },
+
         persistUiState() {
             try {
                 sessionStorage.setItem(config.persistKey, JSON.stringify({
@@ -924,10 +939,12 @@ export function editorCore(config) {
                     sortDirection: this.sortDirection,
                     replaceOpen: this.replaceOpen,
                     replaceValue: this.replaceValue,
+                    pinMain: this.pinMain
+                }));
+                sessionStorage.setItem(this._widthsKey(), JSON.stringify({
                     columnWidths: this.columnWidths,
                     columnsSized: this.columnsSized,
                     gridWidth: this.gridWidth,
-                    pinMain: this.pinMain
                 }));
             } catch (e) { /* storage full/blocked: non-essential */ }
         },
@@ -951,16 +968,43 @@ export function editorCore(config) {
                 if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
                 if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
                 if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
-                if (typeof state.columnsSized === 'boolean') this.columnsSized = state.columnsSized;
-                if (typeof state.gridWidth === 'number' && state.gridWidth > 0) this.gridWidth = state.gridWidth;
+            } catch (e) { /* corrupted state: keep defaults */ }
+
+            this._restoreColumnWidths();
+        },
+
+        /**
+         * Widths come back only if they still make sense HERE.
+         *
+         * A single column wider than the box on its own is not a preference anyone expressed: it
+         * is a measurement taken on another document, or a drag that went too far. Restoring it
+         * hides every column that follows and takes the grab edges off-screen with them, which
+         * leaves the reader with no way back — the state that made a translation column simply
+         * disappear. When in doubt the automatic layout is a perfectly good answer; a remembered
+         * width is a convenience, never something worth breaking the screen for.
+         */
+        _restoreColumnWidths() {
+            try {
+                const raw = sessionStorage.getItem(this._widthsKey());
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                const box = (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0;
+
+                const widths = {};
                 if (state.columnWidths && typeof state.columnWidths === 'object') {
-                    // Numbers only: a corrupted or hand-edited entry would otherwise reach the
-                    // style attribute as "60undefinedpx" and collapse the column
                     for (const [col, width] of Object.entries(state.columnWidths)) {
-                        if (typeof width === 'number' && width > 0) this.columnWidths[col] = width;
+                        // Numbers only: a corrupted or hand-edited entry would otherwise reach
+                        // the style attribute as "60undefinedpx" and collapse the column
+                        if (typeof width !== 'number' || width <= 0) return;
+                        if (box > 0 && width > box) return;
+                        widths[col] = width;
                     }
                 }
-            } catch (e) { /* corrupted state: keep defaults */ }
+
+                Object.assign(this.columnWidths, widths);
+                if (typeof state.columnsSized === 'boolean') this.columnsSized = state.columnsSized;
+                if (typeof state.gridWidth === 'number' && state.gridWidth > 0) this.gridWidth = state.gridWidth;
+            } catch (e) { /* corrupted state: automatic layout */ }
         },
 
         // ── Edit modal ────────────────────────────────────────────────────

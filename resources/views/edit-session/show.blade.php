@@ -567,6 +567,9 @@ document.addEventListener('alpine:init', () => {
         // edits from a previous session would be ghost modifications on
         // keys this file may not even contain
         persistKey: 'edit_session_ui',
+        // Widths are about this session's file, not about how one likes to read — see
+        // translation-editor.js (_widthsKey)
+        widthsKey: 'edit_session_{{ $editSession->id }}_cols',
         pendingKey: 'edit_session_{{ $editSession->id }}_pending',
         filters: {
             tagH: true,

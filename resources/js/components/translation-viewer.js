@@ -23,6 +23,11 @@ export function createViewer(config) {
             // UI state (which tags, what search, which sort) is shared by every viewer: it is a
             // way of reading, not something about one file
             persistKey: 'translation_viewer_ui',
+            // Column widths are NOT: they are about this file's content. Shared, a width measured
+            // on a file of long source lines followed the reader to the next one and pushed its
+            // tag and translation columns off the screen — grab edges included, so there was no
+            // dragging them back.
+            widthsKey: 'translation_viewer_cols_' + config.translationId,
             // The core insists on a pending-work key. Nothing here ever writes one — a viewer has
             // no pending work — but scoping it per file keeps a stray restore from ever landing
             // on the wrong document
