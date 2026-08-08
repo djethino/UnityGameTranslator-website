@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - terjemahan AI",
     "merge.legend_validated": "Tervalidasi - AI ditinjau",
     "merge.legend_mod_ui": "UI Mod - antarmuka mod",
-    "merge.legend_skipped": "Dilewati - tidak diterjemahkan",
+    "merge.legend_skipped": "Dilewati - dibiarkan apa adanya",
     "merge.legend_selection_main": "Seleksi Main",
     "merge.legend_selection_branch": "Seleksi Branch",
     "merge.legend_manual_edit": "Edit manual",

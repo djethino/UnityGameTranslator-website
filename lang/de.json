@@ -596,7 +596,7 @@
     "merge.legend_ai": "KI - KI-Übersetzung",
     "merge.legend_validated": "Validiert - KI überprüft",
     "merge.legend_mod_ui": "Mod-UI - Mod-Oberfläche",
-    "merge.legend_skipped": "Übersprungen - nicht übersetzt",
+    "merge.legend_skipped": "Übersprungen - unverändert belassen",
     "merge.legend_selection_main": "Haupt-Auswahl",
     "merge.legend_selection_branch": "Branch-Auswahl",
     "merge.legend_manual_edit": "Manuelle Bearbeitung",

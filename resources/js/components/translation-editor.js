@@ -827,18 +827,28 @@ export function editorCore(config) {
         rowQualityTag(key) { return null; },
 
         _computeTagCounts() {
-            const counts = { H: 0, V: 0, A: 0, S: 0, M: 0, total: 0 };
+            const counts = { H: 0, V: 0, A: 0, S: 0, C: 0, total: 0 };
             for (const key of this.allKeys) {
                 if (this.isDeleted(key)) continue;
                 const tag = this.rowQualityTag(key);
+                // M is the mod's own interface, not the game's text. The server keeps no counter
+                // for it and neither the mod's bar nor the site's shows it, so counting it here
+                // would make this bar disagree with the same file's card.
                 if (!tag || counts[tag] === undefined) continue;
-                // Captured-only entries (H + empty value, the mod's "collect
-                // texts without translating" mode) are reserved for a future
-                // human translation: the server excludes them from quality
-                // scoring, so must the editors
+                // Captured-only entries (H + empty value, the mod's "collect texts without
+                // translating" mode) are work IDENTIFIED, not work done. They used to be dropped
+                // from both numerator and denominator, which made a file of two translated lines
+                // and eleven captures read "100%" on a bar that was full and green — while the
+                // game page called the same file 15% translated. They now hold their own band,
+                // the same way the mod's bar and the site's composition bar count them: hiding
+                // the untranslated share flatters the result.
                 if (tag === 'H') {
                     const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
-                    if (value === '' || value === null || value === undefined) continue;
+                    if (value === '' || value === null || value === undefined) {
+                        counts.C++;
+                        counts.total++;
+                        continue;
+                    }
                 }
                 counts[tag]++;
                 counts.total++;
@@ -869,7 +879,11 @@ export function editorCore(config) {
             return (counts[tag] / counts.total) * 100;
         },
 
-        /** Share of human + validated lines, the number that matters. */
+        /**
+         * Share of human + validated lines over everything the file has MET, captures included.
+         * Same denominator as the game page and as the mod's card, so one file cannot answer
+         * this question two ways depending on which screen asks it.
+         */
         get qualityPercent() {
             const counts = this.tagCounts;
             if (counts.total === 0) return 0;

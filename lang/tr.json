@@ -596,7 +596,7 @@
     "merge.legend_ai": "YZ - yapay zekâ çevirisi",
     "merge.legend_validated": "Onaylı - YZ tarafından incelendi",
     "merge.legend_mod_ui": "Mod Arayüzü - mod arayüzü",
-    "merge.legend_skipped": "Atlandı - çevrilmedi",
+    "merge.legend_skipped": "Atlandı - olduğu gibi bırakıldı",
     "merge.legend_selection_main": "Main seçimi",
     "merge.legend_selection_branch": "Branch seçimi",
     "merge.legend_manual_edit": "Manuel düzenleme",

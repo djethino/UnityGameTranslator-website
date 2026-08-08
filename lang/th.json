@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - การแปล AI",
     "merge.legend_validated": "ตรวจสอบแล้ว - AI ที่ตรวจสอบแล้ว",
     "merge.legend_mod_ui": "UI ม็อด - อินเทอร์เฟซม็อด",
-    "merge.legend_skipped": "ข้าม - ไม่แปล",
+    "merge.legend_skipped": "ข้าม - คงไว้ตามเดิม",
     "merge.legend_selection_main": "เลือก Main",
     "merge.legend_selection_branch": "เลือก Branch",
     "merge.legend_manual_edit": "แก้ไขด้วยตนเอง",

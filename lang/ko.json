@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - AI 번역",
     "merge.legend_validated": "검증됨 - AI 검토 완료",
     "merge.legend_mod_ui": "모드 UI - 모드 인터페이스",
-    "merge.legend_skipped": "건너뜀 - 번역되지 않음",
+    "merge.legend_skipped": "건너뜀 - 원문 유지",
     "merge.legend_selection_main": "메인 선택",
     "merge.legend_selection_branch": "브랜치 선택",
     "merge.legend_manual_edit": "수동 편집",

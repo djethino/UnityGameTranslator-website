@@ -596,7 +596,7 @@
     "merge.legend_ai": "ИИ — перевод ИИ",
     "merge.legend_validated": "Проверено — проверено ИИ",
     "merge.legend_mod_ui": "Интерфейс мода — интерфейс мода",
-    "merge.legend_skipped": "Пропущено — не переведено",
+    "merge.legend_skipped": "Пропущено — оставлено как есть",
     "merge.legend_selection_main": "Основной выбор",
     "merge.legend_selection_branch": "Выбор ветки",
     "merge.legend_manual_edit": "Ручное редактирование",

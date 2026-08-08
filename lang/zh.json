@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - AI 翻译",
     "merge.legend_validated": "已验证 - AI 已审核",
     "merge.legend_mod_ui": "模组界面 - 模组接口",
-    "merge.legend_skipped": "已跳过 - 未翻译",
+    "merge.legend_skipped": "已跳过 - 保持原样",
     "merge.legend_selection_main": "主选择",
     "merge.legend_selection_branch": "分支选择",
     "merge.legend_manual_edit": "手动编辑",

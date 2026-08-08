@@ -86,8 +86,8 @@
         'H' => ['text-green-600', __('merge.legend_human')],
         'V' => ['text-blue-600', __('merge.legend_validated')],
         'A' => ['text-orange-600', __('merge.legend_ai')],
-        'S' => ['text-gray-600', __('merge.legend_skipped')],
-        'M' => ['text-purple-600', __('merge.legend_mod_ui')],
+        'S' => ['text-purple-600', __('merge.legend_skipped')],
+        'M' => ['text-teal-600', __('merge.legend_mod_ui')],
     ] as $tag => [$checkboxColour, $legend])
         <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $legend }}">
             <input type="checkbox" :checked="filters.tag{{ $tag }}" @change="toggleFilter('tag{{ $tag }}')"

@@ -25,8 +25,15 @@
 .tag-H { background-color: rgb(22 163 74); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
 .tag-A { background-color: rgb(234 88 12); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
 .tag-V { background-color: rgb(37 99 235); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-.tag-M { background-color: rgb(147 51 234); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-.tag-S { background-color: rgb(75 85 99); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
+/* S is purple and M is teal, not the other way round.
+   One colour, one meaning, across the mod, the game pages and the editors: purple has always
+   been "kept as is" in the mod's quality bar (UIStyles.StatusKept) and in the site's composition
+   bar, and grey has always been "captured, still waiting". The editors had purple on M and grey
+   on S, so the same bar read two ways depending on the screen. M keeps a colour of its own —
+   it is a provenance (the mod's own interface), not a degree of translation — and takes the one
+   nothing else uses. */
+.tag-M { background-color: rgb(13 148 136); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
+.tag-S { background-color: rgb(147 51 234); color: white; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
 
 .merge-cell { cursor: pointer; transition: all 150ms; user-select: none; -webkit-user-select: none; position: relative; }
 .merge-cell:hover { background-color: rgba(55, 65, 81, 0.5); }

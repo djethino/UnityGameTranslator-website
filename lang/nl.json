@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - AI-vertaling",
     "merge.legend_validated": "Gevalideerd - AI beoordeeld",
     "merge.legend_mod_ui": "Mod UI - mod-interface",
-    "merge.legend_skipped": "Overgeslagen - niet vertaald",
+    "merge.legend_skipped": "Overgeslagen - ongewijzigd gelaten",
     "merge.legend_selection_main": "Main-selectie",
     "merge.legend_selection_branch": "Branch-selectie",
     "merge.legend_manual_edit": "Handmatige bewerking",

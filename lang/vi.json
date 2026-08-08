@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - bản dịch AI",
     "merge.legend_validated": "Đã xác thực - AI đã xem xét",
     "merge.legend_mod_ui": "Giao diện Mod - giao diện mod",
-    "merge.legend_skipped": "Bỏ qua - không dịch",
+    "merge.legend_skipped": "Bỏ qua - giữ nguyên",
     "merge.legend_selection_main": "Chọn Main",
     "merge.legend_selection_branch": "Chọn Branch",
     "merge.legend_manual_edit": "Chỉnh sửa thủ công",

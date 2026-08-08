@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - AI अनुवाद",
     "merge.legend_validated": "मान्य - AI समीक्षित",
     "merge.legend_mod_ui": "मॉड UI - मॉड इंटरफ़ेस",
-    "merge.legend_skipped": "स्किप्ड - अनुवादित नहीं",
+    "merge.legend_skipped": "स्किप्ड - यथावत रखा गया",
     "merge.legend_selection_main": "मेन चयन",
     "merge.legend_selection_branch": "ब्रांच चयन",
     "merge.legend_manual_edit": "मैनुअल एडिट",

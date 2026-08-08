@@ -596,7 +596,7 @@
     "merge.legend_ai": "IA - traducción IA",
     "merge.legend_validated": "Validado - IA revisada",
     "merge.legend_mod_ui": "Mod UI - interfaz del mod",
-    "merge.legend_skipped": "Omitido - no traducido",
+    "merge.legend_skipped": "Omitido - conservado tal cual",
     "merge.legend_selection_main": "Selección principal",
     "merge.legend_selection_branch": "Selección de rama",
     "merge.legend_manual_edit": "Edición manual",

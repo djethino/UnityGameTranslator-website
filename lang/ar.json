@@ -596,7 +596,7 @@
     "merge.legend_ai": "آلي - ترجمة ذكاء اصطناعي",
     "merge.legend_validated": "معتمد - ذكاء اصطناعي مراجع",
     "merge.legend_mod_ui": "واجهة الإضافة - واجهة الإضافة",
-    "merge.legend_skipped": "متخطى - غير مترجم",
+    "merge.legend_skipped": "متخطى - تُرك كما هو",
     "merge.legend_selection_main": "اختيار Main",
     "merge.legend_selection_branch": "اختيار Branch",
     "merge.legend_manual_edit": "تعديل يدوي",

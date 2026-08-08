@@ -596,7 +596,7 @@
     "merge.legend_ai": "AI - AI翻訳",
     "merge.legend_validated": "Validated - AIレビュー済み",
     "merge.legend_mod_ui": "Mod UI - Modインターフェース",
-    "merge.legend_skipped": "Skipped - 未翻訳",
+    "merge.legend_skipped": "Skipped - そのまま維持",
     "merge.legend_selection_main": "Main選択",
     "merge.legend_selection_branch": "Branch選択",
     "merge.legend_manual_edit": "手動編集",

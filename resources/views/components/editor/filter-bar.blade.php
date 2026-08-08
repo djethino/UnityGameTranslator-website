@@ -48,14 +48,16 @@
                     class="rounded bg-gray-700 border-gray-600 text-orange-600">
                 <span class="tag-A">A</span>
             </label>
+            {{-- The box takes the tag's own colour — see .tag-S / .tag-M in app.css for why
+                 purple belongs to S and teal to M. --}}
             <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_skipped') }}">
                 <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
-                    class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
                 <span class="tag-S">S</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_mod_ui') }}">
                 <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
-                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                    class="rounded bg-gray-700 border-gray-600 text-teal-600">
                 <span class="tag-M">M</span>
             </label>
         @endif
