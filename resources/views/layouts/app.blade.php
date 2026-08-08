@@ -81,8 +81,10 @@
                         <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
-                        <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}
+                        {{-- The only main-nav entry that leaves the site. Saying so beforehand
+                             costs one glyph and spares the surprise of landing on GitHub. --}}
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="text-gray-300 hover:text-white px-3 py-2 transition">
+                            <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}<i class="fas fa-arrow-up-right-from-square ml-1.5 text-[0.65em] opacity-60"></i>
                         </a>
                         @auth
                         <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
@@ -210,8 +212,8 @@
                 <a href="{{ route('docs') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
                     <i class="fas fa-book mr-3 w-5 text-center"></i> {{ __('nav.docs') }}
                 </a>
-                <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
-                    <i class="fas fa-comments mr-3 w-5 text-center"></i> {{ __('nav.community') }}
+                <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-comments mr-3 w-5 text-center"></i> {{ __('nav.community') }}<i class="fas fa-arrow-up-right-from-square ml-1.5 text-[0.65em] opacity-60"></i>
                 </a>
                 @auth
                 <a href="{{ route('translations.create') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
@@ -331,7 +333,14 @@
         @endif
     @endauth
 
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    {{-- Reading pages are capped at a comfortable measure; WORKSPACES are not. A merge screen
+         puts the main translation beside every contribution selected, so its width is dictated by
+         how many people are being arbitrated between — three branches and the fourth column was
+         cut in mid-word, the last two off screen entirely.
+
+         A page opts out with @section('container', 'w-full px-4 sm:px-6 lg:px-8'), which keeps
+         the decision in the page that knows why it needs the room. --}}
+    <main class="flex-1 @yield('container', 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8') py-8 w-full">
         @if(session('success'))
             <div class="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">
                 {{ session('success') }}

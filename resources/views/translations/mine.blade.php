@@ -19,6 +19,63 @@
         </a>
     </div>
 @else
+    {{-- What this page owes its author, and says nowhere else.
+
+         Both are addressed to them alone: a translation that helps nobody is theirs to fix, not
+         something to display in front of others. And both speak of THEIR interest rather than of
+         our tidiness — the first because an empty file earns them the votes of disappointed
+         players, the second because their work is sitting behind a door nobody is opening. --}}
+    @if($emptyPublished->isNotEmpty())
+        <div class="bg-amber-900/25 border border-amber-700/60 rounded-lg p-4 mb-6">
+            <p class="text-amber-200 font-medium mb-1">
+                <i class="fas fa-hourglass-half mr-2"></i>{{ __('my_translations.empty_published_title') }}
+            </p>
+            <p class="text-sm text-gray-300 mb-2">
+                {{ __('my_translations.empty_published', ['days' => \App\Models\Translation::EMPTY_GRACE_DAYS]) }}
+            </p>
+            <ul class="text-sm text-gray-400 list-disc list-inside">
+                @foreach($emptyPublished as $t)
+                    <li>
+                        <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+                            {{ $t->game->name }} — {{ $t->target_language }}
+                        </a>
+                        <span class="text-gray-500">
+                            ({{ __('my_translations.pending_lines', ['count' => number_format($t->capture_count)]) }})
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if($stalledBranches->isNotEmpty())
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
+            <p class="text-white font-medium mb-1">
+                <i class="fas fa-moon mr-2 text-purple-400"></i>{{ __('my_translations.main_silent_title') }}
+            </p>
+            <p class="text-sm text-gray-300 mb-2">{{ __('my_translations.main_silent') }}</p>
+            <ul class="text-sm text-gray-400 list-disc list-inside">
+                @foreach($stalledBranches as $t)
+                    <li>
+                        <a href="{{ route('translations.dashboard', $t) }}" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                            {{ $t->game->name }} — {{ $t->target_language }}
+                        </a>
+                        @if($t->daysSinceMainMoved() !== null)
+                            <span class="text-gray-500">
+                                ({{ __('my_translations.silent_for', ['days' => $t->daysSinceMainMoved()]) }})
+                            </span>
+                        @endif
+                        {{-- Level 2 only: the way out is offered once the silence has lasted, and
+                             never a word about it before. --}}
+                        @if($t->shouldOfferFork())
+                            <span class="text-purple-300">— {{ __('my_translations.can_go_independent') }}</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Only worth showing once there is something to reorder: a sort control above a single
          translation is furniture. Same auto-submit and same wording as the games list, so the
          same gesture works on both screens. --}}
@@ -149,6 +206,7 @@
                                         {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
                                     </span>
                                 @endif
+                                <x-translation-completeness :translation="$translation" />
                                 <x-game-coverage :translation="$translation"
                                     :game-max="$gameMaxes[$translation->game_id] ?? null" />
                             @else

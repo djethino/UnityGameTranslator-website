@@ -136,6 +136,10 @@ class TranslationController extends Controller
                     // translation of the game. Additive fields — an older mod ignores them.
                     'review_coverage' => $t->reviewCoverage(),
                     'game_coverage' => $t->gameCoverage(),
+                    // Share of what the file already met in game that is translated. The mod
+                    // could derive it from the counts, but the formula decides what a badge
+                    // says, and a published measure has one definition — here.
+                    'completeness' => $t->completeness(),
                     // When it was published, which updated_at cannot say: a vote moves that one.
                     // The mod flags a newcomer from it — being noticed is a newcomer's one
                     // advantage over a translation that has had months to gather downloads.
@@ -388,6 +392,49 @@ class TranslationController extends Controller
      *
      * POST /api/v1/translations
      */
+    /**
+     * The origin a fork declares, once it has been checked.
+     *
+     * Only ever set on a genuinely new translation: an update keeps what it already had, and a
+     * branch carries a parent_id, which says the same thing while the row still exists.
+     *
+     * The POINTER is verified, the NUMBERS are taken as declared — we cannot recompute how much
+     * the original held at the instant of the fork, since it has grown since. A pointer that
+     * resolves to nothing is dropped whole rather than stored dangling.
+     *
+     * A mod that sends none of this — every released version — lands on the same nulls as
+     * before. Nothing here is required, and nothing here can fail an upload.
+     *
+     * @return array{translation_id: ?int, user_id: ?int, resolved_lines: ?int, file_hash: ?string}
+     */
+    private function resolveForkOrigin(Request $request, ?Translation $existing, ?int $parentId): array
+    {
+        $empty = ['translation_id' => null, 'user_id' => null, 'resolved_lines' => null, 'file_hash' => null];
+
+        if ($existing || $parentId) {
+            return $empty;
+        }
+
+        $declaredId = (int) $request->input('forked_from_id');
+        if ($declaredId <= 0) {
+            return $empty;
+        }
+
+        $source = Translation::find($declaredId);
+        if (!$source) {
+            return $empty;
+        }
+
+        return [
+            'translation_id' => $source->id,
+            'user_id' => $source->user_id,
+            'resolved_lines' => $request->filled('forked_from_lines')
+                ? max(0, (int) $request->input('forked_from_lines'))
+                : null,
+            'file_hash' => $request->input('forked_from_hash'),
+        ];
+    }
+
     public function store(Request $request, TranslationService $service): JsonResponse
     {
         $languages = config('languages');
@@ -541,10 +588,24 @@ class TranslationController extends Controller
         }
 
         // NEW or BRANCH: Create new translation
+        // Where a fork came from. The mod severs its sync with the original — it must, or it
+        // would keep offering to merge from a lineage it has left — and used to sever the
+        // provenance with it, so a fork reached the site as a brand-new translation and whoever
+        // wrote the first thousands of lines lost every trace of it.
+        //
+        // The POINTER is verified, the NUMBERS are taken as declared. We cannot recompute how
+        // much the original held at the instant of the fork — it has grown since — but a claim
+        // that resolves to nothing is dropped whole rather than stored dangling.
+        $origin = $this->resolveForkOrigin($request, $existingTranslation, $parentId);
+
         $translation = Translation::create([
             'game_id' => $game->id,
             'user_id' => $userId,
             'parent_id' => $parentId,
+            'origin_translation_id' => $origin['translation_id'],
+            'origin_user_id' => $origin['user_id'],
+            'origin_resolved_lines' => $origin['resolved_lines'],
+            'origin_file_hash' => $origin['file_hash'],
             'source_language' => $languages['source'],
             'target_language' => $languages['target'],
             'line_count' => $parsed['line_count'],

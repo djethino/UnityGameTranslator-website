@@ -9,7 +9,9 @@
     "@@type": "WebSite",
     "name": "UnityGameTranslator",
     "url": "{{ url('/') }}",
-    "description": "{{ __('home.hero_description') }}",
+    {{-- Its own sentence: the visible pitch is now four short lines, and a search engine needs
+         one complete statement rather than a fragment of a layout. --}}
+    "description": "{{ __('seo.home_description') }}",
     "inLanguage": "{{ app()->getLocale() }}",
     "potentialAction": {
         "@@type": "SearchAction",
@@ -46,26 +48,59 @@
         <h1 class="glitch-text text-4xl md:text-5xl font-bold text-white mb-4">
             <i class="fas fa-language text-purple-400 mr-3"></i>{{ __('home.hero_title') }}
         </h1>
-        <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-6">
-            {{ __('home.hero_description') }}
+        {{-- Two beats, and they are not interchangeable.
+
+             The first is passive and it is what makes people stay: the game changes language on
+             its own. The second is where the reader enters — correcting a line, and deciding
+             whether it goes any further. Half the product (the editors, the review tags, the
+             community) used to be missing from the first thing anyone read.
+
+             What this replaces was a single 45-word sentence in which "free" sat inside a
+             subordinate clause and "with your own key" — the only mention of a cost — occupied
+             the last three words, which is the position nobody reads. --}}
+        <p class="text-xl md:text-2xl text-white font-medium max-w-3xl mx-auto mb-3">
+            {{ __('home.hero_lead') }}
         </p>
-        <!-- Key features tags -->
-        <div class="flex flex-wrap justify-center gap-2 mb-8">
-            <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fas fa-language text-purple-400 mr-1"></i>{{ __('home.tag_local_ai') }}
-            </span>
-            <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fas fa-users text-purple-400 mr-1"></i>{{ __('home.tag_community') }}
-            </span>
-            <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fas fa-wifi-slash text-purple-400 mr-1"></i>{{ __('home.tag_privacy') }}
-            </span>
-            <span class="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-300">
-                <i class="fab fa-github text-purple-400 mr-1"></i>{{ __('home.tag_opensource') }}
-            </span>
+        <p class="text-base md:text-lg text-gray-300 max-w-2xl mx-auto mb-8">
+            {{ __('home.hero_lead_secondary') }}
+        </p>
+
+        {{-- Where a translation comes from, and what it costs.
+
+             Ordered 2 + 2: the first two ask for nothing beyond the mod, the last two need
+             something plugged in. It also puts the handwritten path right after the community
+             one — the place it actually holds in this project, rather than last after the
+             machines.
+
+             The price teaches itself by ALIGNMENT: three lines open on "free", the fourth on
+             "your key, their price", all starting at the same x. No warning box, no colour
+             coding — the contrast does the work. --}}
+        @php
+            $sources = [
+                ['home.source_community', 'home.source_community_detail', null, null],
+                ['home.source_manual', 'home.source_manual_detail', 'home.link_editors', '#editing'],
+                ['home.source_local', 'home.source_local_detail', 'home.link_install_engine', '#configuration'],
+                // Both land on the settings panel, not on the JSON block that used to greet
+                // whoever clicked "connect your key" — an answer for someone who already knows,
+                // offered to someone who has just decided to try.
+                ['home.source_online', 'home.source_online_detail', 'home.link_connect_key', '#configuration'],
+            ];
+        @endphp
+        <div class="max-w-3xl mx-auto mb-8 text-left grid gap-x-6 gap-y-3 sm:grid-cols-[auto_1fr]">
+            @foreach($sources as [$label, $detail, $linkLabel, $anchor])
+                <div class="text-white font-medium">{{ __($label) }}</div>
+                <div class="text-sm text-gray-400 sm:pt-0.5">
+                    {{ __($detail) }}@if($linkLabel)
+                        <a href="{{ route('docs') }}{{ $anchor }}" class="text-purple-400 hover:text-purple-300 whitespace-nowrap">&rarr;&nbsp;{{ __($linkLabel) }}</a>
+                    @endif
+                </div>
+            @endforeach
         </div>
-        <div class="flex flex-wrap justify-center gap-4">
-            <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
+
+        {{-- One primary action, one secondary, one link. Three buttons of equal weight are no
+             hierarchy at all, and the download lost its force among them. --}}
+        <div class="flex flex-wrap justify-center items-center gap-4">
+            <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank" rel="noopener" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
                 <i class="fas fa-download mr-2"></i>
                 {{ __('home.download_mod') }}
             </a>
@@ -73,11 +108,17 @@
                 <i class="fas fa-gamepad mr-2"></i>
                 {{ __('home.view_games') }}
             </a>
-            <a href="{{ route('docs') }}" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center border border-gray-600">
-                <i class="fas fa-book mr-2"></i>
-                {{ __('home.view_docs') }}
+            <a href="{{ route('docs') }}" class="text-gray-300 hover:text-white underline underline-offset-4 decoration-gray-600 hover:decoration-gray-300 transition">
+                {{ __('home.read_docs') }}
             </a>
         </div>
+
+        {{-- The prerequisite sits where the decision to act is made: it does not slow the
+             reading of the pitch, and it surprises nobody at install time. --}}
+        <p class="text-sm text-gray-500 mt-4">
+            {{ __('home.requires_loader') }} —
+            <a href="{{ route('docs') }}#installation" class="text-gray-400 hover:text-gray-200 underline underline-offset-2">{{ __('home.link_install_guide') }}</a>
+        </p>
     </div>
 
     <!-- Search Bar -->

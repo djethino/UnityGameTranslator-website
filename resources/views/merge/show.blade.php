@@ -2,6 +2,11 @@
 
 @section('title', ($mode === 'edit' ? __('merge.edit_heading') : __('merge.title')) . ' - ' . $main->game->name)
 
+{{-- No container override: outside the workbench this is an ordinary page, the same width as
+     every other screen on the site. Stretching it to the window served neither use — it did not
+     make four columns fit, and it made the page unlike everything around it. The room is asked
+     for explicitly, through the workbench, and only for as long as the arbitration lasts. --}}
+
 @section('content')
 @php
     // Navigation state is now limited to what the SERVER needs to rebuild the
@@ -294,6 +299,10 @@
                         class="rounded bg-gray-700 border-gray-600 text-gray-500">
                     <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
                 </label>
+
+                {{-- Not a layout imposed on everyone: the page stays an ordinary page, and this
+                     hands the whole window to the grid for as long as the work lasts. --}}
+                <x-editor.workbench-toggle class="ml-auto" />
             </div>
 
             @include('partials.editor-floating-search')
@@ -351,26 +360,76 @@
                 </div>
             </div>
 
-            {{-- Table --}}
-            <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-900 sticky top-0 z-10">
+            {{-- The workbench strip, shared by every editing screen — see
+                 components/editor/workbench-bar.blade.php. Only the category filters differ from
+                 one screen to the next, so only those are passed in. --}}
+            <x-editor.workbench-bar save="submitMerge()">
+                @if($mode === 'merge')
+                    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge.filter_new_keys') }}">
+                        <input type="checkbox" :checked="filters.catNew" @change="toggleFilter('catNew')"
+                               class="rounded bg-gray-700 border-gray-600 text-green-600">
+                        <span class="text-green-400">+</span>
+                    </label>
+                    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge.filter_differences') }}">
+                        <input type="checkbox" :checked="filters.catDiff" @change="toggleFilter('catDiff')"
+                               class="rounded bg-gray-700 border-gray-600 text-yellow-600">
+                        <span class="text-yellow-400">≠</span>
+                    </label>
+                    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.same') }}">
+                        <input type="checkbox" :checked="filters.catOther" @change="toggleFilter('catOther')"
+                               class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                        <span class="text-gray-500">=</span>
+                    </label>
+                    <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+                @endif
+            </x-editor.workbench-bar>
+
+            {{-- An ordinary block that the page scrolls, until the workbench tears it out and hands
+                 it the window — then the scrollbars belong to the box and sit at the edges of the
+                 screen, where they can be reached without leaving the line being read.
+
+                 A guessed height was the mistake here before: the box was capped at "100vh minus
+                 14rem" while the chrome above it runs to some four hundred pixels, so it hung below
+                 the fold and took its horizontal scrollbar with it. --}}
+            <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
+                 :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
+                {{-- border-separate, and it is not cosmetic: with the default collapsed borders,
+                     a browser does not paint the background of a sticky cell — only its text. The
+                     frozen key column therefore let every scrolled column show through behind its
+                     own words, which reads as a rendering fault and made the column useless for
+                     the one thing it is for, reading and copying the source line. --}}
+                <table class="editor-grid w-full text-sm border-separate border-spacing-0">
+                    <thead class="bg-gray-900 sticky top-0 z-20">
                         <tr>
                             {{-- Capture-order index (toggleable, sortable) --}}
+                            {{-- The line's identity travels with it. Scrolling sideways used to
+                                 carry the key off screen, and past the third column nobody could
+                                 tell which line they were looking at. --}}
+                            {{-- The width is PINNED, not suggested. A table lays its columns out
+                                 to fit their content, so "w-16" was a hint the browser was free
+                                 to ignore — and the key column, frozen at a hard left-16, then
+                                 left a strip of nothing where the scrolled columns showed
+                                 through. --}}
                             <th x-show="showIndexColumn" x-cloak
-                                class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                                class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
                                 @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
                                 <div class="flex items-center justify-end gap-1">
                                     <span class="text-xs">#</span>
                                     <i class="fas text-xs" :class="getSortIcon('index')"></i>
                                 </div>
                             </th>
-                            <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
+                            {{-- A right edge, because a frozen column is not an overlapping one:
+                                 without it, the columns sliding underneath read as a rendering
+                                 fault rather than as content passing behind a fixed edge. --}}
+                            <th data-col="key"
+                                class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                :class="showIndexColumn ? 'left-16' : 'left-0'"
                                 @click="toggleSort('key')">
                                 <div class="flex items-center gap-2">
                                     {{ __('merge.key') }}
                                     <i class="fas" :class="getSortIcon('key')"></i>
                                 </div>
+                                <x-editor.col-resize col="key" />
                             </th>
                             <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
                                 @click="toggleSort('mainTag')">
@@ -379,21 +438,25 @@
                                     <i class="fas text-xs" :class="getSortIcon('mainTag')"></i>
                                 </div>
                             </th>
-                            <th class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
+                            <th data-col="main"
+                                class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
                                 @click="toggleSort('mainValue')">
                                 <div class="flex items-center gap-2">
                                     <span class="text-green-400 font-medium">Main</span>
                                     <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
                                     <i class="fas" :class="getSortIcon('mainValue')"></i>
                                 </div>
+                                <x-editor.col-resize col="main" />
                             </th>
                             <template x-for="branch in branches" :key="branch.id">
-                                <th colspan="2" class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                <th colspan="2" :data-col="'branch-' + branch.id"
+                                    class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-blue-400 font-medium" x-text="branch.name"></span>
                                         <span class="text-xs text-gray-500"
                                             x-text="'(' + branch.human_count + 'H / ' + branch.validated_count + 'V / ' + branch.ai_count + 'A)'"></span>
                                     </div>
+                                    <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                 </th>
                             </template>
                         </tr>
@@ -405,16 +468,20 @@
                          scopes (wrong values shown on wrong keys) — unacceptable in
                          an editor. The window size is the safe lever instead. --}}
                     <template x-for="(key, idx) in visibleKeys" :key="key">
-                            <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                            <tr class="hover:bg-gray-750 transition-colors"
                                 :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                                 :data-row-index="idx">
                                 {{-- Capture-order index --}}
+                                {{-- Frozen with its header: an opaque background is required, or
+                                     the scrolled columns show through underneath. --}}
                                 <td x-show="showIndexColumn" x-cloak
-                                    class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                    class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
                                     x-text="indexCellText(key)"></td>
 
                                 {{-- Key --}}
-                                <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words">
+                                <td data-col="key"
+                                    class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
                                     <span :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
                                 </td>
 
@@ -439,7 +506,7 @@
                                 </td>
 
                                 {{-- Main Value (click = keep/validate main, dblclick/pencil = edit) --}}
-                                <td class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                     :class="[getCellClass(key, 'main'), isDeleted(key) ? 'deleted-cell' : '']"
                                     @click="select(key, 'main')"
                                     @dblclick="editCell(key, getValue(mainData[key]))">
@@ -472,6 +539,7 @@
                                 {{-- Branch columns (click = take this branch's version) --}}
                                 <template x-for="branch in branches" :key="branch.id">
                                     <td class="px-2 py-2 border-l border-gray-700 merge-cell" colspan="2"
+                                        :data-col="'branch-' + branch.id"
                                         :class="[getCellClass(key, 'branch_' + branch.id), branchCellTint(branch, key)]"
                                         @click="select(key, 'branch_' + branch.id)">
                                         <template x-if="branch.content[key] !== undefined">
@@ -515,8 +583,12 @@
                  wraps nothing but this bar — sticky on the inner div would
                  have no room to stick and the bar would sit at the very
                  bottom of the page --}}
+            {{-- z-40, and the frozen key column below it. A sticky element paints above ordinary
+                 content whatever its order in the document, so the key cells — sticky since they
+                 have to stay legible while scrolling sideways — were coming out on top of this
+                 bar and hiding the save button behind them. --}}
             <form method="POST" action="{{ route('translations.merge.apply', $uuid) }}" id="mergeForm"
-                class="mt-6 sticky bottom-4">
+                class="mt-6 sticky bottom-4 z-40">
                 @csrf
                 {{-- Server needs mode + branches back for the redirect --}}
                 <input type="hidden" name="mode" value="{{ $mode }}">

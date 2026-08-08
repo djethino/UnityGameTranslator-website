@@ -31,6 +31,15 @@
 .merge-cell { cursor: pointer; transition: all 150ms; user-select: none; -webkit-user-select: none; position: relative; }
 .merge-cell:hover { background-color: rgba(55, 65, 81, 0.5); }
 
+/* The editor grids (merge view, mod comparison, edit session).
+ *
+ * They run on border-separate, which the frozen key column requires — a browser
+ * does not paint a sticky cell's background under collapsed borders. The cost is
+ * that a <tr> no longer paints its own border, so the line separating one entry
+ * from the next has to come from the cells. Once, here, rather than on every
+ * <td> of three templates. */
+.editor-grid tbody td { border-top: 1px solid rgb(55 65 81); }
+
 .selected-local, .selected-main { background-color: rgba(20, 83, 45, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(34 197 94); }
 .selected-online, .selected-branch { background-color: rgba(30, 58, 138, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(59 130 246); }
 .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }

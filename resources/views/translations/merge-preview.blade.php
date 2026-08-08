@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+{{-- Same reason as the merge screen it shares its editor with: local beside online, side by
+     side, and the window decides how much room that takes. --}}
+@section('container', 'w-full px-4 sm:px-6 lg:px-8')
+
 @section('title', __('merge_preview.title') . ' - ' . $translation->game->name)
 
 @section('content')
@@ -265,6 +269,10 @@
             <button type="button" @click="selectAllOnline()" class="text-blue-400 hover:text-blue-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_online') }}
             </button>
+
+            {{-- Same view option, same place, same wording as the merge view: three columns of
+                 text to arbitrate has the same need for room whichever screen it is on. --}}
+            <x-editor.workbench-toggle class="ml-auto" />
         </div>
 
         @include('partials.editor-floating-search')
@@ -321,27 +329,71 @@
             </div>
         </div>
 
-        {{-- Table --}}
-        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-900 sticky top-0 z-10">
+        {{-- The workbench strip, shared with the merge view — see
+             components/editor/workbench-bar.blade.php. Only the category filters differ from one
+             screen to the next, so only those are passed in. --}}
+        <x-editor.workbench-bar save="saveToServer()" save-disabled="saving || totalChanges === 0">
+            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.local_only') }}">
+                <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
+                       class="rounded bg-gray-700 border-gray-600 text-green-600">
+                <span class="text-green-400"><i class="fas fa-desktop"></i></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.online_only') }}">
+                <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
+                       class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                <span class="text-blue-400"><i class="fas fa-cloud"></i></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.different') }}">
+                <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
+                       class="rounded bg-gray-700 border-gray-600 text-yellow-600">
+                <span class="text-yellow-400">≠</span>
+            </label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.same') }}">
+                <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
+                       class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                <span class="text-gray-500">=</span>
+            </label>
+            <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+        </x-editor.workbench-bar>
+
+        {{-- Table. An ordinary block that the page scrolls, until the workbench tears it out and
+             hands it the window — then the scrollbars belong to the box and sit at the edges of
+             the screen, where they can be reached without leaving the line being read. --}}
+        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
+             :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 mb-0 rounded-none border-0 overflow-auto'">
+            {{-- border-separate, and it is not cosmetic: with the default collapsed borders, a
+                 browser does not paint the background of a sticky cell — only its text, so the
+                 frozen key column would let every scrolled column show through behind its own
+                 words. --}}
+            <table class="editor-grid w-full text-sm border-separate border-spacing-0">
+                <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
-                        {{-- Capture-order index (toggleable, sortable) --}}
+                        {{-- Capture-order index (toggleable, sortable). Frozen with the key: the
+                             line's identity has to travel with it when the values scroll past.
+                             The width is PINNED, not suggested — a table lays its columns out to
+                             fit their content, so "w-16" alone is a hint it may ignore, and the
+                             key column frozen at a hard left-16 would then leave a strip of
+                             nothing where the scrolled columns show through. --}}
                         <th x-show="showIndexColumn" x-cloak
-                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
                             @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
                             <div class="flex items-center justify-end gap-1">
                                 <span class="text-xs">#</span>
                                 <i class="fas text-xs" :class="getSortIcon('index')"></i>
                             </div>
                         </th>
-                        {{-- Key column with sort --}}
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
+                        {{-- A right edge, because a frozen column is not an overlapping one:
+                             without it, the columns sliding underneath read as a rendering fault
+                             rather than as content passing behind a fixed edge. --}}
+                        <th data-col="key"
+                            class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                            :class="showIndexColumn ? 'left-16' : 'left-0'"
                             @click="toggleSort('key')">
                             <div class="flex items-center gap-2">
                                 {{ __('merge_preview.key') }}
                                 <i class="fas" :class="getSortIcon('key')"></i>
                             </div>
+                            <x-editor.col-resize col="key" />
                         </th>
                         {{-- Local Tag --}}
                         <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
@@ -352,12 +404,14 @@
                             </div>
                         </th>
                         {{-- Local Value --}}
-                        <th class="px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                        <th data-col="local"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
                             @click="toggleSort('localValue')">
                             <div class="flex items-center gap-2">
                                 <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
                                 <i class="fas" :class="getSortIcon('localValue')"></i>
                             </div>
+                            <x-editor.col-resize col="local" />
                         </th>
                         {{-- Online Tag --}}
                         <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
@@ -368,13 +422,15 @@
                             </div>
                         </th>
                         {{-- Online Value --}}
-                        <th class="px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                        <th data-col="online"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
                             @click="toggleSort('onlineValue')">
                             <div class="flex items-center gap-2">
                                 <span class="text-blue-400 font-medium">{{ __('merge_preview.online_version') }}</span>
                                 <span class="text-xs text-gray-500">({{ $translation->user->name }})</span>
                                 <i class="fas" :class="getSortIcon('onlineValue')"></i>
                             </div>
+                            <x-editor.col-resize col="online" />
                         </th>
                     </tr>
                 </thead>
@@ -385,16 +441,20 @@
                          scopes (wrong values shown on wrong keys) — unacceptable in
                          an editor. The window size is the safe lever instead. --}}
                     <template x-for="(key, idx) in visibleKeys" :key="key">
-                        <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                        <tr class="hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                             :data-row-index="idx">
-                            {{-- Capture-order index --}}
+                            {{-- Capture-order index. Frozen with its header: an opaque background
+                                 is required, or the scrolled columns show through underneath. --}}
                             <td x-show="showIndexColumn" x-cloak
-                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
                                 x-text="indexCellText(key)"></td>
 
                             {{-- Key column --}}
-                            <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
+                            <td data-col="key"
+                                class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                :class="showIndexColumn ? 'left-16' : 'left-0'"
+                                x-safe-html="highlightKey(key)"></td>
 
                             {{-- Local Tag column (clickable for tag change).
                                  Carries the selection colour like its online
@@ -419,7 +479,7 @@
                             </td>
 
                             {{-- Local Value column --}}
-                            <td class="px-4 py-2 border-l border-gray-700 merge-cell"
+                            <td data-col="local" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="[getCellClass(key, 'local'), isDeleted(key) ? 'deleted-cell' : '']"
                                 @click="select(key, 'local')"
                                 @dblclick="editCell(key, getValue(localData[key]))">
@@ -461,7 +521,7 @@
                             </td>
 
                             {{-- Online Value column --}}
-                            <td class="px-4 py-2 border-l border-gray-700 merge-cell"
+                            <td data-col="online" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
@@ -498,7 +558,10 @@
         {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
              buttons: the instructions wrap instead of squeezing the save button.
              ↑↓ shortcuts float at both ends of the bar --}}
-        <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
+        {{-- z-40, and it is not decoration: a sticky cell creates its own stacking context and
+             paints above ordinary content, so without it the frozen key column slid over the save
+             bar and hid the button. --}}
+        <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4 z-40">
             <div class="flex flex-col gap-1 shrink-0">
                 <button type="button" @click="scrollToTop()"
                     class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">

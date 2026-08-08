@@ -12,6 +12,12 @@ class Translation extends Model
         'game_id',
         'user_id',
         'parent_id',
+        // Written once, at the fork, and never touched again — see the migration
+        'origin_translation_id',
+        'origin_user_id',
+        'origin_resolved_lines',
+        'origin_file_hash',
+        'merged_at',
         'source_language',
         'target_language',
         'line_count',
@@ -39,6 +45,10 @@ class Translation extends Model
         'game_id' => 'integer',
         'user_id' => 'integer',
         'parent_id' => 'integer',
+        'origin_translation_id' => 'integer',
+        'origin_user_id' => 'integer',
+        'origin_resolved_lines' => 'integer',
+        'merged_at' => 'datetime',
         'line_count' => 'integer',
         'capture_count' => 'integer',
         'skipped_count' => 'integer',
@@ -872,6 +882,192 @@ class Translation extends Model
     }
 
     /**
+     * How much of what this file has ENCOUNTERED is actually translated: resolved / (resolved +
+     * captured). Captured lines are texts the mod met in game and nobody has translated yet, so
+     * they are known, counted, pending work — unlike the rest of the game, whose size nobody
+     * knows.
+     *
+     * This is the only completeness measure that stands on its own: game coverage needs rival
+     * translations to compare against, this one does not. Null when the file holds nothing at
+     * all, which is an absence of translation rather than a translation at zero.
+     */
+    public function completeness(): ?float
+    {
+        $encountered = $this->resolved_lines + $this->capture_count;
+        if ($encountered === 0) {
+            return null;
+        }
+
+        return $this->resolved_lines / $encountered;
+    }
+
+    /** The account this translation was forked from, when it still exists. */
+    public function originAuthor()
+    {
+        return $this->belongsTo(User::class, 'origin_user_id');
+    }
+
+    /**
+     * Public translations started from this one — real forks, not branches.
+     *
+     * A fork leaves the lineage (new file_uuid), so grouping by uuid loses it entirely: the game
+     * page's "Community Forks" section was in fact listing BRANCHES, which are private to the
+     * Main owner and had no business being shown publicly. This is the real list.
+     */
+    public function publicForks()
+    {
+        return $this->hasMany(self::class, 'origin_translation_id')
+            ->where('visibility', 'public');
+    }
+
+    /** Was this one started from somebody else's work? */
+    public function hasOrigin(): bool
+    {
+        return $this->origin_user_id !== null
+            && (int) $this->origin_user_id !== (int) $this->user_id;
+    }
+
+    /**
+     * Nothing translated at all — only texts the mod met in game and nobody has written yet.
+     *
+     * Deliberately the strictest possible test rather than a threshold: zero is unambiguous and
+     * cannot catch a work in progress by accident. A file at 15% is told so by completeness();
+     * this one has nothing to tell a player who downloads it, because their game will not
+     * change by a single word.
+     */
+    public function isCaptureOnly(): bool
+    {
+        return $this->resolved_lines === 0 && $this->capture_count > 0;
+    }
+
+    /**
+     * How long silence is allowed to last before it means abandonment — measured in days, but
+     * not the same number of days for everyone.
+     *
+     * "Finished" and "abandoned" look identical from the outside: in both cases nothing moves.
+     * What tells them apart is what is LEFT. A file whose every line still waits to be read, gone
+     * quiet for two months, has been dropped. A file read from end to end, quiet for six months,
+     * is simply done — and treating the two alike would either hound the second or leave the
+     * first squatting the public place for half a year.
+     *
+     * So the tolerance scales with the work already settled: everything to do → three weeks,
+     * nothing left → half a year. The share used is the product of the two figures already
+     * published on the site — how much is translated, and how much of that a human has read —
+     * so this introduces no new measure, only a use for them.
+     *
+     * MIN is 21 days on purpose: it is the point at which a contributor is offered a way out,
+     * and the two must agree or the site would say "abandoned" on one screen and "still alive"
+     * on another.
+     */
+    public const DORMANT_MIN_DAYS = 21;
+    public const DORMANT_MAX_DAYS = 180;
+
+    /**
+     * Of everything this file has met in game, how much a human has settled. Null when it has
+     * met nothing at all.
+     */
+    public function settledShare(): ?float
+    {
+        $encountered = $this->resolved_lines + $this->capture_count;
+        if ($encountered === 0) {
+            return null;
+        }
+
+        return $this->reviewed_lines / $encountered;
+    }
+
+    /** How many days of silence this particular translation is allowed before it counts as gone. */
+    public function dormantAfterDays(): int
+    {
+        $settled = $this->settledShare() ?? 0.0;
+
+        return (int) round(
+            self::DORMANT_MIN_DAYS + (self::DORMANT_MAX_DAYS - self::DORMANT_MIN_DAYS) * $settled
+        );
+    }
+
+    /** Has this translation been silent past its own tolerance? */
+    public function isDormant(): bool
+    {
+        // A file holding no translation at all is not waiting, whatever its dates say.
+        if ($this->isCaptureOnly()) {
+            return true;
+        }
+
+        return $this->contentChangedAt()->diffInDays(now()) >= $this->dormantAfterDays();
+    }
+
+    /** Days since the Main's content last changed, or null when there is no Main above us. */
+    public function daysSinceMainMoved(): ?int
+    {
+        $main = $this->getMain();
+        if (!$main || $main->id === $this->id) {
+            return null;
+        }
+
+        return (int) $main->contentChangedAt()->diffInDays(now());
+    }
+
+    /**
+     * Palier 1 — the contributor is TOLD, and nothing more. A third of the way to abandonment:
+     * seven days for a Main with everything left to read, two months for one that is all but
+     * finished. Never a word about forking at this stage.
+     */
+    public function mainIsDormant(): bool
+    {
+        $main = $this->getMain();
+        if (!$main || $main->id === $this->id) {
+            return false;
+        }
+
+        if ($main->isCaptureOnly()) {
+            return true;
+        }
+
+        return $main->contentChangedAt()->diffInDays(now()) >= $main->dormantAfterDays() / 3;
+    }
+
+    /** Palier 2 — silence has lasted long enough that going independent is fair to offer. */
+    public function shouldOfferFork(): bool
+    {
+        $main = $this->getMain();
+
+        return $this->isBranch()
+            && $main !== null
+            && $main->id !== $this->id
+            && $main->isDormant();
+    }
+
+    /**
+     * How long a published translation may hold nothing translated before it leaves the public
+     * listings. Its owner keeps it, sees it, and it comes back the moment one line is written.
+     *
+     * The delay is not a courtesy: it is the time it takes to notice the warning and act. Long
+     * enough that nobody is caught out, short enough that the catalogue does not promise
+     * players a file that will change nothing in their game.
+     */
+    public const EMPTY_GRACE_DAYS = 30;
+
+    /** Has this published-but-empty translation used up its grace period? */
+    public function isEmptyPastGrace(): bool
+    {
+        return $this->isCaptureOnly()
+            && $this->created_at->diffInDays(now()) >= self::EMPTY_GRACE_DAYS;
+    }
+
+    /**
+     * Below this, a file is not translated enough for "how well was it reviewed" to mean
+     * anything, and the review stage stays hidden.
+     *
+     * Two lines translated out of thirteen encountered were shown as "Fully reviewed" — the
+     * loudest badge on the site, on the emptiest file in the catalogue. Reviewing and translating
+     * are two different jobs; the second has to exist before the first can be judged. The floor
+     * is high on purpose: a file at 98% is honestly reviewed, a file at 15% is simply not written
+     * yet.
+     */
+    public const TRANSLATION_FLOOR = 0.9;
+
+    /**
      * How much of the file a human settled, plainly: reviewed / resolved.
      *
      * No weighting here on purpose — this is the number the STAGE is read from, and the stage is
@@ -1021,6 +1217,13 @@ class Translation extends Model
      */
     public function reviewStage(): ?string
     {
+        // Nothing to say about the reading of a text that is not written yet — see
+        // TRANSLATION_FLOOR. The completeness figure takes the badge's place on those files.
+        $completeness = $this->completeness();
+        if ($completeness !== null && $completeness < self::TRANSLATION_FLOOR) {
+            return null;
+        }
+
         $coverage = $this->reviewCoverage();
         if ($coverage === null) {
             return null;
@@ -1045,8 +1248,12 @@ class Translation extends Model
      *
      * Conditions for bonus:
      * - This translation has a parent (is a fork)
-     * - Parent hasn't been updated in 180+ days (abandoned)
+     * - The parent has been silent past its own tolerance (see dormantAfterDays)
      * - This translation was updated within 30 days (active)
+     *
+     * The flat 180 days this used to require said "abandoned" while the contributor screens said
+     * it after three weeks — the same word meaning two things depending on the page. It also
+     * asked the same patience of a file with everything left to read as of one already finished.
      */
     public function getForkBonusAttribute(): float
     {
@@ -1063,7 +1270,7 @@ class Translation extends Model
         // parent looked ALIVE simply because people were still downloading it — and the bonus
         // was refused to the fork that had picked up an abandoned translation, which is the
         // one case it exists for.
-        $parentInactive = $parent->contentChangedAt()->diffInDays(now()) > 180;
+        $parentInactive = $parent->isDormant();
         $selfActive = $this->contentChangedAt()->diffInDays(now()) < 30;
 
         if ($parentInactive && $selfActive) {
@@ -1091,16 +1298,22 @@ class Translation extends Model
      * that would send a complete but unreviewed translation to zero, when raw machine output
      * over a whole game is precisely what the mod exists to produce and is genuinely usable.
      *
-     * This is the answer to "which one do I take", and it is the only place the two rates are
+     * This is the answer to "which one do I take", and it is the only place the rates are
      * combined. The stage answers "has anyone read it", the review rate answers "how well" —
      * neither of them knows how much of the game is in the file.
+     *
+     * Completeness multiplies the result rather than joining the ceiling: leaving lines the mod
+     * already met untranslated is not a smaller translation, it is an unfinished one, and the
+     * file with two lines out of thirteen ranked third of the whole catalogue before this.
+     * It is 1.0 for every file with nothing pending, which is most of them.
      */
     public function usefulness(?int $gameMax = null): float
     {
         $coverage = $this->gameCoverage($gameMax) ?? 0.0;
         $rate = $this->reviewRate() ?? 0.0;
+        $completeness = $this->completeness() ?? 1.0;
 
-        return $coverage * (self::COVERAGE_BASE + (1 - self::COVERAGE_BASE) * $rate);
+        return $completeness * $coverage * (self::COVERAGE_BASE + (1 - self::COVERAGE_BASE) * $rate);
     }
 
     /**

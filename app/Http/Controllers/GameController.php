@@ -19,7 +19,12 @@ class GameController extends Controller
 
     public function index(Request $request)
     {
-        $query = Game::withCount('translations')
+        // A game nobody has published a translation for has nothing to offer a page called
+        // "Browse Translations" — and it happens: a translation gets withdrawn and leaves its
+        // game behind, empty. Its own page stays reachable by URL, where "Be the first to
+        // contribute!" is the right thing to say; a card in the catalogue is not.
+        $query = Game::whereHas('translations', fn ($q) => $q->where('visibility', 'public'))
+            ->withCount('translations')
             ->withSum('translations', 'download_count');
 
         // Search by game name
@@ -122,7 +127,14 @@ class GameController extends Controller
         // 'parent' is loaded because the default sort reads ranking_score, which reads
         // fork_bonus, which reads $this->parent — one SQL query per fork otherwise, on the
         // most visited page of the site.
-        $query = $game->translations()->with(['user', 'parent']);
+        // originAuthor and publicForks are read by every card that has them; loading them here
+        // keeps a page of twenty translations at a handful of queries instead of forty.
+        $query = $game->translations()->with([
+            'user',
+            'parent',
+            'originAuthor',
+            'publicForks.user',
+        ]);
 
         // Filter by target language
         if ($request->filled('target')) {

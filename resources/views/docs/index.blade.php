@@ -77,6 +77,12 @@
         background: rgba(234, 179, 8, 0.1);
         border-color: #eab308;
     }
+    /* Not a tip and not a warning: how the thing works. Purple, like the rest of what the
+       product says about itself. */
+    .callout-info {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: #a855f7;
+    }
     .callout-danger {
         background: rgba(239, 68, 68, 0.1);
         border-color: #ef4444;
@@ -182,8 +188,10 @@
         </div>
     </aside>
 
-    <!-- Main content -->
-    <main class="flex-1 min-w-0 max-w-4xl">
+    {{-- data-section-history turns on the reading trail (resources/js/section-history.js):
+         cross-links inside this page become steps you can walk back. It stays invisible until a
+         link is actually followed, and it keeps nothing once the page is left. --}}
+    <main class="flex-1 min-w-0 max-w-4xl" data-section-history>
         <h1 class="text-3xl font-bold mb-2">
             <i class="fas fa-book mr-3 text-purple-400"></i>{{ __('docs.title') }}
         </h1>
@@ -279,6 +287,21 @@
                         <div class="text-3xl font-bold text-purple-400 mb-2">3</div>
                         <div class="text-sm text-gray-300">{{ __('docs.quick_start.step3') }}</div>
                     </div>
+                </div>
+
+                {{-- How the text is FOUND, said before anyone installs anything.
+
+                     This was the most frequently misunderstood thing about the mod: people
+                     expected a one-click extraction of the whole game, the way a datamining
+                     tool works, and only found out otherwise by asking. The site did say it —
+                     once, in "First launch", a section addressed to someone who has already
+                     installed. Whoever is still deciding never reached it. --}}
+                <div class="callout callout-info mb-6">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-eye text-purple-400 mr-2"></i>
+                        <strong>{{ __('docs.quick_start.discovery_title') }}</strong><br>
+                        {{ __('docs.quick_start.discovery') }}
+                    </p>
                 </div>
 
                 <div class="callout callout-tip">
@@ -520,7 +543,14 @@
             </h2>
 
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <p class="text-gray-300 mb-6">{{ __('docs.quality_system.intro') }}</p>
+                <p class="text-gray-300 mb-2">{{ __('docs.quality_system.intro') }}</p>
+                {{-- The tags and the formulas that read them were two sections apart with nothing
+                     connecting them, though neither means much without the other. --}}
+                <p class="text-sm mb-6">
+                    <a href="#algorithms" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                        <i class="fas fa-arrow-turn-down mr-1 text-xs"></i>{{ __('docs.nav.algorithms') }}
+                    </a>
+                </p>
 
                 <!-- HVAS Badges -->
                 <div class="grid md:grid-cols-4 gap-4 mb-6">
@@ -568,11 +598,27 @@
             </h2>
 
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <p class="text-gray-300 mb-6">{{ __('docs.algorithms.intro') }}</p>
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.intro') }}</p>
+                <p class="text-sm mb-6">
+                    <a href="#quality-system" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                        <i class="fas fa-arrow-turn-up mr-1 text-xs"></i>{{ __('docs.nav.quality_system') }}
+                    </a>
+                </p>
 
-                {{-- One card per algorithm, in reading order: what a file is worth on its own,
-                     then how far it reaches, then how the two decide the order. The dots on the
-                     thresholds carry the colours of the badges they describe. --}}
+                {{-- One card per algorithm, in reading order: is the text written, then has it
+                     been read, then how far it reaches, then how they decide the order. The dots
+                     on the thresholds carry the colours of the badges they describe. --}}
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-amber-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-hourglass-half mr-2 text-purple-400"></i>{{ __('docs.algorithms.completeness_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.completeness_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / (H + V + S + A + captured)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.completeness_floor') }}
+                    </p>
+                </div>
+
                 <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-blue-500 mb-4">
                     <h3 class="font-semibold mb-2 text-white">
                         <i class="fas fa-list-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.stage_title') }}
@@ -610,12 +656,23 @@ c = 0.8 → 1.0</pre>
                     </p>
                 </div>
 
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-orange-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-hourglass-end mr-2 text-purple-400"></i>{{ __('docs.algorithms.dormancy_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.dormancy_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">21 j + 159 j × (H + V + S) / (H + V + S + A + captured)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.dormancy_note') }}
+                    </p>
+                </div>
+
                 <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-purple-500 mb-4">
                     <h3 class="font-semibold mb-2 text-white">
                         <i class="fas fa-arrow-down-wide-short mr-2 text-purple-400"></i>{{ __('docs.algorithms.order_title') }}
                     </h3>
                     <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.order_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">coverage × (0.5 + 0.5 × rate)</pre>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">completeness × coverage × (0.5 + 0.5 × rate)</pre>
                     <p class="text-sm text-gray-400">
                         <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.order_base') }}
                     </p>
@@ -991,23 +1048,90 @@ c = 0.8 → 1.0</pre>
                 <i class="fas fa-cog mr-3 text-purple-400"></i>{{ __('docs.configuration') }}
             </h2>
 
+            {{-- The panel first, the file second.
+
+                 The home page sends people here from "connect your key", and what they landed on
+                 was a JSON block — an answer for someone who already knows what they are doing,
+                 offered to someone who has just decided to try. Nothing in the mod requires
+                 editing that file: the same three choices live in the Translation tab, and this
+                 one screen covers three of the four ways a translation can come about — collect
+                 by hand, a local AI, or an online service. --}}
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 class="text-lg font-semibold text-white mb-2">
+                    <i class="fas fa-sliders mr-2 text-purple-400"></i>{{ __('docs.config.gui_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.config.gui_intro') }}</p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <figure class="text-center">
+                        <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.png') }}"
+                             alt="{{ __('docs.config.gui_ai_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="579" height="916"
+                             loading="lazy"
+                             data-zoomable>
+                        <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_ai_caption') }}</figcaption>
+                    </figure>
+                    <figure class="text-center">
+                        <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.png') }}"
+                             alt="{{ __('docs.config.gui_tools_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="575" height="673"
+                             loading="lazy"
+                             data-zoomable>
+                        <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_tools_caption') }}</figcaption>
+                    </figure>
+                </div>
+            </div>
+
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <p class="text-gray-300 mb-4">{{ __('docs.config_location') }}</p>
+                <h3 class="text-lg font-semibold text-white mb-2">
+                    <i class="fas fa-file-code mr-2 text-purple-400"></i>{{ __('docs.config.file_title') }}
+                </h3>
+                <p class="text-gray-300 mb-3">{{ __('docs.config_location') }}</p>
+
+                {{-- "In the mod folder" was the whole answer, and it is not one: under
+                     MelonLoader the folder holding your data is not the folder the mod was
+                     installed into. Shared component, so the three sections that name this
+                     folder can never drift apart again. --}}
+                <x-docs.mod-folder :subfolders="['config.json']" class="mb-4" />
+                <p class="text-sm text-gray-400 mb-4">
+                    {{ __('docs.config.folder_hint') }}
+                    <a href="#installation" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">{{ __('docs.nav.installation') }}</a>.
+                </p>
+
+                {{-- Written from TokenProtection's own threat model, and deliberately not one
+                     word further: the encryption binds the secrets to the machine, so a copy
+                     taken elsewhere is unreadable — but any process running as the same user can
+                     rebuild the key. Calling that "your keys are safe" is how someone ends up
+                     pasting the file into a support thread. --}}
+                <div class="callout callout-warning mb-6">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-triangle-exclamation text-yellow-400 mr-2"></i>
+                        <strong>{{ __('docs.config.never_share_title') }}</strong><br>
+                        {{ __('docs.config.never_share') }}
+                    </p>
+                </div>
 
                 <pre class="bg-gray-900 rounded p-4 overflow-x-auto text-sm mb-6"><code class="text-gray-300">{
-  "ai_url": "http://localhost:11434",
-  "ai_model": "",
+  "translation_backend": "llm",
+  "ai_url": "http://127.0.0.1:11434",
+  "ai_model": "qwen3.5:latest",
   "ai_api_key": null,
-  "enable_ai": false,
+  "enable_ai": true,
+  "source_language": "auto",
   "target_language": "auto",
+  "game_context": "",
   "settings_hotkey": "F10",
   "online_mode": true,
   "sync": {
-    "check_update_on_start": true,
+    "update_check_frequency": "auto",
     "auto_download": false,
     "notify_updates": true
   }
 }</code></pre>
+
+                <p class="text-gray-300 mb-4">{{ __('docs.config.table_intro') }}</p>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -1059,6 +1183,50 @@ c = 0.8 → 1.0</pre>
                                 <td class="px-4 py-2"><code>false</code></td>
                                 <td class="px-4 py-2">{{ __('docs.config_auto_download') }}</td>
                             </tr>
+
+                            {{-- Everything below is reachable only from the file. Taken from a
+                                 config.json of a game actually being worked on, then checked
+                                 against ModConfig: the table had drifted so far that it still
+                                 documented sync.check_update_on_start, which no longer exists —
+                                 it is read once to migrate old files and then dropped. --}}
+                            @php
+                                $advanced = [
+                                    ['group' => 'docs.config.group_sync'],
+                                    ['sync.update_check_frequency', '"auto"', 'docs.config.update_frequency'],
+                                    ['sync.notify_prereleases', 'false', 'docs.config.notify_prereleases'],
+                                    ['sync.ignored_uuids', '[]', 'docs.config.ignored_uuids'],
+
+                                    ['group' => 'docs.config.group_perf'],
+                                    ['max_text_detection_latency_seconds', '1.0', 'docs.config.detection_latency'],
+                                    ['timeout_ms', '30000', 'docs.config.timeout'],
+                                    ['rate_limit_retry_delay', '3.0', 'docs.config.rate_limit'],
+                                    ['max_font_atlas_size', '0', 'docs.config.atlas_size'],
+
+                                    ['group' => 'docs.config.group_network'],
+                                    ['api_base_url', 'null', 'docs.config.api_base_url'],
+                                    ['api_token_server', 'null', 'docs.config.token_server'],
+                                    ['proxy_mode', '"default"', 'docs.config.proxy_mode'],
+                                    ['proxy_url', 'null', 'docs.config.proxy_url'],
+
+                                    ['group' => 'docs.config.group_risky'],
+                                    ['translate_localization_fallback', 'false', 'docs.config.localization_fallback'],
+                                    ['strict_source_language', 'false', 'docs.config.strict_source'],
+                                    ['translate_mod_ui', 'null', 'docs.config.translate_mod_ui'],
+                                ];
+                            @endphp
+                            @foreach($advanced as $row)
+                                @if(isset($row['group']))
+                                    <tr class="border-t border-gray-700 bg-gray-750">
+                                        <td colspan="3" class="px-4 py-2 text-purple-300 font-semibold">{{ __($row['group']) }}</td>
+                                    </tr>
+                                @else
+                                    <tr class="border-t border-gray-700">
+                                        <td class="px-4 py-2"><code class="text-purple-300">{{ $row[0] }}</code></td>
+                                        <td class="px-4 py-2"><code>{{ $row[1] }}</code></td>
+                                        <td class="px-4 py-2">{{ __($row[2]) }}</td>
+                                    </tr>
+                                @endif
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -1081,18 +1249,7 @@ c = 0.8 → 1.0</pre>
                 <h3 class="font-semibold text-purple-300 mb-2">{{ __('docs.external_resources.where_title') }}</h3>
                 <p class="text-gray-300 mb-3">{{ __('docs.external_resources.where_desc') }}</p>
 
-                <div class="space-y-3 mb-4">
-                    <div>
-                        <p class="font-semibold text-purple-300 mb-1">BepInEx</p>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/fonts/</code>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block mt-1">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/images/</code>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-purple-300 mb-1">MelonLoader</p>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/UserData/UnityGameTranslator/fonts/</code>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block mt-1">&lt;Game&gt;/UserData/UnityGameTranslator/images/</code>
-                    </div>
-                </div>
+                <x-docs.mod-folder :subfolders="['fonts/', 'images/']" class="mb-4" />
 
                 <h3 class="font-semibold text-purple-300 mb-2">{{ __('docs.external_resources.fonts_title') }}</h3>
                 <p class="text-gray-300 mb-2">{{ __('docs.external_resources.fonts_desc') }}</p>
@@ -1145,6 +1302,13 @@ c = 0.8 → 1.0</pre>
                             <li>{{ __('docs.ai_tip2') }}</li>
                             <li>{{ __('docs.ai_tip3') }}</li>
                         </ul>
+                        {{-- Troubleshooting sends people looking for a setting; saying where it
+                             lives beats making them find the section by hand. --}}
+                        <p class="text-sm mt-2">
+                            <a href="#configuration" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                                <i class="fas fa-arrow-turn-down mr-1 text-xs"></i>{{ __('docs.nav.configuration') }}
+                            </a>
+                        </p>
                     </div>
 
                     <div>
@@ -1152,6 +1316,11 @@ c = 0.8 → 1.0</pre>
                             <i class="fas fa-exclamation-triangle mr-2"></i>{{ __('docs.overlay_not_showing') }}
                         </h3>
                         <p class="text-gray-300 text-sm">{{ __('docs.overlay_not_showing_desc') }}</p>
+                        <p class="text-sm mt-2">
+                            <a href="#configuration" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                                <i class="fas fa-arrow-turn-down mr-1 text-xs"></i>{{ __('docs.nav.configuration') }}
+                            </a>
+                        </p>
                     </div>
 
                     <div>

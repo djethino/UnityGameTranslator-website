@@ -53,8 +53,10 @@
         </a>
     @endauth
 
+    {{-- The sign carries the meaning, so it only appears when there is one: "+0" reads as a
+         positive vote at a glance, when zero is precisely the absence of any. --}}
     <span class="{{ $countClass }}{{ $countTone }}" id="vote-count-{{ $translation->id }}">
-        {{ $count >= 0 ? '+' : '' }}{{ $count }}
+        {{ $count > 0 ? '+' : '' }}{{ $count }}
     </span>
 
     @auth

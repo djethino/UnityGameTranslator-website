@@ -17,6 +17,9 @@
  *  - nested mutations happen inside these JS methods, which is fine
  */
 
+import { editorWorkbench } from './editor-workbench.js';
+import { editorColumns } from './editor-columns.js';
+
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
  * then \r, otherwise \r\n would become \n\n. Keys must stay consistent
@@ -68,6 +71,11 @@ export function editorCore(config) {
     const pendingKey = config.pendingKey || (config.persistKey + '_pending');
 
     return {
+        // ── Workbench mode (see editor-workbench.js) ──────────────────────
+        ...editorWorkbench(),
+        // ── Resizable columns (see editor-columns.js) ─────────────────────
+        ...editorColumns(),
+
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
         tagChanges: {},     // key -> { newTag, originalTag, value }
@@ -145,7 +153,9 @@ export function editorCore(config) {
          * component's init().
          */
         initEditorCore() {
+            this.initEditorWorkbench();
             this.restoreUiState();
+            this.initEditorColumns();
             this.restorePendingState();
             try {
                 const storedIndexPref = localStorage.getItem('ugt_editor_show_index');
@@ -419,7 +429,12 @@ export function editorCore(config) {
         /**
          * Keyboard review (bound with @keydown.window on each editor's
          * root): ↑↓ move the cursor, V = the page's validate action,
-         * E = edit, Delete = toggle deletion, Escape hides the cursor.
+         * E = edit, Delete = toggle deletion.
+         *
+         * Escape peels one layer at a time, innermost first: the row cursor,
+         * then the workbench. Taken together they would drop someone out of
+         * full window while all they meant was to put the cursor away.
+         *
          * Form fields and open overlays always keep their keys.
          */
         handleEditorKeydown(event) {
@@ -447,7 +462,11 @@ export function editorCore(config) {
                 const key = this.cursorKey;
                 if (key !== undefined) this.toggleDelete(key);
             } else if (event.key === 'Escape') {
-                this.cursorActive = false;
+                if (this.cursorActive) {
+                    this.cursorActive = false;
+                } else if (this.wide) {
+                    this.toggleWide();
+                }
             }
         },
 
@@ -865,7 +884,8 @@ export function editorCore(config) {
                     sortColumn: this.sortColumn,
                     sortDirection: this.sortDirection,
                     replaceOpen: this.replaceOpen,
-                    replaceValue: this.replaceValue
+                    replaceValue: this.replaceValue,
+                    columnWidths: this.columnWidths
                 }));
             } catch (e) { /* storage full/blocked: non-essential */ }
         },
@@ -888,6 +908,13 @@ export function editorCore(config) {
                 if (['asc', 'desc'].includes(state.sortDirection)) this.sortDirection = state.sortDirection;
                 if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
                 if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
+                if (state.columnWidths && typeof state.columnWidths === 'object') {
+                    // Numbers only: a corrupted or hand-edited entry would otherwise reach the
+                    // style attribute as "60undefinedpx" and collapse the column
+                    for (const [col, width] of Object.entries(state.columnWidths)) {
+                        if (typeof width === 'number' && width > 0) this.columnWidths[col] = width;
+                    }
+                }
             } catch (e) { /* corrupted state: keep defaults */ }
         },
 

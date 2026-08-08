@@ -202,7 +202,9 @@
 
             @if($translation)
             @php $hasSettings = $translation->hasSettings() || $translation->getEffectiveResourcesUrl(); @endphp
-            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden" x-data="{ showVersions: false, showForks: false, showSettings: false }">
+            {{-- Anchored so a Main can point at the forks that grew out of it: they live in
+                 their own group further down the page, having left the lineage. --}}
+            <div id="translation-{{ $translation->id }}" class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden scroll-mt-8" x-data="{ showVersions: false, showForks: false, showSettings: false }">
                 <!-- Main Translation Card -->
                 <div class="p-6">
                     <div class="flex justify-between items-start gap-4">
@@ -230,6 +232,8 @@
                                 @else
                                     <x-review-stage :translation="$translation" class="px-2 py-1" />
                                 @endif
+
+                                <x-translation-completeness :translation="$translation" class="px-2 py-1" />
 
                                 <x-game-coverage :translation="$translation" />
 
@@ -285,7 +289,23 @@
                                 @endif
                                 <span><i class="fas fa-file-alt mr-1"></i> {{ number_format($translation->line_count) }} {{ __('translation.lines', ['count' => '']) }}</span>
                                 <span><i class="fas fa-download mr-1"></i> {{ $group['total_downloads'] }}</span>
+                                {{-- Whose work this was built on. A fork leaves its lineage, so
+                                     nothing else on this page can say it. --}}
+                                <x-translation-origin :translation="$translation" />
                             </div>
+
+                            {{-- Independent translations started from this one. Real forks, not
+                                 the branches shown further down: a fork carries its own uuid and
+                                 owner, so it never appears in this group and was invisible from
+                                 here — the Main had no way to know it had been taken up. --}}
+                            @if($translation->publicForks->isNotEmpty())
+                                <div class="text-sm text-gray-400 mb-2">
+                                    <i class="fas fa-code-branch mr-1"></i>{{ __('translation.taken_up_by') }}
+                                    @foreach($translation->publicForks as $fork)
+                                        <a href="#translation-{{ $fork->id }}" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">{{ $fork->user->name }}</a>{{ !$loop->last ? ',' : '' }}
+                                    @endforeach
+                                </div>
+                            @endif
 
                             <!-- Progress bar -->
                             <div class="mt-2 mb-3">
@@ -341,7 +361,11 @@
                     @if($hasForks)
                         <button @click="showForks = !showForks" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
                             <i class="fas fa-code-branch"></i>
-                            <span>{{ $forks->count() }} community fork{{ $forks->count() > 1 ? 's' : '' }}</span>
+                            {{-- Said "community fork", which is the wrong word — these are
+                                 branches — and pluralised with an English "s" on a site that
+                                 speaks nineteen languages. The count sits in parentheses rather
+                                 than inside the sentence: no language has to agree with it. --}}
+                            <span>{{ __('translation.contributions') }} ({{ $forks->count() }})</span>
                             <i class="fas fa-chevron-down text-xs transition-transform" :class="showForks && 'rotate-180'"></i>
                         </button>
                     @endif
@@ -417,8 +441,17 @@
                 @if($hasForks)
                 <div x-show="showForks" x-collapse class="border-t border-gray-700">
                     <div class="px-6 py-4 bg-gray-850">
+                        {{-- These are BRANCHES, and calling them forks guaranteed the confusion:
+                             a fork leaves the lineage with its own uuid and stands on its own,
+                             a branch is a contribution waiting for the Main to take it.
+
+                             Kept public on purpose. The CONTENT of a branch is private — nobody
+                             but the Main can download it — but its EXISTENCE is worth showing:
+                             a Main gone quiet with three contributions pending does not tell the
+                             same story as a Main gone quiet alone, and the people helping
+                             deserve to be named. --}}
                         <h4 class="text-sm font-medium text-gray-400 mb-3">
-                            <i class="fas fa-code-branch mr-2"></i> Community Forks
+                            <i class="fas fa-code-branch mr-2"></i>{{ __('translation.contributions') }}
                         </h4>
                         <div class="space-y-2">
                             @foreach($forks as $fork)
@@ -437,7 +470,7 @@
                                                 <i class="fas fa-pen text-xs mr-1"></i>{{ $fork->contentChangedAt()->isoFormat('LL') }}
                                             </span>
                                         @endif
-                                        <span class="text-gray-400">{{ number_format($fork->line_count) }} lines</span>
+                                        <span class="text-gray-400">{{ __('translation.lines', ['count' => number_format($fork->line_count)]) }}</span>
                                         @if($fork->type)
                                             @if($fork->type === 'ai')
                                                 <span class="bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded text-xs"><i class="fas fa-robot"></i></span>
@@ -451,9 +484,14 @@
                                             <span class="text-gray-400 truncate max-w-xs" title="{{ $fork->notes }}">{{ Str::limit($fork->notes, 50) }}</span>
                                         @endif
                                     </div>
+                                    {{-- Neither a download nor a vote here. The download answered
+                                         403 to everyone but the Main owner, and canBeVotedBy
+                                         refuses a branch outright — a test says so. Offering a
+                                         control that replies 403 is worse than offering none,
+                                         which is the same rule that took the arrows away from an
+                                         author on their own work. Reporting stays: an abusive
+                                         contribution has to be reportable by whoever sees it. --}}
                                     <div class="flex items-center gap-3">
-                                        <!-- Fork vote -->
-                                        <x-vote-buttons :translation="$fork" size="sm" />
                                         @auth
                                             <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>
@@ -463,9 +501,6 @@
                                                 <i class="fas fa-flag"></i>
                                             </a>
                                         @endauth
-                                        <a href="{{ route('translations.download', $fork) }}" class="text-blue-400 hover:text-blue-300">
-                                            <i class="fas fa-download"></i>
-                                        </a>
                                     </div>
                                 </div>
                             @endforeach
@@ -476,6 +511,39 @@
             </div>
             @endif
         @endforeach
+    </div>
+
+    {{-- What happens after the download.
+
+         The page used to stop right here: someone who had just found the translation for their
+         game was left holding a JSON file, with nothing saying it belongs to a mod that has to
+         be installed first — and the only link to that mod was a generic button in the footer.
+         The journey broke exactly where the visitor was most willing to go on.
+
+         It also fills the void that short pages left below the list. --}}
+    <div class="mt-10 bg-gray-800/60 border border-gray-700 rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-circle-play mr-2 text-purple-400"></i>{{ __('games.how_to_play_title') }}
+        </h2>
+        <ol class="space-y-3 text-gray-300 mb-5">
+            <li class="flex gap-3">
+                <span class="flex-none w-6 h-6 rounded-full bg-purple-600/30 text-purple-300 text-sm flex items-center justify-center">1</span>
+                <span>{{ __('games.how_to_play_step1') }}</span>
+            </li>
+            <li class="flex gap-3">
+                <span class="flex-none w-6 h-6 rounded-full bg-purple-600/30 text-purple-300 text-sm flex items-center justify-center">2</span>
+                <span>{{ __('games.how_to_play_step2') }}</span>
+            </li>
+        </ol>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('docs') }}#quick-start" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
+            </a>
+            <a href="{{ route('docs') }}#installation" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-book mr-2"></i>{{ __('docs.installation') }}
+            </a>
+        </div>
+        <p class="text-sm text-gray-500 mt-4">{{ __('games.how_to_play_manual') }}</p>
     </div>
 @endif
 
@@ -554,7 +622,8 @@
             // Update vote count display
             var countEl = document.getElementById('vote-count-' + translationId);
             var count = data.vote_count;
-            countEl.textContent = (count >= 0 ? '+' : '') + count;
+            // Same rule as the component that rendered it: no sign on zero
+            countEl.textContent = (count > 0 ? '+' : '') + count;
             countEl.className = countEl.className.replace(/text-(green|red|gray)-\d+/g, '');
             countEl.classList.add(count > 0 ? 'text-green-400' : (count < 0 ? 'text-red-400' : 'text-gray-400'));
 

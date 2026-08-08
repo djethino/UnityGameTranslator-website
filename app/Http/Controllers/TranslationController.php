@@ -329,7 +329,22 @@ class TranslationController extends Controller
         // card.
         $gameMaxes = Translation::maxResolvedLinesByGame($translations->pluck('game_id'));
 
-        return view('translations.mine', compact('translations', 'branchCounts', 'sort', 'gameMaxes'));
+        // The two things this page must say out loud, computed here so the view asks nothing of
+        // the database. Both are addressed to the author and appear NOWHERE public: a translation
+        // that helps nobody is their problem to fix, not something to hold up in front of others.
+        $emptyPublished = $translations->filter(
+            fn ($t) => $t->visibility === 'public' && $t->isCaptureOnly()
+        );
+
+        // A branch whose Main has gone quiet. Two levels, and the first says nothing about
+        // forking — the point is to inform, not to push anyone into leaving.
+        $stalledBranches = $translations->filter(
+            fn ($t) => $t->isBranch() && $t->mainIsDormant()
+        );
+
+        return view('translations.mine', compact(
+            'translations', 'branchCounts', 'sort', 'gameMaxes', 'emptyPublished', 'stalledBranches'
+        ));
     }
 
     public function edit(Translation $translation)
@@ -517,11 +532,22 @@ class TranslationController extends Controller
         $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         file_put_contents($path, json_encode($content, $jsonFlags));
 
-        // Update database record
+        // Who started this, and how much of it was already written when we took it.
+        //
+        // The snapshot can only be taken here: the original keeps growing afterwards, so asking
+        // the question later would answer a different one. And it is written rather than
+        // derived, because parent_id is "on delete set null" — the credit has to outlive the
+        // row it points at.
+        $main = $translation->getMain();
+
         $translation->update([
             'file_uuid' => $newUuid,
             'visibility' => 'public',
             // Keep parent_id for reference/traceability
+            'origin_translation_id' => $main?->id ?? $translation->parent_id,
+            'origin_user_id' => $main?->user_id ?? $translation->parent?->user_id,
+            'origin_resolved_lines' => $main?->resolved_lines,
+            'origin_file_hash' => $main?->file_hash,
         ]);
 
         // Recalculate hash

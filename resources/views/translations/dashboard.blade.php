@@ -124,6 +124,7 @@
                             {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
                         </span>
                     @endif
+                    <x-translation-completeness :translation="$translation" />
                     <x-game-coverage :translation="$translation" />
                 @else
                     <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
@@ -278,11 +279,17 @@
                     <div class="text-xs text-gray-500">{{ __('dashboard.missing') }}</div>
                 </div>
             </div>
-            <div class="p-4 border-t border-gray-700 flex justify-center">
-                <a href="{{ route('translations.merge-preview', $translation) }}"
-                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                    <i class="fas fa-code-compare mr-2"></i>{{ __('dashboard.compare_with_main') }}
-                </a>
+            {{-- The button that used to sit here opened the merge preview, which compares the
+                 mod's LOCAL file with the online one — the mod opens it, pushing its content
+                 with a token. Reached from the site there is no local file, so it always ended
+                 on "local file not found". A control that cannot work from where it is offered
+                 is worse than none, which is the rule that already took away the download and
+                 the vote on a contribution. --}}
+            <div class="p-4 border-t border-gray-700 text-center">
+                <p class="text-sm text-gray-400">
+                    <i class="fas fa-gamepad mr-2 text-purple-400"></i>{{ __('dashboard.compare_in_mod') }}
+                </p>
+                <p class="text-xs text-gray-500 mt-1">{{ __('dashboard.compare_in_mod_how') }}</p>
             </div>
         </div>
         @endif

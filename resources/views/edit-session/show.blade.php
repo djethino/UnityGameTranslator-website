@@ -152,6 +152,10 @@
                     class="rounded bg-gray-700 border-gray-600 text-gray-500">
                 <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
             </label>
+
+            {{-- Same view option, same place as the other editors. Here it buys height rather
+                 than width: a capture session is a long list read top to bottom. --}}
+            <x-editor.workbench-toggle class="ml-auto" />
         </div>
 
         @include('partials.editor-floating-search')
@@ -208,26 +212,51 @@
             </div>
         </div>
 
-        {{-- Table --}}
-        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-900 sticky top-0 z-10">
+        {{-- The workbench strip, shared with the merge screens — see
+             components/editor/workbench-bar.blade.php. Four columns never scroll sideways here,
+             so what the mode buys is height: the whole window for the list of captures. --}}
+        <x-editor.workbench-bar save="save()" save-disabled="saving || totalChanges === 0"
+                                modified-filter="pendingOnly" save-label="{{ __('edit_session.save') }}">
+            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0"
+                   title="{{ __('edit_session.new_from_game') }}">
+                <input type="checkbox" :checked="sessionNewOnly" @change="toggleSessionNewOnly()"
+                       class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                <span class="text-blue-400"><i class="fas fa-gamepad"></i></span>
+                <span class="text-blue-400 tabular-nums" x-text="sessionNewCount"></span>
+            </label>
+            <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+        </x-editor.workbench-bar>
+
+        {{-- Table. An ordinary block that the page scrolls, until the workbench tears it out and
+             hands it the window. --}}
+        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
+             :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 mb-0 rounded-none border-0 overflow-auto'">
+            {{-- border-separate, like the other editor grids: a browser does not paint the
+                 background of a sticky cell under collapsed borders, and the frozen key column
+                 would let the value column show through behind its own words. The line between
+                 two entries then comes from .editor-grid rather than from the row. --}}
+            <table class="editor-grid w-full text-sm border-separate border-spacing-0">
+                <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
-                        {{-- Capture-order index (toggleable, sortable) --}}
+                        {{-- Capture-order index (toggleable, sortable). Width PINNED, not
+                             suggested: the key column freezes at a hard left-16 beside it. --}}
                         <th x-show="showIndexColumn" x-cloak
-                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 cursor-pointer hover:text-white transition"
+                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
                             @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
                             <div class="flex items-center justify-end gap-1">
                                 <span class="text-xs">#</span>
                                 <i class="fas text-xs" :class="getSortIcon('index')"></i>
                             </div>
                         </th>
-                        <th class="px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition"
+                        <th data-col="key"
+                            class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                            :class="showIndexColumn ? 'left-16' : 'left-0'"
                             @click="toggleSort('key')">
                             <div class="flex items-center gap-2">
                                 {{ __('merge_preview.key') }}
                                 <i class="fas" :class="getSortIcon('key')"></i>
                             </div>
+                            <x-editor.col-resize col="key" />
                         </th>
                         <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
                             @click="toggleSort('tag')">
@@ -236,12 +265,14 @@
                                 <i class="fas text-xs" :class="getSortIcon('tag')"></i>
                             </div>
                         </th>
-                        <th class="px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                        <th data-col="value"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
                             @click="toggleSort('value')">
                             <div class="flex items-center gap-2">
                                 <span class="text-purple-400 font-medium">{{ __('edit_session.translation_column') }}</span>
                                 <i class="fas" :class="getSortIcon('value')"></i>
                             </div>
+                            <x-editor.col-resize col="value" />
                         </th>
                     </tr>
                 </thead>
@@ -252,16 +283,20 @@
                          scopes (wrong values shown on wrong keys) — unacceptable in
                          an editor. The window size is the safe lever instead. --}}
                     <template x-for="(key, idx) in visibleKeys" :key="key">
-                        <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                        <tr class="hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                             :data-row-index="idx">
-                            {{-- Capture-order index --}}
+                            {{-- Capture-order index. Frozen with its header: an opaque background
+                                 is required, or the scrolled columns show through underneath. --}}
                             <td x-show="showIndexColumn" x-cloak
-                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top"
+                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
                                 x-text="displayIndex(data[key])"></td>
 
                             {{-- Key --}}
-                            <td class="px-4 py-2 font-mono text-xs text-gray-500 break-words" x-safe-html="highlightKey(key)"></td>
+                            <td data-col="key"
+                                class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                :class="showIndexColumn ? 'left-16' : 'left-0'"
+                                x-safe-html="highlightKey(key)"></td>
 
                             {{-- Tag (clickable for tag change) --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
@@ -280,7 +315,7 @@
                                  gesture as clicking Main in the merge view — a double
                                  click toggles twice, so editing never alters the tag),
                                  double-click or pencil to edit --}}
-                            <td class="px-4 py-2 border-l border-gray-700 merge-cell"
+                            <td data-col="value" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="[isValidatedPending(key) ? 'selected-main' : '', isEdited(key) ? 'selected-manual' : '', isDeleted(key) ? 'deleted-cell' : '']"
                                 @click="toggleValidate(key)"
                                 @dblclick="editCell(key, getValue(data[key]))">
@@ -350,7 +385,7 @@
         {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
              buttons: the instructions wrap instead of squeezing the save button.
              ↑↓ shortcuts float at both ends of the bar --}}
-        <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4">
+        <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4 z-40">
         <div class="flex flex-wrap gap-4 justify-between items-center">
             <div class="flex flex-col gap-1 shrink-0">
                 <button type="button" @click="scrollToTop()"

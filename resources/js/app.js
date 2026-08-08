@@ -86,6 +86,8 @@ Alpine.data('notifBell', () => ({
 // globally for the nonce'd inline scripts.
 import { composeEditor, normalizeLineEndings } from './components/translation-editor.js';
 import { createLiveSync } from './components/live-sync.js';
+import { createSectionHistory } from './section-history.js';
+import { createSectionSpy } from './section-spy.js';
 window.UGT = { composeEditor, normalizeLineEndings, createLiveSync };
 
 // x-html is prohibited by the Alpine CSP build. The editors need to inject
@@ -108,6 +110,17 @@ mediumZoom('[data-zoomable]', {
     background: 'rgba(3, 7, 18, 0.92)',
     margin: 24,
 });
+
+// A trail of the sections the reader has jumped through, on any page that asks for one by
+// carrying [data-section-history]. Loaded here rather than per page: it is one small module and
+// the bundle is already shared. It shows nothing until a cross-link is actually followed.
+const historyRoot = document.querySelector('[data-section-history]');
+if (historyRoot) {
+    createSectionHistory({ root: historyRoot });
+    // The table of contents finally says where you are. Same page, same position measurement —
+    // they share section-position.js so the trail and the menu can never disagree about it.
+    createSectionSpy({ root: historyRoot, linkSelector: '.docs-nav-item' });
+}
 
 // Organic animated background — 5 independent blob layers, scroll-reactive.
 //
