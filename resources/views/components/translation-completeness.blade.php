@@ -23,15 +23,7 @@
     $pending = $translation->capture_count;
 @endphp
 
-@if($translation->isCaptureOnly())
-    {{-- Silent here, because the "Captured only" badge is already saying it — every screen that
-         shows this component shows that one too (games/show, dashboard, mine).
-
-         Worth a line of its own because the arithmetic is right and the reading is wrong: this
-         file scores 0% translated, which reads as a translation doing badly when no translation
-         has been attempted at all. An amber "0% translated" beside a grey "Captured only" gave
-         the same fact two colours, one of which means "under way". --}}
-@elseif($percent !== null && $percent < 100)
+@if($percent !== null && $percent < 100)
     <span {{ $attributes->merge(['class' => 'px-2 py-0.5 rounded text-xs bg-amber-900/50 text-amber-300']) }}
         title="{{ __('progress.completeness_hint', ['pending' => number_format($pending)]) }}">
         <i class="fas fa-hourglass-half mr-1"></i>{{ __('progress.completeness', ['percent' => $percent]) }}
