@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Bağımsız olarak sürdüren",
     "my_translations.empty_published_title": "Tek bir çevrilmiş satır olmadan yayımlandı",
     "my_translations.empty_published": "İndirenler oyunlarında hiçbir şeyin değiştiğini görmeyecek, ve puanlanan siz olacaksınız. Birkaç satır çevirin, bu uyarı kalksın. Böyle kalırsa :days gün sonra herkese açık listeden çıkar – sizin kalır ve ilk satır yazılır yazılmaz geri döner.",
+    "my_translations.empty_published_remove": "ya da sunucudan kaldırın",
     "my_translations.pending_lines": ":count satır bekliyor",
     "my_translations.main_silent_title": "Ana çeviri artık kımıldamıyor",
     "my_translations.main_silent": "Katkınız sahibini bekliyor: onu yalnızca o açıp alabilir. O zamana dek oyunculara ulaşmaz.",

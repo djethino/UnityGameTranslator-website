@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Retomada por su cuenta por",
     "my_translations.empty_published_title": "Publicada sin ninguna línea traducida",
     "my_translations.empty_published": "Quien la descargue no verá cambiar nada en su juego, y es a ti a quien puntuará. Traduce unas líneas y este aviso desaparece. Si se queda así, sale del catálogo público a los :days días: sigue siendo tuya y vuelve en cuanto escribas una línea.",
+    "my_translations.empty_published_remove": "o quitarla del servidor",
     "my_translations.pending_lines": ":count líneas esperando",
     "my_translations.main_silent_title": "La traducción principal ha dejado de moverse",
     "my_translations.main_silent": "Tu aportación espera a su propietario: solo él puede abrirla e incorporarla. Hasta entonces, no llega a los jugadores.",

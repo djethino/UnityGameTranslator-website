@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Eigenständig weitergeführt von",
     "my_translations.empty_published_title": "Veröffentlicht, ohne dass etwas übersetzt wäre",
     "my_translations.empty_published": "Wer sie herunterlädt, sieht im Spiel nichts anders werden – und bewertet wird dafür du. Übersetze ein paar Zeilen, und dieser Hinweis verschwindet. Bleibt sie so, verlässt sie den öffentlichen Katalog nach :days Tagen – sie bleibt deine und kommt zurück, sobald eine Zeile geschrieben ist.",
+    "my_translations.empty_published_remove": "oder sie vom Server nehmen",
     "my_translations.pending_lines": ":count Zeilen warten",
     "my_translations.main_silent_title": "Die Hauptübersetzung bewegt sich nicht mehr",
     "my_translations.main_silent": "Dein Beitrag wartet auf den Eigentümer: nur er kann ihn öffnen und übernehmen. Bis dahin erreicht er die Spieler nicht.",

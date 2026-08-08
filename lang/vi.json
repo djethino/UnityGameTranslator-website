@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Được tiếp nối độc lập bởi",
     "my_translations.empty_published_title": "Đã đăng mà không có dòng nào được dịch",
     "my_translations.empty_published": "Người tải về sẽ không thấy gì thay đổi trong trò chơi, và người bị chấm điểm là bạn. Dịch vài dòng thì lời nhắc này biến mất. Cứ để nguyên, sau :days ngày nó rời khỏi danh mục công khai – vẫn là của bạn, và trở lại ngay khi có một dòng được viết.",
+    "my_translations.empty_published_remove": "hoặc gỡ khỏi máy chủ",
     "my_translations.pending_lines": ":count dòng đang chờ",
     "my_translations.main_silent_title": "Bản dịch chính đã ngừng thay đổi",
     "my_translations.main_silent": "Phần đóng góp của bạn đang chờ chủ nhân: chỉ họ mới mở và nhận nó được. Từ giờ đến đó, người chơi không nhận được nó.",

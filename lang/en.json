@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Taken up independently by",
     "my_translations.empty_published_title": "Published with nothing translated",
     "my_translations.empty_published": "Players who download it will see nothing change in their game, and it is you they will rate. Translate a few lines and this goes away. Left as it is, it leaves the public catalogue after :days days — it stays yours, and comes back the moment one line is written.",
+    "my_translations.empty_published_remove": "or remove it from the server",
     "my_translations.pending_lines": ":count lines waiting",
     "my_translations.main_silent_title": "The main translation has stopped moving",
     "my_translations.main_silent": "Your contribution is waiting for its owner: only they can open it and take it in. Until then, players do not get it.",

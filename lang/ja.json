@@ -977,6 +977,7 @@
     "translation.taken_up_by": "独立して引き継いだ人",
     "my_translations.empty_published_title": "訳文が一行もないまま公開されています",
     "my_translations.empty_published": "これを入れた人のゲームは何も変わりません。そして評価されるのはあなたです。数行でも訳せば、この案内は消えます。このままなら :days 日後に公開カタログから外れます。所有はあなたのままで、一行書かれた時点で戻ります。",
+    "my_translations.empty_published_remove": "またはサーバーから取り下げる",
     "my_translations.pending_lines": "未着手 :count 行",
     "my_translations.main_silent_title": "本体の翻訳が動かなくなっています",
     "my_translations.main_silent": "あなたの作業は所有者を待っています。開いて取り込めるのはその人だけで、それまではプレイヤーに届きません。",

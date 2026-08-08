@@ -835,6 +835,32 @@ class Translation extends Model
     }
 
     /**
+     * Public, and still entitled to a place in the listings.
+     *
+     * The SQL twin of isEmptyPastGrace, and the reason it exists: the banner on "my translations"
+     * tells authors, in as many words, that a file published without a single translated line
+     * leaves the public catalogue after EMPTY_GRACE_DAYS. Nothing applied it. A file published in
+     * March was still counted as a game's one translation five months later, and a player
+     * downloading it got the game's own text back.
+     *
+     * Nothing is deleted, nothing is hidden from its author: the file stays in their screens,
+     * their dashboard and their own API calls, and it walks straight back into the catalogue the
+     * moment one line is written — no flag to clear, no delay to wait out a second time.
+     *
+     * Use it wherever the site LISTS translations. Never where it resolves one: a Main is still
+     * the Main of its lineage while delisted, and a mod syncing against it must find it.
+     */
+    public function scopePubliclyListed($query)
+    {
+        return $query->where('visibility', 'public')
+            ->where(function ($q) {
+                $q->whereRaw('(human_count + validated_count + ai_count) > 0')
+                    ->orWhere('capture_count', 0)
+                    ->orWhere('created_at', '>', now()->subDays(self::EMPTY_GRACE_DAYS));
+            });
+    }
+
+    /**
      * Below this net vote count, a translation stops being counted as finished.
      *
      * Strictly below zero, not "few votes": silence is not disagreement, and a translation nobody
@@ -894,7 +920,9 @@ class Translation extends Model
                 ->flip();
         };
 
-        $base = fn () => static::whereIn('game_id', $gameIds)->where('visibility', 'public');
+        // publiclyListed: these pills sit on catalogue cards, and a language must not be
+        // promised by a file that has left the listings.
+        $base = fn () => static::whereIn('game_id', $gameIds)->publiclyListed();
 
         $finished = $pairs($base()->withTranslatedLines()->finished());
         $translated = $pairs($base()->withTranslatedLines());

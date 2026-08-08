@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Dilanjutkan secara mandiri oleh",
     "my_translations.empty_published_title": "Terbit tanpa satu pun baris terjemahan",
     "my_translations.empty_published": "Yang mengunduhnya tak akan melihat apa pun berubah di permainannya, dan Andalah yang mereka nilai. Terjemahkan beberapa baris, maka peringatan ini hilang. Dibiarkan begini, ia keluar dari katalog umum setelah :days hari – tetap milik Anda, dan kembali begitu satu baris ditulis.",
+    "my_translations.empty_published_remove": "atau hapus dari server",
     "my_translations.pending_lines": ":count baris menunggu",
     "my_translations.main_silent_title": "Terjemahan utama berhenti bergerak",
     "my_translations.main_silent": "Sumbangan Anda menunggu pemiliknya: hanya dia yang bisa membukanya dan mengambilnya. Sampai itu terjadi, pemain tidak menerimanya.",

@@ -28,8 +28,11 @@ class TranslationController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
+        // Public AND still listed: the mod's community list is a listing like any other, and a
+        // player must not be offered a file that hands the game's own text back. The lineage
+        // endpoints below keep plain visibility — a delisted Main is still the Main.
         $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name'])
-            ->where('visibility', 'public'); // Only public translations (Main/Fork)
+            ->publiclyListed();
 
         // Filter by Steam ID (exact match)
         if ($request->filled('steam_id')) {

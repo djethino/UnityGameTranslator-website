@@ -23,7 +23,10 @@ class GameController extends Controller
         // "Browse Translations" — and it happens: a translation gets withdrawn and leaves its
         // game behind, empty. Its own page stays reachable by URL, where "Be the first to
         // contribute!" is the right thing to say; a card in the catalogue is not.
-        $query = Game::whereHas('translations', fn ($q) => $q->where('visibility', 'public'))
+        // publiclyListed and not just 'public': a file published without a single translated
+        // line leaves the catalogue after its grace period, and a game whose only translation is
+        // one of those has nothing to offer here either.
+        $query = Game::whereHas('translations', fn ($q) => $q->publiclyListed())
             ->withCount('translations')
             ->withSum('translations', 'download_count');
 
@@ -138,8 +141,8 @@ class GameController extends Controller
         // Get available languages for filters. Public only, same reason as above: a filter
         // offering a language that exists solely in an unpublished branch both announces that
         // work and returns nothing when picked.
-        $targetLanguages = Translation::where('visibility', 'public')->distinct()->pluck('target_language')->sort();
-        $sourceLanguages = Translation::where('visibility', 'public')->distinct()->pluck('source_language')->sort();
+        $targetLanguages = Translation::publiclyListed()->distinct()->pluck('target_language')->sort();
+        $sourceLanguages = Translation::publiclyListed()->distinct()->pluck('source_language')->sort();
 
         // Language names in the language itself ("Français", not "French"), like the site's own
         // language switcher: a name shown to someone is written the way they write it.
@@ -187,7 +190,25 @@ class GameController extends Controller
         // Note: type filter removed - type is now a computed accessor from HVASM stats
         // and cannot be filtered at the database level
 
-        $allTranslations = $query->orderBy('created_at', 'desc')->get();
+        // A published file with no translated line leaves this page once its grace period is
+        // over — the banner in "my translations" promises exactly that. Rejected on the loaded
+        // collection rather than in SQL because the query also carries the BRANCHES, whose
+        // existence this page shows on purpose (their content stays private) and which the rule
+        // has nothing to say about.
+        $allTranslations = $query->orderBy('created_at', 'desc')->get()
+            ->reject(fn ($t) => $t->visibility === 'public' && $t->isEmptyPastGrace());
+
+        // And with it, the branches that were hanging from it.
+        //
+        // A branch has no public standing of its own: this page shows that it EXISTS, under the
+        // Main it contributes to, and its content stays private. Left behind alone, the grouping
+        // below promoted it to the group's primary — so a branch appeared as the game's
+        // translation, with a download button that answers 403. The lineage leaves the page
+        // whole, or not at all.
+        $listedUuids = $allTranslations->where('visibility', 'public')->pluck('file_uuid')->filter()->flip();
+        $allTranslations = $allTranslations
+            ->reject(fn ($t) => $t->visibility === 'branch' && !$listedUuids->has($t->file_uuid))
+            ->values();
 
         // How far the furthest translation of this game reaches, asked ONCE. Every card needs it
         // to say what share of the game it covers, and the accessor would otherwise run its own
@@ -199,7 +220,7 @@ class GameController extends Controller
         // further: being furthest is a race of one when there is nobody else, and saying so would
         // dress up a lack of competition as an achievement.
         $publicTranslationCount = Translation::where('game_id', $game->id)
-            ->where('visibility', 'public')
+            ->publiclyListed()
             ->count();
         foreach ($allTranslations as $t) {
             $t->gameMaxHint = $gameMaxResolved;
@@ -309,9 +330,15 @@ class GameController extends Controller
 
         $translationGroups = $groupsCollection->values()->all();
 
-        // Get available languages for this game
-        $targetLanguages = $game->translations()->distinct()->pluck('target_language')->sort();
-        $sourceLanguages = $game->translations()->distinct()->pluck('source_language')->sort();
+        // The languages this page may ANNOUNCE — in its filters, its title and its description.
+        //
+        // These were read from every row, visibility included: an unpublished branch made the
+        // page promise a language nobody could download, which is precisely what the catalogue
+        // refuses to do elsewhere, and a delisted file kept announcing its own after leaving.
+        // The page then read "download free community translations of X in Portuguese" above
+        // "No translation for this game yet".
+        $targetLanguages = $game->translations()->publiclyListed()->distinct()->pluck('target_language')->sort();
+        $sourceLanguages = $game->translations()->publiclyListed()->distinct()->pluck('source_language')->sort();
 
         return view('games.show', compact('gameMaxResolved', 'publicTranslationCount',
             'game', 'translationGroups', 'targetLanguages', 'sourceLanguages',

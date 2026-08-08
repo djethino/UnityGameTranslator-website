@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Podjęte na własną rękę przez",
     "my_translations.empty_published_title": "Opublikowane bez ani jednego przetłumaczonego wiersza",
     "my_translations.empty_published": "Kto je pobierze, nie zobaczy w grze żadnej zmiany – a oceniony zostaniesz Ty. Przetłumacz kilka wierszy, a ten komunikat zniknie. Zostawione tak, po :days dniach opuszcza publiczny katalog – pozostaje Twoje i wraca, gdy tylko powstanie jeden wiersz.",
+    "my_translations.empty_published_remove": "albo usunąć ją z serwera",
     "my_translations.pending_lines": ":count wierszy czeka",
     "my_translations.main_silent_title": "Główne tłumaczenie przestało się ruszać",
     "my_translations.main_silent": "Twój wkład czeka na właściciela: tylko on może go otworzyć i przejąć. Do tego czasu nie trafia do graczy.",

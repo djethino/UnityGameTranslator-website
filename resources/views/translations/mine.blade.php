@@ -42,6 +42,13 @@
                         <span class="text-gray-500">
                             ({{ __('my_translations.pending_lines', ['count' => number_format($t->capture_count)]) }})
                         </span>
+                        {{-- The other honest way out, said plainly: somebody who published by
+                             mistake should not have to hunt for the row among twenty to undo it.
+                             It leads to the card, where the delete button already lives with its
+                             confirmation — the banner never deletes anything itself. --}}
+                        <a href="#translation-{{ $t->id }}" class="text-gray-400 hover:text-gray-200 underline underline-offset-2 ml-1">
+                            {{ __('my_translations.empty_published_remove') }}
+                        </a>
                     </li>
                 @endforeach
             </ul>
@@ -103,7 +110,10 @@
 
     <div class="space-y-4">
         @foreach($translations as $translation)
-            <div class="bg-gray-800 rounded-lg p-5 border border-gray-700 flex justify-between items-center">
+            {{-- Anchored so the banners above can lead to the card they are talking about,
+                 rather than leaving the reader to find it in a list of twenty. --}}
+            <div id="translation-{{ $translation->id }}"
+                 class="bg-gray-800 rounded-lg p-5 border border-gray-700 flex justify-between items-center scroll-mt-24">
                 <div class="flex items-center gap-4">
                     @if($translation->game->image_url)
                         <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">

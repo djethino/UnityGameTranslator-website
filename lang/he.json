@@ -977,6 +977,7 @@
     "translation.taken_up_by": "הומשך באופן עצמאי בידי",
     "my_translations.empty_published_title": "פורסם בלי שורה מתורגמת אחת",
     "my_translations.empty_published": "מי שיוריד אותו לא יראה שום שינוי במשחק, ואתם אלה שיקבלו את הדירוג. תרגמו כמה שורות והודעה זו תיעלם. אם יישאר כך, הוא יוצא מהקטלוג הציבורי אחרי :days ימים — נשאר שלכם, וחוזר ברגע שנכתבת שורה אחת.",
+    "my_translations.empty_published_remove": "או להסיר אותו מהשרת",
     "my_translations.pending_lines": ":count שורות ממתינות",
     "my_translations.main_silent_title": "התרגום הראשי הפסיק לזוז",
     "my_translations.main_silent": "התרומה שלכם ממתינה לבעליה: רק הוא יכול לפתוח אותה ולקלוט אותה. עד אז השחקנים אינם מקבלים אותה.",

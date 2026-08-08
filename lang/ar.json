@@ -977,6 +977,7 @@
     "translation.taken_up_by": "تابعها باستقلال",
     "my_translations.empty_published_title": "منشورة دون سطر مترجَم واحد",
     "my_translations.empty_published": "من ينزّلها لن يرى شيئًا تغيّر في لعبته، وأنتم من سيُقيَّم. ترجموا بضعة أسطر ويختفي هذا التنبيه. وإن بقيت هكذا، غادرت الفهرس العام بعد :days يومًا — تبقى لكم، وتعود بمجرد كتابة سطر واحد.",
+    "my_translations.empty_published_remove": "أو أزلها من الخادم",
     "my_translations.pending_lines": ":count سطر بالانتظار",
     "my_translations.main_silent_title": "الترجمة الرئيسة لم تعد تتحرّك",
     "my_translations.main_silent": "مساهمتكم تنتظر صاحب الترجمة: هو وحده من يفتحها ويضمّها. وحتى ذلك الحين لا تصل إلى اللاعبين.",

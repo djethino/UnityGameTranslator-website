@@ -977,6 +977,7 @@
     "translation.taken_up_by": "Zelfstandig voortgezet door",
     "my_translations.empty_published_title": "Gepubliceerd zonder ook maar één vertaalde regel",
     "my_translations.empty_published": "Wie hem downloadt ziet in het spel niets veranderen, en jij bent degene die ze beoordelen. Vertaal een paar regels en deze melding verdwijnt. Blijft het zo, dan verlaat hij na :days dagen de openbare catalogus – hij blijft van jou en komt terug zodra er één regel staat.",
+    "my_translations.empty_published_remove": "of hem van de server halen",
     "my_translations.pending_lines": ":count regels wachten",
     "my_translations.main_silent_title": "De hoofdvertaling beweegt niet meer",
     "my_translations.main_silent": "Je bijdrage wacht op de eigenaar: alleen hij kan haar openen en overnemen. Tot dan bereikt ze de spelers niet.",

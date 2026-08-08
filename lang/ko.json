@@ -977,6 +977,7 @@
     "translation.taken_up_by": "독립적으로 이어받은 사람",
     "my_translations.empty_published_title": "번역된 줄이 하나도 없이 공개되어 있습니다",
     "my_translations.empty_published": "이것을 내려받은 사람의 게임은 아무것도 달라지지 않으며, 평가를 받는 쪽은 당신입니다. 몇 줄만 옮겨도 이 알림은 사라집니다. 이대로 두면 :days일 뒤 공개 목록에서 빠집니다. 소유는 그대로이고, 한 줄이 쓰이는 순간 돌아옵니다.",
+    "my_translations.empty_published_remove": "또는 서버에서 내리기",
     "my_translations.pending_lines": ":count줄 대기",
     "my_translations.main_silent_title": "본 번역이 더는 움직이지 않습니다",
     "my_translations.main_silent": "당신의 기여는 소유자를 기다리고 있습니다. 열어서 받아들일 수 있는 사람은 그뿐이고, 그때까지 플레이어에게는 닿지 않습니다.",

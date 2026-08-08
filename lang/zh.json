@@ -977,6 +977,7 @@
     "translation.taken_up_by": "独立接手的人",
     "my_translations.empty_published_title": "已发布，但没有任何一行译文",
     "my_translations.empty_published": "下载它的人，游戏里不会有任何变化，而被打分的是你。翻上几行，这条提示就会消失。若一直这样，:days 天后它会离开公开目录——它仍然是你的，写下第一行就会回来。",
+    "my_translations.empty_published_remove": "或从服务器上撤下",
     "my_translations.pending_lines": ":count 行等待中",
     "my_translations.main_silent_title": "主翻译不再有更新",
     "my_translations.main_silent": "你的贡献在等它的所有者：只有他能打开并接收。在那之前，玩家拿不到它。",
