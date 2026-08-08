@@ -23,10 +23,13 @@
                 </div>
             @endif
             <div class="flex-1">
-                <h2 class="text-2xl font-semibold mb-2">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center gap-3">
                     <a href="{{ route('games.show', $translation->game) }}" class="hover:text-purple-400">
                         {{ $translation->game->name }}
                     </a>
+                    {{-- Said outright: a branch is not published, and reading one here is a
+                         moderation act rather than ordinary browsing. --}}
+                    <x-translation-role :translation="$translation" />
                 </h2>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -89,7 +92,9 @@
                     <div class="mt-4 p-3 bg-purple-900/30 border border-purple-700 rounded">
                         <p class="text-purple-300 text-sm">
                             <i class="fas fa-code-branch mr-1"></i>
-                            Fork of {{ $translation->parent->user->name ?? '[Deleted]' }}'s translation
+                            <a href="{{ route('admin.translations.show', $translation->parent) }}" class="hover:text-purple-200 underline underline-offset-2">
+                                {{ __('translation.forked_from', ['author' => $translation->parent->user->name ?? '[Deleted]']) }}
+                            </a>
                         </p>
                     </div>
                 @endif
@@ -114,7 +119,7 @@
 
         <!-- Actions -->
         <div class="flex gap-3 mt-6 pt-6 border-t border-gray-700">
-            <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            <a href="{{ route('admin.translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-download mr-1"></i> {{ __('translation.download') }}
             </a>
             <a href="{{ route('admin.translations.edit', $translation) }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
@@ -183,7 +188,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('translationViewer', () => window.UGT.createViewer({
         translationId: @js($translation->id),
-        dataUrl: @js(route('translations.view.data', $translation)),
+        dataUrl: @js(route('admin.translations.data', $translation)),
         unreadableMessage: @js(__('translation.content_unavailable')),
     }));
 });

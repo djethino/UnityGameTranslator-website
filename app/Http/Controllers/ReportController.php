@@ -20,7 +20,7 @@ class ReportController extends Controller
             ->first();
 
         if ($existing) {
-            return back()->with('error', 'You have already reported this translation.');
+            return back()->with('error', __('report.already'));
         }
 
         Report::create([
@@ -29,6 +29,6 @@ class ReportController extends Controller
             'reason' => $request->reason,
         ]);
 
-        return back()->with('success', 'Report submitted. An admin will review it.');
+        return back()->with('success', __('report.success'));
     }
 }

@@ -4,6 +4,9 @@
     // Client side: the name of an Alpine method taking a segment key and returning a percent
     // (the editors' shared core exposes tagPercent). Mutually exclusive with `percents`.
     'percentFn' => null,
+    // Extra argument handed to that method, as an Alpine expression — for the screens that draw
+    // one bar per object rather than one for the file (the merge view, per branch).
+    'percentArg' => null,
     'title' => null,
     // Whole class names, never "h-{$n}": Tailwind reads the source as text. And a prop rather
     // than a merged class, because two competing heights would be settled by CSS order rather
@@ -44,7 +47,7 @@
     @if($title) title="{{ $title }}" @endif>
     @foreach($segments as $key => $colour)
         @if($percentFn)
-            <div class="{{ $colour }} h-full" :style="'width: ' + {{ $percentFn }}('{{ $key }}') + '%'"></div>
+            <div class="{{ $colour }} h-full" :style="'width: ' + {{ $percentFn }}('{{ $key }}'{{ $percentArg ? ', ' . $percentArg : '' }}) + '%'"></div>
         @elseif(($percents[$key] ?? 0) > 0)
             <div class="{{ $colour }} h-full" style="width: {{ $percents[$key] }}%"></div>
         @endif

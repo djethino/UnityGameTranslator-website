@@ -221,29 +221,14 @@ class TranslationController extends Controller
             abort(403, 'Branch translations are only visible to the Main owner.');
         }
 
-        $content = [];
-        $ok = false;
-
-        if ($translation->file_path) {
-            try {
-                $decoded = json_decode(Storage::disk('local')->get($translation->file_path), true);
-                if (is_array($decoded)) {
-                    $ok = true;
-                    foreach ($decoded as $key => $value) {
-                        // Underscore keys are the file's own bookkeeping, never a line of the game
-                        if (!str_starts_with((string) $key, '_')) {
-                            $content[$key] = $value;
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                $ok = false;
-            }
-        }
+        // The reading itself lives on the model (fileLines): the admin screens serve the same
+        // payload from their own route, and two copies of "strip the underscore keys" would
+        // eventually disagree about what counts as a line.
+        $lines = $translation->fileLines();
 
         return response()->json([
-            'ok' => $ok,
-            'content' => (object) $content,
+            'ok' => $lines !== null,
+            'content' => (object) ($lines ?? []),
         ]);
     }
 

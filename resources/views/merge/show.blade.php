@@ -127,6 +127,22 @@
                         </span>
                         @endif
                     </div>
+
+                    {{-- Reporting a branch.
+
+                         A Main receives contributions it did not ask for and could not preview:
+                         until now the only answers available were to merge it, ignore it, or
+                         rate it one star. Rating says "this is poor work"; reporting says "this
+                         should not have been sent", which is a different message and the only
+                         one that reaches a moderator.
+
+                         Placed with the rating rather than in the grid header: both are
+                         judgements about a contributor's work as a whole, not about a line. --}}
+                    <button type="button" data-report-id="{{ $branch->id }}"
+                        class="report-btn ml-1 text-xs text-gray-500 hover:text-red-400 transition"
+                        title="{{ __('report.report_branch') }}">
+                        <i class="fas fa-flag"></i>
+                    </button>
                 </div>
                 @endforeach
             </form>
@@ -377,9 +393,15 @@
                                     class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-blue-400 font-medium" x-text="branch.name"></span>
-                                        <span class="text-xs text-gray-500"
-                                            x-text="'(' + branch.human_count + 'H / ' + branch.validated_count + 'V / ' + branch.ai_count + 'A)'"></span>
+                                        <span class="text-xs text-gray-500" x-text="branchHumanShare(branch) + '% ' + @js(__('progress.human'))"></span>
                                     </div>
+                                    {{-- What this contribution is MADE OF, on the site's one bar.
+                                         Three raw counters stood here (N H / N V / N A), which
+                                         left out everything kept as is and everything merely
+                                         captured: a branch of ten translated lines and nine
+                                         hundred captures read as ten lines of pure human work. --}}
+                                    <x-quality-bar percent-fn="branchPercent" percent-arg="branch"
+                                        height="h-1" class="mt-1" />
                                     <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                 </th>
                             </template>
@@ -731,6 +753,10 @@
     </div>
 </div>
 
+{{-- The report dialog, opened by the flag beside each branch. Same component as the game pages,
+     so what a report looks like does not depend on where it is raised. --}}
+<x-report-modal />
+
 {{-- Editor styles (tags, cells, affordances) are shared in resources/css/app.css --}}
 @push('head')
 <style>
@@ -1015,6 +1041,22 @@ document.addEventListener('alpine:init', () => {
          *  (same real-change rules: A lines, or replacing a selection). */
         cursorPrimaryAction(key) {
             this.select(key, 'main');
+        },
+
+        /**
+         * One branch's share of a given band, for the header bar.
+         *
+         * The shares are computed server-side by Translation::qualityShares and travel with the
+         * branch: recomputing them here from three counters is exactly how this header came to
+         * disagree with the same branch's card, which counts captured and kept-as-is lines too.
+         */
+        branchPercent(tag, branch) {
+            return (branch && branch.shares && branch.shares[tag]) || 0;
+        },
+
+        /** Human + validated over everything that branch has met — the headline figure. */
+        branchHumanShare(branch) {
+            return Math.round(this.branchPercent('H', branch) + this.branchPercent('V', branch));
         },
 
         /**

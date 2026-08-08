@@ -136,6 +136,9 @@ class MergeController extends Controller
                         'human_count' => $branch->human_count,
                         'validated_count' => $branch->validated_count,
                         'ai_count' => $branch->ai_count,
+                        // The shares as the model computes them, so a branch's bar cannot say
+                        // something else than that same branch's card elsewhere on the site.
+                        'shares' => $branch->qualityShares(),
                         'content' => $this->loadTranslationContent($branch),
                         // Settings live in the metadata keys that loadTranslationContent strips,
                         // so they travel apart. Until now a Main could see THAT a branch's fonts

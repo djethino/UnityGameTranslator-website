@@ -92,20 +92,13 @@ class AdminController extends Controller
 
     public function showReport(Report $report)
     {
-        $report->load(['translation.game', 'translation.user', 'reporter', 'reviewer']);
+        // No file read here any more. This screen used to inline a hundred lines of the
+        // translation, which was the one place a branch could be read — by a path that asked
+        // nobody's permission — while the download button beside it answered 403. The lines now
+        // open in the inspection screen, on the same grid as every other translation.
+        $report->load(['translation.game', 'translation.user', 'translation.parent.user', 'reporter', 'reviewer']);
 
-        // Load JSON content for preview
-        $jsonContent = null;
-        if ($report->translation && $report->translation->file_path) {
-            try {
-                $content = Storage::disk('local')->get($report->translation->file_path);
-                $jsonContent = json_decode($content, true);
-            } catch (\Exception $e) {
-                $jsonContent = null;
-            }
-        }
-
-        return view('admin.report-show', compact('report', 'jsonContent'));
+        return view('admin.report-show', compact('report'));
     }
 
     public function handleReport(Request $request, Report $report)
@@ -258,13 +251,43 @@ class AdminController extends Controller
         $translation->load(['game', 'user', 'parent.user', 'forks.user']);
 
         // Only the metadata is read here. The lines go to the shared editor core through the
-        // same endpoint the public view uses — this screen inspects a file, it does not need its
-        // own filtering, searching and paging, and having them made looking at a translation
+        // admin endpoint below — this screen inspects a file, it does not need its own
+        // filtering, searching and paging, and having them made looking at a translation
         // behave differently from editing one.
         return view('admin.translation-show', [
             'translation' => $translation,
             'metadata' => $translation->fileMetadata(),
         ]);
+    }
+
+    /**
+     * The lines, for the admin inspection screen.
+     *
+     * Same payload as the public viewer's endpoint, but reachable for branches too: moderation
+     * has to see what it is asked to judge. The permission is this route's middleware and
+     * nothing else — Translation::isReadableBy stays untouched, so an admin browsing the public
+     * side, or their own translations, is an ordinary user there.
+     */
+    public function translationData(Translation $translation)
+    {
+        $lines = $translation->fileLines();
+
+        return response()->json([
+            'ok' => $lines !== null,
+            'content' => (object) ($lines ?? []),
+        ]);
+    }
+
+    /** The file itself, for the same reason and under the same rule. */
+    public function downloadTranslation(Translation $translation)
+    {
+        if (!$translation->file_path || !Storage::disk('local')->exists($translation->file_path)) {
+            abort(404);
+        }
+
+        // Same name the mod expects, and no download counter: an admin opening a file to
+        // moderate it is not a player taking it, and counting it would flatter the figure.
+        return Storage::disk('local')->download($translation->file_path, 'translations.json');
     }
 
     public function destroyTranslation(Translation $translation)

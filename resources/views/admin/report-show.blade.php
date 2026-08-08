@@ -13,7 +13,12 @@
     <h1 class="text-3xl font-bold mb-8"><i class="fas fa-flag mr-2"></i> Review Report</h1>
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Reported Translation</h2>
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3">
+            Reported Translation
+            {{-- Which of the three roles was reported. A Main can report a branch, and judging a
+                 branch is not the same act as judging something the whole site can read. --}}
+            <x-translation-role :translation="$report->translation" />
+        </h2>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
@@ -42,17 +47,32 @@
             </div>
         </div>
 
-        <a href="{{ route('translations.download', $report->translation) }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            <i class="fas fa-download mr-1"></i> Download Translation
-        </a>
-    </div>
+        {{-- Getting to the file that was reported, in one click.
 
-    <!-- JSON Preview -->
-    @if($jsonContent)
-        <div class="mb-6">
-            @include('partials.json-table', ['jsonContent' => $jsonContent, 'limit' => 100, 'collapsible' => true])
+             This screen used to inline a hundred lines of JSON read straight off the disk — the
+             only place branches were readable, and by a path that answered nobody's permission
+             question. The lines now open in the same inspection screen as every other
+             translation, which is also where the whole file can be searched and sorted. --}}
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('admin.translations.show', $report->translation) }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                <i class="fas fa-magnifying-glass mr-1"></i> Inspect Translation
+            </a>
+            <a href="{{ route('admin.translations.download', $report->translation) }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                <i class="fas fa-download mr-1"></i> Download Translation
+            </a>
+            @if($report->translation->isBranch() && ($main = $report->translation->getMain()))
+                {{-- A branch is reported by its Main, in practice: the context of the complaint
+                     is the translation it was contributing to. --}}
+                <a href="{{ route('admin.translations.show', $main) }}" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    <i class="fas fa-star mr-1"></i> Its Main ({{ $main->user->name ?? '[Deleted]' }})
+                </a>
+            @elseif($report->translation->parent)
+                <a href="{{ route('admin.translations.show', $report->translation->parent) }}" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    <i class="fas fa-code-branch mr-1"></i> Forked from {{ $report->translation->parent->user->name ?? '[Deleted]' }}
+                </a>
+            @endif
         </div>
-    @endif
+    </div>
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
         <h2 class="text-xl font-semibold mb-4">Report Details</h2>

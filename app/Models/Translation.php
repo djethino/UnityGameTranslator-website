@@ -716,6 +716,38 @@ class Translation extends Model
     }
 
     /**
+     * The translated lines, without the file's own bookkeeping. Null when the file cannot be
+     * read at all — which a caller must not confuse with an empty translation.
+     *
+     * Access is NOT checked here: this is the reader, and who may call it differs by route (the
+     * public viewer asks isReadableBy, the admin screens rely on their middleware). Keeping the
+     * two apart is what stopped the report screen from reading branches off the disk while the
+     * download button beside it refused.
+     */
+    public function fileLines(): ?array
+    {
+        if (!$this->file_path) {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($this->file_path), true);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        return array_filter(
+            $decoded,
+            fn ($key) => !str_starts_with((string) $key, '_'),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    /**
      * May this user read the file at all?
      *
      * Public translations are readable by anyone — that is what the download endpoint already
@@ -735,6 +767,10 @@ class Translation extends Model
             return true;
         }
 
+        // Deliberately no admin exception here. Moderation does need to read branches — a report
+        // an admin cannot open is a decision taken blind — but that access belongs to the /admin
+        // screens and their middleware, not to the rule the public routes apply. Keeping it out
+        // of here means a public URL cannot become an admin back door by accident.
         $main = $this->getMain();
 
         return $user !== null && $main !== null && (int) $main->user_id === (int) $user->id;

@@ -102,9 +102,12 @@
                                     <a href="{{ route('games.show', $translation->game) }}" class="font-medium hover:text-purple-400">
                                         {{ $translation->game->name }}
                                     </a>
-                                    @if($translation->isFork())
-                                        <span class="text-xs text-gray-500 block"><i class="fas fa-code-branch"></i> Fork</span>
-                                    @endif
+                                    {{-- Which of the three roles this file plays. Before this the
+                                         list said "Fork" and nothing else, so a branch — not
+                                         published, visible to its Main alone — looked exactly
+                                         like a public Main. Moderating one is not the same act
+                                         as moderating the other. --}}
+                                    <x-translation-role :translation="$translation" class="mt-1" />
                                 </div>
                             </div>
                         </td>

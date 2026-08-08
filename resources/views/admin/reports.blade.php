@@ -43,6 +43,10 @@
                             <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
                                 @langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}
                             </span>
+                            {{-- Visible before opening anything: a queue of reports on public
+                                 Mains and one on somebody's unpublished branch do not call for
+                                 the same attention. --}}
+                            <x-translation-role :translation="$report->translation" />
                         </div>
                         <p class="text-sm text-gray-400 mb-2">
                             Translation by {{ $report->translation->user->name }}

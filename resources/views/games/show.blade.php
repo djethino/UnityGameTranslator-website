@@ -571,53 +571,12 @@
 @endif
 
 @auth
-<!-- Report Modal -->
-<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
-        <h3 class="text-xl font-semibold mb-4"><i class="fas fa-flag mr-2"></i> {{ __('report.title') }}</h3>
-        <form id="reportForm" method="POST">
-            @csrf
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('report.reason') }}</label>
-                <textarea name="reason" rows="4" required class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white" placeholder="{{ __('report.placeholder') }}"></textarea>
-            </div>
-            <div class="flex gap-3">
-                <button type="button" id="closeReportModalBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg">{{ __('report.cancel') }}</button>
-                <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">{{ __('report.submit') }}</button>
-            </div>
-        </form>
-    </div>
-</div>
+{{-- The report dialog lives in x-report-modal, shared with the merge view: what a report
+     looks like must not depend on the page it is raised from. --}}
+<x-report-modal />
 <script nonce="{{ $cspNonce }}">
 (function() {
-    var reportModal = document.getElementById('reportModal');
-    var reportForm = document.getElementById('reportForm');
-
-    function openReportModal(id) {
-        reportForm.action = '/report/' + id;
-        reportModal.classList.remove('hidden');
-        reportModal.classList.add('flex');
-    }
-
-    function closeReportModal() {
-        reportModal.classList.add('hidden');
-        reportModal.classList.remove('flex');
-    }
-
-    // Report buttons
-    document.querySelectorAll('.report-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            openReportModal(this.dataset.reportId);
-        });
-    });
-
-    // Close modal on backdrop click
-    reportModal.addEventListener('click', function(e) {
-        if (e.target === reportModal) closeReportModal();
-    });
-
-    // Close modal button
-    document.getElementById('closeReportModalBtn').addEventListener('click', closeReportModal);
+    // Opening and closing the report dialog belongs to x-report-modal above.
 
     // Vote buttons
     document.querySelectorAll('.vote-btn[data-vote-id]').forEach(function(btn) {

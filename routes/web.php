@@ -206,6 +206,14 @@ $localizableRoutes = function () {
         Route::post('/announcements/{announcement}/expire', [AdminController::class, 'expireAnnouncement'])->name('announcements.expire');
         Route::get('/translations', [AdminController::class, 'translations'])->name('translations.index');
         Route::get('/translations/{translation}', [AdminController::class, 'showTranslation'])->name('translations.show');
+        // Moderation reads everything, branches included — a report an admin cannot open is a
+        // decision taken blind. That access lives HERE, behind the admin middleware, and not in
+        // Translation::isReadableBy: outside these screens an admin is an ordinary user, and
+        // "my translations" shows them their own work like anyone else's.
+        Route::get('/translations/{translation}/data', [AdminController::class, 'translationData'])
+            ->middleware('throttle:30,1')->name('translations.data');
+        Route::get('/translations/{translation}/download', [AdminController::class, 'downloadTranslation'])
+            ->name('translations.download');
         Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
         Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
         Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
