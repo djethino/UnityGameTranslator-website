@@ -62,7 +62,13 @@ export function editorColumns() {
             // to. Without this, dragging one edge would squeeze its neighbours to keep the total
             // at 100%.
             if (gridWidth) {
-                rules.push(`.editor-grid.cols-sized{table-layout:fixed;width:${Math.round(gridWidth)}px}`);
+                // min-width keeps the grid at least as wide as its box: shrinking a column below
+                // that would otherwise leave bare space past the last one. The surplus goes to
+                // the one column that never declares a width — the filler at the end of every
+                // grid — so the sized columns stay exactly as wide as they were dragged.
+                rules.push(
+                    `.editor-grid.cols-sized{table-layout:fixed;width:${Math.round(gridWidth)}px;min-width:100%}`
+                );
             }
 
             style.textContent = rules.join('\n');

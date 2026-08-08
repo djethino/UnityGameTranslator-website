@@ -477,6 +477,11 @@
                                     <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                 </th>
                             </template>
+                            {{-- Filler: the only column that never declares a width, so it soaks
+                                 up whatever is left when the sized columns add up to less than
+                                 the screen. Without it, shrinking a column left bare space past
+                                 the last one. Empty and unstyled — it is room, not content. --}}
+                            <th class="p-0"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -586,11 +591,12 @@
                                         </template>
                                     </td>
                                 </template>
+                                <td class="p-0"></td>
                             </tr>
                         </template>
 
                         <tr x-show="filteredKeys.length === 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-12 text-center text-gray-500">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2 + 1" class="py-12 text-center text-gray-500">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                                 <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
@@ -600,7 +606,7 @@
                         </tr>
 
                         <tr x-show="hiddenCount > 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-3 text-center">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2 + 1" class="py-3 text-center">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                                 <button type="button" @click="showMore()"
