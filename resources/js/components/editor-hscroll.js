@@ -30,6 +30,9 @@ export function editorHScroll() {
     return {
         // Set by measureHScroll, never computed on read
         hasHScroll: false,
+        // True once the grid's REAL scrollbar has come into view: the mirror stands down rather
+        // than sit twenty pixels above an identical bar
+        hRealBarInView: false,
         // Spacer width, as a style string: the CSP build binds a property, not an expression
         hProxyStyle: 'width: 0px',
 
@@ -41,6 +44,27 @@ export function editorHScroll() {
             // show a mirror with nothing to scroll
             this.hasHScroll = scrollWidth > box.clientWidth + 1;
             this.hProxyStyle = 'width: ' + scrollWidth + 'px';
+            this.updateHRealBar();
+        },
+
+        /**
+         * Reaching the end of the grid brings its own scrollbar into view, right above the save
+         * bar. Two identical bars a few pixels apart is worse than none: you cannot tell which
+         * one is the real one. So the mirror withdraws for exactly as long as the real one is
+         * doing its job.
+         *
+         * Measured against the SAVE BAR's top, not the viewport's bottom, and that matters: the
+         * bar is anchored by its bottom, so its top does not move when the mirror above it
+         * disappears. Measuring against the mirror itself would have made the threshold jump by
+         * the mirror's own height each time it hid — a band in which it would flicker on and off.
+         */
+        updateHRealBar() {
+            const box = this.$refs.gridBox;
+            const proxy = this.$refs.hProxy;
+            if (!box || !proxy) return;
+            const bar = proxy.nextElementSibling;
+            const limit = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+            this.hRealBarInView = box.getBoundingClientRect().bottom <= limit + 1;
         },
 
         _hWired: false,
@@ -84,6 +108,21 @@ export function editorHScroll() {
                             const grid = box.querySelector('table');
                             if (grid) observer.observe(grid);
                         }
+
+                        // Whether the real bar has come into view changes with every page
+                        // scroll. Coalesced into one frame: this runs on a document that can
+                        // hold six thousand rows.
+                        let pending = false;
+                        const onViewChange = () => {
+                            if (pending) return;
+                            pending = true;
+                            requestAnimationFrame(() => {
+                                pending = false;
+                                this.updateHRealBar();
+                            });
+                        };
+                        window.addEventListener('scroll', onViewChange, { passive: true });
+                        window.addEventListener('resize', onViewChange, { passive: true });
                     }
 
                     this.measureHScroll();
