@@ -412,8 +412,17 @@ class TranslationController extends Controller
             fn ($t) => $t->isBranch() && $t->mainIsDormant()
         );
 
+        // Two more states a contributor could not see, kept apart on purpose because the answer
+        // differs. A DELISTED Main is still there and can still take the work in — its author
+        // has simply published nothing translated for thirty days, so the branch hangs from
+        // something no player can find. An ORPHANED branch has no Main at all: nobody can merge
+        // it, ever, and its only way forward is to become a translation of its own.
+        $delistedMains = $translations->filter(fn ($t) => $t->mainIsDelisted());
+        $orphanBranches = $translations->filter(fn ($t) => $t->isOrphanBranch());
+
         return view('translations.mine', compact(
-            'translations', 'branchCounts', 'sort', 'gameMaxes', 'emptyPublished', 'stalledBranches'
+            'translations', 'branchCounts', 'sort', 'gameMaxes', 'emptyPublished', 'stalledBranches',
+            'delistedMains', 'orphanBranches'
         ));
     }
 

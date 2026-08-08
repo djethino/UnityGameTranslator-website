@@ -260,6 +260,11 @@ class TranslationController extends Controller
             return response()->json([
                 'exists' => true,
                 'role' => $role,
+                // A branch whose Main is gone. The mod had no way to know: this endpoint answers
+                // on the user's OWN row, so it kept saying "you are a branch" long after there
+                // was anything to be a branch of — and the next upload dutifully stayed one, of a
+                // lineage with no head. Additive field: older mods ignore it and behave as before.
+                'main_missing' => $role === 'branch' ? $publicTranslation === null : null,
                 'translation' => [
                     'id' => $ownTranslation->id,
                     'source_language' => $ownTranslation->source_language,

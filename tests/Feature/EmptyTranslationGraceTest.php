@@ -154,6 +154,103 @@ class EmptyTranslationGraceTest extends TestCase
         $this->assertDatabaseCount('translations', 1);
     }
 
+    /**
+     * The two states a contributor could not see, and the reason they are kept apart.
+     *
+     * A DELISTED Main is still there and can still merge the work. An ORPHANED branch has no Main
+     * at all — nobody can ever merge it. Same symptom from the outside (nothing visible), two
+     * different answers, so the site says two different things.
+     */
+    public function test_a_branch_knows_whether_its_main_is_hidden_or_gone(): void
+    {
+        $main = $this->makeTranslation();
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 1200,
+            'capture_count' => 400,
+        ]);
+
+        $this->assertTrue($branch->mainIsDelisted(), 'The Main is delisted, not gone.');
+        $this->assertFalse($branch->isOrphanBranch());
+
+        $this->actingAs($contributor)->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('my_translations.main_delisted_title'))
+            ->assertDontSee(__('my_translations.orphan_title'));
+
+        $main->delete();
+        $branch->refresh();
+
+        $this->assertTrue($branch->isOrphanBranch(), 'With no Main left, the branch is orphaned.');
+        $this->assertFalse($branch->mainIsDelisted());
+
+        $this->actingAs($contributor)->get(route('translations.mine'))
+            ->assertOk()
+            ->assertSee(__('my_translations.orphan_title'));
+    }
+
+    /** And the mod is told, so it stops calling itself a branch of nothing. */
+    public function test_check_uuid_tells_the_mod_when_the_main_is_gone(): void
+    {
+        $main = $this->makeTranslation();
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 5,
+        ]);
+
+        $token = \App\Models\ApiToken::createForUser($contributor, 'test');
+        $headers = ['Authorization' => 'Bearer ' . $token->plain_token];
+
+        $this->getJson('/api/v1/translations/check-uuid?uuid=' . $branch->file_uuid, $headers)
+            ->assertOk()
+            ->assertJsonPath('role', 'branch')
+            ->assertJsonPath('main_missing', false);
+
+        $main->delete();
+
+        $this->getJson('/api/v1/translations/check-uuid?uuid=' . $branch->file_uuid, $headers)
+            ->assertOk()
+            ->assertJsonPath('main_missing', true);
+    }
+
+    /**
+     * And whatever happens to the Main, its author can still read their own branch.
+     *
+     * "Private" was being read as "belongs to the Main": the download button and the eye on this
+     * very page answered 403 to the person who wrote the file, and once the Main was deleted the
+     * branch became unreadable to everyone alive.
+     */
+    public function test_a_contributor_can_always_read_their_own_branch(): void
+    {
+        $main = $this->makeTranslation();
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 5,
+        ]);
+
+        $this->actingAs($contributor)->get(route('translations.download', $branch))->assertOk();
+
+        $main->delete();
+        $branch->refresh();
+
+        $this->actingAs($contributor)->get(route('translations.download', $branch))->assertOk();
+        $this->actingAs($contributor)->get(route('translations.view', $branch))->assertOk();
+
+        // Still nobody else's business
+        $this->actingAs(User::factory()->create())
+            ->get(route('translations.download', $branch))
+            ->assertForbidden();
+    }
+
     /** Delisted is not deleted: the file, and its owner's access to it, are untouched. */
     public function test_its_author_keeps_it(): void
     {

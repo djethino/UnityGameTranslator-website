@@ -55,6 +55,49 @@
         </div>
     @endif
 
+    {{-- Orphaned: the Main is gone, not quiet. Nobody can merge this work, ever — so this is
+         the one banner that says what to DO, and the strongest of the three. --}}
+    @if($orphanBranches->isNotEmpty())
+        <div class="bg-red-900/25 border border-red-700/60 rounded-lg p-4 mb-6">
+            <p class="text-red-200 font-medium mb-1">
+                <i class="fas fa-unlink mr-2"></i>{{ __('my_translations.orphan_title') }}
+            </p>
+            <p class="text-sm text-gray-300 mb-2">{{ __('my_translations.orphan') }}</p>
+            <ul class="text-sm text-gray-400 list-disc list-inside">
+                @foreach($orphanBranches as $t)
+                    <li>
+                        {{-- To the dashboard, not to the card: that is where "become
+                             independent" lives, with its warning and its confirmation. --}}
+                        <a href="{{ route('translations.dashboard', $t) }}" class="text-red-300 hover:text-red-200 underline underline-offset-2">
+                            {{ $t->game->name }} — {{ $t->target_language }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Delisted: nothing is broken, and that is exactly what has to come across. The Main is
+         still there and can still take the work in; it is simply invisible to players until its
+         author translates a line. --}}
+    @if($delistedMains->isNotEmpty())
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
+            <p class="text-white font-medium mb-1">
+                <i class="fas fa-eye-slash mr-2 text-amber-400"></i>{{ __('my_translations.main_delisted_title') }}
+            </p>
+            <p class="text-sm text-gray-300 mb-2">{{ __('my_translations.main_delisted') }}</p>
+            <ul class="text-sm text-gray-400 list-disc list-inside">
+                @foreach($delistedMains as $t)
+                    <li>
+                        <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+                            {{ $t->game->name }} — {{ $t->target_language }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if($stalledBranches->isNotEmpty())
         <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
             <p class="text-white font-medium mb-1">

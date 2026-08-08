@@ -751,8 +751,13 @@ class Translation extends Model
      * May this user read the file at all?
      *
      * Public translations are readable by anyone — that is what the download endpoint already
-     * grants without an account. A branch is private to the Main owner it was submitted to:
-     * it is someone's work-in-progress contribution, not a published version.
+     * grants without an account. A branch is private: readable by the Main owner it was
+     * submitted to, and by the person who wrote it.
+     *
+     * That second half was missing, and it locked contributors out of their own work: the
+     * download button and the eye on "my translations" answered 403 on their own branches, and
+     * once a Main was deleted its branches became unreadable to everyone alive — author
+     * included. "Private" was being read as "belongs to the Main" when it means "not published".
      *
      * One definition, because the rule was written out at every point that needed it and a
      * further copy would be one more place to forget when it changes. It decides both what the
@@ -764,6 +769,15 @@ class Translation extends Model
     public function isReadableBy(?User $user): bool
     {
         if ($this->visibility !== 'branch') {
+            return true;
+        }
+
+        if ($user === null) {
+            return false;
+        }
+
+        // Its author, always — including when the Main it was contributed to is gone.
+        if ((int) $this->user_id === (int) $user->id) {
             return true;
         }
 
@@ -1250,6 +1264,40 @@ class Translation extends Model
      * seven days for a Main with everything left to read, two months for one that is all but
      * finished. Never a word about forking at this stage.
      */
+    /**
+     * A branch whose Main no longer exists at all.
+     *
+     * NOT the same thing as a Main gone quiet, and not the same thing as a Main that left the
+     * listings: those are still there, still reachable, and can still take this work in. This one
+     * has been deleted — with the account it belonged to, most of the time — and the branch is
+     * left pointing at nothing.
+     *
+     * Until this was named, such a branch was a dead end nobody was told about: it appeared
+     * nowhere, could be merged by nobody, and re-uploading it kept it a branch of a lineage that
+     * had no head. The answer is not to promote it behind its author's back — an uuid is an
+     * identity, and the site never rewrites one silently — but to say so and offer the way out.
+     */
+    public function isOrphanBranch(): bool
+    {
+        return $this->isBranch() && $this->getMain() === null;
+    }
+
+    /**
+     * A branch whose Main is still there but has left the public listings — the thirty-day rule
+     * on a file that translates nothing.
+     *
+     * Deliberately distinct from the orphan case. Nothing is broken here: the Main exists, it can
+     * still merge this work, and one translated line puts it back in the catalogue. What its
+     * contributors need to know is that their work currently hangs from something no player can
+     * find — which is a reason to talk to the Main, or to go independent, not an emergency.
+     */
+    public function mainIsDelisted(): bool
+    {
+        $main = $this->getMain();
+
+        return $this->isBranch() && $main !== null && $main->isEmptyPastGrace();
+    }
+
     public function mainIsDormant(): bool
     {
         $main = $this->getMain();
