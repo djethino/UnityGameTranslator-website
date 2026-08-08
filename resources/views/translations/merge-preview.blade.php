@@ -367,7 +367,7 @@
                  frozen key column would let every scrolled column show through behind its own
                  words. --}}
             <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="[showLineBreaks && 'show-linebreaks', pinMain && 'pin-main']">
+                   :class="[showLineBreaks && 'show-linebreaks', pinMain && 'pin-main', columnsSized && 'cols-sized']">
                 <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
                         {{-- Capture-order index (toggleable, sortable). Frozen with the key: the

@@ -108,7 +108,7 @@
              class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
              :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
             <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="showLineBreaks && 'show-linebreaks'">
+                   :class="[showLineBreaks && 'show-linebreaks', columnsSized && 'cols-sized']">
                 <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
                         <th x-show="showIndexColumn" x-cloak

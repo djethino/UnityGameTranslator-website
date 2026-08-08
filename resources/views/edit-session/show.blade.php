@@ -238,7 +238,7 @@
                  would let the value column show through behind its own words. The line between
                  two entries then comes from .editor-grid rather than from the row. --}}
             <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="showLineBreaks && 'show-linebreaks'">
+                   :class="[showLineBreaks && 'show-linebreaks', columnsSized && 'cols-sized']">
                 <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
                         {{-- Capture-order index (toggleable, sortable). Width PINNED, not

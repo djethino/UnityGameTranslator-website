@@ -911,6 +911,8 @@ export function editorCore(config) {
                     replaceOpen: this.replaceOpen,
                     replaceValue: this.replaceValue,
                     columnWidths: this.columnWidths,
+                    columnsSized: this.columnsSized,
+                    gridWidth: this.gridWidth,
                     pinMain: this.pinMain
                 }));
             } catch (e) { /* storage full/blocked: non-essential */ }
@@ -935,6 +937,8 @@ export function editorCore(config) {
                 if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
                 if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
                 if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
+                if (typeof state.columnsSized === 'boolean') this.columnsSized = state.columnsSized;
+                if (typeof state.gridWidth === 'number' && state.gridWidth > 0) this.gridWidth = state.gridWidth;
                 if (state.columnWidths && typeof state.columnWidths === 'object') {
                     // Numbers only: a corrupted or hand-edited entry would otherwise reach the
                     // style attribute as "60undefinedpx" and collapse the column
