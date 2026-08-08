@@ -116,6 +116,44 @@ class EmptyTranslationGraceTest extends TestCase
         $this->get(route('games.index'))->assertOk()->assertSee('Grace Game');
     }
 
+    /**
+     * The other end of the same problem: not publishing it in the first place.
+     *
+     * Refusing outright would be wrong — capture mode is legitimate work and its author may have
+     * reasons — so the upload asks once. Both halves are tested here because a warning nobody can
+     * get past is as broken as no warning at all.
+     */
+    public function test_uploading_a_file_with_nothing_translated_asks_first(): void
+    {
+        $user = User::factory()->create();
+        $payload = [
+            'game_name' => 'Asked Game',
+            'game_source' => 'igdb',
+            'game_external_id' => 4242,
+            'source_language' => 'English',
+            'target_language' => 'French',
+            'status' => 'in_progress',
+        ];
+        $file = fn () => \Illuminate\Http\UploadedFile::fake()->createWithContent(
+            'translations.json',
+            json_encode(['_uuid' => (string) \Illuminate\Support\Str::uuid(), 'Hello' => ['v' => '', 't' => 'H']])
+        );
+
+        $this->actingAs($user)
+            ->post(route('translations.store'), $payload + ['file' => $file()])
+            ->assertSessionHasErrors('file')
+            ->assertSessionHas('confirm_empty');
+
+        $this->assertDatabaseCount('translations', 0);
+
+        // Ticked, it goes through: the author has been told, and it remains their call.
+        $this->actingAs($user)
+            ->post(route('translations.store'), $payload + ['file' => $file(), 'publish_empty' => '1'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('translations', 1);
+    }
+
     /** Delisted is not deleted: the file, and its owner's access to it, are untouched. */
     public function test_its_author_keeps_it(): void
     {

@@ -21,6 +21,17 @@
     <form action="{{ route('translations.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm" class="bg-gray-800 rounded-lg p-6">
         @csrf
 
+        {{-- Only after the server has read the file and found nothing translated in it. The box
+             is unticked and the file has to be chosen again: publishing a file that changes
+             nothing in anyone's game should take one deliberate act, not a reflex. --}}
+        @if(session('confirm_empty'))
+            <label class="flex items-start gap-3 mb-6 p-4 bg-amber-900/25 border border-amber-700/60 rounded-lg cursor-pointer">
+                <input type="checkbox" name="publish_empty" value="1"
+                    class="mt-1 rounded bg-gray-700 border-gray-600 text-amber-500">
+                <span class="text-sm text-amber-100">{{ __('upload.empty_confirm') }}</span>
+            </label>
+        @endif
+
         <!-- Step 1: File Upload (Drag & Drop) -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-300 mb-2">

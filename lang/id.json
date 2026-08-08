@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Bandingkan file lokalmu dengan versi online dan gabungkan secara manual",
     "upload.translation_composition": "Komposisi Terjemahan",
     "upload.composition_auto": "Dihitung otomatis dari konten file",
+    "upload.empty_warning": "Berkas ini tidak berisi terjemahan: :count baris yang ditangkap adalah teks game itu sendiri, menunggu diterjemahkan. Diterbitkan apa adanya, pengunduh mendapat teks asli kembali — dan Anda yang akan dinilai.",
+    "upload.empty_confirm": "Saya mengerti, terbitkan saja",
     "profile.title": "Pengaturan Profil",
     "profile.display_name": "Nama Tampilan",
     "profile.email": "Email",

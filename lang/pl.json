@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Porównaj swój plik lokalny z wersją online i scal ręcznie",
     "upload.translation_composition": "Skład tłumaczenia",
     "upload.composition_auto": "Obliczane automatycznie na podstawie zawartości pliku",
+    "upload.empty_warning": "Ten plik nie zawiera tłumaczenia: jego :count przechwyconych wierszy to tekst gry czekający na przetłumaczenie. Opublikowany w tej postaci odda pobierającym oryginalny tekst — a ocenią za to ciebie.",
+    "upload.empty_confirm": "Rozumiem, opublikuj mimo to",
     "profile.title": "Ustawienia profilu",
     "profile.display_name": "Nazwa wyświetlana",
     "profile.email": "Email",

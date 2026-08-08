@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Vergelijk je lokale bestand met de online versie en merge handmatig",
     "upload.translation_composition": "Vertaalsamenstelling",
     "upload.composition_auto": "Automatisch berekend uit bestandsinhoud",
+    "upload.empty_warning": "Dit bestand bevat geen vertaling: de :count vastgelegde regels zijn de tekst van het spel zelf, wachtend op vertaling. Zo gepubliceerd krijgt wie het downloadt de originele tekst terug — en jij wordt erop beoordeeld.",
+    "upload.empty_confirm": "Begrepen, toch publiceren",
     "profile.title": "Profielinstellingen",
     "profile.display_name": "Weergavenaam",
     "profile.email": "E-mail",

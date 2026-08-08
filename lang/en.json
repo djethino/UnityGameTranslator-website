@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Compare your local file with the online version and merge manually",
     "upload.translation_composition": "Translation Composition",
     "upload.composition_auto": "Automatically calculated from file content",
+    "upload.empty_warning": "This file contains no translation: its :count captured lines are the game's own text, waiting to be translated. Published as it is, anyone downloading it gets the original text back — and it is you they will rate.",
+    "upload.empty_confirm": "I understand, publish it anyway",
     "profile.title": "Profile Settings",
     "profile.display_name": "Display Name",
     "profile.email": "Email",

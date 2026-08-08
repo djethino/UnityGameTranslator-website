@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Yerel dosyanızı çevrimiçi sürümle karşılaştırın ve el ile birleştirin",
     "upload.translation_composition": "Çeviri Bileşimi",
     "upload.composition_auto": "Dosya içeriğinden otomatik olarak hesaplanır",
+    "upload.empty_warning": "Bu dosyada çeviri yok: yakalanan :count satır, çevrilmeyi bekleyen oyunun kendi metni. Böyle yayımlanırsa indirenler özgün metni geri alır — ve puanlanan siz olursunuz.",
+    "upload.empty_confirm": "Anladım, yine de yayımla",
     "profile.title": "Profil Ayarları",
     "profile.display_name": "Görünen ad",
     "profile.email": "E-posta",

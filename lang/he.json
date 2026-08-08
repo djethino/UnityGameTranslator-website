@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "השוו את הקובץ המקומי שלכם עם הגרסה המקוונת ומזגו ידנית",
     "upload.translation_composition": "הרכב התרגום",
     "upload.composition_auto": "מחושב אוטומטית מתוכן הקובץ",
+    "upload.empty_warning": "הקובץ הזה אינו מכיל תרגום: :count השורות שנאספו הן הטקסט של המשחק עצמו, ממתין לתרגום. פרסום במצב הזה יחזיר למורידים את הטקסט המקורי — ואתם אלה שיקבלו את הדירוג.",
+    "upload.empty_confirm": "הבנתי, לפרסם בכל זאת",
     "profile.title": "הגדרות פרופיל",
     "profile.display_name": "שם תצוגה",
     "profile.email": "דוא\"ל",

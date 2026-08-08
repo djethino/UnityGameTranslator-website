@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "ローカルファイルをオンライン版と比較して手動でマージしてください",
     "upload.translation_composition": "翻訳の構成",
     "upload.composition_auto": "ファイル内容から自動計算",
+    "upload.empty_warning": "このファイルには翻訳がありません。収集された :count 行はゲーム本来のテキストで、翻訳を待っている状態です。このまま公開すると、ダウンロードした人には元の文章がそのまま返り、評価されるのはあなたです。",
+    "upload.empty_confirm": "了解しました、このまま公開する",
     "profile.title": "プロフィール設定",
     "profile.display_name": "表示名",
     "profile.email": "メール",

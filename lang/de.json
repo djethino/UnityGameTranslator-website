@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Vergleichen Sie Ihre lokale Datei mit der Online-Version und führen Sie manuell zusammen",
     "upload.translation_composition": "Übersetzungszusammensetzung",
     "upload.composition_auto": "Automatisch aus dem Dateiinhalt berechnet",
+    "upload.empty_warning": "Diese Datei enthält keine Übersetzung: Ihre :count erfassten Zeilen sind der Text des Spiels und warten darauf, übersetzt zu werden. So veröffentlicht, bekommen Herunterladende den Originaltext zurück – und bewertet werden Sie.",
+    "upload.empty_confirm": "Verstanden, trotzdem veröffentlichen",
     "profile.title": "Profileinstellungen",
     "profile.display_name": "Anzeigename",
     "profile.email": "E-Mail",

@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "قارن ملفك المحلي مع النسخة المتصلة وادمج يدوياً",
     "upload.translation_composition": "تركيبة الترجمة",
     "upload.composition_auto": "محسوبة تلقائياً من محتوى الملف",
+    "upload.empty_warning": "لا يحتوي هذا الملف على أي ترجمة: أسطره المُلتقطة البالغة :count هي نص اللعبة نفسه، في انتظار الترجمة. إذا نُشر هكذا، فسيستعيد من يُنزّله النص الأصلي — وأنت من سيُقيَّم.",
+    "upload.empty_confirm": "فهمت، انشره على أي حال",
     "profile.title": "إعدادات الملف الشخصي",
     "profile.display_name": "الاسم المعروض",
     "profile.email": "البريد الإلكتروني",

@@ -53,6 +53,30 @@ class TranslationController extends Controller
             return back()->withErrors(['file' => $message]);
         }
 
+        // A file that translates nothing, asked about once before it is published.
+        //
+        // Capture mode collects the game's own text on purpose, as a starting point. Published as
+        // it stands it looks like a translation from the outside and hands the original words
+        // back — which has happened, and the next person built their own work on top of it. The
+        // author is the only one who knows whether that is what they meant, so this asks rather
+        // than refuses. Same question the mod asks at the same moment.
+        //
+        // The file has to be picked again to confirm, and that is not an oversight: this is the
+        // one place where a second of friction is cheaper than a catalogue entry that changes
+        // nothing in anyone's game.
+        $tagCounts = $parsed['tag_counts'];
+        $translatedLines = ($tagCounts['human_count'] ?? 0) + ($tagCounts['validated_count'] ?? 0)
+            + ($tagCounts['ai_count'] ?? 0);
+
+        if ($translatedLines === 0 && ($tagCounts['capture_count'] ?? 0) > 0 && !$request->boolean('publish_empty')) {
+            return back()
+                ->withInput()
+                ->with('confirm_empty', true)
+                ->withErrors(['file' => __('upload.empty_warning', [
+                    'count' => number_format($tagCounts['capture_count']),
+                ])]);
+        }
+
         $fileUuid = $parsed['uuid'];
         $userId = auth()->id();
 

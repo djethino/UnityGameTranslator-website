@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "Compara tu archivo local con la versión en línea y fusiona manualmente",
     "upload.translation_composition": "Composición de la traducción",
     "upload.composition_auto": "Calculado automáticamente del contenido del archivo",
+    "upload.empty_warning": "Este archivo no contiene ninguna traducción: sus :count líneas capturadas son el texto del juego, a la espera de traducirse. Publicado así, quien lo descargue recibe el texto original, y es a ti a quien valorarán.",
+    "upload.empty_confirm": "Entendido, publicar de todos modos",
     "profile.title": "Configuración del perfil",
     "profile.display_name": "Nombre para mostrar",
     "profile.email": "Correo electrónico",

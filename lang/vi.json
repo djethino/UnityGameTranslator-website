@@ -182,6 +182,8 @@
     "upload.review_changes_desc": "So sánh file cục bộ với phiên bản trực tuyến và hợp nhất thủ công",
     "upload.translation_composition": "Thành phần bản dịch",
     "upload.composition_auto": "Được tính tự động từ nội dung file",
+    "upload.empty_warning": "Tệp này không có bản dịch nào: :count dòng đã thu là văn bản của chính trò chơi, đang chờ được dịch. Công bố như vậy, người tải về nhận lại văn bản gốc — và họ sẽ đánh giá bạn.",
+    "upload.empty_confirm": "Tôi hiểu, vẫn công bố",
     "profile.title": "Cài đặt hồ sơ",
     "profile.display_name": "Tên hiển thị",
     "profile.email": "Email",
