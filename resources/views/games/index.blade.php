@@ -186,8 +186,10 @@
                                      rest is worth reading at all --}}
                                 <div class="flex flex-wrap gap-1 mb-1.5">
                                     @foreach($shownLanguages as $language)
-                                        <span class="text-[11px] px-1 py-0.5 rounded leading-none {{ $language === $highlightLanguage ? 'bg-purple-600 ring-1 ring-purple-300' : 'bg-black/60' }}"
-                                            title="{{ $languageNames[$language] ?? $language }}">@langflag($language)</span>
+                                        <x-language-flag :language="$language"
+                                            :state="$languageStates[$game->id][$language] ?? 'progress'"
+                                            :name="$languageNames[$language] ?? $language"
+                                            :highlight="$language === $highlightLanguage" />
                                     @endforeach
                                     @if($extraLanguages > 0)
                                         <span class="text-[10px] bg-black/60 text-gray-300 px-1.5 py-0.5 rounded leading-none"

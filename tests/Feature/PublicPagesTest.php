@@ -17,6 +17,24 @@ class PublicPagesTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * The page's own content, without the shared header and footer.
+     *
+     * The header holds a switcher naming every interface language and the footer a set of
+     * standing links: a test asserting that some language or word is (or is not) on a page
+     * reads them too, and answers about the layout instead of about the page.
+     */
+    private function mainContent(string $html): string
+    {
+        $start = strpos($html, '<main');
+        $end = strpos($html, '</main>');
+
+        $this->assertNotFalse($start, 'The layout no longer wraps its content in <main>.');
+        $this->assertNotFalse($end);
+
+        return substr($html, $start, $end - $start);
+    }
+
     public function test_home_page_renders(): void
     {
         $this->get('/')->assertOk();
@@ -251,10 +269,18 @@ class PublicPagesTest extends TestCase
         $make('public', $main->id, 'German');
         $make('branch', $main->id, 'Spanish');
 
-        $html = $this->get('/')->assertOk()->getContent();
+        // Only the page's own content: the header carries a language switcher naming every
+        // interface language, so a probe on the whole document would find "Deutsch" and
+        // "Español" there whatever the storefront actually shows.
+        $html = $this->mainContent($this->get('/')->assertOk()->getContent());
 
-        $this->assertStringContainsString('German', $html, 'A fork must be visible on the storefront.');
-        $this->assertStringNotContainsString('Spanish', $html, 'A branch must stay private.');
+        // Languages are named in their own language on this site, so the probe has to be too —
+        // read from the same table the view reads, rather than spelled out a second time here.
+        $german = config('language-names.German', 'German');
+        $spanish = config('language-names.Spanish', 'Spanish');
+
+        $this->assertStringContainsString($german, $html, 'A fork must be visible on the storefront.');
+        $this->assertStringNotContainsString($spanish, $html, 'A branch must stay private.');
     }
 
     /**
@@ -281,9 +307,12 @@ class PublicPagesTest extends TestCase
             'capture_count' => 1430,
         ])->save();
 
-        $html = $this->get('/')->assertOk()->getContent();
+        $html = $this->mainContent($this->get('/')->assertOk()->getContent());
 
         $this->assertStringNotContainsString('Captured Game', $html);
+        // Under both spellings: the site names a language in its own language, so probing only
+        // the English one would pass on a page that displays the flag and its native name.
         $this->assertStringNotContainsString('Persian', $html);
+        $this->assertStringNotContainsString(config('language-names.Persian', 'Persian'), $html);
     }
 }

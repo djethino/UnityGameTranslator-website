@@ -128,13 +128,12 @@ class GameController extends Controller
         // One query for the whole page rather than one per card, and PUBLIC translations only:
         // a branch is someone's unpublished contribution, and listing its language here would
         // announce work its author has not published.
-        $languagesByGame = Translation::whereIn('game_id', $games->pluck('id'))
-            ->where('visibility', 'public')
-            ->select('game_id', 'target_language')
-            ->distinct()
-            ->get()
-            ->groupBy('game_id')
-            ->map(fn ($rows) => $rows->pluck('target_language')->unique()->sort()->values());
+        // Not just WHICH languages, but how far each has got: a flag alone reads as a promise
+        // that the game can be played in that language, and a file of collected-but-untranslated
+        // text does not keep it. See Translation::languageStatesForGames.
+        $languageStates = Translation::languageStatesForGames($games->pluck('id'));
+        $languagesByGame = collect($languageStates)
+            ->map(fn ($byLanguage) => collect($byLanguage)->keys()->sort()->values());
 
         // Get available languages for filters. Public only, same reason as above: a filter
         // offering a language that exists solely in an unpublished branch both announces that
@@ -152,6 +151,7 @@ class GameController extends Controller
             'targetLanguages',
             'sourceLanguages',
             'languagesByGame',
+            'languageStates',
             'highlightLanguage',
             'languageFirst',
             'sort',

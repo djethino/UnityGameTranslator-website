@@ -389,16 +389,20 @@
                                 {{ __('translation.downloads', ['count' => number_format($game->downloads_total)]) }}
                             @endif
                         </div>
-                        @if(!empty($game->target_languages))
+                        @if(!empty($game->language_states))
                         <div class="flex flex-wrap gap-1 mt-1">
                             @php
                                 $maxFlags = 5;
-                                $languages = $game->target_languages;
-                                $displayLanguages = array_slice($languages, 0, $maxFlags);
-                                $remaining = count($languages) - $maxFlags;
+                                // Finished first, then under way, then merely collected: the five
+                                // that fit should be the five worth seeing.
+                                $order = ['finished' => 0, 'progress' => 1, 'capture' => 2];
+                                $languages = collect($game->language_states)
+                                    ->sortBy(fn ($state, $language) => [$order[$state] ?? 3, $language])
+                                    ->all();
+                                $remaining = max(0, count($languages) - $maxFlags);
                             @endphp
-                            @foreach($displayLanguages as $lang)
-                                <span class="text-base" title="{{ $lang }}">@langflag($lang)</span>
+                            @foreach(array_slice($languages, 0, $maxFlags, true) as $lang => $state)
+                                <x-language-flag :language="$lang" :state="$state" />
                             @endforeach
                             @if($remaining > 0)
                                 <span class="text-xs text-gray-400 ml-1">+{{ $remaining }}</span>

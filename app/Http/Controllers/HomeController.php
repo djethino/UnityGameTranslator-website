@@ -99,18 +99,13 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        // Load distinct target languages for each popular game (Main translations only)
+        // Which languages each game has, and how far each has got. A flag alone promises the
+        // game can be played in that language; the state keeps the promise honest — and lets a
+        // collected-but-untranslated language be shown in grey rather than hidden, which says
+        // the true thing: somebody has started, and the next person could pick it up.
+        $languageStates = Translation::languageStatesForGames($popularGames->pluck('id'));
         foreach ($popularGames as $game) {
-            // Only languages someone has actually translated INTO. A flag on a card is a promise
-            // that the game can be played in that language; an empty capture file makes none.
-            $game->target_languages = Translation::where('game_id', $game->id)
-                ->where('visibility', 'public')
-                ->withTranslatedLines()
-                ->distinct()
-                ->pluck('target_language')
-                ->filter()
-                ->values()
-                ->toArray();
+            $game->language_states = $languageStates[$game->id] ?? [];
         }
 
         return view('home', compact('stats', 'finished', 'latestTranslations', 'popularGames'));

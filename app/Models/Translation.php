@@ -827,6 +827,55 @@ class Translation extends Model
             ->whereDoesntHave('reports', fn ($reports) => $reports->where('status', 'pending'));
     }
 
+    /**
+     * How far each language has got, for a set of games at once.
+     *
+     * A flag on a card says a language EXISTS, which is a promise: it reads as "this game can be
+     * played in that language". Three states behind it keep the promise honest —
+     *
+     *   finished : somebody has declared a translation in that language complete
+     *   progress : lines are translated, work is under way
+     *   capture  : the text has been collected in that language and none of it translated yet
+     *
+     * The last one is why the states exist at all. Such a file was first shown like any other
+     * (a Persian flag on a game with nothing Persian to read), then hidden entirely — and hiding
+     * it lost something true: someone HAS started, and the next person could pick it up. Said in
+     * grey, it stops promising and starts inviting.
+     *
+     * Three queries for a whole page rather than three per card. Returned as
+     * [game_id => [language => state]].
+     */
+    public static function languageStatesForGames($gameIds): array
+    {
+        $gameIds = collect($gameIds)->all();
+        if (empty($gameIds)) {
+            return [];
+        }
+
+        $pairs = function ($query) {
+            return $query->select('game_id', 'target_language')->distinct()->get()
+                ->map(fn ($row) => $row->game_id . "\0" . $row->target_language)
+                ->flip();
+        };
+
+        $base = fn () => static::whereIn('game_id', $gameIds)->where('visibility', 'public');
+
+        $finished = $pairs($base()->withTranslatedLines()->finished());
+        $translated = $pairs($base()->withTranslatedLines());
+
+        $states = [];
+        foreach ($base()->select('game_id', 'target_language')->distinct()->get() as $row) {
+            $key = $row->game_id . "\0" . $row->target_language;
+            $states[$row->game_id][$row->target_language] = match (true) {
+                $finished->has($key) => 'finished',
+                $translated->has($key) => 'progress',
+                default => 'capture',
+            };
+        }
+
+        return $states;
+    }
+
     public function scopeBranches($query)
     {
         return $query->where('visibility', 'branch');
