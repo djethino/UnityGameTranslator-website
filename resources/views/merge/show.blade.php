@@ -234,8 +234,18 @@
 
             @include('partials.editor-quality-bar')
 
-            {{-- Filters (checked = visible, same model as the other editors) --}}
-            <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+            {{-- Filters (checked = visible, same model as the other editors).
+
+                 TWO ZONES, and that is the whole point: what to show on the left, how to show it
+                 on the right. Left wraps within itself when a language runs long; the right group
+                 is pinned and never gets separated from the bar it belongs to. Before this, one
+                 flow held both and the wrap fell wherever it fell — a filter on one line, another
+                 on the next, and the workbench button stranded beside them. --}}
+            <div class="mb-4 flex gap-4 items-start text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+              {{-- gap-x-3, not 4: the filters are dense little checkboxes and the row was
+                   overflowing by a couple of pixels at a common window width. Row gap stays
+                   larger so the two lines, when a language forces them, read as two lines. --}}
+              <div class="flex flex-wrap gap-x-3 gap-y-2 items-center flex-1 min-w-0">
                 <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
 
                 @if($mode === 'merge')
@@ -292,25 +302,14 @@
                         class="rounded bg-gray-700 border-gray-600 text-purple-600">
                     <span class="text-purple-400">{{ __('merge.modifications') }}</span>
                 </label>
+              </div>
 
-                {{-- Capture-order index column (mod-assigned "i") --}}
-                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.capture_order_hint') }}">
-                    <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
-                        class="rounded bg-gray-700 border-gray-600 text-gray-500">
-                    <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
-                </label>
-
-                {{-- Show a line the way the game breaks it. A display switch only: the edit box
-                     has always kept the breaks, and nothing here can change what is stored. --}}
-                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.line_breaks_hint') }}">
-                    <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
-                        class="rounded bg-gray-700 border-gray-600 text-gray-500">
-                    <span class="text-gray-400"><i class="fas fa-paragraph mr-1"></i>{{ __('editor.line_breaks') }}</span>
-                </label>
-
-                {{-- Not a layout imposed on everyone: the page stays an ordinary page, and this
-                     hands the whole window to the grid for as long as the work lasts. --}}
-                <x-editor.workbench-toggle class="ml-auto" />
+              {{-- How a row is drawn, and how much room the grid gets. Pinned: this group is
+                   never what a long language pushes onto a second line. --}}
+              <div class="flex items-center gap-3 shrink-0 border-l border-gray-700 pl-4">
+                <x-editor.view-options />
+                <x-editor.workbench-toggle />
+              </div>
             </div>
 
             @include('partials.editor-floating-search')

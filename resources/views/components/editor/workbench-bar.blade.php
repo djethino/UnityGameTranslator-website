@@ -103,16 +103,8 @@
                class="rounded bg-gray-700 border-gray-600 text-purple-600">
         <i class="fas fa-pen text-purple-400"></i>
     </label>
-    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('editor.capture_order') }}">
-        <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
-               class="rounded bg-gray-700 border-gray-600 text-gray-500">
-        <i class="fas fa-arrow-down-1-9 text-gray-400"></i>
-    </label>
-    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('editor.line_breaks_hint') }}">
-        <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
-               class="rounded bg-gray-700 border-gray-600 text-gray-500">
-        <i class="fas fa-paragraph text-gray-400"></i>
-    </label>
+    {{-- The same two icons, from the same file, as the ordinary bar behind --}}
+    <x-editor.view-options />
 
     <span class="w-px h-5 bg-gray-700 shrink-0"></span>
 

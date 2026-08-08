@@ -184,8 +184,11 @@
 
         @include('partials.editor-quality-bar')
 
-        {{-- Filters --}}
-        <div class="mb-4 flex flex-wrap gap-4 items-center text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+        {{-- Filters. Two zones, like the merge view: what to show on the left, how to show it on
+             the right. The right group is pinned, so a long language wraps the FILTERS and never
+             strands a view option on a line of its own. --}}
+        <div class="mb-4 flex gap-4 items-start text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+          <div class="flex flex-wrap gap-x-3 gap-y-2 items-center flex-1 min-w-0">
             <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
 
             <label class="flex items-center gap-2 cursor-pointer">
@@ -253,21 +256,6 @@
                 <span class="text-purple-400">{{ __('merge_preview.modifications') }}</span>
             </label>
 
-            {{-- Capture-order index column (mod-assigned "i") --}}
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.capture_order_hint') }}">
-                <input type="checkbox" :checked="showIndexColumn" @change="toggleIndexColumn()"
-                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
-                <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
-            </label>
-
-            {{-- Show a line the way the game breaks it. A display switch only: the edit box has
-                 always kept the breaks, and nothing here can change what is stored. --}}
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.line_breaks_hint') }}">
-                <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
-                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
-                <span class="text-gray-400"><i class="fas fa-paragraph mr-1"></i>{{ __('editor.line_breaks') }}</span>
-            </label>
-
             <span class="text-gray-600">|</span>
 
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
@@ -277,10 +265,14 @@
             <button type="button" @click="selectAllOnline()" class="text-blue-400 hover:text-blue-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_online') }}
             </button>
+          </div>
 
-            {{-- Same view option, same place, same wording as the merge view: three columns of
-                 text to arbitrate has the same need for room whichever screen it is on. --}}
-            <x-editor.workbench-toggle class="ml-auto" />
+          {{-- How a row is drawn, and how much room the grid gets. Same group, same icons, same
+               place as on the merge view. --}}
+          <div class="flex items-center gap-3 shrink-0 border-l border-gray-700 pl-4">
+            <x-editor.view-options />
+            <x-editor.workbench-toggle />
+          </div>
         </div>
 
         @include('partials.editor-floating-search')
