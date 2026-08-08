@@ -62,13 +62,7 @@ export function editorColumns() {
             // to. Without this, dragging one edge would squeeze its neighbours to keep the total
             // at 100%.
             if (gridWidth) {
-                // min-width keeps the grid at least as wide as its box: shrinking a column below
-                // that would otherwise leave bare space past the last one. The surplus goes to
-                // the one column that never declares a width — the filler at the end of every
-                // grid — so the sized columns stay exactly as wide as they were dragged.
-                rules.push(
-                    `.editor-grid.cols-sized{table-layout:fixed;width:${Math.round(gridWidth)}px;min-width:100%}`
-                );
+                rules.push(`.editor-grid.cols-sized{table-layout:fixed;width:${Math.round(gridWidth)}px}`);
             }
 
             style.textContent = rules.join('\n');
@@ -123,6 +117,72 @@ export function editorColumns() {
          */
         onColumnsResized() {},
 
+        /** The addressable columns, left to right as the header lays them out. */
+        _columnOrder() {
+            const table = (this.$refs.gridBox || document).querySelector('table.editor-grid');
+            if (!table) return [];
+            return Array.from(table.querySelectorAll('thead th[data-col]'), (th) => th.dataset.col);
+        },
+
+        /**
+         * A column meant to take up slack: one the person can resize themselves.
+         *
+         * The criterion is the handle, and it says exactly the right thing — a column offered for
+         * dragging is a column whose width is a matter of taste, so it is also one that may be
+         * stretched. A tag column has none: it holds a badge, and it should still hold a badge
+         * after someone narrows the key beside it.
+         */
+        _isFlexible(col) {
+            const root = this.$refs.gridBox || document;
+            return !!root.querySelector(`thead [data-resize-col="${CSS.escape(col)}"]`);
+        },
+
+        /**
+         * Where the width taken or given by a drag comes from and goes to.
+         *
+         * A data grid is not a spreadsheet: there is nothing past the last column, so the grid
+         * must never end short of its box. Narrowing a column therefore STRETCHES the ones to its
+         * right — which is what the automatic layout used to do on its own, and what was lost the
+         * moment widths started being declared. A filler column was tried instead and was exactly
+         * the spreadsheet answer: a phantom column that belongs to no data.
+         *
+         * Widening is the opposite and stops at a floor: the right-hand columns give ground until
+         * they reach MIN_COLUMN_WIDTH, after which the grid simply grows past its box and scrolls.
+         * Nothing is ever squeezed out of existence to keep a total.
+         *
+         * Distributed from the widths PHOTOGRAPHED at mousedown, never from the live ones: taking
+         * a share of a share at every mouse move compounds its own rounding and the columns drift
+         * over a long drag.
+         */
+        _distribute(newWidth) {
+            const drag = this._resize;
+            const widths = { ...drag.baseWidths, [drag.col]: newWidth };
+            const fixedPart = drag.baseGridWidth
+                - Object.values(drag.baseWidths).reduce((sum, w) => sum + w, 0);
+
+            let total = fixedPart + Object.values(widths).reduce((sum, w) => sum + w, 0);
+
+            // Short of the box: the flexible columns to the right take up the slack, each in
+            // proportion to what it already occupies — a wide value column absorbs most of it and
+            // a narrow one is not doubled in size to satisfy an arithmetic mean.
+            const slack = drag.boxWidth - total;
+            if (slack > 0 && drag.rightOf.length) {
+                const base = drag.rightOf.reduce((sum, col) => sum + (drag.baseWidths[col] || 0), 0);
+                let given = 0;
+                drag.rightOf.forEach((col, index) => {
+                    // The last one takes what rounding left over, so the sum lands on the box
+                    const share = index === drag.rightOf.length - 1
+                        ? slack - given
+                        : Math.round(slack * ((drag.baseWidths[col] || 0) / (base || 1)));
+                    given += share;
+                    widths[col] = (drag.baseWidths[col] || 0) + share;
+                });
+                total = drag.boxWidth;
+            }
+
+            return { widths, gridWidth: total };
+        },
+
         startColumnResize(event) {
             const handle = event.target.closest('[data-resize-col]');
             if (!handle) return;
@@ -137,11 +197,22 @@ export function editorColumns() {
             // about to abandon
             this._enterSizedMode();
 
+            const order = this._columnOrder();
             this._resize = {
                 col,
                 startX: event.clientX,
                 startWidth: cell.getBoundingClientRect().width,
                 width: null,
+                // Photographed once, at the start: distributing from the LIVE widths would
+                // compound its own rounding at every mouse move and drift across a long drag
+                baseWidths: { ...this.columnWidths },
+                baseGridWidth: this.gridWidth,
+                // What gives and takes room: the columns to the right that ARE resizable. A
+                // column with no handle — the tag columns, a badge wide — was never meant to
+                // stretch, and sharing the slack equally with one made it grow a hundred pixels.
+                rightOf: order.slice(order.indexOf(col) + 1).filter((c) => this._isFlexible(c)),
+                // What the grid must never be narrower than
+                boxWidth: (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0,
             };
 
             // On the document, not on the handle: the pointer outruns a six-pixel strip long
@@ -190,22 +261,21 @@ export function editorColumns() {
                     MIN_COLUMN_WIDTH,
                     Math.round(this._resize.startWidth + (event.clientX - this._resize.startX))
                 );
+                const { widths, gridWidth } = this._distribute(this._resize.width);
                 // Written straight to the stylesheet: the component (and the two hundred rows
                 // watching it) only hears about it on drop
-                // The grid grows and shrinks BY the amount dragged: the neighbours keep theirs
-                const gridWidth = this.gridWidth - this._resize.startWidth + this._resize.width;
-                this._writeColumnWidths(
-                    { ...this.columnWidths, [this._resize.col]: this._resize.width },
-                    gridWidth
-                );
+                this._writeColumnWidths(widths, gridWidth);
                 this.onColumnsResized();
             };
 
             this._onColumnResizeEnd = () => {
                 if (this._resize) {
                     if (this._resize.width !== null) {
-                        this.gridWidth = this.gridWidth - this._resize.startWidth + this._resize.width;
-                        this.columnWidths[this._resize.col] = this._resize.width;
+                        const { widths, gridWidth } = this._distribute(this._resize.width);
+                        Object.entries(widths).forEach(([col, width]) => {
+                            this.columnWidths[col] = width;
+                        });
+                        this.gridWidth = gridWidth;
                         this.persistUiState();
                     }
                     this._resize = null;

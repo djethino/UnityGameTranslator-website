@@ -148,11 +148,6 @@
                             </div>
                             <x-editor.col-resize col="value" />
                         </th>
-                        {{-- Filler: the only column that never declares a width, so it soaks up
-                             whatever is left when the sized columns add up to less than the
-                             screen. Without it, shrinking a column left bare space past the last
-                             one. Empty and unstyled — it is room, not content. --}}
-                        <th class="p-0"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -188,12 +183,11 @@
                                     <span class="break-words editor-text" x-safe-html="valueHtml(key)"></span>
                                 </template>
                             </td>
-                            <td class="p-0"></td>
                         </tr>
                     </template>
 
                     <tr x-show="isEmptyResult" x-cloak>
-                        <td :colspan="showIndexColumn ? 5 : 4" class="py-12 text-center text-gray-500">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="py-12 text-center text-gray-500">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                             <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
@@ -204,7 +198,7 @@
 
                     {{-- "Show more", not pages: the same gesture as every editor --}}
                     <tr x-show="hiddenCount > 0" x-cloak>
-                        <td :colspan="showIndexColumn ? 5 : 4" class="py-3 text-center">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="py-3 text-center">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                             <button type="button" @click="showMore()"

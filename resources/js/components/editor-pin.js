@@ -34,7 +34,20 @@ export function editorPin() {
         togglePinMain() {
             this.pinMain = !this.pinMain;
             this.persistUiState();
-            this.$nextTick(() => this.applyPinOffsets());
+            this.$nextTick(() => this.remeasurePinOffsets());
+        },
+
+        /**
+         * Measure now, and again once the browser has finished with the layout.
+         *
+         * Pinning changes the columns' own borders and backgrounds, so the widths read in the
+         * same tick as the class was added are the ones from BEFORE it. A five-pixel gap opened
+         * between the frozen columns and closed later, when anything else happened to trigger a
+         * fresh measurement — which is exactly the "sometimes live, sometimes afterwards" of it.
+         */
+        remeasurePinOffsets() {
+            this.applyPinOffsets();
+            requestAnimationFrame(() => this.applyPinOffsets());
         },
 
         /**
@@ -108,10 +121,10 @@ export function editorPin() {
                 this.showIndexColumn;
                 this.columnWidths;
                 this.pinMain;
-                this.$nextTick(() => this.applyPinOffsets());
+                this.$nextTick(() => this.remeasurePinOffsets());
             });
 
-            window.addEventListener('resize', () => this.applyPinOffsets(), { passive: true });
+            window.addEventListener('resize', () => this.remeasurePinOffsets(), { passive: true });
         },
     };
 }
