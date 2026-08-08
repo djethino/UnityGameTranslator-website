@@ -1,23 +1,11 @@
 @props(['translation'])
 
 @php
-    // What the file is MADE OF, not how far it has come: a game's total line count
-    // is unknowable (text is captured as it is met), so there is no progress to
-    // measure. The denominator is everything that WAS captured — including lines
-    // marked as not to translate, which were met, looked at, and settled.
+    // What the file is MADE OF, not how far it has come. The shares come from the model
+    // (Translation::qualityShares) and the drawing from x-quality-bar: this file only decides
+    // what goes AROUND the bar.
     $captureCount = $translation->capture_count ?? 0;
-    $skippedCount = $translation->skipped_count ?? 0;
-    $total = $translation->effective_lines + $captureCount + $skippedCount;
-
-    // Only the shares. What the bar looks like belongs to x-quality-bar, which the editors
-    // render too — see that component for why there is exactly one of it.
-    $percents = $total > 0 ? [
-        'H' => ($translation->human_count / $total) * 100,
-        'V' => ($translation->validated_count / $total) * 100,
-        'A' => ($translation->ai_count / $total) * 100,
-        'S' => ($skippedCount / $total) * 100,
-        'C' => ($captureCount / $total) * 100,
-    ] : [];
+    $percents = $translation->qualityShares();
 @endphp
 
 <div {{ $attributes->merge(['class' => 'progress-bar-wrapper']) }}>

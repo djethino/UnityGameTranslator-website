@@ -1042,6 +1042,38 @@ class Translation extends Model
         return $this->resolved_lines / $encountered;
     }
 
+    /**
+     * The five shares of the quality bar, in percent, keyed the way <x-quality-bar> expects.
+     *
+     * Here rather than in a view because three screens were computing it, and two of them got a
+     * different answer: the admin list divided by H+V+A alone, so a file of two translated lines
+     * and eleven captures showed a full green bar and "100% human" while the same file's card
+     * said 15%. The denominator is everything the file has MET — translated, settled, or still
+     * waiting — which is the only total anyone can actually count. A game's real line count is
+     * unknowable, since text is captured as it is encountered.
+     *
+     * Empty array when nothing has been met at all: a bar of zeroes says "nothing yet" better
+     * than five bands of zero width.
+     */
+    public function qualityShares(): array
+    {
+        $captured = $this->capture_count ?? 0;
+        $skipped = $this->skipped_count ?? 0;
+        $total = $this->effective_lines + $captured + $skipped;
+
+        if ($total <= 0) {
+            return [];
+        }
+
+        return [
+            'H' => ($this->human_count / $total) * 100,
+            'V' => ($this->validated_count / $total) * 100,
+            'A' => ($this->ai_count / $total) * 100,
+            'S' => ($skipped / $total) * 100,
+            'C' => ($captured / $total) * 100,
+        ];
+    }
+
     /** The account this translation was forked from, when it still exists. */
     public function originAuthor()
     {

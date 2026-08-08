@@ -117,18 +117,20 @@
                             <span class="text-gray-300">{{ $translation->user->name ?? '[Deleted]' }}</span>
                         </td>
                         <td class="py-3 px-4">
-                            @php
-                                $h = $translation->human_count; $v = $translation->validated_count; $a = $translation->ai_count;
-                                $tot = $h + $v + $a;
-                            @endphp
-                            @if($tot > 0)
-                                <div class="flex h-2 w-24 rounded overflow-hidden bg-gray-700"
-                                     title="Human {{ round($h / $tot * 100) }}% · Validated {{ round($v / $tot * 100) }}% · AI {{ round($a / $tot * 100) }}%">
-                                    <div class="bg-green-500" style="width: {{ $h / $tot * 100 }}%"></div>
-                                    <div class="bg-blue-500" style="width: {{ $v / $tot * 100 }}%"></div>
-                                    <div class="bg-orange-500" style="width: {{ $a / $tot * 100 }}%"></div>
-                                </div>
-                                <span class="text-xs text-gray-500">{{ round(($h + $v) / $tot * 100) }}% human</span>
+                            {{-- The same bar as everywhere else. This column used to draw its own,
+                                 dividing by H+V+A alone: a file of two translated lines and eleven
+                                 captures showed a full green bar and "100% human" here while its
+                                 own page said 15%. An admin comparing files was comparing numbers
+                                 that did not mean the same thing. --}}
+                            @php $shares = $translation->qualityShares(); @endphp
+                            @if($shares)
+                                <x-quality-bar :percents="$shares" class="w-24" :title="__('progress.tooltip', [
+                                    'human' => $translation->human_count,
+                                    'validated' => $translation->validated_count,
+                                    'ai' => $translation->ai_count,
+                                    'capture' => $translation->capture_count ?? 0,
+                                ])" />
+                                <span class="text-xs text-gray-500">{{ round($shares['H'] + $shares['V']) }}% {{ __('progress.human') }}</span>
                             @else
                                 <span class="text-gray-600 text-sm">—</span>
                             @endif

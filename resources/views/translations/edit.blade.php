@@ -65,35 +65,17 @@
             </div>
         </div>
 
-        <!-- Translation Composition (read-only, computed from file content) -->
-        @php
-            $total = $translation->human_count + $translation->validated_count + $translation->ai_count;
-            $humanPct = $total > 0 ? round($translation->human_count / $total * 100) : 0;
-            $validatedPct = $total > 0 ? round($translation->validated_count / $total * 100) : 0;
-            $aiPct = $total > 0 ? round($translation->ai_count / $total * 100) : 0;
-        @endphp
+        {{-- Composition (read-only, computed from the file).
+
+             Three cards over H+V+A used to stand here, each showing a share of a total that left
+             out everything captured and everything kept as is: an author whose file is mostly
+             captured read "Human 100%" on the very screen where they publish it, while their own
+             game page said 15%. The shared bar says the same thing as every other screen, and its
+             key names the bands that exist. --}}
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.translation_composition') }}</label>
-            <div class="grid grid-cols-3 gap-3">
-                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $humanPct > 0 ? 'border-green-500/50' : 'border-transparent' }} opacity-90">
-                    <i class="fas fa-user text-2xl text-green-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('progress.human') }}</span>
-                    <span class="text-lg font-bold text-green-400 mt-1">{{ $humanPct }}%</span>
-                    <span class="text-xs text-gray-500">({{ number_format($translation->human_count) }})</span>
-                </div>
-                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $validatedPct > 0 ? 'border-blue-500/50' : 'border-transparent' }} opacity-90">
-                    <i class="fas fa-check-circle text-2xl text-blue-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('progress.validated') }}</span>
-                    <span class="text-lg font-bold text-blue-400 mt-1">{{ $validatedPct }}%</span>
-                    <span class="text-xs text-gray-500">({{ number_format($translation->validated_count) }})</span>
-                </div>
-                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg border-2 {{ $aiPct > 0 ? 'border-orange-500/50' : 'border-transparent' }} opacity-90">
-                    <i class="fas fa-robot text-2xl text-orange-400 mb-2"></i>
-                    <span class="text-sm font-medium">{{ __('progress.ai') }}</span>
-                    <span class="text-lg font-bold text-orange-400 mt-1">{{ $aiPct }}%</span>
-                    <span class="text-xs text-gray-500">({{ number_format($translation->ai_count) }})</span>
-                </div>
-            </div>
+            <x-progress-bar :translation="$translation" />
+            <x-quality-legend :translation="$translation" />
             <p class="text-xs text-gray-500 mt-2 text-center">{{ __('upload.composition_auto') }}</p>
         </div>
 

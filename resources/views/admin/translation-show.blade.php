@@ -50,19 +50,13 @@
                         <p class="text-gray-400 text-sm">{{ __('my_translations.downloads') }}</p>
                         <p class="font-medium">{{ number_format($translation->download_count) }}</p>
                     </div>
-                    @php
-                        $total = $translation->human_count + $translation->validated_count + $translation->ai_count;
-                        $humanPct = $total > 0 ? round($translation->human_count / $total * 100) : 0;
-                        $validatedPct = $total > 0 ? round($translation->validated_count / $total * 100) : 0;
-                        $aiPct = $total > 0 ? round($translation->ai_count / $total * 100) : 0;
-                    @endphp
+                    {{-- The same bar and the same key as every other screen. This block used to
+                         work out its own percentages over H+V+A alone, so a file whose lines are
+                         mostly captured read "H:100%" here. --}}
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('upload.translation_composition') }}</p>
-                        <p class="font-medium text-sm">
-                            <span class="text-green-400">H:{{ $humanPct }}%</span>
-                            <span class="text-blue-400 ml-1">V:{{ $validatedPct }}%</span>
-                            <span class="text-orange-400 ml-1">A:{{ $aiPct }}%</span>
-                        </p>
+                        <x-progress-bar :translation="$translation" class="mt-1" />
+                        <x-quality-legend :translation="$translation" compact />
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('admin.status') }}</p>
