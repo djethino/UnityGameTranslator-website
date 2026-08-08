@@ -221,7 +221,7 @@ export function editorCore(config) {
         },
 
         toggleDelete(key) {
-            this.setMatchCursor(key);
+            this.focusRow(key);
             if (this.deletions[key]) {
                 delete this.deletions[key];
             } else {
@@ -499,10 +499,23 @@ export function editorCore(config) {
          * style: clicking in the buffer moves the find caret. No scrolling,
          * the row is already on screen.
          */
-        setMatchCursor(key) {
-            if (!this.hasQuery) return;
-            const index = this.matchKeys.indexOf(key);
-            if (index !== -1) this.currentMatchIndex = index;
+        /**
+         * Put the row cursor on this row, and show it.
+         *
+         * Was setMatchCursor, and it did two things wrong for the one job it has. It looked the
+         * row up among the MATCHES, so with no search active it returned immediately and the
+         * click moved nothing; and it never set cursorActive, so even when it did move, the
+         * outline stayed invisible unless a search happened to be running.
+         *
+         * The result was a screen that answered a click on a value but not on a key, and only
+         * sometimes — which reads as "you have to click in the right place to select a line".
+         * A row is a row: clicking anywhere on it points the cursor at it.
+         */
+        focusRow(key) {
+            const index = this.filteredKeys.indexOf(key);
+            if (index === -1) return;
+            this.currentMatchIndex = index;
+            this.cursorActive = true;
         },
 
         // ── Page-level scroll shortcuts (floating bar) ────────────────────
@@ -929,7 +942,7 @@ export function editorCore(config) {
         // ── Edit modal ────────────────────────────────────────────────────
 
         editCell(key, currentValue) {
-            this.setMatchCursor(key);
+            this.focusRow(key);
             this.editModalValue = this.editedValues[key] ?? currentValue;
             this.editModal = {
                 open: true,

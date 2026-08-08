@@ -286,7 +286,13 @@
                          scopes (wrong values shown on wrong keys) — unacceptable in
                          an editor. The window size is the safe lever instead. --}}
                     <template x-for="(key, idx) in visibleKeys" :key="key">
-                        <tr class="hover:bg-gray-750 transition-colors"
+                        {{-- The whole row moves the cursor, not just the cells that already had a job.
+                             Clicking a value both selects it and focuses the row, but
+                             clicking the key did nothing — which reads as "you have to
+                             click in the right place to pick a line", and forced a double
+                             toggle on a value you did not want to change. Buttons inside
+                             stop propagation, so their own actions are unaffected. --}}
+                        <tr @click="focusRow(key)" class="cursor-default hover:bg-gray-750 transition-colors"
                             :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
                             :data-row-index="idx">
                             {{-- Capture-order index. Frozen with its header: an opaque background
@@ -859,7 +865,7 @@ document.addEventListener('alpine:init', () => {
          */
         requestRetranslate(key) {
             if (!this.canRetranslate(key)) return;
-            this.setMatchCursor(key);
+            this.focusRow(key);
             this.retranslating[key] = Date.now();
             this._scheduleNextPoll(); // switch to the fast poll right away
 
@@ -917,7 +923,7 @@ document.addEventListener('alpine:init', () => {
          */
         toggleValidate(key) {
             // Even on inert rows the click moves the search cursor (IDE caret)
-            this.setMatchCursor(key);
+            this.focusRow(key);
             if (this.isDeleted(key) || this.isEdited(key)) return;
             if (this.isValidatedPending(key)) {
                 this.cancelTagChange(key);
