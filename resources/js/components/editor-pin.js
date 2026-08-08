@@ -58,15 +58,15 @@ export function editorPin() {
          * sideways would feed the layout its own displacement and walk the columns off screen.
          */
         applyPinOffsets() {
+            const box = this.$refs.gridBox;
             const style = this._pinStyleElement();
-            if (!this.pinMain) {
+            if (!this.pinMain || !box) {
                 style.textContent = '';
                 return;
             }
 
-            const root = this.$refs.gridBox || document;
             const widthOf = (selector) => {
-                const cell = root.querySelector('thead ' + selector);
+                const cell = box.querySelector('thead ' + selector);
                 if (!cell) return 0;
                 // An x-show'd column is still in the DOM; a hidden one occupies nothing
                 if (cell.offsetParent === null && cell.getClientRects().length === 0) return 0;
@@ -80,9 +80,25 @@ export function editorPin() {
             const tagLeft = Math.round(indexWidth + keyWidth);
             const valueLeft = Math.round(tagLeft + tagWidth);
 
-            style.textContent =
-                `.editor-grid.pin-main [data-col="${this.pinTagCol}"]{left:${tagLeft}px}\n`
-                + `.editor-grid.pin-main [data-col="${this.pinValueCol}"]{left:${valueLeft}px}`;
+            // The RULES are written once and never touched again; only the two numbers move,
+            // as inherited custom properties on the box.
+            //
+            // Rewriting the stylesheet on every mouse move was tearing the frozen block apart
+            // mid-drag: the header followed the edge while the BODY cells stayed at a stale
+            // offset and the next column rode over them. Replacing a stylesheet's text destroys
+            // and rebuilds its rules, and a sticky element being re-anchored by a rule that no
+            // longer exists for an instant is not something a compositor is obliged to keep up
+            // with. A custom property is a value change on an element — the offset moves without
+            // the rule ever going away.
+            const rules =
+                `.editor-grid.pin-main [data-col="${this.pinTagCol}"]{left:var(--pin-tag-left,0px)}\n`
+                + `.editor-grid.pin-main [data-col="${this.pinValueCol}"]{left:var(--pin-value-left,0px)}`;
+            if (style.textContent !== rules) {
+                style.textContent = rules;
+            }
+
+            box.style.setProperty('--pin-tag-left', tagLeft + 'px');
+            box.style.setProperty('--pin-value-left', valueLeft + 'px');
         },
 
         _pinStyleElement() {

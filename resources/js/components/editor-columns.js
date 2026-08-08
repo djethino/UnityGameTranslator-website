@@ -36,6 +36,17 @@ export function editorColumns() {
         columnWidths: {},
         // Whether the grid has switched to honouring those widths exactly (see _enterSizedMode)
         columnsSized: false,
+        /**
+         * True for the duration of a drag, and the pinned columns unfreeze while it lasts.
+         *
+         * Moving a sticky element's anchor on every mouse move is something the browser is not
+         * obliged to keep up with: measured live, the frozen Main followed the edge in the HEADER
+         * and stayed put in the BODY, which the next column then rode over — and it healed by
+         * itself the moment the mouse stopped, because the next layout put it right. Nothing is
+         * frozen while an edge is being dragged; everything is, again, as soon as it is dropped.
+         * You are looking at the edge you are moving, not at the column you froze.
+         */
+        resizingColumns: false,
         // Total width the grid takes in that mode
         gridWidth: 0,
         // Columns whose width was only PHOTOGRAPHED when the grid switched to exact widths, as
@@ -196,6 +207,7 @@ export function editorColumns() {
             // BEFORE measuring, or the first width read would be the one the automatic layout is
             // about to abandon
             this._enterSizedMode();
+            this.resizingColumns = true;
 
             const order = this._columnOrder();
             this._resize = {
@@ -269,6 +281,7 @@ export function editorColumns() {
             };
 
             this._onColumnResizeEnd = () => {
+                this.resizingColumns = false;
                 if (this._resize) {
                     if (this._resize.width !== null) {
                         const { widths, gridWidth } = this._distribute(this._resize.width);

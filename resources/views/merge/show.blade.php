@@ -412,7 +412,7 @@
                      own words, which reads as a rendering fault and made the column useless for
                      the one thing it is for, reading and copying the source line. --}}
                 <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="[showLineBreaks && 'show-linebreaks', pinMain && 'pin-main', columnsSized && 'cols-sized']">
+                   :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
                     <thead class="bg-gray-900 sticky top-0 z-20">
                         <tr>
                             {{-- Capture-order index (toggleable, sortable) --}}
