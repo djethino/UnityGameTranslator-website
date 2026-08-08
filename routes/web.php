@@ -136,6 +136,8 @@ $localizableRoutes = function () {
     // raw file does not.
     Route::get('/translations/{translation}/view', [TranslationController::class, 'view'])
         ->middleware('throttle:60,1')->name('translations.view');
+    Route::get('/translations/{translation}/view/data', [TranslationController::class, 'viewData'])
+        ->middleware('throttle:30,1')->name('translations.view.data');
 
     // Merge preview page — token-based auth from the mod; the tokenized
     // entry URL is unprefixed (mod-generated) but browsed afterwards

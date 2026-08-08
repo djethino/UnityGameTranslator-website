@@ -88,7 +88,8 @@ import { composeEditor, normalizeLineEndings } from './components/translation-ed
 import { createLiveSync } from './components/live-sync.js';
 import { createSectionHistory } from './section-history.js';
 import { createSectionSpy } from './section-spy.js';
-window.UGT = { composeEditor, normalizeLineEndings, createLiveSync };
+import { createViewer } from './components/translation-viewer.js';
+window.UGT = { composeEditor, normalizeLineEndings, createLiveSync, createViewer };
 
 // Flowing text or line breaks. The three editors get it by composing the editor
 // core; this registration is for any other screen that lists translation lines

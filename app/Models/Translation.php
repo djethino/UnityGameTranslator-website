@@ -671,6 +671,39 @@ class Translation extends Model
     }
 
     /**
+     * The file's own bookkeeping — the underscore-prefixed keys (_uuid, _game, _source…).
+     *
+     * Only the metadata: the lines themselves are never loaded server-side any more. They are
+     * sent whole to the shared editor core, which filters, searches, sorts and windows them in
+     * the browser, exactly as it does for the three editing screens.
+     *
+     * A missing or corrupted file yields an empty array, never an exception: a translation whose
+     * file has gone is a page that shows nothing, not a 500.
+     */
+    public function fileMetadata(): array
+    {
+        if (!$this->file_path) {
+            return [];
+        }
+
+        try {
+            $decoded = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($this->file_path), true);
+        } catch (\Exception $e) {
+            return [];
+        }
+
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        return array_filter(
+            $decoded,
+            fn ($key) => str_starts_with((string) $key, '_'),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    /**
      * May this user read the file at all?
      *
      * Public translations are readable by anyone — that is what the download endpoint already

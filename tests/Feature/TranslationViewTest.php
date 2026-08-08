@@ -52,15 +52,39 @@ class TranslationViewTest extends TestCase
         return $translation->refresh();
     }
 
-    public function test_anonymous_visitor_can_read_a_public_translation(): void
+    public function test_anonymous_visitor_can_open_a_public_translation(): void
     {
         $translation = $this->makeTranslation(User::factory()->create());
 
-        $response = $this->get(route('translations.view', $translation));
+        $this->get(route('translations.view', $translation))
+            ->assertOk()
+            ->assertSee($translation->game->name);
+    }
+
+    /**
+     * The lines travel to the shared editor core, which filters, searches and sorts them in the
+     * browser exactly as it does for the editing screens — so this is where the content lives.
+     */
+    public function test_anonymous_visitor_can_read_the_lines(): void
+    {
+        $translation = $this->makeTranslation(User::factory()->create());
+
+        $response = $this->getJson(route('translations.view.data', $translation));
 
         $response->assertOk();
-        $response->assertSee('Boutique');
-        $response->assertSee('Réparer');
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('content.Shop.v', 'Boutique');
+        $response->assertJsonPath('content.Repair.v', 'Réparer');
+    }
+
+    /** Underscore keys are the file's bookkeeping, not lines of the game. */
+    public function test_the_metadata_never_travels_with_the_lines(): void
+    {
+        $translation = $this->makeTranslation(User::factory()->create());
+
+        $this->getJson(route('translations.view.data', $translation))
+            ->assertOk()
+            ->assertJsonMissingPath('content._uuid');
     }
 
     /**
@@ -85,10 +109,11 @@ class TranslationViewTest extends TestCase
         ]);
 
         $this->get(route('translations.view', $branch))->assertForbidden();
+        $this->getJson(route('translations.view.data', $branch))->assertForbidden();
 
-        $this->actingAs(User::factory()->create())
-            ->get(route('translations.view', $branch))
-            ->assertForbidden();
+        $stranger = User::factory()->create();
+        $this->actingAs($stranger)->get(route('translations.view', $branch))->assertForbidden();
+        $this->actingAs($stranger)->getJson(route('translations.view.data', $branch))->assertForbidden();
     }
 
     public function test_a_branch_is_readable_by_the_main_owner(): void
@@ -100,10 +125,11 @@ class TranslationViewTest extends TestCase
             'Shop' => ['v' => 'Magasin', 't' => 'H'],
         ]);
 
+        $this->actingAs($mainOwner)->get(route('translations.view', $branch))->assertOk();
         $this->actingAs($mainOwner)
-            ->get(route('translations.view', $branch))
+            ->getJson(route('translations.view.data', $branch))
             ->assertOk()
-            ->assertSee('Magasin');
+            ->assertJsonPath('content.Shop.v', 'Magasin');
     }
 
     /**
@@ -128,46 +154,19 @@ class TranslationViewTest extends TestCase
         $owner->assertSee(route('translations.view', $branch), false);
     }
 
-    /** A captured line has no translation yet, and the page must not pass it off as an empty one. */
-    public function test_a_captured_line_is_named_rather_than_shown_blank(): void
-    {
-        $translation = $this->makeTranslation(User::factory()->create());
-
-        $this->get(route('translations.view', $translation))
-            ->assertSee(__('progress.capture'));
-    }
-
-    public function test_filtering_by_tag_narrows_the_lines(): void
-    {
-        $translation = $this->makeTranslation(User::factory()->create());
-
-        $response = $this->get(route('translations.view', ['translation' => $translation, 'validated' => 1]));
-
-        $response->assertOk();
-        $response->assertSee('Boutique');     // tagged V
-        $response->assertDontSee('Réparer');  // tagged H
-    }
-
-    public function test_search_narrows_the_lines(): void
-    {
-        $translation = $this->makeTranslation(User::factory()->create());
-
-        $response = $this->get(route('translations.view', ['translation' => $translation, 'search' => 'Repair']));
-
-        $response->assertOk();
-        $response->assertSee('Réparer');
-        $response->assertDontSee('Boutique');
-    }
-
-    /** A file that has gone missing is a page that says so, never a 500. */
-    public function test_a_missing_file_does_not_break_the_page(): void
+    /**
+     * A file that has gone missing is reported, never a 500 and never an empty grid that looks
+     * like a translation with nothing in it.
+     */
+    public function test_a_missing_file_is_reported_rather_than_shown_empty(): void
     {
         $translation = $this->makeTranslation(User::factory()->create());
         Storage::disk('local')->delete($translation->file_path);
 
-        $this->get(route('translations.view', $translation))
+        $this->get(route('translations.view', $translation))->assertOk();
+        $this->getJson(route('translations.view.data', $translation))
             ->assertOk()
-            ->assertSee(__('translation.content_unavailable'));
+            ->assertJsonPath('ok', false);
     }
 
     /** Looking is not taking: the number people judge a translation by must not move. */

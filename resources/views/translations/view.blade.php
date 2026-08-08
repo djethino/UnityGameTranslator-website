@@ -11,7 +11,7 @@
 @endpush
 
 @section('content')
-<div class="max-w-6xl mx-auto">
+<div class="max-w-7xl mx-auto">
     {{-- Enough of a header to know WHOSE work this is and how far it goes. Arriving on a bare
          table of six thousand lines with no idea who wrote it, in what direction, and how much of
          it is machine output, answers none of the question that brought you here — which of these
@@ -39,8 +39,8 @@
             </div>
 
             <div class="shrink-0 flex items-center gap-3">
-                {{-- The way out of looking and into using. A branch never reaches this page, so
-                     the button can never be the one that answers 403. --}}
+                {{-- The way out of looking and into using. A branch never reaches this page for
+                     anyone but the Main owner, so this button can never be the one that 403s. --}}
                 <a href="{{ route('translations.download', $translation) }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium">
                     <i class="fas fa-download mr-1"></i>{{ __('translation.download') }}
@@ -48,32 +48,36 @@
             </div>
         </div>
 
-        {{-- What the file is made of, in the same bar as everywhere else on the site --}}
-        <div class="mt-4">
-            <x-progress-bar :translation="$translation" />
-        </div>
-
         @if($translation->notes)
             <div class="mt-3 text-sm text-gray-400 bg-gray-750 rounded p-3 border-l-2 border-purple-500">
                 <i class="fas fa-quote-left text-purple-500 mr-2"></i>{{ $translation->notes }}
             </div>
         @endif
+
+        <p class="mt-3 text-xs text-gray-500">
+            <i class="fas fa-lock mr-1"></i>{{ __('translation.view_readonly') }}
+        </p>
     </div>
 
-    {{-- Read-only, and it says so: nothing here can be changed, editing happens in the mod or in
-         the owner's own screens. --}}
-    <p class="mb-4 text-xs text-gray-500">
-        <i class="fas fa-lock mr-1"></i>{{ __('translation.view_readonly') }}
-    </p>
-
-    <x-translation-content
-        :translation="$translation"
-        :json-content="$jsonContent"
-        :paged-keys="$pagedKeys"
-        :filters="$filters"
-        :page="$page"
-        :total-pages="$totalPages"
-        :total-keys="$totalKeys"
-        route="translations.view" />
+    <x-editor.readonly-grid component="translationViewer"
+        :source-label="$translation->source_language"
+        :target-label="$translation->target_language" />
 </div>
+{{-- Everything this screen does lives in the shared editor core; only the file to read and the
+     message for a file that cannot be read are page-specific. --}}
+<script nonce="{{ $cspNonce }}">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('translationViewer', () => window.UGT.createViewer({
+        translationId: @js($translation->id),
+        dataUrl: @js(route('translations.view.data', $translation)),
+        unreadableMessage: @js(__('translation.content_unavailable')),
+    }));
+});
+</script>
 @endsection
+
+@push('head')
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+@endpush

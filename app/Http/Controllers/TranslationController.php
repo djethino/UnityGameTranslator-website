@@ -9,7 +9,6 @@ use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
-use App\Support\TranslationContentReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -196,7 +195,7 @@ class TranslationController extends Controller
      * No download count is incremented here: looking is not taking, and counting it would
      * inflate the very number people use to judge a translation.
      */
-    public function view(Translation $translation, Request $request)
+    public function view(Translation $translation)
     {
         if (!$translation->isReadableBy(auth()->user())) {
             abort(403, 'Branch translations are only visible to the Main owner.');
@@ -204,10 +203,48 @@ class TranslationController extends Controller
 
         $translation->load(['game', 'user', 'originAuthor']);
 
-        return view('translations.view', array_merge(
-            ['translation' => $translation],
-            TranslationContentReader::read($translation, $request)
-        ));
+        return view('translations.view', ['translation' => $translation]);
+    }
+
+    /**
+     * The lines themselves, for the read-only viewer.
+     *
+     * Sent whole, exactly as the three editors are: filtering, searching, sorting and windowing
+     * belong to the shared editor core, which does them live in the browser. A server-paginated
+     * copy of the same features was the first attempt and it made the reading screens behave
+     * differently from the editing ones — no highlighting, a search that needed Enter, pages
+     * instead of "show more".
+     */
+    public function viewData(Translation $translation)
+    {
+        if (!$translation->isReadableBy(auth()->user())) {
+            abort(403, 'Branch translations are only visible to the Main owner.');
+        }
+
+        $content = [];
+        $ok = false;
+
+        if ($translation->file_path) {
+            try {
+                $decoded = json_decode(Storage::disk('local')->get($translation->file_path), true);
+                if (is_array($decoded)) {
+                    $ok = true;
+                    foreach ($decoded as $key => $value) {
+                        // Underscore keys are the file's own bookkeeping, never a line of the game
+                        if (!str_starts_with((string) $key, '_')) {
+                            $content[$key] = $value;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                $ok = false;
+            }
+        }
+
+        return response()->json([
+            'ok' => $ok,
+            'content' => (object) $content,
+        ]);
     }
 
     public function download(Translation $translation)

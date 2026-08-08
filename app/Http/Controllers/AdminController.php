@@ -13,7 +13,6 @@ use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
 use App\Services\LiveEditCapacity;
-use App\Support\TranslationContentReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -258,13 +257,14 @@ class AdminController extends Controller
     {
         $translation->load(['game', 'user', 'parent.user', 'forks.user']);
 
-        // Filtering, search, sort and pagination live in TranslationContentReader: the public
-        // read-only view needs exactly the same reading of the same file, and two copies would
-        // have meant two definitions of what "sort by tag" means.
-        return view('admin.translation-show', array_merge(
-            ['translation' => $translation],
-            TranslationContentReader::read($translation, $request)
-        ));
+        // Only the metadata is read here. The lines go to the shared editor core through the
+        // same endpoint the public view uses — this screen inspects a file, it does not need its
+        // own filtering, searching and paging, and having them made looking at a translation
+        // behave differently from editing one.
+        return view('admin.translation-show', [
+            'translation' => $translation,
+            'metadata' => $translation->fileMetadata(),
+        ]);
     }
 
     public function destroyTranslation(Translation $translation)

@@ -136,9 +136,9 @@
         </div>
     </div>
 
-    <!-- JSON Content. The "file could not be read" case is handled by x-translation-content, so
-         there is no outer guard here any more: the metadata block guards on its own. -->
-        {{-- Metadata Section --}}
+        {{-- Metadata Section. The lines themselves are loaded by the shared read-only grid
+             below, so nothing here guards on the file being readable — that case is the grid's
+             to report. --}}
         @if(!empty($metadata))
         <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
             <h3 class="text-lg font-semibold mb-4"><i class="fas fa-info-circle mr-2 text-blue-400"></i> {{ __('admin.metadata') }}</h3>
@@ -179,17 +179,25 @@
         </div>
         @endif
 
-        {{-- Filters, search, sort, pagination and the table itself: the same reading of the same
-             file as the public read-only view, so it lives in one component. --}}
-        <x-translation-content
-            :translation="$translation"
-            :json-content="$jsonContent"
-            :paged-keys="$pagedKeys"
-            :filters="$filters"
-            :page="$page"
-            :total-pages="$totalPages"
-            :total-keys="$totalKeys"
-            route="admin.translations.show" />
+        {{-- The very same grid as the public read-only view, on the very same editor core as the
+             three editing screens: live search with highlighting, client-side sort, "show more"
+             instead of pages, resizable columns, workbench. --}}
+        <x-editor.readonly-grid component="translationViewer" />
 </div>
 
+<script nonce="{{ $cspNonce }}">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('translationViewer', () => window.UGT.createViewer({
+        translationId: @js($translation->id),
+        dataUrl: @js(route('translations.view.data', $translation)),
+        unreadableMessage: @js(__('translation.content_unavailable')),
+    }));
+});
+</script>
 @endsection
+
+@push('head')
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+@endpush

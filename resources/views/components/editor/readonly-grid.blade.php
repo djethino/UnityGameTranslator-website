@@ -1,0 +1,220 @@
+@props([
+    // Alpine component name the page registered on window.UGT.createViewer
+    'component',
+    'sourceLabel' => null,
+    'targetLabel' => null,
+])
+
+{{--
+    Reading a translation's lines — the same grid as the editors, minus every gesture that writes.
+
+    It runs on the shared editor core (js/components/translation-viewer.js), so the search is live
+    and highlights, the sort is client-side, rows arrive by "show more" rather than by page, the
+    columns resize, the line-break switch works, and the workbench is one click away. Before this
+    the reading screens had their own server-rendered filtering, paging and search: looking at a
+    file behaved differently from editing it, which is one screen too many to learn.
+
+    Shared by the public view and the admin inspection screen: same three columns, same file, and
+    they differ only in who may reach them.
+--}}
+<div x-data="{{ $component }}" @keydown.window="handleEditorKeydown($event)">
+    <div x-show="!loaded" class="text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
+        <p class="text-gray-400">{{ __('merge_preview.loading') }}</p>
+    </div>
+
+    <div x-show="error" x-cloak class="bg-red-900/50 border border-red-600 rounded-lg p-6 text-center">
+        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+        <p class="text-red-300" x-text="error"></p>
+    </div>
+
+    <div x-show="loaded && !error" x-cloak>
+        @include('partials.editor-quality-bar')
+
+        {{-- Two zones, like every editor: what to show on the left, how to show it on the right --}}
+        <div class="mb-4 flex gap-4 items-start text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
+            <div class="flex flex-wrap gap-x-3 gap-y-2 items-center flex-1 min-w-0">
+                <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
+
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_human') }}">
+                    <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
+                        class="rounded bg-gray-700 border-gray-600 text-green-600">
+                    <span class="tag-H">H</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_validated') }}">
+                    <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
+                        class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                    <span class="tag-V">V</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_ai') }}">
+                    <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
+                        class="rounded bg-gray-700 border-gray-600 text-orange-600">
+                    <span class="tag-A">A</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_skipped') }}">
+                    <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
+                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                    <span class="tag-S">S</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_mod_ui') }}">
+                    <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
+                        class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                    <span class="tag-M">M</span>
+                </label>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0 border-l border-gray-700 pl-4">
+                <x-editor.view-options />
+                <x-editor.workbench-toggle />
+            </div>
+        </div>
+
+        @include('partials.editor-floating-search')
+
+        {{-- Live search: no Enter needed, matches are highlighted, and Enter walks between them --}}
+        <div class="mb-4 flex gap-2" x-ref="searchBar">
+            <div class="relative flex-1">
+                <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
+                    placeholder="{{ __('merge.search_placeholder') }}"
+                    class="w-full px-4 py-2 pl-10 pr-32 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <span x-show="hasQuery" x-cloak class="text-xs text-gray-500 tabular-nums" x-text="matchCounterText"></span>
+                    <button x-show="hasQuery" x-cloak @click="prevMatch()" type="button"
+                        class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_prev') }}">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button x-show="hasQuery" x-cloak @click="nextMatch()" type="button"
+                        class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_next') }}">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <button x-show="searchQuery" x-cloak @click="searchQuery = ''" type="button"
+                        class="text-gray-500 hover:text-white transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <select x-model="searchScope" title="{{ __('merge.search_scope_title') }}"
+                class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                <option value="both">{{ __('merge.search_scope_both') }}</option>
+                <option value="keys">{{ __('merge.search_scope_keys') }}</option>
+                <option value="values">{{ __('merge.search_scope_values') }}</option>
+            </select>
+        </div>
+
+        <x-editor.workbench-bar />
+
+        <div x-ref="gridBox"
+             class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
+             :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
+            <table class="editor-grid w-full text-sm border-separate border-spacing-0"
+                   :class="showLineBreaks && 'show-linebreaks'">
+                <thead class="bg-gray-900 sticky top-0 z-20">
+                    <tr>
+                        <th x-show="showIndexColumn" x-cloak
+                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
+                            @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
+                            <div class="flex items-center justify-end gap-1">
+                                <span class="text-xs">#</span>
+                                <i class="fas text-xs" :class="getSortIcon('index')"></i>
+                            </div>
+                        </th>
+                        {{-- No editor-text on a HEADER: it holds template markup, not a line of
+                             the game, and pre-wrap would render the Blade indentation as visible
+                             whitespace — which it did, three times the height it should be. --}}
+                        <th data-col="key"
+                            class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                            :class="showIndexColumn ? 'left-16' : 'left-0'"
+                            @click="toggleSort('key')">
+                            <div class="flex items-center gap-2">
+                                {{ $sourceLabel ?? __('admin.original') }}
+                                <i class="fas" :class="getSortIcon('key')"></i>
+                            </div>
+                            <x-editor.col-resize col="key" />
+                        </th>
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('tag')">
+                            <div class="flex items-center justify-center gap-1">
+                                <span class="text-gray-400 font-medium text-xs">Tag</span>
+                                <i class="fas text-xs" :class="getSortIcon('tag')"></i>
+                            </div>
+                        </th>
+                        <th data-col="value"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            @click="toggleSort('value')">
+                            <div class="flex items-center gap-2">
+                                <span class="text-purple-400 font-medium">{{ $targetLabel ?? __('admin.translated') }}</span>
+                                <i class="fas" :class="getSortIcon('value')"></i>
+                            </div>
+                            <x-editor.col-resize col="value" />
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(key, idx) in visibleKeys" :key="key">
+                        <tr class="hover:bg-gray-750 transition-colors"
+                            :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
+                            :data-row-index="idx">
+                            <td x-show="showIndexColumn" x-cloak
+                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
+                                x-text="indexCellText(key)"></td>
+
+                            <td data-col="key"
+                                class="editor-text px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                :class="showIndexColumn ? 'left-16' : 'left-0'"
+                                x-safe-html="highlightKey(key)"></td>
+
+                            <td class="px-2 py-2 text-center border-l border-gray-700">
+                                <span :class="'tag-' + getTag(data[key]) + (isCaptureRow(key) ? ' opacity-40' : '')"
+                                    x-text="getTag(data[key])"></span>
+                            </td>
+
+                            <td data-col="value" class="px-4 py-2 border-l border-gray-700 align-top">
+                                <template x-if="isEmptyValue(key)">
+                                    <span class="text-gray-600 italic">{{ __('progress.capture') }}</span>
+                                </template>
+                                <template x-if="!isEmptyValue(key)">
+                                    <span class="break-words editor-text" x-safe-html="valueHtml(key)"></span>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <tr x-show="isEmptyResult" x-cloak>
+                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-12 text-center text-gray-500">
+                            <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
+                            <p>{{ __('merge.no_keys_found') }}</p>
+                        </td>
+                    </tr>
+
+                    {{-- "Show more", not pages: the same gesture as every editor --}}
+                    <tr x-show="hiddenCount > 0" x-cloak>
+                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-3 text-center">
+                            <button type="button" @click="showMore()"
+                                class="text-purple-400 hover:text-purple-300 text-sm transition">
+                                <i class="fas fa-chevron-down mr-1"></i>
+                                {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {{-- A viewer has nothing to save, but it still needs a bar at the bottom: it is what the
+             mirrored horizontal scrollbar rides on, and where the tag legend belongs. --}}
+        <div class="mt-6 sticky bottom-4 z-40">
+            <x-editor.h-scrollbar />
+            <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                <span><span class="tag-H">H</span> {{ __('merge.legend_human') }}</span>
+                <span><span class="tag-V">V</span> {{ __('merge.legend_validated') }}</span>
+                <span><span class="tag-A">A</span> {{ __('merge.legend_ai') }}</span>
+                <span><span class="tag-S">S</span> {{ __('merge.legend_skipped') }}</span>
+                <span><span class="tag-M">M</span> {{ __('merge.legend_mod_ui') }}</span>
+                <span class="ml-auto text-gray-400 tabular-nums">
+                    <span x-text="filteredKeys.length"></span> / <span x-text="allKeys.length"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
