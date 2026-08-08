@@ -13,6 +13,7 @@ use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
 use App\Services\LiveEditCapacity;
+use App\Support\TranslationContentReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -257,114 +258,12 @@ class AdminController extends Controller
     {
         $translation->load(['game', 'user', 'parent.user', 'forks.user']);
 
-        // Load JSON content
-        $jsonContent = null;
-        $metadata = [];
-        $allKeys = [];
-
-        if ($translation->file_path) {
-            try {
-                $content = Storage::disk('local')->get($translation->file_path);
-                $jsonContent = json_decode($content, true);
-
-                if (is_array($jsonContent)) {
-                    // Separate metadata from translations
-                    foreach ($jsonContent as $key => $value) {
-                        if (str_starts_with($key, '_')) {
-                            $metadata[$key] = $value;
-                        } else {
-                            $allKeys[] = $key;
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                $jsonContent = null;
-            }
-        }
-
-        // Apply tag filters
-        $filters = [
-            'human' => $request->boolean('human'),
-            'validated' => $request->boolean('validated'),
-            'ai' => $request->boolean('ai'),
-            'mod_ui' => $request->boolean('mod_ui'),
-            'skipped' => $request->boolean('skipped'),
-        ];
-
-        $filteredKeys = $allKeys;
-        if (array_filter($filters)) {
-            $filteredKeys = array_values(array_filter($allKeys, function ($key) use ($jsonContent, $filters) {
-                $entry = $jsonContent[$key] ?? null;
-                $tag = is_array($entry) ? ($entry['t'] ?? 'A') : 'A';
-
-                return ($filters['human'] && $tag === 'H')
-                    || ($filters['validated'] && $tag === 'V')
-                    || ($filters['ai'] && $tag === 'A')
-                    || ($filters['mod_ui'] && $tag === 'M')
-                    || ($filters['skipped'] && $tag === 'S');
-            }));
-        }
-
-        // Apply search
-        $search = $request->input('search');
-        if ($search) {
-            $searchLower = mb_strtolower($search);
-            $filteredKeys = array_values(array_filter($filteredKeys, function ($key) use ($searchLower, $jsonContent) {
-                if (mb_stripos($key, $searchLower) !== false) {
-                    return true;
-                }
-                $entry = $jsonContent[$key] ?? null;
-                $value = is_array($entry) ? ($entry['v'] ?? '') : (string) $entry;
-                return mb_stripos($value, $searchLower) !== false;
-            }));
-        }
-
-        // Apply sorting
-        $sortColumn = $request->input('sort', 'key');
-        $sortDir = $request->input('dir', 'asc');
-        $multiplier = ($sortDir === 'desc') ? -1 : 1;
-
-        usort($filteredKeys, function ($a, $b) use ($jsonContent, $sortColumn, $multiplier) {
-            switch ($sortColumn) {
-                case 'tag':
-                    $entryA = $jsonContent[$a] ?? null;
-                    $entryB = $jsonContent[$b] ?? null;
-                    $valA = is_array($entryA) ? ($entryA['t'] ?? 'A') : 'A';
-                    $valB = is_array($entryB) ? ($entryB['t'] ?? 'A') : 'A';
-                    break;
-                case 'value':
-                    $entryA = $jsonContent[$a] ?? null;
-                    $entryB = $jsonContent[$b] ?? null;
-                    $valA = mb_strtolower(is_array($entryA) ? ($entryA['v'] ?? '') : (string) $entryA);
-                    $valB = mb_strtolower(is_array($entryB) ? ($entryB['v'] ?? '') : (string) $entryB);
-                    break;
-                case 'key':
-                default:
-                    $valA = mb_strtolower($a);
-                    $valB = mb_strtolower($b);
-                    break;
-            }
-            return strcmp($valA, $valB) * $multiplier;
-        });
-
-        // Pagination
-        $page = max(1, (int) $request->input('page', 1));
-        $perPage = 100;
-        $totalKeys = count($filteredKeys);
-        $totalPages = max(1, ceil($totalKeys / $perPage));
-        $page = min($page, $totalPages);
-        $pagedKeys = array_slice($filteredKeys, ($page - 1) * $perPage, $perPage);
-
-        return view('admin.translation-show', compact(
-            'translation',
-            'jsonContent',
-            'metadata',
-            'pagedKeys',
-            'filters',
-            'page',
-            'perPage',
-            'totalKeys',
-            'totalPages'
+        // Filtering, search, sort and pagination live in TranslationContentReader: the public
+        // read-only view needs exactly the same reading of the same file, and two copies would
+        // have meant two definitions of what "sort by tag" means.
+        return view('admin.translation-show', array_merge(
+            ['translation' => $translation],
+            TranslationContentReader::read($translation, $request)
         ));
     }
 

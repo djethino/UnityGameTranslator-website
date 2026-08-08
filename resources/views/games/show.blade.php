@@ -328,6 +328,17 @@
 
                             <!-- Action buttons -->
                             <div class="flex gap-2">
+                                {{-- Look before you take. Offered only where the content is
+                                     actually readable by whoever is looking — same rule as the
+                                     download, asked of the same method, so the button can never
+                                     be the one that answers 403. --}}
+                                @if($translation->isReadableBy(auth()->user()))
+                                    <a href="{{ route('translations.view', $translation) }}"
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm"
+                                        title="{{ __('translation.view_content') }}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                @endif
                                 @auth
                                     <button type="button" data-report-id="{{ $translation->id }}" class="report-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm" title="{{ __('translation.report') }}">
                                         <i class="fas fa-flag"></i>
@@ -492,6 +503,18 @@
                                          author on their own work. Reporting stays: an abusive
                                          contribution has to be reportable by whoever sees it. --}}
                                     <div class="flex items-center gap-3">
+                                        {{-- Same rule as above, and here it does the real work:
+                                             this list holds branches, which nobody but the Main
+                                             owner may read — and public forks, which read like
+                                             any other translation. The method decides, not the
+                                             list an entry happens to land in. --}}
+                                        @if($fork->isReadableBy(auth()->user()))
+                                            <a href="{{ route('translations.view', $fork) }}"
+                                                class="text-gray-400 hover:text-white"
+                                                title="{{ __('translation.view_content') }}">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endif
                                         @auth
                                             <button type="button" data-report-id="{{ $fork->id }}" class="report-btn text-red-400 hover:text-red-300">
                                                 <i class="fas fa-flag"></i>

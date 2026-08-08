@@ -130,6 +130,13 @@ $localizableRoutes = function () {
     Route::get('/link', [DeviceFlowController::class, 'showLinkPage'])->name('link');
     Route::post('/link', [DeviceFlowController::class, 'validateCode'])->middleware(['auth', 'throttle:10,1'])->name('link.validate');
 
+    // Read-only view of a translation's lines. Public, because the file itself has always been
+    // downloadable by anyone — this only lets you look before you take. Throttled all the same:
+    // it decodes a JSON file that can hold tens of thousands of entries, which a download of the
+    // raw file does not.
+    Route::get('/translations/{translation}/view', [TranslationController::class, 'view'])
+        ->middleware('throttle:60,1')->name('translations.view');
+
     // Merge preview page — token-based auth from the mod; the tokenized
     // entry URL is unprefixed (mod-generated) but browsed afterwards
     Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');

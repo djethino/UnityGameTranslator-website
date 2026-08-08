@@ -1,0 +1,79 @@
+@extends('layouts.app')
+
+@section('title', __('translation.view_title', ['game' => $translation->game->name]))
+
+@push('head')
+    {{-- noindex, decided deliberately. The file has always been downloadable by anyone, so this
+         page discloses nothing new — but making a commercial game's whole script SEARCHABLE is a
+         different act from serving a JSON file to a mod, and it brings nothing: nobody looks up a
+         line of dialogue hoping to find a translation mod. The game pages stay indexed. --}}
+    <meta name="robots" content="noindex, nofollow">
+@endpush
+
+@section('content')
+<div class="max-w-6xl mx-auto">
+    {{-- Enough of a header to know WHOSE work this is and how far it goes. Arriving on a bare
+         table of six thousand lines with no idea who wrote it, in what direction, and how much of
+         it is machine output, answers none of the question that brought you here — which of these
+         translations do I take? --}}
+    <div class="mb-6">
+        <a href="{{ route('games.show', $translation->game) }}" class="text-purple-400 hover:text-purple-300 text-sm">
+            <i class="fas fa-arrow-left mr-1"></i>{{ $translation->game->name }}
+        </a>
+
+        <div class="mt-2 flex flex-wrap items-start justify-between gap-4">
+            <div class="min-w-0">
+                <h1 class="text-2xl font-bold text-white">
+                    <i class="fas fa-eye mr-2 text-purple-400"></i>{{ __('translation.view_heading') }}
+                </h1>
+                <p class="text-gray-400 mt-1">
+                    {{ $translation->source_language }}
+                    <i class="fas fa-arrow-right text-xs"></i>
+                    {{ $translation->target_language }}
+                    <span class="text-gray-600 mx-1">·</span>
+                    <span class="text-gray-300">{{ $translation->user->name }}</span>
+                </p>
+
+                {{-- Where it came from, when it came from somewhere --}}
+                <x-translation-origin :translation="$translation" />
+            </div>
+
+            <div class="shrink-0 flex items-center gap-3">
+                {{-- The way out of looking and into using. A branch never reaches this page, so
+                     the button can never be the one that answers 403. --}}
+                <a href="{{ route('translations.download', $translation) }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium">
+                    <i class="fas fa-download mr-1"></i>{{ __('translation.download') }}
+                </a>
+            </div>
+        </div>
+
+        {{-- What the file is made of, in the same bar as everywhere else on the site --}}
+        <div class="mt-4">
+            <x-progress-bar :translation="$translation" />
+        </div>
+
+        @if($translation->notes)
+            <div class="mt-3 text-sm text-gray-400 bg-gray-750 rounded p-3 border-l-2 border-purple-500">
+                <i class="fas fa-quote-left text-purple-500 mr-2"></i>{{ $translation->notes }}
+            </div>
+        @endif
+    </div>
+
+    {{-- Read-only, and it says so: nothing here can be changed, editing happens in the mod or in
+         the owner's own screens. --}}
+    <p class="mb-4 text-xs text-gray-500">
+        <i class="fas fa-lock mr-1"></i>{{ __('translation.view_readonly') }}
+    </p>
+
+    <x-translation-content
+        :translation="$translation"
+        :json-content="$jsonContent"
+        :paged-keys="$pagedKeys"
+        :filters="$filters"
+        :page="$page"
+        :total-pages="$totalPages"
+        :total-keys="$totalKeys"
+        route="translations.view" />
+</div>
+@endsection

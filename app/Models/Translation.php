@@ -406,27 +406,6 @@ class Translation extends Model
      * Counting it whole overstates what the author actually configured, and
      * makes two copies of the same translation look different for no reason.
      */
-    /**
-     * May this user read the file at all?
-     *
-     * Public translations are readable by anyone — that is what the download endpoint already
-     * grants without an account. A branch is private to the Main owner it was submitted to:
-     * it is someone's work-in-progress contribution, not a published version.
-     *
-     * One definition, because the rule was written out at every point that needed it and a
-     * fourth copy would be one more place to forget when it changes.
-     */
-    public function isReadableBy(?User $user): bool
-    {
-        if ($this->visibility !== 'branch') {
-            return true;
-        }
-
-        $main = $this->getMain();
-
-        return $user !== null && $main !== null && (int) $main->user_id === (int) $user->id;
-    }
-
     public static function isDeliberateFontSetting(array $settings): bool
     {
         // Turned off, or given a fallback: unambiguously someone's decision
@@ -689,6 +668,31 @@ class Translation extends Model
     public function isMain(): bool
     {
         return $this->visibility === 'public' && $this->isLineageRoot();
+    }
+
+    /**
+     * May this user read the file at all?
+     *
+     * Public translations are readable by anyone — that is what the download endpoint already
+     * grants without an account. A branch is private to the Main owner it was submitted to:
+     * it is someone's work-in-progress contribution, not a published version.
+     *
+     * One definition, because the rule was written out at every point that needed it and a
+     * further copy would be one more place to forget when it changes. It decides both what the
+     * server allows AND what a page offers: a control that answers 403 is worse than no control.
+     *
+     * Moved here from between isDeliberateFontSetting and its own docblock, where it had been
+     * inserted — the comment above that method described a font rule and sat over this one.
+     */
+    public function isReadableBy(?User $user): bool
+    {
+        if ($this->visibility !== 'branch') {
+            return true;
+        }
+
+        $main = $this->getMain();
+
+        return $user !== null && $main !== null && (int) $main->user_id === (int) $user->id;
     }
 
     /**

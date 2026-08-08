@@ -9,6 +9,7 @@ use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
+use App\Support\TranslationContentReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -183,16 +184,39 @@ class TranslationController extends Controller
             ->with('success', 'Translation uploaded successfully!');
     }
 
+    /**
+     * Read-only view of a translation's lines, for anyone.
+     *
+     * Before this, the only way to know what was inside a translation was to download it and
+     * open the file — so the choice between three translations of the same game was made on
+     * counts and a coloured bar alone. Nothing new is disclosed: the file has always been
+     * downloadable by anyone, and one rule decides both — Translation::isReadableBy, which
+     * already existed and which the download route had been re-implementing inline.
+     *
+     * No download count is incremented here: looking is not taking, and counting it would
+     * inflate the very number people use to judge a translation.
+     */
+    public function view(Translation $translation, Request $request)
+    {
+        if (!$translation->isReadableBy(auth()->user())) {
+            abort(403, 'Branch translations are only visible to the Main owner.');
+        }
+
+        $translation->load(['game', 'user', 'originAuthor']);
+
+        return view('translations.view', array_merge(
+            ['translation' => $translation],
+            TranslationContentReader::read($translation, $request)
+        ));
+    }
+
     public function download(Translation $translation)
     {
-        // Security: branches are private to the Main owner
-        if ($translation->visibility === 'branch') {
-            $user = auth()->user();
-            $main = $translation->getMain();
-
-            if (!$user || !$main || (int) $main->user_id !== (int) $user->id) {
-                abort(403, 'Branch translations are only visible to the Main owner.');
-            }
+        // Security: branches are private to the Main owner. The rule itself lives on the model,
+        // so the pages that decide whether to OFFER a way in cannot drift from what the server
+        // actually allows.
+        if (!$translation->isReadableBy(auth()->user())) {
+            abort(403, 'Branch translations are only visible to the Main owner.');
         }
 
         $translation->incrementDownloads();
