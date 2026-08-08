@@ -64,6 +64,8 @@
     "home.stats_join": "Для вашей игры ещё ничего нет? Перевод начинается в тот день, когда кто‑то за него берётся.",
     "home.stats_join_link": "с чего начать",
     "home.latest_translations": "Последние переводы",
+    "home.finished_translations": "Недавно завершённые",
+    "home.see_more": "смотреть все",
     "home.popular_games": "Популярные игры",
     "home.search_games": "Поиск игры...",
     "home.search_redirect": "Поиск",

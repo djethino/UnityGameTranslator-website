@@ -64,6 +64,8 @@
     "home.stats_join": "Nothing for your game yet? It starts the day someone begins.",
     "home.stats_join_link": "where to start",
     "home.latest_translations": "Latest Translations",
+    "home.finished_translations": "Recently finished",
+    "home.see_more": "see more",
     "home.popular_games": "Popular Games",
     "home.search_games": "Search for a game...",
     "home.search_redirect": "Search",

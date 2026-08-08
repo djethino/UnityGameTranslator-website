@@ -64,6 +64,8 @@
     "home.stats_join": "あなたのゲームの分はまだありませんか。誰かが始めた日から始まります。",
     "home.stats_join_link": "はじめ方",
     "home.latest_translations": "最新の翻訳",
+    "home.finished_translations": "最近完成した翻訳",
+    "home.see_more": "もっと見る",
     "home.popular_games": "人気のゲーム",
     "home.search_games": "ゲームを検索...",
     "home.search_redirect": "検索",

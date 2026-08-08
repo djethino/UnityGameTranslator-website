@@ -64,6 +64,8 @@
     "home.stats_join": "Il manque celle de votre jeu ? Elle commence le jour où quelqu'un s'y met.",
     "home.stats_join_link": "par où commencer",
     "home.latest_translations": "Dernières Traductions",
+    "home.finished_translations": "Dernières traductions terminées",
+    "home.see_more": "voir plus",
     "home.popular_games": "Jeux Populaires",
     "home.search_games": "Rechercher un jeu...",
     "home.search_redirect": "Rechercher",

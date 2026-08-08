@@ -356,10 +356,17 @@
     <!-- Popular Games -->
     @if($popularGames->count() > 0)
     <div class="mb-12">
-        <h2 class="glitch-text text-2xl font-bold text-white mb-6 flex items-center">
-            <i class="fas fa-fire text-purple-400 mr-2"></i>
-            {{ __('home.popular_games') }}
-        </h2>
+        <div class="flex items-baseline justify-between gap-4 mb-6">
+            <h2 class="glitch-text text-2xl font-bold text-white flex items-center">
+                <i class="fas fa-fire text-purple-400 mr-2"></i>
+                {{ __('home.popular_games') }}
+            </h2>
+            {{-- Straight to the catalogue sorted the same way, so the list continues rather than
+                 starts again. --}}
+            <a href="{{ route('games.index', ['sort' => 'downloads']) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
+                {{ __('home.see_more') }} <i class="fas fa-arrow-right text-xs ml-1"></i>
+            </a>
+        </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($popularGames as $game)
             <a href="{{ route('games.show', $game) }}" class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
@@ -373,8 +380,14 @@
                     @endif
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-white truncate">{{ $game->name }}</h3>
+                        {{-- The two facts side by side: what ordered this list, and how many
+                             hands are on the game. Neither is worth guessing at. --}}
                         <div class="text-sm text-gray-400">
                             {{ trans_choice('home.translations_count', $game->translations_count, ['count' => $game->translations_count]) }}
+                            @if($game->downloads_total)
+                                <span class="text-gray-600">·</span>
+                                {{ __('translation.downloads', ['count' => number_format($game->downloads_total)]) }}
+                            @endif
                         </div>
                         @if(!empty($game->target_languages))
                         <div class="flex flex-wrap gap-1 mt-1">
@@ -400,55 +413,32 @@
     </div>
     @endif
 
-    <!-- Latest Translations -->
-    @if($latestTranslations->count() > 0)
-    <div class="mb-12">
-        <h2 class="glitch-text text-2xl font-bold text-white mb-6 flex items-center">
-            <i class="fas fa-clock text-purple-400 mr-2"></i>
-            {{ __('home.latest_translations') }}
-        </h2>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach($latestTranslations as $translation)
-            <a href="{{ route('games.show', $translation->game) }}" class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
-                <div class="flex items-start space-x-3">
-                    @if($translation->game->image_url)
-                    <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">
-                    @else
-                    <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                        <i class="fas fa-gamepad text-gray-400"></i>
-                    </div>
-                    @endif
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-white truncate">{{ $translation->game->name }}</h3>
-                        <div class="text-sm text-gray-400 flex items-center gap-1">
-                            <span>@langflag($translation->source_language)</span>
-                            <i class="fas fa-arrow-right text-xs text-gray-600"></i>
-                            <span>@langflag($translation->target_language)</span>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">
-                        {{-- created_at, not updated_at: this section lists what was published
-                             most recently and is ordered by that, so the date under each card
-                             has to be the same fact. updated_at said neither one nor the other —
-                             a vote or a download moves it. --}}
-                            {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->created_at->diffForHumans() }}
-                        </div>
-                        {{-- The same badges as the game pages: what catches the eye about a
-                             translation must not depend on which page you meet it. --}}
-                        <div class="flex flex-wrap gap-1 mt-2">
-                            <x-translation-badges :translation="$translation" />
-                        </div>
-                        <div class="mt-2">
-                            <x-progress-bar :translation="$translation" />
-                            <x-quality-legend :translation="$translation" compact>
-                                <span class="text-gray-600">•</span>
-                                <span>{{ number_format($translation->line_count) }} {{ __('my_translations.lines') }}</span>
-                            </x-quality-legend>
-                        </div>
-                    </div>
-                </div>
-            </a>
-            @endforeach
+    {{-- Two lists that partition the same set: what is finished, and what is under way.
+         Finished comes first — it is the one thing on this page someone can play tonight, and the
+         counters above promise it. Three cards each: a front page is a doorway, and the catalogue
+         sorts the same two ways for whoever wants the rest. --}}
+    @foreach([
+        ['finished', $finished, 'home.finished_translations', 'fa-circle-check', ['sort' => 'updated'], true],
+        ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock', ['sort' => 'new'], false],
+    ] as [$slug, $list, $heading, $icon, $params, $byContentDate])
+        @if($list->count() > 0)
+        <div class="mb-12">
+            <div class="flex items-baseline justify-between gap-4 mb-6">
+                <h2 class="glitch-text text-2xl font-bold text-white flex items-center">
+                    <i class="fas {{ $icon }} text-purple-400 mr-2"></i>
+                    {{ __($heading) }}
+                </h2>
+                <a href="{{ route('games.index', $params) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
+                    {{ __('home.see_more') }} <i class="fas fa-arrow-right text-xs ml-1"></i>
+                </a>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($list as $translation)
+                    <x-home.translation-card :translation="$translation"
+                        :date="$byContentDate ? $translation->contentChangedAt() : $translation->created_at" />
+                @endforeach
+            </div>
         </div>
-    </div>
-    @endif
+        @endif
+    @endforeach
 @endsection

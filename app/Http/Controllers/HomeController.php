@@ -54,31 +54,66 @@ class HomeController extends Controller
             'downloads' => $published()->sum('download_count'),
         ];
 
-        // Latest translations (6) - Only Main translations (exclude branches)
+        // Two lists, and they PARTITION the same set rather than overlapping: what is finished,
+        // and what is under way. The counters above say 2 and 18; a visitor who then found the
+        // same translation in both lists would have to work out that the sections are not
+        // exclusive. Finished first, because it is the one thing here that can be played tonight.
+        //
+        // Three each, not six: a front page is a doorway. What does not fit is one click away,
+        // and the catalogue already sorts the same two ways these lists do.
+        $finished = Translation::with(['game', 'user'])
+            ->where('visibility', 'public')
+            ->withTranslatedLines()
+            ->where('status', 'complete')
+            ->where('vote_count', '>', self::COMPLETE_VOTE_FLOOR)
+            ->whereDoesntHave('reports', fn ($query) => $query->where('status', 'pending'))
+            // When it was last actually worked on, not when it was first published: a translation
+            // declared finished years ago and touched last week is the more recent piece of news.
+            // Never updated_at, which a vote or a download moves.
+            ->orderByDesc('content_updated_at')
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get();
+
+        // Published translations only. NOT whereNull('parent_id'): a fork keeps its parent for
+        // traceability while being a Main of its own lineage, so that filter hid every fork from
+        // the storefront — and nowhere else, since the rest of the site asks for visibility.
         $latestTranslations = Translation::with(['game', 'user'])
-            // Published translations only. NOT whereNull('parent_id'): a fork keeps its
-            // parent for traceability while being a Main of its own lineage, so that
-            // filter hid every fork from the storefront — and nowhere else, since the
-            // rest of the site asks for visibility.
             ->where('visibility', 'public')
             // A shop window shows work, and a file with no translated line has none to show yet.
             // Nothing is hidden from its author — the grace period keeps it in the listings and
             // in their own screens — but the front page is where it has least business being.
             ->withTranslatedLines()
+            ->whereKeyNot($finished->modelKeys() ?: [0])
             ->latest()
-            ->take(6)
+            ->take(3)
             ->get();
 
-        // Popular games (6) with available target languages
+        // Popular means downloaded, not translated the most times.
+        //
+        // The section was ordered by how many translations a game had, which is a measure of the
+        // community's effort rather than of the game's draw: a game with four modest translations
+        // came ahead of one downloaded twice as often with a single good one. Measured before
+        // changing it, because a ranking built on empty counters ranks noise — but no game sits at
+        // zero, the median is 46 and the leader holds under a quarter of the total, so downloads
+        // do discriminate here.
+        //
+        // Both facts stay on the card: the ranking is by downloads, the translation count is
+        // written beside it, so the order can be read rather than guessed.
         $popularGames = Game::withCount(['translations' => function ($query) {
                 // Published translations that hold something, forks included
                 $query->where('visibility', 'public')->withTranslatedLines();
             }])
+            ->withSum(['translations as downloads_total' => function ($query) {
+                $query->where('visibility', 'public')->withTranslatedLines();
+            }], 'download_count')
             ->whereHas('translations', function ($query) {
                 $query->where('visibility', 'public')->withTranslatedLines();
             })
+            ->orderByDesc('downloads_total')
+            // A tie goes to the game people have worked on more: equal draw, more hands on it
             ->orderByDesc('translations_count')
-            ->take(6)
+            ->take(3)
             ->get();
 
         // Load distinct target languages for each popular game (Main translations only)
@@ -95,6 +130,6 @@ class HomeController extends Controller
                 ->toArray();
         }
 
-        return view('home', compact('stats', 'latestTranslations', 'popularGames'));
+        return view('home', compact('stats', 'finished', 'latestTranslations', 'popularGames'));
     }
 }
