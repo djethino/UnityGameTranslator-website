@@ -772,6 +772,20 @@ class Translation extends Model
     /**
      * Scope to filter only branch translations
      */
+    /**
+     * Translations that actually hold a translated line.
+     *
+     * The SQL twin of resolved_lines > 0 — kept next to it so the two cannot drift. Anything the
+     * site puts FORWARD has to pass through here: a file of captured-but-untranslated text is
+     * legitimate work in progress, and the thirty-day grace protects its author from being
+     * delisted while they get on with it, but that is not the same as being shown on the front
+     * page as a translation, or lending its language to a flag that promises one.
+     */
+    public function scopeWithTranslatedLines($query)
+    {
+        return $query->whereRaw('(human_count + validated_count + skipped_count + ai_count) > 0');
+    }
+
     public function scopeBranches($query)
     {
         return $query->where('visibility', 'branch');

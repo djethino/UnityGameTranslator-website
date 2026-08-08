@@ -223,6 +223,9 @@ class PublicPagesTest extends TestCase
         $game = \App\Models\Game::forceCreate(['name' => 'Storefront Game', 'slug' => 'storefront-game']);
         $author = \App\Models\User::factory()->create()->refresh();
 
+        // human_count, and not only line_count: the storefront shows translations that hold a
+        // translated LINE, so a fixture counting lines without translating any would be testing
+        // the emptiness rule by accident instead of the fork/branch one.
         $make = function (string $visibility, ?int $parentId, string $language) use ($game, $author) {
             $translation = new \App\Models\Translation();
             $translation->forceFill([
@@ -235,6 +238,7 @@ class PublicPagesTest extends TestCase
                 'visibility' => $visibility,
                 'parent_id' => $parentId,
                 'line_count' => 1,
+                'human_count' => 1,
             ])->save();
 
             return $translation;
@@ -251,5 +255,35 @@ class PublicPagesTest extends TestCase
 
         $this->assertStringContainsString('German', $html, 'A fork must be visible on the storefront.');
         $this->assertStringNotContainsString('Spanish', $html, 'A branch must stay private.');
+    }
+
+    /**
+     * A file of captured-but-untranslated text is legitimate work in progress, and its author
+     * keeps it in the listings and in their own screens. The front page is another matter: it
+     * shows translations, and it must not lend such a file's language to a flag that promises
+     * the game can be played in it.
+     */
+    public function test_the_home_page_leaves_out_translations_with_no_translated_line(): void
+    {
+        $game = \App\Models\Game::forceCreate(['name' => 'Captured Game', 'slug' => 'captured-game']);
+        $author = \App\Models\User::factory()->create()->refresh();
+
+        $captureOnly = new \App\Models\Translation();
+        $captureOnly->forceFill([
+            'game_id' => $game->id,
+            'user_id' => $author->id,
+            'source_language' => 'English',
+            'target_language' => 'Persian',
+            'file_path' => 'translations/none.json',
+            'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'visibility' => 'public',
+            'line_count' => 1430,
+            'capture_count' => 1430,
+        ])->save();
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('Captured Game', $html);
+        $this->assertStringNotContainsString('Persian', $html);
     }
 }

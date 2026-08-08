@@ -24,16 +24,21 @@ class HomeController extends Controller
             // filter hid every fork from the storefront — and nowhere else, since the
             // rest of the site asks for visibility.
             ->where('visibility', 'public')
+            // A shop window shows work, and a file with no translated line has none to show yet.
+            // Nothing is hidden from its author — the grace period keeps it in the listings and
+            // in their own screens — but the front page is where it has least business being.
+            ->withTranslatedLines()
             ->latest()
             ->take(6)
             ->get();
 
         // Popular games (6) with available target languages
         $popularGames = Game::withCount(['translations' => function ($query) {
-                $query->where('visibility', 'public'); // Count published translations, forks included
+                // Published translations that hold something, forks included
+                $query->where('visibility', 'public')->withTranslatedLines();
             }])
             ->whereHas('translations', function ($query) {
-                $query->where('visibility', 'public'); // Games with at least one published translation
+                $query->where('visibility', 'public')->withTranslatedLines();
             })
             ->orderByDesc('translations_count')
             ->take(6)
@@ -41,8 +46,11 @@ class HomeController extends Controller
 
         // Load distinct target languages for each popular game (Main translations only)
         foreach ($popularGames as $game) {
+            // Only languages someone has actually translated INTO. A flag on a card is a promise
+            // that the game can be played in that language; an empty capture file makes none.
             $game->target_languages = Translation::where('game_id', $game->id)
                 ->where('visibility', 'public')
+                ->withTranslatedLines()
                 ->distinct()
                 ->pluck('target_language')
                 ->filter()

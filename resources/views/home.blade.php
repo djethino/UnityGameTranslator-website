@@ -409,6 +409,11 @@
                              a vote or a download moves it. --}}
                             {{ $translation->user->name ?? '[Deleted]' }} · {{ $translation->created_at->diffForHumans() }}
                         </div>
+                        {{-- The same badges as the game pages: what catches the eye about a
+                             translation must not depend on which page you meet it. --}}
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            <x-translation-badges :translation="$translation" />
+                        </div>
                         <div class="mt-2">
                             <x-progress-bar :translation="$translation" />
                             <x-quality-legend :translation="$translation" compact>
