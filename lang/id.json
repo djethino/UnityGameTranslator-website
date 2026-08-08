@@ -816,6 +816,8 @@
     "editor.capture_order": "Urutan penangkapan",
     "editor.capture_order_hint": "Urutan teks saat ditangkap dalam game. Kosong untuk entri dari versi mod yang lebih lama.",
     "editor.resize_column": "Seret untuk mengubah lebar · klik dua kali untuk mengatur ulang",
+    "editor.line_breaks": "Pergantian baris",
+    "editor.line_breaks_hint": "Menampilkan setiap baris beserta pergantian baris di dalamnya. Saat menyunting, semuanya selalu dipertahankan, apa pun pengaturan ini.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Kembali ke Terjemahan Saya",
     "dashboard.main_owner": "Main",

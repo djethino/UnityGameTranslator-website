@@ -252,9 +252,19 @@
 
         {{-- Translation Table --}}
         <div class="bg-gray-800 rounded-lg border border-gray-700">
-            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+            {{-- Same switch as the editors, reading the same preference (editor-text-mode.js).
+                 This screen has no editor core, so it declares the component on its own. --}}
+            <div x-data="editorTextMode">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center gap-4">
                 <h3 class="text-lg font-semibold"><i class="fas fa-code mr-2"></i> {{ __('admin.translation_content') }}</h3>
-                <span class="text-sm text-gray-400">{{ number_format($totalKeys) }} {{ __('admin.translation_entries') }}</span>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm" title="{{ __('editor.line_breaks_hint') }}">
+                        <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
+                            class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                        <span class="text-gray-400"><i class="fas fa-paragraph mr-1"></i>{{ __('editor.line_breaks') }}</span>
+                    </label>
+                    <span class="text-sm text-gray-400">{{ number_format($totalKeys) }} {{ __('admin.translation_entries') }}</span>
+                </div>
             </div>
 
             @php
@@ -268,7 +278,7 @@
             @endphp
 
             <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm" :class="showLineBreaks && 'show-linebreaks'">
                     <thead class="bg-gray-900 sticky top-0 z-10">
                         <tr>
                             {{-- Key column with sort --}}
@@ -306,13 +316,13 @@
                             @endphp
                             <tr class="border-t border-gray-700 hover:bg-gray-750">
                                 <td class="px-4 py-2 text-gray-300 break-words align-top">
-                                    <span class="font-mono text-xs">{{ Str::limit($key, 150) }}</span>
+                                    <span class="editor-text font-mono text-xs">{{ Str::limit($key, 150) }}</span>
                                 </td>
                                 <td class="px-2 py-2 text-center align-top">
                                     <span class="tag-{{ $tag }}">{{ $tag }}</span>
                                 </td>
                                 <td class="px-4 py-2 text-white break-words align-top">
-                                    {{ Str::limit($value, 150) }}
+                                    <span class="editor-text">{{ Str::limit($value, 150) }}</span>
                                 </td>
                             </tr>
                         @empty
@@ -349,6 +359,7 @@
                 </div>
             </div>
             @endif
+            </div>{{-- /x-data="editorTextMode" --}}
         </div>
 
         {{-- Legend (HVASM order) --}}

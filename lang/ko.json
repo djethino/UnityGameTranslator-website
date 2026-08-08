@@ -816,6 +816,8 @@
     "editor.capture_order": "캡처 순서",
     "editor.capture_order_hint": "게임에서 텍스트가 캡처된 순서입니다. 이전 버전 모드의 항목은 비어 있습니다.",
     "editor.resize_column": "드래그하여 너비 조절 · 더블클릭하면 초기화",
+    "editor.line_breaks": "줄바꿈",
+    "editor.line_breaks_hint": "각 줄을 포함된 줄바꿈 그대로 보여 줍니다. 편집할 때는 이 설정과 관계없이 항상 유지됩니다.",
     "dashboard.title": "대시보드",
     "dashboard.back_to_translations": "내 번역으로 돌아가기",
     "dashboard.main_owner": "메인",

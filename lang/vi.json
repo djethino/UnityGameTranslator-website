@@ -816,6 +816,8 @@
     "editor.capture_order": "Thứ tự thu thập",
     "editor.capture_order_hint": "Thứ tự các đoạn văn bản được thu thập trong game. Để trống với các mục từ phiên bản mod cũ hơn.",
     "editor.resize_column": "Kéo để đổi độ rộng · nhấp đúp để đặt lại",
+    "editor.line_breaks": "Ngắt dòng",
+    "editor.line_breaks_hint": "Hiển thị mỗi dòng kèm các ngắt dòng bên trong. Khi chỉnh sửa, chúng luôn được giữ, bất kể tùy chọn này.",
     "dashboard.title": "Bảng điều khiển",
     "dashboard.back_to_translations": "Quay lại Bản dịch của tôi",
     "dashboard.main_owner": "Main",

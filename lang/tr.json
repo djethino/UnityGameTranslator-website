@@ -816,6 +816,8 @@
     "editor.capture_order": "Yakalama sırası",
     "editor.capture_order_hint": "Metinlerin oyun içinde yakalandığı sıra. Eski mod sürümlerinden gelen kayıtlarda boştur.",
     "editor.resize_column": "Genişliği değiştirmek için sürükleyin · sıfırlamak için çift tıklayın",
+    "editor.line_breaks": "Satır sonları",
+    "editor.line_breaks_hint": "Her satırı içerdiği satır sonlarıyla gösterir. Düzenlerken bu ayar ne olursa olsun her zaman korunurlar.",
     "dashboard.title": "Kontrol Paneli",
     "dashboard.back_to_translations": "Çevirilerime Dön",
     "dashboard.main_owner": "Main",

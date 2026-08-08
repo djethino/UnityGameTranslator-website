@@ -816,6 +816,8 @@
     "editor.capture_order": "捕获顺序",
     "editor.capture_order_hint": "文本在游戏中被捕获的先后顺序。旧版本模组保存的条目为空。",
     "editor.resize_column": "拖动调整列宽 · 双击恢复默认",
+    "editor.line_breaks": "换行",
+    "editor.line_breaks_hint": "按文本自带的换行显示每一条。无论此项如何设置，编辑时都会保留它们。",
     "dashboard.title": "控制面板",
     "dashboard.back_to_translations": "返回我的翻译",
     "dashboard.main_owner": "主版本",

@@ -816,6 +816,8 @@
     "editor.capture_order": "ลำดับการจับข้อความ",
     "editor.capture_order_hint": "ลำดับที่ข้อความถูกจับในเกม ว่างสำหรับรายการจากม็อดเวอร์ชันเก่า",
     "editor.resize_column": "ลากเพื่อปรับความกว้าง · ดับเบิลคลิกเพื่อรีเซ็ต",
+    "editor.line_breaks": "การขึ้นบรรทัดใหม่",
+    "editor.line_breaks_hint": "แสดงแต่ละบรรทัดพร้อมการขึ้นบรรทัดใหม่ที่มีอยู่ การแก้ไขจะเก็บไว้เสมอ ไม่ว่าตั้งค่านี้ไว้อย่างไร",
     "dashboard.title": "แดชบอร์ด",
     "dashboard.back_to_translations": "กลับไปยังการแปลของฉัน",
     "dashboard.main_owner": "Main",

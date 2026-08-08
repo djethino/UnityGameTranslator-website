@@ -816,6 +816,8 @@
     "editor.capture_order": "Ordem de captura",
     "editor.capture_order_hint": "Ordem pela qual cada texto foi capturado no jogo. Vazio para entradas de versões anteriores do mod.",
     "editor.resize_column": "Arraste para ajustar a largura · clique duplo para redefinir",
+    "editor.line_breaks": "Quebras de linha",
+    "editor.line_breaks_hint": "Mostra cada linha com as quebras que contém. Ao editar elas são sempre mantidas, seja qual for esta opção.",
     "dashboard.title": "Painel",
     "dashboard.back_to_translations": "Voltar para Minhas Traduções",
     "dashboard.main_owner": "Main",

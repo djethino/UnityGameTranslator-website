@@ -816,6 +816,8 @@
     "editor.capture_order": "סדר לכידה",
     "editor.capture_order_hint": "הסדר שבו הטקסטים נלכדו במשחק. ריק עבור רשומות מגרסאות ישנות של המוד.",
     "editor.resize_column": "גררו כדי לשנות את הרוחב · לחיצה כפולה לאיפוס",
+    "editor.line_breaks": "מעברי שורה",
+    "editor.line_breaks_hint": "מציג כל שורה עם מעברי השורה שבה. בעריכה הם נשמרים תמיד, ללא קשר להגדרה הזו.",
     "dashboard.title": "לוח בקרה",
     "dashboard.back_to_translations": "חזרה לתרגומים שלי",
     "dashboard.main_owner": "Main",

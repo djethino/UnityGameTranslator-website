@@ -816,6 +816,8 @@
     "editor.capture_order": "Orden de captura",
     "editor.capture_order_hint": "Orden en el que se capturó cada texto en el juego. Vacío para entradas de versiones anteriores del mod.",
     "editor.resize_column": "Arrastra para ajustar el ancho · doble clic para restablecer",
+    "editor.line_breaks": "Saltos de línea",
+    "editor.line_breaks_hint": "Muestra cada línea con los saltos que contiene. Al editar siempre se conservan, esté como esté esta opción.",
     "dashboard.title": "Panel de control",
     "dashboard.back_to_translations": "Volver a Mis Traducciones",
     "dashboard.main_owner": "Principal",

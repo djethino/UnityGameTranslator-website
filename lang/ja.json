@@ -816,6 +816,8 @@
     "editor.capture_order": "取得順",
     "editor.capture_order_hint": "ゲーム内でテキストが取得された順番です。旧バージョンのModで保存された項目は空欄になります。",
     "editor.resize_column": "ドラッグで幅を変更 · ダブルクリックでリセット",
+    "editor.line_breaks": "改行",
+    "editor.line_breaks_hint": "各行を含まれる改行ごとに表示します。編集時はこの設定に関係なく常に保持されます。",
     "dashboard.title": "ダッシュボード",
     "dashboard.back_to_translations": "マイ翻訳に戻る",
     "dashboard.main_owner": "Main",

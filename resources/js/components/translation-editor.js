@@ -19,6 +19,7 @@
 
 import { editorWorkbench } from './editor-workbench.js';
 import { editorColumns } from './editor-columns.js';
+import { editorTextMode } from './editor-text-mode.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -75,6 +76,8 @@ export function editorCore(config) {
         ...editorWorkbench(),
         // ── Resizable columns (see editor-columns.js) ─────────────────────
         ...editorColumns(),
+        // ── Flowing text or line breaks (see editor-text-mode.js) ─────────
+        ...editorTextMode(),
 
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
@@ -154,6 +157,7 @@ export function editorCore(config) {
          */
         initEditorCore() {
             this.initEditorWorkbench();
+            this.initTextMode();
             this.restoreUiState();
             this.initEditorColumns();
             this.restorePendingState();

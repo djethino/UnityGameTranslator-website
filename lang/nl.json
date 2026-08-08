@@ -816,6 +816,8 @@
     "editor.capture_order": "Volgorde van vastleggen",
     "editor.capture_order_hint": "Volgorde waarin elke tekst in het spel is vastgelegd. Leeg voor items uit oudere modversies.",
     "editor.resize_column": "Sleep om de breedte aan te passen · dubbelklik om te herstellen",
+    "editor.line_breaks": "Regeleinden",
+    "editor.line_breaks_hint": "Toont elke regel met de regeleinden die erin staan. Bij het bewerken blijven ze altijd behouden, hoe dit ook staat.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Terug naar Mijn vertalingen",
     "dashboard.main_owner": "Main",

@@ -816,6 +816,8 @@
     "editor.capture_order": "Erfassungsreihenfolge",
     "editor.capture_order_hint": "Reihenfolge, in der die Texte im Spiel erfasst wurden. Leer bei Einträgen aus älteren Mod-Versionen.",
     "editor.resize_column": "Ziehen zum Anpassen der Breite · Doppelklick zum Zurücksetzen",
+    "editor.line_breaks": "Zeilenumbrüche",
+    "editor.line_breaks_hint": "Zeigt jede Zeile mit ihren Umbrüchen. Beim Bearbeiten bleiben sie in jedem Fall erhalten.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Zurück zu meinen Übersetzungen",
     "dashboard.main_owner": "Haupt",

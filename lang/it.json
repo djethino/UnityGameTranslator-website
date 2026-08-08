@@ -816,6 +816,8 @@
     "editor.capture_order": "Ordine di cattura",
     "editor.capture_order_hint": "Ordine in cui ogni testo è stato catturato nel gioco. Vuoto per le voci di versioni precedenti della mod.",
     "editor.resize_column": "Trascina per ridimensionare · doppio clic per ripristinare",
+    "editor.line_breaks": "A capo",
+    "editor.line_breaks_hint": "Mostra ogni riga con gli a capo che contiene. Durante la modifica vengono sempre conservati, comunque sia impostata questa opzione.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Torna alle mie traduzioni",
     "dashboard.main_owner": "Main",

@@ -260,6 +260,14 @@
                 <span class="text-gray-400"><i class="fas fa-arrow-down-1-9 mr-1"></i>{{ __('editor.capture_order') }}</span>
             </label>
 
+            {{-- Show a line the way the game breaks it. A display switch only: the edit box has
+                 always kept the breaks, and nothing here can change what is stored. --}}
+            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('editor.line_breaks_hint') }}">
+                <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
+                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                <span class="text-gray-400"><i class="fas fa-paragraph mr-1"></i>{{ __('editor.line_breaks') }}</span>
+            </label>
+
             <span class="text-gray-600">|</span>
 
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
@@ -365,7 +373,8 @@
                  browser does not paint the background of a sticky cell — only its text, so the
                  frozen key column would let every scrolled column show through behind its own
                  words. --}}
-            <table class="editor-grid w-full text-sm border-separate border-spacing-0">
+            <table class="editor-grid w-full text-sm border-separate border-spacing-0"
+                   :class="showLineBreaks && 'show-linebreaks'">
                 <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
                         {{-- Capture-order index (toggleable, sortable). Frozen with the key: the
@@ -451,8 +460,11 @@
                                 x-text="indexCellText(key)"></td>
 
                             {{-- Key column --}}
+                            {{-- editor-text on the cell itself: its whole content is written by
+                                 highlightKey, so there is no markup here whose indentation
+                                 pre-wrap could turn into visible whitespace. --}}
                             <td data-col="key"
-                                class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                class="editor-text px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
                                 :class="showIndexColumn ? 'left-16' : 'left-0'"
                                 x-safe-html="highlightKey(key)"></td>
 
@@ -500,7 +512,7 @@
                                             title="{{ __('merge.placeholder_warning') }}">
                                             <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
                                         </span>
-                                        <span x-safe-html="localValueHtml(key)"></span>
+                                        <span class="editor-text" x-safe-html="localValueHtml(key)"></span>
                                     </span>
                                 </template>
                                 <template x-if="localData[key] === undefined">
@@ -525,7 +537,7 @@
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <span class="break-words" :class="valueUnchanged(key) ? 'opacity-50' : ''"
+                                    <span class="break-words editor-text" :class="valueUnchanged(key) ? 'opacity-50' : ''"
                                         x-safe-html="onlineValueHtml(key)"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">
@@ -640,7 +652,10 @@
             {{-- Modal Header --}}
             <div class="px-6 py-4 border-b border-gray-700">
                 <h3 class="text-lg font-semibold text-white">{{ __('merge_preview.edit_translation') }}</h3>
-                <p class="text-sm text-gray-400 font-mono mt-1 break-words" x-text="editModal.key"></p>
+                {{-- Always with its line breaks, never subject to the display switch: this is the
+                         reference you match while typing, and a translation is expected to keep the
+                         original's breaks. The textarea below has always kept them. --}}
+                    <p class="text-sm text-gray-400 font-mono mt-1 break-words whitespace-pre-wrap" x-text="editModal.key"></p>
             </div>
 
             {{-- Modal Body --}}

@@ -90,6 +90,15 @@ import { createSectionHistory } from './section-history.js';
 import { createSectionSpy } from './section-spy.js';
 window.UGT = { composeEditor, normalizeLineEndings, createLiveSync };
 
+// Flowing text or line breaks. The three editors get it by composing the editor
+// core; this registration is for any other screen that lists translation lines
+// (the admin inspection view) so the whole site answers to ONE preference.
+import { editorTextMode } from './components/editor-text-mode.js';
+Alpine.data('editorTextMode', () => ({
+    ...editorTextMode(),
+    init() { this.initTextMode(); },
+}));
+
 // x-html is prohibited by the Alpine CSP build. The editors need to inject
 // their own search-highlight markup, so x-safe-html provides the same
 // semantics restricted to OUR trusted helpers: translation-editor.js

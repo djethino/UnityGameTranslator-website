@@ -40,6 +40,14 @@
  * <td> of three templates. */
 .editor-grid tbody td { border-top: 1px solid rgb(55 65 81); }
 
+/* Show a line the way the game shows it (see js/components/editor-text-mode.js).
+ *
+ * Only on `.editor-text`, the elements whose whole content is written by the
+ * highlight helpers — never on the cell. A cell also holds the pencil, the
+ * trash and the placeholder badge, and pre-wrap on it would render the
+ * template's own indentation as visible whitespace. */
+.show-linebreaks .editor-text { white-space: pre-wrap; }
+
 .selected-local, .selected-main { background-color: rgba(20, 83, 45, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(34 197 94); }
 .selected-online, .selected-branch { background-color: rgba(30, 58, 138, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(59 130 246); }
 .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }

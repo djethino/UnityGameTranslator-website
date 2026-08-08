@@ -816,6 +816,8 @@
     "editor.capture_order": "Ordre de capture",
     "editor.capture_order_hint": "Ordre dans lequel chaque texte a été capturé en jeu. Vide pour les entrées issues d'anciennes versions du mod.",
     "editor.resize_column": "Glisser pour redimensionner · double-clic pour réinitialiser",
+    "editor.line_breaks": "Retours à la ligne",
+    "editor.line_breaks_hint": "Affiche chaque ligne avec les retours qu'elle contient. L'édition les conserve toujours, quel que soit ce réglage.",
     "dashboard.title": "Tableau de bord",
     "dashboard.back_to_translations": "Retour à mes traductions",
     "dashboard.main_owner": "Principal",

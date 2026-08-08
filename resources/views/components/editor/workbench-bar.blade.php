@@ -108,6 +108,11 @@
                class="rounded bg-gray-700 border-gray-600 text-gray-500">
         <i class="fas fa-arrow-down-1-9 text-gray-400"></i>
     </label>
+    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('editor.line_breaks_hint') }}">
+        <input type="checkbox" :checked="showLineBreaks" @change="toggleLineBreaks()"
+               class="rounded bg-gray-700 border-gray-600 text-gray-500">
+        <i class="fas fa-paragraph text-gray-400"></i>
+    </label>
 
     <span class="w-px h-5 bg-gray-700 shrink-0"></span>
 

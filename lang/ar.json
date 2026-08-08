@@ -816,6 +816,8 @@
     "editor.capture_order": "ترتيب الالتقاط",
     "editor.capture_order_hint": "الترتيب الذي التُقطت به النصوص داخل اللعبة. يكون فارغًا للمدخلات من إصدارات المود الأقدم.",
     "editor.resize_column": "اسحب لتغيير العرض · انقر نقرًا مزدوجًا لإعادة التعيين",
+    "editor.line_breaks": "فواصل الأسطر",
+    "editor.line_breaks_hint": "يعرض كل سطر بما يحويه من فواصل. تُحفظ دائمًا عند التحرير، مهما كان هذا الإعداد.",
     "dashboard.title": "لوحة التحكم",
     "dashboard.back_to_translations": "العودة لترجماتي",
     "dashboard.main_owner": "Main",
