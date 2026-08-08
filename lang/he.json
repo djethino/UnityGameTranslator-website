@@ -85,6 +85,7 @@
     "games.sort.translations": "הכי הרבה תרגומים",
     "games.sort.finished": "הושלמו לאחרונה",
     "games.filter.completed": "הושלמו בלבד",
+    "games.filter.completed_hint": "תרגום בעבודה בדרך כלל כבר ראוי למשחק: מה שהמוד פגש במשחק מתורגם, ואיש לא יודע כמה טקסט יש במשחק.",
     "games.sort.language_first": "קודם :language",
     "games.sort.quality": "ציון איכות",
     "games.sort.votes": "הכי מדורג",

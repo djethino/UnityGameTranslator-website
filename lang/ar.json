@@ -85,6 +85,7 @@
     "games.sort.translations": "الأكثر ترجمات",
     "games.sort.finished": "اكتملت حديثًا",
     "games.filter.completed": "المكتملة فقط",
+    "games.filter.completed_hint": "الترجمة قيد العمل صالحة للعب غالبًا: ما صادفته الإضافة داخل اللعبة مترجم، ولا أحد يعرف كم نصًا تحوي اللعبة.",
     "games.sort.language_first": ":language أولًا",
     "games.sort.quality": "درجة الجودة",
     "games.sort.votes": "الأكثر تصويتاً",

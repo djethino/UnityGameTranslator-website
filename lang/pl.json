@@ -85,6 +85,7 @@
     "games.sort.translations": "Najwięcej tłumaczeń",
     "games.sort.finished": "Ostatnio ukończone",
     "games.filter.completed": "Tylko ukończone",
+    "games.filter.completed_hint": "Tłumaczenie w toku zwykle wystarcza do gry: to, co mod napotkał w grze, jest przetłumaczone, a ile tekstu ma gra – nie wie nikt.",
     "games.sort.language_first": "Najpierw :language",
     "games.sort.quality": "Ocena Jakości",
     "games.sort.votes": "Najwyżej oceniane",

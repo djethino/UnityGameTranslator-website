@@ -85,6 +85,7 @@
     "games.sort.translations": "Nhiều bản dịch nhất",
     "games.sort.finished": "Vừa hoàn tất",
     "games.filter.completed": "Chỉ đã hoàn tất",
+    "games.filter.completed_hint": "Bản dịch đang làm thường đã chơi được: những gì mod gặp trong game đều đã dịch, và không ai biết một game có bao nhiêu chữ.",
     "games.sort.language_first": ":language trước",
     "games.sort.quality": "Điểm chất lượng",
     "games.sort.votes": "Được bình chọn nhiều nhất",

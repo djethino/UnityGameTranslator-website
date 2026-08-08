@@ -85,6 +85,7 @@
     "games.sort.translations": "Most translations",
     "games.sort.finished": "Recently finished",
     "games.filter.completed": "Finished only",
+    "games.filter.completed_hint": "A translation still under way is usually playable: what the mod has met in game is translated, and nobody knows how much text a game holds.",
     "games.sort.language_first": ":language first",
     "games.sort.quality": "Quality Score",
     "games.sort.votes": "Top Voted",

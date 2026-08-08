@@ -81,14 +81,21 @@
             @endforeach
         </select>
 
-        {{-- Games somebody has declared finished: "what can I play all the way through". A filter
-             and not a sort, because it answers yes or no. --}}
-        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer whitespace-nowrap">
+        {{-- Games somebody has declared finished. A filter and not a sort, because it answers yes
+             or no — but a QUIET one, and never on by default.
+
+             It hides most of the catalogue for a reason that is weaker than it looks: "finished"
+             is a declaration, and a translation still under way at ninety percent is a game you
+             can play through. Nobody knows that share — the total text of a game is unknowable —
+             so the filter cannot be presented as the difference between playable and not. Small,
+             last, and explained on hover. --}}
+        <label class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer whitespace-nowrap"
+            title="{{ __('games.filter.completed_hint') }}">
             {{-- An unchecked box sends nothing at all, so without this the filter could be
                  turned on but never off --}}
             <input type="hidden" name="completed" value="0">
             <input type="checkbox" name="completed" value="1" {{ $completedOnly ? 'checked' : '' }}
-                class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                class="rounded bg-gray-700 border-gray-600 text-gray-500">
             <span>{{ __('games.filter.completed') }}</span>
         </label>
 

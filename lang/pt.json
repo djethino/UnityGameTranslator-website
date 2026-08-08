@@ -85,6 +85,7 @@
     "games.sort.translations": "Mais traduções",
     "games.sort.finished": "Terminadas recentemente",
     "games.filter.completed": "Só terminadas",
+    "games.filter.completed_hint": "Uma tradução em curso costuma dar para jogar: o que o mod encontrou no jogo está traduzido, e ninguém sabe quanto texto um jogo tem.",
     "games.sort.language_first": ":language primeiro",
     "games.sort.quality": "Pontuação de Qualidade",
     "games.sort.votes": "Mais votados",

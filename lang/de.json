@@ -85,6 +85,7 @@
     "games.sort.translations": "Meiste Übersetzungen",
     "games.sort.finished": "Zuletzt fertiggestellt",
     "games.filter.completed": "Nur fertige",
+    "games.filter.completed_hint": "Eine laufende Übersetzung ist meist schon spielbar: Was der Mod im Spiel angetroffen hat, ist übersetzt – und wie viel Text ein Spiel enthält, weiß niemand.",
     "games.sort.language_first": ":language zuerst",
     "games.sort.quality": "Qualitätsbewertung",
     "games.sort.votes": "Beste Bewertung",

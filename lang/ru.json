@@ -85,6 +85,7 @@
     "games.sort.translations": "Больше всего переводов",
     "games.sort.finished": "Недавно завершённые",
     "games.filter.completed": "Только завершённые",
+    "games.filter.completed_hint": "Незавершённый перевод обычно уже годится для игры: то, что мод встретил в игре, переведено, а сколько в игре текста — не знает никто.",
     "games.sort.language_first": "Сначала :language",
     "games.sort.quality": "Оценка качества",
     "games.sort.votes": "По рейтингу",

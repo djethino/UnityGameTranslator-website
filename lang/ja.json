@@ -85,6 +85,7 @@
     "games.sort.translations": "翻訳数が多い順",
     "games.sort.finished": "最近完成した順",
     "games.filter.completed": "完成済みのみ",
+    "games.filter.completed_hint": "進行中の翻訳でもたいていは遛べます。MOD がゲーム内で出会った分は訳されており、ゲーム全体の文量は誰にも分かりません。",
     "games.sort.language_first": ":language を先頭に",
     "games.sort.quality": "品質スコア",
     "games.sort.votes": "高評価順",

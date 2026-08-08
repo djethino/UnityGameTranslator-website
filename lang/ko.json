@@ -85,6 +85,7 @@
     "games.sort.translations": "번역 많은 순",
     "games.sort.finished": "최근 완성순",
     "games.filter.completed": "완성된 것만",
+    "games.filter.completed_hint": "진행 중인 번역도 대개는 플레이하기에 충분합니다. 모드가 게임에서 만난 문구는 번역되어 있고, 게임의 전체 분량은 아무도 모릅니다.",
     "games.sort.language_first": ":language 먼저",
     "games.sort.quality": "품질 점수",
     "games.sort.votes": "인기순",

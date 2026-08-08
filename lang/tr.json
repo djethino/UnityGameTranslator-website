@@ -85,6 +85,7 @@
     "games.sort.translations": "En çok çeviri",
     "games.sort.finished": "Yeni tamamlananlar",
     "games.filter.completed": "Yalnızca tamamlananlar",
+    "games.filter.completed_hint": "Devam eden bir çeviri çoğu zaman oynanabilir: modun oyunda karşılaştığı metin çevrilmiştir ve bir oyunda ne kadar metin olduğunu kimse bilmez.",
     "games.sort.language_first": "Önce :language",
     "games.sort.quality": "Kalite Puanı",
     "games.sort.votes": "En çok oylanan",

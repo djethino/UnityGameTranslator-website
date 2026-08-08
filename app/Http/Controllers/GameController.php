@@ -70,9 +70,25 @@ class GameController extends Controller
         // Games available in that language come first — WITHOUT hiding the others, which is
         // what a filter would do. Someone browsing in French wants French translations at the
         // top, not a page that pretends nothing else exists.
+        //
+        // It is a SORT PREFERENCE, not a filter, and that changes what it has to mean: it must
+        // ask its question about the same translations the sort is ranking. Asked about ANY
+        // French translation while the list was ordered by what was recently FINISHED, it put
+        // games with nothing finished at all above one finished the day before, on the sole
+        // ground of being in French — French first, and the sort left saying nothing.
+        //
+        // So the flag narrows with the sort: on "recently finished" it means "finished IN my
+        // language", which reads as the eye expects — French finished first, then finished in
+        // other languages, then the rest.
+        $languageScope = match ($request->input('sort', 'name')) {
+            'finished' => fn ($q) => $q->where('visibility', 'public')->withTranslatedLines()->finished(),
+            default => fn ($q) => $q->where('visibility', 'public'),
+        };
+
         if ($highlightLanguage && $languageFirst) {
-            $query->withExists(['translations as has_highlight_language' => function ($q) use ($highlightLanguage) {
-                $q->where('visibility', 'public')->where('target_language', $highlightLanguage);
+            $query->withExists(['translations as has_highlight_language' => function ($q) use ($highlightLanguage, $languageScope) {
+                $languageScope($q);
+                $q->where('target_language', $highlightLanguage);
             }])->orderByDesc('has_highlight_language');
         }
 

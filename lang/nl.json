@@ -85,6 +85,7 @@
     "games.sort.translations": "Meeste vertalingen",
     "games.sort.finished": "Onlangs afgerond",
     "games.filter.completed": "Alleen afgerond",
+    "games.filter.completed_hint": "Een lopende vertaling is meestal al speelbaar: wat de mod in het spel is tegengekomen, is vertaald – en hoeveel tekst een spel bevat, weet niemand.",
     "games.sort.language_first": ":language eerst",
     "games.sort.quality": "Kwaliteitsscore",
     "games.sort.votes": "Meeste stemmen",
