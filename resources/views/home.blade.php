@@ -421,12 +421,19 @@
          Finished comes first — it is the one thing on this page someone can play tonight, and the
          counters above promise it. Three cards each: a front page is a doorway, and the catalogue
          sorts the same two ways for whoever wants the rest. --}}
+    {{-- Both lists continue in the catalogue, and each link SAYS SO in its own words.
+         "See more" under a list of translations landed on a page of games, and the reader had to
+         work out the change of object for themselves — so the link names its destination instead.
+         The catalogue is a catalogue of games; "all translations" is not a view this site has. --}}
     @foreach([
-        // The finished list continues in the catalogue filtered the same way — same set, same
-        // order. The latest list has no such destination: see GameController::index.
-        ['finished', $finished, 'home.finished_translations', 'fa-circle-check', ['completed' => 1, 'sort' => 'finished'], true],
-        ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock', null, false],
-    ] as [$slug, $list, $heading, $icon, $params, $byContentDate])
+        ['finished', $finished, 'home.finished_translations', 'fa-circle-check',
+            ['completed' => 1, 'sort' => 'finished'], 'home.see_all_finished_games', true],
+        // Ordered on the newest translation; the catalogue's closest reading is games by last
+        // content change. The two agree on the first four games here and drift after that, which
+        // is why the link promises "recently translated games" and not "these, continued".
+        ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock',
+            ['sort' => 'updated'], 'home.see_all_recent_games', false],
+    ] as [$slug, $list, $heading, $icon, $params, $linkLabel, $byContentDate])
         @if($list->count() > 0)
         <div class="mb-12">
             <div class="flex items-baseline justify-between gap-4 mb-6">
@@ -434,11 +441,9 @@
                     <i class="fas {{ $icon }} text-purple-400 mr-2"></i>
                     {{ __($heading) }}
                 </h2>
-                @if($params)
-                    <a href="{{ route('games.index', $params) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
-                        {{ __('home.see_more') }} <i class="fas fa-arrow-right text-xs ml-1"></i>
-                    </a>
-                @endif
+                <a href="{{ route('games.index', $params) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
+                    {{ __($linkLabel) }} <i class="fas fa-arrow-right text-xs ml-1"></i>
+                </a>
             </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($list as $translation)
