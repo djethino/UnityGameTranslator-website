@@ -184,71 +184,38 @@
 
         @include('partials.editor-quality-bar')
 
-        {{-- Filters. Two zones, like the merge view: what to show on the left, how to show it on
-             the right. The right group is pinned, so a long language wraps the FILTERS and never
-             strands a view option on a line of its own. --}}
-        <div class="mb-4 flex gap-4 items-start text-sm bg-gray-800 p-4 rounded-lg border border-gray-700">
-          <div class="flex flex-wrap gap-x-3 gap-y-2 items-center flex-1 min-w-0">
-            <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
+        {{-- Ahead of the tags, where a row COMES FROM — the question this screen exists to
+             answer. After them, what to do with the answer. --}}
+        <x-editor.filter-bar>
+            <x-slot:before>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
+                        class="rounded bg-gray-700 border-gray-600 text-green-600">
+                    <span class="text-green-400">{{ __('merge_preview.local_only') }}</span>
+                </label>
 
-            <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
-                    class="rounded bg-gray-700 border-gray-600 text-green-600">
-                <span class="text-green-400">{{ __('merge_preview.local_only') }}</span>
-            </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
+                        class="rounded bg-gray-700 border-gray-600 text-blue-600">
+                    <span class="text-blue-400">{{ __('merge_preview.online_only') }}</span>
+                </label>
 
-            <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
-                    class="rounded bg-gray-700 border-gray-600 text-blue-600">
-                <span class="text-blue-400">{{ __('merge_preview.online_only') }}</span>
-            </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
+                        class="rounded bg-gray-700 border-gray-600 text-yellow-600">
+                    <span class="text-yellow-400">{{ __('merge_preview.different') }}</span>
+                </label>
 
-            <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
-                    class="rounded bg-gray-700 border-gray-600 text-yellow-600">
-                <span class="text-yellow-400">{{ __('merge_preview.different') }}</span>
-            </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
+                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
+                    <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
+                </label>
 
-            <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
-                    class="rounded bg-gray-700 border-gray-600 text-gray-600">
-                <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
-            </label>
+                <x-editor.filter-sep />
+            </x-slot:before>
 
-            <span class="text-gray-600">|</span>
-
-            {{-- Tag filters in HVASM order --}}
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_human') }}">
-                <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
-                    class="rounded bg-gray-700 border-gray-600 text-green-600">
-                <span class="tag-H">H</span>
-            </label>
-
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_validated') }}">
-                <input type="checkbox" :checked="filters.tagV" @change="toggleFilter('tagV')"
-                    class="rounded bg-gray-700 border-gray-600 text-blue-600">
-                <span class="tag-V">V</span>
-            </label>
-
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_ai') }}">
-                <input type="checkbox" :checked="filters.tagA" @change="toggleFilter('tagA')"
-                    class="rounded bg-gray-700 border-gray-600 text-orange-600">
-                <span class="tag-A">A</span>
-            </label>
-
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_skipped') }}">
-                <input type="checkbox" :checked="filters.tagS" @change="toggleFilter('tagS')"
-                    class="rounded bg-gray-700 border-gray-600 text-gray-600">
-                <span class="tag-S">S</span>
-            </label>
-
-            <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_mod_ui') }}">
-                <input type="checkbox" :checked="filters.tagM" @change="toggleFilter('tagM')"
-                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                <span class="tag-M">M</span>
-            </label>
-
-            <span class="text-gray-600">|</span>
+            <x-editor.filter-sep />
 
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" :checked="filters.modifiedOnly" @change="toggleFilter('modifiedOnly')"
@@ -256,7 +223,7 @@
                 <span class="text-purple-400">{{ __('merge_preview.modifications') }}</span>
             </label>
 
-            <span class="text-gray-600">|</span>
+            <x-editor.filter-sep />
 
             <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_local') }}
@@ -265,69 +232,12 @@
             <button type="button" @click="selectAllOnline()" class="text-blue-400 hover:text-blue-300">
                 <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_online') }}
             </button>
-          </div>
-
-          {{-- How a row is drawn, and how much room the grid gets. Same group, same icons, same
-               place as on the merge view. --}}
-          <div class="flex items-center gap-3 shrink-0 border-l border-gray-700 pl-4">
-            <x-editor.view-options />
-            <x-editor.workbench-toggle />
-          </div>
-        </div>
+        </x-editor.filter-bar>
 
         @include('partials.editor-floating-search')
 
         {{-- Search (Enter/Shift+Enter navigate matches) + replace --}}
-        <div class="mb-4 space-y-2" x-ref="searchBar">
-            <div class="flex gap-2">
-                <div class="relative flex-1">
-                    <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
-                        placeholder="{{ __('merge_preview.search_placeholder') }}"
-                        class="w-full px-4 py-2 pl-10 pr-32 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        <span x-show="hasQuery" x-cloak class="text-xs text-gray-500 tabular-nums" x-text="matchCounterText"></span>
-                        <button x-show="hasQuery" x-cloak @click="prevMatch()" type="button"
-                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_prev') }}">
-                            <i class="fas fa-chevron-up"></i>
-                        </button>
-                        <button x-show="hasQuery" x-cloak @click="nextMatch()" type="button"
-                            class="text-gray-500 hover:text-white transition" title="{{ __('merge.search_next') }}">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <button x-show="searchQuery" x-cloak @click="searchQuery = ''" type="button"
-                            class="text-gray-500 hover:text-white transition">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                <select x-model="searchScope"
-                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                    title="{{ __('merge_preview.search_scope_title') }}">
-                    <option value="both">{{ __('merge_preview.search_scope_both') }}</option>
-                    <option value="keys">{{ __('merge_preview.search_scope_keys') }}</option>
-                    <option value="values">{{ __('merge_preview.search_scope_values') }}</option>
-                </select>
-                <button type="button" @click="toggleReplace()"
-                    :class="replaceOpen ? 'bg-purple-700 text-white border-purple-500' : 'bg-gray-800 text-gray-300 border-gray-700 hover:text-white'"
-                    class="border rounded-lg px-3 py-2 text-sm transition" title="{{ __('merge.replace') }}">
-                    <i class="fas fa-right-left"></i>
-                </button>
-            </div>
-            {{-- Replace: single-row only, staged as a human edit (→ H), no replace-all --}}
-            <div x-show="replaceOpen" x-cloak class="flex gap-2">
-                <div class="relative flex-1">
-                    <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
-                        placeholder="{{ __('merge.replace_with') }}"
-                        class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
-                    <i class="fas fa-right-left absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                </div>
-                <button type="button" @click="replaceCurrent()" :disabled="replaceDisabled"
-                    class="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white text-sm transition">
-                    {{ __('merge.replace') }}
-                </button>
-            </div>
-        </div>
+        <x-editor.search-bar replace />
 
         {{-- The workbench strip, shared with the merge view — see
              components/editor/workbench-bar.blade.php. Only the category filters differ from one
