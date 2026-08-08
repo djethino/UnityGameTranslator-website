@@ -324,24 +324,33 @@
          The pair "translations / of which finished" is the point of the block: one says what can
          be picked up and played tonight, the other says by contrast that the rest is under way —
          which is where someone joins in. --}}
+    {{-- Six numbers, all at the same level: none of them is a footnote to another.
+         "Finished" and "under way" are the pair that does the work — one says what can be played
+         tonight, the other says where someone joins in — and neither should have to be worked out
+         by subtracting. --}}
     <div class="bg-gray-800/80 backdrop-blur-sm rounded-lg p-6 border border-gray-700 mb-12">
-        <div class="grid grid-cols-3 gap-4 text-center">
-            <div>
-                <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['games']) }}</div>
-                <div class="text-gray-400">{{ __('home.stats_games') }}</div>
-            </div>
-            <div>
-                <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['translations']) }}</div>
-                <div class="text-gray-400">{{ __('home.stats_translations') }}</div>
-                <div class="text-sm text-gray-500 mt-0.5">
-                    {{ __('home.stats_completed', ['count' => number_format($stats['completed'])]) }}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+            @foreach([
+                ['games', 'home.stats_games'],
+                ['translations', 'home.stats_translations'],
+                ['completed', 'home.stats_completed'],
+                ['in_progress', 'home.stats_in_progress'],
+                ['users', 'home.stats_users'],
+                ['downloads', 'home.stats_downloads'],
+            ] as [$key, $label])
+                <div>
+                    <div class="text-3xl font-bold text-purple-400">{{ number_format($stats[$key]) }}</div>
+                    <div class="text-gray-400 text-sm">{{ __($label) }}</div>
                 </div>
-            </div>
-            <div>
-                <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['users']) }}</div>
-                <div class="text-gray-400">{{ __('home.stats_users') }}</div>
-            </div>
+            @endforeach
         </div>
+
+        {{-- The numbers say what exists; this says what is missing, which is the only part a
+             visitor can do something about. --}}
+        <p class="mt-5 pt-4 border-t border-gray-700 text-center text-sm text-gray-400">
+            {{ __('home.stats_join') }}
+            <a href="{{ route('docs') }}#quick-start" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">{{ __('home.stats_join_link') }}</a>
+        </p>
     </div>
 
     <!-- Popular Games -->

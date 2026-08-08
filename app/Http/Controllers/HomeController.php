@@ -25,12 +25,14 @@ class HomeController extends Controller
         // small numbers on a young project reads them as young, not as failing. What would be
         // dishonest is to hide them until they flatter.
         //
-        // "Finished" is counted apart, and it is the more useful half of the pair: it says a
-        // translation can be picked up and played, and it says by contrast that the others are
-        // under way — which is an invitation, not a shortfall.
-        $completed = Translation::query()
-            ->where('visibility', 'public')
-            ->withTranslatedLines()
+        // ONE rule behind every number: published, and holding at least one translated line. The
+        // game count used to be every row in the table — it counted a game created by mistake
+        // with nothing attached, and two whose only translations are captured text nobody has
+        // translated yet. A visitor reads "games" as "games I could play in my language".
+        $published = fn () => Translation::query()->where('visibility', 'public')->withTranslatedLines();
+
+        $translations = $published()->count();
+        $completed = $published()
             ->where('status', 'complete')
             // Declared by its author, so the claim needs a way of being taken back. Two things
             // take it back: the community disagreeing loudly enough (a net vote below the floor)
@@ -41,10 +43,15 @@ class HomeController extends Controller
             ->count();
 
         $stats = [
-            'games' => Game::count(),
-            'translations' => Translation::where('visibility', 'public')->withTranslatedLines()->count(),
+            'games' => Game::whereHas('translations', fn ($query) => $query
+                ->where('visibility', 'public')->withTranslatedLines())->count(),
+            'translations' => $translations,
             'completed' => $completed,
+            // Said outright rather than left to be worked out: "in progress" is the number that
+            // invites someone in, and a reader should not have to subtract to find it.
+            'in_progress' => max(0, $translations - $completed),
             'users' => User::count(),
+            'downloads' => $published()->sum('download_count'),
         ];
 
         // Latest translations (6) - Only Main translations (exclude branches)
