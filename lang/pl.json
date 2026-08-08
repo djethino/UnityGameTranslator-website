@@ -57,6 +57,7 @@
     "home.website_screenshot_alt": "Edytor webowy UnityGameTranslator z walidacją",
     "home.stats_games": "Gry",
     "home.stats_translations": "Tłumaczenia",
+    "home.stats_completed": "w tym :count ukończonych",
     "home.stats_users": "Użytkownicy",
     "home.latest_translations": "Najnowsze tłumaczenia",
     "home.popular_games": "Popularne gry",

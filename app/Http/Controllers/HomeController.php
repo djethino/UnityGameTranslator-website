@@ -8,12 +8,42 @@ use App\Models\User;
 
 class HomeController extends Controller
 {
+    /**
+     * Below this net vote count, a translation stops being counted as finished.
+     *
+     * Strictly below zero, not "few votes": silence is not disagreement, and a translation
+     * nobody has voted on has to keep the benefit of the doubt. It takes people actively saying
+     * no — more of them than say yes — for the claim to be set aside.
+     */
+    private const COMPLETE_VOTE_FLOOR = -1;
+
     public function index()
     {
-        // Statistics for homepage
+        // What the project holds so far.
+        //
+        // Shown from the first day, without a threshold: this is a beta, and a visitor who reads
+        // small numbers on a young project reads them as young, not as failing. What would be
+        // dishonest is to hide them until they flatter.
+        //
+        // "Finished" is counted apart, and it is the more useful half of the pair: it says a
+        // translation can be picked up and played, and it says by contrast that the others are
+        // under way — which is an invitation, not a shortfall.
+        $completed = Translation::query()
+            ->where('visibility', 'public')
+            ->withTranslatedLines()
+            ->where('status', 'complete')
+            // Declared by its author, so the claim needs a way of being taken back. Two things
+            // take it back: the community disagreeing loudly enough (a net vote below the floor)
+            // and a report waiting for a moderator. Neither deletes anything — the translation
+            // stays where it is, it simply stops being counted as finished while in doubt.
+            ->where('vote_count', '>', self::COMPLETE_VOTE_FLOOR)
+            ->whereDoesntHave('reports', fn ($query) => $query->where('status', 'pending'))
+            ->count();
+
         $stats = [
             'games' => Game::count(),
-            'translations' => Translation::count(),
+            'translations' => Translation::where('visibility', 'public')->withTranslatedLines()->count(),
+            'completed' => $completed,
             'users' => User::count(),
         ];
 

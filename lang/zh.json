@@ -57,6 +57,7 @@
     "home.website_screenshot_alt": "UnityGameTranslator带验证功能的网页编辑器",
     "home.stats_games": "游戏",
     "home.stats_translations": "翻译",
+    "home.stats_completed": "其中 :count 个已完成",
     "home.stats_users": "用户",
     "home.latest_translations": "最新翻译",
     "home.popular_games": "热门游戏",

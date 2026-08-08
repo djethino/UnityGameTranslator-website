@@ -86,7 +86,13 @@
                 ['home.source_online', 'home.source_online_detail', 'home.link_connect_key', '#configuration'],
             ];
         @endphp
-        <div class="max-w-3xl mx-auto mb-8 text-left grid gap-x-6 gap-y-3 sm:grid-cols-[auto_1fr]">
+        {{-- The label column is CAPPED, not sized by its longest entry.
+             Measured: the longest label runs to 33 characters in French, 43 in Polish and 52 in
+             Turkish. Sized on its content, it would take half the width in those languages and
+             push the detail — the part that carries the price — onto four lines. Capped, a long
+             label wraps within its own column instead, and the alignment that teaches the price
+             without a word of explanation survives all nineteen. --}}
+        <div class="max-w-3xl mx-auto mb-8 text-left grid gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,15rem)_1fr]">
             @foreach($sources as [$label, $detail, $linkLabel, $anchor])
                 <div class="text-white font-medium">{{ __($label) }}</div>
                 <div class="text-sm text-gray-400 sm:pt-0.5">
@@ -310,8 +316,14 @@
         </div>
     </div>
 
-    <!-- Stats (hidden when numbers are low) -->
-    @if($stats['games'] >= 10 && $stats['translations'] >= 25 && $stats['users'] >= 50)
+    {{-- What the project holds, shown from the first day.
+         There used to be a threshold below which these numbers stayed hidden. A beta that hides
+         its size until the size flatters is a beta that will be caught doing it; and a visitor
+         reads small numbers on a young project as young, not as failing.
+
+         The pair "translations / of which finished" is the point of the block: one says what can
+         be picked up and played tonight, the other says by contrast that the rest is under way —
+         which is where someone joins in. --}}
     <div class="bg-gray-800/80 backdrop-blur-sm rounded-lg p-6 border border-gray-700 mb-12">
         <div class="grid grid-cols-3 gap-4 text-center">
             <div>
@@ -321,6 +333,9 @@
             <div>
                 <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['translations']) }}</div>
                 <div class="text-gray-400">{{ __('home.stats_translations') }}</div>
+                <div class="text-sm text-gray-500 mt-0.5">
+                    {{ __('home.stats_completed', ['count' => number_format($stats['completed'])]) }}
+                </div>
             </div>
             <div>
                 <div class="text-3xl font-bold text-purple-400">{{ number_format($stats['users']) }}</div>
@@ -328,7 +343,6 @@
             </div>
         </div>
     </div>
-    @endif
 
     <!-- Popular Games -->
     @if($popularGames->count() > 0)

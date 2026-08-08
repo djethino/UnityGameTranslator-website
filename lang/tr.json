@@ -57,6 +57,7 @@
     "home.website_screenshot_alt": "Doğrulama ile UnityGameTranslator web editörü",
     "home.stats_games": "Oyunlar",
     "home.stats_translations": "Çeviriler",
+    "home.stats_completed": "bunlardan :count tamamlandı",
     "home.stats_users": "Kullanıcılar",
     "home.latest_translations": "Son Çeviriler",
     "home.popular_games": "Popüler Oyunlar",

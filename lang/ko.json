@@ -57,6 +57,7 @@
     "home.website_screenshot_alt": "검증 기능이 있는 UnityGameTranslator 웹 에디터",
     "home.stats_games": "게임",
     "home.stats_translations": "번역",
+    "home.stats_completed": "그중 :count개 완료",
     "home.stats_users": "사용자",
     "home.latest_translations": "최신 번역",
     "home.popular_games": "인기 게임",

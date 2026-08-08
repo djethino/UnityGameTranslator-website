@@ -57,6 +57,7 @@
     "home.website_screenshot_alt": "Веб-редактор UnityGameTranslator с проверкой",
     "home.stats_games": "Игры",
     "home.stats_translations": "Переводы",
+    "home.stats_completed": "из них :count завершено",
     "home.stats_users": "Пользователи",
     "home.latest_translations": "Последние переводы",
     "home.popular_games": "Популярные игры",

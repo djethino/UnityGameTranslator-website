@@ -291,6 +291,18 @@ class Translation extends Model
     }
 
     /**
+     * Reports raised against this translation.
+     *
+     * Read to suspend a claim while it is in doubt — a translation declared finished stops being
+     * COUNTED as finished while a report waits for a moderator. Nothing is hidden or removed by
+     * a report on its own: an accusation is not a verdict.
+     */
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    /**
      * Get the effective resources URL: own URL if set, otherwise parent's URL.
      * Forks inherit the parent's resources URL.
      */
