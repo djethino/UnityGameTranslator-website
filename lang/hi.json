@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "खेल में सेटिंग्स पटल खोलें, फिर Translation Tools — मॉड अपनी फ़ाइल भेजता है और तुलना आपके ब्राउज़र में खुल जाती है।",
     "merge.wide_on": "कार्यपटल",
     "merge.wide_off": "कार्यपटल छोड़ें",
+    "merge.pin_column": "यह कॉलम पिन करें",
+    "merge.unpin_column": "कॉलम अनपिन करें",
     "progress.game_coverage": "गेम का :percent%",
     "progress.game_coverage_hint": "यह अनुवाद खेल के कितने हिस्से तक पहुँचता है — उसी खेल के सबसे आगे बढ़े अनुवाद के मुकाबले, वह किसी भी भाषा में हो।",
     "progress.capture_only": "केवल कैप्चर",

@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "ในเกม เปิดหน้าต่างตั้งค่าแล้วไปที่ Translation Tools ม็อดจะส่งไฟล์ของมันไป และหน้าเปรียบเทียบจะเปิดขึ้นในเบราว์เซอร์ของคุณ",
     "merge.wide_on": "โต๊ะทำงาน",
     "merge.wide_off": "ออกจากโต๊ะทำงาน",
+    "merge.pin_column": "ตรึงคอลัมน์นี้",
+    "merge.unpin_column": "เลิกตรึงคอลัมน์",
     "progress.game_coverage": ":percent% ของเกม",
     "progress.game_coverage_hint": "สัดส่วนของเกมที่คำแปลนี้เข้าถึง วัดเทียบกับคำแปลที่ไปได้ไกลที่สุดของเกมเดียวกัน ไม่ว่าจะเป็นภาษาใด",
     "progress.capture_only": "บันทึกเท่านั้น",

@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "게임에서 설정 창을 열고 Translation Tools로 갑니다. 모드가 자기 파일을 보내고, 비교 화면이 브라우저에서 열립니다.",
     "merge.wide_on": "작업대",
     "merge.wide_off": "작업대 닫기",
+    "merge.pin_column": "이 열 고정",
+    "merge.unpin_column": "열 고정 해제",
     "progress.game_coverage": "게임의 :percent%",
     "progress.game_coverage_hint": "이 번역이 게임의 어디까지 닿는지를, 같은 게임에서 가장 멀리 나아간 번역과 견주어 나타냅니다(언어는 상관없습니다).",
     "progress.capture_only": "캡처만",

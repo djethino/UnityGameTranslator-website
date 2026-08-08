@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "Open in het spel het instellingenscherm en dan Translation Tools — de mod stuurt zijn bestand en de vergelijking opent in je browser.",
     "merge.wide_on": "Werkblad",
     "merge.wide_off": "Werkblad verlaten",
+    "merge.pin_column": "Deze kolom vastzetten",
+    "merge.unpin_column": "Kolom losmaken",
     "progress.game_coverage": ":percent % van het spel",
     "progress.game_coverage_hint": "Deel van het spel dat deze vertaling bereikt, afgemeten aan de verst gevorderde vertaling van hetzelfde spel, in welke taal dan ook.",
     "progress.capture_only": "Alleen capture",

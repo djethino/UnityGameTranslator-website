@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "Trong trò chơi, mở bảng cài đặt rồi Translation Tools — bản mod gửi tập tin của nó và phần so sánh mở ra trong trình duyệt.",
     "merge.wide_on": "Bàn làm việc",
     "merge.wide_off": "Rời bàn làm việc",
+    "merge.pin_column": "Ghim cột này",
+    "merge.unpin_column": "Bỏ ghim cột",
     "progress.game_coverage": ":percent% trò chơi",
     "progress.game_coverage_hint": "Phần trò chơi mà bản dịch này chạm tới, so với bản dịch đi xa nhất của cùng trò chơi, bằng bất kỳ ngôn ngữ nào.",
     "progress.capture_only": "Chỉ thu thập",

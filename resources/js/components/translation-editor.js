@@ -21,6 +21,7 @@ import { editorWorkbench } from './editor-workbench.js';
 import { editorColumns } from './editor-columns.js';
 import { editorTextMode } from './editor-text-mode.js';
 import { editorHScroll } from './editor-hscroll.js';
+import { editorPin } from './editor-pin.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -81,6 +82,8 @@ export function editorCore(config) {
         ...editorTextMode(),
         // ── Reachable horizontal scrollbar (see editor-hscroll.js) ────────
         ...editorHScroll(),
+        // ── Pinning the reference column (see editor-pin.js) ──────────────
+        ...editorPin(),
 
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
@@ -163,6 +166,7 @@ export function editorCore(config) {
             this.initTextMode();
             this.restoreUiState();
             this.initEditorColumns();
+            this.initEditorPin();
             this.initHScroll();
             this.restorePendingState();
             try {
@@ -906,7 +910,8 @@ export function editorCore(config) {
                     sortDirection: this.sortDirection,
                     replaceOpen: this.replaceOpen,
                     replaceValue: this.replaceValue,
-                    columnWidths: this.columnWidths
+                    columnWidths: this.columnWidths,
+                    pinMain: this.pinMain
                 }));
             } catch (e) { /* storage full/blocked: non-essential */ }
         },
@@ -929,6 +934,7 @@ export function editorCore(config) {
                 if (['asc', 'desc'].includes(state.sortDirection)) this.sortDirection = state.sortDirection;
                 if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
                 if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
+                if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
                 if (state.columnWidths && typeof state.columnWidths === 'object') {
                     // Numbers only: a corrupted or hand-edited entry would otherwise reach the
                     // style attribute as "60undefinedpx" and collapse the column

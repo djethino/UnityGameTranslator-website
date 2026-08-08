@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "Di dalam permainan, buka panel pengaturan lalu Translation Tools — mod mengirim berkasnya dan perbandingannya terbuka di peramban Anda.",
     "merge.wide_on": "Meja kerja",
     "merge.wide_off": "Tinggalkan meja kerja",
+    "merge.pin_column": "Sematkan kolom ini",
+    "merge.unpin_column": "Lepas sematan kolom",
     "progress.game_coverage": ":percent% dari permainan",
     "progress.game_coverage_hint": "Bagian permainan yang dijangkau terjemahan ini, diukur terhadap terjemahan terjauh dari permainan yang sama, dalam bahasa apa pun.",
     "progress.capture_only": "Hanya tangkap",

@@ -55,6 +55,17 @@ export function editorColumns() {
             this._writeColumnWidths(this.columnWidths);
         },
 
+        /**
+         * Hook: a column's width has just changed.
+         *
+         * Announced rather than watched, because the width map is mutated key by key and an
+         * Alpine effect that merely reads the map subscribes to nothing — it would go on holding
+         * the old numbers. Anything whose layout is measured FROM these widths has to be told.
+         * editor-pin listens: its frozen columns start where the key column ends, so shrinking
+         * the key left the pinned block stuck at its old offset, overlapping the column beside it.
+         */
+        onColumnsResized() {},
+
         startColumnResize(event) {
             const handle = event.target.closest('[data-resize-col]');
             if (!handle) return;
@@ -107,6 +118,7 @@ export function editorColumns() {
                 // Written straight to the stylesheet: the component (and the two hundred rows
                 // watching it) only hears about it on drop
                 this._writeColumnWidths({ ...this.columnWidths, [this._resize.col]: this._resize.width });
+                this.onColumnsResized();
             };
 
             this._onColumnResizeEnd = () => {
@@ -117,6 +129,7 @@ export function editorColumns() {
                     }
                     this._resize = null;
                     this.applyColumnWidths();
+                    this.onColumnsResized();
                 }
                 document.removeEventListener('mousemove', this._onColumnResizeMove);
                 document.removeEventListener('mouseup', this._onColumnResizeEnd);

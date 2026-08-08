@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "Nel gioco, apri il pannello delle impostazioni e poi Translation Tools — la mod invia il suo file e il confronto si apre nel browser.",
     "merge.wide_on": "Piano di lavoro",
     "merge.wide_off": "Lasciare il piano di lavoro",
+    "merge.pin_column": "Blocca questa colonna",
+    "merge.unpin_column": "Sblocca la colonna",
     "progress.game_coverage": ":percent % del gioco",
     "progress.game_coverage_hint": "Parte del gioco che questa traduzione raggiunge, misurata rispetto alla traduzione più avanzata dello stesso gioco, in qualunque lingua.",
     "progress.capture_only": "Solo cattura",

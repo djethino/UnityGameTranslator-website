@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "داخل اللعبة، افتحوا لوحة الإعدادات ثم Translation Tools — ترسل الأداة ملفها وتُفتح المقارنة في متصفّحكم.",
     "merge.wide_on": "طاولة العمل",
     "merge.wide_off": "مغادرة طاولة العمل",
+    "merge.pin_column": "تثبيت هذا العمود",
+    "merge.unpin_column": "إلغاء تثبيت العمود",
     "progress.game_coverage": ":percent٪ من اللعبة",
     "progress.game_coverage_hint": "نسبة اللعبة التي تبلغها هذه الترجمة، مقيسةً على أبعد ترجمة للعبة نفسها، أيًّا كانت لغتها.",
     "progress.capture_only": "التقاط فقط",

@@ -367,7 +367,7 @@
                  frozen key column would let every scrolled column show through behind its own
                  words. --}}
             <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="showLineBreaks && 'show-linebreaks'">
+                   :class="[showLineBreaks && 'show-linebreaks', pinMain && 'pin-main']">
                 <thead class="bg-gray-900 sticky top-0 z-20">
                     <tr>
                         {{-- Capture-order index (toggleable, sortable). Frozen with the key: the
@@ -397,8 +397,10 @@
                             </div>
                             <x-editor.col-resize col="key" />
                         </th>
-                        {{-- Local Tag --}}
-                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                        {{-- Local Tag. data-col so the pin can freeze the pair: a value without
+                             its tag says only half of what the row holds. --}}
+                        <th data-col="localTag"
+                            class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
                             @click="toggleSort('localTag')">
                             <div class="flex items-center justify-center gap-1">
                                 <span class="text-green-400 font-medium text-xs">Tag</span>
@@ -412,6 +414,7 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
                                 <i class="fas" :class="getSortIcon('localValue')"></i>
+                                <x-editor.pin-toggle />
                             </div>
                             <x-editor.col-resize col="local" />
                         </th>
@@ -472,7 +475,7 @@
                                  counterpart: both cells of a side belong to that
                                  side, and colouring only one of the two made the
                                  local pick look half-selected. --}}
-                            <td class="px-2 py-2 text-center border-l border-gray-700"
+                            <td data-col="localTag" class="px-2 py-2 text-center border-l border-gray-700"
                                 :class="[getCellClass(key, 'local'), hasTagChange(key) ? 'tag-changed-cell' : '']">
                                 <template x-if="localData[key] !== undefined">
                                     {{-- Shows the tag the save will PRODUCE (edit → H,
@@ -809,6 +812,10 @@ document.addEventListener('alpine:init', () => {
         loaded: false,
         error: null,
         saving: false,
+        // Which columns the pin freezes here: the local file is this screen's reference, the
+        // way Main is the merge view's (see js/components/editor-pin.js)
+        pinTagCol: 'localTag',
+        pinValueCol: 'local',
         localData: {},
         onlineData: {},
         onlineMetadata: {},

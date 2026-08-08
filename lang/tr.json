@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "Oyun içinde ayarlar penceresini, sonra Translation Tools'u açın — mod dosyasını gönderir ve karşılaştırma tarayıcınızda açılır.",
     "merge.wide_on": "Çalışma tezgâhı",
     "merge.wide_off": "Çalışma tezgâhından çık",
+    "merge.pin_column": "Bu sütunu sabitle",
+    "merge.unpin_column": "Sütunu serbest bırak",
     "progress.game_coverage": "oyunun %:percent'i",
     "progress.game_coverage_hint": "Bu çevirinin oyunun ne kadarına ulaştığı; aynı oyunun en ileri çevirisiyle karşılaştırılır, hangi dilde olursa olsun.",
     "progress.capture_only": "Sadece yakalama",

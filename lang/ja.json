@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "ゲーム内で設定画面を開き、Translation Tools へ。MOD が自分のファイルを送り、比較がブラウザーで開きます。",
     "merge.wide_on": "作業台",
     "merge.wide_off": "作業台を閉じる",
+    "merge.pin_column": "この列を固定",
+    "merge.unpin_column": "列の固定を解除",
     "progress.game_coverage": "ゲームの :percent %",
     "progress.game_coverage_hint": "この翻訳がゲームのどこまで届いているか。同じゲームで最も先まで進んだ翻訳を基準にしています（言語は問いません）。",
     "progress.capture_only": "キャプチャのみ",

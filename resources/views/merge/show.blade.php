@@ -407,7 +407,7 @@
                      own words, which reads as a rendering fault and made the column useless for
                      the one thing it is for, reading and copying the source line. --}}
                 <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                   :class="showLineBreaks && 'show-linebreaks'">
+                   :class="[showLineBreaks && 'show-linebreaks', pinMain && 'pin-main']">
                     <thead class="bg-gray-900 sticky top-0 z-20">
                         <tr>
                             {{-- Capture-order index (toggleable, sortable) --}}
@@ -440,7 +440,10 @@
                                 </div>
                                 <x-editor.col-resize col="key" />
                             </th>
-                            <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                            {{-- data-col on the tag column too: the pin freezes the pair, since a
+                                 value without its tag says only half of what the row holds. --}}
+                            <th data-col="mainTag"
+                                class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
                                 @click="toggleSort('mainTag')">
                                 <div class="flex items-center justify-center gap-1">
                                     <span class="text-green-400 font-medium text-xs">Tag</span>
@@ -454,6 +457,7 @@
                                     <span class="text-green-400 font-medium">Main</span>
                                     <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
                                     <i class="fas" :class="getSortIcon('mainValue')"></i>
+                                    <x-editor.pin-toggle />
                                 </div>
                                 <x-editor.col-resize col="main" />
                             </th>
@@ -501,7 +505,7 @@
                                 </td>
 
                                 {{-- Main Tag (clickable for tag change) --}}
-                                <td class="px-2 py-2 text-center border-l border-gray-700"
+                                <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"
                                     :class="[hasTagChange(key) ? 'tag-changed-cell' : '', isDeleted(key) ? 'deleted-cell' : '']">
                                     <template x-if="mainData[key] !== undefined">
                                         {{-- Shows the tag the save will PRODUCE (edit → H,

@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "In game, open the settings panel, then Translation Tools — the mod sends its file and the comparison opens in your browser.",
     "merge.wide_on": "Workbench",
     "merge.wide_off": "Leave the workbench",
+    "merge.pin_column": "Pin this column",
+    "merge.unpin_column": "Unpin this column",
     "progress.game_coverage": ":percent% of the game",
     "progress.game_coverage_hint": "Share of the game this translation reaches, measured against the furthest translation of the same game — whatever language it is in.",
     "progress.capture_only": "Capture only",

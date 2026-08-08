@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "במשחק, פתחו את חלון ההגדרות ואז Translation Tools — המוד שולח את הקובץ שלו וההשוואה נפתחת בדפדפן.",
     "merge.wide_on": "שולחן עבודה",
     "merge.wide_off": "לצאת משולחן העבודה",
+    "merge.pin_column": "נעיצת עמודה זו",
+    "merge.unpin_column": "ביטול הנעיצה",
     "progress.game_coverage": ":percent% מהמשחק",
     "progress.game_coverage_hint": "החלק מהמשחק שהתרגום הזה מגיע אליו, ביחס לתרגום שהגיע הכי רחוק באותו משחק, בכל שפה שהיא.",
     "progress.capture_only": "לכידה בלבד",

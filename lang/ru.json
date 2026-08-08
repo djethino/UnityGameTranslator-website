@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "В игре откройте панель настроек, затем Translation Tools — мод отправит свой файл, и сравнение откроется в браузере.",
     "merge.wide_on": "Рабочий стол",
     "merge.wide_off": "Выйти из рабочего стола",
+    "merge.pin_column": "Закрепить столбец",
+    "merge.unpin_column": "Открепить столбец",
     "progress.game_coverage": ":percent % игры",
     "progress.game_coverage_hint": "Доля игры, которую охватывает этот перевод, в сравнении с самым продвинутым переводом той же игры, на любом языке.",
     "progress.capture_only": "Только захват",

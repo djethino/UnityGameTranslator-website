@@ -968,6 +968,8 @@
     "dashboard.compare_in_mod_how": "在游戏里打开设置面板，再进 Translation Tools——模组会把它的文件送过去，比较页面就在你的浏览器里打开。",
     "merge.wide_on": "工作台",
     "merge.wide_off": "离开工作台",
+    "merge.pin_column": "固定此列",
+    "merge.unpin_column": "取消固定",
     "progress.game_coverage": "游戏的 :percent%",
     "progress.game_coverage_hint": "这份翻译覆盖了游戏的多少，以同一款游戏中走得最远的翻译为基准，不论其语言。",
     "progress.capture_only": "仅捕获",
