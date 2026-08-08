@@ -83,6 +83,8 @@
     "games.sort.updated": "อัปเดตล่าสุด",
     "games.sort.new": "เพิ่มล่าสุด",
     "games.sort.translations": "มีคำแปลมากที่สุด",
+    "games.sort.finished": "เสร็จล่าสุด",
+    "games.filter.completed": "เฉพาะที่เสร็จ",
     "games.sort.language_first": ":language ก่อน",
     "games.sort.quality": "คะแนนคุณภาพ",
     "games.sort.votes": "โหวตสูงสุด",

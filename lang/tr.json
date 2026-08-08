@@ -83,6 +83,8 @@
     "games.sort.updated": "Son güncellenenler",
     "games.sort.new": "Son eklenenler",
     "games.sort.translations": "En çok çeviri",
+    "games.sort.finished": "Yeni tamamlananlar",
+    "games.filter.completed": "Yalnızca tamamlananlar",
     "games.sort.language_first": "Önce :language",
     "games.sort.quality": "Kalite Puanı",
     "games.sort.votes": "En çok oylanan",

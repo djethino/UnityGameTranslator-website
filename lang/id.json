@@ -83,6 +83,8 @@
     "games.sort.updated": "Baru diperbarui",
     "games.sort.new": "Baru ditambahkan",
     "games.sort.translations": "Terjemahan terbanyak",
+    "games.sort.finished": "Baru selesai",
+    "games.filter.completed": "Hanya yang selesai",
     "games.sort.language_first": ":language lebih dulu",
     "games.sort.quality": "Skor Kualitas",
     "games.sort.votes": "Vote Tertinggi",

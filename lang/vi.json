@@ -83,6 +83,8 @@
     "games.sort.updated": "Mới cập nhật",
     "games.sort.new": "Mới thêm",
     "games.sort.translations": "Nhiều bản dịch nhất",
+    "games.sort.finished": "Vừa hoàn tất",
+    "games.filter.completed": "Chỉ đã hoàn tất",
     "games.sort.language_first": ":language trước",
     "games.sort.quality": "Điểm chất lượng",
     "games.sort.votes": "Được bình chọn nhiều nhất",

@@ -8,15 +8,6 @@ use App\Models\User;
 
 class HomeController extends Controller
 {
-    /**
-     * Below this net vote count, a translation stops being counted as finished.
-     *
-     * Strictly below zero, not "few votes": silence is not disagreement, and a translation
-     * nobody has voted on has to keep the benefit of the doubt. It takes people actively saying
-     * no — more of them than say yes — for the claim to be set aside.
-     */
-    private const COMPLETE_VOTE_FLOOR = -1;
-
     public function index()
     {
         // What the project holds so far.
@@ -32,15 +23,9 @@ class HomeController extends Controller
         $published = fn () => Translation::query()->where('visibility', 'public')->withTranslatedLines();
 
         $translations = $published()->count();
-        $completed = $published()
-            ->where('status', 'complete')
-            // Declared by its author, so the claim needs a way of being taken back. Two things
-            // take it back: the community disagreeing loudly enough (a net vote below the floor)
-            // and a report waiting for a moderator. Neither deletes anything — the translation
-            // stays where it is, it simply stops being counted as finished while in doubt.
-            ->where('vote_count', '>', self::COMPLETE_VOTE_FLOOR)
-            ->whereDoesntHave('reports', fn ($query) => $query->where('status', 'pending'))
-            ->count();
+        // What "finished" means, and when the claim is suspended, lives on the model:
+        // Translation::scopeFinished
+        $completed = $published()->finished()->count();
 
         $stats = [
             'games' => Game::whereHas('translations', fn ($query) => $query
@@ -64,9 +49,7 @@ class HomeController extends Controller
         $finished = Translation::with(['game', 'user'])
             ->where('visibility', 'public')
             ->withTranslatedLines()
-            ->where('status', 'complete')
-            ->where('vote_count', '>', self::COMPLETE_VOTE_FLOOR)
-            ->whereDoesntHave('reports', fn ($query) => $query->where('status', 'pending'))
+            ->finished()
             // When it was last actually worked on, not when it was first published: a translation
             // declared finished years ago and touched last week is the more recent piece of news.
             // Never updated_at, which a vote or a download moves.

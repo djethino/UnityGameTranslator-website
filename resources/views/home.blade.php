@@ -418,8 +418,10 @@
          counters above promise it. Three cards each: a front page is a doorway, and the catalogue
          sorts the same two ways for whoever wants the rest. --}}
     @foreach([
-        ['finished', $finished, 'home.finished_translations', 'fa-circle-check', ['sort' => 'updated'], true],
-        ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock', ['sort' => 'new'], false],
+        // The finished list continues in the catalogue filtered the same way — same set, same
+        // order. The latest list has no such destination: see GameController::index.
+        ['finished', $finished, 'home.finished_translations', 'fa-circle-check', ['completed' => 1, 'sort' => 'finished'], true],
+        ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock', null, false],
     ] as [$slug, $list, $heading, $icon, $params, $byContentDate])
         @if($list->count() > 0)
         <div class="mb-12">
@@ -428,9 +430,11 @@
                     <i class="fas {{ $icon }} text-purple-400 mr-2"></i>
                     {{ __($heading) }}
                 </h2>
-                <a href="{{ route('games.index', $params) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
-                    {{ __('home.see_more') }} <i class="fas fa-arrow-right text-xs ml-1"></i>
-                </a>
+                @if($params)
+                    <a href="{{ route('games.index', $params) }}" class="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap">
+                        {{ __('home.see_more') }} <i class="fas fa-arrow-right text-xs ml-1"></i>
+                    </a>
+                @endif
             </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($list as $translation)

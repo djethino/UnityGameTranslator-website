@@ -83,6 +83,8 @@
     "games.sort.updated": "हाल ही में अपडेट",
     "games.sort.new": "हाल ही में जोड़े गए",
     "games.sort.translations": "सबसे ज़्यादा अनुवाद",
+    "games.sort.finished": "हाल ही में पूर्ण",
+    "games.filter.completed": "केवल पूर्ण",
     "games.sort.language_first": "पहले :language",
     "games.sort.quality": "क्वालिटी स्कोर",
     "games.sort.votes": "टॉप वोटेड",

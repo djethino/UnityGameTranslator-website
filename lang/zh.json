@@ -83,6 +83,8 @@
     "games.sort.updated": "最近更新",
     "games.sort.new": "最近添加",
     "games.sort.translations": "翻译最多",
+    "games.sort.finished": "最近完成",
+    "games.filter.completed": "仅已完成",
     "games.sort.language_first": "优先显示 :language",
     "games.sort.quality": "质量评分",
     "games.sort.votes": "最高评分",

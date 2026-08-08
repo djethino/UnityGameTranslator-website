@@ -49,8 +49,11 @@
         class="bg-gray-800 rounded-lg p-4 mb-6 flex flex-wrap items-center gap-3"
         data-auto-submit>
 
-        {{-- The button submits THIS field and nothing else, so it sits against it --}}
-        <div class="flex min-w-[16rem] flex-1">
+        {{-- The button submits THIS field and nothing else, so it sits against it.
+             min-w-48 and not 64: at sixteen rem the field refused to give way and pushed the sort
+             group onto a second row, then grew to fill the gap it had just made. Twelve rem still
+             holds a game name, and the whole bar fits on one line. --}}
+        <div class="flex min-w-[12rem] flex-1">
             <input type="text" name="q" value="{{ request('q') }}"
                 placeholder="{{ __('games.game_name_placeholder') }}"
                 aria-label="{{ __('games.search_game') }}"
@@ -78,6 +81,17 @@
             @endforeach
         </select>
 
+        {{-- Games somebody has declared finished: "what can I play all the way through". A filter
+             and not a sort, because it answers yes or no. --}}
+        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer whitespace-nowrap">
+            {{-- An unchecked box sends nothing at all, so without this the filter could be
+                 turned on but never off --}}
+            <input type="hidden" name="completed" value="0">
+            <input type="checkbox" name="completed" value="1" {{ $completedOnly ? 'checked' : '' }}
+                class="rounded bg-gray-700 border-gray-600 text-purple-600">
+            <span>{{ __('games.filter.completed') }}</span>
+        </label>
+
         {{-- What follows only reorders — the border says so without a heading --}}
         <div class="flex flex-wrap items-center gap-3 md:border-l md:border-gray-700 md:pl-3">
             <select name="sort" aria-label="{{ __('games.sort_by') }}"
@@ -87,6 +101,7 @@
                 <option value="updated" {{ $sort === 'updated' ? 'selected' : '' }}>{{ __('games.sort.updated') }}</option>
                 <option value="new" {{ $sort === 'new' ? 'selected' : '' }}>{{ __('games.sort.new') }}</option>
                 <option value="translations" {{ $sort === 'translations' ? 'selected' : '' }}>{{ __('games.sort.translations') }}</option>
+                <option value="finished" {{ $sort === 'finished' ? 'selected' : '' }}>{{ __('games.sort.finished') }}</option>
             </select>
 
             @if($highlightLanguage)

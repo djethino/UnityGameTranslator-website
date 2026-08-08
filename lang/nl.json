@@ -83,6 +83,8 @@
     "games.sort.updated": "Onlangs bijgewerkt",
     "games.sort.new": "Onlangs toegevoegd",
     "games.sort.translations": "Meeste vertalingen",
+    "games.sort.finished": "Onlangs afgerond",
+    "games.filter.completed": "Alleen afgerond",
     "games.sort.language_first": ":language eerst",
     "games.sort.quality": "Kwaliteitsscore",
     "games.sort.votes": "Meeste stemmen",

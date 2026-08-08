@@ -83,6 +83,8 @@
     "games.sort.updated": "עודכנו לאחרונה",
     "games.sort.new": "נוספו לאחרונה",
     "games.sort.translations": "הכי הרבה תרגומים",
+    "games.sort.finished": "הושלמו לאחרונה",
+    "games.filter.completed": "הושלמו בלבד",
     "games.sort.language_first": "קודם :language",
     "games.sort.quality": "ציון איכות",
     "games.sort.votes": "הכי מדורג",

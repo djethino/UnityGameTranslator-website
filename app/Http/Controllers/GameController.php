@@ -47,6 +47,14 @@ class GameController extends Controller
             });
         }
 
+        // Games somebody has declared finished. What "finished" means, and when the claim is
+        // suspended, lives on the model — see Translation::scopeFinished.
+        $completedOnly = $request->boolean('completed');
+        if ($completedOnly) {
+            $query->whereHas('translations', fn ($q) => $q
+                ->where('visibility', 'public')->withTranslatedLines()->finished());
+        }
+
         // The language the visitor is most likely looking for: the one they filtered on, or
         // failing that the one they are reading the site in.
         $highlightLanguage = $request->filled('target')
@@ -79,6 +87,19 @@ class GameController extends Controller
                 ['translations as last_content_update' => fn ($q) => $q->where('visibility', 'public')],
                 'content_updated_at'
             )->orderByDesc('last_content_update'),
+            // Where the front page's finished list continues. Without it, "see more" under a
+            // list of recently FINISHED translations landed on games sorted by their own creation
+            // date, and the reader had to work out they were looking at something else.
+            //
+            // No twin for "latest translations": ordering games by their newest translation says
+            // almost exactly what "recently updated" already says, and a second near-identical
+            // entry in a dropdown informs nobody. That list simply has no "see more" — a filter
+            // invented to justify a link is the tail wagging the dog.
+            'finished' => $query->withMax(
+                ['translations as last_finished' => fn ($q) => $q
+                    ->where('visibility', 'public')->withTranslatedLines()->finished()],
+                'content_updated_at'
+            )->orderByDesc('last_finished'),
             default => null,
         };
 
@@ -117,7 +138,8 @@ class GameController extends Controller
             'languagesByGame',
             'highlightLanguage',
             'languageFirst',
-            'sort'
+            'sort',
+            'completedOnly'
         ));
     }
 

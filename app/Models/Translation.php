@@ -798,6 +798,35 @@ class Translation extends Model
         return $query->whereRaw('(human_count + validated_count + skipped_count + ai_count) > 0');
     }
 
+    /**
+     * Below this net vote count, a translation stops being counted as finished.
+     *
+     * Strictly below zero, not "few votes": silence is not disagreement, and a translation nobody
+     * has voted on keeps the benefit of the doubt. It takes people actively saying no — more of
+     * them than say yes — for the claim to be set aside.
+     */
+    public const COMPLETE_VOTE_FLOOR = -1;
+
+    /**
+     * Translations that count as finished.
+     *
+     * "Finished" is DECLARED by the author, so the claim needs a way of being taken back without
+     * a moderator having to act on every case. Two things take it back: the community disagreeing
+     * loudly enough, and a report waiting to be looked at. Neither deletes or hides anything —
+     * the translation stays exactly where it is, it simply stops being counted and shown AS
+     * finished while it is in doubt. An accusation is not a verdict.
+     *
+     * One definition, because it is asked in at least two places — the front page counts them and
+     * leads with them, the catalogue filters on them — and two copies would part ways the day the
+     * floor moves.
+     */
+    public function scopeFinished($query)
+    {
+        return $query->where('status', 'complete')
+            ->where('vote_count', '>', self::COMPLETE_VOTE_FLOOR)
+            ->whereDoesntHave('reports', fn ($reports) => $reports->where('status', 'pending'));
+    }
+
     public function scopeBranches($query)
     {
         return $query->where('visibility', 'branch');

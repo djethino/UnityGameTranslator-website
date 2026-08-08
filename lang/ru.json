@@ -83,6 +83,8 @@
     "games.sort.updated": "Недавно обновлённые",
     "games.sort.new": "Недавно добавленные",
     "games.sort.translations": "Больше всего переводов",
+    "games.sort.finished": "Недавно завершённые",
+    "games.filter.completed": "Только завершённые",
     "games.sort.language_first": "Сначала :language",
     "games.sort.quality": "Оценка качества",
     "games.sort.votes": "По рейтингу",

@@ -83,6 +83,8 @@
     "games.sort.updated": "Recently updated",
     "games.sort.new": "Recently added",
     "games.sort.translations": "Most translations",
+    "games.sort.finished": "Recently finished",
+    "games.filter.completed": "Finished only",
     "games.sort.language_first": ":language first",
     "games.sort.quality": "Quality Score",
     "games.sort.votes": "Top Voted",

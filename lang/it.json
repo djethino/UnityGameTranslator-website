@@ -83,6 +83,8 @@
     "games.sort.updated": "Aggiornati di recente",
     "games.sort.new": "Aggiunti di recente",
     "games.sort.translations": "Più traduzioni",
+    "games.sort.finished": "Completate di recente",
+    "games.filter.completed": "Solo completate",
     "games.sort.language_first": ":language per primo",
     "games.sort.quality": "Punteggio Qualità",
     "games.sort.votes": "Più votati",

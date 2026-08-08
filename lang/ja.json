@@ -83,6 +83,8 @@
     "games.sort.updated": "最近更新された順",
     "games.sort.new": "最近追加された順",
     "games.sort.translations": "翻訳数が多い順",
+    "games.sort.finished": "最近完成した順",
+    "games.filter.completed": "完成済みのみ",
     "games.sort.language_first": ":language を先頭に",
     "games.sort.quality": "品質スコア",
     "games.sort.votes": "高評価順",

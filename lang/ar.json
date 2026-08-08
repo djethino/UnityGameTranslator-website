@@ -83,6 +83,8 @@
     "games.sort.updated": "المحدَّثة حديثًا",
     "games.sort.new": "المضافة حديثًا",
     "games.sort.translations": "الأكثر ترجمات",
+    "games.sort.finished": "اكتملت حديثًا",
+    "games.filter.completed": "المكتملة فقط",
     "games.sort.language_first": ":language أولًا",
     "games.sort.quality": "درجة الجودة",
     "games.sort.votes": "الأكثر تصويتاً",
