@@ -390,7 +390,11 @@
         {{-- Footer with Save button. min-w-0 on the text + shrink-0 on the
              buttons: the instructions wrap instead of squeezing the save button.
              ↑↓ shortcuts float at both ends of the bar --}}
-        <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4 z-40">
+        {{-- Sticky wrapper: the mirrored scrollbar has to ride WITH the bar, so both live in
+             the same sticky block rather than the bar being sticky on its own. --}}
+        <div class="sticky bottom-4 z-40">
+        <x-editor.h-scrollbar />
+        <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
         <div class="flex flex-wrap gap-4 justify-between items-center">
             <div class="flex flex-col gap-1 shrink-0">
                 <button type="button" @click="scrollToTop()"
@@ -459,6 +463,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
 
         {{-- Link state, inside the sticky bar rather than up in the header:

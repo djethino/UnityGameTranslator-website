@@ -48,6 +48,19 @@
  * template's own indentation as visible whitespace. */
 .show-linebreaks .editor-text { white-space: pre-wrap; }
 
+/* The mirrored horizontal scrollbar (see js/components/editor-hscroll.js).
+ *
+ * Its own styling because it IS the interface — the element has no content,
+ * only a spacer, so a scrollbar left to the platform's default width would be
+ * a grey sliver on a dark bar, or on some platforms nothing at all until the
+ * pointer moves. Scoped to this class: the rest of the site keeps its native
+ * scrollbars. */
+.editor-hscroll { scrollbar-width: thin; scrollbar-color: rgb(107 114 128) rgb(17 24 39); }
+.editor-hscroll::-webkit-scrollbar { height: 10px; }
+.editor-hscroll::-webkit-scrollbar-track { background: rgb(17 24 39); border-radius: 9999px; }
+.editor-hscroll::-webkit-scrollbar-thumb { background: rgb(75 85 99); border-radius: 9999px; }
+.editor-hscroll::-webkit-scrollbar-thumb:hover { background: rgb(139 92 246); }
+
 .selected-local, .selected-main { background-color: rgba(20, 83, 45, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(34 197 94); }
 .selected-online, .selected-branch { background-color: rgba(30, 58, 138, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(59 130 246); }
 .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }

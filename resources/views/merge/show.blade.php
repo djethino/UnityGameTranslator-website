@@ -398,7 +398,8 @@
                  A guessed height was the mistake here before: the box was capped at "100vh minus
                  14rem" while the chrome above it runs to some four hundred pixels, so it hung below
                  the fold and took its horizontal scrollbar with it. --}}
-            <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
+            <div x-ref="gridBox"
+                 class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
                  :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
                 {{-- border-separate, and it is not cosmetic: with the default collapsed borders,
                      a browser does not paint the background of a sticky cell — only its text. The
@@ -608,6 +609,10 @@
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
                 <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
                 <input type="hidden" id="settingsJson" name="settings_json" value="">
+
+                {{-- The grid's sideways scroll, brought within reach: the real bar is at the
+                     bottom of six thousand rows, this one rides with the save bar. --}}
+                <x-editor.h-scrollbar />
 
                 {{-- min-w-0 on the text + shrink-0 on the buttons: the
                      instructions wrap instead of squeezing the save button --}}

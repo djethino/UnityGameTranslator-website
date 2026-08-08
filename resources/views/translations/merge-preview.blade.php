@@ -359,7 +359,8 @@
         {{-- Table. An ordinary block that the page scrolls, until the workbench tears it out and
              hands it the window — then the scrollbars belong to the box and sit at the edges of
              the screen, where they can be reached without leaving the line being read. --}}
-        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
+        <div x-ref="gridBox"
+             class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
              :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 mb-0 rounded-none border-0 overflow-auto'">
             {{-- border-separate, and it is not cosmetic: with the default collapsed borders, a
                  browser does not paint the background of a sticky cell — only its text, so the
@@ -565,7 +566,11 @@
         {{-- z-40, and it is not decoration: a sticky cell creates its own stacking context and
              paints above ordinary content, so without it the frozen key column slid over the save
              bar and hid the button. --}}
-        <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 sticky bottom-4 z-40">
+        {{-- Sticky wrapper: the mirrored scrollbar has to ride WITH the bar, so both live in
+             the same sticky block rather than the bar being sticky on its own. --}}
+        <div class="sticky bottom-4 z-40">
+        <x-editor.h-scrollbar />
+        <div class="flex flex-wrap gap-4 justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700">
             <div class="flex flex-col gap-1 shrink-0">
                 <button type="button" @click="scrollToTop()"
                     class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
@@ -626,6 +631,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
 
         {{-- Hidden form for saving to server --}}

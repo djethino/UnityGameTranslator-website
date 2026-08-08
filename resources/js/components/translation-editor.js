@@ -20,6 +20,7 @@
 import { editorWorkbench } from './editor-workbench.js';
 import { editorColumns } from './editor-columns.js';
 import { editorTextMode } from './editor-text-mode.js';
+import { editorHScroll } from './editor-hscroll.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -78,6 +79,8 @@ export function editorCore(config) {
         ...editorColumns(),
         // ── Flowing text or line breaks (see editor-text-mode.js) ─────────
         ...editorTextMode(),
+        // ── Reachable horizontal scrollbar (see editor-hscroll.js) ────────
+        ...editorHScroll(),
 
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
@@ -160,6 +163,7 @@ export function editorCore(config) {
             this.initTextMode();
             this.restoreUiState();
             this.initEditorColumns();
+            this.initHScroll();
             this.restorePendingState();
             try {
                 const storedIndexPref = localStorage.getItem('ugt_editor_show_index');
