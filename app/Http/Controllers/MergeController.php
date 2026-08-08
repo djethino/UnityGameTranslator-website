@@ -72,7 +72,13 @@ class MergeController extends Controller
                 return !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash;
             })->pluck('id')->toArray();
 
-            $selectedIds = $request->input('branches', $defaultIds);
+            // "None" has to be distinguishable from "has not chosen yet", and an absent
+            // parameter says both. Unticking every box therefore submitted nothing, fell back on
+            // the default, and handed back the whole selection — the one button that could not
+            // do what it said. The form states that a choice was made; the choice itself may be
+            // empty.
+            $hasChosen = $request->boolean('branches_chosen');
+            $selectedIds = $hasChosen ? $request->input('branches', []) : $request->input('branches', $defaultIds);
             if (is_string($selectedIds)) {
                 $selectedIds = explode(',', $selectedIds);
             }

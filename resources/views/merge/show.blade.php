@@ -12,8 +12,11 @@
     // Navigation state is now limited to what the SERVER needs to rebuild the
     // page: mode and selected branches. Filters/search/sort/windowing are
     // client-side (shared translation-editor core) and persist on their own.
+    // branches_chosen travels with the selection: without it, "none" is indistinguishable from
+    // "never chose", and switching mode or reloading would hand the default selection back.
     $stateParams = array_merge(
         ['mode' => $mode],
+        request()->boolean('branches_chosen') ? ['branches_chosen' => 1] : [],
         $selectedBranches->isNotEmpty() ? ['branches' => $selectedBranches->pluck('id')->all()] : []
     );
     $dataUrl = route('translations.merge.data', ['uuid' => $uuid]) . '?' . http_build_query($stateParams);
@@ -71,6 +74,8 @@
         <div class="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
             <form method="GET" id="branchForm" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="mode" value="{{ $mode }}">
+                {{-- Submitting this form IS the choice, even when it selects nothing --}}
+                <input type="hidden" name="branches_chosen" value="1">
                 <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
 
                 {{-- Quick filters --}}
@@ -585,20 +590,26 @@
                         </template>
 
                         <tr x-show="filteredKeys.length === 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length" class="px-4 py-12 text-center text-gray-500">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-12 text-center text-gray-500">
+                            {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
+                            <div class="grid-visible-center">
                                 <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
                                 <p>{{ __('merge.no_keys_found') }}</p>
-                            </td>
+                            </div>
+                        </td>
                         </tr>
 
                         <tr x-show="hiddenCount > 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length" class="px-4 py-3 text-center">
+                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-3 text-center">
+                            {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
+                            <div class="grid-visible-center">
                                 <button type="button" @click="showMore()"
                                     class="text-purple-400 hover:text-purple-300 text-sm transition">
                                     <i class="fas fa-chevron-down mr-1"></i>
                                     {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
                                 </button>
-                            </td>
+                            </div>
+                        </td>
                         </tr>
                     </tbody>
                 </table>

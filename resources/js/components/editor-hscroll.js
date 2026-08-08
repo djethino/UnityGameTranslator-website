@@ -44,6 +44,14 @@ export function editorHScroll() {
             // show a mirror with nothing to scroll
             this.hasHScroll = scrollWidth > box.clientWidth + 1;
             this.hProxyStyle = 'width: ' + scrollWidth + 'px';
+
+            // How wide the VISIBLE part of the grid is, published for anything that has to stay
+            // where the eye is rather than where the table is: a full-width row's content is
+            // centred on the whole table, so "show more" and "nothing found" drifted off screen
+            // as soon as you scrolled sideways. Set here because this is where the box is already
+            // being measured, on every change that could move it.
+            box.style.setProperty('--grid-view-width', box.clientWidth + 'px');
+
             this.updateHRealBar();
         },
 

@@ -187,20 +187,26 @@
                     </template>
 
                     <tr x-show="isEmptyResult" x-cloak>
-                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-12 text-center text-gray-500">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="py-12 text-center text-gray-500">
+                            {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
+                            <div class="grid-visible-center">
                             <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
                             <p>{{ __('merge.no_keys_found') }}</p>
+                            </div>
                         </td>
                     </tr>
 
                     {{-- "Show more", not pages: the same gesture as every editor --}}
                     <tr x-show="hiddenCount > 0" x-cloak>
-                        <td :colspan="showIndexColumn ? 4 : 3" class="px-4 py-3 text-center">
+                        <td :colspan="showIndexColumn ? 4 : 3" class="py-3 text-center">
+                            {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
+                            <div class="grid-visible-center">
                             <button type="button" @click="showMore()"
                                 class="text-purple-400 hover:text-purple-300 text-sm transition">
                                 <i class="fas fa-chevron-down mr-1"></i>
                                 {{ __('merge_preview.show_more') }} (<span x-text="hiddenCount"></span>)
                             </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

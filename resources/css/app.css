@@ -40,6 +40,23 @@
  * <td> of three templates. */
 .editor-grid tbody td { border-top: 1px solid rgb(55 65 81); }
 
+/* Content of a full-width row that must stay where the EYE is.
+ *
+ * A row spanning every column is as wide as the table, so its centred content
+ * is centred on the table — six thousand pixels of it. Scroll sideways and
+ * "show more" is nowhere near the screen, which reads as the button having
+ * disappeared. Stuck to the left of the scroll box and made exactly as wide as
+ * what is on screen (the variable is measured in editor-hscroll.js), so its
+ * centre and the screen's centre are the same point.
+ *
+ * The fallback matters: before the first measurement, and on any screen that
+ * never scrolls, 100% is simply the old behaviour. */
+.editor-grid .grid-visible-center {
+    position: sticky;
+    left: 0;
+    width: var(--grid-view-width, 100%);
+}
+
 /* Show a line the way the game shows it (see js/components/editor-text-mode.js).
  *
  * Only on `.editor-text`, the elements whose whole content is written by the
@@ -72,12 +89,34 @@
 
 /* The edge of the frozen block moves with it: the key column stops being the
  * last frozen thing, so the shadow that says "content passes behind here"
- * belongs on the reference column instead. */
+ * belongs on the reference column instead.
+ *
+ * A box-shadow, and it has to be: an element sticking out to the right — which
+ * a pseudo-element drawing the same strip was — ENLARGES the scrollable area.
+ * On a grid with no branches, where nothing overflows, it invented eight pixels
+ * of horizontal scroll out of thin air, and scrolling that far opened a gap
+ * between the frozen columns. A shadow never takes part in layout.
+ *
+ * Which means sharing box-shadow with the selection rings, so the cells that
+ * carry one declare both. Without that, pinning the Main made the green ring on
+ * a chosen line vanish, leaving the tint alone to say it had been picked. */
 .editor-grid.pin-main [data-col="key"] { box-shadow: none; border-right-color: rgb(55 65 81); }
 .editor-grid.pin-main [data-col="main"],
 .editor-grid.pin-main [data-col="local"] {
     border-right: 1px solid rgb(55 65 81);
     box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.6);
+}
+.editor-grid.pin-main [data-col="main"].selected-main,
+.editor-grid.pin-main [data-col="local"].selected-local {
+    box-shadow: inset 0 0 0 2px rgb(34 197 94), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
+}
+.editor-grid.pin-main [data-col="main"].selected-manual,
+.editor-grid.pin-main [data-col="local"].selected-manual {
+    box-shadow: inset 0 0 0 2px rgb(168 85 247), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
+}
+.editor-grid.pin-main [data-col="main"].deleted-cell,
+.editor-grid.pin-main [data-col="local"].deleted-cell {
+    box-shadow: inset 0 0 0 2px rgb(239 68 68), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
 }
 
 /* Selection tints are 50% alpha because they were designed to sit ON a row.
@@ -95,24 +134,6 @@
 .editor-grid.pin-main tbody [data-col="localTag"].deleted-cell { background-color: rgb(79 35 42) !important; }
 .editor-grid.pin-main tbody [data-col="mainTag"].tag-changed-cell,
 .editor-grid.pin-main tbody [data-col="localTag"].tag-changed-cell { background-color: rgb(48 37 79) !important; }
-
-/* The current-row outline crosses the pinned block too, for the same reason it
- * had to be continued on the key column: these cells paint above their row.
- *
- * Not on a cell that already draws its own ring — a selection or a deletion
- * says more than the cursor does, and overriding it would take that away.
- * Scoped to the pinned state, because unpinned these cells cover nothing. */
-.editor-grid.pin-main .current-match-row > td[data-col="mainTag"]:not(.deleted-cell):not(.tag-changed-cell),
-.editor-grid.pin-main .current-match-row > td[data-col="localTag"]:not(.deleted-cell):not(.tag-changed-cell),
-.editor-grid.pin-main .current-match-row > td[data-col="main"]:not(.deleted-cell):not([class*="selected-"]),
-.editor-grid.pin-main .current-match-row > td[data-col="local"]:not(.deleted-cell):not([class*="selected-"]) {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6);
-}
-/* …and the key column keeps the outline WITHOUT the drop shadow, which has
- * moved to the right edge of the block it now sits inside. */
-.editor-grid.pin-main .current-match-row > td.sticky[data-col="key"] {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6);
-}
 
 /* The mirrored horizontal scrollbar (see js/components/editor-hscroll.js).
  *
@@ -138,35 +159,31 @@
  * columns underneath use anything from gray-100 to gray-500, so inheriting
  * the text color made dim text (keys) unreadable inside the mark. */
 .search-mark { background-color: rgb(250 204 21); color: rgb(17 24 39); border-radius: 0.125rem; padding: 0 0.0625rem; }
-.current-match-row { box-shadow: inset 0 0 0 2px rgba(250, 204, 21, 0.6); }
+/* The row the cursor points at.
+ *
+ * An OVERLAY, not a box-shadow, and that is the whole point. Drawn on the row it
+ * was covered twice over: any cell with a background of its own — a selection, a
+ * deletion, a pending tag change — painted over it, and so did every frozen
+ * column, each being a stacking context in its own right. The frame came out in
+ * pieces, which reads as a rendering fault rather than as "you are on this line".
+ *
+ * A positioned pseudo-element sits above every cell whatever they paint, so the
+ * frame is continuous over a selection and over the pinned block alike. ABOVE,
+ * deliberately: a selection ring says what will be SAVED and goes on saying it
+ * through its tint; the cursor says where you are right now, and a cursor you
+ * have to guess at is not one. It is a mark, never a target — hence no pointer
+ * events, so the click still reaches the cell underneath. */
+.current-match-row { position: relative; }
+.current-match-row::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(250, 204, 21, 0.6);
+    pointer-events: none;
+    /* Above the frozen columns, which sit at 10 in the body and 30 in the header */
+    z-index: 40;
+}
 .current-match-row .search-mark { background-color: rgb(251 146 60); color: rgb(17 24 39); }
-
-/* …and the same outline continued ON the frozen cells.
- *
- * A sticky cell creates its own stacking context and paints above the row it
- * belongs to, so the row-level outline above disappeared behind the frozen
- * index and key columns: the marker started a third of the way across the
- * screen and had no left edge at all.
- *
- * Only the frozen cells, because they are the only ones that cover it — and
- * because they never carry a selection ring (.selected-*, .deleted-cell) that
- * this would override. The leftmost one closes the outline on its left side,
- * and the key column keeps the drop shadow that says content passes behind it. */
-.current-match-row > td.sticky {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6);
-}
-.current-match-row > td.sticky.left-0 {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6),
-                inset 2px 0 0 0 rgba(250, 204, 21, 0.6);
-}
-.current-match-row > td.sticky[data-col="key"] {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6),
-                4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
-.current-match-row > td.sticky.left-0[data-col="key"] {
-    box-shadow: inset 0 2px 0 0 rgba(250, 204, 21, 0.6), inset 0 -2px 0 0 rgba(250, 204, 21, 0.6),
-                inset 2px 0 0 0 rgba(250, 204, 21, 0.6), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
 
 /* Words that differ from the other side of the comparison.
  *
