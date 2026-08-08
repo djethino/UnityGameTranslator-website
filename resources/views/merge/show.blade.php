@@ -552,8 +552,15 @@
                                         :class="[getCellClass(key, 'branch_' + branch.id), branchCellTint(branch, key)]"
                                         @click="select(key, 'branch_' + branch.id)">
                                         <template x-if="branch.content[key] !== undefined">
-                                            <div class="flex items-start gap-2">
-                                                <span :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
+                                            {{-- items-center, to match the Main. Its tag sits in a
+                                                 cell of its own, so the table centres it on the
+                                                 row; a branch tag shares a cell with its value and
+                                                 was pinned to the top of the text instead. On a
+                                                 long entry the two columns disagreed by half a
+                                                 paragraph, and a badge that changes height from
+                                                 one column to the next reads as a fault. --}}
+                                            <div class="flex items-center gap-2">
+                                                <span class="shrink-0" :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
                                                 <span class="break-words editor-text"
                                                     :class="branchTextTint(branch, key)"
                                                     x-safe-html="branchValueHtml(branch, key)"></span>
