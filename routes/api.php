@@ -42,12 +42,17 @@ Route::prefix('v1')->group(function () {
     });
 
     // Check if translation updated (used for ETag-based cache validation)
+    //
+    // auth.api.optional, like search: public translations stay open to anyone, but a branch is
+    // readable by its author and by the Main owner, and without this the token was never resolved
+    // — so $request->user() was always null and EVERY branch answered 403, its author included.
+    // The visibility rule was written and unreachable.
     Route::get('translations/{translation}/check', [TranslationController::class, 'check'])
-        ->middleware('throttle:120,1');
+        ->middleware(['auth.api.optional', 'throttle:120,1']);
 
     // Download translation file
     Route::get('translations/{translation}/download', [TranslationController::class, 'download'])
-        ->middleware('throttle:30,1');
+        ->middleware(['auth.api.optional', 'throttle:30,1']);
 
     // ===========================================
     // DEVICE FLOW AUTHENTICATION (public)

@@ -166,17 +166,13 @@ class TranslationController extends Controller
      */
     public function check(Translation $translation, Request $request): JsonResponse
     {
-        // Visibility check: branches are private to their Main owner (same rule as download)
-        if ($translation->visibility === 'branch') {
-            $main = $translation->getMain();
-            $user = $request->user();
-
-            if (!$user || !$main || $main->user_id !== $user->id) {
-                return response()->json([
-                    'error' => 'Forbidden',
-                    'message' => 'Branch translations are only visible to the Main owner',
-                ], 403);
-            }
+        // Same single definition as download. A contributor who could not even ask whether their
+        // own branch had changed would be told nothing about work they wrote themselves.
+        if (!$translation->isReadableBy($request->user())) {
+            return response()->json([
+                'error' => 'Forbidden',
+                'message' => 'A branch is visible to whoever wrote it, and to the Main owner for merging',
+            ], 403);
         }
 
         // Compute hash if not already stored
@@ -316,18 +312,17 @@ class TranslationController extends Controller
      */
     public function download(Translation $translation, Request $request): mixed
     {
-        // Visibility check: branches are private to their Main owner
-        if ($translation->visibility === 'branch') {
-            $main = $translation->getMain();
-            $user = $request->user();
-
-            // Must be authenticated AND be the Main owner
-            if (!$user || !$main || $main->user_id !== $user->id) {
-                return response()->json([
-                    'error' => 'Forbidden',
-                    'message' => 'Branch translations are only visible to the Main owner',
-                ], 403);
-            }
+        // The one definition of who may read a branch, in the model. This endpoint carried its
+        // own copy, which had fallen behind: it admitted the Main owner alone, so contributors
+        // were locked out of work they had written themselves — reinstall a game or lose the
+        // file, and the only way back was to ask someone else. isReadableBy has always said "its
+        // author, always", and its docblock warns in as many words that a further copy is one
+        // more place to forget. This was that place.
+        if (!$translation->isReadableBy($request->user())) {
+            return response()->json([
+                'error' => 'Forbidden',
+                'message' => 'A branch is visible to whoever wrote it, and to the Main owner for merging',
+            ], 403);
         }
 
         // Compute hash if not stored
