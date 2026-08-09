@@ -235,6 +235,49 @@ class EmptyTranslationGraceTest extends TestCase
         $this->assertSame(0, $contributor->notifications()->count());
     }
 
+    /**
+     * The scheduled command, and the only reason one exists here.
+     *
+     * The STATE is computed on every query — nothing to store, nothing to reconcile. What cannot
+     * happen on its own is the moment: no code runs on the thirtieth day. Two audiences, two
+     * messages, because the author can act and the contributors cannot.
+     */
+    public function test_the_daily_command_tells_the_author_and_the_contributors(): void
+    {
+        $main = $this->makeTranslation();
+        $contributor = User::factory()->create();
+        $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 40,
+            'file_hash' => 'unreviewed-hash',
+        ]);
+
+        $this->artisan('translations:notify-delisted')->assertSuccessful();
+
+        $authorNotification = $main->user->notifications()->first();
+        $this->assertSame('translation_delisted', $authorNotification->data['type']);
+        $this->assertSame(1, $authorNotification->data['waiting_branches'], 'The author needs the count they cannot see.');
+
+        $this->assertSame('main_delisted', $contributor->notifications()->first()->data['type']);
+
+        // Run again the next night: nobody is told the same thing twice.
+        $this->artisan('translations:notify-delisted')->assertSuccessful();
+        $this->assertSame(1, $main->user->notifications()->count());
+        $this->assertSame(1, $contributor->notifications()->count());
+    }
+
+    /** Inside the grace period the command says nothing at all. */
+    public function test_the_daily_command_leaves_a_fresh_translation_alone(): void
+    {
+        $translation = $this->makeTranslation(['created_at' => now()->subDay()]);
+
+        $this->artisan('translations:notify-delisted')->assertSuccessful();
+
+        $this->assertSame(0, $translation->user->notifications()->count());
+    }
+
     /** And the mod is told, so it stops calling itself a branch of nothing. */
     public function test_check_uuid_tells_the_mod_when_the_main_is_gone(): void
     {

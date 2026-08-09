@@ -11,6 +11,12 @@ Artisan::command('inspire', function () {
 // Aggregate analytics daily at 2 AM
 Schedule::command('analytics:aggregate')->dailyAt('02:00');
 
+// Being delisted is computed on every query, so nothing here decides anything: the state is
+// already true the moment the thirtieth day passes. What no code can do on its own is say so —
+// there is no event when a date is crossed — and the banners only reach somebody who came back
+// by themselves. This is the one job that exists purely to create a moment.
+Schedule::command('translations:notify-delisted')->dailyAt('03:00');
+
 // Purge expired temporary sessions and their content files. Both models also
 // clean up opportunistically on creation, but that depends on traffic — the
 // scheduler guarantees expired multi-MB files never linger on the disk.

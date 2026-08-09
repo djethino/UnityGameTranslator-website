@@ -39,6 +39,8 @@
                             <i class="fas fa-code-merge text-green-400"></i>
                         @elseif($type === 'branch_orphaned')
                             <i class="fas fa-unlink text-red-400"></i>
+                        @elseif($type === 'translation_delisted' || $type === 'main_delisted')
+                            <i class="fas fa-eye-slash text-amber-400"></i>
                         @elseif($type === 'announcement')
                             <i class="fas fa-bullhorn text-purple-400"></i>
                         @else
@@ -66,6 +68,21 @@
                                     'game' => $data['game_name'] ?? '?',
                                     'lang' => $data['target_language'] ?? '?',
                                 ]) }}
+                            @elseif($type === 'translation_delisted')
+                                {{ __('notif.translation_delisted', [
+                                    'game' => $data['game_name'] ?? '?',
+                                    'lang' => $data['target_language'] ?? '?',
+                                ]) }}
+                                @if(($data['waiting_branches'] ?? 0) > 0)
+                                    {{ trans_choice('notif.delisted_waiting', $data['waiting_branches'], [
+                                        'count' => $data['waiting_branches'],
+                                    ]) }}
+                                @endif
+                            @elseif($type === 'main_delisted')
+                                {{ __('notif.main_delisted', [
+                                    'game' => $data['game_name'] ?? '?',
+                                    'lang' => $data['target_language'] ?? '?',
+                                ]) }}
                             @elseif($type === 'announcement')
                                 <span class="font-semibold">{{ $data['title'] ?? '' }}</span><br>
                                 <span class="text-gray-300">{{ $data['body'] ?? '' }}</span>
@@ -81,6 +98,10 @@
                                 </a>
                             @elseif($type === 'branch_merged' && !empty($data['game_slug']))
                                 <a href="{{ route('games.show', $data['game_slug']) }}" class="text-purple-400 hover:text-purple-300">
+                                    {{ __('notif.see_translation') }} →
+                                </a>
+                            @elseif($type === 'translation_delisted' && !empty($data['translation_id']))
+                                <a href="{{ route('translations.dashboard', $data['translation_id']) }}" class="text-purple-400 hover:text-purple-300">
                                     {{ __('notif.see_translation') }} →
                                 </a>
                             @elseif($type === 'branch_orphaned' && !empty($data['translation_id']))
