@@ -261,6 +261,11 @@ class TranslationController extends Controller
                 // was anything to be a branch of — and the next upload dutifully stayed one, of a
                 // lineage with no head. Additive field: older mods ignore it and behave as before.
                 'main_missing' => $role === 'branch' ? $publicTranslation === null : null,
+                // Told, came back, took nothing. Distinct from silence, which the mod already
+                // hears about through dormancy. Additive: older mods ignore it.
+                'main_ignoring' => $role === 'branch' ? $ownTranslation->mainIgnoresContributions() : null,
+                // The contributor's apport over time, for their own card in game.
+                'merged_lines_total' => $role === 'branch' ? $ownTranslation->merged_lines_total : null,
                 'translation' => [
                     'id' => $ownTranslation->id,
                     'source_language' => $ownTranslation->source_language,

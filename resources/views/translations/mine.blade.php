@@ -77,6 +77,32 @@
         </div>
     @endif
 
+    {{-- Not silence but indifference: they came back, they worked, they left it aside. The
+         wording says "does not seem to", because we do not know their reasons — and it lists
+         what the contributor can do rather than pushing one of them. --}}
+    @if($ignoredBranches->isNotEmpty())
+        <div class="bg-gray-800 border border-amber-700/50 rounded-lg p-4 mb-6">
+            <p class="text-white font-medium mb-1">
+                <i class="fas fa-inbox mr-2 text-amber-400"></i>{{ __('my_translations.main_ignoring_title') }}
+            </p>
+            <p class="text-sm text-gray-300 mb-2">{{ __('my_translations.main_ignoring') }}</p>
+            <ul class="text-sm text-gray-400 list-disc list-inside">
+                @foreach($ignoredBranches as $t)
+                    <li>
+                        <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+                            {{ $t->game->name }} — {{ $t->target_language }}
+                        </a>
+                        @if($t->merged_lines_total > 0)
+                            <span class="text-gray-500">
+                                ({{ trans_choice('my_translations.merged_lines_total', $t->merged_lines_total, ['count' => number_format($t->merged_lines_total)]) }})
+                            </span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Delisted: nothing is broken, and that is exactly what has to come across. The Main is
          still there and can still take the work in; it is simply invisible to players until its
          author translates a line. --}}

@@ -190,6 +190,62 @@ class DormancyTest extends TestCase
         $this->assertTrue($branch->shouldOfferFork(), 'Silent longer than it was ever worked on.');
     }
 
+    /**
+     * Indifference is not silence, and the two need different answers.
+     *
+     * Dormancy counts days, so an active Main who never merges anything looks exactly like one
+     * who is present and busy. This counts missed occasions instead: they were told, they came
+     * back, they worked, and they left the contributions where they were.
+     *
+     * Nothing new is collected to see it — the notification the site SENT carries the date.
+     */
+    public function test_a_main_who_comes_back_and_takes_nothing_is_told_apart_from_a_silent_one(): void
+    {
+        $main = $this->makeTranslation([
+            'created_at' => now()->subDays(200),
+            'content_updated_at' => now()->subDays(4),
+        ]);
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+        ]);
+
+        // Never told: silence is not indifference.
+        $this->assertFalse($branch->mainIgnoresContributions());
+        $this->assertFalse($branch->isDormant(), 'And they are plainly still active.');
+
+        $main->user->notify(new \App\Notifications\BranchSubmitted($main, $contributor->name));
+        $main->user->notifications()->update(['created_at' => now()->subDays(10)]);
+        $branch->refresh();
+
+        $this->assertTrue($branch->mainIgnoresContributions(), 'Told, came back, took nothing.');
+
+        // Taking something in stops it, whatever else happens.
+        $branch->forceFill(['merged_at' => now()->subDay(), 'merged_lines_total' => 12])->save();
+        $this->assertFalse($branch->refresh()->mainIgnoresContributions());
+    }
+
+    /** Told, but not back since: that is dormancy's business, not this one's. */
+    public function test_a_main_who_has_not_returned_since_being_told_is_not_ignoring_anyone(): void
+    {
+        $main = $this->makeTranslation([
+            'created_at' => now()->subDays(200),
+            'content_updated_at' => now()->subDays(30),
+        ]);
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+        ]);
+
+        $main->user->notify(new \App\Notifications\BranchSubmitted($main, $contributor->name));
+
+        $this->assertFalse($branch->mainIgnoresContributions());
+    }
+
     /** The ranking reads the same notion, so "abandoned" cannot mean two things on two screens. */
     public function test_the_fork_bonus_follows_the_same_rule(): void
     {
