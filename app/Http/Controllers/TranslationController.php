@@ -222,7 +222,7 @@ class TranslationController extends Controller
     public function view(Translation $translation)
     {
         if (!$translation->isReadableBy(auth()->user())) {
-            abort(403, 'Branch translations are only visible to the Main owner.');
+            abort(403, 'A branch is visible to whoever wrote it, and to the Main owner for merging.');
         }
 
         $translation->load(['game', 'user', 'originAuthor']);
@@ -242,7 +242,7 @@ class TranslationController extends Controller
     public function viewData(Translation $translation)
     {
         if (!$translation->isReadableBy(auth()->user())) {
-            abort(403, 'Branch translations are only visible to the Main owner.');
+            abort(403, 'A branch is visible to whoever wrote it, and to the Main owner for merging.');
         }
 
         // The reading itself lives on the model (fileLines): the admin screens serve the same
@@ -262,7 +262,7 @@ class TranslationController extends Controller
         // so the pages that decide whether to OFFER a way in cannot drift from what the server
         // actually allows.
         if (!$translation->isReadableBy(auth()->user())) {
-            abort(403, 'Branch translations are only visible to the Main owner.');
+            abort(403, 'A branch is visible to whoever wrote it, and to the Main owner for merging.');
         }
 
         $translation->incrementDownloads();
