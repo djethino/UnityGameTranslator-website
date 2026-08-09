@@ -1193,26 +1193,43 @@ class Translation extends Model
     }
 
     /**
-     * How long silence is allowed to last before it means abandonment — measured in days, but
-     * not the same number of days for everyone.
+     * How long silence is allowed to last before it means abandonment — measured against the
+     * rhythm of the person who wrote the file, not against a number picked for everyone.
      *
      * "Finished" and "abandoned" look identical from the outside: in both cases nothing moves.
-     * What tells them apart is what is LEFT. A file whose every line still waits to be read, gone
-     * quiet for two months, has been dropped. A file read from end to end, quiet for six months,
-     * is simply done — and treating the two alike would either hound the second or leave the
-     * first squatting the public place for half a year.
+     * A translation somebody kept up for seven months and left alone for six weeks is on holiday.
+     * One that was worked on for ten days and has said nothing since is over — most games are
+     * played once, and the only engine that moves a translation forward is somebody playing.
      *
-     * So the tolerance scales with the work already settled: everything to do → three weeks,
-     * nothing left → half a year. The share used is the product of the two figures already
-     * published on the site — how much is translated, and how much of that a human has read —
-     * so this introduces no new measure, only a use for them.
+     * So the tolerance IS the span they were active for: created_at to the last content change,
+     * clamped between MIN and MAX. It needs no new measure, adapts to the game and to the person,
+     * and answers the question actually being asked — is this a pause in a habit, or the end of
+     * one?
      *
-     * MIN is 21 days on purpose: it is the point at which a contributor is offered a way out,
-     * and the two must agree or the site would say "abandoned" on one screen and "still alive"
-     * on another.
+     * A previous version scaled with the share already settled. That measured PROGRESS where the
+     * question is about COMMITMENT, and it got the answer backwards: a file worked on for seven
+     * months with everything still to review was declared abandoned after three weeks, while one
+     * finished in twelve days was given six.
+     *
+     * MIN is two weeks: on a game nobody replays, a fortnight of silence is already the end. A
+     * structured team has a chat channel and knows who is away; the lone contributor has nothing,
+     * and the cost of being wrong here is one needless offer to go independent — nothing is taken
+     * from the Main. The opposite mistake leaves somebody waiting in front of a dead file.
+     *
+     * MAX is three months rather than half a year: with finished translations exempt from the
+     * clock entirely (see isDormant), no living case needs more.
      */
-    public const DORMANT_MIN_DAYS = 21;
-    public const DORMANT_MAX_DAYS = 180;
+    public const DORMANT_MIN_DAYS = 14;
+    public const DORMANT_MAX_DAYS = 90;
+
+    /**
+     * The first level, where a contributor is merely told the Main has gone quiet — no mention of
+     * forking, the point being to inform rather than to push anyone into leaving.
+     *
+     * A third of the tolerance, with a floor of its own: on the shortest tolerance a plain third
+     * would fire after five days and warn about somebody's weekend.
+     */
+    public const DORMANT_HINT_MIN_DAYS = 7;
 
     /**
      * Of everything this file has met in game, how much a human has settled. Null when it has
@@ -1228,14 +1245,27 @@ class Translation extends Model
         return $this->reviewed_lines / $encountered;
     }
 
-    /** How many days of silence this particular translation is allowed before it counts as gone. */
+    /**
+     * How many days of silence this particular translation is allowed before it counts as gone:
+     * as many as it was actively worked on, within bounds.
+     *
+     * The span is measured to the last CONTENT change, never to updated_at — a vote or a download
+     * touches the latter, and being downloaded is not a sign that its author is still there.
+     *
+     * A file uploaded once and never touched has a span of zero and falls to MIN, which is the
+     * right answer: nothing about it suggests a habit to be patient with.
+     */
     public function dormantAfterDays(): int
     {
-        $settled = $this->settledShare() ?? 0.0;
+        $activeSpan = (int) $this->created_at->diffInDays($this->contentChangedAt());
 
-        return (int) round(
-            self::DORMANT_MIN_DAYS + (self::DORMANT_MAX_DAYS - self::DORMANT_MIN_DAYS) * $settled
-        );
+        return max(self::DORMANT_MIN_DAYS, min(self::DORMANT_MAX_DAYS, $activeSpan));
+    }
+
+    /** Days of silence before a contributor is told the Main has gone quiet — level one. */
+    public function dormantHintAfterDays(): int
+    {
+        return max(self::DORMANT_HINT_MIN_DAYS, (int) round($this->dormantAfterDays() / 3));
     }
 
     /** Has this translation been silent past its own tolerance? */
@@ -1244,6 +1274,15 @@ class Translation extends Model
         // A file holding no translation at all is not waiting, whatever its dates say.
         if ($this->isCaptureOnly()) {
             return true;
+        }
+
+        // A finished translation is never dormant by the clock. It will not change again, and
+        // that is the point of finishing: silence is the normal state of a completed piece of
+        // work, not a symptom. What can push it aside is a rival covering more of the game —
+        // competition, which the ranking already measures — never the calendar. The ranking's
+        // freshness decay has exempted finished work for the same reason; this aligns the two.
+        if ($this->isComplete()) {
+            return false;
         }
 
         return $this->contentChangedAt()->diffInDays(now()) >= $this->dormantAfterDays();
@@ -1345,7 +1384,7 @@ class Translation extends Model
             return true;
         }
 
-        return $main->contentChangedAt()->diffInDays(now()) >= $main->dormantAfterDays() / 3;
+        return $main->contentChangedAt()->diffInDays(now()) >= $main->dormantHintAfterDays();
     }
 
     /** Palier 2 — silence has lasted long enough that going independent is fair to offer. */
