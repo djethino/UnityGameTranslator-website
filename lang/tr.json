@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Mevcut çevirinizi güncelliyorsunuz",
     "upload.update_description": "Önceki sürümünüz bu yeni dosyayla değiştirilecektir.",
     "upload.become_branch": "Katkıda bulunan (Branch) olacaksınız",
-    "upload.branch_description": "Çeviriniz Branch katkısı olarak görünecektir. Main sahibi çalışmanızı birleştirebilir.",
+    "upload.branch_description": "Emeginiz Main sahibine gider; onu yalnizca o acabilir ve birlestirebilir. Oyuncular bir dali indiremez: oyun sayfasi katkinizin var oldugunu, adinizla birlikte gosterir, o kadar. Oyuncularin kurabilecegi bir ceviri yayimlamak icin onu bagimsiz hale getirin.",
     "upload.update_your_branch": "Branch'inizi güncelliyorsunuz",
     "upload.update_branch_description": "Branch sürümünüz bu yeni dosyayla değiştirilecektir.",
     "upload.review_changes": "Yüklemeden önce değişiklikleri gözden geçirin",

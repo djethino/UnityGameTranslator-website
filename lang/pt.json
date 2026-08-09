@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Você está atualizando sua tradução existente",
     "upload.update_description": "Sua versão anterior será substituída por este novo arquivo.",
     "upload.become_branch": "Você se tornará um colaborador (Branch)",
-    "upload.branch_description": "Sua tradução aparecerá como contribuição Branch. O proprietário Main pode mesclar seu trabalho.",
+    "upload.branch_description": "O seu trabalho vai para o proprietario Main, o unico que o pode abrir e fundir. Os jogadores nao podem descarregar um ramo: a pagina do jogo mostra que a sua contribuicao existe, com o seu nome, e nada mais. Para publicar uma traducao que os jogadores instalem, torne-a antes independente.",
     "upload.update_your_branch": "Você está atualizando seu Branch",
     "upload.update_branch_description": "Sua versão de Branch será substituída por este novo arquivo.",
     "upload.review_changes": "Revise as mudanças antes de enviar",

@@ -175,7 +175,7 @@
     "upload.update_your_translation": "You are updating your existing translation",
     "upload.update_description": "Your previous version will be replaced with this new file.",
     "upload.become_branch": "You will become a contributor (branch)",
-    "upload.branch_description": "Your translation will appear as a branch contribution. The Main owner can merge your work.",
+    "upload.branch_description": "Your work goes to the Main owner, who alone can open it and merge it. Players cannot download a branch: the game page shows that your contribution exists, under your name, and nothing more. To publish a translation players can install, make it independent instead.",
     "upload.update_your_branch": "You are updating your branch",
     "upload.update_branch_description": "Your branch version will be replaced with this new file.",
     "upload.review_changes": "Review changes before uploading",

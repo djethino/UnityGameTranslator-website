@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Kamu memperbarui terjemahan yang sudah ada",
     "upload.update_description": "Versi sebelumnya akan diganti dengan file baru ini.",
     "upload.become_branch": "Kamu akan menjadi kontributor (branch)",
-    "upload.branch_description": "Terjemahanmu akan muncul sebagai kontribusi branch. Pemilik Main bisa menggabungkan karyamu.",
+    "upload.branch_description": "Karya Anda menuju pemilik Main, satu-satunya yang bisa membukanya dan menggabungkannya. Pemain tidak bisa mengunduh cabang: halaman game menunjukkan bahwa kontribusi Anda ada, atas nama Anda, dan tidak lebih. Untuk menerbitkan terjemahan yang bisa dipasang pemain, jadikan saja mandiri.",
     "upload.update_your_branch": "Kamu memperbarui branch-mu",
     "upload.update_branch_description": "Versi branch-mu akan diganti dengan file baru ini.",
     "upload.review_changes": "Tinjau perubahan sebelum mengunggah",

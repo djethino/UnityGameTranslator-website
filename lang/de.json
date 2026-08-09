@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Sie aktualisieren Ihre vorhandene Übersetzung",
     "upload.update_description": "Ihre vorherige Version wird durch diese neue Datei ersetzt.",
     "upload.become_branch": "Sie werden Mitwirkender (branch)",
-    "upload.branch_description": "Ihre Übersetzung erscheint als Branch-Beitrag. Der Main-Besitzer kann Ihre Arbeit zusammenführen.",
+    "upload.branch_description": "Deine Arbeit geht an den Main-Besitzer, der sie als Einziger oeffnen und zusammenfuehren kann. Spieler koennen einen Branch nicht herunterladen: Die Spielseite zeigt, dass dein Beitrag existiert, unter deinem Namen, und sonst nichts. Um eine Uebersetzung zu veroeffentlichen, die Spieler installieren koennen, mach sie stattdessen unabhaengig.",
     "upload.update_your_branch": "Sie aktualisieren Ihren Branch",
     "upload.update_branch_description": "Ihre Branch-Version wird durch diese neue Datei ersetzt.",
     "upload.review_changes": "Änderungen vor dem Hochladen überprüfen",

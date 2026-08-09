@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Aktualizujesz istniejące tłumaczenie",
     "upload.update_description": "Twoja poprzednia wersja zostanie zastąpiona tym nowym plikiem.",
     "upload.become_branch": "Staniesz się współtwórcą (Branch)",
-    "upload.branch_description": "Twoje tłumaczenie pojawi się jako wkład Branch. Właściciel Main może scalić twoją pracę.",
+    "upload.branch_description": "Twoja praca trafia do wlasciciela Main, ktory jako jedyny moze ja otworzyc i scalic. Gracze nie moga pobrac galezi: strona gry pokazuje, ze twoj wklad istnieje, pod twoim nazwiskiem, i nic wiecej. Aby opublikowac tlumaczenie, ktore gracze zainstaluja, uczyn je niezaleznym.",
     "upload.update_your_branch": "Aktualizujesz swoją gałąź",
     "upload.update_branch_description": "Twoja wersja Branch zostanie zastąpiona tym nowym plikiem.",
     "upload.review_changes": "Przejrzyj zmiany przed przesłaniem",

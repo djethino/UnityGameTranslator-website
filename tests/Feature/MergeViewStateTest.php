@@ -137,6 +137,35 @@ class MergeViewStateTest extends TestCase
         $this->assertSame('Main value', $saved['Shared']['v']);
     }
 
+    /**
+     * A merge leaves a mark on the branch it took from.
+     *
+     * merged_at shipped with the lineage migration and nothing ever wrote it, so "this Main is
+     * ignoring your work" could not be told apart from "this Main has not merged anything yet" —
+     * the difference between being overlooked and being early, which is the whole point of the
+     * question. Stamped on the branch, because that is the side asking.
+     */
+    public function test_merging_a_branch_records_that_it_was_taken_in(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $this->assertNull($branch->merged_at, 'Nothing has taken this work in yet.');
+        $before = $branch->updated_at;
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'selections_json' => json_encode([
+                ['key' => 'Shared', 'value' => 'Branch value', 'tag' => 'H', 'source' => 'branch_' . $branch->id],
+            ]),
+        ])->assertRedirect();
+
+        $branch->refresh();
+
+        $this->assertNotNull($branch->merged_at);
+        // Merging is not a content change: touching updated_at would move the branch in every
+        // list ordered by freshness, for something its author did not do.
+        $this->assertEquals($before, $branch->updated_at);
+    }
+
     public function test_settings_of_a_translation_outside_this_lineage_are_ignored(): void
     {
         [$owner, $uuid, $main] = $this->makeMergeView();

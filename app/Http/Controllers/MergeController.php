@@ -400,6 +400,17 @@ class MergeController extends Controller
                 ->with('user')
                 ->get();
             foreach ($branches as $branch) {
+                // Stamped on the BRANCH, not on the Main: the question it answers is "has this
+                // contribution ever been taken in", and it is asked from the contributor's side.
+                // The column was added with the lineage migration and nothing had ever written
+                // it, so "the Main is ignoring you" could not be told apart from "the Main has
+                // not merged anything yet" — the difference between being overlooked and being
+                // early. timestamps stay off: merging is not a content change, and touching
+                // updated_at here would move the branch in every list ordered by freshness.
+                $branch->timestamps = false;
+                $branch->merged_at = now();
+                $branch->save();
+
                 if ($branch->user && $branch->user_id !== $user->id) {
                     $branch->user->notify(new BranchMerged($main, $mergedPerBranch[$branch->id]));
                 }

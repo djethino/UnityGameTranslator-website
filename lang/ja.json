@@ -175,7 +175,7 @@
     "upload.update_your_translation": "既存の翻訳を更新しています",
     "upload.update_description": "以前のバージョンはこの新しいファイルに置き換えられます。",
     "upload.become_branch": "コントリビューター（Branch）になります",
-    "upload.branch_description": "あなたの翻訳はBranchコントリビューションとして表示されます。Mainオーナーがあなたの作業をマージできます。",
+    "upload.branch_description": "あなたの作業は Main の所有者に届きます。開いて統合できるのはその人だけです。プレイヤーはブランチをダウンロードできません。ゲームのページに表示されるのは、あなたの名前で貢献が存在するという事実だけです。プレイヤーが導入できる翻訳として公開したい場合は、独立させてください。",
     "upload.update_your_branch": "Branchを更新しています",
     "upload.update_branch_description": "BranchバージョンはこのNewファイルに置き換えられます。",
     "upload.review_changes": "アップロードする前に変更を確認",

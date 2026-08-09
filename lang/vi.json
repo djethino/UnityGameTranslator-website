@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Bạn đang cập nhật bản dịch hiện có",
     "upload.update_description": "Phiên bản trước sẽ được thay thế bằng file mới này.",
     "upload.become_branch": "Bạn sẽ trở thành người đóng góp (branch)",
-    "upload.branch_description": "Bản dịch của bạn sẽ xuất hiện như một nhánh đóng góp. Chủ sở hữu Main có thể hợp nhất công việc của bạn.",
+    "upload.branch_description": "Cong suc cua ban den voi chu so huu Main, nguoi duy nhat co the mo va hop nhat no. Nguoi choi khong tai duoc mot nhanh: trang tro choi cho thay dong gop cua ban ton tai, duoi ten ban, va khong gi hon. De cong bo mot ban dich ma nguoi choi cai dat duoc, hay lam cho no doc lap.",
     "upload.update_your_branch": "Bạn đang cập nhật nhánh của mình",
     "upload.update_branch_description": "Phiên bản nhánh của bạn sẽ được thay thế bằng file mới này.",
     "upload.review_changes": "Xem lại thay đổi trước khi tải lên",

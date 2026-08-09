@@ -175,7 +175,7 @@
     "upload.update_your_translation": "Je werkt je bestaande vertaling bij",
     "upload.update_description": "Je vorige versie wordt vervangen door dit nieuwe bestand.",
     "upload.become_branch": "Je wordt een bijdrager (branch)",
-    "upload.branch_description": "Je vertaling verschijnt als een branch-bijdrage. De Main-eigenaar kan je werk mergen.",
+    "upload.branch_description": "Je werk gaat naar de Main-eigenaar, de enige die het kan openen en samenvoegen. Spelers kunnen een branch niet downloaden: de spelpagina laat zien dat je bijdrage bestaat, onder je naam, en niets meer. Wil je een vertaling publiceren die spelers installeren, maak hem dan zelfstandig.",
     "upload.update_your_branch": "Je werkt je branch bij",
     "upload.update_branch_description": "Je branch-versie wordt vervangen door dit nieuwe bestand.",
     "upload.review_changes": "Bekijk wijzigingen voor het uploaden",

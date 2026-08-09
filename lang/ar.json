@@ -175,7 +175,7 @@
     "upload.update_your_translation": "أنت تقوم بتحديث ترجمتك الحالية",
     "upload.update_description": "سيتم استبدال نسختك السابقة بهذا الملف الجديد.",
     "upload.become_branch": "ستصبح مساهماً (Branch)",
-    "upload.branch_description": "ستظهر ترجمتك كمساهمة Branch. يمكن لمالك Main دمج عملك.",
+    "upload.branch_description": "يذهب عملك إلى صاحب Main، وهو الوحيد الذي يمكنه فتحه ودمجه. لا يستطيع اللاعبون تنزيل فرع: صفحة اللعبة تُظهر أن مساهمتك موجودة، باسمك، لا أكثر. ولنشر ترجمة يستطيع اللاعبون تثبيتها، اجعلها مستقلة بدلًا من ذلك.",
     "upload.update_your_branch": "أنت تقوم بتحديث Branch الخاص بك",
     "upload.update_branch_description": "سيتم استبدال نسخة Branch الخاصة بك بهذا الملف الجديد.",
     "upload.review_changes": "مراجعة التغييرات قبل الرفع",

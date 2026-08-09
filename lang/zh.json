@@ -175,7 +175,7 @@
     "upload.update_your_translation": "您正在更新现有翻译",
     "upload.update_description": "您的旧版本将被此新文件替换。",
     "upload.become_branch": "您将成为贡献者（branch）",
-    "upload.branch_description": "您的翻译将显示为branch贡献。Main所有者可以合并您的工作。",
+    "upload.branch_description": "你的成果会送到 Main 所有者手中，只有他能打开并合并它。玩家无法下载分支：游戏页面只显示你的贡献存在，署你的名，仅此而已。若想发布玩家可以安装的翻译，请改为让它独立。",
     "upload.update_your_branch": "您正在更新您的分支",
     "upload.update_branch_description": "您的分支版本将被此新文件替换。",
     "upload.review_changes": "上传前查看更改",

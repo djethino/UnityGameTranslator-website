@@ -175,7 +175,7 @@
     "upload.update_your_translation": "אתם מעדכנים את התרגום הקיים שלכם",
     "upload.update_description": "הגרסה הקודמת שלכם תוחלף בקובץ החדש הזה.",
     "upload.become_branch": "אתם תהפכו לתורם (Branch)",
-    "upload.branch_description": "התרגום שלכם יופיע כתרומת Branch. בעל ה-Main יכול למזג את העבודה שלכם.",
+    "upload.branch_description": "העבודה שלך עוברת לבעל ה-Main, היחיד שיכול לפתוח אותה ולמזג. שחקנים לא יכולים להוריד ענף: עמוד המשחק מראה שהתרומה שלך קיימת, בשמך, וזה הכול. כדי לפרסם תרגום שהשחקנים יתקינו, הפוך אותו לעצמאי.",
     "upload.update_your_branch": "אתם מעדכנים את ה-Branch שלכם",
     "upload.update_branch_description": "גרסת ה-Branch שלכם תוחלף בקובץ החדש הזה.",
     "upload.review_changes": "סקירת שינויים לפני העלאה",
