@@ -420,9 +420,13 @@ class TranslationController extends Controller
         $delistedMains = $translations->filter(fn ($t) => $t->mainIsDelisted());
         $orphanBranches = $translations->filter(fn ($t) => $t->isOrphanBranch());
 
+        // A Main that came back, worked, and left the contributions aside. Distinct from silence:
+        // dormancy counts days, this counts missed occasions.
+        $ignoredBranches = $translations->filter(fn ($t) => $t->mainIgnoresContributions());
+
         return view('translations.mine', compact(
             'translations', 'branchCounts', 'sort', 'gameMaxes', 'emptyPublished', 'stalledBranches',
-            'delistedMains', 'orphanBranches'
+            'delistedMains', 'orphanBranches', 'ignoredBranches'
         ));
     }
 

@@ -409,6 +409,10 @@ class MergeController extends Controller
                 // updated_at here would move the branch in every list ordered by freshness.
                 $branch->timestamps = false;
                 $branch->merged_at = now();
+                // A running total, not an inventory: a line later replaced by another branch or
+                // rewritten by the Main still counts. What is measured is a contribution over
+                // time, not what survives of it in today's file.
+                $branch->merged_lines_total += $mergedPerBranch[$branch->id];
                 $branch->save();
 
                 if ($branch->user && $branch->user_id !== $user->id) {

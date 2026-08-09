@@ -18,6 +18,7 @@ class Translation extends Model
         'origin_resolved_lines',
         'origin_file_hash',
         'merged_at',
+        'merged_lines_total',
         'source_language',
         'target_language',
         'line_count',
@@ -49,6 +50,7 @@ class Translation extends Model
         'origin_user_id' => 'integer',
         'origin_resolved_lines' => 'integer',
         'merged_at' => 'datetime',
+        'merged_lines_total' => 'integer',
         'line_count' => 'integer',
         'capture_count' => 'integer',
         'skipped_count' => 'integer',
@@ -681,6 +683,23 @@ class Translation extends Model
     public function isMain(): bool
     {
         return $this->visibility === 'public' && $this->isLineageRoot();
+    }
+
+    /**
+     * Where this file stands in its lineage, in the one word the mod and the installer read.
+     *
+     * Published is 'main', anything else is 'branch'. Deliberately NOT isMain(): that one also
+     * requires being the lineage ROOT, which a fork never is — and a fork is a main. Judging the
+     * role on the root would demote every fork owner to contributor of a lineage they lead.
+     *
+     * Two endpoints answer this question — check-uuid before an upload, /me/translations for a
+     * whole library at once — and a second copy of the rule is a second place to forget it. The
+     * download endpoint kept its own copy of isReadableBy for exactly one release too long, and it
+     * locked contributors out of their own work.
+     */
+    public function lineageRole(): string
+    {
+        return $this->visibility === 'public' ? 'main' : 'branch';
     }
 
     /**
@@ -1337,6 +1356,68 @@ class Translation extends Model
             ->each(function (self $branch) {
                 $branch->user?->notify(new \App\Notifications\BranchOrphaned($branch));
             });
+    }
+
+    /**
+     * Once the Main has been told and has worked since, this many days without taking anything
+     * in is enough to say so.
+     *
+     * Short on purpose, and it does not need to scale with anyone's rhythm: the point is not how
+     * long they have been away — that is dormancy — but that they came back, did something, and
+     * left the contributions where they were. Three days leaves room for a merge put off to the
+     * next evening, and no more.
+     */
+    public const IGNORED_AFTER_DAYS = 3;
+
+    /**
+     * A branch whose Main has been told about it, has worked on their own file since, and has
+     * still taken nothing in.
+     *
+     * NOT an accusation and not a measure of silence: an active Main and an absent one are
+     * indistinguishable to dormancy, which only counts days. This counts missed occasions —
+     * every time they came back and left the contributions aside.
+     *
+     * Nothing new is collected to answer it. The three signals are already in the database, and
+     * none of them observes anybody: the notification the site SENT (with its date), the Main's
+     * own content date, and the merge stamp. Somebody who never returns triggers nothing here —
+     * that case belongs to dormancy.
+     */
+    public function mainIgnoresContributions(): bool
+    {
+        if (!$this->isBranch()) {
+            return false;
+        }
+
+        $main = $this->getMain();
+        if (!$main || $main->id === $this->id) {
+            return false;
+        }
+
+        // When we told them. No notification means they were never warned, and silence is not
+        // indifference.
+        $told = \Illuminate\Notifications\DatabaseNotification::query()
+            ->where('notifiable_id', $main->user_id)
+            ->where('type', \App\Notifications\BranchSubmitted::class)
+            ->where('data->uuid', $this->file_uuid)
+            ->latest('created_at')
+            ->value('created_at');
+
+        if (!$told) {
+            return false;
+        }
+
+        // Did they come back and work on it since?
+        $workedSince = $main->contentChangedAt();
+        if ($workedSince <= $told) {
+            return false;
+        }
+
+        // Did they take anything in since being told?
+        if ($this->merged_at && $this->merged_at >= $told) {
+            return false;
+        }
+
+        return $workedSince->diffInDays(now()) >= self::IGNORED_AFTER_DAYS;
     }
 
     /**

@@ -248,7 +248,7 @@ class TranslationController extends Controller
 
         if ($ownTranslation) {
             // User has a translation with this UUID
-            $role = $ownTranslation->visibility === 'public' ? 'main' : 'branch';
+            $role = $ownTranslation->lineageRole();
             $branchesCount = $role === 'main'
                 ? Translation::where('file_uuid', $uuid)->branches()->count()
                 : null;
