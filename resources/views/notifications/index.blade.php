@@ -37,6 +37,8 @@
                             <i class="fas fa-code-branch text-blue-400"></i>
                         @elseif($type === 'branch_merged')
                             <i class="fas fa-code-merge text-green-400"></i>
+                        @elseif($type === 'branch_orphaned')
+                            <i class="fas fa-unlink text-red-400"></i>
                         @elseif($type === 'announcement')
                             <i class="fas fa-bullhorn text-purple-400"></i>
                         @else
@@ -59,6 +61,11 @@
                                     'lang' => $data['target_language'] ?? '?',
                                     'owner' => $data['owner_username'] ?? '?',
                                 ]) }}
+                            @elseif($type === 'branch_orphaned')
+                                {{ __('notif.branch_orphaned', [
+                                    'game' => $data['game_name'] ?? '?',
+                                    'lang' => $data['target_language'] ?? '?',
+                                ]) }}
                             @elseif($type === 'announcement')
                                 <span class="font-semibold">{{ $data['title'] ?? '' }}</span><br>
                                 <span class="text-gray-300">{{ $data['body'] ?? '' }}</span>
@@ -75,6 +82,12 @@
                             @elseif($type === 'branch_merged' && !empty($data['game_slug']))
                                 <a href="{{ route('games.show', $data['game_slug']) }}" class="text-purple-400 hover:text-purple-300">
                                     {{ __('notif.see_translation') }} →
+                                </a>
+                            @elseif($type === 'branch_orphaned' && !empty($data['translation_id']))
+                                {{-- Straight to the dashboard: that is where "become independent"
+                                     lives, with its warning and its confirmation. --}}
+                                <a href="{{ route('translations.dashboard', $data['translation_id']) }}" class="text-purple-400 hover:text-purple-300">
+                                    {{ __('notif.take_it_over') }} →
                                 </a>
                             @elseif($type === 'announcement' && !empty($data['link']))
                                 <a href="{{ $data['link'] }}" class="text-purple-400 hover:text-purple-300" rel="noopener">

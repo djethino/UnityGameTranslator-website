@@ -192,6 +192,49 @@ class EmptyTranslationGraceTest extends TestCase
             ->assertSee(__('my_translations.orphan_title'));
     }
 
+    /**
+     * And the contributor is told at the moment it happens.
+     *
+     * From their side nothing changes visibly — the file still opens, still translates, still
+     * saves — so this has to be pushed rather than waited for. Deleting an ACCOUNT does not come
+     * through here: accounts are anonymised and their translations kept, which is why the wording
+     * speaks of a deleted translation rather than a departed author.
+     */
+    public function test_deleting_a_main_notifies_the_contributors_it_strands(): void
+    {
+        $main = $this->makeTranslation();
+        $contributor = User::factory()->create();
+        $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 5,
+        ]);
+
+        $main->delete();
+
+        $this->assertSame(1, $contributor->notifications()->count());
+        $this->assertSame('branch_orphaned', $contributor->notifications()->first()->data['type']);
+    }
+
+    /** A lineage that still has a head strands nobody, so nobody is told. */
+    public function test_deleting_one_of_two_public_translations_notifies_nobody(): void
+    {
+        $main = $this->makeTranslation();
+        $fork = $this->makeTranslation(['file_uuid' => $main->file_uuid]);
+        $contributor = User::factory()->create();
+        $this->makeTranslation([
+            'user_id' => $contributor->id,
+            'visibility' => 'branch',
+            'file_uuid' => $main->file_uuid,
+            'human_count' => 5,
+        ]);
+
+        $fork->delete();
+
+        $this->assertSame(0, $contributor->notifications()->count());
+    }
+
     /** And the mod is told, so it stops calling itself a branch of nothing. */
     public function test_check_uuid_tells_the_mod_when_the_main_is_gone(): void
     {

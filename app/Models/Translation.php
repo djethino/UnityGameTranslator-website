@@ -104,6 +104,7 @@ class Translation extends Model
         static::deleted(function (Translation $translation) use ($syncSearchEngines) {
             if ($translation->visibility === 'public') {
                 $syncSearchEngines($translation);
+                $translation->notifyBranchesOfOrphanhood();
             }
         });
         static::updated(function (Translation $translation) use ($syncSearchEngines) {
@@ -1264,6 +1265,41 @@ class Translation extends Model
      * seven days for a Main with everything left to read, two months for one that is all but
      * finished. Never a word about forking at this stage.
      */
+    /**
+     * Tell the contributors, at the moment their work stops being mergeable.
+     *
+     * Called from the deleted event on a PUBLIC translation, and it checks that no other public
+     * translation of the lineage is left: a Main with a fork beside it leaves the lineage a head,
+     * and there is nothing to announce.
+     *
+     * From the contributor's side nothing changes visibly — the file still opens, still
+     * translates, still saves — so this has to be pushed rather than waited for. Deleting an
+     * account does NOT come through here: accounts are anonymised and their translations kept,
+     * which is why the wording talks about a deleted translation and not a departed author.
+     */
+    public function notifyBranchesOfOrphanhood(): void
+    {
+        if (!$this->file_uuid) {
+            return;
+        }
+
+        $lineageStillHasAHead = static::where('file_uuid', $this->file_uuid)
+            ->where('visibility', 'public')
+            ->exists();
+
+        if ($lineageStillHasAHead) {
+            return;
+        }
+
+        static::where('file_uuid', $this->file_uuid)
+            ->where('visibility', 'branch')
+            ->with('user', 'game')
+            ->get()
+            ->each(function (self $branch) {
+                $branch->user?->notify(new \App\Notifications\BranchOrphaned($branch));
+            });
+    }
+
     /**
      * A branch whose Main no longer exists at all.
      *
