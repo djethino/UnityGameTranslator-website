@@ -230,10 +230,24 @@ export function editorColumns() {
                 return { widths, gridWidth: total };
             }
 
+            // Short of the box with nobody on the right to take the slack: the dragged column
+            // keeps it.
+            //
+            // The mirror image of the case above. Narrowing the LAST column has no neighbour to
+            // hand the freed width to, so the grid would simply end early and leave a strip of
+            // background against the right edge. Refusing the shrink is the same answer as
+            // refusing the growth: the edge stops following the pointer once there is nothing
+            // left to give, and the grid stays exactly as wide as its box.
+            const slack = drag.boxWidth - total;
+            if (slack > 0 && !drag.rightOf.length) {
+                widths[drag.col] = (widths[drag.col] || 0) + slack;
+
+                return { widths, gridWidth: drag.boxWidth };
+            }
+
             // Short of the box: the flexible columns to the right take up the slack, each in
             // proportion to what it already occupies — a wide value column absorbs most of it and
             // a narrow one is not doubled in size to satisfy an arithmetic mean.
-            const slack = drag.boxWidth - total;
             if (slack > 0 && drag.rightOf.length) {
                 const base = drag.rightOf.reduce((sum, col) => sum + (drag.baseWidths[col] || 0), 0);
                 let given = 0;
