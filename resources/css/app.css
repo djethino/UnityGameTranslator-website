@@ -74,8 +74,12 @@
  * Distributing leftwards instead would keep the total right and the handle just as stuck. The
  * honest answer is that the last column's width is what the others leave it: widen it by
  * narrowing its neighbour, which works and follows the cursor. An edge that cannot obey is worse
- * than no edge at all. */
-.editor-grid thead th:last-child [data-resize-col] { display: none; }
+ * than no edge at all.
+ *
+ * Only while the grid FITS, though. A merge view showing several branches scrolls anyway: its
+ * right edge is against nothing, the total is free to grow, and that last column is as draggable
+ * as any other. The class is maintained by the shared core (refreshGridFits). */
+.editor-grid.grid-fits thead th:last-child [data-resize-col] { display: none; }
 
 /* Content of a full-width row that must stay where the EYE is.
  *

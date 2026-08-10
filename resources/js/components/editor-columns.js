@@ -81,6 +81,28 @@ export function editorColumns() {
 
         applyColumnWidths() {
             this._writeColumnWidths(this.columnWidths, this.columnsSized ? this.gridWidth : 0);
+            this.refreshGridFits();
+        },
+
+        /**
+         * Does the grid fit its box, or does it genuinely need to scroll?
+         *
+         * The answer decides one thing: whether the LAST column may be dragged. On a grid pinned
+         * to both edges it may not — there is nothing on its right to take width from, so the
+         * edge would sit on a border that cannot move while the pointer walks away. On a merge
+         * view with several branches the grid scrolls anyway, its right edge is not against
+         * anything, and dragging that column is as meaningful as dragging any other.
+         *
+         * Written straight onto the table rather than bound in four templates: the rule belongs
+         * to the grid's state, not to any one page's markup.
+         */
+        refreshGridFits() {
+            const box = this.$refs.gridBox;
+            const table = (box || document).querySelector('table.editor-grid');
+            if (!box || !table) return;
+
+            const fits = Math.round(table.getBoundingClientRect().width) <= box.clientWidth + 1;
+            table.classList.toggle('grid-fits', fits);
         },
 
         /**
@@ -302,6 +324,20 @@ export function editorColumns() {
         },
 
         initEditorColumns() {
+            // The verdict has to follow the table, not the moment it was first drawn: rows arrive
+            // by fetch, so at init the grid is empty, fits by definition, and would keep saying so
+            // once six thousand lines had made it three times too wide. An observer on the table
+            // catches every cause at once — data loading, the workbench taking the window, a
+            // browser resize — where a hook per cause would miss the next one.
+            if (typeof ResizeObserver !== 'undefined') {
+                const table = (this.$refs.gridBox || document).querySelector('table.editor-grid');
+                if (table) {
+                    this._gridFitsObserver = new ResizeObserver(() => this.refreshGridFits());
+                    this._gridFitsObserver.observe(table);
+                    if (this.$refs.gridBox) this._gridFitsObserver.observe(this.$refs.gridBox);
+                }
+            }
+
             this._onColumnResizeMove = (event) => {
                 if (!this._resize) return;
                 this._resize.width = Math.max(
