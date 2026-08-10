@@ -942,6 +942,8 @@ export function editorCore(config) {
                     pinMain: this.pinMain
                 }));
                 sessionStorage.setItem(this._widthsKey(), JSON.stringify({
+                    // Which columns these widths were measured against — see _restoreColumnWidths
+                    columns: this._columnOrder().join('|'),
                     columnWidths: this.columnWidths,
                     columnsSized: this.columnsSized,
                     gridWidth: this.gridWidth,
@@ -989,6 +991,17 @@ export function editorCore(config) {
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 const box = (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0;
+
+                // Widths belong to a COLUMN LAYOUT, not just to a document. Hiding every branch on
+                // the merge view leaves a plain key/value grid, and replaying the widths measured
+                // when three branches were shown made it overflow with nothing to scroll to —
+                // the key alone kept a width that only made sense beside its neighbours. A
+                // different set of columns is a different question, so the answer is dropped and
+                // the automatic layout, which fills the box exactly, takes over.
+                const columns = this._columnOrder().join('|');
+                if (state.columns && state.columns !== columns) {
+                    return;
+                }
 
                 const widths = {};
                 if (state.columnWidths && typeof state.columnWidths === 'object') {

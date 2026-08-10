@@ -111,11 +111,14 @@
                         <span class="text-gray-300">{{ $branch->user->name }}</span>
                         <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
                     </label>
-                    {{-- Rating Stars --}}
-                    <div class="flex items-center gap-1 ml-2 branch-rating" data-branch-id="{{ $branch->id }}">
+                    {{-- Rating and report sit tight against the name: the row holds one chip per
+                         branch and has to stay on ONE line — three of them wrapped the moment the
+                         report flag was added, and a name longer than these would have done it
+                         anyway. Nothing is removed, the spacing simply stops being generous. --}}
+                    <div class="flex items-center branch-rating" data-branch-id="{{ $branch->id }}">
                         @for($i = 1; $i <= 5; $i++)
                         <button type="button"
-                            class="rating-star text-sm {{ $branch->main_rating >= $i ? 'text-yellow-400' : 'text-gray-600' }} hover:text-yellow-300 transition"
+                            class="rating-star text-xs px-px {{ $branch->main_rating >= $i ? 'text-yellow-400' : 'text-gray-600' }} hover:text-yellow-300 transition"
                             data-rating="{{ $i }}"
                             title="{{ __('rating.rate_branch', ['stars' => $i]) }}">
                             <i class="fas fa-star"></i>
@@ -139,7 +142,7 @@
                          Placed with the rating rather than in the grid header: both are
                          judgements about a contributor's work as a whole, not about a line. --}}
                     <button type="button" data-report-id="{{ $branch->id }}"
-                        class="report-btn ml-1 text-xs text-gray-500 hover:text-red-400 transition"
+                        class="report-btn text-xs text-gray-500 hover:text-red-400 transition"
                         title="{{ __('report.report_branch') }}">
                         <i class="fas fa-flag"></i>
                     </button>

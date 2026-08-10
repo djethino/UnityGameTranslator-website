@@ -47,6 +47,23 @@
  * <td> of three templates. */
 .editor-grid tbody td { border-top: 1px solid rgb(55 65 81); }
 
+/* Once the columns carry declared widths, their min-width has done its job.
+ *
+ * The min-w on a value column exists for the AUTOMATIC layout, where a column with nothing in it
+ * would otherwise shrink to the width of its placeholder. Under declared widths it becomes a
+ * floor the drag cannot cross: the neighbour refuses to give way, the grid grows past its box,
+ * and a two-column grid starts scrolling sideways for no reason. The JS keeps its own floor
+ * (MIN_COLUMN_WIDTH), which is the one that should decide here. */
+.editor-grid.cols-sized [data-col] { min-width: 0; }
+
+/* And the header must be allowed to be cut, or it keeps the column wide from the inside.
+ *
+ * The table itself was honouring its box exactly — every declared width added up to it — while
+ * the box still scrolled by forty pixels, because a header's own title and sort icon are not
+ * compressible and simply stuck out. A column narrowed to its floor then pushed the grid out
+ * through its heading rather than through its data. */
+.editor-grid.cols-sized thead th { overflow: hidden; }
+
 /* No grab edge on the LAST column.
  *
  * A drag takes width from one column and gives it to those on its right, so that the grid never

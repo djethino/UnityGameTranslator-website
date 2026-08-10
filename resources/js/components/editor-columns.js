@@ -173,6 +173,41 @@ export function editorColumns() {
 
             let total = fixedPart + Object.values(widths).reduce((sum, w) => sum + w, 0);
 
+            // Past the box, on a grid that fitted in it: take the width from the right instead of
+            // pushing the grid out.
+            //
+            // A two-column key/value grid has nowhere to scroll TO — its columns belong against
+            // both edges, and widening one is asking the other to give way, not asking for a
+            // sideways journey. Scrolling is the merge view's business, where a Main and three
+            // branches genuinely do not fit. So the rule is not "which screen is this" but
+            // something the grid already knows: a drag never CREATES an overflow that was not
+            // there. A merge view with every branch hidden behaves like the simple grid it has
+            // become, and the same one with three branches keeps scrolling as before.
+            const fitted = drag.baseGridWidth <= drag.boxWidth + 1;
+            if (fitted && total > drag.boxWidth && drag.rightOf.length) {
+                let over = total - drag.boxWidth;
+
+                // Right to left: the neighbour gives first, and the far column is only called on
+                // once the near one has nothing left. Taking a proportional share from every
+                // column at once would shrink a distant one nobody was touching.
+                for (let i = 0; i < drag.rightOf.length && over > 0; i++) {
+                    const col = drag.rightOf[i];
+                    const current = widths[col] || 0;
+                    const canGive = Math.max(0, current - MIN_COLUMN_WIDTH);
+                    const given = Math.min(canGive, over);
+                    widths[col] = current - given;
+                    over -= given;
+                }
+
+                // Whatever the right could not give is refused to the dragged column: the grid
+                // stays inside its box, and the edge stops following the pointer — which is the
+                // honest way to say "there is nothing left to take".
+                widths[drag.col] = Math.max(MIN_COLUMN_WIDTH, newWidth - over);
+                total = drag.boxWidth;
+
+                return { widths, gridWidth: total };
+            }
+
             // Short of the box: the flexible columns to the right take up the slack, each in
             // proportion to what it already occupies — a wide value column absorbs most of it and
             // a narrow one is not doubled in size to satisfy an arithmetic mean.
