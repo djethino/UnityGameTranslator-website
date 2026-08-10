@@ -318,8 +318,12 @@
                             </div>
                         </th>
                         {{-- Local Value --}}
+                        {{-- min-w on both value columns, like every other grid: a key that
+                             exists on one side only leaves the other cell empty, and with
+                             automatic layout that column would shrink to nothing — exactly when
+                             the reader needs to see what is missing. --}}
                         <th data-col="local"
-                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
                             @click="toggleSort('localValue')">
                             <div class="flex items-center gap-2">
                                 <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
@@ -338,7 +342,7 @@
                         </th>
                         {{-- Online Value --}}
                         <th data-col="online"
-                            class="relative px-4 py-3 text-left border-l border-gray-700 cursor-pointer hover:text-white transition"
+                            class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
                             @click="toggleSort('onlineValue')">
                             <div class="flex items-center gap-2">
                                 <span class="text-blue-400 font-medium">{{ __('merge_preview.online_version') }}</span>
