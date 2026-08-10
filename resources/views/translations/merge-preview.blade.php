@@ -380,7 +380,7 @@
                                  highlightKey, so there is no markup here whose indentation
                                  pre-wrap could turn into visible whitespace. --}}
                             <td data-col="key"
-                                class="editor-text px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                class="editor-text px-4 py-2 font-mono text-xs text-gray-500 sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
                                 :class="showIndexColumn ? 'left-16' : 'left-0'"
                                 x-safe-html="highlightKey(key)"></td>
 
@@ -453,7 +453,7 @@
                                 :class="getCellClass(key, 'online')"
                                 @click="select(key, 'online')">
                                 <template x-if="onlineData[key] !== undefined">
-                                    <span class="break-words editor-text" :class="valueUnchanged(key) ? 'opacity-50' : ''"
+                                    <span class="editor-text" :class="valueUnchanged(key) ? 'opacity-50' : ''"
                                         x-safe-html="onlineValueHtml(key)"></span>
                                 </template>
                                 <template x-if="onlineData[key] === undefined">

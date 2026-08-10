@@ -507,7 +507,7 @@
                                                  one column to the next reads as a fault. --}}
                                             <div class="flex items-center gap-2">
                                                 <span class="shrink-0" :class="'tag-' + getTag(branch.content[key])" x-text="getTag(branch.content[key])"></span>
-                                                <span class="break-words editor-text"
+                                                <span class="editor-text"
                                                     :class="branchTextTint(branch, key)"
                                                     x-safe-html="branchValueHtml(branch, key)"></span>
                                             </div>

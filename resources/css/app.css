@@ -106,6 +106,39 @@
  * template's own indentation as visible whitespace. */
 .show-linebreaks .editor-text { white-space: pre-wrap; }
 
+/* A game line must never be wider than the column holding it.
+ *
+ * `break-words` (overflow-wrap: break-word) breaks a long word onto the next
+ * line, but it deliberately does NOT change the element's min-content width —
+ * the intrinsic size still claims the longest unbreakable run. Game strings are
+ * full of them: a colour tag, a sprite name and a placeholder run together for
+ * ninety characters without a space. Inside a flex row (a value cell holds the
+ * text beside its badges) that claim is a floor, so a 429px column carried a
+ * 652px span and the table quietly gained 262px of scrollable width it did not
+ * paint. Narrowing the last column of a merge view then left an empty strip at
+ * the right: the table had shrunk, the scrollable area had not.
+ *
+ * `anywhere` is the same break, but it counts in the intrinsic size — which is
+ * exactly what a fixed column needs. It also lifts an older constraint: under
+ * automatic layout, one such line used to force its whole column to 652px and
+ * push the others off screen. Nothing is broken that fits. */
+.editor-text { overflow-wrap: anywhere; }
+
+/* The key column keeps a floor of its own, now that the rule above took away the
+ * accidental one it had.
+ *
+ * A key is an identifier: `UI/Menu/Options_Volume_Master` has no space in it, so
+ * its longest unbreakable run WAS the whole key, and the automatic layout gave
+ * the column that much whether it deserved it or not — up to six hundred pixels,
+ * which is how the value columns ended up off screen. Breaking anywhere fixes
+ * that and hands the column to the share-out, which will just as happily reduce
+ * it to a ribbon of one letter per line.
+ *
+ * Declared once here rather than as a class in four templates, and stated as a
+ * min-width so `.cols-sized` lifts it the moment someone drags an edge — a floor
+ * for the layout's guess, never for a deliberate width (see the rule above). */
+.editor-grid [data-col="key"] { min-width: 200px; }
+
 /* The pinned reference column (see js/components/editor-pin.js).
  *
  * `left` is not here: it depends on how wide the key column has been dragged,
