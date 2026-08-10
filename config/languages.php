@@ -1,9 +1,18 @@
 <?php
 
 /**
- * Languages supported by Qwen3 for translation
- * Source: https://qwenlm.github.io/blog/qwen3/
- * 119 languages and dialects
+ * Languages a translation may be published in.
+ *
+ * This list IS the contract. The upload endpoint validates target_language against it, and the
+ * mod carries the same names (UnityGameTranslator.Common.Languages) so that what it sends is
+ * accepted. A name added, removed or respelled on one side only shows up as an upload refused by
+ * a validation error the contributor did not cause and cannot read.
+ *
+ * A name, not a code: five of these have no ISO 639-1 code at all, and the name is what travels
+ * everywhere — stored here, resolved by the mod, written into the game's config.
+ *
+ * It does NOT describe what any model can translate. Models are picked from a catalogue and most
+ * will attempt any pair with varying success; this is what the site accepts to host.
  */
 return [
     // Major languages (most common for game translations)
