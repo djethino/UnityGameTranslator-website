@@ -972,7 +972,11 @@ export function editorCore(config) {
                 if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
             } catch (e) { /* corrupted state: keep defaults */ }
 
-            this._restoreColumnWidths();
+            // After a frame, never during init: $refs.gridBox has no width yet when Alpine runs
+            // this, so every check against the box compared with zero and let anything through —
+            // which is how a grid came back sized to 3147px inside a box of 1182 and started
+            // scrolling before anyone had touched it.
+            requestAnimationFrame(() => this._restoreColumnWidths());
         },
 
         /**
@@ -991,6 +995,9 @@ export function editorCore(config) {
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 const box = (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0;
+                // No measurable box, no judgement: leaving the automatic layout in place is
+                // always safe, restoring a width that cannot be checked is not.
+                if (box === 0) return;
 
                 // Widths belong to a COLUMN LAYOUT, not just to a document. Hiding every branch on
                 // the merge view leaves a plain key/value grid, and replaying the widths measured
