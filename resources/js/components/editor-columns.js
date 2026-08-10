@@ -195,18 +195,27 @@ export function editorColumns() {
 
             let total = fixedPart + Object.values(widths).reduce((sum, w) => sum + w, 0);
 
-            // Past the box, on a grid that fitted in it: take the width from the right instead of
-            // pushing the grid out.
+            // Past the box, on a grid that belongs against both edges: take the width from the
+            // right instead of pushing the grid out.
             //
-            // A two-column key/value grid has nowhere to scroll TO — its columns belong against
-            // both edges, and widening one is asking the other to give way, not asking for a
-            // sideways journey. Scrolling is the merge view's business, where a Main and three
-            // branches genuinely do not fit. So the rule is not "which screen is this" but
-            // something the grid already knows: a drag never CREATES an overflow that was not
-            // there. A merge view with every branch hidden behaves like the simple grid it has
-            // become, and the same one with three branches keeps scrolling as before.
-            const fitted = drag.baseGridWidth <= drag.boxWidth + 1;
-            if (fitted && total > drag.boxWidth && drag.rightOf.length) {
+            // A key/value grid has nowhere to scroll TO — its two columns belong against the two
+            // edges, and widening one is asking the other to give way, not asking for a sideways
+            // journey. A comparison is the opposite: three or more versions of the same line
+            // genuinely do not fit, the grid scrolls by design, and widening the column you are
+            // reading must NOT crush the ones further right to keep a total — they hold the very
+            // text you are comparing it against, and squeezed to their floor they say nothing.
+            // There, growing past the box is the right answer.
+            //
+            // The line between the two is the grid's own shape rather than which page it is on:
+            // how many columns can be dragged. Two means key and one value; three or more means a
+            // key and at least two versions. It follows the branches being checked and unchecked,
+            // so a merge view with every branch hidden behaves like the simple grid it has become.
+            //
+            // Still conditioned on having FITTED to begin with: a two-column grid already wider
+            // than its box (a narrow window, both floors added up) must not be yanked back to the
+            // box width by an unrelated drag.
+            const anchored = drag.flexibleCount <= 2 && drag.baseGridWidth <= drag.boxWidth + 1;
+            if (anchored && total > drag.boxWidth && drag.rightOf.length) {
                 let over = total - drag.boxWidth;
 
                 // Right to left: the neighbour gives first, and the far column is only called on
@@ -281,6 +290,7 @@ export function editorColumns() {
             this.resizingColumns = true;
 
             const order = this._columnOrder();
+            const flexible = order.filter((c) => this._isFlexible(c));
             this._resize = {
                 col,
                 startX: event.clientX,
@@ -294,6 +304,11 @@ export function editorColumns() {
                 // column with no handle — the tag columns, a badge wide — was never meant to
                 // stretch, and sharing the slack equally with one made it grow a hundred pixels.
                 rightOf: order.slice(order.indexOf(col) + 1).filter((c) => this._isFlexible(c)),
+                // Two draggable columns is a key and a value; three or more is a comparison. It
+                // decides whether the grid stays pinned to both edges or may grow past its box —
+                // see _distribute. Counted at mousedown, like everything else here: branches
+                // appear and disappear, and the answer must hold for the length of one drag.
+                flexibleCount: flexible.length,
                 // What the grid must never be narrower than
                 boxWidth: (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0,
             };
