@@ -71,7 +71,20 @@
             @endif
         </dl>
 
-        <p class="text-sm text-gray-400 mt-3">{{ __('docs.models.too_small') }}</p>
+        {{-- ⚠ A tighter card is NOT a reason to send somebody to a paid service, and the wording
+             this replaced did exactly that. Several models in the list below run on 4 GB; the
+             honest first answer is to try one, and the tester in the Manager settles it on the
+             reader's own machine, in the reader's own language, against the very instructions the
+             mod sends. An external API stays available to whoever wants one — it is their call,
+             and all we owe them is a word about what it can cost. --}}
+        <p class="text-sm text-gray-400 mt-3">
+            {{ __('docs.models.try_smaller') }}
+            <a href="https://github.com/djethino/unitygametranslator-manager/releases/latest"
+               target="_blank" rel="noopener"
+               class="text-purple-300 hover:text-purple-200 underline">{{ __('docs.models.get_manager') }}</a>
+        </p>
+
+        <p class="text-sm text-gray-400 mt-2">{{ __('docs.models.external_apis') }}</p>
     </div>
 @endif
 
