@@ -1133,21 +1133,27 @@ c = 0.8 → 1.0</pre>
 
                 <div class="grid md:grid-cols-2 gap-6">
                     <figure class="text-center">
-                        <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.png') }}"
-                             alt="{{ __('docs.config.gui_ai_alt') }}"
-                             class="doc-img doc-img-tall mx-auto"
-                             width="579" height="916"
-                             loading="lazy"
-                             data-zoomable>
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/ModOptionsTranslationAi.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.png') }}"
+                                 alt="{{ __('docs.config.gui_ai_alt') }}"
+                                 class="doc-img doc-img-tall mx-auto"
+                                 width="579" height="916"
+                                 loading="lazy"
+                                 data-zoomable>
+                        </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_ai_caption') }}</figcaption>
                     </figure>
                     <figure class="text-center">
-                        <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.png') }}"
-                             alt="{{ __('docs.config.gui_tools_alt') }}"
-                             class="doc-img doc-img-tall mx-auto"
-                             width="575" height="673"
-                             loading="lazy"
-                             data-zoomable>
+                        <picture>
+                            <source srcset="{{ asset('images/screenshots/ModOptionsTranslationTools.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.png') }}"
+                                 alt="{{ __('docs.config.gui_tools_alt') }}"
+                                 class="doc-img doc-img-tall mx-auto"
+                                 width="575" height="673"
+                                 loading="lazy"
+                                 data-zoomable>
+                        </picture>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_tools_caption') }}</figcaption>
                     </figure>
                 </div>
