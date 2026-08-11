@@ -19,11 +19,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.banned.api' => \App\Http\Middleware\CheckBannedApi::class,
         ]);
 
-        // First in, last out: the security headers then cover everything, including the
-        // responses that never reach a controller. Appended, it sat after SubstituteBindings,
-        // so a 404 raised by a failed route binding went out with no CSP at all — and once
-        // error pages started using the site layout, without the nonce the layout expects.
-        $middleware->prependToGroup('web', [
+        // GLOBAL, not on the web group, and that distinction is the whole point.
+        //
+        // ⚠ A URL matching no route never enters a route group. So while this sat on `web`, every
+        // 404 rendered errors/404.blade.php — which extends the site layout, which asks for
+        // $cspNonce — with no middleware having shared it: "Undefined variable $cspNonce", and a
+        // 500 in place of the 404. Every mistyped address, dead link and stale indexed URL served
+        // a server error, to visitors and to crawlers alike. Found 2026-08-11.
+        //
+        // Moving it to the group was already an attempt at this: it was appended before, sitting
+        // after SubstituteBindings, so a 404 from a failed route binding went out with no CSP.
+        // That fixed the bindings and left the unmatched URLs, which is the larger case.
+        //
+        // Safe to run on everything: the middleware returns early for any response that is not
+        // text/html, so API answers are untouched.
+        $middleware->prepend([
             \App\Http\Middleware\ContentSecurityPolicy::class,
         ]);
 
