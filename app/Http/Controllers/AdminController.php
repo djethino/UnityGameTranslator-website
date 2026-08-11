@@ -440,6 +440,22 @@ class AdminController extends Controller
 
         $liveCapacity = LiveEditCapacity::current();
 
+        // How long since the shared catalogues were last confirmed against the published ones.
+        //
+        // ⚠ This is here because the failure it reports has NO other symptom. When the catalogue
+        // cannot be fetched, the site keeps serving the copy committed in resources/catalog/ and
+        // stays entirely correct — so a source that went unreachable months ago looks exactly like
+        // one that is simply stable. Nothing about it belongs on a visitor's screen; it is an
+        // operational fact for us, next to the other operational facts.
+        $catalogue = [];
+        foreach (CatalogStore::FILES as $document) {
+            $confirmed = CatalogStore::lastConfirmedAt($document);
+            $catalogue[$document] = [
+                'at' => $confirmed,
+                'days' => $confirmed === null ? null : (int) $confirmed->diff(new \DateTimeImmutable())->days,
+            ];
+        }
+
         // Concurrency peaks over the period. Free: $dailyStats is already
         // loaded, and this is the history the instant gauge above cannot give —
         // nobody watches a dashboard at the moment it saturates.
@@ -459,6 +475,7 @@ class AdminController extends Controller
 
         return view('admin.analytics', compact(
             'liveCapacity',
+            'catalogue',
             'peaks',
             'chartPeakSessions',
             'chartPeakStreams',

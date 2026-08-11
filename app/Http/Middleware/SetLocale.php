@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CatalogStore;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -97,6 +98,27 @@ class SetLocale
         return $defaultLocale;
     }
 
+    /**
+     * The interface language a browser is asking for, or null to leave the decision to the default.
+     *
+     * ⚠ THE LOCALE IS RESOLVED THROUGH THE CATALOGUE, not by taking its first two letters. That
+     * shortcut was wrong in both directions:
+     *
+     *   · "zh-Hant-TW" became "zh", and this site's zh IS Simplified Chinese — so a machine set to
+     *     Traditional was served the other script, silently;
+     *   · "iw" stayed "iw" and matched nothing, so browsers and runtimes still emitting the old
+     *     code for Hebrew got English while `he` sat right there in the list.
+     *
+     * The catalogue knows every code a language answers to (zh-Hans, zh-CN, iw, no…) and shortens
+     * one segment at a time rather than by character count, which is what keeps zh-Hant from
+     * collapsing into zh. Same rule as the mod's Languages.FromLocale, on purpose: one machine must
+     * not be understood differently by the site and by the plugin running in its games.
+     *
+     * ⚠ A language the interface does not have falls through to the DEFAULT, which is English —
+     * deliberately, and documented in the catalogue's own `about.interface_fallback`. Routing
+     * Catalan to Spanish or Traditional Chinese to Simplified would often be more useful and is
+     * refused on purpose: it decides for somebody what else they read. Do not "improve" this.
+     */
     protected function getBrowserLocale(Request $request, array $supportedLocales): ?string
     {
         $acceptLanguage = $request->header('Accept-Language');
@@ -105,8 +127,9 @@ class SetLocale
             return null;
         }
 
-        // Parse Accept-Language header (e.g., "fr-FR,fr;q=0.9,en;q=0.8")
-        $languages = [];
+        // Parse Accept-Language (e.g. "fr-FR,fr;q=0.9,en;q=0.8"), keeping the FULL tag: the
+        // subtags are the information, and dropping them here is what caused the bug above.
+        $requested = [];
         foreach (explode(',', $acceptLanguage) as $part) {
             $part = trim($part);
             $priority = 1.0;
@@ -114,20 +137,27 @@ class SetLocale
             if (strpos($part, ';q=') !== false) {
                 [$part, $q] = explode(';q=', $part);
                 $priority = (float) $q;
+                $part = trim($part);
             }
 
-            // Get the primary language code (e.g., "fr" from "fr-FR")
-            $lang = strtolower(substr($part, 0, 2));
-            $languages[$lang] = $priority;
+            if ($part !== '' && !isset($requested[$part])) {
+                $requested[$part] = $priority;
+            }
         }
 
-        // Sort by priority
-        arsort($languages);
+        arsort($requested);
 
-        // Find first supported language
-        foreach (array_keys($languages) as $lang) {
-            if (in_array($lang, $supportedLocales)) {
-                return $lang;
+        foreach (array_keys($requested) as $tag) {
+            // An exact hit on one of our own locale codes first: it costs nothing and covers the
+            // ordinary case without opening the catalogue at all.
+            $plain = strtolower($tag);
+            if (in_array($plain, $supportedLocales, true)) {
+                return $plain;
+            }
+
+            $canonical = CatalogStore::canonicalTag($tag);
+            if ($canonical !== null && in_array($canonical, $supportedLocales, true)) {
+                return $canonical;
             }
         }
 

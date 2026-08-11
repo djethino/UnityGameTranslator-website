@@ -164,6 +164,85 @@ class CatalogStore
         return $names;
     }
 
+    /**
+     * The canonical tag of the language a system locale is asking for, or null if it is none of
+     * ours. The PHP counterpart of UnityGameTranslator.Common.Languages.FromLocale — same rule,
+     * because a machine reporting zh-Hant-TW must not be understood differently by the site and
+     * by the mod.
+     *
+     * The locale is shortened ONE SEGMENT AT A TIME (RFC 4647 lookup), never truncated to two
+     * letters. That distinction is the whole point: "zh-Hant-TW" shortens to "zh-Hant", which the
+     * catalogue knows as Traditional Chinese, and stops there. Cutting to "zh" would have answered
+     * Simplified Chinese — a different language, offered to somebody who asked for the other one.
+     *
+     * ⚠ What comes back is a catalogue tag, NOT a site locale. Mapping one to the other is a
+     * separate decision and deliberately not made here: the catalogue knows 90 languages and the
+     * interface is translated into 19, and what happens to the other 71 is a policy (English, see
+     * the `about.interface_fallback` note in the catalogue), not a lookup.
+     */
+    public static function canonicalTag(?string $locale): ?string
+    {
+        if ($locale === null || trim($locale) === '') {
+            return null;
+        }
+
+        // Underscores because some systems report fr_FR; case because BCP 47 is case-insensitive
+        // and every source spells the script subtag its own way (zh-Hant, zh-hant, ZH-HANT).
+        $wanted = strtolower(str_replace('_', '-', trim($locale)));
+        $index = self::localeIndex();
+
+        while ($wanted !== '') {
+            if (isset($index[$wanted])) {
+                return $index[$wanted];
+            }
+
+            $cut = strrpos($wanted, '-');
+            if ($cut === false) {
+                return null;
+            }
+
+            $wanted = substr($wanted, 0, $cut);
+        }
+
+        return null;
+    }
+
+    /**
+     * Every code a language answers to, pointing at the one code it is written down as.
+     *
+     * The aliases are not decoration: a system reports zh-CN, a browser sends zh-Hans, Java still
+     * emits iw for Hebrew and most systems say no for Norwegian Bokmål. Dropping them would not
+     * lose a language, it would lose the ability to recognise the machine somebody is actually on.
+     */
+    private static function localeIndex(): array
+    {
+        if (isset(self::$memo['#locales'])) {
+            return self::$memo['#locales'];
+        }
+
+        $index = [];
+
+        foreach (self::document('languages')['languages'] ?? [] as $entry) {
+            $tag = strtolower((string) ($entry['tag'] ?? ''));
+            if ($tag === '') {
+                continue;
+            }
+
+            $index[$tag] = $tag;
+
+            foreach ($entry['also'] ?? [] as $alias) {
+                $alias = strtolower((string) $alias);
+                // An alias never displaces a canonical tag: if two entries ever disagree, the one
+                // that writes the code down wins, rather than whichever came last in the file.
+                if ($alias !== '' && !isset($index[$alias])) {
+                    $index[$alias] = $tag;
+                }
+            }
+        }
+
+        return self::$memo['#locales'] = $index;
+    }
+
     /** Cheap sanity check on fetched text before it is trusted enough to be parsed or served. */
     public static function looksLikeDocument(string $text): bool
     {

@@ -134,6 +134,56 @@
     </div>
 </div>
 
+{{-- Shared catalogues: languages, mod loaders, AI models.
+
+     Here because this is the one failure with no symptom. If the catalogue cannot be
+     fetched the site keeps working from the copy committed in the repository and stays
+     entirely correct — so a source unreachable for months looks identical to one that is
+     simply stable. This line is the only place that tells them apart. --}}
+@php
+    $catalogueStale = collect($catalogue)->max(fn ($d) => $d['days'] ?? PHP_INT_MAX);
+    $catalogueNever = collect($catalogue)->every(fn ($d) => $d['at'] === null);
+@endphp
+<div class="mt-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <h3 class="text-sm font-semibold text-gray-400 mb-2">
+        <i class="fas fa-book mr-1 text-purple-500"></i> Shared catalogues
+    </h3>
+
+    @if ($catalogueNever)
+        <p class="text-sm text-amber-400">
+            Never fetched — running on the copy shipped with the code.
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+            Correct, but frozen at the last deployment. Check that the scheduler runs
+            <code class="text-gray-400">catalog:refresh</code>.
+        </p>
+    @else
+        <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            @foreach ($catalogue as $name => $state)
+                <span class="text-gray-300">
+                    {{ $name }}
+                    @if ($state['at'] === null)
+                        <span class="text-amber-400">never fetched</span>
+                    @elseif ($state['days'] === 0)
+                        <span class="text-green-400">today</span>
+                    @else
+                        <span class="{{ $state['days'] > 7 ? 'text-amber-400' : 'text-gray-500' }}">
+                            {{ $state['days'] }}d ago
+                        </span>
+                    @endif
+                </span>
+            @endforeach
+        </div>
+
+        @if ($catalogueStale > 7)
+            <p class="text-xs text-amber-400 mt-2">
+                Refreshed daily when it works. More than a week means the source has been
+                unreachable and nobody was told — the site is fine, the data is not moving.
+            </p>
+        @endif
+    @endif
+</div>
+
 <!-- ─── Over a period ────────────────────────────────────────────────────── -->
 {{-- The selector sits HERE, not next to the page title: it drives this section
      and everything below it, and nothing above. --}}

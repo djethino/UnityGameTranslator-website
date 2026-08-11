@@ -71,6 +71,32 @@ class CatalogMirrorTest extends TestCase
         $this->assertContains('Cantonese', $names);
     }
 
+    /**
+     * The state of a deployment that has never reached GitHub — which is also the state of one
+     * whose scheduler is not running. The site is correct either way, so this line on the admin
+     * page is the only thing that would ever say so.
+     */
+    public function test_an_admin_is_told_when_nothing_has_ever_been_fetched(): void
+    {
+        $live = storage_path('app/catalog');
+        $aside = storage_path('app/catalog-under-test');
+        $moved = is_dir($live) && @rename($live, $aside);
+
+        try {
+            $admin = \App\Models\User::factory()->create(['is_admin' => true]);
+
+            $this->actingAs($admin)
+                ->get(route('admin.analytics'))
+                ->assertOk()
+                ->assertSee('Never fetched', false);
+        } finally {
+            // In a finally so a failed assertion cannot leave a developer's storage renamed.
+            if ($moved) {
+                @rename($aside, $live);
+            }
+        }
+    }
+
     public function test_the_upload_form_offers_the_catalogue_languages(): void
     {
         $user = \App\Models\User::factory()->create();
