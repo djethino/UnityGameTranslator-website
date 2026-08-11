@@ -11,6 +11,14 @@ Artisan::command('inspire', function () {
 // Aggregate analytics daily at 2 AM
 Schedule::command('analytics:aggregate')->dailyAt('02:00');
 
+// Pick up changes to the shared catalogues (languages, mod loaders, AI models).
+//
+// These hold facts we do not decide — a provider adds a language, a loader ships a release — so
+// they are fetched rather than deployed. Daily is deliberate: they move a few times a month, and
+// the copy committed in resources/catalog/ means a fetch that never happens costs a novelty, not
+// a failure. The command refuses anything malformed or truncated rather than overwrite with it.
+Schedule::command('catalog:refresh')->dailyAt('04:30');
+
 // Being delisted is computed on every query, so nothing here decides anything: the state is
 // already true the moment the thirtieth day passes. What no code can do on its own is say so —
 // there is no event when a date is crossed — and the banners only reach somebody who came back

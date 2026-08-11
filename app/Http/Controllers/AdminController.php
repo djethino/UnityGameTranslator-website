@@ -12,6 +12,7 @@ use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
+use App\Services\CatalogStore;
 use App\Services\LiveEditCapacity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -239,7 +240,7 @@ class AdminController extends Controller
 
         $translations = $query->paginate(20)->appends($request->query());
         $games = Game::orderBy('name')->get();
-        $languages = config('languages');
+        $languages = CatalogStore::languageNames();
         $statuses = Translation::STATUSES;
         $visibilities = Translation::VISIBILITY;
 

@@ -10,6 +10,7 @@ use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Models\User;
 use App\Notifications\BranchSubmitted;
+use App\Services\CatalogStore;
 use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
@@ -445,7 +446,7 @@ class TranslationController extends Controller
 
     public function store(Request $request, TranslationService $service): JsonResponse
     {
-        $languages = config('languages');
+        $languages = CatalogStore::languageNames();
 
         $request->validate([
             'steam_id' => 'nullable|required_without:game_name|string',

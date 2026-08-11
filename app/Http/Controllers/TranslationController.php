@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Services\CatalogStore;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
@@ -18,12 +19,12 @@ class TranslationController extends Controller
 {
     public function create()
     {
-        return view('translations.create');
+        return view('translations.create', ['languages' => CatalogStore::languageNames()]);
     }
 
     public function store(Request $request, TranslationService $service)
     {
-        $languages = config('languages');
+        $languages = CatalogStore::languageNames();
 
         $request->validate([
             'game_id' => 'nullable|exists:games,id',

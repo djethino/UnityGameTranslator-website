@@ -1,0 +1,1004 @@
+{
+  "about": {
+    "what": "Languages a translation may be published in.",
+    "contract": "This list IS the upload contract. The website validates target_language against these names and the mod sends them, so a name added, removed or respelled on one side only shows up as an upload refused by a validation error the contributor did not cause and cannot read. It moves on every side at once or not at all.",
+    "identity": "The NAME is the identity, never the tag. It is what the website stores, what the mod resolves to and what a game's config holds. Five of these have no ISO 639-1 code at all, which is a fact about a 1967 standard and not about a language.",
+    "tag": "BCP 47. For most languages that is the familiar two-letter code, which is already a valid BCP 47 tag; the five without one carry the registered subtag instead - yue, prs, arz, ary, apc - each checked against the IANA Language Subtag Registry rather than written from memory. None of them is deprecated.",
+    "parent": "Set only where the parent is itself an entry in this list, for grouping in a picker. Cantonese has none: its macrolanguage is zh, and this list has Simplified and Traditional Chinese, which are scripts rather than a language it is a variety of. Left empty rather than attached to something it does not belong to.",
+    "aliases": "What somebody would actually type. Present only where a source gives one - the registry's own alternative descriptions here. Nothing invented.",
+    "providers": "What Google Translate and DeepL accept, and under which code. null means the provider does not do that language: the caller must say so BEFORE translating rather than send a request per line and collect a refusal each time, which is what happened while this field did not exist. Google's codes come from its Neural Machine Translation list, because that is the model behind the v2 endpoint this project calls - the newer LLM list is longer and does not apply. DeepL distinguishes source from target: the same language is EN as a source and EN-US as a target, and sending the wrong one is refused. Taken from their published tables on 2026-08-11, not from an endpoint - see sources below. A list read from their own API would be better and needs a key; this is dated so it can be recognised as stale.",
+    "not_the_website_interface": "Unrelated to the 19 languages the website's own interface is translated into. Those are fixed and are a different question.",
+    "order": "Same order as the website's config/languages.php, which is the reference for this list. Not because order carries meaning - it does not, the contract is checked by membership - but so that comparing the two sides is a diff anyone can read.",
+    "interface_fallback": "When somebody's system asks for a language the website's interface does not have — Catalan, Breton, Basque — it serves ENGLISH. Uniformly, so no field carries it. The tempting alternative was to fall back to the majority language of the territory: Catalan to Spanish, Breton to French. It would often be more useful and it was rejected on purpose. It decides for somebody what else they speak, and routing a minority language to the language that displaced it is exactly the framing that makes those languages invisible elsewhere. English assumes nothing about anyone. ⚠ This is now a decision rather than an accident: the behaviour was already English, but only because an unmatched locale fell through to the default. Written down so it is not silently 'improved' later.",
+    "sources": {
+      "deepl": "https://developers.deepl.com/docs/getting-started/supported-languages, read 2026-08-11 (125 languages)",
+      "google": "https://docs.cloud.google.com/translate/docs/languages, Neural Machine Translation table, read 2026-08-11 (232 languages)"
+    },
+    "also": "Other codes the same language answers to, and it is a recognition list rather than a choice. A system reports zh-CN, a browser sends zh-Hans, Java still emits iw for Hebrew and no is what most systems mean by Norwegian Bokmål. All of them have to be understood; only `tag` is ever written down. Dropping these would not lose a language, it would lose the ability to recognise the machine somebody is actually using."
+  },
+  "languages": [
+    {
+      "name": "English",
+      "tag": "en",
+      "providers": {
+        "google": "en",
+        "deepl": {
+          "source": "EN",
+          "target": "EN-US"
+        }
+      }
+    },
+    {
+      "name": "French",
+      "tag": "fr",
+      "providers": {
+        "google": "fr",
+        "deepl": {
+          "source": "FR",
+          "target": "FR"
+        }
+      }
+    },
+    {
+      "name": "German",
+      "tag": "de",
+      "providers": {
+        "google": "de",
+        "deepl": {
+          "source": "DE",
+          "target": "DE"
+        }
+      }
+    },
+    {
+      "name": "Spanish",
+      "tag": "es",
+      "providers": {
+        "google": "es",
+        "deepl": {
+          "source": "ES",
+          "target": "ES"
+        }
+      }
+    },
+    {
+      "name": "Italian",
+      "tag": "it",
+      "providers": {
+        "google": "it",
+        "deepl": {
+          "source": "IT",
+          "target": "IT"
+        }
+      }
+    },
+    {
+      "name": "Portuguese",
+      "tag": "pt",
+      "providers": {
+        "google": "pt",
+        "deepl": {
+          "source": "PT",
+          "target": "PT-BR"
+        }
+      }
+    },
+    {
+      "name": "Russian",
+      "tag": "ru",
+      "providers": {
+        "google": "ru",
+        "deepl": {
+          "source": "RU",
+          "target": "RU"
+        }
+      }
+    },
+    {
+      "name": "Polish",
+      "tag": "pl",
+      "providers": {
+        "google": "pl",
+        "deepl": {
+          "source": "PL",
+          "target": "PL"
+        }
+      }
+    },
+    {
+      "name": "Japanese",
+      "tag": "ja",
+      "providers": {
+        "google": "ja",
+        "deepl": {
+          "source": "JA",
+          "target": "JA"
+        }
+      }
+    },
+    {
+      "name": "Korean",
+      "tag": "ko",
+      "providers": {
+        "google": "ko",
+        "deepl": {
+          "source": "KO",
+          "target": "KO"
+        }
+      }
+    },
+    {
+      "name": "Simplified Chinese",
+      "tag": "zh",
+      "also": [
+        "zh-cn",
+        "zh-hans"
+      ],
+      "providers": {
+        "google": "zh-CN",
+        "deepl": {
+          "source": "ZH",
+          "target": "ZH-HANS"
+        }
+      }
+    },
+    {
+      "name": "Traditional Chinese",
+      "tag": "zh-tw",
+      "also": [
+        "zh-hant"
+      ],
+      "providers": {
+        "google": "zh-TW",
+        "deepl": {
+          "source": "ZH",
+          "target": "ZH-HANT"
+        }
+      }
+    },
+    {
+      "name": "Arabic",
+      "tag": "ar",
+      "providers": {
+        "google": "ar",
+        "deepl": {
+          "source": "AR",
+          "target": "AR"
+        }
+      }
+    },
+    {
+      "name": "Turkish",
+      "tag": "tr",
+      "providers": {
+        "google": "tr",
+        "deepl": {
+          "source": "TR",
+          "target": "TR"
+        }
+      }
+    },
+    {
+      "name": "Dutch",
+      "tag": "nl",
+      "providers": {
+        "google": "nl",
+        "deepl": {
+          "source": "NL",
+          "target": "NL"
+        }
+      }
+    },
+    {
+      "name": "Swedish",
+      "tag": "sv",
+      "providers": {
+        "google": "sv",
+        "deepl": {
+          "source": "SV",
+          "target": "SV"
+        }
+      }
+    },
+    {
+      "name": "Danish",
+      "tag": "da",
+      "providers": {
+        "google": "da",
+        "deepl": {
+          "source": "DA",
+          "target": "DA"
+        }
+      }
+    },
+    {
+      "name": "Norwegian Bokmål",
+      "tag": "nb",
+      "also": [
+        "no"
+      ],
+      "providers": {
+        "google": "no",
+        "deepl": {
+          "source": "NB",
+          "target": "NB"
+        }
+      }
+    },
+    {
+      "name": "Finnish",
+      "tag": "fi",
+      "providers": {
+        "google": "fi",
+        "deepl": {
+          "source": "FI",
+          "target": "FI"
+        }
+      }
+    },
+    {
+      "name": "Czech",
+      "tag": "cs",
+      "providers": {
+        "google": "cs",
+        "deepl": {
+          "source": "CS",
+          "target": "CS"
+        }
+      }
+    },
+    {
+      "name": "Hungarian",
+      "tag": "hu",
+      "providers": {
+        "google": "hu",
+        "deepl": {
+          "source": "HU",
+          "target": "HU"
+        }
+      }
+    },
+    {
+      "name": "Romanian",
+      "tag": "ro",
+      "providers": {
+        "google": "ro",
+        "deepl": {
+          "source": "RO",
+          "target": "RO"
+        }
+      }
+    },
+    {
+      "name": "Greek",
+      "tag": "el",
+      "providers": {
+        "google": "el",
+        "deepl": {
+          "source": "EL",
+          "target": "EL"
+        }
+      }
+    },
+    {
+      "name": "Thai",
+      "tag": "th",
+      "providers": {
+        "google": "th",
+        "deepl": {
+          "source": "TH",
+          "target": "TH"
+        }
+      }
+    },
+    {
+      "name": "Vietnamese",
+      "tag": "vi",
+      "providers": {
+        "google": "vi",
+        "deepl": {
+          "source": "VI",
+          "target": "VI"
+        }
+      }
+    },
+    {
+      "name": "Indonesian",
+      "tag": "id",
+      "providers": {
+        "google": "id",
+        "deepl": {
+          "source": "ID",
+          "target": "ID"
+        }
+      }
+    },
+    {
+      "name": "Malay",
+      "tag": "ms",
+      "providers": {
+        "google": "ms",
+        "deepl": {
+          "source": "MS",
+          "target": "MS"
+        }
+      }
+    },
+    {
+      "name": "Ukrainian",
+      "tag": "uk",
+      "providers": {
+        "google": "uk",
+        "deepl": {
+          "source": "UK",
+          "target": "UK"
+        }
+      }
+    },
+    {
+      "name": "Bulgarian",
+      "tag": "bg",
+      "providers": {
+        "google": "bg",
+        "deepl": {
+          "source": "BG",
+          "target": "BG"
+        }
+      }
+    },
+    {
+      "name": "Slovak",
+      "tag": "sk",
+      "providers": {
+        "google": "sk",
+        "deepl": {
+          "source": "SK",
+          "target": "SK"
+        }
+      }
+    },
+    {
+      "name": "Croatian",
+      "tag": "hr",
+      "providers": {
+        "google": "hr",
+        "deepl": {
+          "source": "HR",
+          "target": "HR"
+        }
+      }
+    },
+    {
+      "name": "Serbian",
+      "tag": "sr",
+      "providers": {
+        "google": "sr",
+        "deepl": {
+          "source": "SR",
+          "target": "SR"
+        }
+      }
+    },
+    {
+      "name": "Slovenian",
+      "tag": "sl",
+      "providers": {
+        "google": "sl",
+        "deepl": {
+          "source": "SL",
+          "target": "SL"
+        }
+      }
+    },
+    {
+      "name": "Lithuanian",
+      "tag": "lt",
+      "providers": {
+        "google": "lt",
+        "deepl": {
+          "source": "LT",
+          "target": "LT"
+        }
+      }
+    },
+    {
+      "name": "Latvian",
+      "tag": "lv",
+      "providers": {
+        "google": "lv",
+        "deepl": {
+          "source": "LV",
+          "target": "LV"
+        }
+      }
+    },
+    {
+      "name": "Estonian",
+      "tag": "et",
+      "providers": {
+        "google": "et",
+        "deepl": {
+          "source": "ET",
+          "target": "ET"
+        }
+      }
+    },
+    {
+      "name": "Norwegian Nynorsk",
+      "tag": "nn",
+      "providers": {
+        "google": "no",
+        "deepl": {
+          "source": "NB",
+          "target": "NB"
+        }
+      }
+    },
+    {
+      "name": "Icelandic",
+      "tag": "is",
+      "providers": {
+        "google": "is",
+        "deepl": {
+          "source": "IS",
+          "target": "IS"
+        }
+      }
+    },
+    {
+      "name": "Faroese",
+      "tag": "fo",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Irish",
+      "tag": "ga",
+      "providers": {
+        "google": "ga",
+        "deepl": {
+          "source": "GA",
+          "target": "GA"
+        }
+      }
+    },
+    {
+      "name": "Welsh",
+      "tag": "cy",
+      "providers": {
+        "google": "cy",
+        "deepl": {
+          "source": "CY",
+          "target": "CY"
+        }
+      }
+    },
+    {
+      "name": "Catalan",
+      "tag": "ca",
+      "providers": {
+        "google": "ca",
+        "deepl": {
+          "source": "CA",
+          "target": "CA"
+        }
+      }
+    },
+    {
+      "name": "Galician",
+      "tag": "gl",
+      "providers": {
+        "google": "gl",
+        "deepl": {
+          "source": "GL",
+          "target": "GL"
+        }
+      }
+    },
+    {
+      "name": "Basque",
+      "tag": "eu",
+      "providers": {
+        "google": "eu",
+        "deepl": {
+          "source": "EU",
+          "target": "EU"
+        }
+      }
+    },
+    {
+      "name": "Luxembourgish",
+      "tag": "lb",
+      "providers": {
+        "google": "lb",
+        "deepl": {
+          "source": "LB",
+          "target": "LB"
+        }
+      }
+    },
+    {
+      "name": "Afrikaans",
+      "tag": "af",
+      "providers": {
+        "google": "af",
+        "deepl": {
+          "source": "AF",
+          "target": "AF"
+        }
+      }
+    },
+    {
+      "name": "Macedonian",
+      "tag": "mk",
+      "providers": {
+        "google": "mk",
+        "deepl": {
+          "source": "MK",
+          "target": "MK"
+        }
+      }
+    },
+    {
+      "name": "Bosnian",
+      "tag": "bs",
+      "providers": {
+        "google": "bs",
+        "deepl": {
+          "source": "BS",
+          "target": "BS"
+        }
+      }
+    },
+    {
+      "name": "Albanian",
+      "tag": "sq",
+      "providers": {
+        "google": "sq",
+        "deepl": {
+          "source": "SQ",
+          "target": "SQ"
+        }
+      }
+    },
+    {
+      "name": "Armenian",
+      "tag": "hy",
+      "providers": {
+        "google": "hy",
+        "deepl": {
+          "source": "HY",
+          "target": "HY"
+        }
+      }
+    },
+    {
+      "name": "Belarusian",
+      "tag": "be",
+      "providers": {
+        "google": "be",
+        "deepl": {
+          "source": "BE",
+          "target": "BE"
+        }
+      }
+    },
+    {
+      "name": "Persian",
+      "tag": "fa",
+      "providers": {
+        "google": "fa",
+        "deepl": {
+          "source": "FA",
+          "target": "FA"
+        }
+      }
+    },
+    {
+      "name": "Dari",
+      "tag": "prs",
+      "parent": "Persian",
+      "aliases": [
+        "Afghan Persian"
+      ],
+      "providers": {
+        "google": null,
+        "deepl": {
+          "source": "PRS",
+          "target": "PRS"
+        }
+      }
+    },
+    {
+      "name": "Tajik",
+      "tag": "tg",
+      "providers": {
+        "google": "tg",
+        "deepl": {
+          "source": "TG",
+          "target": "TG"
+        }
+      }
+    },
+    {
+      "name": "Hindi",
+      "tag": "hi",
+      "providers": {
+        "google": "hi",
+        "deepl": {
+          "source": "HI",
+          "target": "HI"
+        }
+      }
+    },
+    {
+      "name": "Bengali",
+      "tag": "bn",
+      "providers": {
+        "google": "bn",
+        "deepl": {
+          "source": "BN",
+          "target": "BN"
+        }
+      }
+    },
+    {
+      "name": "Urdu",
+      "tag": "ur",
+      "providers": {
+        "google": "ur",
+        "deepl": {
+          "source": "UR",
+          "target": "UR"
+        }
+      }
+    },
+    {
+      "name": "Punjabi",
+      "tag": "pa",
+      "providers": {
+        "google": "pa",
+        "deepl": {
+          "source": "PA",
+          "target": "PA"
+        }
+      }
+    },
+    {
+      "name": "Gujarati",
+      "tag": "gu",
+      "providers": {
+        "google": "gu",
+        "deepl": {
+          "source": "GU",
+          "target": "GU"
+        }
+      }
+    },
+    {
+      "name": "Marathi",
+      "tag": "mr",
+      "providers": {
+        "google": "mr",
+        "deepl": {
+          "source": "MR",
+          "target": "MR"
+        }
+      }
+    },
+    {
+      "name": "Tamil",
+      "tag": "ta",
+      "providers": {
+        "google": "ta",
+        "deepl": {
+          "source": "TA",
+          "target": "TA"
+        }
+      }
+    },
+    {
+      "name": "Telugu",
+      "tag": "te",
+      "providers": {
+        "google": "te",
+        "deepl": {
+          "source": "TE",
+          "target": "TE"
+        }
+      }
+    },
+    {
+      "name": "Kannada",
+      "tag": "kn",
+      "providers": {
+        "google": "kn",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Malayalam",
+      "tag": "ml",
+      "providers": {
+        "google": "ml",
+        "deepl": {
+          "source": "ML",
+          "target": "ML"
+        }
+      }
+    },
+    {
+      "name": "Oriya",
+      "tag": "or",
+      "providers": {
+        "google": "or",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Sinhala",
+      "tag": "si",
+      "providers": {
+        "google": "si",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Nepali",
+      "tag": "ne",
+      "providers": {
+        "google": "ne",
+        "deepl": {
+          "source": "NE",
+          "target": "NE"
+        }
+      }
+    },
+    {
+      "name": "Assamese",
+      "tag": "as",
+      "providers": {
+        "google": "as",
+        "deepl": {
+          "source": "AS",
+          "target": "AS"
+        }
+      }
+    },
+    {
+      "name": "Sindhi",
+      "tag": "sd",
+      "providers": {
+        "google": "sd",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Cantonese",
+      "tag": "yue",
+      "aliases": [
+        "Yue Chinese"
+      ],
+      "providers": {
+        "google": "yue",
+        "deepl": {
+          "source": "YUE",
+          "target": "YUE"
+        }
+      }
+    },
+    {
+      "name": "Burmese",
+      "tag": "my",
+      "providers": {
+        "google": "my",
+        "deepl": {
+          "source": "MY",
+          "target": "MY"
+        }
+      }
+    },
+    {
+      "name": "Khmer",
+      "tag": "km",
+      "providers": {
+        "google": "km",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Lao",
+      "tag": "lo",
+      "providers": {
+        "google": "lo",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Tagalog",
+      "tag": "tl",
+      "providers": {
+        "google": "tl",
+        "deepl": {
+          "source": "TL",
+          "target": "TL"
+        }
+      }
+    },
+    {
+      "name": "Cebuano",
+      "tag": "ceb",
+      "providers": {
+        "google": "ceb",
+        "deepl": {
+          "source": "CEB",
+          "target": "CEB"
+        }
+      }
+    },
+    {
+      "name": "Javanese",
+      "tag": "jv",
+      "providers": {
+        "google": "jv",
+        "deepl": {
+          "source": "JV",
+          "target": "JV"
+        }
+      }
+    },
+    {
+      "name": "Sundanese",
+      "tag": "su",
+      "providers": {
+        "google": "su",
+        "deepl": {
+          "source": "SU",
+          "target": "SU"
+        }
+      }
+    },
+    {
+      "name": "Azerbaijani",
+      "tag": "az",
+      "providers": {
+        "google": "az",
+        "deepl": {
+          "source": "AZ",
+          "target": "AZ"
+        }
+      }
+    },
+    {
+      "name": "Uzbek",
+      "tag": "uz",
+      "providers": {
+        "google": "uz",
+        "deepl": {
+          "source": "UZ",
+          "target": "UZ"
+        }
+      }
+    },
+    {
+      "name": "Kazakh",
+      "tag": "kk",
+      "providers": {
+        "google": "kk",
+        "deepl": {
+          "source": "KK",
+          "target": "KK"
+        }
+      }
+    },
+    {
+      "name": "Bashkir",
+      "tag": "ba",
+      "providers": {
+        "google": "ba",
+        "deepl": {
+          "source": "BA",
+          "target": "BA"
+        }
+      }
+    },
+    {
+      "name": "Tatar",
+      "tag": "tt",
+      "providers": {
+        "google": "tt",
+        "deepl": {
+          "source": "TT",
+          "target": "TT"
+        }
+      }
+    },
+    {
+      "name": "Hebrew",
+      "tag": "he",
+      "also": [
+        "iw"
+      ],
+      "providers": {
+        "google": "he",
+        "deepl": {
+          "source": "HE",
+          "target": "HE"
+        }
+      }
+    },
+    {
+      "name": "Maltese",
+      "tag": "mt",
+      "providers": {
+        "google": "mt",
+        "deepl": {
+          "source": "MT",
+          "target": "MT"
+        }
+      }
+    },
+    {
+      "name": "Egyptian Arabic",
+      "tag": "arz",
+      "parent": "Arabic",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Levantine Arabic",
+      "tag": "apc",
+      "parent": "Arabic",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Moroccan Arabic",
+      "tag": "ary",
+      "parent": "Arabic",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Georgian",
+      "tag": "ka",
+      "providers": {
+        "google": "ka",
+        "deepl": {
+          "source": "KA",
+          "target": "KA"
+        }
+      }
+    },
+    {
+      "name": "Swahili",
+      "tag": "sw",
+      "providers": {
+        "google": "sw",
+        "deepl": {
+          "source": "SW",
+          "target": "SW"
+        }
+      }
+    },
+    {
+      "name": "Haitian Creole",
+      "tag": "ht",
+      "providers": {
+        "google": "ht",
+        "deepl": {
+          "source": "HT",
+          "target": "HT"
+        }
+      }
+    }
+  ]
+}

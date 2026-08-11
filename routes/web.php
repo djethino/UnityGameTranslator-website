@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Auth\LocalAuthController;
 use App\Http\Controllers\Auth\SocialController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\HomeController;
@@ -29,6 +30,14 @@ Route::get('/indexnow.txt', function () {
     abort_unless(!empty($key), 404);
     return response($key, 200)->header('Content-Type', 'text/plain');
 })->name('indexnow.key');
+
+// Shared catalogues (no locale prefix - fetched by the Manager, never navigated).
+// This is the mirror rung of the Manager's fetch order: GitHub, here, its cache, its embedded
+// copy. The path is compiled into the tool as CatalogMirrorBase, so it cannot be renamed on a
+// whim — an older Manager will keep asking for exactly this.
+Route::get('/catalog/{name}.json', [CatalogController::class, 'show'])
+    ->where('name', '[a-z]+')
+    ->name('catalog.show');
 
 // Language switcher
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');

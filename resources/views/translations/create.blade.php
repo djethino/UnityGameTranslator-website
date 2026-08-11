@@ -134,7 +134,7 @@
                     <select name="source_language" id="source_language" required
                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                         <option value="">{{ __('upload.select') }}</option>
-                        @foreach(config('languages') as $lang)
+                        @foreach($languages as $lang)
                             <option value="{{ $lang }}">@langflag($lang) {{ $lang }}</option>
                         @endforeach
                     </select>
@@ -144,7 +144,7 @@
                     <select name="target_language" id="target_language" required
                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                         <option value="">{{ __('upload.select') }}</option>
-                        @foreach(config('languages') as $lang)
+                        @foreach($languages as $lang)
                             <option value="{{ $lang }}">@langflag($lang) {{ $lang }}</option>
                         @endforeach
                     </select>
