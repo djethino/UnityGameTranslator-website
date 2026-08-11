@@ -843,6 +843,44 @@
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.merge_caption') }}</figcaption>
                 </figure>
                 </ol>
+                <h4 class="font-semibold mb-3 mt-6">{{ __('docs.card.title') }}</h4>
+                <p class="text-gray-300 mb-4">{{ __('docs.card.intro') }}</p>
+
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebTranslationCard.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebTranslationCard.png') }}"
+                             alt="{{ __('docs.card.alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1232" height="202"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.card.caption') }}</figcaption>
+                </figure>
+
+                <ul class="space-y-2 text-gray-300 mb-2">
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-pen text-purple-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('my_translations.edit_translations') }}</strong> — {{ __('docs.card.pen') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-code-merge text-green-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('my_translations.merge_branches', ['count' => 2]) }}</strong> — {{ __('docs.card.merge') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-download text-blue-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('translation.download') }}</strong> — {{ __('docs.card.download') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-sliders-h text-gray-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('my_translations.edit_metadata') }}</strong> — {{ __('docs.card.settings') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-trash text-red-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('translation.delete') }}</strong> — {{ __('docs.card.delete') }}</span>
+                    </li>
+                </ul>
             </div>
 
             <!-- Upload -->
