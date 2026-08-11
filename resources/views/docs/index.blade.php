@@ -313,7 +313,19 @@
                     </p>
                 </div>
             </div>
-        </section>
+        
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebBrowse.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebBrowse.png') }}"
+                             alt="{{ __('docs.shot.browse_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1424" height="849"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                </figure>
+            </section>
 
         <!-- Quick Start -->
         <section id="quick-start" class="mb-12 scroll-mt-8">
@@ -385,7 +397,19 @@
                     </p>
                 </div>
             </div>
-        </section>
+        
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebGamePage.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebGamePage.png') }}"
+                             alt="{{ __('docs.shot.game_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1424" height="849"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                </figure>
+            </section>
 
         <!-- Installation -->
         <section id="installation" class="mb-12 scroll-mt-8">
@@ -856,7 +880,31 @@
 
                 <p class="text-gray-300">{{ __('docs.collaboration.merge_rules') }}</p>
             </div>
-        </section>
+        
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebUpload.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebUpload.png') }}"
+                             alt="{{ __('docs.shot.upload_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1424" height="849"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                </figure>
+            
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebMerge.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebMerge.png') }}"
+                             alt="{{ __('docs.shot.merge_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1424" height="849"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                </figure>
+            </section>
 
         <!-- Sync -->
         <section id="sync" class="mb-12 scroll-mt-8">
@@ -1010,7 +1058,19 @@
                     <p class="text-sm text-gray-300">{{ __('docs.quality_system.capture_desc') }}</p>
                 </div>
             </div>
-        </section>
+        
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebMyTranslations.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebMyTranslations.png') }}"
+                             alt="{{ __('docs.shot.mine_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1424" height="849"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                </figure>
+            </section>
 
         <!-- How the numbers are computed. Published in full on purpose: every figure shown on
              this site comes from a formula, and anyone whose work is being measured is entitled
