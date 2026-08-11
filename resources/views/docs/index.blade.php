@@ -255,6 +255,18 @@
 
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.whatis.pitch') }}</p>
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebBrowse.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebBrowse.png') }}"
+                             alt="{{ __('docs.shot.browse_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1400" height="841"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.browse_caption') }}</figcaption>
+                </figure>
 
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-gray-700 rounded-lg p-4">
@@ -314,17 +326,6 @@
                 </div>
             </div>
         
-                <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebBrowse.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebBrowse.png') }}"
-                             alt="{{ __('docs.shot.browse_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1424" height="849"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
-                </figure>
             </section>
 
         <!-- Quick Start -->
@@ -335,6 +336,18 @@
 
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.quick_start.intro') }}</p>
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebGamePage.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebGamePage.png') }}"
+                             alt="{{ __('docs.shot.game_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1390" height="840"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.game_caption') }}</figcaption>
+                </figure>
 
                 {{-- Each step goes where it is explained.
 
@@ -398,17 +411,6 @@
                 </div>
             </div>
         
-                <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebGamePage.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebGamePage.png') }}"
-                             alt="{{ __('docs.shot.game_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1424" height="849"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
-                </figure>
             </section>
 
         <!-- Installation -->
@@ -828,6 +830,18 @@
                     <li>{{ __('docs.collaboration.workflow2') }}</li>
                     <li>{{ __('docs.collaboration.workflow3') }}</li>
                     <li>{{ __('docs.collaboration.workflow4') }}</li>
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebMerge.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebMerge.png') }}"
+                             alt="{{ __('docs.shot.merge_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1389" height="841"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.merge_caption') }}</figcaption>
+                </figure>
                 </ol>
             </div>
 
@@ -837,6 +851,18 @@
                     <i class="fas fa-upload text-green-400 mr-2"></i>{{ __('docs.collaboration.upload_title') }}
                 </h3>
                 <p class="text-gray-300 mb-4">{{ __('docs.collaboration.upload_intro') }}</p>
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebUpload.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebUpload.png') }}"
+                             alt="{{ __('docs.shot.upload_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1400" height="841"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.upload_caption') }}</figcaption>
+                </figure>
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
@@ -881,29 +907,7 @@
                 <p class="text-gray-300">{{ __('docs.collaboration.merge_rules') }}</p>
             </div>
         
-                <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebUpload.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebUpload.png') }}"
-                             alt="{{ __('docs.shot.upload_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1424" height="849"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
-                </figure>
             
-                <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebMerge.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebMerge.png') }}"
-                             alt="{{ __('docs.shot.merge_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1424" height="849"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
-                </figure>
             </section>
 
         <!-- Sync -->
@@ -1015,6 +1019,18 @@
 
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-2">{{ __('docs.quality_system.intro') }}</p>
+                <figure class="mb-6 w-full flex flex-col items-center justify-center">
+                    <picture>
+                        <source srcset="{{ asset('images/screenshots/WebMyTranslations.webp') }}" type="image/webp">
+                        <img src="{{ asset('images/screenshots/WebMyTranslations.png') }}"
+                             alt="{{ __('docs.shot.mine_alt') }}"
+                             class="doc-img doc-img-web block mx-auto"
+                             width="1400" height="841"
+                             loading="lazy"
+                             data-zoomable>
+                    </picture>
+                    <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.mine_caption') }}</figcaption>
+                </figure>
                 {{-- The tags and the formulas that read them were two sections apart with nothing
                      connecting them, though neither means much without the other. --}}
                 <p class="text-sm mb-6">
@@ -1059,17 +1075,6 @@
                 </div>
             </div>
         
-                <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebMyTranslations.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebMyTranslations.png') }}"
-                             alt="{{ __('docs.shot.mine_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1424" height="849"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
-                </figure>
             </section>
 
         <!-- How the numbers are computed. Published in full on purpose: every figure shown on
