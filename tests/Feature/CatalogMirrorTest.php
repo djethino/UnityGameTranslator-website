@@ -113,6 +113,43 @@ class CatalogMirrorTest extends TestCase
         $response->assertDontSee(':latest', false);
     }
 
+    /**
+     * The order is a decision, not a side effect of how the catalogue happens to be written — and
+     * a decision nothing else would notice going wrong. Reordering the file, or adding a model,
+     * would silently reshuffle the page.
+     */
+    public function test_the_models_are_ordered_by_the_rule_the_page_claims(): void
+    {
+        $models = \App\Services\ModelCatalog::installable();
+        $this->assertGreaterThan(1, count($models));
+
+        $this->assertSame('reference', $models[0]['role'] ?? null, 'The reference model must come first.');
+
+        // Everything after it: instructions followed (most first), then memory (least first), then
+        // claimed languages (most first) — compared as one ascending tuple, exactly as the service
+        // builds it.
+        $key = function (array $m) {
+            $measured = $m['measured'] ?? [];
+            $followed = isset($measured['suite'], $measured['suite_of']) && $measured['suite_of'] > 0
+                ? $measured['suite'] / $measured['suite_of']
+                : -1.0;
+
+            return [-$followed, $m['min_vram_gb'] ?? PHP_INT_MAX,
+                    -(\App\Services\ModelCatalog::claimedLanguages($m) ?? 0)];
+        };
+
+        $rest = array_slice($models, 1);
+
+        for ($i = 1; $i < count($rest); $i++) {
+            $this->assertLessThanOrEqual(
+                0,
+                $key($rest[$i - 1]) <=> $key($rest[$i]),
+                sprintf('%s is listed before %s but sorts after it.',
+                    $rest[$i - 1]['pull'], $rest[$i]['pull'])
+            );
+        }
+    }
+
     public function test_the_documentation_only_offers_models_that_can_be_downloaded(): void
     {
         // Some catalogue entries carry no `pull`: they exist so the tool can RECOGNISE a model

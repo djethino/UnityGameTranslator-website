@@ -39,19 +39,40 @@ class ModelCatalog
     }
 
     /**
-     * The models somebody can actually install, reference first, then by how small a card they
-     * need.
+     * The models somebody can actually install, in the order this project chooses to present them.
      *
      * ⚠ Entries WITHOUT a `pull` are deliberately excluded, and they are not incomplete records:
      * they exist so the tool can recognise a model somebody already has, matching as a substring
      * ("qwen3.5" catching "qwen3.5:32b"). Listing them as choices would offer a download that does
      * not exist.
      *
-     * ⚠ Sorted by memory needed, NEVER by score. The catalogue forbids ranking in as many words,
-     * and for a good reason: the suite is a heuristic on free text, and the machine matters as much
-     * as the model. Smallest-first answers the only question a reader actually has — what will run
-     * on the card I own — and it puts the 4 GB entries in front of somebody who would otherwise
-     * conclude they need a 4090.
+     * ORDER, and it is a decision rather than an obvious default:
+     *
+     *   1. the reference model — the one the mod's prompts and retries were written against;
+     *   2. instructions followed, most first;
+     *   3. video memory needed, least first;
+     *   4. languages the publisher claims, most first.
+     *
+     * ⚠ The catalogue says of itself "never a ranking", on the grounds that the suite is a
+     * heuristic on free text and the machine matters as much as the model. Leading with the score
+     * does assume an order, and that was weighed: every figure stays on screen next to every model,
+     * nothing is withheld for scoring badly, and the note saying which machine and which language
+     * produced these numbers travels with them. What the order claims is "start here", not "this
+     * one is better" — and a reader looking for somewhere to start is served by the model that
+     * followed the instructions over the one that merely fit.
+     *
+     * The tie-breaks matter more than the first key in practice: the scores cluster at 15/15 and
+     * 14/15, so what actually decides most rows is memory, smallest first.
+     *
+     * 🔸 THE SAME ORDER IS APPLIED BY THE MANAGER — `ModelNotes.Installable` in the manager
+     * repository. Change one, change the other. They cannot share code (PHP and C#, and the shared
+     * library takes no JSON parser), so the rule is written twice on purpose.
+     *
+     * The Manager adds ONE key in front of these: what fits the card it just read. That is the only
+     * legitimate difference — a web page has no idea what card the reader owns, so it never demotes
+     * anything. Everything after must match. They had drifted: the Manager broke ties by LARGEST
+     * memory first, so the same catalogue came out in opposite orders depending on which of our own
+     * tools you were looking at.
      */
     public static function installable(): array
     {
@@ -60,17 +81,33 @@ class ModelCatalog
             fn ($m) => is_array($m) && !empty($m['pull'])
         ));
 
-        usort($models, function ($a, $b) {
-            $aRef = ($a['role'] ?? '') === 'reference';
-            $bRef = ($b['role'] ?? '') === 'reference';
-            if ($aRef !== $bRef) {
-                return $aRef ? -1 : 1;
-            }
-
-            return ($a['min_vram_gb'] ?? PHP_INT_MAX) <=> ($b['min_vram_gb'] ?? PHP_INT_MAX);
-        });
+        usort($models, fn ($a, $b) => self::order($a) <=> self::order($b));
 
         return $models;
+    }
+
+    /**
+     * The sort key, as a list compared left to right — the same shape as the order documented
+     * above, so changing one means changing the other in the same place.
+     *
+     * Negated where "more is better", because the comparison is always ascending. A model with no
+     * measurement sorts after every measured one rather than in the middle: an unknown score is not
+     * a zero, but it is also not a reason to put it first.
+     */
+    private static function order(array $model): array
+    {
+        $measured = $model['measured'] ?? [];
+
+        $followed = isset($measured['suite'], $measured['suite_of']) && $measured['suite_of'] > 0
+            ? $measured['suite'] / $measured['suite_of']
+            : -1.0;
+
+        return [
+            ($model['role'] ?? '') === 'reference' ? 0 : 1,
+            -$followed,
+            $model['min_vram_gb'] ?? PHP_INT_MAX,
+            -(self::claimedLanguages($model) ?? 0),
+        ];
     }
 
     /**
