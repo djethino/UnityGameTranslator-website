@@ -8,9 +8,8 @@
      catalogue forbids.
 
      ⚠ The measurement note is not decoration. One machine, one card, one pair of languages: print
-     the figures without it and a set of observations reads as a league table. The order does lead
-     with the score — see ModelCatalog::installable for why that was accepted — which makes the note
-     load-bearing rather than a footnote. --}}
+     the figures without it and a set of observations reads as a verdict. The order leads with the
+     score — see ModelCatalog::installable — which makes the note load-bearing, not a footnote. --}}
 
 @php
     $reference = \App\Services\ModelCatalog::reference();

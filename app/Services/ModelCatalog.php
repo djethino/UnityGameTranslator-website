@@ -53,13 +53,12 @@ class ModelCatalog
      *   3. video memory needed, least first;
      *   4. languages the publisher claims, most first.
      *
-     * ⚠ The catalogue says of itself "never a ranking", on the grounds that the suite is a
-     * heuristic on free text and the machine matters as much as the model. Leading with the score
-     * does assume an order, and that was weighed: every figure stays on screen next to every model,
-     * nothing is withheld for scoring badly, and the note saying which machine and which language
-     * produced these numbers travels with them. What the order claims is "start here", not "this
-     * one is better" — and a reader looking for somewhere to start is served by the model that
-     * followed the instructions over the one that merely fit.
+     * ⚠ What the order claims is "start here", not "this one is better". The catalogue keeps no
+     * rank of its own — the suite is a heuristic on free text and the machine matters as much as
+     * the model — and deciding what to show first is left to whoever shows it. That is this
+     * method, and the decision is defensible only while the rest holds: every figure stays on
+     * screen next to every model, nothing is withheld for scoring badly, and the note saying which
+     * machine and which language produced these numbers travels with them.
      *
      * The tie-breaks matter more than the first key in practice: the scores cluster at 15/15 and
      * 14/15, so what actually decides most rows is memory, smallest first.
