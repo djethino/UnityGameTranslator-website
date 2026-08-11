@@ -97,6 +97,35 @@ class CatalogMirrorTest extends TestCase
         }
     }
 
+    public function test_the_documentation_names_the_model_the_catalogue_names(): void
+    {
+        $reference = \App\Services\ModelCatalog::reference();
+        $this->assertNotNull($reference, 'The catalogue no longer marks any model as the reference.');
+
+        $response = $this->get(route('docs'));
+        $response->assertOk();
+        $response->assertSee($reference['pull'], false);
+
+        // ⚠ The paragraph this replaced recommended a `:latest` tag, which the catalogue forbids in
+        // as many words: a moving tag makes every figure printed beside it a lie the day it moves,
+        // and the reader has no way of knowing which day that was. Asserting the absence is the
+        // point — it is how the old wording came back unnoticed the first time.
+        $response->assertDontSee(':latest', false);
+    }
+
+    public function test_the_documentation_only_offers_models_that_can_be_downloaded(): void
+    {
+        // Some catalogue entries carry no `pull`: they exist so the tool can RECOGNISE a model
+        // somebody already has, matching as a substring. Offering them would advertise a download
+        // that does not exist.
+        $families = array_filter(
+            \App\Services\ModelCatalog::installable(),
+            fn ($m) => empty($m['pull'])
+        );
+
+        $this->assertSame([], $families, 'A recognition-only entry reached the list of choices.');
+    }
+
     public function test_the_upload_form_offers_the_catalogue_languages(): void
     {
         $user = \App\Models\User::factory()->create();

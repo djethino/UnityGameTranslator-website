@@ -469,13 +469,7 @@
                     </div>
                 </div>
 
-                <div class="callout callout-tip">
-                    <p class="text-sm text-gray-300">
-                        <i class="fas fa-lightbulb text-blue-400 mr-2"></i>
-                        <strong>{{ __('docs.ai_tip_title') }}</strong><br>
-                        {{ __('docs.ai_tip_content') }}
-                    </p>
-                </div>
+                @include('docs._models')
             </div>
         </section>
 
@@ -1116,7 +1110,7 @@ c = 0.8 → 1.0</pre>
                 <pre class="bg-gray-900 rounded p-4 overflow-x-auto text-sm mb-6"><code class="text-gray-300">{
   "translation_backend": "llm",
   "ai_url": "http://127.0.0.1:11434",
-  "ai_model": "qwen3.5:latest",
+  "ai_model": "{{ \App\Services\ModelCatalog::reference()['pull'] ?? '' }}",
   "ai_api_key": null,
   "enable_ai": true,
   "source_language": "auto",

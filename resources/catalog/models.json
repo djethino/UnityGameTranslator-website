@@ -2,7 +2,7 @@
   "schema": 5,
   "updated": "2026-08-10",
   "measured_in": "French",
-  "measured_on": "GeForce RTX 4090 with 24 GB",
+  "measured_on": "GeForce RTX 4090 (24 GB)",
 
   "_comment": [
     "What we have actually run, not what we recommend. Models age in weeks and this file is",
