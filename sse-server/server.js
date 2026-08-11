@@ -136,11 +136,13 @@ redis.on('connect', () => {
 /**
  * Extract client IP from request (supports X-Forwarded-For behind proxy).
  *
- * Deployment assumption: exactly one trusted reverse proxy in front
- * (cPanel Passenger/Apache), which APPENDS the real client IP to any
- * client-supplied X-Forwarded-For. The LAST entry is therefore the only
- * trustworthy one — taking the first would let a client spoof arbitrary
- * IPs and bypass the per-IP connection limit.
+ * Deployment assumption: exactly one trusted reverse proxy in front, which
+ * APPENDS the real client IP to any client-supplied X-Forwarded-For. The LAST
+ * entry is therefore the only trustworthy one — taking the first would let a
+ * client spoof arbitrary IPs and bypass the per-IP connection limit.
+ *
+ * ⚠ Re-check this if the front end ever changes: a proxy that PREPENDS instead,
+ * or two proxies in a row, silently turns this into the spoofable version.
  */
 function getClientIp(req) {
     const forwarded = req.headers['x-forwarded-for'];
@@ -634,7 +636,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Health check (also serves as root for cPanel Passenger availability check).
+    // Health check (also serves as root for the host's availability probe).
     // Reports live connection usage: each open stream holds one of the host's
     // concurrent request slots, so this is the number to watch to know when the
     // server outgrows its hosting — long before users start being refused.
