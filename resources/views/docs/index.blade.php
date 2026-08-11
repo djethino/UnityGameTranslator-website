@@ -873,8 +873,8 @@
                         <span><strong>{{ __('translation.download') }}</strong> — {{ __('docs.card.download') }}</span>
                     </li>
                     <li class="flex items-start gap-3">
-                        <i class="fas fa-sliders-h text-gray-400 mt-1 w-4 text-center"></i>
-                        <span><strong>{{ __('my_translations.edit_metadata') }}</strong> — {{ __('docs.card.settings') }}</span>
+                        <i class="fas fa-circle-info text-gray-400 mt-1 w-4 text-center"></i>
+                        <span><strong>{{ __('dashboard.title') }}</strong> — {{ __('docs.card.settings') }}</span>
                     </li>
                     <li class="flex items-start gap-3">
                         <i class="fas fa-trash text-red-400 mt-1 w-4 text-center"></i>

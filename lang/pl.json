@@ -298,7 +298,7 @@
     "docs.card.pen": "otwiera linie w edytorze przeglądarkowym, do pisania i zatwierdzania.",
     "docs.card.merge": "pokazuje wkłady obok twoich, jeden wybór na linię. Wyszarzony, dopóki nikt nic nie dodał.",
     "docs.card.download": "pobiera plik z powrotem, by umieścić go samemu albo zachować kopię.",
-    "docs.card.settings": "czcionki, obrazy, wykluczone teksty i zasoby zewnętrzne tego pliku.",
+    "docs.card.settings": "otwiera wszystko, co wiadomo o tym tłumaczeniu: jego rolę, liczby, niesione czcionki i obrazy, oczekujące wkłady. Edytowalne ustawienia to przycisk na tej stronie.",
     "docs.card.delete": "usuwa je z katalogu. Powiązane wkłady zostają przy swoich autorach.",
     "docs.shot.browse_alt": "Katalog gier: okładki, języki, na które przetłumaczono każdą grę, i liczba pobrań",
     "docs.shot.game_alt": "Strona gry z jej tłumaczeniami, każde z udziałem linii ludzkich, sprawdzonych i wygenerowanych przez SI, oraz przyciskiem pobierania",

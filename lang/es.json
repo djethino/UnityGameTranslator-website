@@ -298,7 +298,7 @@
     "docs.card.pen": "abre las líneas en el editor del navegador, para escribir y validar.",
     "docs.card.merge": "muestra las contribuciones junto a las tuyas, una elección por línea. Gris mientras nadie haya contribuido.",
     "docs.card.download": "recupera el archivo, para colocarlo tú o guardar una copia.",
-    "docs.card.settings": "fuentes, imágenes, textos excluidos y recursos externos de este archivo.",
+    "docs.card.settings": "abre todo lo que se sabe de esta traducción: su papel, sus cifras, las fuentes e imágenes que lleva, las contribuciones en espera. Los ajustes modificables son un botón en esa página.",
     "docs.card.delete": "lo retira del catálogo. Las contribuciones asociadas siguen siendo de sus autores.",
     "docs.shot.browse_alt": "El catálogo de juegos: portadas, idiomas a los que está traducido cada juego y número de descargas",
     "docs.shot.game_alt": "La página de un juego con sus traducciones, cada una con la proporción de líneas humanas, revisadas y generadas por IA, y un botón de descarga",

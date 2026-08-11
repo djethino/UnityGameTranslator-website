@@ -324,11 +324,19 @@
                     <a href="{{ route('translations.download', $translation) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded" title="{{ __('translation.download') }}">
                         <i class="fas fa-download"></i>
                     </a>
-                    @if($translation->isMain())
-                    <a href="{{ route('translations.edit', $translation) }}" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded" title="{{ __('my_translations.edit_metadata') }}">
-                        <i class="fas fa-sliders-h"></i>
+                    {{-- Le detail, pas les reglages.
+                         Cette place portait « Parametres », qui ouvrait un formulaire de quatre
+                         champs. Deux pages parlaient donc de la meme traduction, separees par ce
+                         qu'elles PERMETTENT et non par ce qu'elles disent : le tableau de bord
+                         affichait les ressources externes, le formulaire les modifiait. Et le
+                         tableau de bord n'etait atteignable que par le titre du jeu, un lien qui
+                         ne ressemble pas a un lien, a cote de cinq boutons colores — on pouvait
+                         utiliser le produit longtemps sans le decouvrir.
+                         Le bouton mene donc la ou mene le titre, et le reglage est un bouton DANS
+                         cette page (actions rapides). Un seul endroit par traduction. --}}
+                    <a href="{{ route('translations.dashboard', $translation) }}" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded" title="{{ __('dashboard.title') }}">
+                        <i class="fas fa-circle-info"></i>
                     </a>
-                    @endif
                     <form action="{{ route('translations.destroy', $translation) }}" method="POST" class="delete-form" data-confirm="{{ __('my_translations.delete_confirm') }}">
                         @csrf
                         @method('DELETE')

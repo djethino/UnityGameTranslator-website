@@ -298,7 +298,7 @@
     "docs.card.pen": "satırları tarayıcı düzenleyicisinde açar; yazmak ve onaylamak için.",
     "docs.card.merge": "katkıları sizinkinin yanında gösterir, satır başına bir seçim. Kimse katkı vermediyse soluk.",
     "docs.card.download": "dosyayı geri alır; kendiniz yerleştirmek ya da bir kopya saklamak için.",
-    "docs.card.settings": "bu dosyanın yazı tipleri, görselleri, dışlanan metinleri ve dış kaynakları.",
+    "docs.card.settings": "bu çeviri hakkında bilinen her şeyi açar: rolü, sayıları, taşıdığı yazı tipleri ve görseller, bekleyen katkılar. Değiştirilebilir ayarlar o sayfadaki bir düğmedir.",
     "docs.card.delete": "katalogdan kaldırır. Bağlı katkılar sahiplerinde kalır.",
     "docs.shot.browse_alt": "Oyun kataloğu: kapaklar, her oyunun çevrildiği diller ve indirme sayıları",
     "docs.shot.game_alt": "Bir oyunun sayfası ve çevirileri; her birinde insan eliyle yazılan, gözden geçirilen ve yapay zekâ tarafından üretilen satır oranları ile bir indirme düğmesi",

@@ -298,7 +298,7 @@
     "docs.card.pen": "mở các dòng trong trình soạn thảo trên trình duyệt, để viết và duyệt.",
     "docs.card.merge": "hiển thị các đóng góp cạnh phần của bạn, mỗi dòng một lựa chọn. Xám khi chưa ai đóng góp.",
     "docs.card.download": "lấy lại tệp, để tự đặt vào hoặc giữ một bản.",
-    "docs.card.settings": "phông chữ, hình ảnh, văn bản loại trừ và tài nguyên ngoài của tệp này.",
+    "docs.card.settings": "mở mọi thứ đã biết về bản dịch này: vai trò, các con số, phông chữ và hình ảnh nó mang theo, những đóng góp đang chờ. Các thiết lập sửa được là một nút trên trang đó.",
     "docs.card.delete": "gỡ khỏi danh mục. Các đóng góp gắn với nó vẫn thuộc về tác giả của chúng.",
     "docs.shot.browse_alt": "Danh mục trò chơi: ảnh bìa, các ngôn ngữ mà mỗi trò chơi được dịch sang, và số lượt tải",
     "docs.shot.game_alt": "Trang của một trò chơi cùng các bản dịch, mỗi bản kèm tỉ lệ dòng do người dịch, đã duyệt và do AI tạo, cùng nút tải xuống",

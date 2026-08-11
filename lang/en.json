@@ -298,7 +298,7 @@
     "docs.card.pen": "opens the lines in the browser editor, where you write and validate.",
     "docs.card.merge": "opens the contributions side by side with yours, one choice per line. Greyed out when nobody has contributed.",
     "docs.card.download": "gets the file back, to place it yourself or to keep a copy.",
-    "docs.card.settings": "fonts, images, excluded texts and external resources for this file.",
+    "docs.card.settings": "opens everything known about this translation: its role, its figures, the fonts and images it carries, the contributions waiting. The editable settings are a button on that page.",
     "docs.card.delete": "removes it from the catalogue. Contributions attached to it stay with their authors.",
     "docs.shot.browse_alt": "The game catalogue: cover art, the languages each game is translated into, and how many times each has been downloaded",
     "docs.shot.game_alt": "A game page listing its translations, each with the share of human, reviewed and AI lines, and a download button",

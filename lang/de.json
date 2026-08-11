@@ -298,7 +298,7 @@
     "docs.card.pen": "öffnet die Zeilen im Browser-Editor, zum Schreiben und Prüfen.",
     "docs.card.merge": "zeigt die Beiträge neben Ihren, eine Entscheidung je Zeile. Ausgegraut, solange niemand beigetragen hat.",
     "docs.card.download": "holt die Datei zurück, um sie selbst abzulegen oder aufzubewahren.",
-    "docs.card.settings": "Schriften, Bilder, ausgeschlossene Texte und externe Ressourcen dieser Datei.",
+    "docs.card.settings": "öffnet alles, was über diese Übersetzung bekannt ist: ihre Rolle, ihre Zahlen, die mitgeführten Schriften und Bilder, die wartenden Beiträge. Die änderbaren Einstellungen sind eine Schaltfläche auf dieser Seite.",
     "docs.card.delete": "entfernt sie aus dem Katalog. Angehängte Beiträge bleiben bei ihren Urhebern.",
     "docs.shot.browse_alt": "Der Spielkatalog: Cover, die Sprachen, in die jedes Spiel übersetzt ist, und die Anzahl der Downloads",
     "docs.shot.game_alt": "Die Seite eines Spiels mit seinen Übersetzungen, jeweils mit dem Anteil menschlicher, geprüfter und KI-Zeilen sowie einer Schaltfläche zum Herunterladen",

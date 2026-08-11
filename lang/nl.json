@@ -298,7 +298,7 @@
     "docs.card.pen": "opent de regels in de browser-editor, om te schrijven en na te kijken.",
     "docs.card.merge": "toont de bijdragen naast de jouwe, één keuze per regel. Grijs zolang niemand heeft bijgedragen.",
     "docs.card.download": "haalt het bestand terug, om het zelf te plaatsen of te bewaren.",
-    "docs.card.settings": "lettertypen, afbeeldingen, uitgesloten teksten en externe bronnen van dit bestand.",
+    "docs.card.settings": "opent alles wat over deze vertaling bekend is: haar rol, haar cijfers, de lettertypen en afbeeldingen die ze meedraagt, de wachtende bijdragen. De aanpasbare instellingen zijn een knop op die pagina.",
     "docs.card.delete": "haalt hem uit de catalogus. Bijbehorende bijdragen blijven van hun auteurs.",
     "docs.shot.browse_alt": "De spellencatalogus: covers, de talen waarin elk spel is vertaald en het aantal downloads",
     "docs.shot.game_alt": "De pagina van een spel met zijn vertalingen, elk met het aandeel menselijke, gecontroleerde en door AI gemaakte regels, en een downloadknop",

@@ -298,7 +298,7 @@
     "docs.card.pen": "membuka baris di editor peramban, untuk menulis dan meninjau.",
     "docs.card.merge": "menampilkan kontribusi di samping milik Anda, satu pilihan per baris. Kelabu selama belum ada kontribusi.",
     "docs.card.download": "mengambil kembali berkasnya, untuk ditempatkan sendiri atau disimpan.",
-    "docs.card.settings": "fon, gambar, teks yang dikecualikan, dan sumber daya luar untuk berkas ini.",
+    "docs.card.settings": "membuka semua yang diketahui tentang terjemahan ini: perannya, angkanya, fon dan gambar yang dibawanya, kontribusi yang menunggu. Pengaturan yang bisa diubah adalah sebuah tombol di halaman itu.",
     "docs.card.delete": "menghapusnya dari katalog. Kontribusi yang menempel tetap milik penulisnya.",
     "docs.shot.browse_alt": "Katalog game: sampul, bahasa tujuan terjemahan setiap game, dan jumlah unduhan",
     "docs.shot.game_alt": "Halaman sebuah game beserta terjemahannya, masing-masing dengan proporsi baris manusia, tinjauan, dan hasil AI, serta tombol unduh",
