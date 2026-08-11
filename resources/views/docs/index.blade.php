@@ -33,6 +33,29 @@
         background: rgba(147, 51, 234, 0.2);
         color: #c084fc;
     }
+    /* Group heading in the sidebar. Deliberately quiet: it has to separate without competing
+       with the items it introduces, and the active item stays the loudest thing in the menu. */
+    .docs-nav-group {
+        margin: 1.25rem 0 0.25rem;
+        padding: 0 1rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+    .docs-nav-group:first-child {
+        margin-top: 0;
+    }
+    /* Quick Start step cards, which are links. They looked like plain boxes for a long time, so
+       the hover has to say "this goes somewhere" without turning three cards into three buttons. */
+    .docs-step {
+        transition: background 0.2s, transform 0.2s;
+    }
+    .docs-step:hover {
+        background: #4b5563;
+        transform: translateY(-2px);
+    }
     /* Image styles */
     .doc-img {
         border: 1px solid #374151;
@@ -134,7 +157,26 @@
 
     <!-- Sidebar -->
     <aside id="docs-sidebar" class="docs-sidebar w-64 flex-shrink-0 hidden lg:block self-start">
+        {{-- Grouped, and the groups are the point.
+
+             Twelve items in a flat list is already past what anyone scans: you stop reading the
+             menu and start using Ctrl-F, which works but tells you nothing about what else exists.
+             The groups answer a question the item labels cannot — "is this for me right now?" —
+             and they hold the order the page follows: get it running, use it, understand it, look
+             things up, fix it.
+
+             ⚠ The scroll-spy is untouched by this. It keys on `section[id]` and
+             `.docs-nav-item[href="#id"]`, neither of which the grouping changes. Keep that class on
+             every item or the highlight silently stops following the reader.
+
+             ⚠ Two sections are NOT in their final place yet. Once the Manager has its own section
+             it takes the install slot here, and `installation` — which is the manual procedure —
+             moves down to Reference and gets renamed. It is left in Start for now because it is
+             still the ONLY way in: burying today's only path under "Reference" to prepare for
+             tomorrow would be a regression for everyone reading this week. See
+             analyse/docs-structure.md. --}}
         <nav class="space-y-1">
+            <p class="docs-nav-group">{{ __('docs.nav.group.start') }}</p>
             <a href="#what-is" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-circle-info mr-2 w-4"></i>{{ __('docs.nav.what_is') }}
             </a>
@@ -147,12 +189,8 @@
             <a href="#first-launch" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-play mr-2 w-4"></i>{{ __('docs.nav.first_launch') }}
             </a>
-            <a href="#quality-system" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
-                <i class="fas fa-star mr-2 w-4"></i>{{ __('docs.nav.quality_system') }}
-            </a>
-            <a href="#algorithms" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
-                <i class="fas fa-calculator mr-2 w-4"></i>{{ __('docs.nav.algorithms') }}
-            </a>
+
+            <p class="docs-nav-group">{{ __('docs.nav.group.use') }}</p>
             <a href="#editing" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-pen-to-square mr-2 w-4"></i>{{ __('docs.nav.editing') }}
             </a>
@@ -162,12 +200,24 @@
             <a href="#sync" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-sync mr-2 w-4"></i>{{ __('docs.nav.sync') }}
             </a>
+
+            <p class="docs-nav-group">{{ __('docs.nav.group.understand') }}</p>
+            <a href="#quality-system" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-star mr-2 w-4"></i>{{ __('docs.nav.quality_system') }}
+            </a>
+            <a href="#algorithms" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
+                <i class="fas fa-calculator mr-2 w-4"></i>{{ __('docs.nav.algorithms') }}
+            </a>
+
+            <p class="docs-nav-group">{{ __('docs.nav.group.reference') }}</p>
             <a href="#configuration" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-cog mr-2 w-4"></i>{{ __('docs.nav.configuration') }}
             </a>
             <a href="#external-resources" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-folder-open mr-2 w-4"></i>{{ __('docs.nav.external_resources') }}
             </a>
+
+            <p class="docs-nav-group">{{ __('docs.nav.group.problems') }}</p>
             <a href="#troubleshooting" class="docs-nav-item block px-4 py-2 text-sm text-gray-300 rounded-r">
                 <i class="fas fa-question-circle mr-2 w-4"></i>{{ __('docs.nav.troubleshooting') }}
             </a>
@@ -274,19 +324,36 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.quick_start.intro') }}</p>
 
+                {{-- Each step goes where it is explained.
+
+                     These three named the thing to do and then left the reader to find it: the page
+                     has a navigation system, a menu and working anchors, and the one place someone
+                     is most certain to want the next page was the one place that offered no way
+                     there. Whole card is the target, not a word inside a translated sentence —
+                     bigger to hit, and it does not require re-translating anything to say where it
+                     leads. The section's own name does that, reusing the menu labels. --}}
                 <div class="grid md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                    <a href="#install-loader" class="docs-step bg-gray-700 rounded-lg p-4 text-center block">
                         <div class="text-3xl font-bold text-purple-400 mb-2">1</div>
                         <div class="text-sm text-gray-300">{{ __('docs.quick_start.step1') }}</div>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <div class="text-xs text-purple-400 mt-3">
+                            {{ __('docs.nav.installation') }} <i class="fas fa-arrow-right ml-1"></i>
+                        </div>
+                    </a>
+                    <a href="#install-plugin" class="docs-step bg-gray-700 rounded-lg p-4 text-center block">
                         <div class="text-3xl font-bold text-purple-400 mb-2">2</div>
                         <div class="text-sm text-gray-300">{{ __('docs.quick_start.step2') }}</div>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <div class="text-xs text-purple-400 mt-3">
+                            {{ __('docs.nav.installation') }} <i class="fas fa-arrow-right ml-1"></i>
+                        </div>
+                    </a>
+                    <a href="#first-launch" class="docs-step bg-gray-700 rounded-lg p-4 text-center block">
                         <div class="text-3xl font-bold text-purple-400 mb-2">3</div>
                         <div class="text-sm text-gray-300">{{ __('docs.quick_start.step3') }}</div>
-                    </div>
+                        <div class="text-xs text-purple-400 mt-3">
+                            {{ __('docs.nav.first_launch') }} <i class="fas fa-arrow-right ml-1"></i>
+                        </div>
+                    </a>
                 </div>
 
                 {{-- How the text is FOUND, said before anyone installs anything.
@@ -304,11 +371,17 @@
                     </p>
                 </div>
 
+                {{-- Says the mod works on community translations alone, and now offers the way to
+                     one. It used to make the claim and stop there, on a site whose whole catalogue
+                     of translations is two clicks away — the reader had to believe us and then go
+                     looking. --}}
                 <div class="callout callout-tip">
                     <p class="text-sm text-gray-300">
                         <i class="fas fa-lightbulb text-blue-400 mr-2"></i>
                         <strong>{{ __('docs.quick_start.tip_title') }}</strong><br>
                         {{ __('docs.quick_start.tip_content') }}
+                        <a href="{{ route('games.index') }}"
+                           class="text-purple-300 hover:text-purple-200 underline whitespace-nowrap">{{ __('games.browse') }} <i class="fas fa-arrow-right text-xs"></i></a>
                     </p>
                 </div>
             </div>
@@ -322,7 +395,9 @@
 
             <!-- Step 1: Mod Loader -->
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
-                <h3 class="text-lg font-semibold mb-4">
+                {{-- Addressable on its own: the Quick Start steps link straight here rather than
+                     dropping the reader at the top of a 160-line section to hunt for step one. --}}
+                <h3 id="install-loader" class="text-lg font-semibold mb-4 scroll-mt-8">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">1</span>
                     {{ __('docs.install_modloader') }}
                 </h3>
@@ -373,7 +448,7 @@
 
             <!-- Step 2: Download UGT -->
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
-                <h3 class="text-lg font-semibold mb-4">
+                <h3 id="install-plugin" class="text-lg font-semibold mb-4 scroll-mt-8">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">2</span>
                     {{ __('docs.download_ugt') }}
                 </h3>
@@ -525,158 +600,6 @@
                         <i class="fas fa-keyboard text-blue-400 mr-2"></i>
                         <strong>{{ __('docs.hotkey_tip_title') }}</strong><br>
                         {{ __('docs.hotkey_tip_content') }}
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quality System -->
-        <section id="quality-system" class="mb-12 scroll-mt-8">
-            <h2 class="text-2xl font-bold mb-6 flex items-center">
-                <i class="fas fa-star mr-3 text-purple-400"></i>{{ __('docs.quality_system.title') }}
-            </h2>
-
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <p class="text-gray-300 mb-2">{{ __('docs.quality_system.intro') }}</p>
-                {{-- The tags and the formulas that read them were two sections apart with nothing
-                     connecting them, though neither means much without the other. --}}
-                <p class="text-sm mb-6">
-                    <a href="#algorithms" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
-                        <i class="fas fa-arrow-turn-down mr-1 text-xs"></i>{{ __('docs.nav.algorithms') }}
-                    </a>
-                </p>
-
-                <!-- HVAS Badges -->
-                <div class="grid md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-green-500">
-                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-green-600 text-white mb-2">H</span>
-                        <div class="font-semibold text-white">{{ __('docs.quality_system.human') }}</div>
-                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.human_desc') }}</div>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-blue-500">
-                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-blue-600 text-white mb-2">V</span>
-                        <div class="font-semibold text-white">{{ __('docs.quality_system.validated') }}</div>
-                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.validated_desc') }}</div>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-orange-500">
-                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-orange-600 text-white mb-2">A</span>
-                        <div class="font-semibold text-white">{{ __('docs.quality_system.ai') }}</div>
-                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.ai_desc') }}</div>
-                    </div>
-                    {{-- Purple, like its segment in the composition bar: a line kept as it is
-                         has been dealt with, and must not be mistaken for one still waiting. --}}
-                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-purple-500">
-                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-purple-600 text-white mb-2">S</span>
-                        <div class="font-semibold text-white">{{ __('docs.quality_system.skip') }}</div>
-                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.skip_desc') }}</div>
-                        <div class="text-xs text-purple-300 mt-2">{{ __('docs.quality_system.skip_note') }}</div>
-                    </div>
-                </div>
-
-                <!-- Capture Mode -->
-                <div class="mt-6 p-4 bg-gray-900 rounded-lg">
-                    <h4 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-camera mr-2 text-purple-400"></i>{{ __('docs.quality_system.capture_mode') }}
-                    </h4>
-                    <p class="text-sm text-gray-300">{{ __('docs.quality_system.capture_desc') }}</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- How the numbers are computed. Published in full on purpose: every figure shown on
-             this site comes from a formula, and anyone whose work is being measured is entitled
-             to read the measure. -->
-        <section id="algorithms" class="mb-12 scroll-mt-8">
-            <h2 class="text-2xl font-bold mb-6 flex items-center">
-                <i class="fas fa-calculator mr-3 text-purple-400"></i>{{ __('docs.algorithms.title') }}
-            </h2>
-
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.intro') }}</p>
-                <p class="text-sm mb-6">
-                    <a href="#quality-system" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
-                        <i class="fas fa-arrow-turn-up mr-1 text-xs"></i>{{ __('docs.nav.quality_system') }}
-                    </a>
-                </p>
-
-                {{-- One card per algorithm, in reading order: is the text written, then has it
-                     been read, then how far it reaches, then how they decide the order. The dots
-                     on the thresholds carry the colours of the badges they describe. --}}
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-amber-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-hourglass-half mr-2 text-purple-400"></i>{{ __('docs.algorithms.completeness_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.completeness_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / (H + V + S + A + captured)</pre>
-                    <p class="text-sm text-gray-400">
-                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.completeness_floor') }}
-                    </p>
-                </div>
-
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-blue-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-list-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.stage_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.stage_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S) / (H + V + S + A)</pre>
-                    <ul class="text-sm text-gray-400 space-y-1">
-                        <li><span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>100 % — {{ __('progress.stage.reviewed') }}</li>
-                        <li><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>40 % … 99 % — {{ __('progress.stage.advanced') }}</li>
-                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>1 % … 39 % — {{ __('progress.stage.started') }}</li>
-                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-600 mr-2"></span>0 % — {{ __('progress.stage.machine') }}</li>
-                    </ul>
-                </div>
-
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-green-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-user-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.rate_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.rate_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + S + c × V) / (H + V + S + A)
-c = 0.8 → 1.0</pre>
-                    <p class="text-sm text-gray-400">
-                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.rate_limit') }}
-                    </p>
-                </div>
-
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-cyan-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-map-location-dot mr-2 text-purple-400"></i>{{ __('docs.algorithms.coverage_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.coverage_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / max(H + V + S + A)</pre>
-                    <p class="text-sm text-gray-400">
-                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.coverage_caveat') }}
-                    </p>
-                </div>
-
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-orange-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-hourglass-end mr-2 text-purple-400"></i>{{ __('docs.algorithms.dormancy_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.dormancy_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">21 j + 159 j × (H + V + S) / (H + V + S + A + captured)</pre>
-                    <p class="text-sm text-gray-400">
-                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.dormancy_note') }}
-                    </p>
-                </div>
-
-                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-purple-500 mb-4">
-                    <h3 class="font-semibold mb-2 text-white">
-                        <i class="fas fa-arrow-down-wide-short mr-2 text-purple-400"></i>{{ __('docs.algorithms.order_title') }}
-                    </h3>
-                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.order_desc') }}</p>
-                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">completeness × coverage × (0.5 + 0.5 × rate)</pre>
-                    <p class="text-sm text-gray-400">
-                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.order_base') }}
-                    </p>
-                </div>
-
-                <div class="callout callout-tip">
-                    <p class="text-sm text-gray-300">
-                        <i class="fas fa-eye text-blue-400 mr-2"></i>
-                        <strong>{{ __('docs.algorithms.visibility_title') }}</strong><br>
-                        {{ __('docs.algorithms.visibility_desc') }}
                     </p>
                 </div>
             </div>
@@ -1032,6 +955,158 @@ c = 0.8 → 1.0</pre>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quality System -->
+        <section id="quality-system" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-star mr-3 text-purple-400"></i>{{ __('docs.quality_system.title') }}
+            </h2>
+
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <p class="text-gray-300 mb-2">{{ __('docs.quality_system.intro') }}</p>
+                {{-- The tags and the formulas that read them were two sections apart with nothing
+                     connecting them, though neither means much without the other. --}}
+                <p class="text-sm mb-6">
+                    <a href="#algorithms" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                        <i class="fas fa-arrow-turn-down mr-1 text-xs"></i>{{ __('docs.nav.algorithms') }}
+                    </a>
+                </p>
+
+                <!-- HVAS Badges -->
+                <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-green-500">
+                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-green-600 text-white mb-2">H</span>
+                        <div class="font-semibold text-white">{{ __('docs.quality_system.human') }}</div>
+                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.human_desc') }}</div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-blue-500">
+                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-blue-600 text-white mb-2">V</span>
+                        <div class="font-semibold text-white">{{ __('docs.quality_system.validated') }}</div>
+                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.validated_desc') }}</div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-orange-500">
+                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-orange-600 text-white mb-2">A</span>
+                        <div class="font-semibold text-white">{{ __('docs.quality_system.ai') }}</div>
+                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.ai_desc') }}</div>
+                    </div>
+                    {{-- Purple, like its segment in the composition bar: a line kept as it is
+                         has been dealt with, and must not be mistaken for one still waiting. --}}
+                    <div class="bg-gray-700 rounded-lg p-4 text-center border-t-4 border-purple-500">
+                        <span class="inline-block px-3 py-1 rounded text-lg font-bold bg-purple-600 text-white mb-2">S</span>
+                        <div class="font-semibold text-white">{{ __('docs.quality_system.skip') }}</div>
+                        <div class="text-sm text-gray-400">{{ __('docs.quality_system.skip_desc') }}</div>
+                        <div class="text-xs text-purple-300 mt-2">{{ __('docs.quality_system.skip_note') }}</div>
+                    </div>
+                </div>
+
+                <!-- Capture Mode -->
+                <div class="mt-6 p-4 bg-gray-900 rounded-lg">
+                    <h4 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-camera mr-2 text-purple-400"></i>{{ __('docs.quality_system.capture_mode') }}
+                    </h4>
+                    <p class="text-sm text-gray-300">{{ __('docs.quality_system.capture_desc') }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How the numbers are computed. Published in full on purpose: every figure shown on
+             this site comes from a formula, and anyone whose work is being measured is entitled
+             to read the measure. -->
+        <section id="algorithms" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-calculator mr-3 text-purple-400"></i>{{ __('docs.algorithms.title') }}
+            </h2>
+
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <p class="text-gray-300 mb-2">{{ __('docs.algorithms.intro') }}</p>
+                <p class="text-sm mb-6">
+                    <a href="#quality-system" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                        <i class="fas fa-arrow-turn-up mr-1 text-xs"></i>{{ __('docs.nav.quality_system') }}
+                    </a>
+                </p>
+
+                {{-- One card per algorithm, in reading order: is the text written, then has it
+                     been read, then how far it reaches, then how they decide the order. The dots
+                     on the thresholds carry the colours of the badges they describe. --}}
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-amber-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-hourglass-half mr-2 text-purple-400"></i>{{ __('docs.algorithms.completeness_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.completeness_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / (H + V + S + A + captured)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.completeness_floor') }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-blue-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-list-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.stage_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.stage_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S) / (H + V + S + A)</pre>
+                    <ul class="text-sm text-gray-400 space-y-1">
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>100 % — {{ __('progress.stage.reviewed') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>40 % … 99 % — {{ __('progress.stage.advanced') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>1 % … 39 % — {{ __('progress.stage.started') }}</li>
+                        <li><span class="inline-block w-2 h-2 rounded-full bg-gray-600 mr-2"></span>0 % — {{ __('progress.stage.machine') }}</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-green-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-user-check mr-2 text-purple-400"></i>{{ __('docs.algorithms.rate_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.rate_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + S + c × V) / (H + V + S + A)
+c = 0.8 → 1.0</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.rate_limit') }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-cyan-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-map-location-dot mr-2 text-purple-400"></i>{{ __('docs.algorithms.coverage_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.coverage_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">(H + V + S + A) / max(H + V + S + A)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.coverage_caveat') }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-orange-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-hourglass-end mr-2 text-purple-400"></i>{{ __('docs.algorithms.dormancy_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.dormancy_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">21 j + 159 j × (H + V + S) / (H + V + S + A + captured)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.dormancy_note') }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-purple-500 mb-4">
+                    <h3 class="font-semibold mb-2 text-white">
+                        <i class="fas fa-arrow-down-wide-short mr-2 text-purple-400"></i>{{ __('docs.algorithms.order_title') }}
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-3">{{ __('docs.algorithms.order_desc') }}</p>
+                    <pre class="bg-gray-950 rounded p-3 text-sm text-gray-300 mb-3 overflow-x-auto">completeness × coverage × (0.5 + 0.5 × rate)</pre>
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-circle-info text-blue-400 mr-2"></i>{{ __('docs.algorithms.order_base') }}
+                    </p>
+                </div>
+
+                <div class="callout callout-tip">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-eye text-blue-400 mr-2"></i>
+                        <strong>{{ __('docs.algorithms.visibility_title') }}</strong><br>
+                        {{ __('docs.algorithms.visibility_desc') }}
+                    </p>
                 </div>
             </div>
         </section>
