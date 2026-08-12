@@ -181,7 +181,18 @@ class TranslationController extends Controller
             $translation->updateHash();
         }
 
-        $etag = '"' . $translation->file_hash . '"';
+        // ⚠ Covers everything this endpoint ANSWERS, not just the file. An ETag built on
+        // file_hash alone — which is what stood here — replies 304 while the caller's copy of
+        // the vote count or the uploader's name is stale, because neither of those touches a
+        // single translated line. Deliberately WITHOUT updated_at: that one moves on every
+        // download by anyone, so including it would invalidate the ETag constantly and the
+        // 304 would never happen at all.
+        $etag = '"' . substr(hash('sha256', implode('|', [
+            $translation->file_hash,
+            $translation->line_count,
+            $translation->vote_count,
+            $translation->user->name ?? '',
+        ])), 0, 32) . '"';
 
         // Check If-None-Match header for 304 response
         $ifNoneMatch = $request->header('If-None-Match');
@@ -192,6 +203,10 @@ class TranslationController extends Controller
         $response = [
             'id' => $translation->id,
             'file_hash' => $translation->file_hash,
+            // Who published it. The one endpoint someone with NO ACCOUNT can reach about the
+            // translation they installed, so without this the mod can only call them "Website" —
+            // it knows the site id it came from and nothing about whose work it is.
+            'uploader' => $translation->user->name ?? '',
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),
