@@ -187,11 +187,16 @@ class TranslationController extends Controller
         // single translated line. Deliberately WITHOUT updated_at: that one moves on every
         // download by anyone, so including it would invalidate the ETag constantly and the
         // 304 would never happen at all.
+        // ⚠ Null-safe: a translation outlives the account that published it, and this endpoint
+        // runs unauthenticated on a timer — a fatal here would take the update check down for
+        // everyone still holding that file.
+        $uploader = $translation->user?->name ?? '';
+
         $etag = '"' . substr(hash('sha256', implode('|', [
             $translation->file_hash,
             $translation->line_count,
             $translation->vote_count,
-            $translation->user->name ?? '',
+            $uploader,
         ])), 0, 32) . '"';
 
         // Check If-None-Match header for 304 response
@@ -206,7 +211,11 @@ class TranslationController extends Controller
             // Who published it. The one endpoint someone with NO ACCOUNT can reach about the
             // translation they installed, so without this the mod can only call them "Website" —
             // it knows the site id it came from and nothing about whose work it is.
-            'uploader' => $translation->user->name ?? '',
+            //
+            // No new disclosure: this same name is already returned by the public search and shown
+            // on the public game pages. A branch never reaches this line — isReadableBy above
+            // answers 403 to anyone but its author and the Main owner.
+            'uploader' => $uploader,
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),
