@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Oyunun yapay zekasıyla yeniden çevir",
     "edit_session.retranslating": "Yeniden çevriliyor…",
     "edit_session.retranslate_human_confirm": "Bu satır elle çevrildi. Yapay zekâya yeniden sorarsanız satır değişir ve yazdığınız metin hiçbir yerde saklanmaz. Yine de yeniden çevrilsin mi?",
+    "edit_session.retranslate_unchanged": "Yapay zekâ aynı çeviriyi verdi — değiştirilecek bir şey yok.",
+    "edit_session.retranslate_failed": "Yapay zekâdan yanıt gelmedi — satır olduğu gibi kaldı.",
     "edit_session.new_from_game": "Oyundan yeni",
     "edit_session.click_to_view": "Görüntülemek için tıklayın",
     "edit_session.instructions": "Bir çeviriyi düzenlemek için çift tıklayın – oyunda uygulamak için kaydedin",

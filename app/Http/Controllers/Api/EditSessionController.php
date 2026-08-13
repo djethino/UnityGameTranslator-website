@@ -106,6 +106,52 @@ class EditSessionController extends Controller
     }
 
     /**
+     * The answer to a per-line retranslation the browser asked for.
+     *
+     * ⚠ This exists so the mod does NOT have to write the line to be able to
+     * show it. A retranslation is a proposal: it reaches the page as a pending
+     * edit, subject to the same Save button as anything the user typed, and
+     * cancelled the same way. Before this route the mod had to store the value
+     * for it to travel at all — the file being the only thing that moved —
+     * which meant the browser's Retranslate silently bypassed Save.
+     *
+     * ⚠ Deliberately NOT part of the content push: that one carries the WHOLE
+     * file (tens of megabytes on a large game) and short-circuits when the
+     * hash has not changed — which is precisely the case here, since nothing
+     * was written.
+     *
+     * Kept in the cache, not in a column: it is worth nothing five minutes
+     * later, and a session that ends takes it with it.
+     *
+     * POST /api/v1/edit-session/{modKey}/retranslation
+     */
+    public function retranslation(Request $request, string $modKey): JsonResponse
+    {
+        $session = EditSessionToken::findByModKey($modKey);
+        if (!$session) {
+            return response()->json(['error' => 'Edit session expired or not found.'], 404);
+        }
+
+        $request->validate([
+            'id' => 'required|string|max:64',
+            'key' => 'required|string|max:10000',
+            // Absent when the backend gave nothing back — the outcome says which
+            'value' => 'nullable|string|max:20000',
+            'outcome' => 'required|string|in:replaced,unchanged,failed',
+        ]);
+
+        $session->pushRetranslation(
+            $request->input('id'),
+            $request->input('key'),
+            $request->input('value'),
+            $request->input('outcome'),
+        );
+        $session->touchGameSeen();
+
+        return response()->json(['received' => true]);
+    }
+
+    /**
      * Keep the session alive while the game runs. A session must only end
      * when the browser page is explicitly closed or the game stops — never
      * on a timer: a player can keep the editor open for hours between

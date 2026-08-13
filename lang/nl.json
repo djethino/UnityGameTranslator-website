@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Opnieuw vertalen met de AI van het spel",
     "edit_session.retranslating": "Opnieuw vertalen…",
     "edit_session.retranslate_human_confirm": "Deze regel is met de hand vertaald. Als je het de AI opnieuw vraagt, wordt hij vervangen en blijft jouw tekst nergens bewaard. Toch opnieuw vertalen?",
+    "edit_session.retranslate_unchanged": "De AI gaf opnieuw dezelfde vertaling — er valt niets te wijzigen.",
+    "edit_session.retranslate_failed": "De AI gaf niets terug — de regel blijft ongewijzigd.",
     "edit_session.new_from_game": "Nieuw uit het spel",
     "edit_session.click_to_view": "Klik om ze te bekijken",
     "edit_session.instructions": "Dubbelklik op een vertaling om deze te bewerken – sla op om deze in het spel toe te passen",

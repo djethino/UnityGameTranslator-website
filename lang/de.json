@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Mit der KI des Spiels neu übersetzen",
     "edit_session.retranslating": "Wird neu übersetzt…",
     "edit_session.retranslate_human_confirm": "Diese Zeile wurde von Hand übersetzt. Wenn die KI erneut gefragt wird, ersetzt sie den Text – dein eigener wird nirgends aufbewahrt. Trotzdem neu übersetzen?",
+    "edit_session.retranslate_unchanged": "Die KI hat dieselbe Übersetzung erneut geliefert – nichts zu ändern.",
+    "edit_session.retranslate_failed": "Die KI hat nichts zurückgegeben – die Zeile bleibt unverändert.",
     "edit_session.new_from_game": "Neu aus dem Spiel",
     "edit_session.click_to_view": "Klicken zum Anzeigen",
     "edit_session.instructions": "Doppelklicken Sie auf eine Übersetzung, um sie zu bearbeiten – speichern Sie, um sie im Spiel anzuwenden",

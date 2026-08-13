@@ -140,6 +140,11 @@ class EditSessionController extends Controller
             // "applied in-game", and the difference is exactly what the user
             // stands to lose if they walk away from a game that never comes back.
             'pending_changes' => $session->pending_changes,
+            // Per-line retranslations the mod has answered. They arrive as
+            // PROPOSALS: the page stages them as pending edits, so they wait
+            // for the same Save button as anything typed here. Served without
+            // being consumed — see pendingRetranslations().
+            'retranslations' => $session->pendingRetranslations(),
         ]);
     }
 

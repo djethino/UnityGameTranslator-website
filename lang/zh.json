@@ -854,6 +854,8 @@
     "edit_session.retranslate": "使用游戏的 AI 重新翻译",
     "edit_session.retranslating": "正在重新翻译…",
     "edit_session.retranslate_human_confirm": "这一行是手动翻译的。再让 AI 翻译一次会覆盖它，你写的内容不会保留在任何地方。确定重新翻译吗？",
+    "edit_session.retranslate_unchanged": "AI 又给出了相同的译文，没有可改动的内容。",
+    "edit_session.retranslate_failed": "AI 没有返回任何内容，该行保持原样。",
     "edit_session.new_from_game": "来自游戏的新内容",
     "edit_session.click_to_view": "点击查看",
     "edit_session.instructions": "双击翻译进行编辑——保存后将在游戏中应用",

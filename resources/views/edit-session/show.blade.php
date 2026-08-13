@@ -362,6 +362,12 @@
                 <span x-show="saveMessage" :class="gameConnected === false ? 'text-amber-300' : 'text-green-400'">
                     <i class="fas mr-1" :class="gameConnected === false ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
                 </span>
+
+                {{-- A retranslation that changed nothing. The success case needs no
+                     line here: the row turns purple and the Save counter moves. --}}
+                <span x-show="retranslateNotice" x-cloak class="text-amber-300">
+                    <i class="fas fa-wand-magic-sparkles mr-1"></i><span x-text="retranslateNotice"></span>
+                </span>
             </div>
 
             <div class="flex gap-4 items-center shrink-0">
@@ -607,6 +613,12 @@ document.addEventListener('alpine:init', () => {
         currentHash: null,
         pollTimer: null,
         refreshNotice: '',
+        // Retranslation outcomes that produce no visible row change ("same
+        // answer", "nothing came back") — without this the spinner was the
+        // only feedback, and it just stopped
+        retranslateNotice: '',
+        // Request ids already turned into pending edits by THIS page
+        retranslateApplied: [],
         // Game presence, from the state poll. null until the first answer, and
         // whenever the server cannot tell — never rendered as a disconnection.
         gameConnected: null,
@@ -844,6 +856,65 @@ document.addEventListener('alpine:init', () => {
             }, 180000);
         },
 
+        /**
+         * A retranslation came back. It is a PROPOSAL, not a change: it is
+         * staged exactly like something typed here — purple row, counted in
+         * the Save button, dropped by Cancel changes — so the same Apply
+         * governs it. Nothing was written in the game, and nothing will be
+         * until this page saves.
+         *
+         * Entries are served repeatedly (the server does not consume them, so
+         * two tabs both get them); `retranslateApplied` is what makes each
+         * page act once. It rides in the pending state, so a refresh does not
+         * resurrect a proposal that was cancelled before it.
+         */
+        applyRetranslations(items) {
+            let staged = 0;
+
+            for (const item of items) {
+                if (!item || !item.id || this.retranslateApplied.includes(item.id)) continue;
+                this.retranslateApplied.push(item.id);
+                delete this.retranslating[item.key];
+
+                if (item.outcome === 'replaced' && typeof item.value === 'string' && item.key in this.data) {
+                    // stageEdit drops the edit by itself if the value equals what
+                    // is stored — a proposal identical to the line is not a change
+                    this.stageEdit(item.key, item.value, this.getValue(this.data[item.key]));
+                    this.focusRow(item.key);
+                    staged++;
+                } else if (item.outcome === 'unchanged') {
+                    this.retranslateNotice = @js(__('edit_session.retranslate_unchanged'));
+                } else if (item.outcome === 'failed') {
+                    this.retranslateNotice = @js(__('edit_session.retranslate_failed'));
+                }
+            }
+
+            // Bounded: one entry per request for the life of the page, and the
+            // server forgets them after a few minutes anyway
+            if (this.retranslateApplied.length > 50) {
+                this.retranslateApplied = this.retranslateApplied.slice(-50);
+            }
+
+            if (staged > 0) this.retranslateNotice = '';
+            if (this.retranslateNotice) {
+                setTimeout(() => { this.retranslateNotice = ''; }, 6000);
+            }
+
+            this.persistPendingState();
+            this._scheduleNextPoll();
+        },
+
+        /** Applied proposals ride with the pending work they became. */
+        pendingExtraState() {
+            return { retranslateApplied: this.retranslateApplied };
+        },
+
+        restorePendingExtra(extra) {
+            if (extra && Array.isArray(extra.retranslateApplied)) {
+                this.retranslateApplied = extra.retranslateApplied;
+            }
+        },
+
         // ── Click-to-validate (parity with the merge view's Main click) ──
 
         /** The row carries a pending validation (previewed V, green cell). */
@@ -969,6 +1040,12 @@ document.addEventListener('alpine:init', () => {
                     this.applyGamePresence(state);
                     if (typeof state.pending_changes === 'number') {
                         this.pendingChanges = state.pending_changes;
+                    }
+                    // Before the hash check, which returns early on the very first
+                    // poll: a proposal that landed while the page was loading has
+                    // nothing to do with the file having changed — it changed nothing.
+                    if (Array.isArray(state.retranslations) && state.retranslations.length) {
+                        this.applyRetranslations(state.retranslations);
                     }
                     if (this.currentHash === null) {
                         this.currentHash = state.content_hash;

@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Перевести заново с помощью ИИ игры",
     "edit_session.retranslating": "Повторный перевод…",
     "edit_session.retranslate_human_confirm": "Эта строка переведена вручную. Если снова спросить ИИ, он её заменит, а написанный вами текст нигде не сохранится. Перевести заново?",
+    "edit_session.retranslate_unchanged": "ИИ снова выдал тот же перевод — менять нечего.",
+    "edit_session.retranslate_failed": "ИИ ничего не вернул — строка осталась прежней.",
     "edit_session.new_from_game": "Новое из игры",
     "edit_session.click_to_view": "Нажмите, чтобы посмотреть",
     "edit_session.instructions": "Дважды щёлкните перевод, чтобы отредактировать его — сохраните, чтобы применить в игре",

@@ -409,6 +409,73 @@ class EditSessionFlowTest extends TestCase
         $this->postJson('/edit-session-retranslate', ['key' => '_uuid', 'id' => 'req-2'])->assertStatus(422);
     }
 
+    public function test_retranslation_answer_reaches_the_page_without_writing_the_file(): void
+    {
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'ai_available' => true,
+        ])->assertOk();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $hashBefore = $session->fresh()->content_hash;
+
+        // The mod answers a retranslation. This is a PROPOSAL: the whole point is
+        // that it travels WITHOUT the file being rewritten, so the browser's Save
+        // stays the only thing that writes.
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/retranslation', [
+            'id' => 'req-1',
+            'key' => 'Hello',
+            'value' => 'Salut',
+            'outcome' => 'replaced',
+        ])->assertOk()->assertJson(['received' => true]);
+
+        $this->assertSame($hashBefore, $session->fresh()->content_hash, 'a proposal must not touch the file');
+
+        $expected = ['id' => 'req-1', 'key' => 'Hello', 'value' => 'Salut', 'outcome' => 'replaced'];
+
+        $this->get('/edit-session-state')->assertOk()->assertJson(['retranslations' => [$expected]]);
+
+        // Read again: still there. Reading must not consume, or a second tab open
+        // on the same session would swallow a proposal the first never learns about.
+        $this->get('/edit-session-state')->assertOk()->assertJson(['retranslations' => [$expected]]);
+
+        // The browser re-emits a pending request every 30s, always with the same
+        // id — the answer must not pile up as several proposals for one line.
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/retranslation', [
+            'id' => 'req-1',
+            'key' => 'Hello',
+            'value' => 'Salut',
+            'outcome' => 'replaced',
+        ])->assertOk();
+
+        $response = $this->get('/edit-session-state')->assertOk();
+        $this->assertCount(1, $response->json('retranslations'));
+    }
+
+    public function test_retranslation_answer_refused_for_an_unknown_session(): void
+    {
+        $this->initSession();
+
+        // 64 valid-format characters that belong to no session
+        $this->postJson('/api/v1/edit-session/' . str_repeat('a', 64) . '/retranslation', [
+            'id' => 'req-1',
+            'key' => 'Hello',
+            'value' => 'Salut',
+            'outcome' => 'replaced',
+        ])->assertStatus(404);
+
+        $session = EditSessionToken::first();
+
+        // An outcome the page would not know how to read is refused rather than stored
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/retranslation', [
+            'id' => 'req-1',
+            'key' => 'Hello',
+            'outcome' => 'whatever',
+        ])->assertStatus(422);
+    }
+
     public function test_retranslate_rejected_without_ai_backend(): void
     {
         $this->initSession();

@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Retraduzir com a IA do jogo",
     "edit_session.retranslating": "A retraduzir…",
     "edit_session.retranslate_human_confirm": "Esta linha foi traduzida à mão. Pedir de novo à IA substitui-a, e o texto que escreveu não fica guardado em lado nenhum. Retraduzir?",
+    "edit_session.retranslate_unchanged": "A IA devolveu a mesma tradução — não há nada a mudar.",
+    "edit_session.retranslate_failed": "A IA não devolveu nada — a linha fica intacta.",
     "edit_session.new_from_game": "Novo do jogo",
     "edit_session.click_to_view": "Clique para as ver",
     "edit_session.instructions": "Faça duplo clique numa tradução para editá-la – guarde para aplicá-la no jogo",

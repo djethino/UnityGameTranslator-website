@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -265,6 +266,60 @@ class EditSessionToken extends Model
         if ($this->pending_changes > 0) {
             $this->update(['pending_changes' => 0]);
         }
+    }
+
+    /**
+     * Per-line retranslations the mod has answered, waiting for the page.
+     *
+     * ⚠ In the cache, never in the file and never in a column. A proposal is
+     * worth nothing five minutes later, and writing it anywhere durable would
+     * be the very thing this feature exists to avoid: a retranslation that
+     * lands without passing the Save button.
+     */
+    private const RETRANSLATION_TTL_SECONDS = 300;
+    private const RETRANSLATION_MAX = 20;
+
+    private function retranslationCacheKey(): string
+    {
+        return "edit-session:{$this->id}:retranslations";
+    }
+
+    public function pushRetranslation(string $id, string $key, ?string $value, string $outcome): void
+    {
+        $pending = $this->pendingRetranslations();
+
+        // Same request answered twice (the browser re-emits while waiting):
+        // keep one entry, or the page would count the same proposal twice.
+        $pending = array_values(array_filter($pending, fn ($item) => ($item['id'] ?? null) !== $id));
+
+        $pending[] = [
+            'id' => $id,
+            'key' => $key,
+            'value' => $value,
+            'outcome' => $outcome,
+        ];
+
+        if (count($pending) > self::RETRANSLATION_MAX) {
+            $pending = array_slice($pending, -self::RETRANSLATION_MAX);
+        }
+
+        Cache::put($this->retranslationCacheKey(), $pending, self::RETRANSLATION_TTL_SECONDS);
+    }
+
+    /**
+     * What is waiting, WITHOUT consuming it.
+     *
+     * ⚠ Reading does not clear: two tabs open on one session would otherwise
+     * race, the first poll swallowing a proposal the other never learns about.
+     * Each page skips what it has already applied (it generated the request
+     * ids), so serving the same entry twice costs nothing and losing one costs
+     * a retranslation nobody can explain.
+     */
+    public function pendingRetranslations(): array
+    {
+        $pending = Cache::get($this->retranslationCacheKey(), []);
+
+        return is_array($pending) ? $pending : [];
     }
 
     /** End of the inactivity window, counted from now. */

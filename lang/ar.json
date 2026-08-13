@@ -854,6 +854,8 @@
     "edit_session.retranslate": "إعادة الترجمة باستخدام ذكاء اللعبة الاصطناعي",
     "edit_session.retranslating": "جارٍ إعادة الترجمة…",
     "edit_session.retranslate_human_confirm": "هذا السطر مترجَم يدويًا. إذا طلبتَ من الذكاء الاصطناعي ترجمته من جديد فسيحلّ محلّه، ولن يُحفظ النص الذي كتبتَه في أي مكان. هل تريد إعادة الترجمة؟",
+    "edit_session.retranslate_unchanged": "أعاد الذكاء الاصطناعي الترجمة نفسها — لا شيء يتغيّر.",
+    "edit_session.retranslate_failed": "لم يُعِد الذكاء الاصطناعي شيئًا — بقي السطر كما هو.",
     "edit_session.new_from_game": "جديد من اللعبة",
     "edit_session.click_to_view": "انقر لعرضها",
     "edit_session.instructions": "انقر نقرًا مزدوجًا على ترجمة لتعديلها — احفظ لتطبيقها في اللعبة",

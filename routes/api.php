@@ -70,6 +70,12 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:30,1');
     Route::post('edit-session/{modKey}/update', [EditSessionController::class, 'update'])
         ->middleware('throttle:30,1');
+    // The answer to a per-line retranslation. Separate from the content push
+    // on purpose: that one carries the whole file and is skipped when nothing
+    // changed — which is exactly the case for a proposal, since it writes
+    // nothing. Same throttle as a save: one per line the user asked about.
+    Route::post('edit-session/{modKey}/retranslation', [EditSessionController::class, 'retranslation'])
+        ->middleware('throttle:30,1');
     Route::post('edit-session/{modKey}/keepalive', [EditSessionController::class, 'keepalive'])
         ->middleware('throttle:30,1');
     Route::delete('edit-session/{modKey}', [EditSessionController::class, 'destroy'])

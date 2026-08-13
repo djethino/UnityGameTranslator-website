@@ -854,6 +854,8 @@
     "edit_session.retranslate": "Dịch lại bằng AI của trò chơi",
     "edit_session.retranslating": "Đang dịch lại…",
     "edit_session.retranslate_human_confirm": "Dòng này được dịch thủ công. Nhờ AI dịch lại sẽ thay thế nó, và phần bạn đã viết không được lưu ở đâu cả. Vẫn dịch lại chứ?",
+    "edit_session.retranslate_unchanged": "AI đưa lại đúng bản dịch cũ — không có gì để thay đổi.",
+    "edit_session.retranslate_failed": "AI không trả về gì — dòng này giữ nguyên.",
     "edit_session.new_from_game": "Mới từ trò chơi",
     "edit_session.click_to_view": "Nhấp để xem",
     "edit_session.instructions": "Nhấp đúp vào bản dịch để chỉnh sửa – lưu để áp dụng trong trò chơi",
