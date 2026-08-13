@@ -23,6 +23,17 @@
 
         <div class="mt-2 flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
+                {{-- ⚠ Reading, not writing — and saying WHICH copy is being read matters as much:
+                     somebody arriving from an in-game editor is looking at the published version,
+                     not at the file in their game, and the two can differ by everything they have
+                     translated since. The same control as everywhere, so the question is answered
+                     in the same place whatever screen they came from. --}}
+                <div class="flex items-center gap-3 flex-wrap mb-1">
+                    <x-editor.scope-badge side="server" :why="[
+                        'local' => __('edit_scope.why_page_is_server'),
+                        'both' => __('edit_scope.why_page_is_server'),
+                    ]" />
+                </div>
                 <h1 class="text-2xl font-bold text-white">
                     <i class="fas fa-eye mr-2 text-purple-400"></i>{{ __('translation.view_heading') }}
                 </h1>

@@ -42,13 +42,23 @@
             </div>
             @endif
         </div>
-        <h1 class="text-2xl font-bold text-white">
-            @if($mode === 'edit')
-                <i class="fas fa-pen mr-2 text-purple-400"></i>{{ __('merge.edit_heading') }}
-            @else
-                <i class="fas fa-code-merge mr-2 text-green-400"></i>{{ __('merge.heading') }}
-            @endif
-        </h1>
+        {{-- ⚠ Both modes of this screen write to the PUBLISHED translation: editing changes the
+             Main, and merging takes a contribution into it. Nothing here ever reaches a machine —
+             which is exactly the thing somebody arriving from an in-game editor would assume, and
+             the reason the same control is shown here as there. --}}
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-editor.scope-badge side="server" :why="[
+                'local' => __('edit_scope.why_page_is_server'),
+                'both' => __('edit_scope.why_page_is_server'),
+            ]" />
+            <h1 class="text-2xl font-bold text-white">
+                @if($mode === 'edit')
+                    <i class="fas fa-pen mr-2 text-purple-400"></i>{{ __('merge.edit_heading') }}
+                @else
+                    <i class="fas fa-code-merge mr-2 text-green-400"></i>{{ __('merge.heading') }}
+                @endif
+            </h1>
+        </div>
         <p class="text-gray-400">
             {{ $main->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $main->target_language }}
         </p>

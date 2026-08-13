@@ -10,7 +10,17 @@
 </div>
 
 <div class="max-w-5xl">
-    <h1 class="text-3xl font-bold mb-8"><i class="fas fa-file-alt mr-2"></i> {{ __('admin.translation_details') }}</h1>
+    {{-- ⚠ Here too, and precisely because it is moderation: what is on screen is the PUBLISHED
+         file, never anybody's machine. The badge belongs on every screen showing translation
+         lines without exception — one missing and the glance stops being a habit, which is worse
+         than never having had it: an absent badge would start to mean something it does not. --}}
+    <div class="flex items-center gap-3 flex-wrap mb-8">
+        <x-editor.scope-badge side="server" :why="[
+            'local' => __('edit_scope.why_page_is_server'),
+            'both' => __('edit_scope.why_page_is_server'),
+        ]" />
+        <h1 class="text-3xl font-bold"><i class="fas fa-file-alt mr-2"></i> {{ __('admin.translation_details') }}</h1>
+    </div>
 
     <!-- Translation Info Card -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
