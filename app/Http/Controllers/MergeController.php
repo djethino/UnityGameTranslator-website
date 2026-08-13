@@ -471,7 +471,7 @@ class MergeController extends Controller
         // Named, not just counted: knowing WHICH lines were left alone is the
         // difference between "check everything again" and "look at these three"
         if ($conflicts) {
-            $redirect->with('warning', __('merge.conflicts_skipped', [
+            $redirect->with('warning', trans_choice('merge.conflicts_skipped', count($conflicts), [
                 'count' => count($conflicts),
                 'keys' => collect($conflicts)->take(5)->implode(', ')
                     . (count($conflicts) > 5 ? '…' : ''),

@@ -297,7 +297,10 @@
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-language text-gray-400 mr-2 mt-0.5"></i>
-                        <span>{{ __('home.website_feature_languages') }}</span>
+                        {{-- Counted, never written down: this said "19 languages" and stayed at 19
+                             the day a twentieth was added. A number nobody recomputes is a number
+                             that becomes wrong without anyone touching it. --}}
+                        <span>{{ __('home.website_feature_languages', ['count' => count(config('locales.supported', []))]) }}</span>
                     </li>
                 </ul>
                 <!-- Screenshot -->

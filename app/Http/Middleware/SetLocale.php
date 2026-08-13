@@ -55,14 +55,59 @@ class SetLocale
     }
 
     /**
+     * The locale we support that this code names, or null.
+     *
+     * ⚠ Every comparison against our own list goes through here, and the reason is a bug this
+     * replaced: the list was searched with in_array() on a lowercased tag. That worked only as
+     * long as every locale code WAS lowercase. The moment one carried a region — 'pt-PT' — a
+     * browser announcing exactly that stopped matching it, and Portugal would have been handed
+     * Brazilian Portuguese: the precise outcome the split exists to prevent. A locale code is
+     * case-insensitive by BCP 47; comparing it as a byte string is the mistake.
+     *
+     * Aliases are applied here too, so a legacy code resolves identically wherever it arrives
+     * from — URL, stored preference, session or browser header.
+     */
+    public static function resolve(?string $tag): ?string
+    {
+        if ($tag === null || trim($tag) === '') {
+            return null;
+        }
+
+        $wanted = strtolower(str_replace('_', '-', trim($tag)));
+
+        foreach (array_keys(config('locales.supported', [])) as $locale) {
+            if (strtolower($locale) === $wanted) {
+                return $locale;
+            }
+        }
+
+        foreach (config('locales.aliases', []) as $alias => $target) {
+            if (strtolower($alias) === $wanted) {
+                return $target;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get locale from URL prefix (e.g., /en/games, /fr/docs)
      */
     protected function getLocaleFromUrl(Request $request, array $supportedLocales): ?string
     {
         $segment = $request->segment(1);
 
-        if ($segment && in_array($segment, $supportedLocales)) {
-            return $segment;
+        if (!$segment) {
+            return null;
+        }
+
+        // ⚠ Resolved WITHOUT aliases on purpose: an alias in the path is answered with a 301 to
+        // the real one (see routes/web.php) rather than served here. Two URLs quietly returning
+        // the same page is what splits a page's ranking between them.
+        foreach ($supportedLocales as $locale) {
+            if (strcasecmp($segment, $locale) === 0) {
+                return $locale;
+            }
         }
 
         return null;
@@ -73,17 +118,20 @@ class SetLocale
         $defaultLocale = config('locales.default', 'en');
 
         // 1. Check authenticated user preference
+        //    Resolved rather than compared: an account that chose Portuguese before the two were
+        //    told apart holds 'pt', and dropping it would silently reset a stated preference to
+        //    whatever the browser happens to say.
         if (Auth::check() && Auth::user()->locale) {
-            $userLocale = Auth::user()->locale;
-            if (in_array($userLocale, $supportedLocales)) {
+            $userLocale = self::resolve(Auth::user()->locale);
+            if ($userLocale !== null) {
                 return $userLocale;
             }
         }
 
         // 2. Check session
         if (session()->has('locale')) {
-            $sessionLocale = session('locale');
-            if (in_array($sessionLocale, $supportedLocales)) {
+            $sessionLocale = self::resolve(session('locale'));
+            if ($sessionLocale !== null) {
                 return $sessionLocale;
             }
         }
@@ -149,14 +197,16 @@ class SetLocale
 
         foreach (array_keys($requested) as $tag) {
             // An exact hit on one of our own locale codes first: it costs nothing and covers the
-            // ordinary case without opening the catalogue at all.
-            $plain = strtolower($tag);
-            if (in_array($plain, $supportedLocales, true)) {
-                return $plain;
+            // ordinary case without opening the catalogue at all. ⚠ It must run BEFORE the
+            // catalogue, because the catalogue shortens a tag one segment at a time — it would
+            // turn 'pt-PT' into the language 'pt' and lose the very distinction being asked for.
+            $direct = self::resolve($tag);
+            if ($direct !== null) {
+                return $direct;
             }
 
-            $canonical = CatalogStore::canonicalTag($tag);
-            if ($canonical !== null && in_array($canonical, $supportedLocales, true)) {
+            $canonical = self::resolve(CatalogStore::canonicalTag($tag));
+            if ($canonical !== null) {
                 return $canonical;
             }
         }

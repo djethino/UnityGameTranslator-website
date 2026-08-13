@@ -199,16 +199,16 @@
                     <div class="flex items-center gap-4 text-sm">
                         @if($stats)
                         <span class="text-gray-400">
-                            {{ number_format($stats['same']) }} {{ __('dashboard.same') }}
+                            {{ trans_choice('dashboard.same_count', $stats['same'], ['count' => number_format($stats['same'])]) }}
                         </span>
                         @if($stats['different'] > 0)
                         <span class="text-yellow-400">
-                            {{ $stats['different'] }} {{ __('dashboard.different') }}
+                            {{ trans_choice('dashboard.different_count', $stats['different']) }}
                         </span>
                         @endif
                         @if($stats['branch_only'] > 0)
                         <span class="text-green-400">
-                            +{{ $stats['branch_only'] }} {{ __('dashboard.new_keys') }}
+                            +{{ trans_choice('dashboard.new_keys_count', $stats['branch_only']) }}
                         </span>
                         @endif
                         @endif
@@ -242,8 +242,8 @@
                 <div class="flex-1">
                     <p class="text-white">{{ __('dashboard.main_by', ['name' => $mainTranslation->user->name]) }}</p>
                     <p class="text-sm text-gray-400">
-                        {{ number_format($mainTranslation->line_count) }} {{ __('dashboard.lines') }} •
-                        {{ number_format($mainTranslation->download_count) }} {{ __('dashboard.downloads') }}
+                        {{ trans_choice('dashboard.lines_count', $mainTranslation->line_count, ['count' => number_format($mainTranslation->line_count)]) }} •
+                        {{ trans_choice('dashboard.downloads_count', $mainTranslation->download_count, ['count' => number_format($mainTranslation->download_count)]) }}
                     </p>
                 </div>
                 <a href="{{ route('games.show', $mainTranslation->game) }}"

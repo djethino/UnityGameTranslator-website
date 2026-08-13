@@ -36,10 +36,39 @@ class BrowserLocaleTest extends TestCase
         $this->assertSame('de', $this->localeFor('de-DE,de;q=0.9'));
     }
 
-    public function test_a_region_is_ignored_but_the_language_is_not(): void
+    public function test_a_region_is_ignored_where_we_have_only_one_of_them(): void
     {
-        $this->assertSame('pt', $this->localeFor('pt-BR'));
+        // We have one French, so fr-CA is French. The region only carries information when the
+        // interface actually has both — see the Portuguese case below.
         $this->assertSame('fr', $this->localeFor('fr-CA'));
+        $this->assertSame('es', $this->localeFor('es-MX'));
+    }
+
+    public function test_the_two_portuguese_are_told_apart(): void
+    {
+        // Serving one to the other's audience is the same mistake as serving Simplified Chinese
+        // to somebody who asked for Traditional, and it is refused for the same reason.
+        $this->assertSame('pt-BR', $this->localeFor('pt-BR'));
+        $this->assertSame('pt-PT', $this->localeFor('pt-PT'));
+
+        // ⚠ Announced in lowercase, which clients do: a locale code is case-insensitive by
+        // BCP 47. Comparing it as a byte string sent Portugal to Brazilian Portuguese.
+        $this->assertSame('pt-PT', $this->localeFor('pt-pt'));
+        $this->assertSame('pt-BR', $this->localeFor('PT-br'));
+
+        // No region stated is not a preference between the two: CLDR and RFC 4647 both read a
+        // bare 'pt' as Brazilian, and it is what /pt/ served for its whole life.
+        $this->assertSame('pt-BR', $this->localeFor('pt'));
+        $this->assertSame('pt-BR', $this->localeFor('pt;q=0.9,en;q=0.8'));
+    }
+
+    public function test_the_old_portuguese_address_still_leads_somewhere(): void
+    {
+        // /pt/ was linked to and indexed for as long as the site existed. It answers permanently,
+        // never 404, and never the same page under two addresses.
+        $this->get('/pt')->assertStatus(301)->assertRedirect('/pt-BR');
+        $this->get('/pt/games')->assertStatus(301)->assertRedirect('/pt-BR/games');
+        $this->get('/pt/games?sort=recent')->assertRedirect('/pt-BR/games?sort=recent');
     }
 
     public function test_the_old_code_for_hebrew_is_understood(): void

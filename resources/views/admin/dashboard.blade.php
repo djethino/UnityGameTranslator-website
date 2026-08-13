@@ -48,7 +48,7 @@
                 <p class="text-gray-400 text-sm">{{ __('admin.users') }}</p>
                 <p class="text-3xl font-bold text-blue-400">{{ $totalUsers }}</p>
                 @if($bannedUsers > 0)
-                    <p class="text-sm text-red-400 mt-1">{{ $bannedUsers }} {{ __('admin.banned') }}</p>
+                    <p class="text-sm text-red-400 mt-1">{{ trans_choice('admin.banned', $bannedUsers, ['count' => $bannedUsers]) }}</p>
                 @endif
             </div>
             <i class="fas fa-users text-4xl text-blue-400 opacity-50"></i>

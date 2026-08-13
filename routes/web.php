@@ -229,6 +229,25 @@ $localizableRoutes = function () {
     });
 };
 
+// A code that is no longer a locale of ours, but named one for its whole life.
+//
+// ⚠ Declared BEFORE the groups below, and answering 301 rather than serving the page: /pt/ has
+// been linked to and indexed for as long as the site existed. Letting it 404 would throw that
+// away; serving the same page at two addresses would split its ranking between them. A permanent
+// redirect is the only answer that keeps both.
+//
+// The list comes from config, so adding an alias never means remembering this file.
+Route::get('/{alias}/{rest?}', function (string $alias, ?string $rest = null) {
+    $target = config('locales.aliases')[strtolower($alias)] ?? config('locales.default', 'en');
+    $path = '/' . $target . ($rest !== null && $rest !== '' ? '/' . $rest : '');
+    $query = request()->getQueryString();
+
+    return redirect($path . ($query !== null && $query !== '' ? '?' . $query : ''), 301);
+})->where([
+    'alias' => implode('|', array_keys(config('locales.aliases', ['pt' => 'pt-BR']))),
+    'rest' => '.*',
+]);
+
 // Routes without locale prefix (default locale detection)
 Route::group([], $localizableRoutes);
 

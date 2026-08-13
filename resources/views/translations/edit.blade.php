@@ -29,7 +29,7 @@
                     {{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}
                 </p>
                 <p class="text-sm text-gray-500">
-                    {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} &bull; {{ $translation->download_count }} {{ __('my_translations.downloads') }}
+                    {{ trans_choice('my_translations.lines_count', $translation->line_count, ['count' => number_format($translation->line_count)]) }} &bull; {{ trans_choice('my_translations.downloads_count', $translation->download_count, ['count' => number_format($translation->download_count)]) }}
                 </p>
             </div>
         </div>

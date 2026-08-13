@@ -215,8 +215,12 @@
                         $branchTotal = $translation->forks->where('visibility', 'branch')->count();
                     @endphp
                     <div class="text-sm text-gray-400 mt-1">
-                        {{ number_format($translation->line_count) }} {{ __('my_translations.lines') }} •
-                        {{ $translation->download_count }} {{ __('my_translations.downloads') }} •
+                        {{ trans_choice('my_translations.lines_count', $translation->line_count, [
+                            'count' => number_format($translation->line_count),
+                        ]) }} •
+                        {{ trans_choice('my_translations.downloads_count', $translation->download_count, [
+                            'count' => number_format($translation->download_count),
+                        ]) }} •
                         {{-- The one number that says someone was GLAD to find it — downloads only
                              say they tried. Hidden at zero, like the other counts on this line:
                              a fresh upload does not need "+0" thrown at its author, and the
@@ -229,10 +233,10 @@
                             </span> •
                         @endif
                         @if($translation->isMain() && $branchTotal > 0)
-                            {{ $branchTotal }} {{ __('my_translations.branches') }} •
+                            {{ trans_choice('my_translations.branches_count', $branchTotal) }} •
                         @endif
                         @if($forkCount > 0)
-                            {{ $forkCount }} {{ __('my_translations.forks') }} •
+                            {{ trans_choice('my_translations.forks_count', $forkCount) }} •
                         @endif
                         {{-- Two distinct facts, as on the game page: when you published it, and
                              whether you have touched it since. One date alone could not tell an

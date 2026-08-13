@@ -45,7 +45,7 @@
                 <x-progress-bar :translation="$translation" />
                 <x-quality-legend :translation="$translation" compact>
                     <span class="text-gray-600">•</span>
-                    <span>{{ number_format($translation->line_count) }} {{ __('my_translations.lines') }}</span>
+                    <span>{{ trans_choice('my_translations.lines_count', $translation->line_count, ['count' => number_format($translation->line_count)]) }}</span>
                 </x-quality-legend>
             </div>
         </div>

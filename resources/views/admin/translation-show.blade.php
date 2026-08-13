@@ -113,7 +113,7 @@
                     <div class="mt-4 p-3 bg-gray-750 rounded">
                         <p class="text-gray-400 text-sm mb-2">
                             <i class="fas fa-code-branch mr-1"></i>
-                            {{ $translation->forks->count() }} {{ __('translation.forks') }}
+                            {{ trans_choice('translation.forks_count', $translation->forks->count()) }}
                         </p>
                         <div class="flex flex-wrap gap-2">
                             @foreach($translation->forks as $fork)
