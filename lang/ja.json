@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "AI 翻訳をクリックして検証済みにする：",
     "edit_session.retranslate": "ゲームの AI で再翻訳",
     "edit_session.retranslating": "再翻訳中…",
+    "edit_session.retranslate_human_confirm": "この行は手作業で翻訳されています。AI に翻訳し直させると置き換わり、書いた文章はどこにも残りません。再翻訳しますか？",
     "edit_session.new_from_game": "ゲームからの新着",
     "edit_session.click_to_view": "クリックして表示",
     "edit_session.instructions": "翻訳をダブルクリックして編集 — 保存するとゲーム内に適用されます",

@@ -796,6 +796,14 @@ document.addEventListener('alpine:init', () => {
         requestRetranslate(key) {
             if (!this.canRetranslate(key)) return;
             this.focusRow(key);
+
+            // A line somebody typed themselves is one click away from being replaced by a
+            // machine, with nothing keeping the previous text. Worth asking.
+            if (this.getTag(this.data[key]) === 'H'
+                && !confirm(@js(__('edit_session.retranslate_human_confirm')))) {
+                return;
+            }
+
             this.retranslating[key] = Date.now();
             this._scheduleNextPoll(); // switch to the fast poll right away
 

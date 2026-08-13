@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "Klik terjemahan AI untuk memvalidasinya:",
     "edit_session.retranslate": "Terjemahkan ulang dengan AI game",
     "edit_session.retranslating": "Menerjemahkan ulang…",
+    "edit_session.retranslate_human_confirm": "Baris ini diterjemahkan secara manual. Meminta AI sekali lagi akan menggantinya, dan teks yang kamu tulis tidak disimpan di mana pun. Terjemahkan ulang?",
     "edit_session.new_from_game": "Baru dari game",
     "edit_session.click_to_view": "Klik untuk melihatnya",
     "edit_session.instructions": "Klik dua kali terjemahan untuk mengeditnya – simpan untuk menerapkannya dalam game",

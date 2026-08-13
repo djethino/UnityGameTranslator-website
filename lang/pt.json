@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "Clique numa tradução de IA para validá-la:",
     "edit_session.retranslate": "Retraduzir com a IA do jogo",
     "edit_session.retranslating": "A retraduzir…",
+    "edit_session.retranslate_human_confirm": "Esta linha foi traduzida à mão. Pedir de novo à IA substitui-a, e o texto que escreveu não fica guardado em lado nenhum. Retraduzir?",
     "edit_session.new_from_game": "Novo do jogo",
     "edit_session.click_to_view": "Clique para as ver",
     "edit_session.instructions": "Faça duplo clique numa tradução para editá-la – guarde para aplicá-la no jogo",

@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "Kliknij tłumaczenie AI, aby je zatwierdzić:",
     "edit_session.retranslate": "Przetłumacz ponownie za pomocą AI gry",
     "edit_session.retranslating": "Ponowne tłumaczenie…",
+    "edit_session.retranslate_human_confirm": "Ta linia została przetłumaczona ręcznie. Ponowne pytanie AI ją zastąpi, a napisany przez Ciebie tekst nie zostanie nigdzie zachowany. Przetłumaczyć ponownie?",
     "edit_session.new_from_game": "Nowe z gry",
     "edit_session.click_to_view": "Kliknij, aby je zobaczyć",
     "edit_session.instructions": "Kliknij dwukrotnie tłumaczenie, aby je edytować – zapisz, aby zastosować je w grze",

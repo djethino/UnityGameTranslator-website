@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "AI 번역을 클릭하여 검증:",
     "edit_session.retranslate": "게임 AI로 다시 번역",
     "edit_session.retranslating": "다시 번역 중…",
+    "edit_session.retranslate_human_confirm": "이 줄은 직접 번역한 것입니다. AI에게 다시 맡기면 내용이 바뀌고, 작성한 문장은 어디에도 남지 않습니다. 다시 번역할까요?",
     "edit_session.new_from_game": "게임에서 새로 받음",
     "edit_session.click_to_view": "클릭하여 보기",
     "edit_session.instructions": "번역을 더블 클릭하여 편집 — 저장하면 게임에 적용됩니다",

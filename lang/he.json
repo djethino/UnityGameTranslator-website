@@ -853,6 +853,7 @@
     "edit_session.instructions_validate": "לחץ על תרגום AI כדי לאמת אותו:",
     "edit_session.retranslate": "תרגם מחדש עם ה-AI של המשחק",
     "edit_session.retranslating": "מתרגם מחדש…",
+    "edit_session.retranslate_human_confirm": "השורה הזאת תורגמה ידנית. בקשה נוספת מה‑AI תחליף אותה, והטקסט שכתבת לא נשמר בשום מקום. לתרגם מחדש?",
     "edit_session.new_from_game": "חדש מהמשחק",
     "edit_session.click_to_view": "לחץ להצגה",
     "edit_session.instructions": "לחץ פעמיים על תרגום כדי לערוך אותו — שמור כדי להחיל אותו במשחק",
