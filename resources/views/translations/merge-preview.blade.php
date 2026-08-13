@@ -15,7 +15,16 @@
                 <i class="fas fa-arrow-left"></i> {{ __('merge_preview.back_to_translations') }}
             </a>
         </div>
-        <h1 class="text-2xl font-bold text-white">{{ __('merge_preview.title') }}</h1>
+        {{-- ⚠ Which way this comparison runs decides far more than a form action — what counts as
+             a change is reversed, and Delete stops meaning "remove it from the server" to mean
+             "remove it from my file". That was known only by reading the buttons. It is said
+             here first, in the control the mod and the manager show for the same question. --}}
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-editor.scope-badge :side="$toLocal ? 'local' : 'server'" :why="$toLocal
+                ? ['server' => __('edit_scope.why_page_is_local'), 'both' => __('edit_scope.why_page_is_local')]
+                : ['local' => __('edit_scope.why_page_is_server'), 'both' => __('edit_scope.why_page_is_server')]" />
+            <h1 class="text-2xl font-bold text-white">{{ __('merge_preview.title') }}</h1>
+        </div>
         <p class="text-gray-400">
             {{ $translation->game->name }} &bull;
             {{ $translation->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $translation->target_language }}

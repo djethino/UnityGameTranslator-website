@@ -6,9 +6,19 @@
 <div class="container mx-auto px-4 py-8" x-data="editSession" @keydown.window="handleEditorKeydown($event)">
     {{-- Header --}}
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white">
-            <i class="fas fa-pen-to-square text-purple-400 mr-2"></i>{{ __('edit_session.title') }}
-        </h1>
+        {{-- ⚠ Left of the title, before anything else is read: what this page writes to. A live
+             edit session always writes to the machine on the other end — that is what a session
+             IS — and nothing here is ever published. Saying it once, in the same control the mod
+             and the manager show, is cheaper than a paragraph nobody reads. --}}
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-editor.scope-badge side="local" :why="[
+                'server' => __('edit_scope.why_page_is_local'),
+                'both' => __('edit_scope.why_page_is_local'),
+            ]" />
+            <h1 class="text-2xl font-bold text-white">
+                <i class="fas fa-pen-to-square text-purple-400 mr-2"></i>{{ __('edit_session.title') }}
+            </h1>
+        </div>
         <p class="text-gray-400">
             @if($editSession->game_name)
                 {{ $editSession->game_name }}
