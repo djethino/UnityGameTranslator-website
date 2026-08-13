@@ -106,6 +106,47 @@ class EditSessionController extends Controller
     }
 
     /**
+     * What is going on in a session, without moving the file.
+     *
+     * ⚠ Exists for a client that cannot hold an SSE stream open. The mod can — it is inside a
+     * running game and already keeps one — but a desktop tool sitting behind a corporate proxy
+     * often cannot, and those are exactly the setups where a long-lived stream fails silently and
+     * looks like "the editor does nothing".
+     *
+     * ⚠ The alternative was polling the content endpoint, which streams the WHOLE translation
+     * file: tens of megabytes on a large game, every few seconds, to learn whether one line
+     * changed. This answers that question in a few dozen bytes, and the file is fetched only once
+     * the hash says it is worth fetching.
+     *
+     * Same credential and same throttle as every other mod-side route: the 64-character mod key,
+     * which is the only thing that authorises it.
+     *
+     * GET /api/v1/edit-session/{modKey}/state
+     */
+    public function state(string $modKey): JsonResponse
+    {
+        $session = EditSessionToken::findByModKey($modKey);
+        if (!$session) {
+            return response()->json(['error' => 'Edit session expired or not found.'], 404);
+        }
+
+        // ⚠ Deliberately NOT touchGameSeen: asking what happened is not being present, and a tool
+        // polling in the background would otherwise hold a session alive for ever on behalf of a
+        // window nobody has looked at since yesterday. Keepalive is the route that says "still
+        // here", and it is a separate decision made by a caller that means it.
+        return response()->json([
+            'content_hash' => $session->content_hash,
+            'expires_at' => $session->expires_at->toIso8601String(),
+            // Whether anyone is at the other end. A session whose page was closed is finished for
+            // practical purposes, and the caller can stop following it instead of waiting.
+            'browser_seen_seconds_ago' => $session->browserSeenSecondsAgo(),
+            'browser_left' => $session->browser_left_at !== null,
+            // Edits saved in the browser that this side has not fetched yet.
+            'pending_changes' => $session->pending_changes,
+        ]);
+    }
+
+    /**
      * The answer to a per-line retranslation the browser asked for.
      *
      * ⚠ This exists so the mod does NOT have to write the line to be able to

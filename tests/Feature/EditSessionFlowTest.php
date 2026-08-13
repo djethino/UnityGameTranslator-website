@@ -409,6 +409,41 @@ class EditSessionFlowTest extends TestCase
         $this->postJson('/edit-session-retranslate', ['key' => '_uuid', 'id' => 'req-2'])->assertStatus(422);
     }
 
+    public function test_mod_side_state_reports_saves_without_moving_the_file(): void
+    {
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $before = $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')
+            ->assertOk()
+            ->assertJson(['pending_changes' => 0, 'browser_left' => false]);
+
+        $hashBefore = $before->json('content_hash');
+        $this->assertNotEmpty($hashBefore, 'the state must carry the identity of the file');
+
+        // A browser save moves the hash — which is the whole point: a client can tell there is
+        // something to fetch WITHOUT streaming the entire translation to find out.
+        $this->postJson('/edit-session-save', [
+            'selections' => [
+                ['key' => 'Hello', 'value' => 'Salut', 'tag' => 'A', 'source' => 'manual'],
+            ],
+        ])->assertOk();
+
+        $after = $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')->assertOk();
+        $this->assertNotSame($hashBefore, $after->json('content_hash'));
+        $this->assertSame(1, $after->json('pending_changes'));
+
+        // ⚠ Asking is not being present: polling must not keep a session alive on behalf of a
+        // window nobody is looking at. Only keepalive says "still here".
+        $seenBefore = $session->fresh()->game_last_seen_at;
+        $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')->assertOk();
+        $this->assertEquals($seenBefore, $session->fresh()->game_last_seen_at);
+
+        // Unknown key: refused, and never with the shape of an answer.
+        $this->getJson('/api/v1/edit-session/' . str_repeat('a', 64) . '/state')->assertStatus(404);
+    }
+
     public function test_retranslation_answer_reaches_the_page_without_writing_the_file(): void
     {
         $this->postJson('/api/v1/edit-session/init', [

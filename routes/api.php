@@ -68,6 +68,10 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:6,1');
     Route::get('edit-session/{modKey}/content', [EditSessionController::class, 'content'])
         ->middleware('throttle:30,1');
+    // A few dozen bytes, polled while an editor is open, so the whole file is only fetched once
+    // there is something new in it. Looser throttle than the content route for that very reason.
+    Route::get('edit-session/{modKey}/state', [EditSessionController::class, 'state'])
+        ->middleware('throttle:60,1');
     Route::post('edit-session/{modKey}/update', [EditSessionController::class, 'update'])
         ->middleware('throttle:30,1');
     // The answer to a per-line retranslation. Separate from the content push
