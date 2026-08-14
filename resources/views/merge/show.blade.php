@@ -130,7 +130,7 @@
                         <button type="button"
                             class="rating-star text-xs px-px {{ $branch->main_rating >= $i ? 'text-yellow-400' : 'text-gray-600' }} hover:text-yellow-300 transition"
                             data-rating="{{ $i }}"
-                            title="{{ __('rating.rate_branch', ['stars' => $i]) }}">
+                            title="{{ trans_choice('rating.rate_branch', $i, ['stars' => $i]) }}">
                             <i class="fas fa-star"></i>
                         </button>
                         @endfor

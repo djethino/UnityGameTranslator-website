@@ -50,14 +50,14 @@
                     <div class="flex-1 min-w-0">
                         <p class="text-gray-200 text-sm">
                             @if($type === 'branch_submitted')
-                                {{ __('notif.branch_submitted', [
+                                {{ trans_choice('notif.branch_submitted', $data['count'] ?? 1, [
                                     'count' => $data['count'] ?? 1,
                                     'game' => $data['game_name'] ?? '?',
                                     'lang' => $data['target_language'] ?? '?',
                                     'user' => $data['last_contributor'] ?? '?',
                                 ]) }}
                             @elseif($type === 'branch_merged')
-                                {{ __('notif.branch_merged', [
+                                {{ trans_choice('notif.branch_merged', $data['merged_count'] ?? 1, [
                                     'count' => $data['merged_count'] ?? 1,
                                     'game' => $data['game_name'] ?? '?',
                                     'lang' => $data['target_language'] ?? '?',

@@ -315,7 +315,7 @@
                     @if($translation->isMain())
                     {{-- Merge branches (highlighted when branches exist) --}}
                     @if($branchCount > 0)
-                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded inline-flex items-center gap-1.5" title="{{ __('my_translations.merge_branches', ['count' => $branchCount]) }}">
+                    <a href="{{ route('translations.merge', $translation->file_uuid) }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded inline-flex items-center gap-1.5" title="{{ trans_choice('my_translations.merge_branches', $branchCount, ['count' => $branchCount]) }}">
                         <i class="fas fa-code-merge"></i>
                         <span class="bg-red-500 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1">{{ $branchCount }}</span>
                     </a>

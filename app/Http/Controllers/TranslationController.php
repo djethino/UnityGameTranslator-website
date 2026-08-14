@@ -1248,7 +1248,9 @@ class TranslationController extends Controller
         }
 
         return $this->finishMergePreviewSession(
-            __('merge_preview.save_success', ['count' => $modifiedCount + $deletedCount])
+            trans_choice('merge_preview.save_success', $modifiedCount + $deletedCount, [
+                'count' => $modifiedCount + $deletedCount,
+            ])
         );
     }
 
