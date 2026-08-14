@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "لا يُنشَر أي شيء",
     "docs.editing.live_pill3": "مزامنة مباشرة ثنائية الاتّجاه",
     "docs.editing.mod_tools_alt": "علامة تبويب Tools في الإضافة مع قسمَي محرّر النصوص ومحرّر المتصفّح",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: ابدأ أيًّا من المحرّرَين من هنا",
+    "docs.editing.mod_tools_caption": "علامة تبويب Tools في الإضافة: نقطة الدخول إلى محرّرَي اللعبة",
     "docs.editing.session_active_alt": "علامة تبويب Tools أثناء نشاط جلسة المتصفّح",
     "docs.editing.session_active_caption": "أثناء نشاط الجلسة، يُطبَّق كل حفظ من المتصفّح داخل اللعبة",
     "docs.editing.live_edit_step1": "في الإضافة: Translation Tools → Edit in browser. يفتح متصفّحك المحرّر على ملفك المحلي.",

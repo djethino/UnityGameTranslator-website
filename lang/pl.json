@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "Nic nie jest publikowane",
     "docs.editing.live_pill3": "Dwukierunkowa synchronizacja na żywo",
     "docs.editing.mod_tools_alt": "Karta Tools moda z sekcjami Text Editor i Browser Editor",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: uruchom stąd dowolny z edytorów",
+    "docs.editing.mod_tools_caption": "Zakładka Tools w modzie: wejście do obu edytorów w grze",
     "docs.editing.session_active_alt": "Karta Tools, gdy sesja przeglądarki jest aktywna",
     "docs.editing.session_active_caption": "Gdy sesja jest aktywna, każdy zapis w przeglądarce jest stosowany w grze",
     "docs.editing.live_edit_step1": "W modzie: Translation Tools → Edit in browser. Przeglądarka otworzy edytor z Twoim lokalnym plikiem.",

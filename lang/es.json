@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "No se publica nada",
     "docs.editing.live_pill3": "Sincronización en vivo bidireccional",
     "docs.editing.mod_tools_alt": "La pestaña Tools del mod con las secciones Text Editor y Browser Editor",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: inicia cualquiera de los editores desde aquí",
+    "docs.editing.mod_tools_caption": "La pestaña Tools del mod: el punto de entrada de los dos editores en el juego",
     "docs.editing.session_active_alt": "La pestaña Tools mientras una sesión del navegador está activa",
     "docs.editing.session_active_caption": "Mientras la sesión está activa, cada guardado del navegador se aplica en el juego",
     "docs.editing.live_edit_step1": "En el mod: Translation Tools → Edit in browser. Tu navegador abre el editor con tu archivo local.",

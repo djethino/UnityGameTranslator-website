@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "Er wordt niets gepubliceerd",
     "docs.editing.live_pill3": "Live tweerichtingssynchronisatie",
     "docs.editing.mod_tools_alt": "Het tabblad Tools van de mod met de secties Text Editor en Browser Editor",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: start hier een van beide editors",
+    "docs.editing.mod_tools_caption": "Het Tools-tabblad van de mod: de ingang van beide editors in het spel",
     "docs.editing.session_active_alt": "Het tabblad Tools terwijl een browsersessie actief is",
     "docs.editing.session_active_caption": "Zolang de sessie actief is, wordt elke opslag in de browser in het spel toegepast",
     "docs.editing.live_edit_step1": "In de mod: Translation Tools → Edit in browser. Je browser opent de editor met je lokale bestand.",

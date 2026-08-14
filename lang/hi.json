@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "कुछ भी प्रकाशित नहीं होता",
     "docs.editing.live_pill3": "दो-तरफ़ा लाइव सिंक",
     "docs.editing.mod_tools_alt": "Text Editor और Browser Editor अनुभागों वाला मॉड का Tools टैब",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: यहाँ से कोई भी संपादक शुरू करें",
+    "docs.editing.mod_tools_caption": "मॉड का Tools टैब: गेम के भीतर दोनों संपादकों का प्रवेश-बिंदु",
     "docs.editing.session_active_alt": "ब्राउज़र सत्र सक्रिय होने के दौरान Tools टैब",
     "docs.editing.session_active_caption": "जब तक सत्र सक्रिय है, प्रत्येक ब्राउज़र सेव गेम में लागू होता है",
     "docs.editing.live_edit_step1": "मॉड में: Translation Tools → Edit in browser। आपका ब्राउज़र आपकी स्थानीय फ़ाइल पर संपादक खोलता है।",

@@ -360,7 +360,7 @@
     "docs.editing.live_pill2": "Nichts wird veröffentlicht",
     "docs.editing.live_pill3": "Live-Synchronisierung in beide Richtungen",
     "docs.editing.mod_tools_alt": "Der Tools-Tab der Mod mit den Abschnitten Text Editor und Browser Editor",
-    "docs.editing.mod_tools_caption": "Parameters → Tools: Starte beide Editoren von hier aus",
+    "docs.editing.mod_tools_caption": "Der Tools-Reiter der Mod: der Einstieg in beide Editoren im Spiel",
     "docs.editing.session_active_alt": "Der Tools-Tab, während eine Browser-Sitzung aktiv ist",
     "docs.editing.session_active_caption": "Während die Sitzung aktiv ist, wird jedes Speichern im Browser im Spiel angewendet",
     "docs.editing.live_edit_step1": "In der Mod: Translation Tools → Edit in browser. Dein Browser öffnet den Editor mit deiner lokalen Datei.",
