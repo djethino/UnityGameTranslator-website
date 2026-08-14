@@ -48,12 +48,16 @@
 @endphp
 
 @if ($compact)
-    {{-- The mark alone, for beside an action. Same icon as the strip, so the two read as one
-         control rather than as two unrelated decorations. --}}
-    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-purple-700/60
-                 bg-purple-900/40 text-purple-100 text-xs whitespace-nowrap shrink-0"
+    {{-- ⚠ **All three marks, one lit — not the chosen one on its own.** The small form has to be
+         recognised as the strip above, and a single icon with a word beside it is a new label to
+         learn rather than the same control read at a glance. Same pictures, same order, no words:
+         that is the entire difference between the two sizes. --}}
+    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-gray-700
+                 bg-gray-800 whitespace-nowrap shrink-0"
           title="{{ $effects[$side] ?? '' }}">
-        <i class="fas {{ $icons[$side] ?? '' }} text-[10px]"></i>{{ $sides[$side] ?? '' }}
+        @foreach ($icons as $key => $icon)
+            <i class="fas {{ $icon }} text-[10px] {{ $key === $side ? 'text-purple-300' : 'text-gray-600' }}"></i>
+        @endforeach
     </span>
 @else
     <div class="inline-flex rounded-lg overflow-hidden border border-gray-700 shrink-0"
