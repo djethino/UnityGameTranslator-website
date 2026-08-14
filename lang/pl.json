@@ -437,7 +437,7 @@
     "docs.models.expand": "Przetestowane modele: :count, od :gb GB pamięci karty graficznej",
     "docs.models.measured_note": "Zmierzone na :card, przy tłumaczeniu na :language, dnia :date. To, co model potrafi, jest cechą modelu; to, czy się zmieści, zależy od twojej karty.",
     "docs.models.try_smaller": "Karty bywają różne, języki też: kilka modeli z listy poniżej działa na 4 GB. Wypróbowanie jednego kosztuje tylko pobranie — a manager ma w sekcji „Mod defaults” tester, który poddaje model dokładnie tym instrukcjom, jakie wysyła mod, w twoim języku.",
-    "docs.models.get_manager": "Pobierz managera",
+    "docs.models.get_manager": "Pobierz Manager",
     "docs.models.external_apis": "Skierowanie moda na zewnętrzne API to twoja decyzja. Jeśli tak zrobisz, pilnuj kosztów: część dostawców daje darmowy limit, inni naliczają każde zapytanie.",
     "docs.first_launch": "Pierwsze uruchomienie",
     "docs.first_launch_intro": "Przy pierwszym uruchomieniu kreator konfiguracji przeprowadzi Cię przez wszystko krok po kroku:",
