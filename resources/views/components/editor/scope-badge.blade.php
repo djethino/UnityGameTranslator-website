@@ -56,7 +56,12 @@
                  bg-gray-800 whitespace-nowrap shrink-0"
           title="{{ $effects[$side] ?? '' }}">
         @foreach ($icons as $key => $icon)
-            <i class="fas {{ $icon }} text-[10px] {{ $key === $side ? 'text-purple-300' : 'text-gray-600' }}"></i>
+            {{-- ⚠ cyan-200, and it must stay outside every colour a button is filled with. The lit
+                 mark used to be a light purple, which on the purple buttons of the mod and the
+                 manager scored LESS against the fill than the two dimmed marks — the control read
+                 backwards. UnityGameTranslator.Common.Theme.MarkLit holds the value and the
+                 measurement for the two C# programs; this is the copy PHP cannot consume. --}}
+            <i class="fas {{ $icon }} text-[10px] {{ $key === $side ? 'text-cyan-200' : 'text-gray-600' }}"></i>
         @endforeach
     </span>
 @else
@@ -71,7 +76,10 @@
                          {{ $active ? 'bg-purple-900/60 text-purple-100 font-semibold' : 'bg-gray-800 text-gray-400' }}
                          {{ $blocked ? 'opacity-40' : '' }}"
                   @if ($blocked) title="{{ $why[$key] }}" @endif>
-                <i class="fas {{ $icons[$key] ?? '' }} text-[10px]"></i>{{ $label }}
+                {{-- The picture says "lit" the same way it does in the compact form and on a
+                     button; the segment's own fill and weight say it a second time, which is what
+                     the full form has room for. --}}
+                <i class="fas {{ $icons[$key] ?? '' }} text-[10px] {{ $active ? 'text-cyan-200' : '' }}"></i>{{ $label }}
             </span>
         @endforeach
     </div>
