@@ -14,31 +14,348 @@
     "These are deliberately NOT faithful reproductions. At sixteen pixels wide an emblem is a",
     "patch of the right colour in the right place, which is what every icon set ships."
   ],
-
-  "grid": { "width": 16, "height": 11 },
-
+  "grid": {
+    "width": 16,
+    "height": 11
+  },
   "flags": {
-    "fr": {
-      "name": "France",
-      "palette": { "b": "#002654", "w": "#FFFFFF", "r": "#CE1126" },
+    "af": {
+      "name": "Afghanistan",
+      "palette": {
+        "w": "#FFFFFF",
+        "k": "#000000"
+      },
       "rows": [
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr",
-        "bbbbbwwwwwwrrrrr"
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwkkkkkkkkkkwww",
+        "wwwkkkkkkkkkkwww",
+        "wwwkkkkkkkkkkwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
       ]
     },
-
+    "al": {
+      "name": "Albania",
+      "palette": {
+        "r": "#E41E20",
+        "k": "#000000"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrkkkkrrrrrr",
+        "rrrrrrkkkkrrrrrr",
+        "rrrrrrkkkkrrrrrr",
+        "rrrrrrkkkkrrrrrr",
+        "rrrrrrkkkkrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "am": {
+      "name": "Armenia",
+      "palette": {
+        "r": "#D90012",
+        "b": "#0033A0",
+        "o": "#F2A800"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "oooooooooooooooo",
+        "oooooooooooooooo",
+        "oooooooooooooooo",
+        "oooooooooooooooo"
+      ]
+    },
+    "at": {
+      "name": "Austria",
+      "palette": {
+        "r": "#ED2939",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "az": {
+      "name": "Azerbaijan",
+      "palette": {
+        "c": "#00B5E2",
+        "r": "#EF3340",
+        "g": "#509E2F",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "rrrrrrwwrrrrrrrr",
+        "rrrrrrwrrrrrrrrr",
+        "rrrrrrwwrrrrrrrr",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "ba": {
+      "name": "Bosnia and Herzegovina",
+      "palette": {
+        "b": "#002395",
+        "y": "#FECB00",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb",
+        "bbbbbyyybbbbbbbb"
+      ]
+    },
+    "bd": {
+      "name": "Bangladesh",
+      "palette": {
+        "g": "#006A4E",
+        "r": "#F42A41"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggrrrrggggggg",
+        "ggggrrrrrrgggggg",
+        "ggggrrrrrrgggggg",
+        "ggggrrrrrrgggggg",
+        "gggggrrrrggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "be": {
+      "name": "Belgium",
+      "palette": {
+        "k": "#000000",
+        "y": "#FDDA24",
+        "r": "#EF3340"
+      },
+      "rows": [
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr",
+        "kkkkkkyyyyyrrrrr"
+      ]
+    },
+    "bg": {
+      "name": "Bulgaria",
+      "palette": {
+        "w": "#FFFFFF",
+        "g": "#00966E",
+        "r": "#D62612"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "bo": {
+      "name": "Bolivia",
+      "palette": {
+        "r": "#D52B1E",
+        "y": "#F9E300",
+        "g": "#007A33"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "by": {
+      "name": "Belarus",
+      "palette": {
+        "r": "#D22730",
+        "g": "#007C30",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwrrrrrrrrrrrrr",
+        "wwwggggggggggggg",
+        "wwwggggggggggggg",
+        "wwwggggggggggggg",
+        "wwwggggggggggggg"
+      ]
+    },
+    "ca": {
+      "name": "Canada",
+      "palette": {
+        "r": "#FF0000",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwrwwwrrrr",
+        "rrrrwwwrrrwwrrrr",
+        "rrrrwwwwrwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr"
+      ]
+    },
+    "ch": {
+      "name": "Switzerland",
+      "palette": {
+        "r": "#FF0000",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "cn": {
+      "name": "China",
+      "palette": {
+        "r": "#DE2910",
+        "y": "#FFDE00"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrryrrrryrrrrrrr",
+        "rryyyrrrrrrrrrrr",
+        "rrryrrrryrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrryrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrryrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "co": {
+      "name": "Colombia",
+      "palette": {
+        "y": "#FCD116",
+        "b": "#003893",
+        "r": "#CE1126"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "cz": {
+      "name": "Czechia",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#D7141A",
+        "b": "#11457E"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
     "de": {
       "name": "Germany",
-      "palette": { "k": "#000000", "r": "#DD0000", "y": "#FFCE00" },
+      "palette": {
+        "k": "#000000",
+        "r": "#DD0000",
+        "y": "#FFCE00"
+      },
       "rows": [
         "kkkkkkkkkkkkkkkk",
         "kkkkkkkkkkkkkkkk",
@@ -53,64 +370,240 @@
         "yyyyyyyyyyyyyyyy"
       ]
     },
-
-    "se": {
-      "name": "Sweden",
-      "palette": { "b": "#006AA7", "y": "#FECC00" },
+    "dk": {
+      "name": "Denmark",
+      "palette": {
+        "r": "#C8102E",
+        "w": "#FFFFFF"
+      },
       "rows": [
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb",
-        "bbbbbyybbbbbbbbb"
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr"
       ]
     },
-
-    "jp": {
-      "name": "Japan",
-      "palette": { "w": "#FFFFFF", "r": "#BC002D" },
+    "dz": {
+      "name": "Algeria",
+      "palette": {
+        "g": "#006233",
+        "w": "#FFFFFF",
+        "r": "#D21034"
+      },
       "rows": [
+        "ggggggggwwwwwwww",
+        "ggggggggwwwwwwww",
+        "ggggggggwwwwwwww",
+        "ggggggrrrrwwwwww",
+        "gggggrrgwwwwwwww",
+        "gggggrrgwwwwwwww",
+        "gggggrrgwwwwwwww",
+        "ggggggrrrrwwwwww",
+        "ggggggggwwwwwwww",
+        "ggggggggwwwwwwww",
+        "ggggggggwwwwwwww"
+      ]
+    },
+    "ee": {
+      "name": "Estonia",
+      "palette": {
+        "b": "#0072CE",
+        "k": "#000000",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwrrrrrrwwwww",
-        "wwwwrrrrrrrrwwww",
-        "wwwwrrrrrrrrwwww",
-        "wwwwrrrrrrrrwwww",
-        "wwwwwrrrrrrwwwww",
-        "wwwwwwwrrwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww"
       ]
     },
-
-    "tr": {
-      "name": "Turkey",
-      "palette": { "r": "#E30A17", "w": "#FFFFFF" },
+    "eg": {
+      "name": "Egypt",
+      "palette": {
+        "r": "#CE1126",
+        "w": "#FFFFFF",
+        "k": "#000000",
+        "y": "#C09300"
+      },
       "rows": [
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "rrrwwwwrrrrrrrrr",
-        "rrwwrrrwwrrrrrrr",
-        "rrwrrrrrwrwrrrrr",
-        "rrwrrrrrrwwwwrrr",
-        "rrwrrrrrwrwrrrrr",
-        "rrwwrrrwwrrrrrrr",
-        "rrrwwwwrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwywwwwwww",
+        "wwwwwwwyyywwwwww",
+        "wwwwwwwwywwwwwww",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk"
+      ]
+    },
+    "es": {
+      "name": "Spain",
+      "palette": {
+        "r": "#AA151B",
+        "y": "#F1BF00"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
     },
-
+    "es-ct": {
+      "name": "Catalonia",
+      "palette": {
+        "y": "#FCDD09",
+        "r": "#DA121A"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy"
+      ]
+    },
+    "es-ga": {
+      "name": "Galicia",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#0066CC"
+      },
+      "rows": [
+        "bbwwwwwwwwwwwwww",
+        "wbbwwwwwwwwwwwww",
+        "wwbbbwwwwwwwwwww",
+        "wwwbbbwwwwwwwwww",
+        "wwwwwbbbwwwwwwww",
+        "wwwwwwbbbbwwwwww",
+        "wwwwwwwwbbbwwwww",
+        "wwwwwwwwwbbbwwww",
+        "wwwwwwwwwwwbbbww",
+        "wwwwwwwwwwwwbbbb",
+        "wwwwwwwwwwwwwwbb"
+      ]
+    },
+    "es-pv": {
+      "name": "Basque Country",
+      "palette": {
+        "r": "#D52B1E",
+        "g": "#009B48",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "ggrrrrrwwrrrrrgg",
+        "rggrrrrwwrrrrggr",
+        "rrgggrrwwrrgggrr",
+        "rrrrggrwwrggrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrggwwggrrrrr",
+        "rrrrggrwwrggrrrr",
+        "rrgggrrwwrrgggrr",
+        "rggrrrrwwrrrrggr",
+        "ggrrrrrwwrrrrrgg"
+      ]
+    },
+    "fi": {
+      "name": "Finland",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#003580"
+      },
+      "rows": [
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww",
+        "wwwwwbbwwwwwwwww"
+      ]
+    },
+    "fo": {
+      "name": "Faroe Islands",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#C8102E",
+        "b": "#0065BD"
+      },
+      "rows": [
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww",
+        "wwwwwrrwwwwwwwww"
+      ]
+    },
+    "fr": {
+      "name": "France",
+      "palette": {
+        "b": "#002654",
+        "w": "#FFFFFF",
+        "r": "#CE1126"
+      },
+      "rows": [
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr"
+      ]
+    },
     "gb": {
       "name": "United Kingdom",
-      "palette": { "b": "#012169", "w": "#FFFFFF", "r": "#C8102E" },
+      "palette": {
+        "b": "#012169",
+        "w": "#FFFFFF",
+        "r": "#C8102E"
+      },
       "rows": [
         "bwwbbbbwwbbbbwwb",
         "bbwwbbbwwbbbwwbb",
@@ -125,10 +618,241 @@
         "bwwbbbbwwbbbbwwb"
       ]
     },
-
+    "gb-wls": {
+      "name": "Wales",
+      "palette": {
+        "w": "#FFFFFF",
+        "g": "#00AB39",
+        "r": "#C8102E"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwrrrrrrrwwwww",
+        "wwwwrrrrrrrwwwww",
+        "wwwwwwwwwrrrwwww",
+        "gggggggggrrrgggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "ge": {
+      "name": "Georgia",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#FF0000"
+      },
+      "rows": [
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwrrwwwwwww"
+      ]
+    },
+    "gh": {
+      "name": "Ghana",
+      "palette": {
+        "r": "#CE1126",
+        "y": "#FCD116",
+        "g": "#006B3F",
+        "k": "#000000"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyykyyyyyyy",
+        "yyyyyyykkkyyyyyy",
+        "yyyyyyyykyyyyyyy",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "gr": {
+      "name": "Greece",
+      "palette": {
+        "b": "#0D5EAF",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbwwwwwwwwww",
+        "wwwwwwbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
+      ]
+    },
+    "hk": {
+      "name": "Hong Kong",
+      "palette": {
+        "r": "#DE2910",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "hr": {
+      "name": "Croatia",
+      "palette": {
+        "r": "#FF0000",
+        "w": "#FFFFFF",
+        "b": "#171796"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
+      ]
+    },
+    "ht": {
+      "name": "Haiti",
+      "palette": {
+        "b": "#00209F",
+        "r": "#D21034",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbwwwwbbbbbb",
+        "bbbbbbwwwwbbbbbb",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "hu": {
+      "name": "Hungary",
+      "palette": {
+        "r": "#CD2A3E",
+        "w": "#FFFFFF",
+        "g": "#436F4D"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "id": {
+      "name": "Indonesia",
+      "palette": {
+        "r": "#CE1126",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+    "ie": {
+      "name": "Ireland",
+      "palette": {
+        "g": "#169B62",
+        "w": "#FFFFFF",
+        "o": "#FF883E"
+      },
+      "rows": [
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo",
+        "ggggggwwwwwooooo"
+      ]
+    },
+    "il": {
+      "name": "Israel",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#0038B8"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwbbbbwwwwww",
+        "wwwwwwbbbbwwwwww",
+        "wwwwwwbbbbwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
     "in": {
       "name": "India",
-      "palette": { "o": "#FF9933", "w": "#FFFFFF", "g": "#138808", "b": "#000088" },
+      "palette": {
+        "o": "#FF9933",
+        "w": "#FFFFFF",
+        "g": "#138808",
+        "b": "#000088"
+      },
       "rows": [
         "oooooooooooooooo",
         "oooooooooooooooo",
@@ -143,22 +867,1072 @@
         "gggggggggggggggg"
       ]
     },
-
+    "iq": {
+      "name": "Iraq",
+      "palette": {
+        "r": "#CE1126",
+        "w": "#FFFFFF",
+        "k": "#000000",
+        "g": "#007A3D"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwggggwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk"
+      ]
+    },
+    "ir": {
+      "name": "Iran",
+      "palette": {
+        "g": "#239F40",
+        "w": "#FFFFFF",
+        "r": "#DA0000"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "is": {
+      "name": "Iceland",
+      "palette": {
+        "b": "#02529C",
+        "w": "#FFFFFF",
+        "r": "#DC1E35"
+      },
+      "rows": [
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb",
+        "wwwwwrwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwrwwwwwwwwww",
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb",
+        "bbbbwrwbbbbbbbbb"
+      ]
+    },
+    "it": {
+      "name": "Italy",
+      "palette": {
+        "g": "#009246",
+        "w": "#F1F2F1",
+        "r": "#CE2B37"
+      },
+      "rows": [
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr",
+        "ggggggwwwwwrrrrr"
+      ]
+    },
+    "jp": {
+      "name": "Japan",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#BC002D"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwrrrrrrwwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwwrrrrrrwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+    "ke": {
+      "name": "Kenya",
+      "palette": {
+        "k": "#000000",
+        "w": "#FFFFFF",
+        "r": "#BB0000",
+        "g": "#006600"
+      },
+      "rows": [
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "kh": {
+      "name": "Cambodia",
+      "palette": {
+        "b": "#032EA1",
+        "r": "#E00025",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
+      ]
+    },
+    "kr": {
+      "name": "South Korea",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#CD2E3A",
+        "b": "#0047A0",
+        "k": "#000000"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwrrrrwwwwww",
+        "wwwwwrrrrrrwwwww",
+        "wwwwwrrbbrrwwwww",
+        "wwwwwrbbbbrwwwww",
+        "wwwwwwrbbrwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+    "kz": {
+      "name": "Kazakhstan",
+      "palette": {
+        "c": "#00AFCA",
+        "y": "#FEC50C"
+      },
+      "rows": [
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "ccccccyyyycccccc",
+        "ccccccyyyycccccc",
+        "ccccccyyyycccccc",
+        "ccccccyyyycccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc"
+      ]
+    },
+    "la": {
+      "name": "Laos",
+      "palette": {
+        "r": "#CE1126",
+        "b": "#002868",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbwwwwbbbbbb",
+        "bbbbbbwwwwbbbbbb",
+        "bbbbbbwwwwbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "lk": {
+      "name": "Sri Lanka",
+      "palette": {
+        "y": "#FFB700",
+        "r": "#8D153A",
+        "g": "#00534E",
+        "o": "#EB7400"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "ygggrrrrrrrrrrry",
+        "yyyyyyyyyyyyyyyy"
+      ]
+    },
+    "lt": {
+      "name": "Lithuania",
+      "palette": {
+        "y": "#FDB913",
+        "g": "#006A44",
+        "r": "#C1272D"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "lu": {
+      "name": "Luxembourg",
+      "palette": {
+        "r": "#ED2939",
+        "w": "#FFFFFF",
+        "c": "#00A1DE"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc"
+      ]
+    },
+    "lv": {
+      "name": "Latvia",
+      "palette": {
+        "r": "#9E3039",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "ma": {
+      "name": "Morocco",
+      "palette": {
+        "r": "#C1272D",
+        "g": "#006233"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrgrrrrrrr",
+        "rrrrrrrgggrrrrrr",
+        "rrrrrrrrgrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "mk": {
+      "name": "North Macedonia",
+      "palette": {
+        "r": "#D20000",
+        "y": "#FFE600"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrryyyyrrrrrr",
+        "rrrrrryyyyrrrrrr",
+        "rrrrrryyyyrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "mm": {
+      "name": "Myanmar",
+      "palette": {
+        "y": "#FECB00",
+        "g": "#34B233",
+        "r": "#EA2839",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "ggggggggwggggggg",
+        "gggggggwwwgggggg",
+        "ggggggggwggggggg",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "mt": {
+      "name": "Malta",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#CF142B"
+      },
+      "rows": [
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr",
+        "wwwwwwwwrrrrrrrr"
+      ]
+    },
+    "my": {
+      "name": "Malaysia",
+      "palette": {
+        "r": "#CC0001",
+        "w": "#FFFFFF",
+        "b": "#010066",
+        "y": "#FFCC00"
+      },
+      "rows": [
+        "bbbbbbbbrrrrrrrr",
+        "bbyybbbbwwwwwwww",
+        "bbybbbbbrrrrrrrr",
+        "bbybbbbbwwwwwwww",
+        "bbyybbbbrrrrrrrr",
+        "bbbbbbbbwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "ng": {
+      "name": "Nigeria",
+      "palette": {
+        "g": "#008751",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg",
+        "ggggggwwwwwggggg"
+      ]
+    },
+    "nl": {
+      "name": "Netherlands",
+      "palette": {
+        "r": "#AE1C28",
+        "w": "#FFFFFF",
+        "b": "#21468B"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
+      ]
+    },
+    "no": {
+      "name": "Norway",
+      "palette": {
+        "r": "#BA0C2F",
+        "w": "#FFFFFF",
+        "b": "#00205B"
+      },
+      "rows": [
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr",
+        "rrrrrwwrrrrrrrrr"
+      ]
+    },
     "np": {
       "name": "Nepal",
-      "palette": { "c": "#003893", "r": "#DC143C", "w": "#FFFFFF" },
+      "palette": {
+        "c": "#003893",
+        "r": "#DC143C",
+        "w": "#FFFFFF"
+      },
       "rows": [
         "ccc.............",
-        "crcc............",
-        "crwrcc..........",
-        "crrrrcc.........",
-        "crrrrrcc........",
-        "ccccccccc.......",
-        "crrrrrcc........",
-        "crwwwrcc........",
-        "crrrrrrcc.......",
-        "crrrrrrrcc......",
-        "cccccccccc......"
+        "crrc............",
+        "crwrc...........",
+        "crrrrc..........",
+        "crrrrrc.........",
+        "cccccccc........",
+        "crrrrrc.........",
+        "crwwrrc.........",
+        "crrrrrrc........",
+        "crrrrrrrc.......",
+        "ccccccccc......."
+      ]
+    },
+    "pe": {
+      "name": "Peru",
+      "palette": {
+        "r": "#D91023",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr",
+        "rrrrrrwwwwwrrrrr"
+      ]
+    },
+    "ph": {
+      "name": "Philippines",
+      "palette": {
+        "b": "#0038A8",
+        "r": "#CE1126",
+        "w": "#FFFFFF",
+        "y": "#FCD116"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwbbbbbbbbbbb",
+        "wwywwbbbbbbbbbbb",
+        "wyyywbbbbbbbbbbb",
+        "wwywwrrrrrrrrrrr",
+        "wwwwwrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "pk": {
+      "name": "Pakistan",
+      "palette": {
+        "g": "#01411C",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "wwwwgggggggggggg",
+        "wwwwgggggggggggg",
+        "wwwwgggggggggggg",
+        "wwwwgggggwwggggg",
+        "wwwwggggwggggggg",
+        "wwwwgggwwggggggg",
+        "wwwwggggwggggggg",
+        "wwwwgggggwwggggg",
+        "wwwwgggggggggggg",
+        "wwwwgggggggggggg",
+        "wwwwgggggggggggg"
+      ]
+    },
+    "pl": {
+      "name": "Poland",
+      "palette": {
+        "w": "#FFFFFF",
+        "r": "#DC143C"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "pt": {
+      "name": "Portugal",
+      "palette": {
+        "g": "#046A38",
+        "r": "#DA291C",
+        "y": "#FFE900"
+      },
+      "rows": [
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggyrrrrrrrrr",
+        "gggggyyyrrrrrrrr",
+        "ggggggyrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr",
+        "ggggggrrrrrrrrrr"
+      ]
+    },
+    "ro": {
+      "name": "Romania",
+      "palette": {
+        "b": "#002B7F",
+        "y": "#FCD116",
+        "r": "#CE1126"
+      },
+      "rows": [
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr"
+      ]
+    },
+    "rs": {
+      "name": "Serbia",
+      "palette": {
+        "r": "#C6363C",
+        "b": "#0C4076",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+    "ru": {
+      "name": "Russia",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#0039A6",
+        "r": "#D52B1E"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "ru-ba": {
+      "name": "Bashkortostan",
+      "palette": {
+        "b": "#0072CE",
+        "w": "#FFFFFF",
+        "g": "#009B48",
+        "y": "#FFD700"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwywwwwwww",
+        "wwwwwwwyyywwwwww",
+        "wwwwwwwwywwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "ru-ta": {
+      "name": "Tatarstan",
+      "palette": {
+        "g": "#00A650",
+        "w": "#FFFFFF",
+        "r": "#DA2032"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "sa": {
+      "name": "Saudi Arabia",
+      "palette": {
+        "g": "#006C35",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggwwwwwwwwwwggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "ggggwwwwwwwwgggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "se": {
+      "name": "Sweden",
+      "palette": {
+        "b": "#006AA7",
+        "y": "#FECC00"
+      },
+      "rows": [
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb"
+      ]
+    },
+    "sg": {
+      "name": "Singapore",
+      "palette": {
+        "r": "#EF3340",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrwwrrrrrrrrrrrr",
+        "rrwrrrrrrrrrrrrr",
+        "rrwwrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+    "si": {
+      "name": "Slovenia",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#0000FF",
+        "r": "#FF0000"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "sk": {
+      "name": "Slovakia",
+      "palette": {
+        "w": "#FFFFFF",
+        "b": "#0B4EA2",
+        "r": "#EE1C25"
+      },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "sy": {
+      "name": "Syria",
+      "palette": {
+        "g": "#007A3D",
+        "w": "#FFFFFF",
+        "k": "#000000",
+        "r": "#CE1126"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "wwwwwwrwwwrwwwww",
+        "wwwwwrrrwrrrwwww",
+        "wwwwwwrwwwrwwwww",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk"
+      ]
+    },
+    "td": {
+      "name": "Chad",
+      "palette": {
+        "b": "#002664",
+        "y": "#FECB00",
+        "r": "#C60C30"
+      },
+      "rows": [
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr",
+        "bbbbbbyyyyyrrrrr"
+      ]
+    },
+    "th": {
+      "name": "Thailand",
+      "palette": {
+        "r": "#A51931",
+        "w": "#F4F5F8",
+        "b": "#2D2A4A"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "tj": {
+      "name": "Tajikistan",
+      "palette": {
+        "r": "#CC0000",
+        "w": "#FFFFFF",
+        "g": "#006600",
+        "y": "#F8C300"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwywwwwwww",
+        "wwwwwwwyyywwwwww",
+        "wwwwwwwwywwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "tn": {
+      "name": "Tunisia",
+      "palette": {
+        "r": "#E70013",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrwwrrrwrrrrr",
+        "rrrrrwrrwwwrrrrr",
+        "rrrrrwrrwwwrrrrr",
+        "rrrrrwrrwwwrrrrr",
+        "rrrrrwwrrrwrrrrr",
+        "rrrrrrrwwrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "tr": {
+      "name": "Turkey",
+      "palette": {
+        "r": "#E30A17",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrwwwwrrrrrrrrr",
+        "rrwwrrrwwrrrrrrr",
+        "rrwrrrrrwrwrrrrr",
+        "rrwrrrrrrwwwwrrr",
+        "rrwrrrrrwrwrrrrr",
+        "rrwwrrrwwrrrrrrr",
+        "rrrwwwwrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "tw": {
+      "name": "Taiwan",
+      "palette": {
+        "r": "#FE0000",
+        "b": "#000095",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "bbbbbbbbrrrrrrrr",
+        "bbbbbbbbrrrrrrrr",
+        "bbbbwbbbrrrrrrrr",
+        "bbbwwwbbrrrrrrrr",
+        "bbbbwbbbrrrrrrrr",
+        "bbbbbbbbrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "ua": {
+      "name": "Ukraine",
+      "palette": {
+        "b": "#0057B7",
+        "y": "#FFDD00"
+      },
+      "rows": [
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy"
+      ]
+    },
+    "uz": {
+      "name": "Uzbekistan",
+      "palette": {
+        "c": "#0099B5",
+        "w": "#FFFFFF",
+        "g": "#1EB53A",
+        "r": "#CE1126"
+      },
+      "rows": [
+        "ccwwcccccccccccc",
+        "cwcccccccccccccc",
+        "cwcccccccccccccc",
+        "ccwwcccccccccccc",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+    "ve": {
+      "name": "Venezuela",
+      "palette": {
+        "y": "#FFCC00",
+        "b": "#00247D",
+        "r": "#CF142B"
+      },
+      "rows": [
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "vn": {
+      "name": "Vietnam",
+      "palette": {
+        "r": "#DA251D",
+        "y": "#FFFF00"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrryrrrrrrr",
+        "rrrrrrryyyrrrrrr",
+        "rrrrrrrryrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+    "ye": {
+      "name": "Yemen",
+      "palette": {
+        "r": "#CE1126",
+        "w": "#FFFFFF",
+        "k": "#000000"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk"
+      ]
+    },
+    "za": {
+      "name": "South Africa",
+      "palette": {
+        "g": "#007A4D",
+        "w": "#FFFFFF",
+        "k": "#000000",
+        "y": "#FFB612",
+        "r": "#DE3831",
+        "b": "#002395"
+      },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "krrrrrrrrrrrrrrr",
+        "kywwrrrrrrrrrrrr",
+        "kkyggwwwwwwwwwww",
+        "kkkygggggggggggg",
+        "kkkygggggggggggg",
+        "kkkygggggggggggg",
+        "kkyggwwwwwwwwwww",
+        "kywwbbbbbbbbbbbb",
+        "kbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
       ]
     }
   }

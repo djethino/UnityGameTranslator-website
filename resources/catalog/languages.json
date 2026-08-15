@@ -19,7 +19,8 @@
   "languages": [
     {
       "name": "English",
-      "tag": "en", "flag": "gb",
+      "tag": "en",
+      "flag": "gb",
       "providers": {
         "google": "en",
         "deepl": {
@@ -30,7 +31,8 @@
     },
     {
       "name": "French",
-      "tag": "fr", "flag": "fr",
+      "tag": "fr",
+      "flag": "fr",
       "providers": {
         "google": "fr",
         "deepl": {
@@ -41,7 +43,8 @@
     },
     {
       "name": "German",
-      "tag": "de", "flag": "de",
+      "tag": "de",
+      "flag": "de",
       "providers": {
         "google": "de",
         "deepl": {
@@ -53,6 +56,7 @@
     {
       "name": "Spanish",
       "tag": "es",
+      "flag": "es",
       "providers": {
         "google": "es",
         "deepl": {
@@ -64,6 +68,7 @@
     {
       "name": "Italian",
       "tag": "it",
+      "flag": "it",
       "providers": {
         "google": "it",
         "deepl": {
@@ -75,6 +80,7 @@
     {
       "name": "Portuguese",
       "tag": "pt",
+      "flag": "pt",
       "providers": {
         "google": "pt",
         "deepl": {
@@ -86,6 +92,7 @@
     {
       "name": "Russian",
       "tag": "ru",
+      "flag": "ru",
       "providers": {
         "google": "ru",
         "deepl": {
@@ -97,6 +104,7 @@
     {
       "name": "Polish",
       "tag": "pl",
+      "flag": "pl",
       "providers": {
         "google": "pl",
         "deepl": {
@@ -107,7 +115,8 @@
     },
     {
       "name": "Japanese",
-      "tag": "ja", "flag": "jp",
+      "tag": "ja",
+      "flag": "jp",
       "providers": {
         "google": "ja",
         "deepl": {
@@ -119,6 +128,7 @@
     {
       "name": "Korean",
       "tag": "ko",
+      "flag": "kr",
       "providers": {
         "google": "ko",
         "deepl": {
@@ -130,6 +140,7 @@
     {
       "name": "Simplified Chinese",
       "tag": "zh",
+      "flag": "cn",
       "also": [
         "zh-cn",
         "zh-hans"
@@ -145,6 +156,7 @@
     {
       "name": "Traditional Chinese",
       "tag": "zh-tw",
+      "flag": "tw",
       "also": [
         "zh-hant"
       ],
@@ -159,6 +171,7 @@
     {
       "name": "Arabic",
       "tag": "ar",
+      "flag": "sa",
       "providers": {
         "google": "ar",
         "deepl": {
@@ -169,7 +182,8 @@
     },
     {
       "name": "Turkish",
-      "tag": "tr", "flag": "tr",
+      "tag": "tr",
+      "flag": "tr",
       "providers": {
         "google": "tr",
         "deepl": {
@@ -181,6 +195,7 @@
     {
       "name": "Dutch",
       "tag": "nl",
+      "flag": "nl",
       "providers": {
         "google": "nl",
         "deepl": {
@@ -191,7 +206,8 @@
     },
     {
       "name": "Swedish",
-      "tag": "sv", "flag": "se",
+      "tag": "sv",
+      "flag": "se",
       "providers": {
         "google": "sv",
         "deepl": {
@@ -203,6 +219,7 @@
     {
       "name": "Danish",
       "tag": "da",
+      "flag": "dk",
       "providers": {
         "google": "da",
         "deepl": {
@@ -214,6 +231,7 @@
     {
       "name": "Norwegian Bokmål",
       "tag": "nb",
+      "flag": "no",
       "also": [
         "no"
       ],
@@ -228,6 +246,7 @@
     {
       "name": "Finnish",
       "tag": "fi",
+      "flag": "fi",
       "providers": {
         "google": "fi",
         "deepl": {
@@ -239,6 +258,7 @@
     {
       "name": "Czech",
       "tag": "cs",
+      "flag": "cz",
       "providers": {
         "google": "cs",
         "deepl": {
@@ -250,6 +270,7 @@
     {
       "name": "Hungarian",
       "tag": "hu",
+      "flag": "hu",
       "providers": {
         "google": "hu",
         "deepl": {
@@ -261,6 +282,7 @@
     {
       "name": "Romanian",
       "tag": "ro",
+      "flag": "ro",
       "providers": {
         "google": "ro",
         "deepl": {
@@ -272,6 +294,7 @@
     {
       "name": "Greek",
       "tag": "el",
+      "flag": "gr",
       "providers": {
         "google": "el",
         "deepl": {
@@ -283,6 +306,7 @@
     {
       "name": "Thai",
       "tag": "th",
+      "flag": "th",
       "providers": {
         "google": "th",
         "deepl": {
@@ -294,6 +318,7 @@
     {
       "name": "Vietnamese",
       "tag": "vi",
+      "flag": "vn",
       "providers": {
         "google": "vi",
         "deepl": {
@@ -305,6 +330,7 @@
     {
       "name": "Indonesian",
       "tag": "id",
+      "flag": "id",
       "providers": {
         "google": "id",
         "deepl": {
@@ -316,6 +342,7 @@
     {
       "name": "Malay",
       "tag": "ms",
+      "flag": "my",
       "providers": {
         "google": "ms",
         "deepl": {
@@ -327,6 +354,7 @@
     {
       "name": "Ukrainian",
       "tag": "uk",
+      "flag": "ua",
       "providers": {
         "google": "uk",
         "deepl": {
@@ -338,6 +366,7 @@
     {
       "name": "Bulgarian",
       "tag": "bg",
+      "flag": "bg",
       "providers": {
         "google": "bg",
         "deepl": {
@@ -349,6 +378,7 @@
     {
       "name": "Slovak",
       "tag": "sk",
+      "flag": "sk",
       "providers": {
         "google": "sk",
         "deepl": {
@@ -360,6 +390,7 @@
     {
       "name": "Croatian",
       "tag": "hr",
+      "flag": "hr",
       "providers": {
         "google": "hr",
         "deepl": {
@@ -371,6 +402,7 @@
     {
       "name": "Serbian",
       "tag": "sr",
+      "flag": "rs",
       "providers": {
         "google": "sr",
         "deepl": {
@@ -382,6 +414,7 @@
     {
       "name": "Slovenian",
       "tag": "sl",
+      "flag": "si",
       "providers": {
         "google": "sl",
         "deepl": {
@@ -393,6 +426,7 @@
     {
       "name": "Lithuanian",
       "tag": "lt",
+      "flag": "lt",
       "providers": {
         "google": "lt",
         "deepl": {
@@ -404,6 +438,7 @@
     {
       "name": "Latvian",
       "tag": "lv",
+      "flag": "lv",
       "providers": {
         "google": "lv",
         "deepl": {
@@ -415,6 +450,7 @@
     {
       "name": "Estonian",
       "tag": "et",
+      "flag": "ee",
       "providers": {
         "google": "et",
         "deepl": {
@@ -426,6 +462,7 @@
     {
       "name": "Norwegian Nynorsk",
       "tag": "nn",
+      "flag": "no",
       "providers": {
         "google": "no",
         "deepl": {
@@ -437,6 +474,7 @@
     {
       "name": "Icelandic",
       "tag": "is",
+      "flag": "is",
       "providers": {
         "google": "is",
         "deepl": {
@@ -448,6 +486,7 @@
     {
       "name": "Faroese",
       "tag": "fo",
+      "flag": "fo",
       "providers": {
         "google": null,
         "deepl": null
@@ -456,6 +495,7 @@
     {
       "name": "Irish",
       "tag": "ga",
+      "flag": "ie",
       "providers": {
         "google": "ga",
         "deepl": {
@@ -467,6 +507,7 @@
     {
       "name": "Welsh",
       "tag": "cy",
+      "flag": "gb-wls",
       "providers": {
         "google": "cy",
         "deepl": {
@@ -478,6 +519,7 @@
     {
       "name": "Catalan",
       "tag": "ca",
+      "flag": "es-ct",
       "providers": {
         "google": "ca",
         "deepl": {
@@ -489,6 +531,7 @@
     {
       "name": "Galician",
       "tag": "gl",
+      "flag": "es-ga",
       "providers": {
         "google": "gl",
         "deepl": {
@@ -500,6 +543,7 @@
     {
       "name": "Basque",
       "tag": "eu",
+      "flag": "es-pv",
       "providers": {
         "google": "eu",
         "deepl": {
@@ -511,6 +555,7 @@
     {
       "name": "Luxembourgish",
       "tag": "lb",
+      "flag": "lu",
       "providers": {
         "google": "lb",
         "deepl": {
@@ -522,6 +567,7 @@
     {
       "name": "Afrikaans",
       "tag": "af",
+      "flag": "za",
       "providers": {
         "google": "af",
         "deepl": {
@@ -533,6 +579,7 @@
     {
       "name": "Macedonian",
       "tag": "mk",
+      "flag": "mk",
       "providers": {
         "google": "mk",
         "deepl": {
@@ -544,6 +591,7 @@
     {
       "name": "Bosnian",
       "tag": "bs",
+      "flag": "ba",
       "providers": {
         "google": "bs",
         "deepl": {
@@ -555,6 +603,7 @@
     {
       "name": "Albanian",
       "tag": "sq",
+      "flag": "al",
       "providers": {
         "google": "sq",
         "deepl": {
@@ -566,6 +615,7 @@
     {
       "name": "Armenian",
       "tag": "hy",
+      "flag": "am",
       "providers": {
         "google": "hy",
         "deepl": {
@@ -577,6 +627,7 @@
     {
       "name": "Belarusian",
       "tag": "be",
+      "flag": "by",
       "providers": {
         "google": "be",
         "deepl": {
@@ -588,6 +639,7 @@
     {
       "name": "Persian",
       "tag": "fa",
+      "flag": "ir",
       "providers": {
         "google": "fa",
         "deepl": {
@@ -599,6 +651,7 @@
     {
       "name": "Dari",
       "tag": "prs",
+      "flag": "af",
       "parent": "Persian",
       "aliases": [
         "Afghan Persian"
@@ -614,6 +667,7 @@
     {
       "name": "Tajik",
       "tag": "tg",
+      "flag": "tj",
       "providers": {
         "google": "tg",
         "deepl": {
@@ -624,7 +678,8 @@
     },
     {
       "name": "Hindi",
-      "tag": "hi", "flag": "in",
+      "tag": "hi",
+      "flag": "in",
       "providers": {
         "google": "hi",
         "deepl": {
@@ -636,6 +691,7 @@
     {
       "name": "Bengali",
       "tag": "bn",
+      "flag": "bd",
       "providers": {
         "google": "bn",
         "deepl": {
@@ -647,6 +703,7 @@
     {
       "name": "Urdu",
       "tag": "ur",
+      "flag": "pk",
       "providers": {
         "google": "ur",
         "deepl": {
@@ -658,6 +715,7 @@
     {
       "name": "Punjabi",
       "tag": "pa",
+      "flag": "in",
       "providers": {
         "google": "pa",
         "deepl": {
@@ -669,6 +727,7 @@
     {
       "name": "Gujarati",
       "tag": "gu",
+      "flag": "in",
       "providers": {
         "google": "gu",
         "deepl": {
@@ -680,6 +739,7 @@
     {
       "name": "Marathi",
       "tag": "mr",
+      "flag": "in",
       "providers": {
         "google": "mr",
         "deepl": {
@@ -691,6 +751,7 @@
     {
       "name": "Tamil",
       "tag": "ta",
+      "flag": "in",
       "providers": {
         "google": "ta",
         "deepl": {
@@ -702,6 +763,7 @@
     {
       "name": "Telugu",
       "tag": "te",
+      "flag": "in",
       "providers": {
         "google": "te",
         "deepl": {
@@ -713,6 +775,7 @@
     {
       "name": "Kannada",
       "tag": "kn",
+      "flag": "in",
       "providers": {
         "google": "kn",
         "deepl": null
@@ -721,6 +784,7 @@
     {
       "name": "Malayalam",
       "tag": "ml",
+      "flag": "in",
       "providers": {
         "google": "ml",
         "deepl": {
@@ -732,6 +796,7 @@
     {
       "name": "Oriya",
       "tag": "or",
+      "flag": "in",
       "providers": {
         "google": "or",
         "deepl": null
@@ -740,6 +805,7 @@
     {
       "name": "Sinhala",
       "tag": "si",
+      "flag": "lk",
       "providers": {
         "google": "si",
         "deepl": null
@@ -747,7 +813,8 @@
     },
     {
       "name": "Nepali",
-      "tag": "ne", "flag": "np",
+      "tag": "ne",
+      "flag": "np",
       "providers": {
         "google": "ne",
         "deepl": {
@@ -759,6 +826,7 @@
     {
       "name": "Assamese",
       "tag": "as",
+      "flag": "in",
       "providers": {
         "google": "as",
         "deepl": {
@@ -770,6 +838,7 @@
     {
       "name": "Sindhi",
       "tag": "sd",
+      "flag": "pk",
       "providers": {
         "google": "sd",
         "deepl": null
@@ -778,6 +847,7 @@
     {
       "name": "Cantonese",
       "tag": "yue",
+      "flag": "hk",
       "aliases": [
         "Yue Chinese"
       ],
@@ -792,6 +862,7 @@
     {
       "name": "Burmese",
       "tag": "my",
+      "flag": "mm",
       "providers": {
         "google": "my",
         "deepl": {
@@ -803,6 +874,7 @@
     {
       "name": "Khmer",
       "tag": "km",
+      "flag": "kh",
       "providers": {
         "google": "km",
         "deepl": null
@@ -811,6 +883,7 @@
     {
       "name": "Lao",
       "tag": "lo",
+      "flag": "la",
       "providers": {
         "google": "lo",
         "deepl": null
@@ -819,6 +892,7 @@
     {
       "name": "Tagalog",
       "tag": "tl",
+      "flag": "ph",
       "providers": {
         "google": "tl",
         "deepl": {
@@ -830,6 +904,7 @@
     {
       "name": "Cebuano",
       "tag": "ceb",
+      "flag": "ph",
       "providers": {
         "google": "ceb",
         "deepl": {
@@ -841,6 +916,7 @@
     {
       "name": "Javanese",
       "tag": "jv",
+      "flag": "id",
       "providers": {
         "google": "jv",
         "deepl": {
@@ -852,6 +928,7 @@
     {
       "name": "Sundanese",
       "tag": "su",
+      "flag": "id",
       "providers": {
         "google": "su",
         "deepl": {
@@ -863,6 +940,7 @@
     {
       "name": "Azerbaijani",
       "tag": "az",
+      "flag": "az",
       "providers": {
         "google": "az",
         "deepl": {
@@ -874,6 +952,7 @@
     {
       "name": "Uzbek",
       "tag": "uz",
+      "flag": "uz",
       "providers": {
         "google": "uz",
         "deepl": {
@@ -885,6 +964,7 @@
     {
       "name": "Kazakh",
       "tag": "kk",
+      "flag": "kz",
       "providers": {
         "google": "kk",
         "deepl": {
@@ -896,6 +976,7 @@
     {
       "name": "Bashkir",
       "tag": "ba",
+      "flag": "ru-ba",
       "providers": {
         "google": "ba",
         "deepl": {
@@ -907,6 +988,7 @@
     {
       "name": "Tatar",
       "tag": "tt",
+      "flag": "ru-ta",
       "providers": {
         "google": "tt",
         "deepl": {
@@ -918,6 +1000,7 @@
     {
       "name": "Hebrew",
       "tag": "he",
+      "flag": "il",
       "also": [
         "iw"
       ],
@@ -932,6 +1015,7 @@
     {
       "name": "Maltese",
       "tag": "mt",
+      "flag": "mt",
       "providers": {
         "google": "mt",
         "deepl": {
@@ -943,6 +1027,7 @@
     {
       "name": "Egyptian Arabic",
       "tag": "arz",
+      "flag": "eg",
       "parent": "Arabic",
       "providers": {
         "google": null,
@@ -961,6 +1046,7 @@
     {
       "name": "Moroccan Arabic",
       "tag": "ary",
+      "flag": "ma",
       "parent": "Arabic",
       "providers": {
         "google": null,
@@ -970,6 +1056,7 @@
     {
       "name": "Georgian",
       "tag": "ka",
+      "flag": "ge",
       "providers": {
         "google": "ka",
         "deepl": {
@@ -981,6 +1068,7 @@
     {
       "name": "Swahili",
       "tag": "sw",
+      "flag": "ke",
       "providers": {
         "google": "sw",
         "deepl": {
@@ -992,6 +1080,7 @@
     {
       "name": "Haitian Creole",
       "tag": "ht",
+      "flag": "ht",
       "providers": {
         "google": "ht",
         "deepl": {
