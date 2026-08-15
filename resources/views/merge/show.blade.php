@@ -274,21 +274,24 @@
                                 <th x-show="showIndexColumn" x-cloak
                                     class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
                                 <th data-col="key"
-                                    class="px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    class="relative px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
                                     :class="showIndexColumn ? 'left-16' : 'left-0'">
                                     {{ __('merge_preview.settings_column') }}
+                                    <x-editor.col-resize col="key" />
                                 </th>
                                 <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                <th data-col="main" class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-green-400 font-medium">Main</span>
                                         <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
                                     </div>
+                                    <x-editor.col-resize col="main" />
                                 </th>
                                 <template x-for="branch in branches" :key="branch.id">
                                     <th colspan="2" :data-col="'branch-' + branch.id"
-                                        class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                        class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                                         <span class="text-blue-400 font-medium" x-text="branch.name"></span>
+                                        <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                     </th>
                                 </template>
                             </tr>
@@ -377,21 +380,24 @@
                                 <th x-show="showIndexColumn" x-cloak
                                     class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
                                 <th data-col="key"
-                                    class="px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    class="relative px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
                                     :class="showIndexColumn ? 'left-16' : 'left-0'">
                                     {{ __('merge_preview.settings_column') }}
+                                    <x-editor.col-resize col="key" />
                                 </th>
                                 <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                <th data-col="main" class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-green-400 font-medium">Main</span>
                                         <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
                                     </div>
+                                    <x-editor.col-resize col="main" />
                                 </th>
                                 <template x-for="branch in branches" :key="branch.id">
                                     <th colspan="2" :data-col="'branch-' + branch.id"
-                                        class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                        class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                                         <span class="text-blue-400 font-medium" x-text="branch.name"></span>
+                                        <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                     </th>
                                 </template>
                             </tr>
@@ -415,21 +421,23 @@
                                          cell behaves. --}}
                                     <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="publicationCellClass(row, null)"
-                                        @click="publicationKeepMine(row)">
-                                    {{-- The result lands HERE, because this column IS the Main:
-                                         picking a contribution's wording puts it in the Main's
-                                         cell, where it can be reworded before it is saved. Same
-                                         grammar as a manually edited line, which also displays in
-                                         this column. --}}
-                                    <textarea x-show="publicationPick[row.field] !== undefined" x-cloak
-                                        :rows="row.field === 'notes' ? 3 : 1"
-                                        x-model="publicationValues[row.field]"
-                                        :maxlength="row.field === 'notes' ? 1000 : 2048"
-                                        @click.stop
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
-                                    <template x-if="publicationPick[row.field] === undefined">
-                                        <span class="editor-text break-words" x-text="row.mineValue"></span>
-                                    </template>
+                                        @click="publicationKeepMine(row)"
+                                        @dblclick="editCell(row.field, publicationResult(row), 'publication')">
+                                    {{-- The lines' own affordance, not a box of its own: revert
+                                         what is staged, or open the shared edit modal. A textarea
+                                         living in the cell was invented here — this screen already
+                                         had one way to edit a value and did not need a second. --}}
+                                    <span class="edit-affordance">
+                                        <button type="button" x-show="publicationPick[row.field] !== undefined"
+                                            @click.stop="publicationKeepMine(row)"
+                                            title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
+                                        <button type="button"
+                                            @click.stop="editCell(row.field, publicationResult(row), 'publication')"
+                                            title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                                    </span>
+                                    <span class="editor-text break-words"
+                                        :class="publicationPick[row.field] !== undefined ? 'text-purple-300' : ''"
+                                        x-text="publicationResult(row)"></span>
                                     </td>
 
                                     <template x-for="branch in branches" :key="branch.id">
@@ -1162,7 +1170,11 @@ document.addEventListener('alpine:init', () => {
                     id: field,
                     field,
                     label: labels[field],
+                    // What is SHOWN when nothing is staged, and what the Main actually holds.
+                    // They differ when it holds nothing: the cell then shows a placeholder, and
+                    // comparing an edit against that placeholder would call it a change.
                     mineValue: mine[field] || absent,
+                    mineRaw: mine[field],
                     byBranch,
                 });
             }
@@ -1213,6 +1225,33 @@ document.addEventListener('alpine:init', () => {
             const values = { ...this.publicationValues };
             delete values[row.field];
             this.publicationValues = values;
+        },
+
+        /** What the Main's cell shows: whatever is staged, or the Main's own. */
+        publicationResult(row) {
+            return this.publicationValues[row.field] ?? row.mineValue;
+        },
+
+        /**
+         * Core hook: the shared edit box was used on a description or a link.
+         *
+         * \u26a0 Deliberately NOT the lines' edit map. That one becomes a line selection on save,
+         * so a description staged there would be published as a translated line named "notes".
+         * Typing the Main's own value back drops the staging, exactly as it does on a line.
+         */
+        stageScopedEdit(scope, field, value) {
+            if (scope !== 'publication') return;
+
+            const row = this.publicationRows.find((r) => r.field === field);
+            if (!row) return;
+
+            if (value === (row.mineRaw ?? '')) {
+                this.publicationKeepMine(row);
+                return;
+            }
+
+            this.publicationPick = { ...this.publicationPick, [field]: 'manual' };
+            this.publicationValues = { ...this.publicationValues, [field]: value };
         },
 
         publicationCellClass(row, branchId) {

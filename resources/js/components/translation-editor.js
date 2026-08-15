@@ -94,7 +94,10 @@ export function editorCore(config) {
         editModal: {
             open: false,
             key: '',
-            originalValue: ''
+            originalValue: '',
+            // What is being edited. 'line' is a translated line; a page may use the same box on
+            // something else — see editCell.
+            scope: 'line'
         },
         // Top-level on purpose: the Alpine CSP build prohibits property
         // assignments in inline expressions, so x-model can't target
@@ -1029,13 +1032,25 @@ export function editorCore(config) {
 
         // ── Edit modal ────────────────────────────────────────────────────
 
-        editCell(key, currentValue) {
-            this.focusRow(key);
-            this.editModalValue = this.editedValues[key] ?? currentValue;
+        /**
+         * Open the edit box on a value.
+         *
+         * ⚠ <b>scope</b> says what is being edited, and it is not decoration. A merge screen holds
+         * more than translated lines: the description a contribution proposes is edited with the
+         * same gesture and the same box, but it must NOT land in the lines' edit map — that map
+         * becomes a line selection on save, so a description staged there would be published as a
+         * translated line named "notes". Anything other than 'line' is handed to the page.
+         */
+        editCell(key, currentValue, scope = 'line') {
+            if (scope === 'line') this.focusRow(key);
+            this.editModalValue = scope === 'line'
+                ? (this.editedValues[key] ?? currentValue)
+                : currentValue;
             this.editModal = {
                 open: true,
                 key: key,
-                originalValue: currentValue
+                originalValue: currentValue,
+                scope: scope
             };
 
             this.$nextTick(() => {
@@ -1048,9 +1063,17 @@ export function editorCore(config) {
         },
 
         saveEditModal() {
-            this.stageEdit(this.editModal.key, this.editModalValue, this.editModal.originalValue);
+            const { key, originalValue, scope } = this.editModal;
+            if (scope === 'line' || scope === undefined) {
+                this.stageEdit(key, this.editModalValue, originalValue);
+            } else {
+                this.stageScopedEdit(scope, key, this.editModalValue, originalValue);
+            }
             this.closeEditModal();
         },
+
+        /** Page hook: the same box was used on something that is not a translated line. */
+        stageScopedEdit(scope, key, value, originalValue) {},
 
         /**
          * Stage an edit (shared by the modal and replace). Setting the
@@ -1074,7 +1097,7 @@ export function editorCore(config) {
         onEditUnstaged(key) {},
 
         closeEditModal() {
-            this.editModal = { open: false, key: '', originalValue: '' };
+            this.editModal = { open: false, key: '', originalValue: '', scope: 'line' };
             this.editModalValue = '';
 
             document.addEventListener('keydown', (e) => {
