@@ -809,10 +809,18 @@
                     </div>
                     <div class="text-sm text-gray-400 min-w-0 grow">
                         <span x-show="totalChanges > 0">
-                            <span x-show="selectionCount > 0">
-                                <span class="text-white font-bold" x-text="selectionCount"></span> {{ __('merge.modifications') }}
+                            {{-- The total, not the line count.
+
+                                 ⚠ Both this and the Save button beside it are labelled with the
+                                 same word, and they held two different numbers the moment a
+                                 decision was taken on anything but a line: "50 modifications"
+                                 under a button reading "Save (51)". The deletions and the tag
+                                 changes after it stay what they are — notable parts of that
+                                 total, not a partition of it. --}}
+                            <span x-show="totalChanges > 0">
+                                <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge.modifications') }}
                             </span>
-                            <span x-show="selectionCount > 0 && (deleteCount > 0 || tagChangeCount > 0)"> &bull; </span>
+                            <span x-show="totalChanges > 0 && (deleteCount > 0 || tagChangeCount > 0)"> &bull; </span>
                             <span x-show="deleteCount > 0">
                                 <span class="text-red-400 font-bold" x-text="deleteCount"></span> {{ __('merge.deletions') }}
                             </span>
@@ -1119,6 +1127,14 @@ document.addEventListener('alpine:init', () => {
             this.buildSettingsRows(payload);
             this.buildPublicationRows(payload);
 
+            // 🔴 **Open when there is something in them.** Folded was right while they listed
+            // everything; they list only differences, so a folded block is a difference nobody
+            // sees — and the whole point of putting them on this screen was that a contribution's
+            // fonts and wording stopped travelling upstream unnoticed. They fold back on a click,
+            // and the day they also list what AGREES, this is where the rule changes again.
+            this.settingsOpen = this.hasSettingsRows;
+            this.publicationOpen = this.hasPublicationRows;
+
             this.calculateStats();
             this.applySmartDefaults();
             this.loaded = true;
@@ -1257,12 +1273,18 @@ document.addEventListener('alpine:init', () => {
                 if (branch) this.settingsPick[row.id] = branch.id;
             }
 
+            // 🔴 **A description is never adopted on its own, even when the Main has none.**
+            // It is not a line: it speaks in the Main owner's name, on their public page. A
+            // contribution proposing one is proposing how somebody else's translation presents
+            // itself, and that is theirs to accept in as many words. Measured on a real lineage,
+            // four contributions all proposed "Cas dérivé à l'import — donnée de test" over a
+            // Main that had said nothing; the defaults adopted the first.
+            //
+            // ⚠ So the Main is picked, not left blank. The row is answered, it shows as
+            // answered, and taking a contribution's wording stays one click away.
             for (const row of this.publicationRows) {
                 if (this.publicationPick[row.field] !== undefined) continue;
-                if (row.mineRaw) continue;
-
-                const branch = this.branches.find((b) => row.byBranch[b.id] !== undefined);
-                if (branch) this.publicationPick[row.field] = branch.id;
+                this.publicationPick[row.field] = 'main';
             }
         },
 
@@ -1409,7 +1431,12 @@ document.addEventListener('alpine:init', () => {
          */
         publicationTake(row, branchId) {
             if (row.byBranch[branchId] === undefined) return;
-            this.publicationPick = { ...this.publicationPick, [row.field]: branchId };
+
+            // Re-clicking the chosen one drops the choice, the way a line behaves.
+            const pick = { ...this.publicationPick };
+            if (pick[row.field] === branchId) delete pick[row.field];
+            else pick[row.field] = branchId;
+            this.publicationPick = pick;
 
             // A pending rewording is dropped: it was written against another wording, and
             // keeping it would show the Main's cell disagreeing with the cell just chosen.
@@ -1420,9 +1447,12 @@ document.addEventListener('alpine:init', () => {
 
         publicationKeepMine(row) {
             const pick = { ...this.publicationPick };
-            delete pick[row.field];
+            if (pick[row.field] === 'main') delete pick[row.field];
+            else pick[row.field] = 'main';
             this.publicationPick = pick;
 
+            // Keeping one's own words drops a rewording staged over them: the two are the same
+            // cell, and leaving the text behind would light "kept mine" over somebody's edit.
             const values = { ...this.publicationValues };
             delete values[row.field];
             this.publicationValues = values;
@@ -1484,10 +1514,15 @@ document.addEventListener('alpine:init', () => {
 
         publicationCellClass(row, branchId) {
             const picked = this.publicationPick[row.field];
-            // Only a rewording lights the Main's cell, because only a rewording put something
-            // there. Taking a contribution lights the contribution's cell, where the chosen
-            // words actually are.
-            if (branchId === null) return picked === 'manual' ? 'selected-manual' : '';
+
+            // The Main's cell lights for its own two answers and for nothing else: kept as it
+            // stands, or reworded over. Taking a contribution lights the contribution's cell,
+            // where the chosen words actually are — never this one.
+            if (branchId === null) {
+                if (picked === 'manual') return 'selected-manual';
+                return picked === 'main' ? 'selected-main' : '';
+            }
+
             return picked === branchId ? 'selected-branch' : '';
         },
 
@@ -1931,11 +1966,16 @@ document.addEventListener('alpine:init', () => {
             for (const row of this.publicationRows) {
                 const pick = this.publicationPick[row.field];
                 if (pick === undefined) continue;
+
                 // Resolved here rather than copied on click, so the screen never had to hold the
                 // chosen text in the Main's cell to remember it.
-                publication[row.field] = pick === 'manual'
-                    ? (this.publicationValues[row.field] ?? '')
-                    : row.byBranch[pick];
+                //
+                // ⚠ 'main' sends the Main's own wording back, which writes what is already
+                // there. That is the point: the row was gone through and answered, and the count
+                // says so. Skipping it would make the button lie about what it settled.
+                if (pick === 'manual') publication[row.field] = this.publicationValues[row.field] ?? '';
+                else if (pick === 'main') publication[row.field] = row.mineRaw ?? '';
+                else publication[row.field] = row.byBranch[pick];
             }
             document.getElementById('publicationJson').value = Object.keys(publication).length > 0
                 ? JSON.stringify(publication) : '';

@@ -411,6 +411,34 @@ class MergeViewStateTest extends TestCase
             ->assertJsonPath('branches.0.main_rating', 4);
     }
 
+    public function test_the_description_block_opens_and_keeps_the_main_s_own_words(): void
+    {
+        // 🔴 Two rules, both of them the owner's voice.
+        //
+        // A description is not a line: it speaks in the Main owner's name, on their public page.
+        // A contribution proposing one is proposing how somebody else's translation presents
+        // itself. Measured on a real lineage, four contributions all proposed the same sentence
+        // over a Main that had said nothing, and the defaults adopted the first — so the Main is
+        // picked, the row shows as answered, and taking a contribution stays one click away.
+        //
+        // And the block OPENS when it holds something: it lists differences only, so a folded one
+        // is a difference nobody sees — which is what the merge missed before it existed.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString("this.publicationPick[row.field] = 'main';", $html);
+        $this->assertStringContainsString('this.publicationOpen = this.hasPublicationRows;', $html);
+        $this->assertStringContainsString('this.settingsOpen = this.hasSettingsRows;', $html);
+
+        // ⚠ The footer and the Save button carry the same word; they must carry the same number.
+        $this->assertStringNotContainsString(
+            '<span class="text-white font-bold" x-text="selectionCount"></span>', $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
