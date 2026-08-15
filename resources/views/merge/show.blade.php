@@ -222,100 +222,154 @@
                 </div>
             </div>
 
-            {{-- Settings a branch holds differently. Read-only values: a font or an exclusion is
-                 edited in the mod, and the only decision a merge needs is whether to take it.
-                 Nothing is ticked by default — the Main's own settings stay unless asked. --}}
-            <div x-show="hasSettingsRows" x-cloak
-                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
-                <div class="flex items-center gap-2 text-sm text-gray-300 mb-2">
+            {{-- Everything the branches differ on that is NOT a line.
+
+                 🔴 **Folded, and folded by default.** This screen is a line-by-line merge; a
+                 block sitting open above the table pushes the actual work off the screen for
+                 something that is usually empty and never urgent. The header carries the count,
+                 so the decision to open it is made without opening it.
+
+                 One frame around both tables, and the same four columns in each, because they
+                 answer the same question about two kinds of thing. What separates them is what
+                 can be DONE: a font is edited in the mod and can only be taken or left, while a
+                 description is written here and is meant to be reworded before it goes on the
+                 Main's public page — hence one editable table and one that is not.
+
+                 ⚠ No status row anywhere in here. Whether a translation is finished descends
+                 from a Main to its contributions and never travels back. --}}
+            <div x-show="hasSettingsRows || hasPublicationRows" x-cloak
+                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg">
+                <button type="button" @click="beyondLinesOpen = !beyondLinesOpen"
+                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-750 rounded-lg">
+                    <i class="fas text-gray-500 w-3"
+                       :class="beyondLinesOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                     <i class="fas fa-sliders text-gray-500"></i>
-                    <span>{{ __('merge.settings_from_branches') }}</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead class="text-gray-500">
-                            <tr>
-                                <th class="text-left font-normal px-2 py-1"></th>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="row in settingsRows" :key="row.id">
-                                <tr class="border-t border-gray-750" :class="settingRowClass(row.id)">
-                                    <td class="px-2 py-1 align-top">
-                                        <input type="checkbox" :checked="settingsTaken[row.id]"
-                                            @change="toggleSettingRow(row.id)"
-                                            class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                                    </td>
-                                    <td class="px-2 py-1 align-top">
-                                        <span class="text-gray-500" x-text="row.sectionLabel"></span>
-                                        <span class="font-mono" x-text="row.label"></span>
-                                    </td>
-                                    <td class="px-2 py-1 align-top text-gray-400" x-text="row.mineValue"></td>
-                                    <td class="px-2 py-1 align-top">
-                                        <span class="text-gray-500" x-text="row.branchName"></span>
-                                        <span x-text="row.theirsValue"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
-            </div>
+                    <span>{{ __('merge.beyond_lines') }}</span>
 
-            {{-- What the contributors SAY about their work, as opposed to the work.
+                    {{-- Numeric badges, like the branch counter on the translations list: how
+                         many differences wait inside, and how many are already taken. Titled
+                         with the words the stats above use for the same two ideas. --}}
+                    <span class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
+                          title="{{ __('merge.filter_differences') }}"
+                          x-text="beyondLinesCount"></span>
+                    <span x-show="beyondLinesTakenCount > 0" x-cloak
+                          class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
+                          title="{{ __('merge.modifications') }}"
+                          x-text="beyondLinesTakenCount"></span>
+                </button>
 
-                 Its own block rather than a row in the settings above: a font is edited in the
-                 mod and can only be taken or left, while a description is written on the site and
-                 is meant to be reworded before it goes on the Main's public page. The block above
-                 says so itself — "they are edited in the mod, not here" — and would stop being
-                 true the moment an editable field joined it.
-
-                 ⚠ No status row, on purpose. Whether a translation is finished descends from the
-                 Main to its contributions and never travels back. --}}
-            <div x-show="hasPublicationRows" x-cloak
-                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
-                <div class="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                    <i class="fas fa-comment-dots text-gray-500"></i>
-                    <span>{{ __('merge.publication_from_branches') }}</span>
-                </div>
-
-                <template x-for="row in publicationRows" :key="row.id">
-                    <div class="border-t border-gray-750 py-2">
-                        <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" :checked="publicationTaken[row.id]"
-                                @change="togglePublicationRow(row.id)"
-                                class="mt-1 rounded bg-gray-700 border-gray-600 text-purple-600">
-                            <span class="text-xs text-gray-400" x-text="row.label"></span>
-                        </label>
-
-                        <div class="mt-1 pl-6 text-xs">
-                            <p class="text-gray-500">
-                                <span>{{ __('merge.settings_yours') }}</span> —
-                                <span class="text-gray-400" x-text="row.mineValue"></span>
-                            </p>
-                            <p class="text-gray-500 mt-0.5">
-                                <span>{{ __('merge.publication_theirs') }}</span>
-                                <span x-text="row.branchName"></span>
-                            </p>
-
-                            {{-- Pre-filled with the contribution's wording, editable before it is
-                                 taken — the same gesture as correcting a line in this screen. --}}
-                            <textarea x-show="publicationTaken[row.id]" x-cloak
-                                :rows="row.field === 'notes' ? 3 : 1"
-                                x-model="publicationValues[row.id]"
-                                :maxlength="row.field === 'notes' ? 1000 : 2048"
-                                class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
-                            <p x-show="!publicationTaken[row.id]" class="text-gray-300 mt-0.5"
-                               x-text="row.theirsValue"></p>
+                <div x-show="beyondLinesOpen" x-cloak class="px-4 pb-3">
+                    {{-- File settings. Read-only values: the only decision a merge needs is
+                         whether to take one. Nothing is ticked by default — the Main's own
+                         settings stay unless asked. --}}
+                    <div x-show="hasSettingsRows" class="mb-4">
+                        <p class="text-xs text-gray-400 mb-1">{{ __('merge.settings_from_branches') }}</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead class="text-gray-500">
+                                    <tr>
+                                        <th class="text-left font-normal px-2 py-1"></th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="row in settingsRows" :key="row.id">
+                                        <tr class="border-t border-gray-750" :class="settingRowClass(row.id)">
+                                            <td class="px-2 py-1 align-top">
+                                                <input type="checkbox" :checked="settingsTaken[row.id]"
+                                                    @change="toggleSettingRow(row.id)"
+                                                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                                            </td>
+                                            <td class="px-2 py-1 align-top">
+                                                <span class="text-gray-500" x-text="row.sectionLabel"></span>
+                                                <span class="font-mono" x-text="row.label"></span>
+                                            </td>
+                                            <td class="px-2 py-1 align-top text-gray-400" x-text="row.mineValue"></td>
+                                            <td class="px-2 py-1 align-top">
+                                                <span class="text-gray-500" x-text="row.branchName"></span>
+                                                <span x-text="row.theirsValue"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
+                        <p class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
                     </div>
-                </template>
 
-                <p class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
+                    {{-- What the contributions SAY about their work. Same four columns; the
+                         difference is that the last one becomes writable once ticked. --}}
+                    <div x-show="hasPublicationRows">
+                        <p class="text-xs text-gray-400 mb-1">{{ __('merge.publication_from_branches') }}</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead class="text-gray-500">
+                                    <tr>
+                                        <th class="text-left font-normal px-2 py-1"></th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
+                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="row in publicationRows" :key="row.id">
+                                        <tr class="border-t border-gray-750" :class="publicationRowClass(row.id)">
+                                            <td class="px-2 py-1 align-top">
+                                                <input type="checkbox" :checked="publicationTaken[row.id]"
+                                                    @change="togglePublicationRow(row.id)"
+                                                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                                            </td>
+                                            <td class="px-2 py-1 align-top" x-text="row.label"></td>
+
+                                            {{-- ⚠ A link is shown AS a link, on both sides. It is
+                                                 the one value that cannot be judged by reading
+                                                 it: taking it puts it on the Main's page, and
+                                                 where it leads is the whole question. Only
+                                                 http(s) is ever made clickable. --}}
+                                            <td class="px-2 py-1 align-top text-gray-400">
+                                                <template x-if="isWebLink(row.mineValue)">
+                                                    <a :href="row.mineValue" target="_blank"
+                                                       rel="noopener noreferrer nofollow"
+                                                       class="text-blue-400 hover:underline break-all"
+                                                       x-text="row.mineValue"></a>
+                                                </template>
+                                                <template x-if="!isWebLink(row.mineValue)">
+                                                    <span class="whitespace-pre-line" x-text="row.mineValue"></span>
+                                                </template>
+                                            </td>
+
+                                            <td class="px-2 py-1 align-top">
+                                                <span class="text-gray-500 block" x-text="row.branchName"></span>
+
+                                                {{-- Pre-filled with the contribution's wording and
+                                                     editable, the same gesture as correcting a
+                                                     line in the table below. --}}
+                                                <textarea x-show="publicationTaken[row.id]" x-cloak
+                                                    :rows="row.field === 'notes' ? 3 : 1"
+                                                    x-model="publicationValues[row.id]"
+                                                    :maxlength="row.field === 'notes' ? 1000 : 2048"
+                                                    class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
+
+                                                <template x-if="!publicationTaken[row.id] && isWebLink(row.theirsValue)">
+                                                    <a :href="row.theirsValue" target="_blank"
+                                                       rel="noopener noreferrer nofollow"
+                                                       class="text-blue-400 hover:underline break-all"
+                                                       x-text="row.theirsValue"></a>
+                                                </template>
+                                                <template x-if="!publicationTaken[row.id] && !isWebLink(row.theirsValue)">
+                                                    <span class="whitespace-pre-line" x-text="row.theirsValue"></span>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
+                    </div>
+                </div>
             </div>
 
             @include('partials.editor-quality-bar')
@@ -879,6 +933,9 @@ document.addEventListener('alpine:init', () => {
         publicationTaken: {},
         publicationValues: {},
         hasPublicationRows: false,
+        // Folded by default: this screen is a line merge, and what is in here is usually empty
+        // and never urgent. The header's count is what decides whether it is worth opening.
+        beyondLinesOpen: false,
         stats: { newKeys: 0, different: 0 },
 
         init() {
@@ -1057,6 +1114,23 @@ document.addEventListener('alpine:init', () => {
 
         settingRowClass(id) {
             return this.settingsTaken[id] ? 'bg-purple-900/40 text-purple-100' : 'text-gray-400';
+        },
+
+        publicationRowClass(id) {
+            return this.publicationTaken[id] ? 'bg-purple-900/40 text-purple-100' : 'text-gray-400';
+        },
+
+        /**
+         * Whether a value may be rendered as a clickable link.
+         *
+         * ⚠ http(s) and nothing else, checked here rather than trusted from the server. Every
+         * write path validates the scheme already, so this cannot currently be reached — which
+         * is exactly why it is cheap to keep: the day a fifth way to store one appears, an
+         * href built from it is a hole, and a plain span is not.
+         */
+        isWebLink(value) {
+            return typeof value === 'string'
+                && (value.startsWith('https://') || value.startsWith('http://'));
         },
 
         normalizeEntry(value) {
@@ -1383,6 +1457,15 @@ document.addEventListener('alpine:init', () => {
 
         get publicationTakenCount() {
             return Object.values(this.publicationTaken).filter(Boolean).length;
+        },
+
+        // What the folded header says, so the block can be judged without being opened.
+        get beyondLinesCount() {
+            return this.settingsRows.length + this.publicationRows.length;
+        },
+
+        get beyondLinesTakenCount() {
+            return this.settingsTakenCount + this.publicationTakenCount;
         },
 
         get totalChanges() {

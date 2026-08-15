@@ -275,6 +275,28 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('mode=merge', html_entity_decode($html));
     }
 
+    public function test_what_differs_beyond_the_lines_starts_folded(): void
+    {
+        // 🔴 The screen is a line-by-line merge. A block sitting open above the table pushes the
+        // actual work off the screen for something usually empty and never urgent — so it is
+        // folded, and its header carries the count that decides whether to open it.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('beyondLinesOpen: false', $html);
+        $this->assertStringContainsString('beyondLinesCount', $html);
+        $this->assertStringContainsString(__('merge.beyond_lines'), $html);
+
+        // One frame around both tables: the settings caption and the publication caption are
+        // inside it, neither is a block of its own any more.
+        $this->assertStringContainsString(__('merge.settings_from_branches'), $html);
+        $this->assertStringContainsString(__('merge.publication_from_branches'), $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
