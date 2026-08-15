@@ -331,7 +331,7 @@
                                          one cell over its own pair from the start.
 
                                          Click = keep the Main's own, as a line's Main cell does. --}}
-                                    <td colspan="2" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                    <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="settingsCellClass(row, null)"
                                         @click="settingsKeepMine(row)">
                                         <span class="editor-text break-words" x-text="row.mineValue"></span>
@@ -450,7 +450,7 @@
                                     {{-- One cell over the tag column and the value column — see the
                                          settings table above for why the column stays and the
                                          cell merges. --}}
-                                    <td colspan="2" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                    <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="publicationCellClass(row, null)"
                                         @click="publicationKeepMine(row)"
                                         @dblclick="editCell(row.field, publicationResult(row), 'publication')">
@@ -2054,8 +2054,32 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.settingsPick).length;
         },
 
+        /**
+         * Answered is not the same as CHANGED.
+         *
+         * 🔴 Every description row arrives answered — the Main keeps its own words unless told
+         * otherwise — and counting that as a modification put a "1" on a block where nothing was
+         * going to be written. On a translated LINE the same gesture does change something: the
+         * apply endpoint reads a Main selection as "validate this" and promotes a machine
+         * translation to human-checked. There is no such promotion here, so keeping one's own
+         * wording writes the wording that is already stored, and that is not a modification.
+         */
         get publicationTakenCount() {
-            return Object.keys(this.publicationPick).length;
+            let count = 0;
+            for (const row of this.publicationRows) {
+                if (this.publicationPick[row.field] === undefined) continue;
+                if (this.publicationResolved(row) !== (row.mineRaw ?? '')) count++;
+            }
+            return count;
+        },
+
+        /** What this row would write, whichever of the three answers it carries. */
+        publicationResolved(row) {
+            const pick = this.publicationPick[row.field];
+            if (pick === undefined) return row.mineRaw ?? '';
+            if (pick === 'manual') return this.publicationValues[row.field] ?? '';
+            if (pick === 'main') return row.mineRaw ?? '';
+            return row.byBranch[pick];
         },
 
         get totalChanges() {
@@ -2157,18 +2181,13 @@ document.addEventListener('alpine:init', () => {
             // one text per field can end up on the page.
             const publication = {};
             for (const row of this.publicationRows) {
-                const pick = this.publicationPick[row.field];
-                if (pick === undefined) continue;
+                if (this.publicationPick[row.field] === undefined) continue;
 
-                // Resolved here rather than copied on click, so the screen never had to hold the
-                // chosen text in the Main's cell to remember it.
-                //
-                // ⚠ 'main' sends the Main's own wording back, which writes what is already
-                // there. That is the point: the row was gone through and answered, and the count
-                // says so. Skipping it would make the button lie about what it settled.
-                if (pick === 'manual') publication[row.field] = this.publicationValues[row.field] ?? '';
-                else if (pick === 'main') publication[row.field] = row.mineRaw ?? '';
-                else publication[row.field] = row.byBranch[pick];
+                // ⚠ Nothing is sent for a row that would write back what is already stored. The
+                // endpoint refuses a merge with no changes at all, so a screen whose only answer
+                // was "keep my own words" offered a Save that the server would turn down.
+                const value = this.publicationResolved(row);
+                if (value !== (row.mineRaw ?? '')) publication[row.field] = value;
             }
             document.getElementById('publicationJson').value = Object.keys(publication).length > 0
                 ? JSON.stringify(publication) : '';

@@ -174,6 +174,23 @@
  * Which means sharing box-shadow with the selection rings, so the cells that
  * carry one declare both. Without that, pinning the Main made the green ring on
  * a chosen line vanish, leaving the tint alone to say it had been picked. */
+/* The tables above the lines carry the Main as ONE cell over the tag column and the value
+ * column, so none of the rules above reach it — they are written per data-col, and a merged cell
+ * deliberately has none (a width rule would squeeze the pair to a single column's width).
+ *
+ * ⚠ Anchored on the TAG's offset, not the value's: the merged cell starts where the tag column
+ * starts. Without this the headers of those tables froze with the pin and their bodies did not,
+ * which reads as the pin being broken rather than as a cell it does not know about. */
+.editor-grid.pin-main thead th.main-pair,
+.editor-grid.pin-main tbody td.main-pair {
+    position: sticky;
+    left: var(--pin-tag-left, 0px);
+    z-index: 10;
+    background-color: rgb(31 41 55);
+}
+.editor-grid.pin-main tbody td.main-pair.selected-main { background-color: rgb(26 62 50) !important; }
+.editor-grid.pin-main tbody td.main-pair.selected-manual { background-color: rgb(60 35 95) !important; }
+
 .editor-grid.pin-main [data-col="key"] { box-shadow: none; border-right-color: rgb(55 65 81); }
 .editor-grid.pin-main [data-col="main"],
 .editor-grid.pin-main [data-col="local"] {

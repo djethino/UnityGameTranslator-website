@@ -97,8 +97,18 @@ export function editorPin() {
                 style.textContent = rules;
             }
 
-            box.style.setProperty('--pin-tag-left', tagLeft + 'px');
-            box.style.setProperty('--pin-value-left', valueLeft + 'px');
+            // 🔴 On the component ROOT, not on the box.
+            //
+            // A page can hold more than one grid on the same columns — the merge screen puts the
+            // file settings and the description on the lines' own grid so that everything reads
+            // down the page in one alignment — and each lives in its own scroll box. A custom
+            // property set on one box does not reach the others: they inherit from their
+            // ancestors, not from a sibling. So their frozen cells fell back to `left: 0` and
+            // stuck to the edge of their own box while the lines stuck 264px further in, which
+            // reads as the pin working on one table and being broken on the next.
+            const root = box.closest('[x-data]') || box;
+            root.style.setProperty('--pin-tag-left', tagLeft + 'px');
+            root.style.setProperty('--pin-value-left', valueLeft + 'px');
         },
 
         _pinStyleElement() {
