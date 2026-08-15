@@ -130,17 +130,17 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb",
-        "bbbbbyyybbbbbbbb"
+        "bbwbyyyyyyyyyyyy",
+        "bbbbbyyyyyyyyyyy",
+        "bbbbwbyyyyyyyyyy",
+        "bbbbbbbyyyyyyyyy",
+        "bbbbbbwbyyyyyyyy",
+        "bbbbbbbbbyyyyyyy",
+        "bbbbbbbbwbyyyyyy",
+        "bbbbbbbbbbbyyyyy",
+        "bbbbbbbbbbwbyyyy",
+        "bbbbbbbbbbbbbyyy",
+        "bbbbbbbbbbbbwbyy"
       ]
     },
     "bd": {
@@ -318,17 +318,17 @@
         "y": "#FFD100"
       },
       "rows": [
-        "kkkkkkkkwwwwwwww",
-        "kkkkkkkkwwwwwwww",
-        "kkkkkkkkwwwwwwww",
-        "kkkkkkkkwwwwwwww",
-        "kkkkkkkkwwwwwwww",
-        "bbbbbbbbyyyyyyyy",
-        "bbbbbbbbyyyyyyyy",
-        "bbbbbbbbyyyyyyyy",
-        "bbbbbbbbyyyyyyyy",
-        "bbbbbbbbyyyyyyyy",
-        "bbbbbbbbyyyyyyyy"
+        "kkkkkwwwwwwbbybb",
+        "kkkkkwwwwwwbbybb",
+        "kkkkkwwwwwwyyyyy",
+        "kkkkkwwwwwwbbybb",
+        "kkkkkwwwwwwbbybb",
+        "wwwwwwwwwwwkkwww",
+        "wwwwwwwwwkkkkwww",
+        "wwwwkkkkkkkkkwww",
+        "wwwkkkkkkkkkkwww",
+        "wwwwkkwwkkwwwwww",
+        "wwwwwwwwwwwwwwww"
       ]
     },
     "cn": {
@@ -380,17 +380,17 @@
         "b": "#11457E"
       },
       "rows": [
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr"
+        "bwwwwwwwwwwwwwww",
+        "bbwwwwwwwwwwwwww",
+        "bbbwwwwwwwwwwwww",
+        "bbbbwwwwwwwwwwww",
+        "bbbbbwwwwwwwwwww",
+        "bbbbbbwwwwwwwwww",
+        "bbbbbrrrrrrrrrrr",
+        "bbbbrrrrrrrrrrrr",
+        "bbbrrrrrrrrrrrrr",
+        "bbrrrrrrrrrrrrrr",
+        "brrrrrrrrrrrrrrr"
       ]
     },
     "de": {
@@ -415,24 +415,23 @@
       ]
     },
     "de-nds": {
-      "name": "Northern Germany",
+      "name": "Low German",
       "palette": {
         "w": "#FFFFFF",
-        "r": "#DA121A",
-        "b": "#003399"
+        "r": "#CC0000"
       },
       "rows": [
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
+        "rrwwwwwwwwwwwwww",
+        "rrrrrwwwwwwwwwww",
+        "rrrrrrrrwwwwwwww",
+        "rrrrrrrrrrrwwwww",
+        "rrrrrrrrrrrrrrww",
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb"
+        "wwwwwwwwwwwwwrrr",
+        "wwwwwwwwwwrrrrrr",
+        "wwwwwwwrrrrrrrrr",
+        "wwwwrrrrrrrrrrrr",
+        "wrrrrrrrrrrrrrrr"
       ]
     },
     "dk": {
@@ -510,9 +509,9 @@
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "wwwwwwwwywwwwwww",
         "wwwwwwwyyywwwwww",
-        "wwwwwwwwywwwwwww",
+        "wwwwwwyyyyywwwww",
+        "wwwwwwwyyywwwwww",
         "kkkkkkkkkkkkkkkk",
         "kkkkkkkkkkkkkkkk",
         "kkkkkkkkkkkkkkkk",
@@ -526,12 +525,12 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "wwwwgggggggggggg",
-        "wwgwgggggggggggg",
-        "wwwwwggggggggggg",
-        "wwgwgggggggggggg",
-        "wwwwgggggggggggg",
-        "gggggggggggggggg",
+        "wwwgwwwggggggggg",
+        "wwgggwwggggggggg",
+        "wgggggwggggggggg",
+        "wwgggwwggggggggg",
+        "wwgwgwwggggggggg",
+        "wwwwwwwggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg",
@@ -563,18 +562,19 @@
       "name": "Aragon",
       "palette": {
         "y": "#FFD100",
-        "r": "#DA121A"
+        "r": "#DA121A",
+        "w": "#FFFFFF"
       },
       "rows": [
         "yyyyyyyyyyyyyyyy",
         "rrrrrrrrrrrrrrrr",
         "yyyyyyyyyyyyyyyy",
         "rrrrrrrrrrrrrrrr",
-        "yyyyyyyyyyyyyyyy",
-        "rrrrrrrrrrrrrrrr",
-        "yyyyyyyyyyyyyyyy",
-        "rrrrrrrrrrrrrrrr",
-        "yyyyyyyyyyyyyyyy",
+        "yyyyyywwwwyyyyyy",
+        "rrrrrrwwwwrrrrrr",
+        "yyyyyywwwwyyyyyy",
+        "rrrrrrwwwwrrrrrr",
+        "yyyyyywwwwyyyyyy",
         "rrrrrrrrrrrrrrrr",
         "yyyyyyyyyyyyyyyy"
       ]
@@ -647,17 +647,17 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "ggrrrrrwwrrrrrgg",
-        "rggrrrrwwrrrrggr",
-        "rrgggrrwwrrgggrr",
-        "rrrrggrwwrggrrrr",
+        "ggrrrrwwwwrrrrgg",
+        "ggggrrwwwwrrgggg",
+        "rrgggrwwwwrgggrr",
+        "rrrgggwwwwgggrrr",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "rrrrrggwwggrrrrr",
-        "rrrrggrwwrggrrrr",
-        "rrgggrrwwrrgggrr",
-        "rggrrrrwwrrrrggr",
-        "ggrrrrrwwrrrrrgg"
+        "wwwwwwwwwwwwwwww",
+        "rrrgggwwwwgggrrr",
+        "rrgggrwwwwrgggrr",
+        "ggggrrwwwwrrgggg",
+        "ggrrrrwwwwrrrrgg"
       ]
     },
     "et": {
@@ -706,21 +706,21 @@
       "name": "Faroe Islands",
       "palette": {
         "w": "#FFFFFF",
-        "r": "#C8102E",
-        "b": "#0065BD"
+        "r": "#EF3340",
+        "b": "#005EB8"
       },
       "rows": [
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
+        "wwwwbrrbwwwwwwww",
+        "wwwwbrrbwwwwwwww",
+        "wwwwbrrbwwwwwwww",
+        "wwwwbrrbwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww",
-        "wwwwwrrwwwwwwwww"
+        "bbbbbbbbbbbbbbbb",
+        "wwwwbrrbwwwwwwww",
+        "wwwwbrrbwwwwwwww",
+        "wwwwbrrbwwwwwwww"
       ]
     },
     "fr": {
@@ -751,11 +751,11 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "kkkkwwwwwwwwwwww",
-        "kkkkwwwwwwwwwwww",
-        "kkkkwwwwwwwwwwww",
-        "kkkkwwwwwwwwwwww",
-        "kkkkkkkkkkkkkkkk",
+        "wwwwwwkkkkkkkkkk",
+        "wkwkwwwwwwwwwwww",
+        "wwwwwwkkkkkkkkkk",
+        "wkwkwwwwwwwwwwww",
+        "wwwwwwkkkkkkkkkk",
         "wwwwwwwwwwwwwwww",
         "kkkkkkkkkkkkkkkk",
         "wwwwwwwwwwwwwwww",
@@ -812,17 +812,17 @@
         "r": "#C8102E"
       },
       "rows": [
-        "bwwbbbbwwbbbbwwb",
-        "bbwwbbbwwbbbwwbb",
-        "bbbwwbbwwbbwwbbb",
-        "rbbbwwwwwwwwbbbr",
-        "wrrrrwwwwwwrrrrw",
-        "wwwwwwrrrrwwwwww",
-        "wrrrrwwwwwwrrrrw",
-        "rbbbwwwwwwwwbbbr",
-        "bbbwwbbwwbbwwbbb",
-        "bbwwbbbwwbbbwwbb",
-        "bwwbbbbwwbbbbwwb"
+        "rwwbbbwrrwbbbwwr",
+        "wrrwbbwrrwbbwrrw",
+        "bwwrwwwrrwwwrwwb",
+        "bbbwrrwrrwrrwbbb",
+        "wwwwwwwrrwwwwwww",
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwrrwwwwwww",
+        "bbbwrrwrrwrrwbbb",
+        "bwwrwwwrrwwwrwwb",
+        "wrrwbbwrrwbbwrrw",
+        "rwwbbbwrrwbbbwwr"
       ]
     },
     "gb-cor": {
@@ -894,15 +894,15 @@
       },
       "rows": [
         "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
+        "wwwrwwwrrwwwrwww",
+        "wwrrrwwrrwwrrrww",
+        "wwwrwwwrrwwwrwww",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
+        "wwwrwwwrrwwwrwww",
+        "wwrrrwwrrwwrrrww",
+        "wwwrwwwrrwwwrwww",
         "wwwwwwwrrwwwwwww"
       ]
     },
@@ -918,11 +918,11 @@
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
         "yyyyyyyykyyyyyyy",
         "yyyyyyykkkyyyyyy",
-        "yyyyyyyykyyyyyyy",
-        "gggggggggggggggg",
+        "yyyyykkkkkkkyyyy",
+        "yyyyyykkkkkyyyyy",
+        "yyyyyyykykyyyyyy",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg"
@@ -935,13 +935,13 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwbbbbbbbbbb",
+        "bbwwbbbbbbbbbbbb",
+        "bbwwbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
+        "bbwwbbbbbbbbbbbb",
+        "bbwwbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
@@ -1185,17 +1185,17 @@
         "r": "#DC1E35"
       },
       "rows": [
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb",
-        "wwwwwrwwwwwwwwww",
+        "bbbbwrrwbbbbbbbb",
+        "bbbbwrrwbbbbbbbb",
+        "bbbbwrrwbbbbbbbb",
+        "bbbbwrrwbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
         "rrrrrrrrrrrrrrrr",
-        "wwwwwrwwwwwwwwww",
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb",
-        "bbbbwrwbbbbbbbbb"
+        "rrrrrrrrrrrrrrrr",
+        "wwwwwwwwwwwwwwww",
+        "bbbbwrrwbbbbbbbb",
+        "bbbbwrrwbbbbbbbb",
+        "bbbbwrrwbbbbbbbb"
       ]
     },
     "it": {
@@ -1284,61 +1284,63 @@
       "name": "Liguria",
       "palette": {
         "w": "#FFFFFF",
-        "r": "#DA121A"
+        "r": "#FF0000",
+        "g": "#009C31",
+        "c": "#009CCE"
       },
       "rows": [
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww",
-        "wwwwwwwrrwwwwwww"
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrwwwwrccccc",
+        "gggggrwwwwrccccc",
+        "gggggrwwwwrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc",
+        "gggggrrrrrrccccc"
       ]
     },
     "it-72": {
-      "name": "Campania",
+      "name": "Naples",
       "palette": {
         "r": "#DA121A",
         "y": "#FFD100"
       },
       "rows": [
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrrrryyyyyyyy"
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyrrrrrrrr"
       ]
     },
     "it-82": {
       "name": "Sicily",
       "palette": {
-        "y": "#FFD100",
-        "r": "#DA121A",
+        "y": "#FFF100",
+        "r": "#EC1B23",
         "k": "#000000"
       },
       "rows": [
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrry",
-        "rrrrrrrrrrrrrryy",
-        "rrrrrrrrrrrryyyy",
-        "rrrrrrrrrrryyyyy",
-        "rrrrrrrrryyyyyyy",
-        "rrrrrrrryyyyyyyy",
-        "rrrrrryyyyyyyyyy",
-        "rrrrryyyyyyyyyyy",
-        "rrryyyyyyyyyyyyy",
-        "rryyyyyyyyyyyyyy"
+        "yrrrrrrrrrrrrrrr",
+        "yyrrrrrrrrrrrrrr",
+        "yyyyrrrrrrrrrrrr",
+        "yyyyyrrrrrrrrrrr",
+        "yyyyyyyrrrrrrrrr",
+        "yyyyyyyyrrrrrrrr",
+        "yyyyyyyyyyrrrrrr",
+        "yyyyyyyyyyyrrrrr",
+        "yyyyyyyyyyyyyrrr",
+        "yyyyyyyyyyyyyyrr"
       ]
     },
     "it-88": {
@@ -1518,15 +1520,15 @@
       },
       "rows": [
         "yyyyyyyyyyyyyyyy",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
-        "ygggrrrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
+        "yggoorrrrrrrrrry",
         "yyyyyyyyyyyyyyyy"
       ]
     },
@@ -1596,20 +1598,20 @@
       "name": "Latgale",
       "palette": {
         "w": "#FFFFFF",
-        "r": "#9E3039"
+        "b": "#002855"
       },
       "rows": [
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr"
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb"
       ]
     },
     "ma": {
@@ -1621,13 +1623,13 @@
       "rows": [
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
         "rrrrrrrrgrrrrrrr",
         "rrrrrrrgggrrrrrr",
-        "rrrrrrrrgrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrrrgggggggrrrr",
+        "rrrrrrgggggrrrrr",
+        "rrrrrrrgggrrrrrr",
+        "rrrrrrrgrgrrrrrr",
+        "rrrrrrgrrrrgrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -1684,13 +1686,13 @@
       "rows": [
         "yyyyyyyyyyyyyyyy",
         "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "ggggggggwggggggg",
+        "yyyyyyyywyyyyyyy",
+        "yyyyyyywwwyyyyyy",
+        "ggggwwwwwwwggggg",
+        "ggggggwwwwwggggg",
         "gggggggwwwgggggg",
-        "ggggggggwggggggg",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrwrwrrrrrr",
+        "rrrrrrwrrrrwrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -1807,17 +1809,17 @@
         "r": "#DA121A"
       },
       "rows": [
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwwwwwbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwwwwwbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwwwwwbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwwwwwbbbbbb",
-        "bbbbbbwwwwwwwwww",
-        "wwwwwwwwwwbbbbbb",
-        "bbbbbbwwwwwwwwww"
+        "bbbbwwrwbbbbwwrw",
+        "wbbbbwwwwbbbbwww",
+        "wwbbbbwwwwbbbbww",
+        "wwrbbbbwwwwbbbbw",
+        "wwwwbbbbwwrwbbbb",
+        "bwwwwbbbbwwwwbbb",
+        "bbwwwwbbbbwwwwbb",
+        "bbbwwwrbbbbwwwwb",
+        "bbbbwwwwbbbbwwrw",
+        "wbbbbwwwwbbbbwww",
+        "wwbbbbwwwwbbbbww"
       ]
     },
     "nl-li": {
@@ -1849,17 +1851,17 @@
         "b": "#00205B"
       },
       "rows": [
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
+        "rrrrwbbwrrrrrrrr",
+        "rrrrwbbwrrrrrrrr",
+        "rrrrwbbwrrrrrrrr",
+        "rrrrwbbwrrrrrrrr",
         "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr",
-        "rrrrrwwrrrrrrrrr"
+        "rrrrwbbwrrrrrrrr",
+        "rrrrwbbwrrrrrrrr",
+        "rrrrwbbwrrrrrrrr"
       ]
     },
     "np": {
@@ -1891,11 +1893,11 @@
         "r": "#CC142B"
       },
       "rows": [
-        "bwbbbwbbbbbbbbbb",
-        "bbwbwbbbbbbbbbbb",
-        "wwwwwwwbbbbrbbbb",
-        "bbwbwbbbbbbbbbbb",
-        "bwbbbwbbbbbbrbbb",
+        "bwbrbwbbbbbbbbbb",
+        "bbwrwbbbbbbbbbbb",
+        "rrrrrrrbbbbrbbbb",
+        "bbwrwbbbbbbbbbbb",
+        "bwbrbwbbbbbbrbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbrbbbbb",
         "bbbbbbbbbbbbbbbb",
@@ -2017,11 +2019,11 @@
         "ggggggrrrrrrrrrr",
         "ggggggrrrrrrrrrr",
         "ggggggrrrrrrrrrr",
-        "ggggggrrrrrrrrrr",
-        "ggggggyrrrrrrrrr",
         "gggggyyyrrrrrrrr",
-        "ggggggyrrrrrrrrr",
-        "ggggggrrrrrrrrrr",
+        "ggggyyyyyrrrrrrr",
+        "ggggyyyyyrrrrrrr",
+        "ggggyyyyyrrrrrrr",
+        "gggggyyyrrrrrrrr",
         "ggggggrrrrrrrrrr",
         "ggggggrrrrrrrrrr",
         "ggggggrrrrrrrrrr"
@@ -2145,9 +2147,9 @@
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
-        "wwwwwwwwywwwwwww",
         "wwwwwwwyyywwwwww",
-        "wwwwwwwwywwwwwww",
+        "wwwwwwyyyyywwwww",
+        "wwwwwwwyyywwwwww",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg",
@@ -2157,8 +2159,8 @@
     "ru-ko": {
       "name": "Komi",
       "palette": {
-        "b": "#0072C6",
-        "g": "#009B48",
+        "b": "#0039A6",
+        "g": "#009B3A",
         "w": "#FFFFFF"
       },
       "rows": [
@@ -2166,13 +2168,13 @@
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg",
-        "gggggggggggggggg"
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
       ]
     },
     "ru-ta": {
@@ -2227,13 +2229,13 @@
       "rows": [
         "rrrrggggyyyybbbb",
         "rrrrggggyyyybbbb",
-        "rrrbbbbbbbbbbbbb",
-        "rrbbrrrrbbbbbbbb",
-        "rrbrrggyyybbbbbb",
-        "rrbrgggyyyybbbbb",
-        "rrbrrggyyybbbbbb",
-        "rrbbrrrrbbbbbbbb",
-        "rrrbbbggyyyybbbb",
+        "rrrrggggyyyybbbb",
+        "rrrrggrrbbyybbbb",
+        "rrrrgrrrbbbybbbb",
+        "rrrrgrrrbbbybbbb",
+        "rrrrgrrrbbbybbbb",
+        "rrrrggrrbbyybbbb",
+        "rrrrggggyyyybbbb",
         "rrrrggggyyyybbbb",
         "rrrrggggyyyybbbb"
       ]
@@ -2310,11 +2312,11 @@
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
-        "rrrrrrrrrrrrrrrr",
+        "wwwwrrrwwwwwwwww",
+        "bbbbrwrbbbbbbbbb",
+        "bbbbwwwbbbbbbbbb",
+        "bbbbrwrbbbbbbbbb",
+        "rrrrrwrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
@@ -2329,13 +2331,13 @@
       "rows": [
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
-        "bbbbbbbwwbbbbbbb",
-        "bbbbbwwwwwwbbbbb",
-        "bbbbbbwwwwbbbbbb",
-        "bbbbbbwwwwbbbbbb",
-        "bbbbbwwwwwwbbbbb",
-        "bbbbbbbwwbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbwbbbbbbb",
+        "bbbbbbbwwwbbbbbb",
+        "bbbbbwwwwwwwbbbb",
+        "bbbbbbwwwwwbbbbb",
+        "bbbbbbbwwwbbbbbb",
+        "bbbbbbbwbwbbbbbb",
+        "bbbbbbwbbbbwbbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb"
       ]
@@ -2353,9 +2355,9 @@
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg",
-        "wwwwwwrwwwrwwwww",
-        "wwwwwrrrwrrrwwww",
-        "wwwwwwrwwwrwwwww",
+        "wwwrwwwwrwwwwrww",
+        "wwrrrwwrrrwwrrrw",
+        "wwwrwwwwrwwwwrww",
         "kkkkkkkkkkkkkkkk",
         "kkkkkkkkkkkkkkkk",
         "kkkkkkkkkkkkkkkk",
@@ -2496,10 +2498,10 @@
       },
       "rows": [
         "bbbbbbbbrrrrrrrr",
-        "bbbbbbbbrrrrrrrr",
-        "bbbbwbbbrrrrrrrr",
-        "bbbwwwbbrrrrrrrr",
-        "bbbbwbbbrrrrrrrr",
+        "bbwwwbbbrrrrrrrr",
+        "bwwwwwbbrrrrrrrr",
+        "bwwwwwbbrrrrrrrr",
+        "bbwwwbbbrrrrrrrr",
         "bbbbbbbbrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
@@ -2539,12 +2541,12 @@
       "rows": [
         "ccwwcccccccccccc",
         "cwcccccccccccccc",
-        "cwcccccccccccccc",
         "ccwwcccccccccccc",
+        "rrrrrrrrrrrrrrrr",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "gggggggggggggggg",
+        "rrrrrrrrrrrrrrrr",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg"
@@ -2580,13 +2582,13 @@
       "rows": [
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
         "rrrrrrrryrrrrrrr",
         "rrrrrrryyyrrrrrr",
-        "rrrrrrrryrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrrryyyyyyyrrrr",
+        "rrrrrryyyyyrrrrr",
+        "rrrrrrryyyrrrrrr",
+        "rrrrrrryryrrrrrr",
+        "rrrrrryrrrryrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -2623,17 +2625,17 @@
         "b": "#002395"
       },
       "rows": [
-        "rrrrrrrrrrrrrrrr",
-        "krrrrrrrrrrrrrrr",
-        "kywwrrrrrrrrrrrr",
-        "kkyggwwwwwwwwwww",
-        "kkkygggggggggggg",
-        "kkkygggggggggggg",
-        "kkkygggggggggggg",
-        "kkyggwwwwwwwwwww",
-        "kywwbbbbbbbbbbbb",
-        "kbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb"
+        "kywggwrrrrrrrrrr",
+        "kkywggwrrrrrrrrr",
+        "kkkywggwrrrrrrrr",
+        "kkkkywggwrrrrrrr",
+        "kkkkkywwwwwwwwww",
+        "kkkkkygggggggggg",
+        "kkkkkywwwwwwwwww",
+        "kkkkywggwbbbbbbb",
+        "kkkywggwbbbbbbbb",
+        "kkywggwbbbbbbbbb",
+        "kywggwbbbbbbbbbb"
       ]
     }
   }
