@@ -50,7 +50,7 @@
                 @foreach (\App\Services\CatalogStore::languageChoices() as $tag => $name)
                     <button type="submit" name="game_language" value="{{ $tag }}"
                             class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-700 transition {{ $__gameLanguage === $tag ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
-                        <x-language-mark :language="$name" />
+                        <x-language-mark :language="$name" named />
                         <span>{{ $name }}</span>
                     </button>
                 @endforeach

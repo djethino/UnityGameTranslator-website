@@ -17,10 +17,16 @@
       language  the catalogue's language NAME (not its tag) — "French", "Norwegian Bokmål"
       height    pixels tall, default 11. The width follows the grid's ratio.
 --}}
-@props(['language' => null, 'height' => 11])
+@props(['language' => null, 'height' => 11, 'named' => false])
 
 @php
     $mark = \App\Services\CatalogStore::languageMark($language);
+
+    // 🔴 The chip answers "which language is this flag" — and a name written beside it answers
+    // that better. Asking for both produces "IN hi Hindi", the same thing said twice.
+    if ($named) {
+        $mark['showTag'] = false;
+    }
     $flag = \App\Services\CatalogStore::flag($mark['flag']);
 @endphp
 

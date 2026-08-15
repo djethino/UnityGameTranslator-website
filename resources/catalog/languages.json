@@ -1088,6 +1088,413 @@
           "target": "HT"
         }
       }
+    },
+    {
+      "name": "Breton",
+      "tag": "br",
+      "flag": "fr-bre",
+      "providers": {
+        "google": "br",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Occitan",
+      "tag": "oc",
+      "flag": "fr-oci",
+      "providers": {
+        "google": "oc",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Corsican",
+      "tag": "co",
+      "flag": "fr-cor",
+      "providers": {
+        "google": "co",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Scottish Gaelic",
+      "tag": "gd",
+      "flag": "gb-sct",
+      "providers": {
+        "google": "gd",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Cornish",
+      "tag": "kw",
+      "flag": "gb-cor",
+      "providers": {
+        "google": "kw",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Manx",
+      "tag": "gv",
+      "flag": "im",
+      "providers": {
+        "google": "gv",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Pashto",
+      "tag": "ps",
+      "flag": "af",
+      "providers": {
+        "google": "ps",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Mongolian",
+      "tag": "mn",
+      "flag": "mn",
+      "providers": {
+        "google": "mn",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Kyrgyz",
+      "tag": "ky",
+      "flag": "kg",
+      "providers": {
+        "google": "ky",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Turkmen",
+      "tag": "tk",
+      "flag": "tm",
+      "providers": {
+        "google": "tk",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Amharic",
+      "tag": "am",
+      "flag": "et",
+      "providers": {
+        "google": "am",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Yoruba",
+      "tag": "yo",
+      "flag": "ng",
+      "providers": {
+        "google": "yo",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Igbo",
+      "tag": "ig",
+      "flag": "ng",
+      "providers": {
+        "google": "ig",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Hausa",
+      "tag": "ha",
+      "flag": "ng",
+      "providers": {
+        "google": "ha",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Zulu",
+      "tag": "zu",
+      "flag": "za",
+      "providers": {
+        "google": "zu",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Xhosa",
+      "tag": "xh",
+      "flag": "za",
+      "providers": {
+        "google": "xh",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Somali",
+      "tag": "so",
+      "flag": "so",
+      "providers": {
+        "google": "so",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Malagasy",
+      "tag": "mg",
+      "flag": "mg",
+      "providers": {
+        "google": "mg",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Guarani",
+      "tag": "gn",
+      "flag": "py",
+      "providers": {
+        "google": "gn",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Maori",
+      "tag": "mi",
+      "flag": "nz",
+      "providers": {
+        "google": "mi",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Esperanto",
+      "tag": "eo",
+      "flag": "eo",
+      "providers": {
+        "google": "eo",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Kurdish",
+      "tag": "ku",
+      "providers": {
+        "google": "ku",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Central Kurdish",
+      "tag": "ckb",
+      "providers": {
+        "google": "ckb",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Uyghur",
+      "tag": "ug",
+      "providers": {
+        "google": "ug",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Tibetan",
+      "tag": "bo",
+      "providers": {
+        "google": "bo",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Quechua",
+      "tag": "qu",
+      "providers": {
+        "google": "qu",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Latin",
+      "tag": "la",
+      "providers": {
+        "google": "la",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Yiddish",
+      "tag": "yi",
+      "providers": {
+        "google": "yi",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Frisian",
+      "tag": "fy",
+      "flag": "nl-fr",
+      "providers": {
+        "google": "fy",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Asturian",
+      "tag": "ast",
+      "flag": "es-as",
+      "providers": {
+        "google": "ast",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Aragonese",
+      "tag": "an",
+      "flag": "es-ar",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Sardinian",
+      "tag": "sc",
+      "flag": "it-88",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Sicilian",
+      "tag": "scn",
+      "flag": "it-82",
+      "providers": {
+        "google": "scn",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Venetian",
+      "tag": "vec",
+      "flag": "it-34",
+      "providers": {
+        "google": "vec",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Friulian",
+      "tag": "fur",
+      "flag": "it-36",
+      "providers": {
+        "google": "fur",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Ligurian",
+      "tag": "lij",
+      "flag": "it-42",
+      "providers": {
+        "google": "lij",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Lombard",
+      "tag": "lmo",
+      "flag": "it-25",
+      "providers": {
+        "google": "lmo",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Neapolitan",
+      "tag": "nap",
+      "flag": "it-72",
+      "providers": {
+        "google": "nap",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Silesian",
+      "tag": "szl",
+      "flag": "pl-sl",
+      "providers": {
+        "google": "szl",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Limburgish",
+      "tag": "li",
+      "flag": "nl-li",
+      "providers": {
+        "google": "li",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Low German",
+      "tag": "nds",
+      "flag": "de-nds",
+      "providers": {
+        "google": "nds",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Romansh",
+      "tag": "rm",
+      "flag": "ch-gr",
+      "providers": {
+        "google": null,
+        "deepl": null
+      }
+    },
+    {
+      "name": "Northern Sami",
+      "tag": "se",
+      "flag": "sapmi",
+      "providers": {
+        "google": "se",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Latgalian",
+      "tag": "ltg",
+      "flag": "lv-ltg",
+      "providers": {
+        "google": "ltg",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Romani",
+      "tag": "rom",
+      "flag": "rom",
+      "providers": {
+        "google": "rom",
+        "deepl": null
+      }
+    },
+    {
+      "name": "Komi",
+      "tag": "kv",
+      "flag": "ru-ko",
+      "providers": {
+        "google": "kv",
+        "deepl": null
+      }
     }
   ]
 }

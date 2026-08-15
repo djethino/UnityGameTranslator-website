@@ -57,7 +57,7 @@
             @if (!empty($flags[$selected]))
                 <x-flag :flag="$flags[$selected]" />
             @elseif ($marks && isset($choices[$selected]))
-                <x-language-mark :language="$choices[$selected]" />
+                <x-language-mark :language="$choices[$selected]" named />
             @endif
         @endif
         <span class="flex-1 truncate" x-ref="label">{{ $currentLabel }}</span>
@@ -81,7 +81,9 @@
                 @if (!empty($flags[$value]))
                     <x-flag :flag="$flags[$value]" />
                 @elseif ($marks)
-                    <x-language-mark :language="$label" />
+                    {{-- ⚠ named: the name is written right beside it, so the tag chip would say
+                         the same thing twice. --}}
+                    <x-language-mark :language="$label" named />
                 @endif
                 <span class="truncate">{{ $label }}</span>
             </button>
