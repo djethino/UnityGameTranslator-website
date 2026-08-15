@@ -776,15 +776,15 @@
       },
       "rows": [
         "wwwwwwwwwwwwwwww",
-        "wwwwwkkkkkkwwwww",
-        "wwwwkkkkkkkkwwww",
-        "wwwwwwwwwwwwwwww",
-        "wwwkkkkkkkkkwwww",
-        "wwkkkkkkkkkkwwww",
-        "wwwkkkkkkkkkwwww",
-        "wwwwkkkkkkkkwwww",
-        "wwwwwkkkkkkwwwww",
         "wwwwwwkkkkwwwwww",
+        "wwwwwwkkkkkwwwww",
+        "wwwwwwwkkkkwwwww",
+        "wwwwwkkwwkkwwwww",
+        "wwwwwkkkkkkwwwww",
+        "wwwwwkkkkkwwwwww",
+        "wwwwwkkkkkwwwwww",
+        "wwwwwwkkkkwwwwww",
+        "wwwwwwwkkwwwwwww",
         "wwwwwwwwwwwwwwww"
       ]
     },
@@ -1690,13 +1690,13 @@
       "rows": [
         "yyyyyyyyyyyyyyyy",
         "yyyyyyyyyyyyyyyy",
-        "yyyyyyyywyyyyyyy",
-        "yyyyyyywwwyyyyyy",
-        "ggggwwwwwwwggggg",
-        "ggggggwwwwwggggg",
-        "gggggggwwwgggggg",
-        "rrrrrrrwrwrrrrrr",
-        "rrrrrrwrrrrwrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyywwyyyyyyy",
+        "gggggggwwggggggg",
+        "gggggwwwwwwggggg",
+        "ggggggwwwwgggggg",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrrwrrwrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -1836,15 +1836,15 @@
       },
       "rows": [
         "wwwwwwwwwwwwwwww",
-        "wwrrwwwwwwwwwwww",
-        "wwrrrwwwwwwwwwww",
-        "wwrrrwwwwwwwwwww",
+        "wwrwwrwwwwwwwwww",
+        "wwyrrrwwwwwwwwww",
         "wwrrrrwwwwwwwwww",
-        "bbrrrrbbbbbbbbbb",
-        "bbrrrrbbbbbbbbbb",
-        "yyrrryyyyyyyyyyy",
-        "yyrryyyyyyyyyyyy",
-        "yyryyyyyyyyyyyyy",
+        "bbrrrbbbbbbbbbbb",
+        "bbrrbrbbbbbbbbbb",
+        "byyrrrbbbbbbbbbb",
+        "yyyrrryyyyyyyyyy",
+        "yyyryyryyyyyyyyy",
+        "yyryyryyyyyyyyyy",
         "yyyyyyyyyyyyyyyy"
       ]
     },
@@ -1878,16 +1878,16 @@
       },
       "rows": [
         "bb..............",
-        "brrb............",
-        "brrrrb..........",
-        "brwrrrb.........",
-        "brrrrrrrb.......",
-        "brrrb...........",
+        "brrr............",
         "brrrrrb.........",
-        "brrwrrrb........",
-        "brrrrrrrrrb.....",
+        "brrwrrrrrb......",
+        "brwwwwrrrrrrb...",
+        "brrrrbb.........",
+        "brrrrrrb........",
+        "brwwwwrrrrb.....",
+        "brwwwwrrrrrrb...",
         "brrrrrrrrrrrrb..",
-        "bbbbbbbbbbbbbbb."
+        "brrrrrrrrrrrrbb."
       ]
     },
     "nz": {
