@@ -259,16 +259,19 @@
     /* ⚠ Sized here, not inherited. It sat inside a cell set to text-xs and came out at twelve
      * pixels — a chevron that small is something you find once you already know it is there,
      * which is the opposite of its job. */
-    font-size: 1.35rem;
+    font-size: 1.6rem;
     font-weight: 700;
     line-height: 1;
 
     /* Twice, and not for prettiness: it floats over game text of any colour, and a dark halo is
      * what keeps it legible over a bright tag or a colour code without painting a box over the
      * words underneath. */
-    text-shadow: 0 0 4px rgb(17 24 39), 0 0 9px rgb(17 24 39);
+    /* Three layers, and each does a different job: two dark ones to cut the glyph out of
+     * whatever game text it is floating over, then a bloom in its OWN colour so it reads as a
+     * light rather than as a character somebody typed there. */
+    text-shadow: 0 0 4px rgb(17 24 39), 0 0 9px rgb(17 24 39), 0 0 14px currentColor;
 
-    animation: answer-pulse 1.1s ease-in-out infinite alternate;
+    animation: answer-pulse 0.7s ease-in-out infinite alternate;
 }
 
 /* Opacity AND size move together. Opacity alone is a light going on and off, which the eye stops

@@ -360,9 +360,8 @@
                                         x-show="answerRight(settingsPick[row.id])" x-cloak
                                         @click.stop="goToAnswer(settingsPick[row.id])"
                                         class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :class="answerArrowColour(settingsPick[row.id])"
                                         :title="offScreenHint"
-                                        ><span class="answer-mark" x-text="answerArrow(settingsPick[row.id])"></span></button></td>
+                                        ><i class="fas answer-mark" :class="answerIconClass(settingsPick[row.id])"></i></button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -499,9 +498,8 @@
                                         x-show="answerRight(publicationPick[row.field])" x-cloak
                                         @click.stop="goToAnswer(publicationPick[row.field])"
                                         class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :class="answerArrowColour(publicationPick[row.field])"
                                         :title="offScreenHint"
-                                        ><span class="answer-mark" x-text="answerArrow(publicationPick[row.field])"></span></button></td>
+                                        ><i class="fas answer-mark" :class="answerIconClass(publicationPick[row.field])"></i></button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -717,9 +715,8 @@
                                         x-show="lineAnswerLeft(key)" x-cloak
                                         @click.stop="goToLineAnswer(key)"
                                         class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
-                                        :class="lineAnswerColour(key)"
                                         :title="offScreenHint"
-                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button>
+                                        ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
                                     </template>
                                 </td>
 
@@ -755,9 +752,8 @@
                                         x-show="lineAnswerLeft(key)" x-cloak
                                         @click.stop="goToLineAnswer(key)"
                                         class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
-                                        :class="lineAnswerColour(key)"
                                         :title="offScreenHint"
-                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button>
+                                        ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
                                     </template>
                                     <span class="edit-affordance" x-show="mainData[key] !== undefined">
                                         <button type="button" x-show="isRowModified(key)" @click.stop="revertRow(key)"
@@ -815,9 +811,8 @@
                                         x-show="lineAnswerRight(key)" x-cloak
                                         @click.stop="goToLineAnswer(key)"
                                         class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :class="lineAnswerColour(key)"
                                         :title="offScreenHint"
-                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button></td>
+                                        ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button></td>
                             </tr>
                         </template>
 
@@ -1332,10 +1327,35 @@ document.addEventListener('alpine:init', () => {
          * The mark's colour: the same three the cells use — green kept, blue taken, purple
          * reworded — so it says WHO as well as WHICH WAY, without a legend of its own.
          */
+        /**
+         * The mark's icon and its colour, in one class.
+         *
+         * ⚠ A FontAwesome chevron rather than a guillemet: it is the glyph this interface already
+         * uses to mean "there is more this way" — the folded blocks above carry the same one —
+         * and it is a solid shape, where « is two thin strokes that vanish over dense text.
+         *
+         * ⚠ One binding, not two: the CSP build takes a bare call, and splitting icon from colour
+         * would have meant two expressions per mark on every rendered row.
+         */
+        answerIconClass(source) {
+            const arrow = this.answerArrow(source);
+            if (!arrow) return '';
+            const icon = arrow === '«' ? 'fa-chevron-left' : 'fa-chevron-right';
+            return icon + ' ' + this.answerArrowColour(source);
+        },
+
+        lineAnswerIconClass(key) {
+            const sel = this.selections[key];
+            return sel ? this.answerIconClass(sel.source) : '';
+        },
+
         answerArrowColour(source) {
-            if (source === 'manual') return 'text-purple-300';
-            if (source === 'main') return 'text-green-400';
-            return 'text-blue-400';
+            // ⚠ Brighter than the selection rings they stand for. A ring is read on a calm
+            // background; this floats over game text full of colour codes, and the tint that
+            // works behind a cell is not the one that survives on top of one.
+            if (source === 'manual') return 'text-fuchsia-300';
+            if (source === 'main') return 'text-emerald-300';
+            return 'text-sky-300';
         },
 
         /** Go to the answer. The mark then disappears, which is its own confirmation. */
