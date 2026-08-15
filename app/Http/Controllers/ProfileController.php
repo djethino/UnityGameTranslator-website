@@ -30,6 +30,25 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Change only the language somebody plays in, from the title bar.
+     *
+     * ⚠ Its own action rather than a trip through update(): that one requires a username and
+     * revalidates it, so a one-click switch would fail for anybody whose name predates the current
+     * rules — and would say so about the wrong field.
+     */
+    public function gameLanguage(Request $request)
+    {
+        $request->validate([
+            'game_language' => 'nullable|string|in:'
+                . implode(',', array_keys(\App\Services\CatalogStore::languageChoices())),
+        ]);
+
+        auth()->user()->update(['game_language' => $request->game_language ?: null]);
+
+        return back();
+    }
+
     public function update(Request $request)
     {
         $supportedLocales = array_keys(config('locales.supported', []));
@@ -37,6 +56,11 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\-]+$/',
             'locale' => 'nullable|string|in:' . implode(',', $supportedLocales),
+            // ⚠ Validated against the CATALOGUE, not against the interface locales: the
+            // two lists overlap without matching, and ninety languages can be played in
+            // while twenty can be read in.
+            'game_language' => 'nullable|string|in:'
+                . implode(',', array_keys(\App\Services\CatalogStore::languageChoices())),
         ], [
             'name.regex' => 'Username can only contain letters, numbers, underscores and hyphens.',
         ]);
@@ -65,6 +89,8 @@ class ProfileController extends Controller
         $user->update([
             'name' => $request->name,
             'locale' => $request->locale,
+            // Empty means "follow the interface", which is a real answer and the default.
+            'game_language' => $request->game_language ?: null,
         ]);
 
         // Update session locale immediately

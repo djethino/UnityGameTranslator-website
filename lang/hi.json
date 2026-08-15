@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "नया यादृच्छिक अवतार",
     "profile.avatar_platform": "मेरे प्लेटफ़ॉर्म का अवतार उपयोग करें",
     "profile.codes_regenerate": "फिर से बनाएं",
-    "profile.codes_regenerate_hint": "8 कोड का एक नया सेट बनाता है और पुराने को अमान्य कर देता है। इसके लिए आपका पासवर्ड आवश्यक है।"
+    "profile.codes_regenerate_hint": "8 कोड का एक नया सेट बनाता है और पुराने को अमान्य कर देता है। इसके लिए आपका पासवर्ड आवश्यक है।",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

@@ -18,6 +18,7 @@ class User extends Authenticatable
         'provider_id',
         'avatar',
         'locale',
+        'game_language',
     ];
 
     protected $guarded = [
@@ -61,6 +62,28 @@ class User extends Authenticatable
     public function apiTokens()
     {
         return $this->hasMany(ApiToken::class);
+    }
+
+    /**
+     * The language this person wants their GAMES in — the catalogue's name for it.
+     *
+     * 🔴 **Not the interface language, and the distinction is the point.** `locale` is one of the
+     * twenty this site is translated into; a game translation can be any of the catalogue's ninety.
+     * Someone reading an English interface and wanting French subtitles is ordinary, and a Tamil
+     * player has no interface language to be inferred from at all.
+     *
+     * ⚠ Falls back to the interface language when nothing was chosen, which is exactly what the
+     * site did before the column existed — so nobody's ordering changes until they say otherwise.
+     * Null out means "no idea", and the caller must not invent one: ranking by a language nobody
+     * asked for is what this separation exists to stop.
+     */
+    public function gameLanguage(): ?string
+    {
+        if ($this->game_language) {
+            return \App\Services\CatalogStore::nameOfCode($this->game_language) ?? null;
+        }
+
+        return \App\Services\CatalogStore::nameOfCode($this->locale ?? app()->getLocale());
     }
 
     public function isAdmin(): bool

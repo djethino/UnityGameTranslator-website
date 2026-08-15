@@ -180,6 +180,54 @@ class CatalogStore
      * interface is translated into 19, and what happens to the other 71 is a policy (English, see
      * the `about.interface_fallback` note in the catalogue), not a lookup.
      */
+    /**
+     * Every language as tag => name, for a picker that has to STORE something.
+     *
+     * ⚠ Distinct from <see cref="languageNames"/>, which answers "is this name one of ours" for a
+     * validator. A setting saves a code — names are prose, they get corrected, and a preference
+     * keyed on one would quietly reset itself the day the catalogue tidies a spelling.
+     *
+     * @return array<string, string>
+     */
+    public static function languageChoices(): array
+    {
+        $choices = [];
+
+        foreach (self::document('languages')['languages'] ?? [] as $entry) {
+            $tag = $entry['tag'] ?? null;
+            $name = $entry['name'] ?? null;
+            if ($tag && $name) {
+                $choices[$tag] = $name;
+            }
+        }
+
+        return $choices;
+    }
+
+    /**
+     * The catalogue's NAME for a language code, or null when it knows no such language.
+     *
+     * ⚠ Goes through <see cref="canonicalTag"/> first, so `pt-BR` finds Portuguese and `fr_FR`
+     * finds French: the interface locales and the catalogue tags are two lists that overlap
+     * without matching, and a lookup that demanded an exact tag would answer null for half the
+     * site's own languages.
+     */
+    public static function nameOfCode(?string $code): ?string
+    {
+        $tag = self::canonicalTag($code);
+        if ($tag === null) {
+            return null;
+        }
+
+        foreach (self::document('languages')['languages'] ?? [] as $entry) {
+            if (strtolower((string) ($entry['tag'] ?? '')) === $tag) {
+                return $entry['name'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
     public static function canonicalTag(?string $locale): ?string
     {
         if ($locale === null || trim($locale) === '') {

@@ -184,6 +184,10 @@ $localizableRoutes = function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/avatar', [ProfileController::class, 'avatarReroll'])->middleware('throttle:30,1')->name('profile.avatar');
+        // The game language from the title bar. Separate from the profile form on purpose:
+        // it is a one-click switch a reader makes while browsing, and routing it through
+        // the full profile update would make it require — and revalidate — the username.
+        Route::post('/profile/game-language', [ProfileController::class, 'gameLanguage'])->middleware('throttle:60,1')->name('profile.game-language');
         Route::get('/profile/export', [ProfileController::class, 'export'])->name('profile.export');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "随机换新头像",
     "profile.avatar_platform": "使用我的平台头像",
     "profile.codes_regenerate": "重新生成",
-    "profile.codes_regenerate_hint": "生成一组全新的 8 个恢复码，并使旧的失效。需要你的密码。"
+    "profile.codes_regenerate_hint": "生成一组全新的 8 个恢复码，并使旧的失效。需要你的密码。",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "อวาตาร์สุ่มใหม่",
     "profile.avatar_platform": "ใช้อวาตาร์จากแพลตฟอร์มของฉัน",
     "profile.codes_regenerate": "สร้างใหม่",
-    "profile.codes_regenerate_hint": "สร้างชุดรหัสใหม่ 8 รหัส และทำให้รหัสเก่าใช้ไม่ได้ ต้องใช้รหัสผ่านของคุณ"
+    "profile.codes_regenerate_hint": "สร้างชุดรหัสใหม่ 8 รหัส และทำให้รหัสเก่าใช้ไม่ได้ ต้องใช้รหัสผ่านของคุณ",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

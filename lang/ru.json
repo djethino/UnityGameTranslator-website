@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "Новый случайный аватар",
     "profile.avatar_platform": "Использовать аватар платформы",
     "profile.codes_regenerate": "Перегенерировать",
-    "profile.codes_regenerate_hint": "Создаёт новый набор из 8 кодов и делает старые недействительными. Требуется ваш пароль."
+    "profile.codes_regenerate_hint": "Создаёт новый набор из 8 кодов и делает старые недействительными. Требуется ваш пароль.",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

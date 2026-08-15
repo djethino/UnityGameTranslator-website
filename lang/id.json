@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "Avatar acak baru",
     "profile.avatar_platform": "Gunakan avatar platform saya",
     "profile.codes_regenerate": "Buat ulang",
-    "profile.codes_regenerate_hint": "Membuat satu set baru berisi 8 kode dan membatalkan kode lama. Memerlukan kata sandimu."
+    "profile.codes_regenerate_hint": "Membuat satu set baru berisi 8 kode dan membatalkan kode lama. Memerlukan kata sandimu.",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

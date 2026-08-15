@@ -58,11 +58,20 @@ class GameController extends Controller
                 ->where('visibility', 'public')->withTranslatedLines()->finished());
         }
 
-        // The language the visitor is most likely looking for: the one they filtered on, or
-        // failing that the one they are reading the site in.
+        // The language the visitor is most likely looking for: the one they filtered on, then
+        // the one they told us they PLAY in, and only failing both the one they are reading the
+        // site in.
+        //
+        // 🔴 **Reading and playing are two different languages**, and this used to know only the
+        // first. Someone on an English interface wanting French subtitles was ranked as if they
+        // wanted English, and a Tamil player — no interface exists in Tamil — was ranked as if
+        // they wanted whatever they had settled for reading. The stored preference is what fixes
+        // both; the interface language stays the fallback, so nobody who never sets it sees any
+        // change.
         $highlightLanguage = $request->filled('target')
             ? $request->target
-            : (config('locales.supported.' . app()->getLocale() . '.name') ?: null);
+            : (auth()->user()?->gameLanguage()
+               ?: (config('locales.supported.' . app()->getLocale() . '.name') ?: null));
 
         // On by default, and turned off through the URL rather than remembered. A sort order
         // kept in a cookie is invisible: the list comes back in an order the visitor no longer
@@ -317,9 +326,12 @@ class GameController extends Controller
         // translation into a language they do not read is not a candidate, however good it is.
         // Applied AFTER the chosen sort and never instead of it: PHP sorts are stable, so the
         // order picked above still decides between translations of the same language.
+        // Same order of preference as the list: filtered, then the language they PLAY in, then
+        // the one they read the site in. See the note there.
         $highlightLanguage = $request->filled('target')
             ? $request->target
-            : (config('locales.supported.' . app()->getLocale() . '.name') ?: null);
+            : (auth()->user()?->gameLanguage()
+               ?: (config('locales.supported.' . app()->getLocale() . '.name') ?: null));
         $languageFirst = $request->input('lang_first', '1') !== '0';
 
         if ($highlightLanguage && $languageFirst) {

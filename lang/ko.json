@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "새 무작위 아바타",
     "profile.avatar_platform": "내 플랫폼 아바타 사용",
     "profile.codes_regenerate": "재생성",
-    "profile.codes_regenerate_hint": "8개의 코드를 새로 생성하고 기존 코드를 무효화합니다. 비밀번호가 필요합니다."
+    "profile.codes_regenerate_hint": "8개의 코드를 새로 생성하고 기존 코드를 무효화합니다. 비밀번호가 필요합니다.",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

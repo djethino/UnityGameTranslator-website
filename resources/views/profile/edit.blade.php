@@ -78,6 +78,11 @@
             </div>
             @endif
 
+            {{-- 🔴 **Two languages, because they are two questions.** The one this site is read in
+                 is one of twenty; the one somebody plays in is one of the catalogue's ninety, and
+                 the two are routinely different — an English interface with French subtitles is
+                 ordinary, and a Tamil player has no interface language to be inferred from. They
+                 used to be one setting, which quietly told that player nothing existed for them. --}}
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.language') }}</label>
                 <select name="locale" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
@@ -87,6 +92,23 @@
                         </option>
                     @endforeach
                 </select>
+                <p class="text-xs text-gray-500 mt-1">{{ __('profile.language_hint') }}</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.game_language') }}</label>
+                <select name="game_language" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
+                    {{-- ⚠ "Follow the interface" is a real answer and it is the default: it is what
+                         the site did before this setting existed, so nobody's ordering changes
+                         until they say otherwise. --}}
+                    <option value="">{{ __('profile.game_language_follows') }}</option>
+                    @foreach(\App\Services\CatalogStore::languageChoices() as $tag => $name)
+                        <option value="{{ $tag }}" {{ old('game_language', $user->game_language) === $tag ? 'selected' : '' }}>
+                            {{ $name }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">{{ __('profile.game_language_hint') }}</p>
             </div>
 
             <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition">

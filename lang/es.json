@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "Nuevo avatar aleatorio",
     "profile.avatar_platform": "Usar mi avatar de la plataforma",
     "profile.codes_regenerate": "Regenerar",
-    "profile.codes_regenerate_hint": "Genera un nuevo conjunto de 8 códigos e invalida los antiguos. Requiere tu contraseña."
+    "profile.codes_regenerate_hint": "Genera un nuevo conjunto de 8 códigos e invalida los antiguos. Requiere tu contraseña.",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }

@@ -226,6 +226,28 @@
         "gggggggggggggggg"
       ]
     },
+    "br": {
+      "name": "Brazil",
+      "palette": {
+        "g": "#009B3A",
+        "y": "#FEDF00",
+        "b": "#002776",
+        "w": "#FFFFFF"
+      },
+      "rows": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "ggggyyyyyyyygggg",
+        "gggyyyyyyyyyyggg",
+        "ggyyyybbbbyyyygg",
+        "ggyyybbwwbbyyygg",
+        "ggyyyybbbbyyyygg",
+        "gggyyyyyyyyyyggg",
+        "ggggyyyyyyyygggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
     "by": {
       "name": "Belarus",
       "palette": {

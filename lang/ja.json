@@ -1170,5 +1170,9 @@
     "profile.avatar_reroll": "新しいランダムアバター",
     "profile.avatar_platform": "プラットフォームのアバターを使用",
     "profile.codes_regenerate": "再生成",
-    "profile.codes_regenerate_hint": "8個のコードを新しく生成し、古いコードを無効にします。パスワードが必要です。"
+    "profile.codes_regenerate_hint": "8個のコードを新しく生成し、古いコードを無効にします。パスワードが必要です。",
+    "profile.language_hint": "[MISSING] The language this site is shown in.",
+    "profile.game_language": "[MISSING] Language you play in",
+    "profile.game_language_follows": "[MISSING] Same as the site",
+    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in."
 }
