@@ -42,7 +42,7 @@
     "al": {
       "name": "Albania",
       "palette": {
-        "r": "#E41E20",
+        "r": "#FF0000",
         "k": "#000000"
       },
       "rows": [
@@ -502,7 +502,7 @@
         "r": "#CE1126",
         "w": "#FFFFFF",
         "k": "#000000",
-        "y": "#C09300"
+        "y": "#FFCD00"
       },
       "rows": [
         "rrrrrrrrrrrrrrrr",
@@ -1039,7 +1039,7 @@
     "id": {
       "name": "Indonesia",
       "palette": {
-        "r": "#CE1126",
+        "r": "#FF0000",
         "w": "#FFFFFF"
       },
       "rows": [
@@ -1122,7 +1122,7 @@
       "palette": {
         "o": "#FF9933",
         "w": "#FFFFFF",
-        "g": "#138808",
+        "g": "#046A38",
         "b": "#000088"
       },
       "rows": [
@@ -1414,7 +1414,7 @@
     "kg": {
       "name": "Kyrgyzstan",
       "palette": {
-        "r": "#E8112D",
+        "r": "#FF0000",
         "y": "#FFEF00"
       },
       "rows": [
@@ -1808,7 +1808,7 @@
     "nl-fr": {
       "name": "Friesland",
       "palette": {
-        "b": "#0064C8",
+        "b": "#244994",
         "w": "#FFFFFF",
         "r": "#DA121A"
       },
@@ -2017,7 +2017,7 @@
       "name": "Portugal",
       "palette": {
         "g": "#046A38",
-        "r": "#DA291C",
+        "r": "#FF0000",
         "y": "#FFE900"
       },
       "rows": [
@@ -2081,7 +2081,7 @@
     "rom": {
       "name": "Romani",
       "palette": {
-        "b": "#0066B3",
+        "b": "#0080FF",
         "g": "#009900",
         "r": "#DA121A"
       },
@@ -2146,7 +2146,7 @@
       "palette": {
         "b": "#0072CE",
         "w": "#FFFFFF",
-        "g": "#009B48",
+        "g": "#007000",
         "y": "#FFD700"
       },
       "rows": [
@@ -2187,9 +2187,9 @@
     "ru-ta": {
       "name": "Tatarstan",
       "palette": {
-        "g": "#00A650",
+        "g": "#008000",
         "w": "#FFFFFF",
-        "r": "#DA2032"
+        "r": "#FF0000"
       },
       "rows": [
         "gggggggggggggggg",
@@ -2292,7 +2292,7 @@
       "palette": {
         "w": "#FFFFFF",
         "b": "#0000C1",
-        "r": "#ED1C24"
+        "r": "#FF0000"
       },
       "rows": [
         "wwwwwwwwwwwwwwww",
@@ -2418,7 +2418,7 @@
       "palette": {
         "r": "#CC0000",
         "w": "#FFFFFF",
-        "g": "#006600",
+        "g": "#197B30",
         "y": "#F8C300"
       },
       "rows": [
@@ -2438,7 +2438,7 @@
     "tm": {
       "name": "Turkmenistan",
       "palette": {
-        "g": "#28AE66",
+        "g": "#00843D",
         "w": "#FFFFFF",
         "r": "#D22630"
       },
