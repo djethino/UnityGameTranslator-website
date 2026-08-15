@@ -303,6 +303,17 @@ class TranslationController extends Controller
                     'status' => $ownTranslation->status,
                     'notes' => $ownTranslation->notes,
                     'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
+                    // 🔴 The row's OWN link, beside the effective one above — two different
+                    // questions that had one answer.
+                    //
+                    // A branch with no link of its own shows its Main's, which is right on a
+                    // screen and wrong in an edit field: prefilled from the effective value and
+                    // posted back, the branch adopts a copy of its Main's link and stops
+                    // following it for ever after, over an edit its author never made.
+                    //
+                    // So: `resources_url` to DISPLAY, `resources_url_own` to EDIT. Additive —
+                    // a client that does not know this field behaves exactly as before.
+                    'resources_url_own' => $ownTranslation->resources_url,
                     'line_count' => $ownTranslation->line_count,
                     'file_hash' => $ownTranslation->file_hash,
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
@@ -840,6 +851,85 @@ class TranslationController extends Controller
         return response()->json([
             'vote_count' => $translation->fresh()->vote_count,
             'user_vote' => $translation->userVoteFor($user)?->value,
+        ]);
+    }
+
+    /**
+     * What is SAID about a translation: its description, the link to what it needs, and
+     * whether its author calls it finished.
+     *
+     * PATCH /api/v1/translations/{translation}/details
+     *
+     * 🔴 Separate from store() on purpose. Store takes the FILE and rewrites the row around it,
+     * so changing a description through it meant publishing whatever else the local file had
+     * gained meanwhile. These three fields are the author's words about the work, not the work.
+     *
+     * ⚠ Ownership is the ordinary rule, with no exception: one writes on one's own row and
+     * nowhere else. A branch author edits their branch, a Main owner their Main, and neither
+     * touches the other's — the admin path stays in /admin, behind its middleware.
+     *
+     * ⚠ `status` is refused on a branch rather than ignored. A contribution inherits its Main's,
+     * as store() enforces; answering 200 to a request that changed nothing would teach a client
+     * that it had.
+     */
+    public function updateDetails(Request $request, Translation $translation): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($translation->user_id !== $user->id) {
+            return response()->json([
+                'error' => 'Forbidden',
+                'message' => 'This translation belongs to somebody else.',
+            ], 403);
+        }
+
+        // Same limits as store(), so one field cannot be accepted here and refused there.
+        $request->validate([
+            'notes' => 'nullable|string|max:1000',
+            'resources_url' => 'nullable|string|max:2048|url:http,https',
+            'status' => 'nullable|in:in_progress,complete',
+        ]);
+
+        $isBranch = $translation->visibility === 'branch';
+
+        if ($isBranch && $request->filled('status')) {
+            return response()->json([
+                'error' => 'Unprocessable',
+                'message' => 'A contribution inherits whether it is finished from the translation '
+                           . 'it contributes to.',
+            ], 422);
+        }
+
+        // ⚠ Only what was SENT is written. An absent field is "no opinion", never null — the
+        // opposite of store()'s rule, and deliberately so: a client fixing a link has no reason
+        // to restate a description it may not even have read.
+        $changes = [];
+        if ($request->has('notes')) {
+            $changes['notes'] = $request->input('notes');
+        }
+        if ($request->has('resources_url')) {
+            $changes['resources_url'] = $request->input('resources_url');
+        }
+        if (!$isBranch && $request->has('status')) {
+            $changes['status'] = $request->input('status');
+        }
+
+        if ($changes) {
+            // ⚠ Not content_updated_at: nothing about the file changed. Bumping it would tell
+            // every player the translation had moved on, and rank it as freshly worked on.
+            $translation->update($changes);
+        }
+
+        $translation->refresh();
+
+        return response()->json([
+            'translation' => [
+                'id' => $translation->id,
+                'status' => $translation->status,
+                'notes' => $translation->notes,
+                'resources_url' => $translation->getEffectiveResourcesUrl(),
+                'resources_url_own' => $translation->resources_url,
+            ],
         ]);
     }
 }

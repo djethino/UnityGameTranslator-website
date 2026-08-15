@@ -113,6 +113,16 @@ Route::prefix('v1')->group(function () {
         Route::post('translations', [TranslationController::class, 'store'])
             ->middleware('throttle:10,1');
 
+        // What is SAID about a translation, without resending the translation.
+        //
+        // 🔴 Its own endpoint because the two acts are not the same one. Store requires `content`,
+        // so the only way to fix a description was to publish the local file with it — which
+        // pushes whatever else that file has gained since. A better wording is not a release.
+        //
+        // Rate limited like the upload it replaces for this purpose, not like a read: it writes.
+        Route::patch('translations/{translation}/details', [TranslationController::class, 'updateDetails'])
+            ->middleware('throttle:20,1');
+
         // Initialize merge preview (mod sends local content, gets URL to open)
         Route::post('merge-preview/init', [MergePreviewController::class, 'init'])
             ->middleware('throttle:10,1');
