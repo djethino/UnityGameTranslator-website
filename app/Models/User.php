@@ -83,7 +83,72 @@ class User extends Authenticatable
             return \App\Services\CatalogStore::nameOfCode($this->game_language) ?? null;
         }
 
-        return \App\Services\CatalogStore::nameOfCode($this->locale ?? app()->getLocale());
+        return static::detectedGameLanguage();
+    }
+
+    /**
+     * What to assume when nobody has chosen — for a visitor as much as for an account.
+     *
+     * ⚠ The BROWSER first, then the interface. The browser names a language out of ninety; the
+     * interface can only name one of twenty, so asking it first throws away the better answer.
+     * Somebody whose browser says Tamil is told about Tamil translations, which no interface
+     * language could ever have produced.
+     *
+     * Static because a visitor has no account and deserves the same answer.
+     */
+    public static function detectedGameLanguage(): ?string
+    {
+        $supported = array_keys(config('locales.supported', []));
+
+        foreach (request()?->getLanguages() ?? [] as $announced) {
+            // Not a language we host translations in: nothing to say about it.
+            if (\App\Services\CatalogStore::nameOfCode($announced) === null) {
+                continue;
+            }
+
+            // 🔴 The interface can express this one, so the interface decides. Somebody browsing
+            // /en/ has SAID English, and a browser header is a guess — overruling a stated choice
+            // with a guess is the failure the tests caught.
+            if (\App\Services\CatalogStore::canonicalTag($announced) !== null
+                && self::interfaceSpeaks($announced, $supported)) {
+                break;
+            }
+
+            // The gap this exists for: a browser asking for Tamil, Catalan or Basque, which no
+            // interface language could ever have expressed. Twenty against ninety.
+            return \App\Services\CatalogStore::nameOfCode($announced);
+        }
+
+        return \App\Services\CatalogStore::nameOfCode(app()->getLocale());
+    }
+
+    /**
+     * Is this announced locale one the SITE ITSELF is translated into?
+     *
+     * ⚠ Compared after shortening, so a browser asking for fr-CA is recognised as French. The
+     * interface list is spelt in its own codes (pt-BR, zh), which is why this cannot be a plain
+     * in_array on the raw header value.
+     */
+    private static function interfaceSpeaks(string $announced, array $supported): bool
+    {
+        $wanted = strtolower(str_replace('_', '-', trim($announced)));
+
+        while ($wanted !== '') {
+            foreach ($supported as $code) {
+                if (strtolower($code) === $wanted) {
+                    return true;
+                }
+            }
+
+            $cut = strrpos($wanted, '-');
+            if ($cut === false) {
+                return false;
+            }
+
+            $wanted = substr($wanted, 0, $cut);
+        }
+
+        return false;
     }
 
     public function isAdmin(): bool

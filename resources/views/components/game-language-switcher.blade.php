@@ -17,9 +17,9 @@
 @auth
     @php
         $__gameLanguage = auth()->user()->game_language;
-        $__gameMark = \App\Services\CatalogStore::languageMark(
-            \App\Services\CatalogStore::nameOfCode($__gameLanguage ?: (auth()->user()->locale ?? app()->getLocale()))
-        );
+        // The chosen one, or what we detected — the same answer the ranking uses, so the flag
+        // in the bar always names the language the list is actually ordered by.
+        $__gameMark = \App\Services\CatalogStore::languageMark(auth()->user()->gameLanguage());
     @endphp
 
     <div class="relative" x-data="{ open: false }">
@@ -28,10 +28,12 @@
                 class="flex items-center gap-1 text-gray-300 hover:text-white px-2 py-1 rounded transition">
             <i class="fas fa-gamepad text-xs"></i>
             <x-flag :flag="$__gameMark['flag']" />
-            {{-- Dimmed when nothing was chosen: the flag then shows what the site FOLLOWS, and
-                 letting that look like a decision somebody made would be a small lie. --}}
+            {{-- ⚠ Said to be DETECTED when nothing was chosen. The flag then shows a guess, and
+                 letting a guess look like a decision somebody made is the small lie this avoids —
+                 especially now that the guess comes from the browser and can name a language the
+                 site has no interface for at all. --}}
             @unless ($__gameLanguage)
-                <span class="text-[9px] text-gray-500 leading-none">{{ __('profile.game_language_follows') }}</span>
+                <span class="text-[9px] text-gray-500 leading-none">{{ __('profile.game_language_detected_short') }}</span>
             @endunless
             <i class="fas fa-chevron-down text-xs"></i>
         </button>

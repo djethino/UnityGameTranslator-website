@@ -406,7 +406,11 @@
                                     class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-blue-400 font-medium" x-text="branch.name"></span>
-                                        <span class="text-xs text-gray-500" x-text="branchHumanShare(branch) + '% ' + @js(__('progress.human'))"></span>
+                                        {{-- ⚠ The word stays in the HTML, only the NUMBER comes from Alpine. Passing a translated
+                                             string through @js encodes it as ا… and eleven of the twenty
+                                             languages have a non-ASCII word here — which is how "Humain" reaches a
+                                             page as an escape sequence. --}}
+                                        <span class="text-xs text-gray-500"><span x-text="branchHumanShare(branch)"></span>% {{ __('progress.human') }}</span>
                                     </div>
                                     {{-- What this contribution is MADE OF, on the site's one bar.
                                          Three raw counters stood here (N H / N V / N A), which

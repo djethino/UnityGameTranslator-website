@@ -201,7 +201,42 @@ class CatalogStore
             }
         }
 
+        // ⚠ Sorted by NAME, and here rather than in each picker. The catalogue lists its ninety
+        // languages by how much they are used — right for a picker you type into, which is what
+        // the mod has, and unreadable in one you scan: "English, French, German, Spanish, Italian"
+        // reads as no order at all. Every caller of this is a picker that is scanned.
+        asort($choices, SORT_NATURAL | SORT_FLAG_CASE);
+
         return $choices;
+    }
+
+    /**
+     * The language the browser asks for, matched against the CATALOGUE rather than the interface.
+     *
+     * 🔴 **This is where the two lists stop being interchangeable.** The site is translated into
+     * twenty languages; the catalogue holds ninety. A browser announcing Tamil, Catalan or Basque
+     * gets no interface in it — so falling back to the interface language answered "English" for
+     * someone who told us plainly what they wanted, and ranked the games accordingly.
+     *
+     * ⚠ Every announced language is tried IN ORDER, not just the first: a browser that asks for
+     * "ca, es, en" wants Catalan and will accept Spanish, and stopping at the first miss would skip
+     * both. `canonicalTag` shortens each one segment at a time, so `pt-BR` finds Portuguese.
+     *
+     * ⚠ **Derived, never stored.** Writing a detection into the account would turn a guess into a
+     * stated preference nobody made — and the person would then have to undo something they never
+     * did. The setting stays empty until somebody chooses.
+     *
+     * @param string[] $announced In preference order, as the browser sent them.
+     */
+    public static function detectGameLanguage(array $announced): ?string
+    {
+        foreach ($announced as $locale) {
+            if ($name = self::nameOfCode($locale)) {
+                return $name;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -85,29 +85,29 @@
                  used to be one setting, which quietly told that player nothing existed for them. --}}
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.language') }}</label>
-                <select name="locale" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
-                    @foreach(config('locales.supported', []) as $code => $locale)
-                        <option value="{{ $code }}" {{ (old('locale', $user->locale) ?? app()->getLocale()) === $code ? 'selected' : '' }}>
-                            {{ strtoupper($code) }} — {{ $locale['native'] }} ({{ $locale['name'] }})
-                        </option>
-                    @endforeach
-                </select>
+                {{-- ⚠ marks=false: these are INTERFACE locales, and their labels are native
+                     names ("Português (Brasil)"), not the catalogue's language names. Asking
+                     <x-language-mark> to recognise them would draw nothing, quietly. The flag
+                     comes from the locale's own entry instead. --}}
+                <x-language-select
+                    name="locale"
+                    :choices="collect(config('locales.supported', []))->mapWithKeys(fn ($l, $code) => [$code => strtoupper($code) . ' — ' . $l['native']])->all()"
+                    :selected="old('locale', $user->locale) ?? app()->getLocale()"
+                    :flags="collect(config('locales.supported', []))->mapWithKeys(fn ($l, $code) => [$code => $l['flag'] ?? null])->all()"
+                    :marks="false" />
                 <p class="text-xs text-gray-500 mt-1">{{ __('profile.language_hint') }}</p>
             </div>
 
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.game_language') }}</label>
-                <select name="game_language" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
-                    {{-- ⚠ "Follow the interface" is a real answer and it is the default: it is what
-                         the site did before this setting existed, so nobody's ordering changes
-                         until they say otherwise. --}}
-                    <option value="">{{ __('profile.game_language_follows') }}</option>
-                    @foreach(\App\Services\CatalogStore::languageChoices() as $tag => $name)
-                        <option value="{{ $tag }}" {{ old('game_language', $user->game_language) === $tag ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                    @endforeach
-                </select>
+                {{-- ⚠ "Follow the interface" is a real answer and it is the default: it is what
+                     the site did before this setting existed, so nobody's ordering changes until
+                     they say otherwise. --}}
+                <x-language-select
+                    name="game_language"
+                    :choices="\App\Services\CatalogStore::languageChoices()"
+                    :selected="old('game_language', $user->game_language)"
+                    :empty="__('profile.game_language_follows')" />
                 <p class="text-xs text-gray-500 mt-1">{{ __('profile.game_language_hint') }}</p>
             </div>
 

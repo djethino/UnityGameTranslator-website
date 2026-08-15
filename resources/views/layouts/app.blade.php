@@ -86,15 +86,11 @@
                         <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}<i class="fas fa-arrow-up-right-from-square ml-1.5 text-[0.65em] opacity-60"></i>
                         </a>
-                        @auth
-                        <a href="{{ route('translations.create') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
-                        </a>
-                        @else
-                        <a href="{{ route('login') }}?action=upload" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-upload mr-1"></i> {{ __('nav.upload') }}
-                        </a>
-                        @endauth
+                        {{-- ⚠ Publishing is deliberately NOT here any more. It was the least-used
+                             entry and the widest, and the row now carries two language switchers:
+                             the bar wrapped onto two lines, which costs every visitor a worse
+                             header so that one action can be one click closer. It is reached from
+                             the account menu, from a game's page and from the mod itself. --}}
                     </div>
                 </div>
 
@@ -151,6 +147,12 @@
                             </button>
                             <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
                                 <!-- User Actions -->
+                                {{-- ⚠ Publishing moved HERE when it left the top bar. Taking an
+                                     action out of a menu without putting it back somewhere is not
+                                     tidying, it is removing it. --}}
+                                <a href="{{ route('translations.create') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                                    <i class="fas fa-upload w-5 mr-3 text-purple-400"></i> {{ __('nav.upload') }}
+                                </a>
                                 <a href="{{ route('translations.mine') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
                                     <i class="fas fa-folder w-5 mr-3 text-purple-400"></i> {{ __('nav.my_translations') }}
                                 </a>
