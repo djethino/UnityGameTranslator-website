@@ -279,8 +279,15 @@ export function editorColumns() {
             if (!handle) return;
             const col = handle.dataset.resizeCol;
             // Measured on a real cell of that column rather than on the header the handle sits
-            // in: a branch header spans the tag and the value, and the pair is what moves
-            const cell = document.querySelector(`.editor-grid [data-col="${CSS.escape(col)}"]`);
+            // in: a branch header spans the tag and the value, and the pair is what moves.
+            //
+            // ⚠ Scoped to the grid box, like every other lookup in this module. A page may hold
+            // more than one .editor-grid — the merge screen puts the settings and the description
+            // in tables that carry the same columns on purpose, so that they line up with the
+            // lines and follow this very drag — and a bare document query would measure whichever
+            // came first in the document rather than the grid being dragged.
+            const root = this.$refs.gridBox || document;
+            const cell = root.querySelector(`.editor-grid [data-col="${CSS.escape(col)}"]`);
             if (!cell) return;
             event.preventDefault();
 

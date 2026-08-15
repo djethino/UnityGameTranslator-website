@@ -275,11 +275,13 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('mode=merge', html_entity_decode($html));
     }
 
-    public function test_what_differs_beyond_the_lines_starts_folded(): void
+    public function test_both_metadata_blocks_start_folded_on_the_lines_grid(): void
     {
-        // 🔴 The screen is a line-by-line merge. A block sitting open above the table pushes the
-        // actual work off the screen for something usually empty and never urgent — so it is
-        // folded, and its header carries the count that decides whether to open it.
+        // 🔴 Two things at once, and both were wrong before. They are FOLDED, because the screen
+        // is a line-by-line merge and a block sitting open above the table pushes the actual work
+        // off the screen. And they are the SAME GRID as the lines: the widths are one stylesheet
+        // rule per [data-col], so carrying the same column names is what makes them line up,
+        // follow the same drag and freeze with the same pin.
         [$owner, $uuid] = $this->makeMergeView();
 
         $html = $this->actingAs($owner)
@@ -287,14 +289,18 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('beyondLinesOpen: false', $html);
-        $this->assertStringContainsString('beyondLinesCount', $html);
-        $this->assertStringContainsString(__('merge.beyond_lines'), $html);
+        $this->assertStringContainsString('settingsOpen: false', $html);
+        $this->assertStringContainsString('publicationOpen: false', $html);
 
-        // One frame around both tables: the settings caption and the publication caption are
-        // inside it, neither is a block of its own any more.
-        $this->assertStringContainsString(__('merge.settings_from_branches'), $html);
-        $this->assertStringContainsString(__('merge.publication_from_branches'), $html);
+        $this->assertStringContainsString(__('merge.block_file_settings'), $html);
+        $this->assertStringContainsString(__('merge.block_description'), $html);
+
+        // Three editor grids on the page now: the two folded blocks and the lines themselves.
+        $this->assertSame(3, substr_count($html, 'class="editor-grid'));
+
+        // No checkbox left in either: a value is taken by clicking its cell, as a line is.
+        $this->assertStringNotContainsString('toggleSettingRow', $html);
+        $this->assertStringNotContainsString('togglePublicationRow', $html);
     }
 
     public function test_show_is_owner_only(): void

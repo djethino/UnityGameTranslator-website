@@ -222,154 +222,242 @@
                 </div>
             </div>
 
-            {{-- Everything the branches differ on that is NOT a line.
+            {{-- What the contributions differ on that is not a translated line.
 
-                 🔴 **Folded, and folded by default.** This screen is a line-by-line merge; a
-                 block sitting open above the table pushes the actual work off the screen for
-                 something that is usually empty and never urgent. The header carries the count,
-                 so the decision to open it is made without opening it.
+                 🔴 **Two folded blocks, and the same grid as the lines.** Both were invented here
+                 as little hand-written tables — one of them prepared long ago and never once seen,
+                 because nothing ever opened it. A screen that lays out the same gesture two ways
+                 makes the reader learn it twice, so they now run on the columns the lines run on:
+                 same names, therefore same widths, same drag, same pin, and everything reads down
+                 the page in one alignment.
 
-                 One frame around both tables, and the same four columns in each, because they
-                 answer the same question about two kinds of thing. What separates them is what
-                 can be DONE: a font is edited in the mod and can only be taken or left, while a
-                 description is written here and is meant to be reworded before it goes on the
-                 Main's public page — hence one editable table and one that is not.
+                 Folded because this screen is a line-by-line merge, and a block sitting open
+                 above the table pushes the actual work off the screen for something usually
+                 empty. The header's count is what decides whether to open it.
 
-                 ⚠ No status row anywhere in here. Whether a translation is finished descends
-                 from a Main to its contributions and never travels back. --}}
-            <div x-show="hasSettingsRows || hasPublicationRows" x-cloak
-                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg">
-                <button type="button" @click="beyondLinesOpen = !beyondLinesOpen"
-                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-750 rounded-lg">
+                 ⚠ Separate blocks, because what can be DONE differs: a font is edited in the mod
+                 and can only be taken or left, while a description is written here and is meant to
+                 be reworded before it goes on the Main's public page.
+
+                 ⚠ No status anywhere in either. Whether a translation is finished descends from a
+                 Main to its contributions and never travels back. --}}
+            <div x-show="hasSettingsRows" x-cloak class="mb-4">
+                <button type="button" @click="settingsOpen = !settingsOpen"
+                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition">
                     <i class="fas text-gray-500 w-3"
-                       :class="beyondLinesOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                    <i class="fas fa-sliders text-gray-500"></i>
-                    <span>{{ __('merge.beyond_lines') }}</span>
+                       :class="settingsOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                    <span>{{ __('merge.block_file_settings') }}</span>
 
-                    {{-- Numeric badges, like the branch counter on the translations list: how
-                         many differences wait inside, and how many are already taken. Titled
-                         with the words the stats above use for the same two ideas. --}}
+                    {{-- Numeric badges, like the branch counter on the translations list: how many
+                         differences wait inside, and how many are already taken. Both stay
+                         readable folded, or ticking something and folding would hide it. --}}
                     <span class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.filter_differences') }}"
-                          x-text="beyondLinesCount"></span>
-                    <span x-show="beyondLinesTakenCount > 0" x-cloak
+                          title="{{ __('merge.filter_differences') }}" x-text="settingsRows.length"></span>
+                    <span x-show="settingsTakenCount > 0" x-cloak
                           class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.modifications') }}"
-                          x-text="beyondLinesTakenCount"></span>
+                          title="{{ __('merge.modifications') }}" x-text="settingsTakenCount"></span>
                 </button>
 
-                <div x-show="beyondLinesOpen" x-cloak class="px-4 pb-3">
-                    {{-- File settings. Read-only values: the only decision a merge needs is
-                         whether to take one. Nothing is ticked by default — the Main's own
-                         settings stay unless asked. --}}
-                    <div x-show="hasSettingsRows" class="mb-4">
-                        <p class="text-xs text-gray-400 mb-1">{{ __('merge.settings_from_branches') }}</p>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-xs">
-                                <thead class="text-gray-500">
-                                    <tr>
-                                        <th class="text-left font-normal px-2 py-1"></th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="row in settingsRows" :key="row.id">
-                                        <tr class="border-t border-gray-750" :class="settingRowClass(row.id)">
-                                            <td class="px-2 py-1 align-top">
-                                                <input type="checkbox" :checked="settingsTaken[row.id]"
-                                                    @change="toggleSettingRow(row.id)"
-                                                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                                            </td>
-                                            <td class="px-2 py-1 align-top">
-                                                <span class="text-gray-500" x-text="row.sectionLabel"></span>
-                                                <span class="font-mono" x-text="row.label"></span>
-                                            </td>
-                                            <td class="px-2 py-1 align-top text-gray-400" x-text="row.mineValue"></td>
-                                            <td class="px-2 py-1 align-top">
-                                                <span class="text-gray-500" x-text="row.branchName"></span>
-                                                <span x-text="row.theirsValue"></span>
-                                            </td>
-                                        </tr>
+                {{-- Same table as the lines below, down to the column names. That is not a
+                     resemblance: the widths are written as one stylesheet rule per
+                     [data-col], so carrying the same names makes these columns line up with
+                     the lines, follow the same drag and freeze with the same pin. --}}
+                <div x-show="settingsOpen" x-cloak
+                     class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
+                    <table class="editor-grid w-full text-sm border-separate border-spacing-0"
+                       :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
+                        <thead class="bg-gray-900">
+                            <tr>
+                                {{-- The index column holds no number here, and is kept all the
+                                     same: dropping it would shift every column after it and the
+                                     two tables would stop lining up the moment it is shown. --}}
+                                <th x-show="showIndexColumn" x-cloak
+                                    class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
+                                <th data-col="key"
+                                    class="px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
+                                    {{ __('merge_preview.settings_column') }}
+                                </th>
+                                <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
+                                <th data-col="main" class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-green-400 font-medium">Main</span>
+                                        <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
+                                    </div>
+                                </th>
+                                <template x-for="branch in branches" :key="branch.id">
+                                    <th colspan="2" :data-col="'branch-' + branch.id"
+                                        class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                        <span class="text-blue-400 font-medium" x-text="branch.name"></span>
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="row in settingsRows" :key="row.id">
+                                <tr class="hover:bg-gray-750 transition-colors">
+                                    <td x-show="showIndexColumn" x-cloak
+                                        class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
+
+                                    <td data-col="key"
+                                        class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                        :class="showIndexColumn ? 'left-16' : 'left-0'"
+                                        x-text="row.label"></td>
+
+                                    {{-- No tag on a setting or a description, and the column stays
+                                         so the value columns keep their place. --}}
+                                    <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700 text-gray-600">—</td>
+
+                                    {{-- Click = keep the Main's own, which is how a line's Main
+                                         cell behaves. --}}
+                                    <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                        :class="settingsCellClass(row, null)"
+                                        @click="settingsKeepMine(row)">
+                                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                                    </td>
+
+                                    <template x-for="branch in branches" :key="branch.id">
+                                        <td colspan="2" :data-col="'branch-' + branch.id"
+                                            class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                            :class="settingsCellClass(row, branch.id)"
+                                            @click="settingsTake(row, branch.id)">
+                                            <template x-if="row.byBranch[branch.id] === undefined">
+                                                <span class="text-gray-600 italic">—</span>
+                                            </template>
+                                            <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
+                                                <a :href="row.byBranch[branch.id]" target="_blank"
+                                                   rel="noopener noreferrer nofollow" @click.stop
+                                                   class="text-blue-400 hover:underline break-all"
+                                                   x-text="row.byBranch[branch.id]"></a>
+                                            </template>
+                                            <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
+                                                <span class="editor-text break-words" x-text="row.byBranch[branch.id]"></span>
+                                            </template>
+                                        </td>
                                     </template>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
-                    </div>
-
-                    {{-- What the contributions SAY about their work. Same four columns; the
-                         difference is that the last one becomes writable once ticked. --}}
-                    <div x-show="hasPublicationRows">
-                        <p class="text-xs text-gray-400 mb-1">{{ __('merge.publication_from_branches') }}</p>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-xs">
-                                <thead class="text-gray-500">
-                                    <tr>
-                                        <th class="text-left font-normal px-2 py-1"></th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.settings_yours') }}</th>
-                                        <th class="text-left font-normal px-2 py-1">{{ __('merge.branches') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="row in publicationRows" :key="row.id">
-                                        <tr class="border-t border-gray-750" :class="publicationRowClass(row.id)">
-                                            <td class="px-2 py-1 align-top">
-                                                <input type="checkbox" :checked="publicationTaken[row.id]"
-                                                    @change="togglePublicationRow(row.id)"
-                                                    class="rounded bg-gray-700 border-gray-600 text-purple-600">
-                                            </td>
-                                            <td class="px-2 py-1 align-top" x-text="row.label"></td>
-
-                                            {{-- ⚠ A link is shown AS a link, on both sides. It is
-                                                 the one value that cannot be judged by reading
-                                                 it: taking it puts it on the Main's page, and
-                                                 where it leads is the whole question. Only
-                                                 http(s) is ever made clickable. --}}
-                                            <td class="px-2 py-1 align-top text-gray-400">
-                                                <template x-if="isWebLink(row.mineValue)">
-                                                    <a :href="row.mineValue" target="_blank"
-                                                       rel="noopener noreferrer nofollow"
-                                                       class="text-blue-400 hover:underline break-all"
-                                                       x-text="row.mineValue"></a>
-                                                </template>
-                                                <template x-if="!isWebLink(row.mineValue)">
-                                                    <span class="whitespace-pre-line" x-text="row.mineValue"></span>
-                                                </template>
-                                            </td>
-
-                                            <td class="px-2 py-1 align-top">
-                                                <span class="text-gray-500 block" x-text="row.branchName"></span>
-
-                                                {{-- Pre-filled with the contribution's wording and
-                                                     editable, the same gesture as correcting a
-                                                     line in the table below. --}}
-                                                <textarea x-show="publicationTaken[row.id]" x-cloak
-                                                    :rows="row.field === 'notes' ? 3 : 1"
-                                                    x-model="publicationValues[row.id]"
-                                                    :maxlength="row.field === 'notes' ? 1000 : 2048"
-                                                    class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
-
-                                                <template x-if="!publicationTaken[row.id] && isWebLink(row.theirsValue)">
-                                                    <a :href="row.theirsValue" target="_blank"
-                                                       rel="noopener noreferrer nofollow"
-                                                       class="text-blue-400 hover:underline break-all"
-                                                       x-text="row.theirsValue"></a>
-                                                </template>
-                                                <template x-if="!publicationTaken[row.id] && !isWebLink(row.theirsValue)">
-                                                    <span class="whitespace-pre-line" x-text="row.theirsValue"></span>
-                                                </template>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
-                    </div>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
+
+                <p x-show="settingsOpen" x-cloak class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
+            </div>
+
+            <div x-show="hasPublicationRows" x-cloak class="mb-4">
+                <button type="button" @click="publicationOpen = !publicationOpen"
+                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition">
+                    <i class="fas text-gray-500 w-3"
+                       :class="publicationOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                    <span>{{ __('merge.block_description') }}</span>
+
+                    {{-- Numeric badges, like the branch counter on the translations list: how many
+                         differences wait inside, and how many are already taken. Both stay
+                         readable folded, or ticking something and folding would hide it. --}}
+                    <span class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
+                          title="{{ __('merge.filter_differences') }}" x-text="publicationRows.length"></span>
+                    <span x-show="publicationTakenCount > 0" x-cloak
+                          class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
+                          title="{{ __('merge.modifications') }}" x-text="publicationTakenCount"></span>
+                </button>
+
+                {{-- Same table as the lines below, down to the column names. That is not a
+                     resemblance: the widths are written as one stylesheet rule per
+                     [data-col], so carrying the same names makes these columns line up with
+                     the lines, follow the same drag and freeze with the same pin. --}}
+                <div x-show="publicationOpen" x-cloak
+                     class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
+                    <table class="editor-grid w-full text-sm border-separate border-spacing-0"
+                       :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
+                        <thead class="bg-gray-900">
+                            <tr>
+                                {{-- The index column holds no number here, and is kept all the
+                                     same: dropping it would shift every column after it and the
+                                     two tables would stop lining up the moment it is shown. --}}
+                                <th x-show="showIndexColumn" x-cloak
+                                    class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
+                                <th data-col="key"
+                                    class="px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
+                                    {{ __('merge_preview.settings_column') }}
+                                </th>
+                                <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
+                                <th data-col="main" class="px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-green-400 font-medium">Main</span>
+                                        <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
+                                    </div>
+                                </th>
+                                <template x-for="branch in branches" :key="branch.id">
+                                    <th colspan="2" :data-col="'branch-' + branch.id"
+                                        class="px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
+                                        <span class="text-blue-400 font-medium" x-text="branch.name"></span>
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="row in publicationRows" :key="row.id">
+                                <tr class="hover:bg-gray-750 transition-colors">
+                                    <td x-show="showIndexColumn" x-cloak
+                                        class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
+
+                                    <td data-col="key"
+                                        class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                        :class="showIndexColumn ? 'left-16' : 'left-0'"
+                                        x-text="row.label"></td>
+
+                                    {{-- No tag on a setting or a description, and the column stays
+                                         so the value columns keep their place. --}}
+                                    <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700 text-gray-600">—</td>
+
+                                    {{-- Click = keep the Main's own, which is how a line's Main
+                                         cell behaves. --}}
+                                    <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                        :class="publicationCellClass(row, null)"
+                                        @click="publicationKeepMine(row)">
+                                    {{-- The result lands HERE, because this column IS the Main:
+                                         picking a contribution's wording puts it in the Main's
+                                         cell, where it can be reworded before it is saved. Same
+                                         grammar as a manually edited line, which also displays in
+                                         this column. --}}
+                                    <textarea x-show="publicationPick[row.field] !== undefined" x-cloak
+                                        :rows="row.field === 'notes' ? 3 : 1"
+                                        x-model="publicationValues[row.field]"
+                                        :maxlength="row.field === 'notes' ? 1000 : 2048"
+                                        @click.stop
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
+                                    <template x-if="publicationPick[row.field] === undefined">
+                                        <span class="editor-text break-words" x-text="row.mineValue"></span>
+                                    </template>
+                                    </td>
+
+                                    <template x-for="branch in branches" :key="branch.id">
+                                        <td colspan="2" :data-col="'branch-' + branch.id"
+                                            class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                            :class="publicationCellClass(row, branch.id)"
+                                            @click="publicationTake(row, branch.id)">
+                                            <template x-if="row.byBranch[branch.id] === undefined">
+                                                <span class="text-gray-600 italic">—</span>
+                                            </template>
+                                            <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
+                                                <a :href="row.byBranch[branch.id]" target="_blank"
+                                                   rel="noopener noreferrer nofollow" @click.stop
+                                                   class="text-blue-400 hover:underline break-all"
+                                                   x-text="row.byBranch[branch.id]"></a>
+                                            </template>
+                                            <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
+                                                <span class="editor-text break-words" x-text="row.byBranch[branch.id]"></span>
+                                            </template>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p x-show="publicationOpen" x-cloak class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
             </div>
 
             @include('partials.editor-quality-bar')
@@ -924,18 +1012,24 @@ document.addEventListener('alpine:init', () => {
         selections: {},
         // Settings a branch holds differently, and which of them the Main takes.
         // Keyed "<branchId>|<settingKey>": the same setting can come from several branches.
+        // One row per setting, one column per branch — the lines grid's own shape. It was one row
+        // per (branch, setting) pair, which put the same font on three rows and turned "whose do
+        // I take" into a comparison across rows rather than across columns.
         settingsRows: [],
-        settingsTaken: {},
+        // row id -> the branch whose value is taken. Absent means the Main keeps its own.
+        settingsPick: {},
         hasSettingsRows: false,
-        // What the contributions say about their work. Unlike a setting, a taken one carries a
-        // VALUE the Main may have reworded, so the text is held apart from the tick.
+        // Folded: this screen is a line-by-line merge, and a block sitting open above the table
+        // pushes the actual work off the screen for something usually empty.
+        settingsOpen: false,
+
+        // Same shape for what the contributions SAY about their work. One difference: a taken
+        // value can be reworded first, so the text is held apart from the choice.
         publicationRows: [],
-        publicationTaken: {},
+        publicationPick: {},
         publicationValues: {},
         hasPublicationRows: false,
-        // Folded by default: this screen is a line merge, and what is in here is usually empty
-        // and never urgent. The header's count is what decides whether it is worth opening.
-        beyondLinesOpen: false,
+        publicationOpen: false,
         stats: { newKeys: 0, different: 0 },
 
         init() {
@@ -952,8 +1046,8 @@ document.addEventListener('alpine:init', () => {
 
         loadContent(payload) {
             this.mainOwner = payload.main_owner || '';
-            this.settingsTaken = {};
-            this.publicationTaken = {};
+            this.settingsPick = {};
+            this.publicationPick = {};
             this.publicationValues = {};
 
             this.mainData = {};
@@ -1002,50 +1096,44 @@ document.addEventListener('alpine:init', () => {
             ]);
             const absent = @js(__('merge_preview.settings_absent'));
             const mainSettings = payload.main_settings || {};
-            const rows = [];
+            const byKey = {};
 
             for (const branch of (payload.branches || [])) {
                 const branchSettings = branch.settings || {};
                 for (const key of Object.keys(branchSettings)) {
                     const mine = mainSettings[key];
                     const theirs = branchSettings[key];
-                    // Identical on both sides: nothing to decide, and a row per agreeing
-                    // setting would bury the few that actually differ
+                    // Identical on both sides: nothing to decide, and a row per agreeing setting
+                    // would bury the few that actually differ.
                     if (mine && mine.value === theirs.value) continue;
 
-                    rows.push({
-                        id: branch.id + '|' + key,
-                        branchId: branch.id,
-                        branchName: branch.name,
-                        key,
-                        sectionLabel: labels[theirs.section] || theirs.section,
-                        label: theirs.label,
-                        mineValue: mine ? mine.value : absent,
-                        theirsValue: theirs.value,
-                    });
+                    if (!byKey[key]) {
+                        byKey[key] = {
+                            id: key,
+                            key,
+                            label: (labels[theirs.section] || theirs.section)
+                                   + ' \u203a ' + theirs.label,
+                            mineValue: mine ? mine.value : absent,
+                            byBranch: {},
+                        };
+                    }
+                    byKey[key].byBranch[branch.id] = theirs.value;
                 }
             }
 
-            rows.sort((a, b) => a.branchName.localeCompare(b.branchName)
-                || a.sectionLabel.localeCompare(b.sectionLabel)
-                || a.label.localeCompare(b.label));
+            const rows = Object.values(byKey);
+            rows.sort((a, b) => a.label.localeCompare(b.label));
 
             this.settingsRows = rows;
             this.hasSettingsRows = rows.length > 0;
         },
 
-        toggleSettingRow(id) {
-            this.settingsTaken = { ...this.settingsTaken, [id]: !this.settingsTaken[id] };
-        },
-
         /**
-         * The description and the resources link each contribution carries, when they differ
-         * from the Main's.
+         * What each contribution says about its work, when it differs from the Main's.
          *
-         * ⚠ One row per FIELD per branch, and the Main takes at most one of each — two
-         * contributors proposing a description is a choice between them, not an accumulation.
-         * The tick is what decides; the text beside it is what gets written, so ticking a second
-         * row for the same field unticks the first.
+         * \u26a0 Two fields and no more. Whether a translation is finished descends from a Main to
+         * its contributions and never travels back, so it is not offered here at all: a row that
+         * cannot be taken is worse than an absent one.
          */
         buildPublicationRows(payload) {
             const labels = @js([
@@ -1055,69 +1143,86 @@ document.addEventListener('alpine:init', () => {
             const absent = @js(__('merge_preview.settings_absent'));
 
             const mine = {
-                notes: payload.main_notes || '',
-                resources_url: payload.main_resources_url || '',
+                notes: (payload.main_notes || '').trim(),
+                resources_url: (payload.main_resources_url || '').trim(),
             };
 
             const rows = [];
-            for (const branch of (payload.branches || [])) {
-                for (const field of ['notes', 'resources_url']) {
+            for (const field of ['notes', 'resources_url']) {
+                const byBranch = {};
+                for (const branch of (payload.branches || [])) {
                     const theirs = (branch[field] || '').trim();
-
-                    // Nothing said, or the same thing said: no decision to put on screen. A row
-                    // per agreeing field would bury the ones that actually differ.
-                    if (!theirs || theirs === (mine[field] || '').trim()) continue;
-
-                    rows.push({
-                        id: branch.id + '|' + field,
-                        branchId: branch.id,
-                        branchName: branch.name,
-                        field,
-                        label: labels[field],
-                        mineValue: mine[field] || absent,
-                        theirsValue: theirs,
-                    });
+                    // Nothing said, or the same thing said: no decision to put on screen.
+                    if (!theirs || theirs === mine[field]) continue;
+                    byBranch[branch.id] = theirs;
                 }
-            }
+                if (Object.keys(byBranch).length === 0) continue;
 
-            rows.sort((a, b) => a.branchName.localeCompare(b.branchName)
-                || a.label.localeCompare(b.label));
+                rows.push({
+                    id: field,
+                    field,
+                    label: labels[field],
+                    mineValue: mine[field] || absent,
+                    byBranch,
+                });
+            }
 
             this.publicationRows = rows;
             this.hasPublicationRows = rows.length > 0;
         },
 
-        togglePublicationRow(id) {
-            const row = this.publicationRows.find(r => r.id === id);
-            if (!row) return;
+        // \u2500\u2500 Taking a value, on the gestures the lines already use \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+        //
+        // Click a contribution's cell to take it, click the Main's to keep your own. No checkbox:
+        // the lines below are chosen exactly this way, and one screen holding two ways of saying
+        // "this one" is one way too many.
 
-            const taking = !this.publicationTaken[id];
-            const taken = { ...this.publicationTaken };
-
-            // One value per field: taking another contributor's description replaces the choice
-            // rather than adding to it, because only one text can end up on the page.
-            if (taking) {
-                for (const other of this.publicationRows) {
-                    if (other.field === row.field) taken[other.id] = false;
-                }
-            }
-
-            taken[id] = taking;
-            this.publicationTaken = taken;
-
-            // Pre-filled once, on the first take: refilling on every tick would throw away a
-            // rewording somebody had already done.
-            if (taking && this.publicationValues[row.id] === undefined) {
-                this.publicationValues = { ...this.publicationValues, [row.id]: row.theirsValue };
-            }
+        settingsTake(row, branchId) {
+            if (row.byBranch[branchId] === undefined) return;
+            this.settingsPick = { ...this.settingsPick, [row.id]: branchId };
         },
 
-        settingRowClass(id) {
-            return this.settingsTaken[id] ? 'bg-purple-900/40 text-purple-100' : 'text-gray-400';
+        settingsKeepMine(row) {
+            const pick = { ...this.settingsPick };
+            delete pick[row.id];
+            this.settingsPick = pick;
         },
 
-        publicationRowClass(id) {
-            return this.publicationTaken[id] ? 'bg-purple-900/40 text-purple-100' : 'text-gray-400';
+        settingsCellClass(row, branchId) {
+            const picked = this.settingsPick[row.id];
+            if (branchId === null) return picked === undefined ? 'selected-main' : '';
+            return picked === branchId ? 'selected-branch' : '';
+        },
+
+        publicationTake(row, branchId) {
+            if (row.byBranch[branchId] === undefined) return;
+            this.publicationPick = { ...this.publicationPick, [row.field]: branchId };
+            // The Main's cell is filled with what was just taken. Taking a second contribution
+            // replaces it, because only one text can end up on the page.
+            this.publicationValues = {
+                ...this.publicationValues,
+                [row.field]: row.byBranch[branchId],
+            };
+        },
+
+        publicationKeepMine(row) {
+            const pick = { ...this.publicationPick };
+            delete pick[row.field];
+            this.publicationPick = pick;
+
+            const values = { ...this.publicationValues };
+            delete values[row.field];
+            this.publicationValues = values;
+        },
+
+        publicationCellClass(row, branchId) {
+            const picked = this.publicationPick[row.field];
+            if (branchId === null) {
+                // A taken value shows in the Main's cell, where it can be reworded \u2014 the same
+                // place a manually edited line displays, and the same class.
+                return picked === undefined ? 'selected-main' : 'selected-manual';
+            }
+            return picked === branchId ? 'selected-branch' : '';
         },
 
         /**
@@ -1452,20 +1557,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         get settingsTakenCount() {
-            return Object.values(this.settingsTaken).filter(Boolean).length;
+            return Object.keys(this.settingsPick).length;
         },
 
         get publicationTakenCount() {
-            return Object.values(this.publicationTaken).filter(Boolean).length;
-        },
-
-        // What the folded header says, so the block can be judged without being opened.
-        get beyondLinesCount() {
-            return this.settingsRows.length + this.publicationRows.length;
-        },
-
-        get beyondLinesTakenCount() {
-            return this.settingsTakenCount + this.publicationTakenCount;
+            return Object.keys(this.publicationPick).length;
         },
 
         get totalChanges() {
@@ -1510,9 +1606,10 @@ document.addEventListener('alpine:init', () => {
             // never renders, so rebuilding from it would strip them.
             const settingsByBranch = {};
             for (const row of this.settingsRows) {
-                if (!this.settingsTaken[row.id]) continue;
-                if (!settingsByBranch[row.branchId]) settingsByBranch[row.branchId] = {};
-                settingsByBranch[row.branchId][row.key] = true;
+                const branchId = this.settingsPick[row.id];
+                if (branchId === undefined) continue;
+                if (!settingsByBranch[branchId]) settingsByBranch[branchId] = {};
+                settingsByBranch[branchId][row.key] = true;
             }
             document.getElementById('settingsJson').value = Object.keys(settingsByBranch).length > 0
                 ? JSON.stringify(settingsByBranch) : '';
@@ -1521,8 +1618,8 @@ document.addEventListener('alpine:init', () => {
             // one text per field can end up on the page.
             const publication = {};
             for (const row of this.publicationRows) {
-                if (!this.publicationTaken[row.id]) continue;
-                publication[row.field] = this.publicationValues[row.id] ?? row.theirsValue;
+                if (this.publicationPick[row.field] === undefined) continue;
+                publication[row.field] = this.publicationValues[row.field] ?? '';
             }
             document.getElementById('publicationJson').value = Object.keys(publication).length > 0
                 ? JSON.stringify(publication) : '';
