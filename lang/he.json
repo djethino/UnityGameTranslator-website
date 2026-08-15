@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "הגדרות קובץ ששונות בתרומות האלה",
     "merge.settings_pick_hint": "סמנו את מה שתרצו לקחת. הגדרות שלא סומנו נשארות שלכם — עורכים אותן במוד, לא כאן.",
     "merge.settings_yours": "הגרסה שלך",
+    "merge.publication_from_branches": "מה שהתרומות האלה אומרות על העבודה שלהן",
+    "merge.publication_pick_hint": "סמנו את מה שברצונכם לקחת, ואפשר לנסח מחדש לפני כן. מה שתשאירו ללא סימון שומר על הניסוח שלכם. השאלה אם תרגום הושלם לעולם אינה נלקחת מתרומה — זה נשאר שלכם לקבוע.",
+    "merge.publication_theirs": "הוצע על ידי",
     "merge.filter": "סינון",
     "merge.all": "הכל",
     "merge.none": "כלום",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "להשתמש באווטאר של הפלטפורמה שלי",
     "profile.codes_regenerate": "יצירה מחדש",
     "profile.codes_regenerate_hint": "יוצר סט חדש של 8 קודים ומבטל את הישנים. דורש את הסיסמה שלכם.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "השפה שבה מוצג האתר הזה.",
+    "profile.game_language": "השפה שבה אתם משחקים",
+    "profile.game_language_follows": "זיהוי אוטומטי",
+    "profile.game_language_hint": "אילו תרגומים יופיעו ראשונים כשאתם מעיינים במשחקים. זו לא בהכרח השפה שבה אתם קוראים את האתר.",
+    "profile.game_language_detected": "זוהתה: :language",
+    "profile.game_language_detected_short": "זוהתה"
 }

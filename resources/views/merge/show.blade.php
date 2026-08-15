@@ -266,6 +266,58 @@
                 <p class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
             </div>
 
+            {{-- What the contributors SAY about their work, as opposed to the work.
+
+                 Its own block rather than a row in the settings above: a font is edited in the
+                 mod and can only be taken or left, while a description is written on the site and
+                 is meant to be reworded before it goes on the Main's public page. The block above
+                 says so itself — "they are edited in the mod, not here" — and would stop being
+                 true the moment an editable field joined it.
+
+                 ⚠ No status row, on purpose. Whether a translation is finished descends from the
+                 Main to its contributions and never travels back. --}}
+            <div x-show="hasPublicationRows" x-cloak
+                class="mb-4 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                    <i class="fas fa-comment-dots text-gray-500"></i>
+                    <span>{{ __('merge.publication_from_branches') }}</span>
+                </div>
+
+                <template x-for="row in publicationRows" :key="row.id">
+                    <div class="border-t border-gray-750 py-2">
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" :checked="publicationTaken[row.id]"
+                                @change="togglePublicationRow(row.id)"
+                                class="mt-1 rounded bg-gray-700 border-gray-600 text-purple-600">
+                            <span class="text-xs text-gray-400" x-text="row.label"></span>
+                        </label>
+
+                        <div class="mt-1 pl-6 text-xs">
+                            <p class="text-gray-500">
+                                <span>{{ __('merge.settings_yours') }}</span> —
+                                <span class="text-gray-400" x-text="row.mineValue"></span>
+                            </p>
+                            <p class="text-gray-500 mt-0.5">
+                                <span>{{ __('merge.publication_theirs') }}</span>
+                                <span x-text="row.branchName"></span>
+                            </p>
+
+                            {{-- Pre-filled with the contribution's wording, editable before it is
+                                 taken — the same gesture as correcting a line in this screen. --}}
+                            <textarea x-show="publicationTaken[row.id]" x-cloak
+                                :rows="row.field === 'notes' ? 3 : 1"
+                                x-model="publicationValues[row.id]"
+                                :maxlength="row.field === 'notes' ? 1000 : 2048"
+                                class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-purple-500 focus:border-purple-500"></textarea>
+                            <p x-show="!publicationTaken[row.id]" class="text-gray-300 mt-0.5"
+                               x-text="row.theirsValue"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <p class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
+            </div>
+
             @include('partials.editor-quality-bar')
 
             {{-- Ahead of the tags, what kind of row this is — only in merge mode, since a
@@ -582,6 +634,7 @@
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
                 <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
                 <input type="hidden" id="settingsJson" name="settings_json" value="">
+                <input type="hidden" id="publicationJson" name="publication_json" value="">
 
                 {{-- The grid's sideways scroll, brought within reach: the real bar is at the
                      bottom of six thousand rows, this one rides with the save bar. --}}
@@ -820,6 +873,12 @@ document.addEventListener('alpine:init', () => {
         settingsRows: [],
         settingsTaken: {},
         hasSettingsRows: false,
+        // What the contributions say about their work. Unlike a setting, a taken one carries a
+        // VALUE the Main may have reworded, so the text is held apart from the tick.
+        publicationRows: [],
+        publicationTaken: {},
+        publicationValues: {},
+        hasPublicationRows: false,
         stats: { newKeys: 0, different: 0 },
 
         init() {
@@ -837,6 +896,8 @@ document.addEventListener('alpine:init', () => {
         loadContent(payload) {
             this.mainOwner = payload.main_owner || '';
             this.settingsTaken = {};
+            this.publicationTaken = {};
+            this.publicationValues = {};
 
             this.mainData = {};
             for (const [key, value] of Object.entries(payload.main || {})) {
@@ -858,6 +919,7 @@ document.addEventListener('alpine:init', () => {
             this.allKeys = [...keys].sort();
 
             this.buildSettingsRows(payload);
+            this.buildPublicationRows(payload);
 
             this.calculateStats();
             this.loaded = true;
@@ -917,6 +979,80 @@ document.addEventListener('alpine:init', () => {
 
         toggleSettingRow(id) {
             this.settingsTaken = { ...this.settingsTaken, [id]: !this.settingsTaken[id] };
+        },
+
+        /**
+         * The description and the resources link each contribution carries, when they differ
+         * from the Main's.
+         *
+         * ⚠ One row per FIELD per branch, and the Main takes at most one of each — two
+         * contributors proposing a description is a choice between them, not an accumulation.
+         * The tick is what decides; the text beside it is what gets written, so ticking a second
+         * row for the same field unticks the first.
+         */
+        buildPublicationRows(payload) {
+            const labels = @js([
+                'notes' => __('upload.notes'),
+                'resources_url' => __('upload.resources_url'),
+            ]);
+            const absent = @js(__('merge_preview.settings_absent'));
+
+            const mine = {
+                notes: payload.main_notes || '',
+                resources_url: payload.main_resources_url || '',
+            };
+
+            const rows = [];
+            for (const branch of (payload.branches || [])) {
+                for (const field of ['notes', 'resources_url']) {
+                    const theirs = (branch[field] || '').trim();
+
+                    // Nothing said, or the same thing said: no decision to put on screen. A row
+                    // per agreeing field would bury the ones that actually differ.
+                    if (!theirs || theirs === (mine[field] || '').trim()) continue;
+
+                    rows.push({
+                        id: branch.id + '|' + field,
+                        branchId: branch.id,
+                        branchName: branch.name,
+                        field,
+                        label: labels[field],
+                        mineValue: mine[field] || absent,
+                        theirsValue: theirs,
+                    });
+                }
+            }
+
+            rows.sort((a, b) => a.branchName.localeCompare(b.branchName)
+                || a.label.localeCompare(b.label));
+
+            this.publicationRows = rows;
+            this.hasPublicationRows = rows.length > 0;
+        },
+
+        togglePublicationRow(id) {
+            const row = this.publicationRows.find(r => r.id === id);
+            if (!row) return;
+
+            const taking = !this.publicationTaken[id];
+            const taken = { ...this.publicationTaken };
+
+            // One value per field: taking another contributor's description replaces the choice
+            // rather than adding to it, because only one text can end up on the page.
+            if (taking) {
+                for (const other of this.publicationRows) {
+                    if (other.field === row.field) taken[other.id] = false;
+                }
+            }
+
+            taken[id] = taking;
+            this.publicationTaken = taken;
+
+            // Pre-filled once, on the first take: refilling on every tick would throw away a
+            // rewording somebody had already done.
+            if (taking && this.publicationValues[row.id] === undefined) {
+                this.publicationValues = { ...this.publicationValues, [row.id]: row.theirsValue };
+            }
         },
 
         settingRowClass(id) {
@@ -1245,10 +1381,15 @@ document.addEventListener('alpine:init', () => {
             return Object.values(this.settingsTaken).filter(Boolean).length;
         },
 
+        get publicationTakenCount() {
+            return Object.values(this.publicationTaken).filter(Boolean).length;
+        },
+
         get totalChanges() {
             // Settings count as changes: taking a branch's font without touching a single line
             // is a merge, and the Apply button must not stay disabled on it
-            return this.selectionCount + this.deleteCount + this.tagChangeCount + this.settingsTakenCount;
+            return this.selectionCount + this.deleteCount + this.tagChangeCount
+                   + this.settingsTakenCount + this.publicationTakenCount;
         },
 
         clearAll() {
@@ -1292,6 +1433,16 @@ document.addEventListener('alpine:init', () => {
             }
             document.getElementById('settingsJson').value = Object.keys(settingsByBranch).length > 0
                 ? JSON.stringify(settingsByBranch) : '';
+
+            // The final wording, not "take branch N's": the Main may have reworded it, and only
+            // one text per field can end up on the page.
+            const publication = {};
+            for (const row of this.publicationRows) {
+                if (!this.publicationTaken[row.id]) continue;
+                publication[row.field] = this.publicationValues[row.id] ?? row.theirsValue;
+            }
+            document.getElementById('publicationJson').value = Object.keys(publication).length > 0
+                ? JSON.stringify(publication) : '';
 
             document.getElementById('selectionsJson').value = selectionsArr.length > 0 ? JSON.stringify(selectionsArr) : '';
             document.getElementById('deletionsJson').value = deletionsArr.length > 0 ? JSON.stringify(deletionsArr) : '';

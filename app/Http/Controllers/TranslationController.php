@@ -431,13 +431,25 @@ class TranslationController extends Controller
         ));
     }
 
+    /**
+     * The words about a translation: its description, the link to what it needs, and — on a
+     * translation of one's own — whether its author calls it finished.
+     *
+     * 🔴 **A contributor edits their contribution.** This used to demand isMain(), so a branch
+     * author was refused their own row: no description, no link to the fonts their contribution
+     * needs. The form itself has been written for them from the start — it carries a whole
+     * branch case showing the inherited status, locked, which nobody could ever reach.
+     *
+     * Same reasoning as the pen on the card beside it: correcting one's own lines is not a Main
+     * privilege, and neither is saying what they are. Only what belongs to somebody else stays
+     * out of reach — a branch never writes on the Main it contributes to.
+     */
     public function edit(Translation $translation)
     {
         $user = auth()->user();
         $isAdmin = $user->isAdmin();
 
-        // Main owners or admins can edit
-        if (!$isAdmin && ($translation->user_id !== $user->id || !$translation->isMain())) {
+        if (!$isAdmin && $translation->user_id !== $user->id) {
             abort(403);
         }
 
@@ -454,22 +466,31 @@ class TranslationController extends Controller
         $user = auth()->user();
         $isAdmin = $user->isAdmin();
 
-        // Main owners or admins can edit
-        if (!$isAdmin && ($translation->user_id !== $user->id || !$translation->isMain())) {
+        if (!$isAdmin && $translation->user_id !== $user->id) {
             abort(403);
         }
 
+        // ⚠ A contribution inherits whether it is finished, so the form does not offer the
+        // control and nothing here may write it. Required on anything else: the radio pair is
+        // always rendered there, and a missing value would silently mean "in progress".
+        $isBranch = $translation->visibility === 'branch';
+
         $request->validate([
-            'status' => 'required|in:in_progress,complete',
+            'status' => $isBranch ? 'prohibited' : 'required|in:in_progress,complete',
             'notes' => 'nullable|string|max:1000',
             'resources_url' => 'nullable|string|max:2048|url',
         ]);
 
-        $translation->update([
-            'status' => $request->status,
+        $changes = [
             'notes' => $request->notes,
             'resources_url' => $request->resources_url,
-        ]);
+        ];
+
+        if (!$isBranch) {
+            $changes['status'] = $request->status;
+        }
+
+        $translation->update($changes);
 
         // Redirect based on access route, not user role
         if (request()->routeIs('admin.*')) {

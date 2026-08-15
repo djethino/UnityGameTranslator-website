@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Настройки файла, отличающиеся в этих вкладах",
     "merge.settings_pick_hint": "Отметьте то, что хотите взять. Неотмеченные настройки останутся вашими — их меняют в моде, а не здесь.",
     "merge.settings_yours": "Ваша версия",
+    "merge.publication_from_branches": "Что эти вклады говорят о своей работе",
+    "merge.publication_pick_hint": "Отметьте то, что хотите перенять, — при желании сначала перепишите. Всё неотмеченное сохранит ваши собственные формулировки. Завершён ли перевод, никогда не берётся из вклада: это остаётся вам решать.",
+    "merge.publication_theirs": "Предложено",
     "merge.filter": "Фильтр",
     "merge.all": "Все",
     "merge.none": "Ни одной",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Использовать аватар платформы",
     "profile.codes_regenerate": "Перегенерировать",
     "profile.codes_regenerate_hint": "Создаёт новый набор из 8 кодов и делает старые недействительными. Требуется ваш пароль.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "Язык, на котором отображается этот сайт.",
+    "profile.game_language": "Язык, на котором вы играете",
+    "profile.game_language_follows": "Определять автоматически",
+    "profile.game_language_hint": "Какие переводы показывать первыми при просмотре игр. Это не обязательно тот язык, на котором вы читаете сайт.",
+    "profile.game_language_detected": "Определён: :language",
+    "profile.game_language_detected_short": "определён"
 }

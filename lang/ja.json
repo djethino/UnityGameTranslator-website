@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "これらの貢献で異なるファイル設定",
     "merge.settings_pick_hint": "取り込みたいものにチェックを入れてください。チェックしない設定はあなたのまま。設定はMod側で編集します。",
     "merge.settings_yours": "あなたの版",
+    "merge.publication_from_branches": "これらの貢献が自らの作業について述べていること",
+    "merge.publication_pick_hint": "取り込みたいものにチェックを入れてください。取り込む前に書き直すこともできます。チェックしなかったものはご自身の文面のままです。翻訳が完成しているかどうかは貢献から取り込まれることはなく、判断はご自身に残ります。",
+    "merge.publication_theirs": "提案者",
     "merge.filter": "フィルター",
     "merge.all": "すべて",
     "merge.none": "なし",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "プラットフォームのアバターを使用",
     "profile.codes_regenerate": "再生成",
     "profile.codes_regenerate_hint": "8個のコードを新しく生成し、古いコードを無効にします。パスワードが必要です。",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "このサイトを表示する言語です。",
+    "profile.game_language": "プレイする言語",
+    "profile.game_language_follows": "自動的に判定する",
+    "profile.game_language_hint": "ゲームを見て回るときに、どの翻訳を先に出すか。このサイトを読む言語と同じである必要はありません。",
+    "profile.game_language_detected": "判定: :language",
+    "profile.game_language_detected_short": "判定"
 }

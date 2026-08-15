@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Bu katkılarda farklı olan dosya ayarları",
     "merge.settings_pick_hint": "Almak istediklerinizi işaretleyin. İşaretlenmeyen ayarlar sizinki kalır – onlar modda düzenlenir, burada değil.",
     "merge.settings_yours": "Sürümünüz",
+    "merge.publication_from_branches": "Bu katkıların kendi işleri hakkında söyledikleri",
+    "merge.publication_pick_hint": "Almak istediklerinizi işaretleyin; dilerseniz önce yeniden yazın. İşaretlemediğiniz yerlerde kendi ifadeniz kalır. Bir çevirinin bitmiş olup olmadığı hiçbir zaman bir katkıdan alınmaz: bunu siz söylersiniz.",
+    "merge.publication_theirs": "Öneren",
     "merge.filter": "Filtrele",
     "merge.all": "Tümü",
     "merge.none": "Hiçbiri",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Platform avatarımı kullan",
     "profile.codes_regenerate": "Yeniden oluştur",
     "profile.codes_regenerate_hint": "8 kodluk yeni bir set oluşturur ve eskilerini geçersiz kılar. Parolanızı gerektirir.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "Bu sitenin görüntülendiği dil.",
+    "profile.game_language": "Oynadığınız dil",
+    "profile.game_language_follows": "Otomatik algıla",
+    "profile.game_language_hint": "Oyunlara göz atarken hangi çevirilerin önce geleceği. Bu siteyi okuduğunuz dille aynı olmak zorunda değil.",
+    "profile.game_language_detected": "Algılandı: :language",
+    "profile.game_language_detected_short": "algılandı"
 }

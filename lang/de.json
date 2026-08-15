@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Dateieinstellungen, die in diesen Beiträgen abweichen",
     "merge.settings_pick_hint": "Hake an, was du übernehmen möchtest. Nicht angehakte Einstellungen bleiben deine – sie werden im Mod bearbeitet, nicht hier.",
     "merge.settings_yours": "Deine Version",
+    "merge.publication_from_branches": "Was diese Beiträge über ihre Arbeit sagen",
+    "merge.publication_pick_hint": "Ankreuzen, um es zu übernehmen – du kannst es vorher umformulieren. Was du nicht ankreuzt, behält deine eigene Formulierung. Ob eine Übersetzung fertig ist, wird nie aus einem Beitrag übernommen: das sagst du.",
+    "merge.publication_theirs": "Vorgeschlagen von",
     "merge.filter": "Filtern",
     "merge.all": "Alle",
     "merge.none": "Keine",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Meinen Plattform-Avatar verwenden",
     "profile.codes_regenerate": "Neu generieren",
     "profile.codes_regenerate_hint": "Generiert einen neuen Satz von 8 Codes und macht die alten ungültig. Erfordert dein Passwort.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "Die Sprache, in der diese Seite angezeigt wird.",
+    "profile.game_language": "Sprache, in der du spielst",
+    "profile.game_language_follows": "Automatisch erkennen",
+    "profile.game_language_hint": "Welche Übersetzungen zuerst kommen, wenn du Spiele durchsiehst. Das muss nicht die Sprache sein, in der du diese Seite liest.",
+    "profile.game_language_detected": "Erkannt: :language",
+    "profile.game_language_detected_short": "erkannt"
 }

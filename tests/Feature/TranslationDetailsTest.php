@@ -157,6 +157,72 @@ class TranslationDetailsTest extends TestCase
         $this->assertEquals($before, $translation->refresh()->content_updated_at);
     }
 
+    public function test_the_site_form_lets_a_contributor_describe_their_contribution(): void
+    {
+        // 🔴 The form has carried a branch case from the start — the inherited status, locked,
+        // with its own translation key in twenty languages — and the controller answered 403 to
+        // everyone who could have seen it. Nothing pointed at the contradiction, which is why it
+        // was read as deliberate for months. This test is what would have said otherwise.
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation($contributor, ['visibility' => 'branch']);
+
+        $this->actingAs($contributor)
+            ->get(route('translations.edit', $branch))
+            ->assertOk()
+            ->assertSee(__('upload.inherited_from_main'));
+
+        $this->actingAs($contributor)
+            ->put(route('translations.update', $branch), [
+                'notes' => 'Fixes the menu wording.',
+                'resources_url' => 'https://example.com/branch-fonts',
+            ])
+            ->assertRedirect();
+
+        $branch->refresh();
+        $this->assertSame('Fixes the menu wording.', $branch->notes);
+        $this->assertSame('https://example.com/branch-fonts', $branch->resources_url);
+    }
+
+    public function test_the_site_form_refuses_a_status_forged_onto_a_contribution(): void
+    {
+        // The control is not rendered on a branch, so this can only be a hand-made request.
+        // Refused rather than dropped, for the same reason the API refuses it.
+        $contributor = User::factory()->create();
+        $branch = $this->makeTranslation($contributor, [
+            'visibility' => 'branch',
+            'status' => 'in_progress',
+        ]);
+
+        $this->actingAs($contributor)
+            ->put(route('translations.update', $branch), [
+                'notes' => 'Anything.',
+                'status' => 'complete',
+            ])
+            ->assertSessionHasErrors('status');
+
+        $this->assertSame('in_progress', $branch->refresh()->status);
+    }
+
+    public function test_the_site_form_still_refuses_somebody_elses_translation(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $translation = $this->makeTranslation($owner);
+
+        $this->actingAs($stranger)
+            ->get(route('translations.edit', $translation))
+            ->assertForbidden();
+
+        $this->actingAs($stranger)
+            ->put(route('translations.update', $translation), [
+                'status' => 'complete',
+                'notes' => 'Mine now.',
+            ])
+            ->assertForbidden();
+
+        $this->assertSame('The original description.', $translation->refresh()->notes);
+    }
+
     public function test_a_branch_is_told_its_own_link_apart_from_the_one_it_borrows(): void
     {
         // 🔴 The distinction that stops a branch from pinning a copy of its Main's link: the

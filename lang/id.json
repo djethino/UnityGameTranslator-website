@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Pengaturan berkas yang berbeda pada kontribusi ini",
     "merge.settings_pick_hint": "Centang yang ingin kamu ambil. Pengaturan yang tidak dicentang tetap milikmu – diubah di mod, bukan di sini.",
     "merge.settings_yours": "Versimu",
+    "merge.publication_from_branches": "Apa yang dikatakan kontribusi ini tentang karyanya",
+    "merge.publication_pick_hint": "Centang yang ingin diambil, dan boleh ditulis ulang dulu. Yang tidak dicentang tetap memakai kata-kata Anda sendiri. Apakah sebuah terjemahan sudah selesai tidak pernah diambil dari kontribusi — itu tetap Anda yang menentukan.",
+    "merge.publication_theirs": "Diusulkan oleh",
     "merge.filter": "Filter",
     "merge.all": "Semua",
     "merge.none": "Tidak ada",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Gunakan avatar platform saya",
     "profile.codes_regenerate": "Buat ulang",
     "profile.codes_regenerate_hint": "Membuat satu set baru berisi 8 kode dan membatalkan kode lama. Memerlukan kata sandimu.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "Bahasa yang dipakai untuk menampilkan situs ini.",
+    "profile.game_language": "Bahasa yang Anda pakai saat bermain",
+    "profile.game_language_follows": "Deteksi otomatis",
+    "profile.game_language_hint": "Terjemahan mana yang muncul lebih dulu saat Anda menelusuri game. Tidak harus sama dengan bahasa yang Anda pakai membaca situs ini.",
+    "profile.game_language_detected": "Terdeteksi: :language",
+    "profile.game_language_detected_short": "terdeteksi"
 }

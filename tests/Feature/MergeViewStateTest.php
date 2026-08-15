@@ -138,6 +138,82 @@ class MergeViewStateTest extends TestCase
     }
 
     /**
+     * What a contribution SAYS about its work, offered to the Main beside the work itself.
+     *
+     * 🔴 The merge dealt in lines and file settings only, so a contributor could write a clearer
+     * description or link the fonts their contribution needs and nobody would ever see either.
+     * The right to write them existed; the way to read them did not.
+     */
+    public function test_the_merge_serves_what_each_branch_says_about_its_work(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $main->forceFill(['notes' => 'The whole game.', 'resources_url' => null])->save();
+        $branch->forceFill([
+            'notes' => 'Menus reworded, and the credits.',
+            'resources_url' => 'https://example.com/branch-fonts',
+        ])->save();
+
+        $data = $this->actingAs($owner)->getJson(
+            route('translations.merge.data', ['uuid' => $uuid]) . '?branches=' . $branch->id
+        );
+
+        $data->assertOk()
+            ->assertJsonPath('main_notes', 'The whole game.')
+            ->assertJsonPath('branches.0.notes', 'Menus reworded, and the credits.')
+            ->assertJsonPath('branches.0.resources_url', 'https://example.com/branch-fonts');
+    }
+
+    public function test_the_main_takes_a_description_in_its_own_final_wording(): void
+    {
+        // ⚠ A value, not "take branch N's": the screen pre-fills the contribution's wording and
+        // lets the Main adjust it, exactly as it does for a translation line.
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $main->forceFill(['notes' => 'The whole game.'])->save();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'publication_json' => json_encode([
+                'notes' => 'Menus and credits reworded.',
+                'resources_url' => 'https://example.com/pack',
+            ]),
+        ])->assertRedirect();
+
+        $main->refresh();
+        $this->assertSame('Menus and credits reworded.', $main->notes);
+        $this->assertSame('https://example.com/pack', $main->resources_url);
+    }
+
+    public function test_a_merge_never_takes_whether_a_translation_is_finished(): void
+    {
+        // Finished descends from the Main to its contributions and never travels back. The
+        // screen offers no row for it; a forged field must not create one.
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $main->forceFill(['status' => 'in_progress'])->save();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'publication_json' => json_encode(['status' => 'complete', 'notes' => 'Reworded.']),
+        ])->assertRedirect();
+
+        $main->refresh();
+        $this->assertSame('in_progress', $main->status);
+        $this->assertSame('Reworded.', $main->notes);
+    }
+
+    public function test_a_link_that_is_not_a_web_address_is_refused(): void
+    {
+        // It goes on the Main's public page, and it arrives from a form.
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'publication_json' => json_encode(['resources_url' => 'javascript:alert(1)']),
+        ])->assertSessionHasErrors('error');
+
+        $this->assertNull($main->refresh()->resources_url);
+    }
+
+    /**
      * A merge leaves a mark on the branch it took from.
      *
      * merged_at shipped with the lineage migration and nothing ever wrote it, so "this Main is

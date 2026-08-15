@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "इन योगदानों में भिन्न फ़ाइल सेटिंग्स",
     "merge.settings_pick_hint": "जो लेना चाहते हैं उसे चुनें। बिना चुनी सेटिंग्स आपकी ही रहती हैं — वे मॉड में बदली जाती हैं, यहाँ नहीं।",
     "merge.settings_yours": "आपका संस्करण",
+    "merge.publication_from_branches": "ये योगदान अपने काम के बारे में क्या कहते हैं",
+    "merge.publication_pick_hint": "जो लेना चाहें उस पर निशान लगाएँ, और चाहें तो पहले उसे दोबारा लिख लें। जिस पर निशान नहीं लगाएँगे, वहाँ आपका अपना लिखा हुआ बना रहेगा। अनुवाद पूरा हुआ या नहीं, यह किसी योगदान से कभी नहीं लिया जाता — वह कहना आपका ही है।",
+    "merge.publication_theirs": "प्रस्तावित किया",
     "merge.filter": "फ़िल्टर",
     "merge.all": "सभी",
     "merge.none": "कोई नहीं",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "मेरे प्लेटफ़ॉर्म का अवतार उपयोग करें",
     "profile.codes_regenerate": "फिर से बनाएं",
     "profile.codes_regenerate_hint": "8 कोड का एक नया सेट बनाता है और पुराने को अमान्य कर देता है। इसके लिए आपका पासवर्ड आवश्यक है।",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "वह भाषा जिसमें यह साइट दिखाई देती है।",
+    "profile.game_language": "जिस भाषा में आप खेलते हैं",
+    "profile.game_language_follows": "अपने आप पहचानें",
+    "profile.game_language_hint": "खेल देखते समय कौन-से अनुवाद पहले आएँ। यह ज़रूरी नहीं कि वही भाषा हो जिसमें आप यह साइट पढ़ते हैं।",
+    "profile.game_language_detected": "पहचानी गई: :language",
+    "profile.game_language_detected_short": "पहचानी गई"
 }

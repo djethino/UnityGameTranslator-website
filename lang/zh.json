@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "这些贡献中不同的文件设置",
     "merge.settings_pick_hint": "勾选你想采用的项。未勾选的设置仍是你的——它们在模组中编辑，不在这里。",
     "merge.settings_yours": "你的版本",
+    "merge.publication_from_branches": "这些贡献对自己工作的说明",
+    "merge.publication_pick_hint": "勾选想要采用的内容，采用前也可以先改写。未勾选的部分保留你自己的措辞。译文是否已完成绝不会从贡献中采用，这仍由你来决定。",
+    "merge.publication_theirs": "提出者",
     "merge.filter": "筛选",
     "merge.all": "全部",
     "merge.none": "无",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "使用我的平台头像",
     "profile.codes_regenerate": "重新生成",
     "profile.codes_regenerate_hint": "生成一组全新的 8 个恢复码，并使旧的失效。需要你的密码。",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "本站界面显示所用的语言。",
+    "profile.game_language": "你游玩时使用的语言",
+    "profile.game_language_follows": "自动识别",
+    "profile.game_language_hint": "浏览游戏时优先显示哪种语言的译文。不必与你阅读本站所用的语言相同。",
+    "profile.game_language_detected": "已识别：:language",
+    "profile.game_language_detected_short": "已识别"
 }

@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "이 기여들에서 다른 파일 설정",
     "merge.settings_pick_hint": "가져올 항목을 선택하세요. 선택하지 않은 설정은 그대로 유지됩니다 — 설정은 모드에서 편집합니다.",
     "merge.settings_yours": "내 버전",
+    "merge.publication_from_branches": "이 기여들이 자기 작업에 대해 말하는 것",
+    "merge.publication_pick_hint": "가져올 항목에 표시하세요. 가져오기 전에 문구를 고쳐도 됩니다. 표시하지 않은 항목은 원래 쓰신 문구가 그대로 남습니다. 번역이 완료되었는지는 기여에서 가져오지 않으며, 그 판단은 본인에게 남습니다.",
+    "merge.publication_theirs": "제안한 사람",
     "merge.filter": "필터",
     "merge.all": "전체",
     "merge.none": "없음",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "내 플랫폼 아바타 사용",
     "profile.codes_regenerate": "재생성",
     "profile.codes_regenerate_hint": "8개의 코드를 새로 생성하고 기존 코드를 무효화합니다. 비밀번호가 필요합니다.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "이 사이트가 표시되는 언어입니다.",
+    "profile.game_language": "게임을 하는 언어",
+    "profile.game_language_follows": "자동으로 감지",
+    "profile.game_language_hint": "게임을 둘러볼 때 어떤 번역을 먼저 보여줄지 정합니다. 이 사이트를 읽는 언어와 같지 않아도 됩니다.",
+    "profile.game_language_detected": "감지됨: :language",
+    "profile.game_language_detected_short": "감지됨"
 }

@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "إعدادات الملف المختلفة في هذه المساهمات",
     "merge.settings_pick_hint": "أشِّر على ما تريد أخذه. تبقى الإعدادات غير المؤشَّرة لك — تُعدَّل في الإضافة لا هنا.",
     "merge.settings_yours": "إصدارك",
+    "merge.publication_from_branches": "ما تقوله هذه المساهمات عن عملها",
+    "merge.publication_pick_hint": "أشّر على ما تريد أخذه، ويمكنك إعادة صياغته قبل ذلك. ما تتركه دون تأشير يحتفظ بصياغتك أنت. أما كون الترجمة مكتملة فلا يُؤخذ من مساهمة — هذا قرارك وحدك.",
+    "merge.publication_theirs": "مقترح من",
     "merge.filter": "تصفية",
     "merge.all": "الكل",
     "merge.none": "لا شيء",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "استخدام صورة منصتي الرمزية",
     "profile.codes_regenerate": "إعادة إنشاء",
     "profile.codes_regenerate_hint": "يُنشئ مجموعة جديدة من 8 رموز ويُبطل الرموز القديمة. يتطلب كلمة المرور الخاصة بك.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "اللغة التي يظهر بها هذا الموقع.",
+    "profile.game_language": "اللغة التي تلعب بها",
+    "profile.game_language_follows": "الكشف تلقائيًا",
+    "profile.game_language_hint": "أي الترجمات تظهر أولًا عند تصفح الألعاب. ليس بالضرورة أن تكون اللغة التي تقرأ بها هذا الموقع.",
+    "profile.game_language_detected": "تم الكشف: :language",
+    "profile.game_language_detected_short": "مكتشفة"
 }

@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Ajustes do ficheiro diferentes nestas contribuições",
     "merge.settings_pick_hint": "Marque o que quiser levar. Os ajustes não marcados continuam a ser os seus: editam-se no mod, não aqui.",
     "merge.settings_yours": "A sua versão",
+    "merge.publication_from_branches": "O que estas contribuições dizem sobre o próprio trabalho",
+    "merge.publication_pick_hint": "Assinale o que quiser aproveitar, reescrevendo antes se preferir. O que deixar por assinalar mantém as suas palavras. Se uma tradução está concluída nunca se aproveita de uma contribuição — isso continua a ser você a dizê-lo.",
+    "merge.publication_theirs": "Proposto por",
     "merge.filter": "Filtrar",
     "merge.all": "Todas",
     "merge.none": "Nenhuma",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Usar o meu avatar da plataforma",
     "profile.codes_regenerate": "Regenerar",
     "profile.codes_regenerate_hint": "Gera um novo conjunto de 8 códigos e invalida os antigos. Requer a sua palavra-passe.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "O idioma em que este site é apresentado.",
+    "profile.game_language": "Idioma em que joga",
+    "profile.game_language_follows": "Detetar automaticamente",
+    "profile.game_language_hint": "Que traduções aparecem primeiro quando percorre os jogos. Não tem de ser o idioma em que lê este site.",
+    "profile.game_language_detected": "Detetado: :language",
+    "profile.game_language_detected_short": "detetado"
 }

@@ -614,6 +614,9 @@
     "merge.settings_from_branches": "Thiết lập tệp khác biệt trong các đóng góp này",
     "merge.settings_pick_hint": "Đánh dấu những gì bạn muốn lấy. Thiết lập không đánh dấu vẫn là của bạn – chúng được sửa trong mod, không phải ở đây.",
     "merge.settings_yours": "Phiên bản của bạn",
+    "merge.publication_from_branches": "Những đóng góp này nói gì về công việc của mình",
+    "merge.publication_pick_hint": "Đánh dấu những gì bạn muốn lấy, và có thể viết lại trước nếu muốn. Những gì bạn để nguyên vẫn giữ cách diễn đạt của bạn. Việc một bản dịch đã hoàn thành hay chưa không bao giờ được lấy từ một đóng góp — điều đó vẫn do bạn nói.",
+    "merge.publication_theirs": "Đề xuất bởi",
     "merge.filter": "Lọc",
     "merge.all": "Tất cả",
     "merge.none": "Không có",
@@ -1171,10 +1174,10 @@
     "profile.avatar_platform": "Dùng ảnh đại diện từ nền tảng của tôi",
     "profile.codes_regenerate": "Tạo lại",
     "profile.codes_regenerate_hint": "Tạo một bộ 8 mã mới và vô hiệu hóa các mã cũ. Yêu cầu mật khẩu của bạn.",
-    "profile.language_hint": "[MISSING] The language this site is shown in.",
-    "profile.game_language": "[MISSING] Language you play in",
-    "profile.game_language_follows": "[MISSING] Same as the site",
-    "profile.game_language_hint": "[MISSING] Which translations come first when you browse games. It does not have to be the language you read this site in.",
-    "profile.game_language_detected": "[MISSING] Detected: :language",
-    "profile.game_language_detected_short": "[MISSING] detected"
+    "profile.language_hint": "Ngôn ngữ hiển thị của trang này.",
+    "profile.game_language": "Ngôn ngữ bạn chơi",
+    "profile.game_language_follows": "Tự động nhận diện",
+    "profile.game_language_hint": "Bản dịch nào hiện trước khi bạn xem các trò chơi. Không nhất thiết phải là ngôn ngữ bạn dùng để đọc trang này.",
+    "profile.game_language_detected": "Đã nhận diện: :language",
+    "profile.game_language_detected_short": "đã nhận diện"
 }

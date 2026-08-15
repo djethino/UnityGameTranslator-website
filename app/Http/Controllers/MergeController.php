@@ -145,6 +145,19 @@ class MergeController extends Controller
                         // differed but never which one, and accepting every line accepted none
                         // of them — the merge silently kept the Main's own settings.
                         'settings' => $this->comparableSettingsOf($branch),
+
+                        // What the contributor SAYS about their work, apart from the work.
+                        //
+                        // 🔴 A contribution can carry a clearer description or the link to the
+                        // fonts it needs, and until now the Main had no way to see either: the
+                        // merge dealt in lines and file settings only, so those two were written
+                        // by their author and read by nobody.
+                        //
+                        // ⚠ Its OWN link, never getEffectiveResourcesUrl(): a branch with none
+                        // shows its Main's, and offering the Main to take back its own link
+                        // would be an entry that says nothing.
+                        'notes' => $branch->notes,
+                        'resources_url' => $branch->resources_url,
                     ];
                 }
             }
@@ -154,6 +167,8 @@ class MergeController extends Controller
             'main' => $this->loadTranslationContent($main),
             'main_owner' => $main->user->name ?? '',
             'main_settings' => $this->comparableSettingsOf($main),
+            'main_notes' => $main->notes,
+            'main_resources_url' => $main->resources_url,
             'branches' => $branchesPayload,
         ], 200, [
             'Cache-Control' => 'no-store, private',
@@ -224,8 +239,23 @@ class MergeController extends Controller
             }
         }
 
+        // What the Main takes of what its contributors SAY about their work: { "notes": "…" }.
+        //
+        // ⚠ Values, not "take branch N's". The page pre-fills each field with the contribution's
+        // wording and lets the Main adjust it before taking — a description written for a
+        // contribution rarely reads right at the head of a lineage. So what arrives here is the
+        // final text, exactly as for a translation line edited in the same screen.
+        $publication = [];
+        if ($request->filled('publication_json')) {
+            $publication = json_decode($request->input('publication_json'), true);
+            if (!is_array($publication)) {
+                return back()->withErrors(['error' => 'Invalid publication data.']);
+            }
+        }
+
         // Must have at least one change
-        if (empty($selections) && empty($deletions) && empty($tagChanges) && empty($settingChoices)) {
+        if (empty($selections) && empty($deletions) && empty($tagChanges) && empty($settingChoices)
+            && empty($publication)) {
             return back()->withErrors(['error' => 'No changes to apply.']);
         }
 
@@ -383,6 +413,29 @@ class MergeController extends Controller
             array_keys($content),
             fn($k) => !str_starts_with($k, '_')
         ));
+
+        // ⚠ Two fields and no more. `status` is deliberately absent: whether a translation is
+        // finished descends from the Main to its contributions, never the other way, and every
+        // other write path in the project enforces that. A merge is not the place to reverse it.
+        //
+        // ⚠ Validated here rather than trusted: this text goes on the Main's public page, and it
+        // arrives from a form. Same limits as everywhere else it can be written.
+        if (isset($publication['notes']) && is_string($publication['notes'])) {
+            $main->notes = mb_substr($publication['notes'], 0, 1000) ?: null;
+        }
+        if (isset($publication['resources_url']) && is_string($publication['resources_url'])) {
+            $url = trim($publication['resources_url']);
+            if ($url === '') {
+                $main->resources_url = null;
+            } elseif (filter_var($url, FILTER_VALIDATE_URL)
+                      && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)
+                      && mb_strlen($url) <= 2048) {
+                $main->resources_url = $url;
+            } else {
+                return back()->withErrors(['error' => 'Invalid resources URL.']);
+            }
+        }
+
         $main->save();
 
         // Tell each contributor whose lines were actually merged (per-branch counts

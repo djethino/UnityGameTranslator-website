@@ -333,12 +333,13 @@
            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-download mr-2"></i>{{ __('dashboard.download_file') }}
         </a>
-        @if($isMain)
+        {{-- Not @if($isMain): a contributor describes their contribution and links the fonts it
+             needs, exactly as they correct its lines. Only whether it is finished stays the
+             Main's to say, and the form leaves that out on a branch. --}}
         <a href="{{ route('translations.edit', $translation) }}"
            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-edit mr-2"></i>{{ __('dashboard.edit_metadata') }}
         </a>
-        @endif
         <a href="{{ route('games.show', $translation->game) }}"
            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fas fa-gamepad mr-2"></i>{{ __('dashboard.view_game_page') }}
