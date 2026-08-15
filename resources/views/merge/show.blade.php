@@ -297,7 +297,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="row in settingsRows" :key="row.id">
+                            <template x-for="row in visibleSettingsRows" :key="row.id">
                                 <tr class="hover:bg-gray-750 transition-colors">
                                     <td x-show="showIndexColumn" x-cloak
                                         class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
@@ -403,7 +403,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="row in publicationRows" :key="row.id">
+                            <template x-for="row in visiblePublicationRows" :key="row.id">
                                 <tr class="hover:bg-gray-750 transition-colors">
                                     <td x-show="showIndexColumn" x-cloak
                                         class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
@@ -435,8 +435,12 @@
                                             @click.stop="editCell(row.field, publicationResult(row), 'publication')"
                                             title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
                                     </span>
+                                    {{-- Purple on a rewording and on nothing else, exactly as on a
+                                         line: it says "this text is not what is stored". Taking a
+                                         contribution leaves this cell alone, so there is nothing
+                                         here to mark. --}}
                                     <span class="editor-text break-words"
-                                        :class="publicationPick[row.field] !== undefined ? 'text-purple-300' : ''"
+                                        :class="publicationPick[row.field] === 'manual' ? 'text-purple-300' : ''"
                                         x-text="publicationResult(row)"></span>
                                     </td>
 
@@ -1006,7 +1010,10 @@ document.addEventListener('alpine:init', () => {
             tagA: true,
             tagS: true,
             tagM: true,
-            modifiedOnly: false
+            // 🔴 On by default now that the screen arrives with choices already made. Landing on
+            // a whole file to look for the handful of rows something happened to is work the
+            // screen can do itself; the box is right there to widen it back out.
+            modifiedOnly: true
         }
     }, {
         loaded: false,
@@ -1255,21 +1262,36 @@ document.addEventListener('alpine:init', () => {
             this.settingsPick = pick;
         },
 
+        /**
+         * ⚠ Nothing picked means NO highlight anywhere, as on a line nobody has touched. The Main
+         * column was lit by default here, which said "chosen" about a row where nothing had been
+         * decided — and left no way to tell it apart from one where the owner had deliberately
+         * kept their own.
+         */
         settingsCellClass(row, branchId) {
             const picked = this.settingsPick[row.id];
-            if (branchId === null) return picked === undefined ? 'selected-main' : '';
+            if (branchId === null) return '';
             return picked === branchId ? 'selected-branch' : '';
         },
 
+        /**
+         * Take a contribution's value.
+         *
+         * 🔴 Records the CHOICE and touches no text. Every grid on this site works that way, and
+         * for a reason that only shows once it is broken: copying the taken value into the Main's
+         * cell destroys the very thing being compared — the wording you are choosing against.
+         * A cell's text changes on one occasion only, a manual edit, and that is what the purple
+         * says. Mixing the two makes the colour mean two things and the column mean nothing.
+         */
         publicationTake(row, branchId) {
             if (row.byBranch[branchId] === undefined) return;
             this.publicationPick = { ...this.publicationPick, [row.field]: branchId };
-            // The Main's cell is filled with what was just taken. Taking a second contribution
-            // replaces it, because only one text can end up on the page.
-            this.publicationValues = {
-                ...this.publicationValues,
-                [row.field]: row.byBranch[branchId],
-            };
+
+            // A pending rewording is dropped: it was written against another wording, and
+            // keeping it would show the Main's cell disagreeing with the cell just chosen.
+            const values = { ...this.publicationValues };
+            delete values[row.field];
+            this.publicationValues = values;
         },
 
         publicationKeepMine(row) {
@@ -1283,6 +1305,29 @@ document.addEventListener('alpine:init', () => {
         },
 
         /** What the Main's cell shows: whatever is staged, or the Main's own. */
+        /**
+         * The rows each grid shows, under the one filter that governs all three.
+         *
+         * ⚠ "Modified only" decides what is hidden on this screen, and a checkbox that emptied
+         * the lines while leaving two full tables above them would read as a broken filter
+         * rather than as a filter that does not apply.
+         */
+        get visibleSettingsRows() {
+            if (!this.filters.modifiedOnly) return this.settingsRows;
+            return this.settingsRows.filter((row) => this.settingsPick[row.id] !== undefined);
+        },
+
+        get visiblePublicationRows() {
+            if (!this.filters.modifiedOnly) return this.publicationRows;
+            return this.publicationRows.filter((row) => this.publicationPick[row.field] !== undefined);
+        },
+
+        /**
+         * What the Main's cell shows: its own value, or a rewording staged over it.
+         *
+         * ⚠ Never the value taken from a contribution. That one is shown where it is, in the
+         * contribution's own column, and only resolved into a value when the merge is applied.
+         */
         publicationResult(row) {
             return this.publicationValues[row.field] ?? row.mineValue;
         },
@@ -1311,11 +1356,10 @@ document.addEventListener('alpine:init', () => {
 
         publicationCellClass(row, branchId) {
             const picked = this.publicationPick[row.field];
-            if (branchId === null) {
-                // A taken value shows in the Main's cell, where it can be reworded \u2014 the same
-                // place a manually edited line displays, and the same class.
-                return picked === undefined ? 'selected-main' : 'selected-manual';
-            }
+            // Only a rewording lights the Main's cell, because only a rewording put something
+            // there. Taking a contribution lights the contribution's cell, where the chosen
+            // words actually are.
+            if (branchId === null) return picked === 'manual' ? 'selected-manual' : '';
             return picked === branchId ? 'selected-branch' : '';
         },
 
@@ -1712,8 +1756,13 @@ document.addEventListener('alpine:init', () => {
             // one text per field can end up on the page.
             const publication = {};
             for (const row of this.publicationRows) {
-                if (this.publicationPick[row.field] === undefined) continue;
-                publication[row.field] = this.publicationValues[row.field] ?? '';
+                const pick = this.publicationPick[row.field];
+                if (pick === undefined) continue;
+                // Resolved here rather than copied on click, so the screen never had to hold the
+                // chosen text in the Main's cell to remember it.
+                publication[row.field] = pick === 'manual'
+                    ? (this.publicationValues[row.field] ?? '')
+                    : row.byBranch[pick];
             }
             document.getElementById('publicationJson').value = Object.keys(publication).length > 0
                 ? JSON.stringify(publication) : '';

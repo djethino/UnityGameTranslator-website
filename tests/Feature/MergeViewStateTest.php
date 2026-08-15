@@ -322,6 +322,32 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('best.rank <= mainTag', $html);
     }
 
+    public function test_choosing_a_version_highlights_it_and_rewrites_nothing(): void
+    {
+        // 🔴 The rule every grid on this site obeys, and the one this screen's metadata rows
+        // broke: a selection lights the chosen cell, and a cell's TEXT changes on one occasion
+        // only — a manual rewording, which is what the purple says. Copying a taken value into
+        // the Main's cell destroys the wording being compared against, and makes the colour mean
+        // two things at once.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        // The Main's cell shows its own value or a rewording — never the taken one.
+        $this->assertStringContainsString(
+            'return this.publicationValues[row.field] ?? row.mineValue;', $html);
+
+        // Purple on a rewording and on nothing else.
+        $this->assertStringContainsString(
+            "publicationPick[row.field] === 'manual' ? 'text-purple-300' : ''", $html);
+
+        // The value is resolved when the merge is applied, not copied on click.
+        $this->assertStringContainsString("pick === 'manual'", $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
