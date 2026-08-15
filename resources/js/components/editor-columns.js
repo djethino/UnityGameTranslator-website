@@ -140,6 +140,28 @@ export function editorColumns() {
         },
 
         /**
+         * Hand every grid on the page one set of column widths.
+         *
+         * 🔴 The widths are written per column, so two tables carrying the same column names
+         * agree — but only once there ARE widths. Until somebody drags an edge, each table is
+         * still laid out by the browser on its own content, and a table of two rows is narrower
+         * than a table of six thousand: measured on a real lineage, the Main column ended 37px
+         * short of the one below it.
+         *
+         * So the photograph is taken at load rather than at the first drag, and it is taken from
+         * the grid that has the content — `$refs.gridBox` is the lines. Nothing moves: entering
+         * that mode is defined as keeping the widths it found (see _enterSizedMode).
+         *
+         * ⚠ Only worth doing when something else is following. On a page with one grid this would
+         * take the browser's first guess and make it permanent for no gain.
+         */
+        alignGridsToEachOther() {
+            if (this.columnsSized) return;
+            this._enterSizedMode();
+            this.applyColumnWidths();
+        },
+
+        /**
          * Hook: a column's width has just changed.
          *
          * Announced rather than watched, because the width map is mutated key by key and an

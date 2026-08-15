@@ -279,8 +279,11 @@
                                     {{ __('merge_preview.settings_column') }}
                                     <x-editor.col-resize col="key" />
                                 </th>
+                                {{-- The tag column is kept, empty, and its border is the only one
+                                     between the key and the Main: the two head one block, and
+                                     the title lands exactly where the lines grid puts its own. --}}
                                 <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                <th data-col="main" class="relative px-4 py-3 text-left min-w-[250px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-green-400 font-medium">Main</span>
                                         <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
@@ -307,16 +310,27 @@
                                         :class="showIndexColumn ? 'left-16' : 'left-0'"
                                         x-text="row.label"></td>
 
-                                    {{-- No tag on a setting or a description, and the column stays
-                                         so the value columns keep their place. --}}
-                                    <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700 text-gray-600">—</td>
+                                    {{-- 🔴 One cell over the tag column and the value column.
 
-                                    {{-- Click = keep the Main's own, which is how a line's Main
-                                         cell behaves. --}}
-                                    <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                         A setting has no tag, so that column held a dash — an
+                                         empty stripe down the table, in the one place where the
+                                         lines below it carry something. Kept as a COLUMN, because
+                                         dropping it would shift everything after it and the
+                                         tables would stop lining up; merged as a CELL, because
+                                         there is nothing to put in it.
+
+                                         ⚠ No data-col on the merged cell, deliberately: the width
+                                         rules are written per column and one of them would squeeze
+                                         the pair to the width of a single column. The two headers
+                                         above still carry them, and fixed layout reads the widths
+                                         from there. Same shape as a branch column, which has been
+                                         one cell over its own pair from the start.
+
+                                         Click = keep the Main's own, as a line's Main cell does. --}}
+                                    <td colspan="2" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="settingsCellClass(row, null)"
                                         @click="settingsKeepMine(row)">
-                                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                                        <span class="editor-text break-words" x-text="row.mineValue"></span>
                                     </td>
 
                                     <template x-for="branch in branches" :key="branch.id">
@@ -385,8 +399,11 @@
                                     {{ __('merge_preview.settings_column') }}
                                     <x-editor.col-resize col="key" />
                                 </th>
+                                {{-- The tag column is kept, empty, and its border is the only one
+                                     between the key and the Main: the two head one block, and
+                                     the title lands exactly where the lines grid puts its own. --}}
                                 <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px]">
+                                <th data-col="main" class="relative px-4 py-3 text-left min-w-[250px]">
                                     <div class="flex items-center gap-2">
                                         <span class="text-green-400 font-medium">Main</span>
                                         <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
@@ -413,13 +430,13 @@
                                         :class="showIndexColumn ? 'left-16' : 'left-0'"
                                         x-text="row.label"></td>
 
-                                    {{-- No tag on a setting or a description, and the column stays
-                                         so the value columns keep their place. --}}
-                                    <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700 text-gray-600">—</td>
 
                                     {{-- Click = keep the Main's own, which is how a line's Main
                                          cell behaves. --}}
-                                    <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                    {{-- One cell over the tag column and the value column — see the
+                                         settings table above for why the column stays and the
+                                         cell merges. --}}
+                                    <td colspan="2" class="px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="publicationCellClass(row, null)"
                                         @click="publicationKeepMine(row)"
                                         @dblclick="editCell(row.field, publicationResult(row), 'publication')">
@@ -1134,6 +1151,12 @@ document.addEventListener('alpine:init', () => {
             // and the day they also list what AGREES, this is where the rule changes again.
             this.settingsOpen = this.hasSettingsRows;
             this.publicationOpen = this.hasPublicationRows;
+
+            // ⚠ Only once one of them is on screen: they share the lines' columns, and sharing
+            // them means sharing their WIDTHS, which do not exist until a photograph is taken.
+            if (this.hasSettingsRows || this.hasPublicationRows) {
+                this.$nextTick(() => this.alignGridsToEachOther());
+            }
 
             this.calculateStats();
             this.applySmartDefaults();

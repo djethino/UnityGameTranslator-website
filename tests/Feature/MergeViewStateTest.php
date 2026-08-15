@@ -455,6 +455,31 @@ class MergeViewStateTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data-hscroll-follow'));
     }
 
+    public function test_the_tables_above_the_lines_carry_no_tag_column_of_their_own(): void
+    {
+        // 🔴 A setting has no tag and a description has no tag, so that column held a dash — an
+        // empty stripe down both tables, in the one place where the lines below carry something.
+        //
+        // Kept as a COLUMN, because dropping it would shift everything after it and the tables
+        // would stop lining up. Merged as a CELL, because there is nothing to put in it. And the
+        // merged cell carries no data-col: the width rules are per column, and one of them would
+        // squeeze the pair down to a single column's width.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        // Exactly one tag cell in a body, and it belongs to the lines.
+        $this->assertSame(1, substr_count($html, '<td data-col="mainTag"'));
+
+        // ⚠ Widths are photographed at load when a following table is on screen. Without it each
+        // table is laid out on its own content until somebody drags an edge, and a table of two
+        // rows is narrower than one of six thousand — measured: 37px short on the Main column.
+        $this->assertStringContainsString('alignGridsToEachOther()', $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
