@@ -541,18 +541,20 @@
     "es": {
       "name": "Spain",
       "palette": {
-        "r": "#AA151B",
-        "y": "#F1BF00"
+        "r": "#AD1519",
+        "y": "#FABD00",
+        "w": "#FFFFFF",
+        "b": "#0039A6"
       },
       "rows": [
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
+        "yyyyrbryyyyyyyyy",
+        "yyyyrwryyyyyyyyy",
+        "yyyyrrryyyyyyyyy",
+        "yyyyrrryyyyyyyyy",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
@@ -561,20 +563,21 @@
     "es-ar": {
       "name": "Aragon",
       "palette": {
-        "y": "#FFD100",
+        "y": "#FCDD09",
         "r": "#DA121A",
-        "w": "#FFFFFF"
+        "w": "#FFFFFF",
+        "b": "#0071BC"
       },
       "rows": [
         "yyyyyyyyyyyyyyyy",
         "rrrrrrrrrrrrrrrr",
         "yyyyyyyyyyyyyyyy",
-        "rrrrrrrrrrrrrrrr",
-        "yyyyyywwwwyyyyyy",
         "rrrrrrwwwwrrrrrr",
-        "yyyyyywwwwyyyyyy",
+        "yyyyyywbrwyyyyyy",
+        "rrrrrrwrywrrrrrr",
+        "yyyyyywybwyyyyyy",
         "rrrrrrwwwwrrrrrr",
-        "yyyyyywwwwyyyyyy",
+        "yyyyyyyyyyyyyyyy",
         "rrrrrrrrrrrrrrrr",
         "yyyyyyyyyyyyyyyy"
       ]
@@ -582,8 +585,8 @@
     "es-as": {
       "name": "Asturias",
       "palette": {
-        "b": "#0072C6",
-        "y": "#FFD100"
+        "b": "#0066FF",
+        "y": "#F7D417"
       },
       "rows": [
         "bbbbbbbbbbbbbbbb",
@@ -591,7 +594,7 @@
         "bbbbbbbyybbbbbbb",
         "bbbbyyyyyyyybbbb",
         "bbbbyyyyyyyybbbb",
-        "bbbbbbbyybbbbbbb",
+        "bbbbybbyybbybbbb",
         "bbbbbbbyybbbbbbb",
         "bbbbbbyyyybbbbbb",
         "bbbbbyyyyyybbbbb",
@@ -623,20 +626,21 @@
       "name": "Galicia",
       "palette": {
         "w": "#FFFFFF",
-        "b": "#0066CC"
+        "b": "#0099CC",
+        "y": "#F0C420"
       },
       "rows": [
-        "bbwwwwwwwwwwwwww",
-        "bbbbwwwwwwwwwwww",
-        "wwbbbwwwwwwwwwww",
-        "wwwbbbbwwwwwwwww",
-        "wwwwwbbbwwwwwwww",
-        "wwwwwwbbbbwwwwww",
-        "wwwwwwwwbbbwwwww",
-        "wwwwwwwwwbbbbwww",
-        "wwwwwwwwwwwbbbww",
-        "wwwwwwwwwwwwbbbb",
-        "wwwwwwwwwwwwwwbb"
+        "bwwwwwwwwwwwwwww",
+        "bbbwwwwwwwwwwwww",
+        "wbbbwwwwwwwwwwww",
+        "wwwbbbwwwwwwwwww",
+        "wwwwbbbwwwwwwwww",
+        "wwwwwwbyywwwwwww",
+        "wwwwwwwwwbwwwwww",
+        "wwwwwwwwwbbbwwww",
+        "wwwwwwwwwwbbbwww",
+        "wwwwwwwwwwwwbbbw",
+        "wwwwwwwwwwwwwbbb"
       ]
     },
     "es-pv": {
@@ -648,16 +652,16 @@
       },
       "rows": [
         "ggrrrrwwwwrrrrgg",
-        "ggggrrwwwwrrgggg",
-        "rrgggrwwwwrgggrr",
-        "rrrgggwwwwgggrrr",
+        "rrggrrwwwwrrggrr",
+        "rrrggrwwwwrggrrr",
+        "rrrrggwwwwggrrrr",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
-        "rrrgggwwwwgggrrr",
-        "rrgggrwwwwrgggrr",
-        "ggggrrwwwwrrgggg",
-        "ggrrrrwwwwrrrrgg"
+        "rrrrggwwwwggrrrr",
+        "rrggrrwwwwrrggrr",
+        "ggrrrrwwwwrrrrgg",
+        "grrrrrwwwwrrrrrg"
       ]
     },
     "et": {
@@ -2536,16 +2540,16 @@
     "uz": {
       "name": "Uzbekistan",
       "palette": {
-        "c": "#0099B5",
+        "c": "#3081F7",
         "w": "#FFFFFF",
-        "g": "#1EB53A",
-        "r": "#CE1126"
+        "g": "#308738",
+        "r": "#EE162E"
       },
       "rows": [
+        "ccccwccwcwcwcccc",
         "ccwwcccccccccccc",
-        "cwccccwcwcwccccc",
-        "ccwwcccccccccccc",
-        "rrrrrrrrrrrrrrrr",
+        "ccwwccccwcwcwccc",
+        "rrrrwrrrrrrrrrrr",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
