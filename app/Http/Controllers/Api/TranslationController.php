@@ -296,6 +296,11 @@ class TranslationController extends Controller
                     'source_language' => $ownTranslation->source_language,
                     'target_language' => $ownTranslation->target_language,
                     'type' => $ownTranslation->type,
+                    // 🔴 Sent so the mod can SHOW it and send it back unchanged. Without it the mod
+                    // had nothing to display and nothing to preserve, so it posted "in_progress"
+                    // every time — silently undoing a translation its author had marked complete
+                    // on this site.
+                    'status' => $ownTranslation->status,
                     'notes' => $ownTranslation->notes,
                     'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
                     'line_count' => $ownTranslation->line_count,
