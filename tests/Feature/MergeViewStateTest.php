@@ -348,6 +348,28 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString("pick === 'manual'", $html);
     }
 
+    public function test_the_metadata_blocks_are_not_emptied_by_the_modified_filter(): void
+    {
+        // 🔴 The defect this locks: "modified only" defaults to on, and filtering these two
+        // tables on "already picked" emptied BOTH of them at load — a screen showing nothing
+        // and looking broken. They are built from differences, so every row in them is already
+        // something to decide and the predicate is true of all of them.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('get visibleSettingsRows() {', $html);
+        $this->assertStringNotContainsString('this.settingsPick[row.id] !== undefined);', $html);
+
+        // What a contribution ADDS where the Main holds nothing is pre-taken, as a line is.
+        // A disagreement is a tie with no tag to settle it, and a tie goes to the Main.
+        $this->assertStringContainsString('applyMetadataDefaults()', $html);
+        $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();

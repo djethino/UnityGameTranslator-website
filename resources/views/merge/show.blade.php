@@ -1144,6 +1144,38 @@ document.addEventListener('alpine:init', () => {
                     tag: this.getTag(best.entry),
                 };
             }
+
+            this.applyMetadataDefaults();
+        },
+
+        /**
+         * The same principle on the settings and on what the contributions say about their work.
+         *
+         * ⚠ **Only what the Main does not have at all.** A line is arbitrated on its tag — human
+         * beats machine — and neither a font nor a description carries one, so there is nothing
+         * to arbitrate on: every such row is a tie, and a tie goes to the Main, exactly as it
+         * does above. What a contribution ADDS where the Main holds nothing is the case with no
+         * question in it, and it is pre-taken.
+         *
+         * ⚠ Nothing is written by this either. The owner unpicks what they disagree with, and
+         * every row stays on screen whether it was pre-taken or not.
+         */
+        applyMetadataDefaults() {
+            for (const row of this.settingsRows) {
+                if (this.settingsPick[row.id] !== undefined) continue;
+                if (row.mineRaw) continue;
+
+                const branch = this.branches.find((b) => row.byBranch[b.id] !== undefined);
+                if (branch) this.settingsPick[row.id] = branch.id;
+            }
+
+            for (const row of this.publicationRows) {
+                if (this.publicationPick[row.field] !== undefined) continue;
+                if (row.mineRaw) continue;
+
+                const branch = this.branches.find((b) => row.byBranch[b.id] !== undefined);
+                if (branch) this.publicationPick[row.field] = branch.id;
+            }
         },
 
         /**
@@ -1184,6 +1216,10 @@ document.addEventListener('alpine:init', () => {
                             label: (labels[theirs.section] || theirs.section)
                                    + ' \u203a ' + theirs.label,
                             mineValue: mine ? mine.value : absent,
+                            // What the Main actually holds, as opposed to what the cell shows
+                            // when it holds nothing. Telling the two apart is what says whether
+                            // a contribution is ADDING something or disagreeing with something.
+                            mineRaw: mine ? mine.value : '',
                             byBranch: {},
                         };
                     }
@@ -1306,20 +1342,24 @@ document.addEventListener('alpine:init', () => {
 
         /** What the Main's cell shows: whatever is staged, or the Main's own. */
         /**
-         * The rows each grid shows, under the one filter that governs all three.
+         * The rows each grid shows.
          *
-         * ⚠ "Modified only" decides what is hidden on this screen, and a checkbox that emptied
-         * the lines while leaving two full tables above them would read as a broken filter
-         * rather than as a filter that does not apply.
+         * 🔴 **"Modified only" removes nothing here, and that is not an oversight.** On the lines
+         * it hides rows with no pending decision — most of a file. These two tables are BUILT
+         * from differences: every row in them is something to decide, so the same predicate is
+         * true of all of them.
+         *
+         * ⚠ Filtering them on "already picked" instead emptied both tables the moment the box
+         * defaulted to on, which is exactly how a screen ends up showing nothing and looking
+         * broken. The day the blocks list settings that AGREE as well — they should, for
+         * information — this getter is where the filter starts discriminating.
          */
         get visibleSettingsRows() {
-            if (!this.filters.modifiedOnly) return this.settingsRows;
-            return this.settingsRows.filter((row) => this.settingsPick[row.id] !== undefined);
+            return this.settingsRows;
         },
 
         get visiblePublicationRows() {
-            if (!this.filters.modifiedOnly) return this.publicationRows;
-            return this.publicationRows.filter((row) => this.publicationPick[row.field] !== undefined);
+            return this.publicationRows;
         },
 
         /**
