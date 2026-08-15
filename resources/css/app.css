@@ -222,6 +222,18 @@
 .editor-hscroll::-webkit-scrollbar-thumb { background: rgb(75 85 99); border-radius: 9999px; }
 .editor-hscroll::-webkit-scrollbar-thumb:hover { background: rgb(139 92 246); }
 
+/* A table that moves sideways WITH the grid and shows no bar of its own.
+ *
+ * Same rule as the mirror above, one step further: never two bars for one movement. The merge
+ * screen puts the file settings and the description on the lines' own columns so that everything
+ * reads down the page in one alignment — and each box scrolling on its own produced three bars
+ * showing three positions of the same columns.
+ *
+ * overflow-x stays auto: the box must still be scrollABLE, since that is how the sync moves it
+ * and how a trackpad swipe over it is picked up. Only the bar goes. */
+[data-hscroll-follow] { scrollbar-width: none; }
+[data-hscroll-follow]::-webkit-scrollbar { display: none; }
+
 .selected-local, .selected-main { background-color: rgba(20, 83, 45, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(34 197 94); }
 .selected-online, .selected-branch { background-color: rgba(30, 58, 138, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(59 130 246); }
 .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }

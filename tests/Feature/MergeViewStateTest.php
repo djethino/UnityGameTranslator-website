@@ -439,6 +439,22 @@ class MergeViewStateTest extends TestCase
             '<span class="text-white font-bold" x-text="selectionCount"></span>', $html);
     }
 
+    public function test_only_one_horizontal_bar_moves_all_three_grids(): void
+    {
+        // 🔴 Never two bars for one movement — the rule the mirrored scrollbar was built on,
+        // one step further. Three tables on the same columns each scrolling on their own showed
+        // three positions of the same thing, above a shared bar that agreed with none of them.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        // Both metadata boxes follow, and neither draws a bar (see app.css).
+        $this->assertSame(2, substr_count($html, 'data-hscroll-follow'));
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();

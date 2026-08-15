@@ -262,7 +262,7 @@
                      resemblance: the widths are written as one stylesheet rule per
                      [data-col], so carrying the same names makes these columns line up with
                      the lines, follow the same drag and freeze with the same pin. --}}
-                <div x-show="settingsOpen" x-cloak
+                <div x-show="settingsOpen" x-cloak data-hscroll-follow
                      class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
                     <table class="editor-grid w-full text-sm border-separate border-spacing-0"
                        :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
@@ -368,7 +368,7 @@
                      resemblance: the widths are written as one stylesheet rule per
                      [data-col], so carrying the same names makes these columns line up with
                      the lines, follow the same drag and freeze with the same pin. --}}
-                <div x-show="publicationOpen" x-cloak
+                <div x-show="publicationOpen" x-cloak data-hscroll-follow
                      class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
                     <table class="editor-grid w-full text-sm border-separate border-spacing-0"
                        :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">

@@ -78,6 +78,36 @@ export function editorHScroll() {
         _hWired: false,
 
         /**
+         * Tables that move sideways WITH the grid and carry no bar of their own.
+         *
+         * 🔴 Same rule as the mirror above: never two bars for one movement. A screen can hold
+         * more than one table on the same columns — the merge puts the file settings and the
+         * description on the lines' own grid so that everything reads down the page in one
+         * alignment — and giving each its own scrollbar produced three bars that showed
+         * different positions of the same columns.
+         *
+         * Marked in the markup rather than guessed, and scoped to this component's root: another
+         * editor on the same page must not be dragged along by this one.
+         */
+        hFollowers() {
+            const box = this.$refs.gridBox;
+            const root = box ? box.closest('[x-data]') : null;
+            if (!root) return [];
+            return root.querySelectorAll('[data-hscroll-follow]');
+        },
+
+        /** The last position handed to the followers. See the echo guard in initHScroll. */
+        _hPushed: 0,
+
+        syncHFollowers(left) {
+            this._hPushed = left;
+            for (const follower of this.hFollowers()) {
+                // Assigning a value it already holds fires no event, so nothing ping-pongs.
+                if (follower.scrollLeft !== left) follower.scrollLeft = left;
+            }
+        },
+
+        /**
          * Call from the host component's init().
          *
          * Driven by an effect rather than a single $nextTick: at core-init time the refs do not
@@ -103,10 +133,46 @@ export function editorHScroll() {
                         // already the current value fires no event, so the two cannot ping-pong.
                         proxy.addEventListener('scroll', () => {
                             if (box.scrollLeft !== proxy.scrollLeft) box.scrollLeft = proxy.scrollLeft;
+                            this.syncHFollowers(proxy.scrollLeft);
                         });
                         box.addEventListener('scroll', () => {
                             if (proxy.scrollLeft !== box.scrollLeft) proxy.scrollLeft = box.scrollLeft;
+                            this.syncHFollowers(box.scrollLeft);
                         });
+
+                        // Followers push back, so a trackpad swipe over one of them moves
+                        // everything rather than sliding it out of line with the rest.
+                        for (const follower of this.hFollowers()) {
+                            follower.addEventListener('scroll', () => {
+                                // 🔴 Tell a gesture from an echo, and do it WITHOUT a timer.
+                                //
+                                // A follower narrower than the grid — a folded block, a table of
+                                // two rows — clamps the position it is handed and reports the
+                                // clamped value back as a scroll of its own, which dragged the
+                                // grid to the start of the line as soon as you went past that
+                                // table's width.
+                                //
+                                // ⚠ The first version held a flag released on the next animation
+                                // frame. A background tab is served no frames at all, so the flag
+                                // stayed raised for as long as the tab was away and the follower
+                                // could never drive anything again. What we last handed out is a
+                                // fact, not a deadline: an echo reports either that value, or the
+                                // follower's own maximum when the value was beyond its reach.
+                                if (follower.scrollWidth <= follower.clientWidth + 1) return;
+
+                                const max = follower.scrollWidth - follower.clientWidth;
+                                if (follower.scrollLeft === this._hPushed) return;
+                                if (this._hPushed > max && follower.scrollLeft === max) return;
+
+                                if (box.scrollLeft === follower.scrollLeft) return;
+
+                                box.scrollLeft = follower.scrollLeft;
+                                if (proxy.scrollLeft !== follower.scrollLeft) {
+                                    proxy.scrollLeft = follower.scrollLeft;
+                                }
+                                this.syncHFollowers(follower.scrollLeft);
+                            });
+                        }
 
                         if ('ResizeObserver' in window) {
                             const observer = new ResizeObserver(() => this.measureHScroll());
