@@ -158,6 +158,15 @@ class MergeController extends Controller
                         // would be an entry that says nothing.
                         'notes' => $branch->notes,
                         'resources_url' => $branch->resources_url,
+
+                        // What the Main's owner already thinks of this contribution, in stars.
+                        // Used to break a tie between two contributions offering the same
+                        // quality of work on one line: a reviewer who has judged a contributor
+                        // once should not be asked to judge them again line by line.
+                        //
+                        // Null resets itself when the branch's file changes (Translation's
+                        // saving hook), so a rating never speaks for work it never saw.
+                        'main_rating' => $branch->main_rating,
                     ];
                 }
             }

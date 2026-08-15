@@ -1111,7 +1111,18 @@ document.addEventListener('alpine:init', () => {
          * 🔴 The other comparison screen has done this since it existed; this one never has, so
          * the same file opened from two places asked for two different amounts of work. Same
          * rule, ported: a line only a contribution has is taken, and where both hold one the
-         * better tag wins — human over validated over machine — with the Main keeping ties.
+         * better tag wins — human over validated over machine.
+         *
+         * ⚠ **The Main wins any tie, and that decision is RECORDED** rather than left blank. The point of
+         * the screen is that everything new or contested is answered once; a line nobody marks is
+         * a line that comes back at the next merge, and the contributor never learns whether they
+         * were read. Recording it is also what makes the count truthful — the Save button says
+         * how many lines were gone through, not how many changed hands.
+         *
+         * ⚠ Every selection is written back with A promoted to V (TranslationService::
+         * resolveMergedTag), and that is the intended meaning here, not a side effect: these rows
+         * have been put in front of their owner, who re-reads them and saves. Nothing is written
+         * until they do.
          *
          * ⚠ Keys already chosen are skipped, so a review interrupted and resumed (the pending
          * state is restored on load) does not have its decisions overwritten by the defaults.
@@ -1133,29 +1144,60 @@ document.addEventListener('alpine:init', () => {
 
                 // The best a contribution offers for this line. Several branches can hold it, so
                 // this is a comparison among them before any comparison with the Main.
+                //
+                // 🔴 **A contribution can be a TAG and not a word.** Reading the Main's machine
+                // translation and marking it correct changes no text and is exactly the work this
+                // site asks for. Comparing values alone dropped every one of them — seventeen on
+                // the lineage this was measured against, all of them a contributor's V sitting on
+                // top of the Main's A, none of them ever settled by anybody.
                 let best = null;
                 for (const branch of this.branches) {
                     const entry = branch.content[key];
                     if (entry === undefined) continue;
+
                     if (mainEntry !== undefined
-                        && this.getValue(entry) === this.getValue(mainEntry)) continue;
+                        && this.getValue(entry) === this.getValue(mainEntry)
+                        && this.getTag(entry) === this.getTag(mainEntry)) continue;
 
                     const rank = tagPriority[this.getTag(entry)] ?? 0;
-                    if (!best || rank > best.rank) {
-                        best = { branch, entry, rank };
+
+                    // ⭐ Two contributions offering the same quality of work on one line are
+                    // separated by what the owner already said about their AUTHORS — the stars
+                    // on the branch selector. Somebody who has judged a contributor once should
+                    // not be made to judge them again, line by line.
+                    //
+                    // ⚠ Strictly greater on both counts, so unrated or equally rated leaves the
+                    // first one in front — and "first" is the order the branch list is built in:
+                    // unreviewed before reviewed, then best rated, then most recent.
+                    const rating = branch.main_rating ?? 0;
+
+                    if (!best
+                        || rank > best.rank
+                        || (rank === best.rank && rating > best.rating)) {
+                        best = { branch, entry, rank, rating };
                     }
                 }
 
+                // No contribution holds anything different: nothing to settle on this line.
                 if (!best) continue;
-                // The Main holds it at least as well: it keeps it, and no selection is recorded —
-                // an unmarked row means "nothing changes here", which is what it does.
-                if (best.rank <= mainTag) continue;
 
-                this.selections[key] = {
-                    source: 'branch_' + best.branch.id,
-                    value: this.getValue(best.entry),
-                    tag: this.getTag(best.entry),
-                };
+                if (best.rank > mainTag) {
+                    this.selections[key] = {
+                        source: 'branch_' + best.branch.id,
+                        value: this.getValue(best.entry),
+                        tag: this.getTag(best.entry),
+                    };
+                } else if (mainEntry !== undefined) {
+                    // 🔴 **A tie is a decision too, and it is recorded.** Leaving it unmarked
+                    // meant the line simply vanished from a screen filtered on pending changes,
+                    // and nothing ever settled it — the contribution stayed unanswered for good.
+                    // Keeping the Main IS the answer; it just has to be written down.
+                    this.selections[key] = {
+                        source: 'main',
+                        value: this.getValue(mainEntry),
+                        tag: this.getTag(mainEntry),
+                    };
+                }
             }
 
             this.applyMetadataDefaults();

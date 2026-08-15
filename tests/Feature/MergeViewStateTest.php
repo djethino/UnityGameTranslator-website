@@ -303,25 +303,6 @@ class MergeViewStateTest extends TestCase
         $this->assertStringNotContainsString('togglePublicationRow', $html);
     }
 
-    public function test_the_merge_screen_pre_selects_what_an_owner_would_pick(): void
-    {
-        // 🔴 The other comparison screen has done this since it existed and this one never had,
-        // so the same file opened from two places asked for two different amounts of work. The
-        // assertion is on the page carrying the rule, since the selection itself is client-side.
-        [$owner, $uuid] = $this->makeMergeView();
-
-        $html = $this->actingAs($owner)
-            ->get(route('translations.merge', ['uuid' => $uuid]))
-            ->assertOk()
-            ->getContent();
-
-        $this->assertStringContainsString('applySmartDefaults()', $html);
-
-        // The rule itself: a better tag wins, and the Main keeps ties.
-        $this->assertStringContainsString("tagPriority = { 'H': 3, 'V': 2, 'A': 1", $html);
-        $this->assertStringContainsString('best.rank <= mainTag', $html);
-    }
-
     public function test_choosing_a_version_highlights_it_and_rewrites_nothing(): void
     {
         // 🔴 The rule every grid on this site obeys, and the one this screen's metadata rows
@@ -370,16 +351,18 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
     }
 
-    public function test_the_screen_opens_on_what_needs_a_decision(): void
+    public function test_every_contested_line_arrives_already_answered(): void
     {
-        // 🔴 Measured on a real lineage (2536 keys, 21 new, 35 differing): with "modified only"
-        // on, the screen showed the 21 pre-taken lines and hid all 35 differences — a review
-        // that lost the rows it exists for. The defaults cannot cover that gap either, because
-        // on a differing line pre-selecting the Main is not neutral: the apply endpoint reads it
-        // as "validate this" and promotes a machine translation to human-checked.
+        // 🔴 Measured on a real lineage (2536 keys): 56 rows need a decision, and the screen now
+        // arrives with 56 answers — 38 taken from a contribution, 18 settled on the Main, none
+        // left blank. What is left blank is what never gets settled: the row vanishes from any
+        // filtered view, the merge saves without it, and the contributor never learns whether
+        // they were read.
         //
-        // So the screen opens on the categories instead: everything that needs a decision, and
-        // not the 2497 lines both sides already agree on.
+        // Three rules, and the third is the one that was missing:
+        //   · a line only a contribution has  -> taken
+        //   · both hold one, better tag wins  -> H over V over A
+        //   · a tie                           -> the Main keeps it, AND IT IS RECORDED
         [$owner, $uuid] = $this->makeMergeView();
 
         $html = $this->actingAs($owner)
@@ -387,10 +370,39 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
+        $this->assertStringContainsString('applySmartDefaults()', $html);
+        $this->assertStringContainsString("tagPriority = { 'H': 3, 'V': 2, 'A': 1", $html);
+        $this->assertStringContainsString("source: 'main',", $html);
+
+        // ⚠ A contribution can be a TAG and not a word: reading the Main's machine translation
+        // and marking it correct changes no text. Comparing values alone dropped every one of
+        // them — seventeen on that lineage, none ever settled.
+        $this->assertStringContainsString(
+            'this.getTag(entry) === this.getTag(mainEntry)) continue;', $html);
+
+        // ⭐ Two contributions of equal quality on one line are separated by the stars the owner
+        // already gave their authors, not by asking again line by line. Unrated or equal leaves
+        // the first in front — the list is already ordered unreviewed, best rated, most recent.
+        $this->assertStringContainsString('rating > best.rating', $html);
+
+        // The screen opens on the categories, not on "only what is already picked": unticking a
+        // row must not make it disappear from the review it belongs to.
         $this->assertStringContainsString('modifiedOnly: false', $html);
         $this->assertStringContainsString('catOther: false', $html);
-        $this->assertStringContainsString('catDiff: true', $html);
-        $this->assertStringContainsString('catNew: true', $html);
+    }
+
+    public function test_the_merge_data_carries_what_the_owner_thinks_of_each_contribution(): void
+    {
+        // The stars are the tie-break, so they have to reach the client. They were rendered in
+        // the branch selector and left out of the payload the defaults read.
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $branch->forceFill(['main_rating' => 4])->save();
+
+        $this->actingAs($owner)
+            ->getJson(route('translations.merge.data', ['uuid' => $uuid]) . '?branches=' . $branch->id)
+            ->assertOk()
+            ->assertJsonPath('branches.0.main_rating', 4);
     }
 
     public function test_show_is_owner_only(): void
