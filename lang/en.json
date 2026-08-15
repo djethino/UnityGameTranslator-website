@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "Click a contribution's value to take it, or the Main's to keep your own. These are edited in the mod, not here.",
     "merge.settings_yours": "Your version",
+    "merge.answer_off_screen": "The chosen version is off screen — click to go to it",
     "merge.suggest_rest": "Suggest the rest",
     "merge.block_file_settings": "File settings",
     "merge.block_description": "Description and link",

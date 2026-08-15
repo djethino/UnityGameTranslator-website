@@ -613,6 +613,7 @@
     "merge.branches": "Branch:",
     "merge.settings_pick_hint": "Нажмите на значение вклада, чтобы перенять его, или на значение Main, чтобы оставить своё. Эти настройки меняются в моде, а не здесь.",
     "merge.settings_yours": "Ваша версия",
+    "merge.answer_off_screen": "Выбранный вариант за пределами экрана — нажмите, чтобы перейти к нему",
     "merge.suggest_rest": "Предложить остальное",
     "merge.block_file_settings": "Настройки файла",
     "merge.block_description": "Описание и ссылка",

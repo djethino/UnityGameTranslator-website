@@ -371,7 +371,10 @@ class MergeViewStateTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('applySmartDefaults()', $html);
-        $this->assertStringContainsString("{ 'H': 3, 'V': 2, 'A': 1", $html);
+        // ⚠ The scale itself is no longer in the page: it went down to the shared core, because
+        // two screens were ranking the same three letters from two hand-written maps and a
+        // barème that decides who wins a merge is the last thing that should exist twice.
+        $this->assertStringContainsString('this.tagRank(', $html);
         $this->assertStringContainsString("source: 'main',", $html);
 
         // ⚠ A contribution can be a TAG and not a word: reading the Main's machine translation
@@ -478,6 +481,71 @@ class MergeViewStateTest extends TestCase
         // table is laid out on its own content until somebody drags an edge, and a table of two
         // rows is narrower than one of six thousand — measured: 37px short on the Main column.
         $this->assertStringContainsString('alignGridsToEachOther()', $html);
+    }
+
+    public function test_the_tag_scale_exists_once(): void
+    {
+        // 🔴 The invariant behind moving it: ONE copy in the JavaScript. A second one is two
+        // screens free to disagree about which contribution wins, and nothing would say so.
+        $js = collect(glob(resource_path('js/components/*.js')))
+            ->merge(glob(resource_path('views/**/*.blade.php')))
+            ->merge(glob(resource_path('views/*/*.blade.php')));
+
+        $copies = $js->filter(fn ($file) => str_contains(file_get_contents($file), "'H': 3, 'V': 2, 'A': 1"))
+            ->map(fn ($file) => basename($file))
+            ->values()
+            ->all();
+
+        $this->assertSame(['translation-editor.js'], $copies);
+    }
+
+    public function test_a_row_says_which_way_its_answer_is(): void
+    {
+        // 🔴 A row whose answer is off screen reads as a row nobody answered. Measured: the box
+        // ended at 1444px and the third contribution began at 1450, so with four contributions
+        // this is the ordinary case. The mark rides the last frozen cell on one side and a
+        // zero-width rail frozen to the box's right edge on the other, floats over the rows
+        // rather than taking width from them, and scrolls to the answer when clicked.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('refreshOffScreenSides()', $html);
+        $this->assertStringContainsString('goToLineAnswer(key)', $html);
+        $this->assertStringContainsString('class="answer-rail"', $html);
+    }
+
+    public function test_no_alpine_expression_uses_a_grammar_the_csp_build_refuses(): void
+    {
+        // 🔴 This site runs @alpinejs/csp, whose expression parser is deliberately restricted —
+        // and an expression it cannot parse DOES NOT THROW: it evaluates to nothing. Both traps
+        // were hit in one afternoon on this screen, and both looked identical from the outside:
+        // every mark rendered, every one hidden, nothing in the console.
+        //
+        //   · optional chaining          selections[key]?.source
+        //   · a call compared to a value  answerArrow(x) === 'left'
+        //
+        // The idiom the rest of the project uses is a bare call returning a boolean.
+        $views = collect(glob(resource_path('views/**/*.blade.php')))
+            ->merge(glob(resource_path('views/*/*.blade.php')))
+            ->merge(glob(resource_path('views/*.blade.php')));
+
+        $offenders = [];
+        foreach ($views as $file) {
+            $markup = explode('<script', file_get_contents($file))[0];
+
+            if (preg_match('/(x-show|x-if|:class|x-text)="[^"]*\?\./', $markup)) {
+                $offenders[] = basename($file) . ' (optional chaining)';
+            }
+            if (preg_match('/(x-show|x-if)="[^"]*\w\([^"]*\)\s*===/', $markup)) {
+                $offenders[] = basename($file) . ' (call compared to a value)';
+            }
+        }
+
+        $this->assertSame([], $offenders);
     }
 
     public function test_show_is_owner_only(): void

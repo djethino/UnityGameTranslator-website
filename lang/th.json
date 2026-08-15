@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "คลิกที่ค่าของการมีส่วนร่วมเพื่อรับมา หรือคลิกค่าของ Main เพื่อคงค่าของคุณไว้ การตั้งค่าเหล่านี้แก้ไขในม็อด ไม่ใช่ที่นี่",
     "merge.settings_yours": "เวอร์ชันของคุณ",
+    "merge.answer_off_screen": "เวอร์ชันที่เลือกอยู่นอกหน้าจอ — คลิกเพื่อไปยังเวอร์ชันนั้น",
     "merge.suggest_rest": "เสนอส่วนที่เหลือ",
     "merge.block_file_settings": "การตั้งค่าของไฟล์",
     "merge.block_description": "คำอธิบายและลิงก์",

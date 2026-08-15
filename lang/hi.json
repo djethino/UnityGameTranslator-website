@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "किसी योगदान का मान लेने के लिए उस पर क्लिक करें, या अपना बनाए रखने के लिए Main के मान पर। ये सेटिंग्स मॉड में बदली जाती हैं, यहाँ नहीं।",
     "merge.settings_yours": "आपका संस्करण",
+    "merge.answer_off_screen": "चुना गया संस्करण स्क्रीन से बाहर है — वहाँ जाने के लिए क्लिक करें",
     "merge.suggest_rest": "बाकी के लिए सुझाव",
     "merge.block_file_settings": "फ़ाइल सेटिंग्स",
     "merge.block_description": "विवरण और लिंक",

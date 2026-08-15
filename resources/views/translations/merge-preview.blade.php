@@ -1069,8 +1069,6 @@ document.addEventListener('alpine:init', () => {
          * (F5 mid-review) must not be overwritten by the defaults.
          */
         applySmartDefaults() {
-            const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
-
             for (const key of this.allKeys) {
                 if (key in this.selections) continue;
                 const hasLocal = key in this.localData;
@@ -1084,8 +1082,9 @@ document.addEventListener('alpine:init', () => {
                     if (this.entriesDiffer(key)) {
                         const localTag = this.getTag(this.localData[key]);
                         const onlineTag = this.getTag(this.onlineData[key]);
-                        const localPriority = tagPriority[localTag] || 0;
-                        const onlinePriority = tagPriority[onlineTag] || 0;
+                        // The shared scale, not a copy of it: see translation-editor.js.
+                        const localPriority = this.tagRank(localTag);
+                        const onlinePriority = this.tagRank(onlineTag);
 
                         this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
                     } else {

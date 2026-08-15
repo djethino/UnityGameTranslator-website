@@ -613,6 +613,7 @@
     "merge.branches": "Branche:",
     "merge.settings_pick_hint": "Kliknij wartość wkładu, aby ją przejąć, albo wartość Maina, aby zachować swoją. Te ustawienia zmienia się w modzie, nie tutaj.",
     "merge.settings_yours": "Twoja wersja",
+    "merge.answer_off_screen": "Wybrana wersja jest poza ekranem — kliknij, aby do niej przejść",
     "merge.suggest_rest": "Zaproponuj resztę",
     "merge.block_file_settings": "Ustawienia pliku",
     "merge.block_description": "Opis i odnośnik",

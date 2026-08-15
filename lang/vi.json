@@ -613,6 +613,7 @@
     "merge.branches": "Branch:",
     "merge.settings_pick_hint": "Nhấp vào giá trị của một đóng góp để lấy, hoặc vào giá trị của Main để giữ giá trị của bạn. Các thiết lập này được sửa trong mod, không phải ở đây.",
     "merge.settings_yours": "Phiên bản của bạn",
+    "merge.answer_off_screen": "Bản đã chọn nằm ngoài màn hình — nhấp để đi tới đó",
     "merge.suggest_rest": "Gợi ý phần còn lại",
     "merge.block_file_settings": "Thiết lập của tệp",
     "merge.block_description": "Mô tả và liên kết",

@@ -222,6 +222,54 @@
 .editor-hscroll::-webkit-scrollbar-thumb { background: rgb(75 85 99); border-radius: 9999px; }
 .editor-hscroll::-webkit-scrollbar-thumb:hover { background: rgb(139 92 246); }
 
+/* The far end of the scrolling area, per row.
+ *
+ * Zero width and frozen to the right edge of the box: it takes no room from the columns and
+ * carries no data, it is somewhere for a mark to be. The mark inside is positioned against it,
+ * so it hangs INSIDE the box rather than past its edge.
+ *
+ * ⚠ width AND min/max: under fixed layout a column with no width shares out whatever is left,
+ * and this one must share out nothing. */
+.answer-rail {
+    position: sticky;
+    right: 0;
+    z-index: 20;
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* The mark that says the answer is off to one side.
+ *
+ * 🔴 It floats OVER the rows rather than taking width, because width taken from a merge grid is
+ * width taken from the text being compared — and this is a signpost, not content. Hence the
+ * transparency: what is underneath has to stay readable.
+ *
+ * It pulses so that it reads as "there is something over there" rather than as decoration
+ * printed on the row. Slowly, and between two states that are both legible: a mark that
+ * disappears every second is one you cannot point at.
+ *
+ * ⚠ Motion is a preference. Somebody who has asked their system for less of it gets a mark that
+ * simply sits there, at the readable end of the same range. */
+.answer-mark {
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 0 3px rgb(17 24 39), 0 0 3px rgb(17 24 39);
+    animation: answer-pulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes answer-pulse {
+    from { opacity: 0.4; }
+    to   { opacity: 0.95; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .answer-mark { animation: none; opacity: 0.85; }
+}
+
 /* A table that moves sideways WITH the grid and shows no bar of its own.
  *
  * Same rule as the mirror above, one step further: never two bars for one movement. The merge

@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "Klik op de waarde van een bijdrage om die over te nemen, of op die van Main om je eigen te houden. Deze instellingen bewerk je in de mod, niet hier.",
     "merge.settings_yours": "Jouw versie",
+    "merge.answer_off_screen": "De gekozen versie staat buiten beeld — klik om ernaartoe te gaan",
     "merge.suggest_rest": "Rest voorstellen",
     "merge.block_file_settings": "Bestandsinstellingen",
     "merge.block_description": "Beschrijving en link",

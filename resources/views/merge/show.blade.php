@@ -297,6 +297,10 @@
                                         <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                     </th>
                                 </template>
+                                {{-- The far end of the scrolling area. Zero width, frozen to the
+                                     right edge of the box: it takes no room and carries no data,
+                                     it is only somewhere for a mark to be. --}}
+                                <th class="answer-rail"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -352,6 +356,13 @@
                                             </template>
                                         </td>
                                     </template>
+                                    <td class="answer-rail"><button type="button"
+                                        x-show="answerRight(settingsPick[row.id])" x-cloak
+                                        @click.stop="goToAnswer(settingsPick[row.id])"
+                                        class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
+                                        :class="answerArrowColour(settingsPick[row.id])"
+                                        :title="offScreenHint"
+                                        ><span class="answer-mark" x-text="answerArrow(settingsPick[row.id])"></span></button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -417,6 +428,10 @@
                                         <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                     </th>
                                 </template>
+                                {{-- The far end of the scrolling area. Zero width, frozen to the
+                                     right edge of the box: it takes no room and carries no data,
+                                     it is only somewhere for a mark to be. --}}
+                                <th class="answer-rail"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -480,6 +495,13 @@
                                             </template>
                                         </td>
                                     </template>
+                                    <td class="answer-rail"><button type="button"
+                                        x-show="answerRight(publicationPick[row.field])" x-cloak
+                                        @click.stop="goToAnswer(publicationPick[row.field])"
+                                        class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
+                                        :class="answerArrowColour(publicationPick[row.field])"
+                                        :title="offScreenHint"
+                                        ><span class="answer-mark" x-text="answerArrow(publicationPick[row.field])"></span></button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -562,6 +584,7 @@
                  14rem" while the chrome above it runs to some four hundred pixels, so it hung below
                  the fold and took its horizontal scrollbar with it. --}}
             <div x-ref="gridBox"
+                 @scroll="refreshOffScreenSides()"
                  class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
                  :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
                 {{-- border-separate, and it is not cosmetic: with the default collapsed borders,
@@ -645,6 +668,7 @@
                                     <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
                                 </th>
                             </template>
+                            <th class="answer-rail"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -672,9 +696,31 @@
 
                                 {{-- Key --}}
                                 <td data-col="key"
-                                    class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
+                                    class="relative px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
                                     :class="showIndexColumn ? 'left-16' : 'left-0'">
                                     <span class="editor-text" :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
+
+                                    {{-- The answer is that way.
+
+                                         🔴 A row whose answer is off screen reads as a row
+                                         nobody answered. With four contributions the grid is
+                                         twice the width of the window, so this is the ordinary
+                                         case, not an edge one.
+
+                                         It rides the last frozen cell — this one, unless the pin
+                                         moved the edge past Main — so it needs no measuring: it
+                                         follows the pin, the index column and every drag on its
+                                         own. It floats OVER the scrolling content rather than
+                                         taking width, and it goes there when clicked. --}}
+                                    <template x-if="!pinMain">
+                                        <button type="button"
+                                        x-show="lineAnswerLeft(key)" x-cloak
+                                        @click.stop="goToLineAnswer(key)"
+                                        class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
+                                        :class="lineAnswerColour(key)"
+                                        :title="offScreenHint"
+                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button>
+                                    </template>
                                 </td>
 
                                 {{-- Main Tag (clickable for tag change) --}}
@@ -698,10 +744,21 @@
                                 </td>
 
                                 {{-- Main Value (click = keep/validate main, dblclick/pencil = edit) --}}
-                                <td data-col="main" class="px-4 py-2 border-l border-gray-700 merge-cell"
+                                <td data-col="main" class="relative px-4 py-2 border-l border-gray-700 merge-cell"
                                     :class="[getCellClass(key, 'main'), isDeleted(key) ? 'deleted-cell' : '']"
                                     @click="select(key, 'main')"
                                     @dblclick="editCell(key, getValue(mainData[key]))">
+                                    {{-- Pinned, the frozen block ends here, so the mark moves with
+                                         it. Same one, one cell further right. --}}
+                                    <template x-if="pinMain">
+                                        <button type="button"
+                                        x-show="lineAnswerLeft(key)" x-cloak
+                                        @click.stop="goToLineAnswer(key)"
+                                        class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
+                                        :class="lineAnswerColour(key)"
+                                        :title="offScreenHint"
+                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button>
+                                    </template>
                                     <span class="edit-affordance" x-show="mainData[key] !== undefined">
                                         <button type="button" x-show="isRowModified(key)" @click.stop="revertRow(key)"
                                             title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
@@ -754,11 +811,18 @@
                                         </template>
                                     </td>
                                 </template>
+                                <td class="answer-rail"><button type="button"
+                                        x-show="lineAnswerRight(key)" x-cloak
+                                        @click.stop="goToLineAnswer(key)"
+                                        class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
+                                        :class="lineAnswerColour(key)"
+                                        :title="offScreenHint"
+                                        ><span class="answer-mark" x-text="lineAnswerArrow(key)"></span></button></td>
                             </tr>
                         </template>
 
                         <tr x-show="filteredKeys.length === 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-12 text-center text-gray-500">
+                            <td :colspan="(showIndexColumn ? 5 : 4) + branches.length * 2" class="py-12 text-center text-gray-500">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                                 <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
@@ -768,7 +832,7 @@
                         </tr>
 
                         <tr x-show="hiddenCount > 0">
-                            <td :colspan="(showIndexColumn ? 4 : 3) + branches.length * 2" class="py-3 text-center">
+                            <td :colspan="(showIndexColumn ? 5 : 4) + branches.length * 2" class="py-3 text-center">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                                 <button type="button" @click="showMore()"
@@ -1158,6 +1222,10 @@ document.addEventListener('alpine:init', () => {
                 this.$nextTick(() => this.alignGridsToEachOther());
             }
 
+            // Once the columns are laid out: a grid wider than its box has answers off screen
+            // from the first paint, not only after somebody scrolls.
+            this.$nextTick(() => this.refreshOffScreenSides());
+
             this.calculateStats();
             this.applySmartDefaults();
             this.loaded = true;
@@ -1189,9 +1257,91 @@ document.addEventListener('alpine:init', () => {
          * owner unpicks whatever they disagree with before applying. A default is a starting
          * point, not a decision taken on somebody's behalf.
          */
-        /** Human over validated over machine. Skipped and untranslatable rank with machine. */
-        tagRank(tag) {
-            return { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 }[tag] ?? 0;
+        /**
+         * The column a chosen source lives in.
+         *
+         * ⚠ A rewording shows in the Main's own column, because that is where it will be
+         * written — so it points there, not at the contribution it was written over.
+         */
+        /** Said on the mark itself, since a bare arrow explains nothing on its own. */
+        offScreenHint: @js(__('merge.answer_off_screen')),
+
+        columnOfSource(source) {
+            if (source === undefined || source === null || source === '') return null;
+            if (source === 'main' || source === 'manual') return 'main';
+            if (typeof source === 'number') return 'branch-' + source;
+            if (String(source).startsWith('branch_')) return 'branch-' + String(source).slice(7);
+            return 'branch-' + source;
+        },
+
+        /**
+         * The same three answers for a translated line, asked by KEY.
+         *
+         * 🔴 Not `answerArrow(selections[key]?.source)`. This site runs the Alpine **CSP build**,
+         * whose expression parser is deliberately restricted — optional chaining is not part of
+         * the grammar it accepts, and an expression it cannot parse does not throw: it evaluates
+         * to nothing. Every mark on the screen rendered, empty and invisible, and nothing said
+         * why. No other template in the project uses `?.` inside an Alpine attribute; these were
+         * the first, and they are gone.
+         */
+        lineAnswerArrow(key) {
+            const sel = this.selections[key];
+            return sel ? this.answerArrow(sel.source) : '';
+        },
+
+        /**
+         * Shown or not, as a BOOLEAN.
+         *
+         * 🔴 The template asked `lineAnswerArrow(key) === 'left'`, which the CSP build's
+         * restricted parser cannot evaluate — and an expression it cannot parse does not throw:
+         * it comes out falsey. Every mark rendered, every one hidden, nothing in the console.
+         * The rest of the project only ever puts a bare call in an x-show (hasPlaceholderWarning,
+         * isRowModified) and that is not a style preference: it is the grammar.
+         */
+        answerLeft(source) { return this.answerArrow(source) === '«'; },
+        answerRight(source) { return this.answerArrow(source) === '»'; },
+
+        lineAnswerLeft(key) {
+            const sel = this.selections[key];
+            return !!sel && this.answerLeft(sel.source);
+        },
+
+        lineAnswerRight(key) {
+            const sel = this.selections[key];
+            return !!sel && this.answerRight(sel.source);
+        },
+
+        lineAnswerColour(key) {
+            const sel = this.selections[key];
+            return sel ? this.answerArrowColour(sel.source) : '';
+        },
+
+        goToLineAnswer(key) {
+            const sel = this.selections[key];
+            if (sel) this.goToAnswer(sel.source);
+        },
+
+        /** '«' or '»' when this row's answer is out of sight that way, empty when it can be seen. */
+        answerArrow(source) {
+            const col = this.columnOfSource(source);
+            const side = col ? this.offSide[col] : null;
+            return side === 'left' ? '«' : side === 'right' ? '»' : '';
+        },
+
+        /**
+         * The mark's colour: the same three the cells use — green kept, blue taken, purple
+         * reworded — so it says WHO as well as WHICH WAY, without a legend of its own.
+         */
+        answerArrowColour(source) {
+            if (source === 'manual') return 'text-purple-300';
+            if (source === 'main') return 'text-green-400';
+            return 'text-blue-400';
+        },
+
+        /** Go to the answer. The mark then disappears, which is its own confirmation. */
+        goToAnswer(source) {
+            const col = this.columnOfSource(source);
+            if (col) this.scrollColumnIntoView(col);
         },
 
         /**

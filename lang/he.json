@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "לחצו על הערך של תרומה כדי לקחת אותו, או על זה של ה-Main כדי לשמור על שלכם. ההגדרות האלה נערכות במוד, לא כאן.",
     "merge.settings_yours": "הגרסה שלך",
+    "merge.answer_off_screen": "הגרסה שנבחרה נמצאת מחוץ למסך — לחצו כדי לעבור אליה",
     "merge.suggest_rest": "הצעה לשאר",
     "merge.block_file_settings": "הגדרות הקובץ",
     "merge.block_description": "תיאור וקישור",

@@ -613,6 +613,7 @@
     "merge.branches": "Branch'ler:",
     "merge.settings_pick_hint": "Bir katkının değerini almak için üzerine, kendi değerinizi korumak için Main sütunundakine tıklayın. Bu ayarlar burada değil, mod içinde değiştirilir.",
     "merge.settings_yours": "Sürümünüz",
+    "merge.answer_off_screen": "Seçilen sürüm ekranın dışında — gitmek için tıklayın",
     "merge.suggest_rest": "Kalanı öner",
     "merge.block_file_settings": "Dosya ayarları",
     "merge.block_description": "Açıklama ve bağlantı",

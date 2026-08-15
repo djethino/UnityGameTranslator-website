@@ -21,6 +21,7 @@ import { editorWorkbench } from './editor-workbench.js';
 import { editorColumns } from './editor-columns.js';
 import { editorTextMode } from './editor-text-mode.js';
 import { editorHScroll } from './editor-hscroll.js';
+import { editorOffScreen } from './editor-offscreen.js';
 import { editorPin } from './editor-pin.js';
 
 /**
@@ -82,6 +83,7 @@ export function editorCore(config) {
         ...editorTextMode(),
         // ── Reachable horizontal scrollbar (see editor-hscroll.js) ────────
         ...editorHScroll(),
+        ...editorOffScreen(),
         // ── Pinning the reference column (see editor-pin.js) ──────────────
         ...editorPin(),
 
@@ -741,6 +743,21 @@ export function editorCore(config) {
             if (!this.editModal.open) return false;
             return this._placeholderSignature(this.editModal.originalValue)
                 !== this._placeholderSignature(this.editModalValue);
+        },
+
+        /**
+         * How good a line is, as one number: human over validated over machine.
+         *
+         * 🔴 One scale, one copy. Two screens were ranking the same three letters from two
+         * hand-written maps, and a barème that decides who wins a merge is the last thing that
+         * should exist twice. Skipped and untranslatable rank with machine: neither is a claim
+         * that somebody read the line.
+         *
+         * ⚠ There is a third copy, in C#, in the mod's DecideKeyWithTags. It cannot share this
+         * file — but it must say the same thing, and it does.
+         */
+        tagRank(tag) {
+            return { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 }[tag] ?? 0;
         },
 
         // ── Value / tag accessors ({v, t} objects or legacy strings) ─────

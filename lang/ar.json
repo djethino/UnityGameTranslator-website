@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "انقر على قيمة إحدى المساهمات لأخذها، أو على قيمة Main للإبقاء على قيمتك. تُحرَّر هذه الإعدادات في المود لا هنا.",
     "merge.settings_yours": "إصدارك",
+    "merge.answer_off_screen": "النسخة المختارة خارج الشاشة — انقر للانتقال إليها",
     "merge.suggest_rest": "اقترح الباقي",
     "merge.block_file_settings": "إعدادات الملف",
     "merge.block_description": "الوصف والرابط",
