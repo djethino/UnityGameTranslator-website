@@ -49,17 +49,18 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingReportsCount', $pendingReportsCount);
         });
 
-        // Register Blade directive for language flags (SVG via flag-icons CSS)
+        // 🔴 **Flags we draw, not flags we borrow.** This used to emit a `fi fi-xx` span from
+        // flag-icons and a hand-written 90-line map in config/language-flags.php — the last
+        // hand-written language list on the site, the same anti-pattern as config/languages.php.
+        //
+        // It now renders the shared component, which reads catalogs/flags.json: one source for the
+        // site, the mod and the manager, no icon licence to carry, and the tag chip appearing by
+        // itself wherever one flag stands for several languages.
+        //
+        // ⚠ Kept as a directive rather than replaced in the ten templates that call it: swapping
+        // the body switches them all at once, where ten edits are ten chances to miss one.
         Blade::directive('langflag', function ($expression) {
-            return "<?php \$__code = config('language-flags')[$expression] ?? null; echo \$__code ? '<span class=\"fi fi-' . e(\$__code) . '\"></span>' : '🌐'; ?>";
+            return "<?php echo view('components.language-mark', ['language' => $expression])->render(); ?>";
         });
-    }
-
-    /**
-     * Get flag emoji for a language name
-     */
-    public static function getLanguageFlag(string $language): string
-    {
-        return config('language-flags')[$language] ?? '🌐';
     }
 }

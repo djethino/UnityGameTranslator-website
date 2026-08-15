@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Log;
 class CatalogStore
 {
     /** The catalogue documents this site knows about. Also what /catalog is willing to serve. */
-    public const FILES = ['languages', 'loaders', 'models'];
+    public const FILES = ['languages', 'loaders', 'models', 'flags'];
 
     /**
      * A floor, not a target. Any real catalogue has dozens of entries; a handful means something
@@ -214,6 +214,95 @@ class CatalogStore
      * emits iw for Hebrew and most systems say no for Norwegian Bokmål. Dropping them would not
      * lose a language, it would lose the ability to recognise the machine somebody is actually on.
      */
+    /**
+     * What marks one language: its flag, its tag, and whether the tag has to be shown.
+     *
+     * 🔴 **This mirrors UnityGameTranslator.Common.Flags.Mark, which PHP cannot consume.** Same
+     * situation as the theme and the badge words. The rule it mirrors, stated once so the two
+     * cannot drift on a reading: a flag names a COUNTRY and this control names a LANGUAGE, so when
+     * one flag stands for several languages of the catalogue — ten Indian ones, because no Indian
+     * state has a flag of its own; the two Norwegians, because they are two written standards of
+     * one country — every one of them shows its tag beside it. A language with no flag drawn yet
+     * shows its tag alone.
+     *
+     * ⚠ Derived from the catalogue, never from a list: adding an eleventh Indian language turns the
+     * chips on for all eleven with nobody having to remember why.
+     *
+     * @return array{flag: ?string, tag: ?string, showTag: bool}
+     */
+    public static function languageMark(?string $languageName): array
+    {
+        $none = ['flag' => null, 'tag' => null, 'showTag' => false];
+
+        if ($languageName === null || $languageName === '') {
+            return $none;
+        }
+
+        $marks = self::$memo['#marks'] ??= self::buildMarks();
+
+        return $marks[$languageName] ?? $none;
+    }
+
+    /** @return array<string, array{flag: ?string, tag: ?string, showTag: bool}> */
+    private static function buildMarks(): array
+    {
+        $entries = self::document('languages')['languages'] ?? [];
+
+        $carriers = [];
+        foreach ($entries as $entry) {
+            $flag = $entry['flag'] ?? null;
+            if ($flag !== null) {
+                $carriers[$flag] = ($carriers[$flag] ?? 0) + 1;
+            }
+        }
+
+        $marks = [];
+        foreach ($entries as $entry) {
+            $name = (string) ($entry['name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $flag = $entry['flag'] ?? null;
+
+            $marks[$name] = [
+                'flag' => $flag,
+                'tag' => $entry['tag'] ?? null,
+                // No flag means the tag is the only thing naming this language; a shared flag means
+                // it names ten of them at once. Both need the chip, for the same reason.
+                'showTag' => $flag === null || ($carriers[$flag] ?? 0) > 1,
+            ];
+        }
+
+        return $marks;
+    }
+
+    /**
+     * One flag as its grid and palette, or null when it has not been drawn.
+     *
+     * @return array{width: int, height: int, palette: array<string, string>, rows: string[]}|null
+     */
+    public static function flag(?string $id): ?array
+    {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        $document = self::document('flags');
+        $flag = $document['flags'][$id] ?? null;
+
+        if (!is_array($flag) || !isset($flag['palette'], $flag['rows'])) {
+            return null;
+        }
+
+        return [
+            'width' => (int) ($document['grid']['width'] ?? 0),
+            'height' => (int) ($document['grid']['height'] ?? 0),
+            'palette' => $flag['palette'],
+            'rows' => $flag['rows'],
+        ];
+    }
+
     private static function localeIndex(): array
     {
         if (isset(self::$memo['#locales'])) {

@@ -1,0 +1,165 @@
+{
+  "_readme": [
+    "Flags drawn as pixel art, so this project depends on no icon licence.",
+    "A national flag is an official symbol, not a copyrighted work; what is licensed in the",
+    "usual icon sets is their SVG artwork. These are ours.",
+    "",
+    "ONE grid for every flag: 16 wide, 11 tall. A square or 2:1 flag is normalised into it —",
+    "at the size these are shown (12-16 px) the distortion is invisible and one box keeps every",
+    "renderer identical. '.' is transparent, for the one flag that is not a rectangle.",
+    "",
+    "Each row is exactly 16 characters, each character is a key of that flag's palette or '.'.",
+    "The generator refuses anything else.",
+    "",
+    "These are deliberately NOT faithful reproductions. At sixteen pixels wide an emblem is a",
+    "patch of the right colour in the right place, which is what every icon set ships."
+  ],
+
+  "grid": { "width": 16, "height": 11 },
+
+  "flags": {
+    "fr": {
+      "name": "France",
+      "palette": { "b": "#002654", "w": "#FFFFFF", "r": "#CE1126" },
+      "rows": [
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr",
+        "bbbbbwwwwwwrrrrr"
+      ]
+    },
+
+    "de": {
+      "name": "Germany",
+      "palette": { "k": "#000000", "r": "#DD0000", "y": "#FFCE00" },
+      "rows": [
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy"
+      ]
+    },
+
+    "se": {
+      "name": "Sweden",
+      "palette": { "b": "#006AA7", "y": "#FECC00" },
+      "rows": [
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "yyyyyyyyyyyyyyyy",
+        "yyyyyyyyyyyyyyyy",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb",
+        "bbbbbyybbbbbbbbb"
+      ]
+    },
+
+    "jp": {
+      "name": "Japan",
+      "palette": { "w": "#FFFFFF", "r": "#BC002D" },
+      "rows": [
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwrrrrrrwwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwrrrrrrrrwwww",
+        "wwwwwrrrrrrwwwww",
+        "wwwwwwwrrwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwww"
+      ]
+    },
+
+    "tr": {
+      "name": "Turkey",
+      "palette": { "r": "#E30A17", "w": "#FFFFFF" },
+      "rows": [
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrwwwwrrrrrrrrr",
+        "rrwwrrrwwrrrrrrr",
+        "rrwrrrrrwrwrrrrr",
+        "rrwrrrrrrwwwwrrr",
+        "rrwrrrrrwrwrrrrr",
+        "rrwwrrrwwrrrrrrr",
+        "rrrwwwwrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrrrrrrrrrr"
+      ]
+    },
+
+    "gb": {
+      "name": "United Kingdom",
+      "palette": { "b": "#012169", "w": "#FFFFFF", "r": "#C8102E" },
+      "rows": [
+        "bwwbbbbwwbbbbwwb",
+        "bbwwbbbwwbbbwwbb",
+        "bbbwwbbwwbbwwbbb",
+        "rbbbwwwwwwwwbbbr",
+        "wrrrrwwwwwwrrrrw",
+        "wwwwwwrrrrwwwwww",
+        "wrrrrwwwwwwrrrrw",
+        "rbbbwwwwwwwwbbbr",
+        "bbbwwbbwwbbwwbbb",
+        "bbwwbbbwwbbbwwbb",
+        "bwwbbbbwwbbbbwwb"
+      ]
+    },
+
+    "in": {
+      "name": "India",
+      "palette": { "o": "#FF9933", "w": "#FFFFFF", "g": "#138808", "b": "#000088" },
+      "rows": [
+        "oooooooooooooooo",
+        "oooooooooooooooo",
+        "oooooooooooooooo",
+        "wwwwwwwwwwwwwwww",
+        "wwwwwwwbbwwwwwww",
+        "wwwwwwbwwbwwwwww",
+        "wwwwwwwbbwwwwwww",
+        "wwwwwwwwwwwwwwww",
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ]
+    },
+
+    "np": {
+      "name": "Nepal",
+      "palette": { "c": "#003893", "r": "#DC143C", "w": "#FFFFFF" },
+      "rows": [
+        "ccc.............",
+        "crcc............",
+        "crwrcc..........",
+        "crrrrcc.........",
+        "crrrrrcc........",
+        "ccccccccc.......",
+        "crrrrrcc........",
+        "crwwwrcc........",
+        "crrrrrrcc.......",
+        "crrrrrrrcc......",
+        "cccccccccc......"
+      ]
+    }
+  }
+}

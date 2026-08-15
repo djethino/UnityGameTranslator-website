@@ -158,10 +158,14 @@ class RefreshCatalog extends Command
      */
     private function shrinkage(string $name, string $incoming): ?string
     {
+        // ⚠ An unlisted document threw here rather than being refused — a `match` with no default
+        // on a list that grows. `flags` was the first to arrive after this was written, and the
+        // whole refresh died on it instead of skipping one file.
         $key = match ($name) {
             'languages' => 'languages',
             'loaders' => 'loaders',
             'models' => 'models',
+            'flags' => 'flags',
         };
 
         $new = count(json_decode($incoming, true)[$key] ?? []);

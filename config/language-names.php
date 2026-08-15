@@ -5,7 +5,10 @@
  * Maps full English language names (as stored in translations.target_language)
  * to the language's own native name — what a speaker of that language would
  * actually type in a search engine ("Français", "Deutsch", "日本語"...).
- * Keys must stay in sync with config/language-flags.php.
+ * Keys must stay in sync with the catalogue's language names — catalogs/languages.json,
+ * read through CatalogStore. (This used to point at config/language-flags.php, which was
+ * the last hand-written language list on the site and has been deleted: the flags now come
+ * from the catalogue like everything else.)
  */
 return [
     // Major languages

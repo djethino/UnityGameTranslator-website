@@ -19,7 +19,7 @@
   "languages": [
     {
       "name": "English",
-      "tag": "en",
+      "tag": "en", "flag": "gb",
       "providers": {
         "google": "en",
         "deepl": {
@@ -30,7 +30,7 @@
     },
     {
       "name": "French",
-      "tag": "fr",
+      "tag": "fr", "flag": "fr",
       "providers": {
         "google": "fr",
         "deepl": {
@@ -41,7 +41,7 @@
     },
     {
       "name": "German",
-      "tag": "de",
+      "tag": "de", "flag": "de",
       "providers": {
         "google": "de",
         "deepl": {
@@ -107,7 +107,7 @@
     },
     {
       "name": "Japanese",
-      "tag": "ja",
+      "tag": "ja", "flag": "jp",
       "providers": {
         "google": "ja",
         "deepl": {
@@ -169,7 +169,7 @@
     },
     {
       "name": "Turkish",
-      "tag": "tr",
+      "tag": "tr", "flag": "tr",
       "providers": {
         "google": "tr",
         "deepl": {
@@ -191,7 +191,7 @@
     },
     {
       "name": "Swedish",
-      "tag": "sv",
+      "tag": "sv", "flag": "se",
       "providers": {
         "google": "sv",
         "deepl": {
@@ -624,7 +624,7 @@
     },
     {
       "name": "Hindi",
-      "tag": "hi",
+      "tag": "hi", "flag": "in",
       "providers": {
         "google": "hi",
         "deepl": {
@@ -747,7 +747,7 @@
     },
     {
       "name": "Nepali",
-      "tag": "ne",
+      "tag": "ne", "flag": "np",
       "providers": {
         "google": "ne",
         "deepl": {
