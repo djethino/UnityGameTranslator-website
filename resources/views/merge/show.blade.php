@@ -1081,7 +1081,62 @@ document.addEventListener('alpine:init', () => {
             this.buildPublicationRows(payload);
 
             this.calculateStats();
+            this.applySmartDefaults();
             this.loaded = true;
+        },
+
+        /**
+         * Pre-select what a Main owner would almost always pick anyway.
+         *
+         * 🔴 The other comparison screen has done this since it existed; this one never has, so
+         * the same file opened from two places asked for two different amounts of work. Same
+         * rule, ported: a line only a contribution has is taken, and where both hold one the
+         * better tag wins — human over validated over machine — with the Main keeping ties.
+         *
+         * ⚠ Keys already chosen are skipped, so a review interrupted and resumed (the pending
+         * state is restored on load) does not have its decisions overwritten by the defaults.
+         *
+         * ⚠ Nothing is written by this: it fills the same selection map a click fills, and the
+         * owner unpicks whatever they disagree with before applying. A default is a starting
+         * point, not a decision taken on somebody's behalf.
+         */
+        applySmartDefaults() {
+            const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
+
+            for (const key of this.allKeys) {
+                if (key in this.selections) continue;
+                if (this.isDeleted(key)) continue;
+
+                const mainEntry = this.mainData[key];
+                const mainTag = mainEntry === undefined ? -1
+                    : (tagPriority[this.getTag(mainEntry)] ?? 0);
+
+                // The best a contribution offers for this line. Several branches can hold it, so
+                // this is a comparison among them before any comparison with the Main.
+                let best = null;
+                for (const branch of this.branches) {
+                    const entry = branch.content[key];
+                    if (entry === undefined) continue;
+                    if (mainEntry !== undefined
+                        && this.getValue(entry) === this.getValue(mainEntry)) continue;
+
+                    const rank = tagPriority[this.getTag(entry)] ?? 0;
+                    if (!best || rank > best.rank) {
+                        best = { branch, entry, rank };
+                    }
+                }
+
+                if (!best) continue;
+                // The Main holds it at least as well: it keeps it, and no selection is recorded —
+                // an unmarked row means "nothing changes here", which is what it does.
+                if (best.rank <= mainTag) continue;
+
+                this.selections[key] = {
+                    source: 'branch_' + best.branch.id,
+                    value: this.getValue(best.entry),
+                    tag: this.getTag(best.entry),
+                };
+            }
         },
 
         /**

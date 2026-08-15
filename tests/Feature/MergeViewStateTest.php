@@ -303,6 +303,25 @@ class MergeViewStateTest extends TestCase
         $this->assertStringNotContainsString('togglePublicationRow', $html);
     }
 
+    public function test_the_merge_screen_pre_selects_what_an_owner_would_pick(): void
+    {
+        // 🔴 The other comparison screen has done this since it existed and this one never had,
+        // so the same file opened from two places asked for two different amounts of work. The
+        // assertion is on the page carrying the rule, since the selection itself is client-side.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('applySmartDefaults()', $html);
+
+        // The rule itself: a better tag wins, and the Main keeps ties.
+        $this->assertStringContainsString("tagPriority = { 'H': 3, 'V': 2, 'A': 1", $html);
+        $this->assertStringContainsString('best.rank <= mainTag', $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
