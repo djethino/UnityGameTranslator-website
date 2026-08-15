@@ -1004,16 +1004,29 @@ document.addEventListener('alpine:init', () => {
         filters: {
             catNew: true,
             catDiff: true,
-            catOther: true,
+            // 🔴 Off: on a real lineage this is 2497 rows out of 2536 — the lines both sides
+            // already agree on. Leaving them in means the few that need a decision are found by
+            // scrolling past a hundred that do not. The box is in the bar, one click away.
+            catOther: false,
             tagH: true,
             tagV: true,
             tagA: true,
             tagS: true,
             tagM: true,
-            // 🔴 On by default now that the screen arrives with choices already made. Landing on
-            // a whole file to look for the handful of rows something happened to is work the
-            // screen can do itself; the box is right there to widen it back out.
-            modifiedOnly: true
+            // 🔴 **Off, and it has to be.** It hides every row with no pending decision — which
+            // is exactly what a DIFFERING line is until somebody arbitrates it. Measured on a
+            // real lineage: 21 new lines pre-taken, 35 differences pre-taken by nobody, and with
+            // this on the screen showed the 21 and hid the 35. The review lost the rows it exists
+            // for.
+            //
+            // ⚠ And the defaults cannot cover the gap: on a differing line, pre-selecting the
+            // Main is not a neutral act — the apply endpoint reads it as "validate this", which
+            // promotes a machine translation to human-checked. Marking 35 lines as reviewed
+            // because nobody looked at them is the one outcome worse than scrolling.
+            //
+            // What the screen opens on instead is catOther off: everything that needs a decision,
+            // nothing that does not.
+            modifiedOnly: false
         }
     }, {
         loaded: false,

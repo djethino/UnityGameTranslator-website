@@ -370,6 +370,29 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
     }
 
+    public function test_the_screen_opens_on_what_needs_a_decision(): void
+    {
+        // 🔴 Measured on a real lineage (2536 keys, 21 new, 35 differing): with "modified only"
+        // on, the screen showed the 21 pre-taken lines and hid all 35 differences — a review
+        // that lost the rows it exists for. The defaults cannot cover that gap either, because
+        // on a differing line pre-selecting the Main is not neutral: the apply endpoint reads it
+        // as "validate this" and promotes a machine translation to human-checked.
+        //
+        // So the screen opens on the categories instead: everything that needs a decision, and
+        // not the 2497 lines both sides already agree on.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('modifiedOnly: false', $html);
+        $this->assertStringContainsString('catOther: false', $html);
+        $this->assertStringContainsString('catDiff: true', $html);
+        $this->assertStringContainsString('catNew: true', $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
