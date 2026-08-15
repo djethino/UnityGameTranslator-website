@@ -613,6 +613,7 @@
     "merge.branches": "Branche:",
     "merge.settings_pick_hint": "Kliknij wartość wkładu, aby ją przejąć, albo wartość Maina, aby zachować swoją. Te ustawienia zmienia się w modzie, nie tutaj.",
     "merge.settings_yours": "Twoja wersja",
+    "merge.suggest_rest": "Zaproponuj resztę",
     "merge.block_file_settings": "Ustawienia pliku",
     "merge.block_description": "Opis i odnośnik",
     "merge.publication_pick_hint": "Kliknij wartość wkładu, aby ją przejąć: trafia ona do kolumny Main, gdzie przed zapisem możesz ją przeredagować. Tego, czy tłumaczenie jest ukończone, nigdy nie przejmuje się z wkładu — to Ty o tym mówisz.",

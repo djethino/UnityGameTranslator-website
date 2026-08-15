@@ -371,7 +371,7 @@ class MergeViewStateTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('applySmartDefaults()', $html);
-        $this->assertStringContainsString("tagPriority = { 'H': 3, 'V': 2, 'A': 1", $html);
+        $this->assertStringContainsString("{ 'H': 3, 'V': 2, 'A': 1", $html);
         $this->assertStringContainsString("source: 'main',", $html);
 
         // ⚠ A contribution can be a TAG and not a word: reading the Main's machine translation
@@ -379,6 +379,12 @@ class MergeViewStateTest extends TestCase
         // them — seventeen on that lineage, none ever settled.
         $this->assertStringContainsString(
             'this.getTag(entry) === this.getTag(mainEntry)) continue;', $html);
+
+        // ⚠ The button counts what it is about to answer with the SAME method that answers it.
+        // Counting every unanswered key instead offered to settle 2480 lines both sides already
+        // agree on — rows it would not have touched.
+        $this->assertStringContainsString('bestContributionFor(key)', $html);
+        $this->assertStringContainsString('suggestTheRest()', $html);
 
         // ⭐ Two contributions of equal quality on one line are separated by the stars the owner
         // already gave their authors, not by asking again line by line. Unrated or equal leaves

@@ -613,6 +613,7 @@
     "merge.branches": "Branch:",
     "merge.settings_pick_hint": "Klik nilai sebuah kontribusi untuk mengambilnya, atau nilai Main untuk mempertahankan milik Anda. Pengaturan ini diubah di mod, bukan di sini.",
     "merge.settings_yours": "Versimu",
+    "merge.suggest_rest": "Sarankan sisanya",
     "merge.block_file_settings": "Pengaturan berkas",
     "merge.block_description": "Deskripsi dan tautan",
     "merge.publication_pick_hint": "Klik nilai sebuah kontribusi untuk mengambilnya: nilainya masuk ke kolom Main, tempat Anda bisa menulisnya ulang sebelum menyimpan. Apakah sebuah terjemahan sudah selesai tidak pernah diambil dari kontribusi — itu tetap Anda yang menentukan.",

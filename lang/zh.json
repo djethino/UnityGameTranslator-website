@@ -613,6 +613,7 @@
     "merge.branches": "Branch：",
     "merge.settings_pick_hint": "点击某个贡献的值即可采用，点击 Main 的值则保留你自己的。这些设置在模组中修改，不在此处。",
     "merge.settings_yours": "你的版本",
+    "merge.suggest_rest": "为其余部分提出建议",
     "merge.block_file_settings": "文件设置",
     "merge.block_description": "说明与链接",
     "merge.publication_pick_hint": "点击某个贡献的值即可采用：它会进入 Main 一列，保存前你可以在那里改写。译文是否已完成绝不会从贡献中采用，这仍由你来决定。",

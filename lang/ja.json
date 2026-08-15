@@ -613,6 +613,7 @@
     "merge.branches": "Branch：",
     "merge.settings_pick_hint": "貢献側の値をクリックすると取り込み、Main 側をクリックすると自分の値を保ちます。これらの設定はここではなく MOD 側で変更します。",
     "merge.settings_yours": "あなたの版",
+    "merge.suggest_rest": "残りを提案",
     "merge.block_file_settings": "ファイルの設定",
     "merge.block_description": "説明とリンク",
     "merge.publication_pick_hint": "貢献側の値をクリックすると取り込みます。値は Main の列に入り、保存前に書き直せます。翻訳が完成しているかどうかが貢献から取り込まれることはなく、判断はご自身に残ります。",

@@ -613,6 +613,7 @@
     "merge.branches": "Branch:",
     "merge.settings_pick_hint": "기여의 값을 클릭하면 가져오고, Main의 값을 클릭하면 내 값을 유지합니다. 이 설정은 여기가 아니라 모드에서 바꿉니다.",
     "merge.settings_yours": "내 버전",
+    "merge.suggest_rest": "나머지 제안",
     "merge.block_file_settings": "파일 설정",
     "merge.block_description": "설명과 링크",
     "merge.publication_pick_hint": "기여의 값을 클릭하면 가져옵니다. 값은 Main 열로 들어가며, 저장하기 전에 고쳐 쓸 수 있습니다. 번역이 완료되었는지는 기여에서 가져오지 않으며, 그 판단은 본인에게 남습니다.",

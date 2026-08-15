@@ -613,6 +613,7 @@
     "merge.branches": "Branches :",
     "merge.settings_pick_hint": "Cliquez sur la valeur d'une contribution pour la reprendre, ou sur celle du Main pour garder la vôtre. Ces réglages se modifient dans le mod, pas ici.",
     "merge.settings_yours": "Votre version",
+    "merge.suggest_rest": "Proposer le reste",
     "merge.block_file_settings": "Réglages du fichier",
     "merge.block_description": "Description et lien",
     "merge.publication_pick_hint": "Cliquez sur la valeur d'une contribution pour la reprendre : elle arrive dans la colonne Main, où vous pouvez la reformuler avant d'enregistrer. Qu'une traduction soit terminée ne se reprend jamais d'une contribution : cela reste à vous de le dire.",

@@ -613,6 +613,7 @@
     "merge.branches": "Branch:",
     "merge.settings_pick_hint": "Clicca sul valore di un contributo per prenderlo, o su quello del Main per tenere il tuo. Queste impostazioni si modificano nel mod, non qui.",
     "merge.settings_yours": "La tua versione",
+    "merge.suggest_rest": "Proponi il resto",
     "merge.block_file_settings": "Impostazioni del file",
     "merge.block_description": "Descrizione e link",
     "merge.publication_pick_hint": "Clicca sul valore di un contributo per prenderlo: finisce nella colonna Main, dove puoi riformularlo prima di salvare. Se una traduzione sia finita non si prende mai da un contributo: quello lo dici tu.",

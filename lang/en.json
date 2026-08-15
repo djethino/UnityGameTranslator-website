@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "Click a contribution's value to take it, or the Main's to keep your own. These are edited in the mod, not here.",
     "merge.settings_yours": "Your version",
+    "merge.suggest_rest": "Suggest the rest",
     "merge.block_file_settings": "File settings",
     "merge.block_description": "Description and link",
     "merge.publication_pick_hint": "Click a contribution's value to take it: it lands in the Main column, where you can reword it before saving. Whether a translation is finished is never taken from a contribution — that stays yours to say.",

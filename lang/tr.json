@@ -613,6 +613,7 @@
     "merge.branches": "Branch'ler:",
     "merge.settings_pick_hint": "Bir katkının değerini almak için üzerine, kendi değerinizi korumak için Main sütunundakine tıklayın. Bu ayarlar burada değil, mod içinde değiştirilir.",
     "merge.settings_yours": "Sürümünüz",
+    "merge.suggest_rest": "Kalanı öner",
     "merge.block_file_settings": "Dosya ayarları",
     "merge.block_description": "Açıklama ve bağlantı",
     "merge.publication_pick_hint": "Bir katkının değerini almak için üzerine tıklayın: değer Main sütununa geçer, kaydetmeden önce orada yeniden yazabilirsiniz. Bir çevirinin bitmiş olup olmadığı hiçbir zaman bir katkıdan alınmaz — bunu siz söylersiniz.",

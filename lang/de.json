@@ -613,6 +613,7 @@
     "merge.branches": "Branches:",
     "merge.settings_pick_hint": "Klicke auf den Wert eines Beitrags, um ihn zu übernehmen, oder auf den von Main, um deinen zu behalten. Diese Einstellungen werden im Mod bearbeitet, nicht hier.",
     "merge.settings_yours": "Deine Version",
+    "merge.suggest_rest": "Rest vorschlagen",
     "merge.block_file_settings": "Dateieinstellungen",
     "merge.block_description": "Beschreibung und Link",
     "merge.publication_pick_hint": "Klicke auf den Wert eines Beitrags, um ihn zu übernehmen: er landet in der Spalte Main, wo du ihn vor dem Speichern umformulieren kannst. Ob eine Übersetzung fertig ist, wird nie aus einem Beitrag übernommen – das sagst du.",

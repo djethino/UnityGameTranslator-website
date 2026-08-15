@@ -836,6 +836,25 @@
                         </div>
                     </div>
                     <div class="flex gap-4 items-center shrink-0">
+                        {{-- The way back to the proposal.
+
+                             🔴 The screen arrives already answered, and until now nothing could
+                             put that back: the defaults run once, at load, so Cancel — or
+                             unticking a few rows by hand — left the review at zero with a page
+                             reload as the only way out.
+
+                             ⚠ It touches only what has no answer yet, which is what its name
+                             says: a row you decided is not one of "the rest". So it is safe to
+                             press at any point, and pressing it twice does nothing the second
+                             time.
+
+                             Shown when there is something left to answer, rather than always: a
+                             button that does nothing is a button that teaches nothing. --}}
+                        <button type="button" @click="suggestTheRest()"
+                            x-show="undecidedCount > 0" x-cloak
+                            class="text-gray-400 hover:text-white text-sm transition">
+                            <i class="fas fa-wand-magic-sparkles mr-1"></i> {{ __('merge.suggest_rest') }}
+                        </button>
                         <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                             class="text-gray-400 hover:text-white text-sm transition">
                             <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
@@ -1131,52 +1150,66 @@ document.addEventListener('alpine:init', () => {
          * owner unpicks whatever they disagree with before applying. A default is a starting
          * point, not a decision taken on somebody's behalf.
          */
-        applySmartDefaults() {
-            const tagPriority = { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 };
+        /** Human over validated over machine. Skipped and untranslatable rank with machine. */
+        tagRank(tag) {
+            return { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 }[tag] ?? 0;
+        },
 
+        /**
+         * The best a contribution offers for one line, or null when none offers anything.
+         *
+         * 🔴 **A contribution can be a TAG and not a word.** Reading the Main's machine
+         * translation and marking it correct changes no text and is exactly the work this site
+         * asks for. Comparing values alone dropped every one of them — seventeen on the lineage
+         * this was measured against, all of them a contributor's V sitting on the Main's A, none
+         * ever settled by anybody.
+         *
+         * ⭐ Two contributions of equal quality on one line are separated by what the owner
+         * already said about their AUTHORS — the stars on the branch selector. Somebody who has
+         * judged a contributor once should not be made to judge them again, line by line.
+         *
+         * ⚠ Strictly greater on both counts, so unrated or equally rated leaves the first one in
+         * front — and "first" is the order the branch list is built in: unreviewed before
+         * reviewed, then best rated, then most recent.
+         *
+         * ⚠ Its own method because the BUTTON counts what it is about to answer with it. Asking
+         * the question one way and answering it another is how a control ends up offering to
+         * settle two thousand lines it will not touch.
+         */
+        bestContributionFor(key) {
+            const mainEntry = this.mainData[key];
+            let best = null;
+
+            for (const branch of this.branches) {
+                const entry = branch.content[key];
+                if (entry === undefined) continue;
+
+                if (mainEntry !== undefined
+                    && this.getValue(entry) === this.getValue(mainEntry)
+                    && this.getTag(entry) === this.getTag(mainEntry)) continue;
+
+                const rank = this.tagRank(this.getTag(entry));
+                const rating = branch.main_rating ?? 0;
+
+                if (!best
+                    || rank > best.rank
+                    || (rank === best.rank && rating > best.rating)) {
+                    best = { branch, entry, rank, rating };
+                }
+            }
+
+            return best;
+        },
+
+        applySmartDefaults() {
             for (const key of this.allKeys) {
                 if (key in this.selections) continue;
                 if (this.isDeleted(key)) continue;
 
                 const mainEntry = this.mainData[key];
-                const mainTag = mainEntry === undefined ? -1
-                    : (tagPriority[this.getTag(mainEntry)] ?? 0);
+                const mainTag = mainEntry === undefined ? -1 : this.tagRank(this.getTag(mainEntry));
 
-                // The best a contribution offers for this line. Several branches can hold it, so
-                // this is a comparison among them before any comparison with the Main.
-                //
-                // 🔴 **A contribution can be a TAG and not a word.** Reading the Main's machine
-                // translation and marking it correct changes no text and is exactly the work this
-                // site asks for. Comparing values alone dropped every one of them — seventeen on
-                // the lineage this was measured against, all of them a contributor's V sitting on
-                // top of the Main's A, none of them ever settled by anybody.
-                let best = null;
-                for (const branch of this.branches) {
-                    const entry = branch.content[key];
-                    if (entry === undefined) continue;
-
-                    if (mainEntry !== undefined
-                        && this.getValue(entry) === this.getValue(mainEntry)
-                        && this.getTag(entry) === this.getTag(mainEntry)) continue;
-
-                    const rank = tagPriority[this.getTag(entry)] ?? 0;
-
-                    // ⭐ Two contributions offering the same quality of work on one line are
-                    // separated by what the owner already said about their AUTHORS — the stars
-                    // on the branch selector. Somebody who has judged a contributor once should
-                    // not be made to judge them again, line by line.
-                    //
-                    // ⚠ Strictly greater on both counts, so unrated or equally rated leaves the
-                    // first one in front — and "first" is the order the branch list is built in:
-                    // unreviewed before reviewed, then best rated, then most recent.
-                    const rating = branch.main_rating ?? 0;
-
-                    if (!best
-                        || rank > best.rank
-                        || (rank === best.rank && rating > best.rating)) {
-                        best = { branch, entry, rank, rating };
-                    }
-                }
+                const best = this.bestContributionFor(key);
 
                 // No contribution holds anything different: nothing to settle on this line.
                 if (!best) continue;
@@ -1809,6 +1842,51 @@ document.addEventListener('alpine:init', () => {
                 this.selections = {};
                 this.clearPendingState();
             }
+        },
+
+        /**
+         * Put the proposal back on whatever is still unanswered.
+         *
+         * 🔴 The defaults run once, at load. Cancel — or unticking a handful of rows — therefore
+         * left the review with no way back to them short of reloading the page, which is the one
+         * gesture that also throws away everything else.
+         *
+         * ⚠ Only what has no answer yet, which is what the button says: applySmartDefaults skips
+         * any key already in `selections`, so a row somebody decided is left exactly as they
+         * decided it. Pressing this twice does nothing the second time.
+         */
+        suggestTheRest() {
+            this.applySmartDefaults();
+            this.persistPendingState();
+        },
+
+        /**
+         * Rows on screen that nobody and nothing has answered.
+         *
+         * ⚠ Counted over the FILTERED keys, not over the file: the button offers to answer what
+         * is being looked at, and a count including the two thousand identical lines nobody is
+         * reviewing would promise work it is not about to do.
+         */
+        get undecidedCount() {
+            let count = 0;
+
+            for (const key of this.allKeys) {
+                if (key in this.selections) continue;
+                if (this.isDeleted(key)) continue;
+                // The same question the button answers, asked the same way. Counting every
+                // unanswered key instead offered to settle 2480 lines both sides already agree
+                // on — rows the button would not have touched.
+                if (this.bestContributionFor(key)) count++;
+            }
+
+            for (const row of this.settingsRows) {
+                if (this.settingsPick[row.id] === undefined && !row.mineRaw) count++;
+            }
+            for (const row of this.publicationRows) {
+                if (this.publicationPick[row.field] === undefined && !row.mineRaw) count++;
+            }
+
+            return count;
         },
 
         // ── Submit (exact wire format of MergeController::apply) ─────────
