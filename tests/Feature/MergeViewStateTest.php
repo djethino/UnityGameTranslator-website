@@ -289,8 +289,10 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('settingsOpen: false', $html);
-        $this->assertStringContainsString('publicationOpen: false', $html);
+        // ⚠ The fold state lives in the shared module now, not in the page, and the page decides
+        // it from the difference counts once the data has loaded.
+        $this->assertStringContainsString('this.settingsOpen = this.settingsDifferenceCount() > 0;', $html);
+        $this->assertStringContainsString('this.publicationOpen = this.publicationDifferenceCount() > 0;', $html);
 
         $this->assertStringContainsString(__('merge.block_file_settings'), $html);
         $this->assertStringContainsString(__('merge.block_description'), $html);
@@ -438,8 +440,8 @@ class MergeViewStateTest extends TestCase
         // carries — seven fonts, two exclusions, two variables on a real one — and "this
         // translation has settings" is true of nearly every file and not a reason to push the
         // lines down the page.
-        $this->assertStringContainsString('this.publicationOpen = this.publicationDifferenceCount > 0;', $html);
-        $this->assertStringContainsString('this.settingsOpen = this.settingsDifferenceCount > 0;', $html);
+        $this->assertStringContainsString('this.publicationOpen = this.publicationDifferenceCount() > 0;', $html);
+        $this->assertStringContainsString('this.settingsOpen = this.settingsDifferenceCount() > 0;', $html);
 
         // ⚠ The footer and the Save button carry the same word; they must carry the same number.
         $this->assertStringNotContainsString(
@@ -625,14 +627,16 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('for (const key of Object.keys(mainSettings)) row(key', $html);
+        // The rows are built in the shared module, from the file rather than from contributions.
+        $this->assertStringContainsString(
+            'for (const key of Object.keys(mainSettings)) row(key',
+            file_get_contents(resource_path('js/components/editor-metadata.js')));
 
         // ⚠ And nothing on those tables pretends to be a choice when there is nobody to take
         // from: no hand cursor, no hint describing a gesture that does not exist, no default
         // lighting the Main's cell as "chosen".
-        $this->assertStringContainsString('canTakeContributions', $html);
-        $this->assertStringContainsString("canTakeContributions && 'merge-cell'", $html);
-        $this->assertStringContainsString('publicationOpen && canTakeContributions', $html);
+        $this->assertStringContainsString("canTakeContributions() && 'merge-cell'", $html);
+        $this->assertStringContainsString('publicationOpen && canTakeContributions()', $html);
     }
 
     public function test_show_is_owner_only(): void

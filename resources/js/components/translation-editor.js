@@ -22,6 +22,7 @@ import { editorColumns } from './editor-columns.js';
 import { editorTextMode } from './editor-text-mode.js';
 import { editorHScroll } from './editor-hscroll.js';
 import { editorOffScreen } from './editor-offscreen.js';
+import { editorMetadata } from './editor-metadata.js';
 import { editorPin } from './editor-pin.js';
 
 /**
@@ -84,6 +85,8 @@ export function editorCore(config) {
         // ── Reachable horizontal scrollbar (see editor-hscroll.js) ────────
         ...editorHScroll(),
         ...editorOffScreen(),
+        // ── What a translation carries besides its lines (see editor-metadata.js) ──
+        ...editorMetadata(),
         // ── Pinning the reference column (see editor-pin.js) ──────────────
         ...editorPin(),
 

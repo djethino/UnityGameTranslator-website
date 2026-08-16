@@ -253,9 +253,9 @@
                          readable folded, or ticking something and folding would hide it. --}}
                     {{-- The count is of DISPUTED rows, not of rows: the table lists what the
                          file carries, and "this translation has fonts" is not news. --}}
-                    <span x-show="settingsDifferenceCount > 0" x-cloak
+                    <span x-show="settingsDifferenceCount() > 0" x-cloak
                           class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.filter_differences') }}" x-text="settingsDifferenceCount"></span>
+                          title="{{ __('merge.filter_differences') }}" x-text="settingsDifferenceCount()"></span>
                     <span x-show="settingsTakenCount > 0" x-cloak
                           class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
                           title="{{ __('merge.modifications') }}" x-text="settingsTakenCount"></span>
@@ -339,9 +339,9 @@
                                          contributions, so a hand cursor over a cell that answers
                                          no question promises a gesture that does nothing. --}}
                                     <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700"
-                                        :class="canTakeContributions && 'merge-cell'"
+                                        :class="canTakeContributions() && 'merge-cell'"
                                         :class="settingsCellClass(row, null)"
-                                        @click="canTakeContributions && settingsKeepMine(row)">
+                                        @click="canTakeContributions() && settingsKeepMine(row)">
                                         <span class="editor-text break-words" x-text="row.mineValue"></span>
                                     </td>
 
@@ -383,7 +383,7 @@
                      — clicking a contribution's value — and on a translation being worked on
                      by itself there are no contributions to click. A hint for a gesture that
                      does not exist is worse than no hint: it sends somebody looking. --}}
-                <p x-show="settingsOpen && canTakeContributions" x-cloak
+                <p x-show="settingsOpen && canTakeContributions()" x-cloak
                    class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
             </div>
 
@@ -399,9 +399,9 @@
                          readable folded, or ticking something and folding would hide it. --}}
                     {{-- The count is of DISPUTED rows, not of rows: the table lists what the
                          file carries, and "this translation has fonts" is not news. --}}
-                    <span x-show="publicationDifferenceCount > 0" x-cloak
+                    <span x-show="publicationDifferenceCount() > 0" x-cloak
                           class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.filter_differences') }}" x-text="publicationDifferenceCount"></span>
+                          title="{{ __('merge.filter_differences') }}" x-text="publicationDifferenceCount()"></span>
                     <span x-show="publicationTakenCount > 0" x-cloak
                           class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
                           title="{{ __('merge.modifications') }}" x-text="publicationTakenCount"></span>
@@ -474,9 +474,9 @@
                                          contributions, so a hand cursor over a cell that answers
                                          no question promises a gesture that does nothing. --}}
                                     <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700"
-                                        :class="canTakeContributions && 'merge-cell'"
+                                        :class="canTakeContributions() && 'merge-cell'"
                                         :class="publicationCellClass(row, null)"
-                                        @click="canTakeContributions && publicationKeepMine(row)"
+                                        @click="canTakeContributions() && publicationKeepMine(row)"
                                         @dblclick="editCell(row.id, publicationResult(row), 'publication')">
                                     {{-- The lines' own affordance, not a box of its own: revert
                                          what is staged, or open the shared edit modal. A textarea
@@ -537,7 +537,7 @@
                      — clicking a contribution's value — and on a translation being worked on
                      by itself there are no contributions to click. A hint for a gesture that
                      does not exist is worse than no hint: it sends somebody looking. --}}
-                <p x-show="publicationOpen && canTakeContributions" x-cloak
+                <p x-show="publicationOpen && canTakeContributions()" x-cloak
                    class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
             </div>
 
@@ -1178,21 +1178,15 @@ document.addEventListener('alpine:init', () => {
         // One row per setting, one column per branch — the lines grid's own shape. It was one row
         // per (branch, setting) pair, which put the same font on three rows and turned "whose do
         // I take" into a comparison across rows rather than across columns.
-        settingsRows: [],
         // row id -> the branch whose value is taken. Absent means the Main keeps its own.
         settingsPick: {},
-        hasSettingsRows: false,
         // Folded: this screen is a line-by-line merge, and a block sitting open above the table
         // pushes the actual work off the screen for something usually empty.
-        settingsOpen: false,
 
         // Same shape for what the contributions SAY about their work. One difference: a taken
         // value can be reworded first, so the text is held apart from the choice.
-        publicationRows: [],
         publicationPick: {},
         publicationValues: {},
-        hasPublicationRows: false,
-        publicationOpen: false,
         stats: { newKeys: 0, different: 0 },
 
         init() {
@@ -1232,8 +1226,7 @@ document.addEventListener('alpine:init', () => {
             }
             this.allKeys = [...keys].sort();
 
-            this.buildSettingsRows(payload);
-            this.buildPublicationRows(payload);
+            this.buildMetadataRows(payload);
 
             // 🔴 **Open when there is something in them.** Folded was right while they listed
             // everything; they list only differences, so a folded block is a difference nobody
@@ -1243,8 +1236,8 @@ document.addEventListener('alpine:init', () => {
             // ⚠ Open on a DISAGREEMENT, not on having rows. Now that both tables list what the
             // file carries, having rows only means the translation has settings — true of nearly
             // every file, and not a reason to push the lines down the page.
-            this.settingsOpen = this.settingsDifferenceCount > 0;
-            this.publicationOpen = this.publicationDifferenceCount > 0;
+            this.settingsOpen = this.settingsDifferenceCount() > 0;
+            this.publicationOpen = this.publicationDifferenceCount() > 0;
 
             // ⚠ Only once one of them is on screen: they share the lines' columns, and sharing
             // them means sharing their WIDTHS, which do not exist until a photograph is taken.
@@ -1513,7 +1506,7 @@ document.addEventListener('alpine:init', () => {
             // ⚠ Nothing to arbitrate, nothing to answer. Lighting the Main's cell on a screen
             // with no contributions would say "chosen" about a row where there was never a
             // choice.
-            if (!this.canTakeContributions) return;
+            if (!this.canTakeContributions()) return;
 
             for (const row of this.publicationRows) {
                 if (this.publicationPick[row.id] !== undefined) continue;
@@ -1530,110 +1523,25 @@ document.addEventListener('alpine:init', () => {
          * because two branches may hold the same setting with different values — the Main has to
          * say whose it takes.
          */
-        buildSettingsRows(payload) {
-            const labels = @js([
+        // The words for those rows. They are translated server-side, so they are handed to the
+        // shared module rather than built inside it.
+        metadataLabels: {
+            sections: @js([
                 'fonts' => __('file_settings.label.fonts'),
                 'font_rules' => __('file_settings.label.font_rules'),
                 'images' => __('file_settings.label.images'),
                 'exclusions' => __('file_settings.label.exclusions'),
                 'variables' => __('file_settings.label.variables'),
                 'game_settings' => __('file_settings.game_settings'),
-            ]);
-            const absent = @js(__('merge_preview.settings_absent'));
-            const mainSettings = payload.main_settings || {};
-            const byKey = {};
-
-            const row = (key, entry) => {
-                if (byKey[key]) return byKey[key];
-                const mine = mainSettings[key];
-                byKey[key] = {
-                    id: key,
-                    key,
-                    label: (labels[entry.section] || entry.section) + ' \u203a ' + entry.label,
-                    mineValue: mine ? mine.value : absent,
-                    // What the Main actually holds, as opposed to what the cell shows when it
-                    // holds nothing. Telling the two apart is what says whether a contribution is
-                    // ADDING something or disagreeing with something.
-                    mineRaw: mine ? mine.value : '',
-                    byBranch: {},
-                };
-                return byKey[key];
-            };
-
-            // 🔴 **The file's own settings first, whether anybody disputes them or not.**
-            //
-            // These rows used to be built from the contributions alone, so a screen with no
-            // contributions to show — the edit mode, where a translation is worked on by itself —
-            // listed nothing at all. Measured on a real file: seven fonts, an image, two
-            // exclusions and two variables, none of them anywhere on the page. They are part of
-            // what a translation IS; the merge is only one of the places they are read.
-            for (const key of Object.keys(mainSettings)) row(key, mainSettings[key]);
-
-            for (const branch of (payload.branches || [])) {
-                const branchSettings = branch.settings || {};
-                for (const key of Object.keys(branchSettings)) {
-                    row(key, branchSettings[key]).byBranch[branch.id] = branchSettings[key].value;
-                }
-            }
-
-            const rows = Object.values(byKey);
-            rows.sort((a, b) => a.label.localeCompare(b.label));
-
-            this.settingsRows = rows;
-            this.hasSettingsRows = rows.length > 0;
-        },
-
-        /**
-         * What each contribution says about its work, when it differs from the Main's.
-         *
-         * \u26a0 Two fields and no more. Whether a translation is finished descends from a Main to
-         * its contributions and never travels back, so it is not offered here at all: a row that
-         * cannot be taken is worse than an absent one.
-         */
-        buildPublicationRows(payload) {
-            const labels = @js([
+            ]),
+            fields: @js([
                 'notes' => __('upload.notes'),
                 'resources_url' => __('upload.resources_url'),
-            ]);
-            const absent = @js(__('merge_preview.settings_absent'));
-
-            const mine = {
-                notes: (payload.main_notes || '').trim(),
-                resources_url: (payload.main_resources_url || '').trim(),
-            };
-
-            const rows = [];
-            for (const field of ['notes', 'resources_url']) {
-                const byBranch = {};
-                for (const branch of (payload.branches || [])) {
-                    const theirs = (branch[field] || '').trim();
-                    // The same thing said on both sides is not a decision; it is still worth
-                    // seeing, so it lands in the row rather than being dropped.
-                    if (theirs) byBranch[branch.id] = theirs;
-                }
-
-                // ⚠ A field nobody has filled in, on either side, is the one thing worth leaving
-                // out: an empty row that says "not set" twice teaches nothing.
-                if (!mine[field] && Object.keys(byBranch).length === 0) continue;
-
-                rows.push({
-                    id: field,
-                    field,
-                    label: labels[field],
-                    // What is SHOWN when nothing is staged, and what the Main actually holds.
-                    // They differ when it holds nothing: the cell then shows a placeholder, and
-                    // comparing an edit against that placeholder would call it a change.
-                    mineValue: mine[field] || absent,
-                    mineRaw: mine[field],
-                    byBranch,
-                });
-            }
-
-            this.publicationRows = rows;
-            this.hasPublicationRows = rows.length > 0;
+            ]),
+            absent: @js(__('merge_preview.settings_absent')),
         },
 
-        // \u2500\u2500 Taking a value, on the gestures the lines already use \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+        // ── Taking a value, on the gestures the lines already use ───────────────────
         //
         // Click a contribution's cell to take it, click the Main's to keep your own. No checkbox:
         // the lines below are chosen exactly this way, and one screen holding two ways of saying
@@ -1735,7 +1643,7 @@ document.addEventListener('alpine:init', () => {
         /**
          * Core hook: the shared edit box was used on a description or a link.
          *
-         * \u26a0 Deliberately NOT the lines' edit map. That one becomes a line selection on save,
+         * ⚠ Deliberately NOT the lines' edit map. That one becomes a line selection on save,
          * so a description staged there would be published as a translated line named "notes".
          * Typing the Main's own value back drops the staging, exactly as it does on a line.
          */
@@ -1766,19 +1674,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             return picked === branchId ? 'selected-branch' : '';
-        },
-
-        /**
-         * Whether a value may be rendered as a clickable link.
-         *
-         * ⚠ http(s) and nothing else, checked here rather than trusted from the server. Every
-         * write path validates the scheme already, so this cannot currently be reached — which
-         * is exactly why it is cheap to keep: the day a fifth way to store one appears, an
-         * href built from it is a hole, and a plain span is not.
-         */
-        isWebLink(value) {
-            return typeof value === 'string'
-                && (value.startsWith('https://') || value.startsWith('http://'));
         },
 
         normalizeEntry(value) {
@@ -2139,63 +2034,6 @@ document.addEventListener('alpine:init', () => {
                 if (this.publicationResolved(row) !== (row.mineRaw ?? '')) count++;
             }
             return count;
-        },
-
-        /**
-         * What a contribution's cell says about itself, before anything is chosen.
-         *
-         * 🔴 The lines below have marked this from the start — green where the Main holds
-         * nothing, yellow where the two disagree — and these two tables said nothing at all. The
-         * same fact was worth a colour on one row of the screen and none three rows above, which
-         * leaves a reader working out for themselves what the grid underneath tells them at a
-         * glance.
-         *
-         * ⚠ Same thresholds and same two colours, deliberately: an addition is not a
-         * disagreement, and which of the two it is decides whether there is anything to arbitrate.
-         */
-        /** How many rows a contribution actually disputes — what the header's count is about. */
-        get settingsDifferenceCount() {
-            return this.settingsRows.filter((row) => this.rowIsDisputed(row)).length;
-        },
-
-        get publicationDifferenceCount() {
-            return this.publicationRows.filter((row) => this.rowIsDisputed(row)).length;
-        },
-
-        rowIsDisputed(row) {
-            for (const branch of this.branches) {
-                if (this.metaDifference(row, branch.id)) return true;
-            }
-            return false;
-        },
-
-        /** Whether anything on this screen can be taken from somebody else at all. */
-        get canTakeContributions() {
-            return this.branches.length > 0;
-        },
-
-        metaDifference(row, branchId) {
-            const theirs = row.byBranch[branchId];
-            if (theirs === undefined) return '';
-            if (!row.mineRaw) return 'new';
-            return theirs === row.mineRaw ? '' : 'differs';
-        },
-
-        metaCellTint(row, branchId) {
-            const kind = this.metaDifference(row, branchId);
-            if (kind === 'new') return 'bg-green-900/20';
-            return kind === 'differs' ? 'bg-yellow-900/20' : '';
-        },
-
-        metaTextTint(row, branchId) {
-            const kind = this.metaDifference(row, branchId);
-            if (kind === 'new') return 'text-green-300';
-            return kind === 'differs' ? 'text-yellow-300' : '';
-        },
-
-        /** A link keeps its own colour when it agrees, and takes the difference's when it does not. */
-        metaLinkTint(row, branchId) {
-            return this.metaTextTint(row, branchId) || 'text-blue-400';
         },
 
         /** What this row would write, whichever of the three answers it carries. */
