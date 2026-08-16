@@ -65,21 +65,42 @@
             </button>
         </div>
 
-        <select name="target" aria-label="{{ __('games.target_language') }}"
-            class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
-            <option value="">{{ __('games.target_language') }}: {{ __('games.all') }}</option>
-            @foreach($targetLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $languageNames[$lang] ?? $lang }}</option>
-            @endforeach
-        </select>
+        {{-- 🔴 **The two language filters carry their flags, like every other language on the
+             site.** They were plain `<select>`s, and an `<option>` accepts text and nothing else —
+             no SVG, no markup. That is exactly why <x-language-select> exists; it was already used
+             on the profile and in the title bar, and these two were simply never moved over.
 
-        <select name="source" aria-label="{{ __('games.source_language') }}"
-            class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
-            <option value="">{{ __('games.source_language') }}: {{ __('games.all') }}</option>
-            @foreach($sourceLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $languageNames[$lang] ?? $lang }}</option>
-            @endforeach
-        </select>
+             ⚠ They keep submitting on their own: the picker fires a `change` on its hidden field,
+             which is what `data-auto-submit` above listens for. Without that it would look right
+             and filter nothing.
+
+             ⚠ The flag is named from the VALUE, never from the label: these labels are native
+             spellings ("Français") and the mark resolves a flag from the catalogue name behind
+             them ("French"). Left to guess from the label it would draw nothing, quietly. --}}
+        @php
+            $flagOf = fn ($langs) => collect($langs)
+                ->mapWithKeys(fn ($lang) => [$lang => \App\Services\CatalogStore::languageMark($lang)['flag']])
+                ->all();
+        @endphp
+        <div class="min-w-[11rem]">
+            <x-language-select
+                name="target"
+                :choices="collect($targetLanguages)->mapWithKeys(fn ($lang) => [$lang => $languageNames[$lang] ?? $lang])->all()"
+                :selected="request('target')"
+                :flags="$flagOf($targetLanguages)"
+                :marks="false"
+                :empty="__('games.target_language') . ': ' . __('games.all')" />
+        </div>
+
+        <div class="min-w-[11rem]">
+            <x-language-select
+                name="source"
+                :choices="collect($sourceLanguages)->mapWithKeys(fn ($lang) => [$lang => $languageNames[$lang] ?? $lang])->all()"
+                :selected="request('source')"
+                :flags="$flagOf($sourceLanguages)"
+                :marks="false"
+                :empty="__('games.source_language') . ': ' . __('games.all')" />
+        </div>
 
         {{-- Games somebody has declared finished. A filter and not a sort, because it answers yes
              or no — but a QUIET one, and never on by default.

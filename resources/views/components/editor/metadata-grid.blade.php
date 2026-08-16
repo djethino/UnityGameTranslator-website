@@ -6,6 +6,22 @@
     'title',
     // One sentence under the table, shown only when there is something to take.
     'hint' => null,
+
+    // 🔴 **The columns of THIS screen's grid, because the point is to line up with it.**
+    //
+    // The three editors do not name their columns the same way: the merge view reads
+    // key/mainTag/main + one per contribution, the mod comparison reads key/localTag/local/online,
+    // the live editor reads key/value. Widths are written as one stylesheet rule per [data-col],
+    // so a block that assumed one screen's names lined up on that screen and floated free on the
+    // next — which is the whole reason it is worth sharing at all.
+    'valueCol' => 'main',
+    // The tag column, kept EMPTY and merged into the value cell: neither a setting nor a
+    // description has a tag, and dropping the column would shift everything after it. Null on a
+    // grid that has no tag column of its own.
+    'tagCol' => 'mainTag',
+    // Alpine expression yielding the other sides, as [{id, col, name}]. Empty on a screen that
+    // reads or edits one translation.
+    'others' => 'metaOtherColumns()',
 ])
 
 @php
@@ -13,9 +29,9 @@
     $has     = 'has' . ucfirst($name) . 'Rows';
     $open    = $name . 'Open';
     $pick    = $name . 'Pick';
-    $visible = 'visible' . ucfirst($name) . 'Rows';
+    $visible = 'visible' . ucfirst($name) . 'Rows()';
     $count   = $name . 'DifferenceCount()';
-    $taken   = $name . 'TakenCount';
+    $taken   = $name . 'TakenCount()';
     $cell    = $name . 'CellClass';
     $take    = $name . 'Take';
     $keep    = $name . 'KeepMine';
@@ -75,21 +91,24 @@
                         <x-editor.col-resize col="key" />
                     </th>
                     {{-- The tag column is kept, empty, and its border is the only one between the
-                         key and the Main: the two head one block, and the title lands exactly
+                         key and the value: the two head one block, and the title lands exactly
                          where the lines grid puts its own. --}}
-                    <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                    <th data-col="main" class="relative px-4 py-3 text-left min-w-[250px]">
+                    @if($tagCol)
+                        <th data-col="{{ $tagCol }}" class="px-2 py-3 border-l border-gray-700 w-12"></th>
+                    @endif
+                    <th data-col="{{ $valueCol }}"
+                        class="relative px-4 py-3 text-left min-w-[250px] {{ $tagCol ? '' : 'border-l border-gray-700' }}">
                         <div class="flex items-center gap-2">
                             <span class="text-green-400 font-medium">Main</span>
-                            <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
+                            <span class="text-xs text-gray-500" x-show="mainOwner" x-text="'(' + mainOwner + ')'"></span>
                         </div>
-                        <x-editor.col-resize col="main" />
+                        <x-editor.col-resize col="{{ $valueCol }}" />
                     </th>
-                    <template x-for="branch in branches" :key="branch.id">
-                        <th colspan="2" :data-col="'branch-' + branch.id"
+                    <template x-for="other in {{ $others }}" :key="other.id">
+                        <th colspan="2" :data-col="other.col"
                             class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
-                            <span class="text-blue-400 font-medium" x-text="branch.name"></span>
-                            <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
+                            <span class="text-blue-400 font-medium" x-text="other.name"></span>
+                            <x-editor.col-resize :bind="true" col="other.col" />
                         </th>
                     </template>
                     {{-- The far end of the scrolling area. Zero width, frozen to the right edge of
@@ -133,35 +152,51 @@
                              column's width. The two headers above still carry them, and fixed
                              layout reads the widths from there. It carries `main-pair` instead,
                              which is what the pin looks for. --}}
-                        <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700"
+                        <td colspan="{{ $tagCol ? 2 : 1 }}" class="main-pair px-4 py-2 border-l border-gray-700"
                             :class="[canTakeContributions() && 'merge-cell', {{ $cell }}(row, null)]"
                             @click="canTakeContributions() && {{ $keep }}(row)">
-                            {{ $mainCell }}
+                            {{-- The shown side's cell. A screen that can stage something over it
+                                 passes a slot; one that only reads gets this, which is the same
+                                 rendering the other columns use — a link shown AS a link, because
+                                 it is the one value nobody can judge by reading it. --}}
+                            @isset($mainCell)
+                                {{ $mainCell }}
+                            @else
+                                <template x-if="isWebLink(row.mineValue)">
+                                    <a :href="row.mineValue" target="_blank" @click.stop
+                                       rel="noopener noreferrer nofollow"
+                                       class="text-blue-400 hover:underline break-all"
+                                       x-text="row.mineValue"></a>
+                                </template>
+                                <template x-if="!isWebLink(row.mineValue)">
+                                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                                </template>
+                            @endisset
                         </td>
 
-                        <template x-for="branch in branches" :key="branch.id">
-                            <td colspan="2" :data-col="'branch-' + branch.id"
+                        <template x-for="other in {{ $others }}" :key="other.id">
+                            <td colspan="2" :data-col="other.col"
                                 class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="[{{ $cell }}(row, branch.id), metaCellTint(row, branch.id)]"
-                                @click="{{ $take }}(row, branch.id)">
-                                <template x-if="row.byBranch[branch.id] === undefined">
+                                :class="[{{ $cell }}(row, other.id), metaCellTint(row, other.id)]"
+                                @click="{{ $take }}(row, other.id)">
+                                <template x-if="row.byBranch[other.id] === undefined">
                                     <span class="text-gray-600 italic">—</span>
                                 </template>
                                 {{-- ⚠ A link is shown AS a link. It is the one value that cannot
                                      be judged by reading it: taking it puts it on the Main's
                                      page, and where it leads is the whole question. Only http(s)
                                      is ever made clickable. --}}
-                                <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
-                                    <a :href="row.byBranch[branch.id]" target="_blank"
+                                <template x-if="row.byBranch[other.id] !== undefined && isWebLink(row.byBranch[other.id])">
+                                    <a :href="row.byBranch[other.id]" target="_blank"
                                        rel="noopener noreferrer nofollow" @click.stop
                                        class="hover:underline break-all"
-                                       :class="metaLinkTint(row, branch.id)"
-                                       x-text="row.byBranch[branch.id]"></a>
+                                       :class="metaLinkTint(row, other.id)"
+                                       x-text="row.byBranch[other.id]"></a>
                                 </template>
-                                <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
+                                <template x-if="row.byBranch[other.id] !== undefined && !isWebLink(row.byBranch[other.id])">
                                     <span class="editor-text break-words"
-                                          :class="metaTextTint(row, branch.id)"
-                                          x-text="row.byBranch[branch.id]"></span>
+                                          :class="metaTextTint(row, other.id)"
+                                          x-text="row.byBranch[other.id]"></span>
                                 </template>
                             </td>
                         </template>

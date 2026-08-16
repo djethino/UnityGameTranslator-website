@@ -60,7 +60,9 @@
             </h1>
         </div>
         <p class="text-gray-400">
-            {{ $main->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $main->target_language }}
+            <x-language-mark :language="$main->source_language" named /> {{ $main->source_language }}
+            <i class="fas fa-arrow-right text-xs"></i>
+            <x-language-mark :language="$main->target_language" named /> {{ $main->target_language }}
         </p>
     </div>
 
@@ -1293,11 +1295,11 @@ document.addEventListener('alpine:init', () => {
          * broken. The day the blocks list settings that AGREE as well — they should, for
          * information — this getter is where the filter starts discriminating.
          */
-        get visibleSettingsRows() {
+        visibleSettingsRows() {
             return this.settingsRows;
         },
 
-        get visiblePublicationRows() {
+        visiblePublicationRows() {
             return this.publicationRows;
         },
 
@@ -1684,7 +1686,7 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.tagChanges).length;
         },
 
-        get settingsTakenCount() {
+        settingsTakenCount() {
             return Object.keys(this.settingsPick).length;
         },
 
@@ -1698,7 +1700,7 @@ document.addEventListener('alpine:init', () => {
          * translation to human-checked. There is no such promotion here, so keeping one's own
          * wording writes the wording that is already stored, and that is not a modification.
          */
-        get publicationTakenCount() {
+        publicationTakenCount() {
             let count = 0;
             for (const row of this.publicationRows) {
                 if (this.publicationPick[row.id] === undefined) continue;
@@ -1720,7 +1722,7 @@ document.addEventListener('alpine:init', () => {
             // Settings count as changes: taking a branch's font without touching a single line
             // is a merge, and the Apply button must not stay disabled on it
             return this.selectionCount + this.deleteCount + this.tagChangeCount
-                   + this.settingsTakenCount + this.publicationTakenCount;
+                   + this.settingsTakenCount()() + this.publicationTakenCount();
         },
 
         clearAll() {

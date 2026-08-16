@@ -32,12 +32,13 @@
         </div>
         <div class="min-w-[150px]">
             <label class="block text-sm text-gray-400 mb-1">{{ __('games.target_language') }}</label>
-            <select name="language" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
-                <option value="">{{ __('common.all') }}</option>
-                @foreach($languages as $lang)
-                    <option value="{{ $lang }}" {{ request('language') == $lang ? 'selected' : '' }}>@langflag($lang) {{ $lang }}</option>
-                @endforeach
-            </select>
+            {{-- ⚠ Was a native select carrying @langflag inside its options, which draws nothing:
+                 an `<option>` displays text and no markup. The picker below actually shows them. --}}
+            <x-language-select
+                name="language"
+                :choices="collect($languages)->mapWithKeys(fn ($lang) => [$lang => $lang])->all()"
+                :selected="request('language')"
+                :empty="__('common.all')" />
         </div>
         <div class="min-w-[140px]">
             <label class="block text-sm text-gray-400 mb-1">{{ __('admin.status') }}</label>

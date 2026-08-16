@@ -160,9 +160,57 @@ export function editorMetadata() {
                 && (value.startsWith('https://') || value.startsWith('http://'));
         },
 
+        // ── Reading is the default; taking is what a screen adds ──────────────────────────
+        //
+        // 🔴 Three screens were repeating the same empty implementations to be allowed to show
+        // these blocks at all, which is the shape of a default living in the wrong place. A
+        // screen that CAN take a value implements these and, since a page's members override the
+        // core's, its own win. A screen that only reads writes nothing and gets a block that
+        // offers nothing.
+        //
+        // ⚠ Methods and plain properties, never getters: this module is spread into editorCore,
+        // and a spread evaluates a getter and copies the value it returned.
+
+        /** Who the shown side belongs to, when it belongs to somebody. */
+        mainOwner: '',
+
+        settingsPick: {},
+        publicationPick: {},
+        // Methods, like the screen that overrides them: a block asks the same way everywhere.
+        settingsTakenCount() { return 0; },
+        publicationTakenCount() { return 0; },
+
+        visibleSettingsRows() { return this.settingsRows; },
+        visiblePublicationRows() { return this.publicationRows; },
+
+        settingsCellClass() { return ''; },
+        publicationCellClass() { return ''; },
+        settingsTake() {},
+        publicationTake() {},
+        settingsKeepMine() {},
+        publicationKeepMine() {},
+
+        /** What the shown side's cell holds. A reader sees the value; an editor may stage over it. */
+        publicationResult(row) { return row.mineValue; },
+
+        /**
+         * The other sides this screen compares against, as [{id, col, name}].
+         *
+         * ⚠ Default: the contributions of a merge. A screen that compares against something else
+         * — a published version, a file on disk — overrides this, and a screen that compares
+         * against nothing returns an empty list and gets a read-only block for free.
+         */
+        metaOtherColumns() {
+            return (this.branches || []).map((branch) => ({
+                id: branch.id,
+                col: 'branch-' + branch.id,
+                name: branch.name,
+            }));
+        },
+
         rowIsDisputed(row) {
-            for (const branch of (this.branches || [])) {
-                if (this.metaDifference(row, branch.id)) return true;
+            for (const other of this.metaOtherColumns()) {
+                if (this.metaDifference(row, other.id)) return true;
             }
             return false;
         },
@@ -195,7 +243,7 @@ export function editorMetadata() {
          * there.
          */
         canTakeContributions() {
-            return (this.branches || []).length > 0;
+            return this.metaOtherColumns().length > 0;
         },
     };
 }

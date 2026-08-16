@@ -23,7 +23,9 @@
             @if($editSession->game_name)
                 {{ $editSession->game_name }}
                 @if($editSession->source_language && $editSession->target_language)
-                    &bull; {{ $editSession->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $editSession->target_language }}
+                    &bull; <x-language-mark :language="$editSession->source_language" named /> {{ $editSession->source_language }}
+                    <i class="fas fa-arrow-right text-xs"></i>
+                    <x-language-mark :language="$editSession->target_language" named /> {{ $editSession->target_language }}
                 @endif
             @endif
         </p>
@@ -81,30 +83,27 @@
              the lines, and the panel answers a question you only ask sometimes — "why is this
              font different in game?", "which images does this translation replace?".
              Read-only: these are edited in the mod, the only side that sees the game. --}}
-        <div x-show="hasSettings" x-cloak class="mb-4">
-            <button type="button" @click="toggleSettingsPanel()"
-                class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
-                <i class="fas fa-sliders text-gray-500"></i>
-                <span>{{ __('file_settings.section_title') }}</span>
-                <i class="fas fa-chevron-down text-xs" x-show="showSettings" x-cloak></i>
-                <i class="fas fa-chevron-right text-xs" x-show="hideSettings" x-cloak></i>
-            </button>
+        <div x-show="hasSettingsRows" x-cloak class="mb-4">
+            {{-- What this file carries besides its lines.
 
-            <div x-show="showSettings" x-cloak
-                class="mt-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 overflow-x-auto">
-                <table class="w-full text-xs">
-                    <tbody>
-                        <template x-for="row in settingsRows" :key="row.key">
-                            <tr class="border-t border-gray-750 first:border-t-0">
-                                <td class="px-2 py-1 align-top text-gray-500 whitespace-nowrap" x-text="row.sectionLabel"></td>
-                                <td class="px-2 py-1 align-top text-gray-300 font-mono" x-text="row.label"></td>
-                                <td class="px-2 py-1 align-top text-gray-400" x-text="row.value"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-                <p class="mt-2 text-xs text-gray-500 italic">{{ __('file_settings.section_hint') }}</p>
-            </div>
+                 🔴 The same block as every other screen, on this screen's own columns. It was a
+                 hand-written three-column table here, laid out on nothing in particular: the same
+                 fonts read one way in the live editor, another in the merge, a third nowhere at
+                 all. Widths are written per column name, so carrying this grid's own names —
+                 key/value, and no tag column — is what makes it line up with the lines below.
+
+                 ⚠ Read-only, and not by a flag: the block offers a gesture only when there is
+                 somebody to take from, and a session edits one file with nothing to compare it
+                 to. ⚠ No description block either — an edit session is anonymous by design and
+                 has no published row to describe. --}}
+            <x-editor.metadata-grid name="settings"
+                :title="__('file_settings.section_title')"
+                value-col="value"
+                :tag-col="null"
+                others="[]" />
+
+            <p x-show="hasSettingsRows && settingsOpen" x-cloak
+               class="mt-2 text-xs text-gray-500 italic">{{ __('file_settings.section_hint') }}</p>
         </div>
 
         {{-- Nothing ahead of the tags: a capture session holds rows of one kind. What follows
@@ -608,11 +607,7 @@ document.addEventListener('alpine:init', () => {
     }, {
         loaded: false,
         // What the file carries besides its lines — read-only, one source, nothing to arbitrate.
-        // hideSettings mirrors showSettings: the CSP evaluator reads properties, it cannot negate.
-        settingsRows: [],
-        hasSettings: false,
-        showSettings: false,
-        hideSettings: true,
+
         error: null,
         saving: false,
         saveMessage: '',
@@ -702,24 +697,12 @@ document.addEventListener('alpine:init', () => {
                         'game_settings' => __('file_settings.game_settings'),
                     ]);
 
-                    const rows = Object.entries(payload.settings).map(([key, entry]) => ({
-                        key,
-                        sectionLabel: labels[entry.section] || entry.section,
-                        label: entry.label,
-                        value: entry.value,
-                    }));
-                    rows.sort((a, b) => a.sectionLabel.localeCompare(b.sectionLabel)
-                        || a.label.localeCompare(b.label));
-
-                    this.settingsRows = rows;
-                    this.hasSettings = rows.length > 0;
+                    // The same shape the merge and the reading screens read: one builder, so a
+                    // font cannot be described one way here and another way there.
+                    this.metadataLabels = { sections: labels, fields: {}, absent: '' };
+                    this.buildMetadataRows({ main_settings: payload.settings });
                 })
                 .catch(() => {});
-        },
-
-        toggleSettingsPanel() {
-            this.showSettings = !this.showSettings;
-            this.hideSettings = !this.showSettings;
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────

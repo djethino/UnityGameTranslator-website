@@ -96,25 +96,9 @@ export function createViewer(config) {
             // keyboard handler is bound to the window — without these, pressing E on a viewer
             // would silently open a modal nobody can see and leave the page in a state no
             // control can get it out of.
-            // A viewer has no branches and nothing to pick. The block reads both, so they exist
-            // and stay empty rather than being undefined on every row it draws.
-            branches: [],
-            settingsPick: {},
-            publicationPick: {},
-            settingsTakenCount: 0,
-            publicationTakenCount: 0,
+            // Everything a read-only block needs is the shared module's default. The only thing
+            // this screen adds is whose translation it is showing.
             mainOwner: config.owner || '',
-
-            settingsCellClass() { return ''; },
-            publicationCellClass() { return ''; },
-            settingsTake() {},
-            publicationTake() {},
-            settingsKeepMine() {},
-            publicationKeepMine() {},
-            publicationResult(row) { return row.mineValue; },
-
-            get visibleSettingsRows() { return this.settingsRows; },
-            get visiblePublicationRows() { return this.publicationRows; },
 
             editCell() {},
             toggleDelete() {},

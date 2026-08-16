@@ -38,8 +38,10 @@
                     <i class="fas fa-eye mr-2 text-purple-400"></i>{{ __('translation.view_heading') }}
                 </h1>
                 <p class="text-gray-400 mt-1">
+                    <x-language-mark :language="$translation->source_language" named />
                     {{ $translation->source_language }}
                     <i class="fas fa-arrow-right text-xs"></i>
+                    <x-language-mark :language="$translation->target_language" named />
                     {{ $translation->target_language }}
                     <span class="text-gray-600 mx-1">·</span>
                     <span class="text-gray-300">{{ $translation->user->name }}</span>

@@ -131,21 +131,35 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-gray-400 mb-1">{{ __('upload.source_language') }}</label>
+                    {{-- 🔴 **No flag here, and the call that pretended to draw one is gone.**
+                         @langflag renders a span with an svg, and an `<option>` displays text and
+                         nothing else — the browser drops the markup. Three screens carried that
+                         call believing they showed a flag; none of them ever did.
+
+                         ⚠ Why this one keeps a native select while the game filters moved to
+                         <x-language-select>: the script below drives these two fields
+                         (`sourceLang.value = …`, when the file already belongs to a known
+                         translation) and `required` is enforced by the browser here. The picker is
+                         an Alpine component with a hidden input — assigning `.value` would change
+                         what gets posted without changing what is displayed, which is worse than a
+                         missing flag. Making it drivable from outside is a job of its own; see
+                         TODO.md. --}}
                     <select name="source_language" id="source_language" required
                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                         <option value="">{{ __('upload.select') }}</option>
                         @foreach($languages as $lang)
-                            <option value="{{ $lang }}">@langflag($lang) {{ $lang }}</option>
+                            <option value="{{ $lang }}">{{ $lang }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs text-gray-400 mb-1">{{ __('upload.target_language') }}</label>
+                    {{-- Native for the same two reasons as the field beside it. --}}
                     <select name="target_language" id="target_language" required
                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
                         <option value="">{{ __('upload.select') }}</option>
                         @foreach($languages as $lang)
-                            <option value="{{ $lang }}">@langflag($lang) {{ $lang }}</option>
+                            <option value="{{ $lang }}">{{ $lang }}</option>
                         @endforeach
                     </select>
                 </div>

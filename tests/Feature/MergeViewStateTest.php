@@ -344,7 +344,9 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('get visibleSettingsRows() {', $html);
+        // ⚠ A method, not a getter: it moved next to the shared module's default, and that module
+        // is SPREAD into the core — a spread evaluates a getter and copies what it returned.
+        $this->assertStringContainsString('visibleSettingsRows() {', $html);
         $this->assertStringNotContainsString('this.settingsPick[row.id] !== undefined);', $html);
 
         // What a contribution ADDS where the Main holds nothing is pre-taken, as a line is.
@@ -605,8 +607,10 @@ class MergeViewStateTest extends TestCase
             ->getContent();
 
         // The same two thresholds and the same two colours as branchCellTint / branchTextTint.
-        $this->assertStringContainsString('metaCellTint(row, branch.id)', $html);
-        $this->assertStringContainsString('metaTextTint(row, branch.id)', $html);
+        // ⚠ Keyed on the OTHER SIDE now, whatever it is: the block learned its columns so that
+        // three editors that name them differently can all line up with their own lines.
+        $this->assertStringContainsString('metaCellTint(row, other.id)', $html);
+        $this->assertStringContainsString('metaTextTint(row, other.id)', $html);
         $this->assertStringContainsString("'bg-green-900/20'", $html);
         $this->assertStringContainsString("'bg-yellow-900/20'", $html);
     }

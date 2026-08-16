@@ -126,23 +126,38 @@
      result. The button stays for anyone without JavaScript. --}}
 <form action="{{ route('games.show', $game) }}" method="GET" class="bg-gray-800 rounded-lg p-4 mb-8 flex flex-wrap gap-4 items-end"
     data-auto-submit>
-    <div>
+    {{-- The same two filters as the game list, and for the same reason they carry their flags:
+         a native `<option>` cannot hold one.
+
+         🔴 **The flags are named from the VALUE, not from the label.** This page writes languages
+         in their native spelling ("Français"), and <x-language-mark> resolves a flag from the
+         CATALOGUE name ("French") — left to itself it would silently draw nothing on every entry.
+         The value behind each label is that catalogue name, so the flag is looked up there and the
+         label stays native, which is what this page is for. --}}
+    @php
+        $flagOf = fn ($langs) => collect($langs)
+            ->mapWithKeys(fn ($lang) => [$lang => \App\Services\CatalogStore::languageMark($lang)['flag']])
+            ->all();
+    @endphp
+    <div class="min-w-[11rem]">
         <label class="block text-sm text-gray-400 mb-1">{{ __('games.target_language') }}</label>
-        <select name="target" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
-            <option value="">{{ __('games.all') }}</option>
-            @foreach($targetLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('target') == $lang ? 'selected' : '' }}>{{ $seoLanguageNames[$lang] ?? $lang }}</option>
-            @endforeach
-        </select>
+        <x-language-select
+            name="target"
+            :choices="collect($targetLanguages)->mapWithKeys(fn ($lang) => [$lang => $seoLanguageNames[$lang] ?? $lang])->all()"
+            :selected="request('target')"
+            :flags="$flagOf($targetLanguages)"
+            :marks="false"
+            :empty="__('games.all')" />
     </div>
-    <div>
+    <div class="min-w-[11rem]">
         <label class="block text-sm text-gray-400 mb-1">{{ __('games.source_language') }}</label>
-        <select name="source" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
-            <option value="">{{ __('games.all') }}</option>
-            @foreach($sourceLanguages as $lang)
-                <option value="{{ $lang }}" {{ request('source') == $lang ? 'selected' : '' }}>{{ $seoLanguageNames[$lang] ?? $lang }}</option>
-            @endforeach
-        </select>
+        <x-language-select
+            name="source"
+            :choices="collect($sourceLanguages)->mapWithKeys(fn ($lang) => [$lang => $seoLanguageNames[$lang] ?? $lang])->all()"
+            :selected="request('source')"
+            :flags="$flagOf($sourceLanguages)"
+            :marks="false"
+            :empty="__('games.all')" />
     </div>
     {{-- Note: type filter removed - type is now computed from HVASM stats --}}
     <div>

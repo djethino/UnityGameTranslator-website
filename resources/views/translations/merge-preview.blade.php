@@ -27,7 +27,9 @@
         </div>
         <p class="text-gray-400">
             {{ $translation->game->name }} &bull;
-            {{ $translation->source_language }} <i class="fas fa-arrow-right text-xs"></i> {{ $translation->target_language }}
+            <x-language-mark :language="$translation->source_language" named /> {{ $translation->source_language }}
+            <i class="fas fa-arrow-right text-xs"></i>
+            <x-language-mark :language="$translation->target_language" named /> {{ $translation->target_language }}
         </p>
     </div>
 
