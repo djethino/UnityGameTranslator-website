@@ -69,6 +69,22 @@ class NotificationController extends Controller
                 $data['merged_count'] ?? 1,
                 $data['game_name'] ?? '?',
             ),
+            // 🔴 Both of these reach a contributor whose work has just lost its road, and both
+            // fell through to the bare word "Notification" in the mod and the Manager — the two
+            // places where somebody is most likely to be mid-session and least likely to go and
+            // look it up. A summary that says nothing is worse than none: it costs a glance and
+            // returns nothing.
+            'branches_closed' => sprintf(
+                '@%s no longer takes contributions on %s (%s). Publish your own version to carry on.',
+                $data['owner_username'] ?? '?',
+                $data['game_name'] ?? '?',
+                $data['target_language'] ?? '?',
+            ),
+            'branch_orphaned' => sprintf(
+                'The %s translation your contribution hung from is gone (%s). You can publish yours.',
+                $data['game_name'] ?? '?',
+                $data['target_language'] ?? '?',
+            ),
             'announcement' => (string) ($data['title'] ?? 'Announcement'),
             default => 'Notification',
         };
@@ -83,6 +99,11 @@ class NotificationController extends Controller
             'branch_merged' => !empty($data['game_slug'])
                 ? url('/games/' . $data['game_slug'])
                 : null,
+            // Both land on the branch's own dashboard: it is where the way out — turning it into
+            // a translation of its own — actually lives.
+            'branches_closed', 'branch_orphaned' => !empty($data['translation_id'])
+                ? url('/my-translations/' . $data['translation_id'] . '/dashboard')
+                : url('/notifications'),
             'announcement' => $data['link'] ?? url('/notifications'),
             default => null,
         };
