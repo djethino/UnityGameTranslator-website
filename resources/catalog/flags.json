@@ -47,15 +47,15 @@
       },
       "rows": [
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
         "rrrrrkrrrrkrrrrr",
-        "rrrrrkkrrkkrrrrr",
+        "rrrrkkkrrkkkrrrr",
         "rrrrrrkkkkrrrrrr",
-        "rrrrkkkkkkkkrrrr",
+        "rrkkkkkkkkkkkkrr",
+        "rrrkkkkkkkkkkrrr",
+        "rrrrrrkkkkrrrrrr",
         "rrrrrkkkkkkrrrrr",
         "rrrrrrkkkkrrrrrr",
-        "rrrrrrkkkkrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrrrrrkkrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
     },
@@ -146,8 +146,8 @@
     "bd": {
       "name": "Bangladesh",
       "palette": {
-        "g": "#006A4E",
-        "r": "#F42A41"
+        "g": "#006747",
+        "r": "#DA291C"
       },
       "rows": [
         "gggggggggggggggg",
@@ -278,9 +278,9 @@
       "rows": [
         "rrrrwwwwwwwwrrrr",
         "rrrrwwwrrwwwrrrr",
-        "rrrrwwrrrrwwrrrr",
-        "rrrrwwrrrrwwrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrrwrwrrwrwrrrr",
+        "rrrrwrrrrrrwrrrr",
+        "rrrwrrrrrrrrwrrr",
         "rrrrwrrrrrrwrrrr",
         "rrrrwwrrrrwwrrrr",
         "rrrrwwwrrwwwrrrr",
@@ -633,11 +633,11 @@
         "bwwwwwwwwwwwwwww",
         "bbbwwwwwwwwwwwww",
         "wbbbwwwwwwwwwwww",
-        "wwwbbbwwwwwwwwww",
-        "wwwwbbbwwwwwwwww",
-        "wwwwwwbyywwwwwww",
-        "wwwwwwwwwbwwwwww",
-        "wwwwwwwwwbbbwwww",
+        "wwwbbbwyyywwwwww",
+        "wwwwbbwbbbwwwwww",
+        "wwwwwwwbybwwwwww",
+        "wwwwwwwbbbwwwwww",
+        "wwwwwwwwbwbbwwww",
         "wwwwwwwwwwbbbwww",
         "wwwwwwwwwwwwbbbw",
         "wwwwwwwwwwwwwbbb"
@@ -942,12 +942,12 @@
         "bbwwbbbbbbbbbbbb",
         "bbwwbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww",
-        "wwwwwwwwwwwwwwww",
+        "wwwwwwbbbbbbbbbb",
+        "bbwwbbwwwwwwwwww",
         "bbwwbbbbbbbbbbbb",
-        "bbwwbbbbbbbbbbbb",
-        "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "bbbbbbbbbbbbbbbb",
+        "wwwwwwwwwwwwwwww",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb"
       ]
@@ -955,19 +955,19 @@
     "hk": {
       "name": "Hong Kong",
       "palette": {
-        "r": "#DE2910",
+        "r": "#EE1C25",
         "w": "#FFFFFF"
       },
       "rows": [
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
         "rrrrrrrwwrrrrrrr",
-        "rrrrrwwwwwwrrrrr",
         "rrrrrrwwwwrrrrrr",
-        "rrrrrwwrrwwrrrrr",
-        "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrrrrrrrrr",
+        "rrrwwwwwwwwwwrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrrrwwwwwwrrrrr",
+        "rrrrwwwwwwwwrrrr",
+        "rrrwwwrrrrwwwrrr",
+        "rrrrwwrrrrwwrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -1086,13 +1086,13 @@
       "rows": [
         "wwwwwwwwwwwwwwww",
         "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww",
-        "wwwwwwwbbwwwwwww",
-        "wwwwwbbbbbbwwwww",
-        "wwwwbbbbbbbbwwww",
-        "wwwwwbbbbbbwwwww",
-        "wwwwwwwbbwwwwwww",
+        "wwwwwwbbbbwwwwww",
+        "wwwwwwbwwbwwwwww",
+        "wwwwwwbbbbwwwwww",
         "wwwwwwwwwwwwwwww",
+        "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
         "wwwwwwwwwwwwwwww"
       ]
@@ -1751,11 +1751,11 @@
         "y": "#FFCC00"
       },
       "rows": [
-        "bbbybbbbrrrrrrrr",
-        "bbybbybbwwwwwwww",
-        "bybbyyybrrrrrrrr",
-        "bbybbybbwwwwwwww",
-        "bbbybbbbrrrrrrrr",
+        "bbyyybbbrrrrrrrr",
+        "byybbbybwwwwwwww",
+        "byybbyyyrrrrrrrr",
+        "byybbbybwwwwwwww",
+        "bbyyybbbrrrrrrrr",
         "bbbbbbbbwwwwwwww",
         "rrrrrrrrrrrrrrrr",
         "wwwwwwwwwwwwwwww",
@@ -2275,11 +2275,11 @@
         "w": "#FFFFFF"
       },
       "rows": [
-        "rrrwrrrrwrrrrrrr",
-        "rrwrrrwrrrwrrrrr",
-        "rwrrrrrrrrrrrrrr",
-        "rrwrrrrwrwrrrrrr",
-        "rrrwrrrrrrrrrrrr",
+        "rrwwwrrrrrrrrrrr",
+        "rwwrrrrwrwrrrrrr",
+        "rwwrrrwrrrwrrrrr",
+        "rwwrrrrrwrrrrrrr",
+        "rrwwwrrrrrrrrrrr",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
@@ -2313,8 +2313,8 @@
       "name": "Slovakia",
       "palette": {
         "w": "#FFFFFF",
-        "b": "#0B4EA2",
-        "r": "#EE1C25"
+        "b": "#254AA5",
+        "r": "#ED1C24"
       },
       "rows": [
         "wwwwwwwwwwwwwwww",
@@ -2323,9 +2323,9 @@
         "wwwrrwrrwwwwwwww",
         "bbbrwwwrbbbbbbbb",
         "bbbrrwrrbbbbbbbb",
-        "bbbrwwwrbbbbbbbb",
-        "rrrrrwrrrrrrrrrr",
-        "rrrrrwrrrrrrrrrr",
+        "bbbrrwrrbbbbbbbb",
+        "rrrrbbbrrrrrrrrr",
+        "rrrrrbrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
       ]
@@ -2466,12 +2466,12 @@
       "rows": [
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
-        "rrrrrrrrwwrrrrrr",
-        "rrrrrrrwwwwrrrrr",
-        "rrrrwrrwwrwwrrrr",
-        "rrrrwrrwrrrwrrrr",
-        "rrrrwrrwwrwwrrrr",
-        "rrrrrwrrwwwrrrrr",
+        "rrrrrrwwwwrrrrrr",
+        "rrrrrwwwwwwrrrrr",
+        "rrrrrwwrrwwrrrrr",
+        "rrrrrwwrwrwrrrrr",
+        "rrrrrwwrrwwrrrrr",
+        "rrrrrwwwwwwrrrrr",
         "rrrrrrwwwwrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
