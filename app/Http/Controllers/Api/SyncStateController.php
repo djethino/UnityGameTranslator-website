@@ -74,6 +74,17 @@ class SyncStateController extends Controller
 
         $state['vote'] = $publicTranslation?->voteStateFor($user);
 
+        // 🔴 At the TOP level, because it is a fact about the LINEAGE and not about the caller's
+        // own row. It used to be sent only inside `translation`, which exists only for somebody
+        // who has published into this lineage — so the one person who most needs the answer, the
+        // player holding somebody else's translation and wondering whether they may send their
+        // corrections back, was the only one never told.
+        //
+        // Null when nothing of this lineage is published: there is no Main to have decided.
+        $state['accepts_branches'] = $publicTranslation
+            ? (bool) $publicTranslation->accepts_branches
+            : null;
+
         // Check if current user owns a translation with this UUID
         $ownTranslation = Translation::where('file_uuid', $uuid)
             ->where('user_id', $user->id)
