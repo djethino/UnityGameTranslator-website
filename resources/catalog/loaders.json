@@ -1,18 +1,36 @@
 {
-  "schema": 4,
-  "generated_at": "2026-08-08T00:00:00Z",
+  "schema": 5,
+  "generated_at": "2026-08-16T00:00:00Z",
   "_comment": [
-    "Loader layouts and download locations. Fetched at runtime by the installer so that a",
+    "Loader layouts and download locations. Fetched at runtime by the Manager so that a",
     "layout change on BepInEx's or MelonLoader's side is fixed by editing this file, without",
-    "publishing a new binary. See analyse/feature-installer.md section 3.3.",
+    "publishing a new binary. See analyse/loader-catalog-dynamic.md.",
+    "",
+    "'sources' (schema 5) is what makes versions stop being maintained by hand. Each entry says",
+    "WHERE to look and WHICH assets are ours; the Manager reads the list the publisher actually",
+    "put out and filters it. It never composes a file name: composing means knowing every case in",
+    "advance, so the day BepInEx ships a win-arm64 build a reader sees it and a template does not.",
+    "The three projects name their files three different ways, and each list also contains things",
+    "that are NOT loaders — BepInEx_Patcher_*, BepInEx's NET.CoreCLR/NET.Framework builds,",
+    "MelonLoader.Installer.*. A prefix that matches nothing is simply skipped.",
+    "",
+    "'version', 'github' and 'assets' STAY, and must never be removed. Nothing verifies 'schema'",
+    "— no code reads it — so a Manager already installed cannot refuse a file it does not",
+    "understand: it would ignore the new fields in silence and install nothing. They are the",
+    "pinned fallback: what older binaries use, what an offline install uses, and where resolution",
+    "lands when a source cannot be reached.",
+    "",
+    "BepInEx 6 carries two sources because it has no stable release at all — its GitHub page",
+    "stopped at a pre-release in August 2024 while development continued in Bleeding Edge builds.",
+    "Which one is used is a Manager setting (bepinex6_channel), not a per-game choice.",
     "",
     "Checksums are NOT listed here. Neither project publishes .sha256 files, but GitHub exposes",
-    "a sha256 digest for every release asset through its API, and the installer reads it there.",
+    "a sha256 digest for every release asset through its API, and the Manager reads it there.",
     "Pinning a hash in this file stays possible (asset.sha256) and takes precedence — use it only",
     "when a specific file must be guaranteed, because a pinned hash goes stale on every version",
     "bump and a stale hash blocks installs for everyone.",
-    "",
-    "Bumping a loader version = change 'version', the release 'tag', and the asset names.",
+    "⚠ BepInEx 6 has no digest in EITHER channel: the 2024 release predates the feature and the",
+    "build server publishes none. HTTPS is all there is there, and the tool says so.",
     "",
         "Each warning carries the situation it applies to (os / runtimes / on_fresh_install). A note",
     "shown when it is not true teaches the reader to skip warnings, which is the one habit they",
@@ -27,6 +45,22 @@
       "version": "5.4.23.5",
       "preference": 100,
       "github": { "repo": "BepInEx/BepInEx", "tag": "v5.4.23.5" },
+      "sources": [
+        {
+          "channel": "release",
+          "kind": "github-release",
+          "label": "GitHub release",
+          "repo": "BepInEx/BepInEx",
+          "stable_only": true,
+          "match": [
+            { "prefix": "BepInEx_win_x64_", "os": "windows", "arch": "x64" },
+            { "prefix": "BepInEx_win_x86_", "os": "windows", "arch": "x86" },
+            { "prefix": "BepInEx_linux_x64_", "os": "linux", "arch": "x64" },
+            { "prefix": "BepInEx_linux_x86_", "os": "linux", "arch": "x86" },
+            { "prefix": "BepInEx_macos_universal_", "os": "macos", "arch": "universal" }
+          ]
+        }
+      ],
       "assets": [
         { "os": "windows", "arch": "x64", "name": "BepInEx_win_x64_5.4.23.5.zip" },
         { "os": "windows", "arch": "x86", "name": "BepInEx_win_x86_5.4.23.5.zip" },
@@ -55,6 +89,35 @@
       "version": "6.0.0-pre.2",
       "preference": 50,
       "github": { "repo": "BepInEx/BepInEx", "tag": "v6.0.0-pre.2" },
+      "sources": [
+        {
+          "channel": "be",
+          "kind": "bepinex-be",
+          "label": "Bleeding Edge",
+          "url": "https://builds.bepinex.dev/projects/bepinex_be",
+          "match": [
+            { "prefix": "BepInEx-Unity.Mono-win-x64-", "os": "windows", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.Mono-win-x86-", "os": "windows", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.Mono-linux-x64-", "os": "linux", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.Mono-linux-x86-", "os": "linux", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.Mono-macos-x64-", "os": "macos", "arch": "x64" }
+          ]
+        },
+        {
+          "channel": "github",
+          "kind": "github-release",
+          "label": "GitHub release",
+          "repo": "BepInEx/BepInEx",
+          "stable_only": false,
+          "match": [
+            { "prefix": "BepInEx-Unity.Mono-win-x64-", "os": "windows", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.Mono-win-x86-", "os": "windows", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.Mono-linux-x64-", "os": "linux", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.Mono-linux-x86-", "os": "linux", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.Mono-macos-x64-", "os": "macos", "arch": "x64" }
+          ]
+        }
+      ],
       "assets": [
         { "os": "windows", "arch": "x64", "name": "BepInEx-Unity.Mono-win-x64-6.0.0-pre.2.zip" },
         { "os": "windows", "arch": "x86", "name": "BepInEx-Unity.Mono-win-x86-6.0.0-pre.2.zip" },
@@ -88,6 +151,33 @@
       "version": "6.0.0-pre.2",
       "preference": 100,
       "github": { "repo": "BepInEx/BepInEx", "tag": "v6.0.0-pre.2" },
+      "sources": [
+        {
+          "channel": "be",
+          "kind": "bepinex-be",
+          "label": "Bleeding Edge",
+          "url": "https://builds.bepinex.dev/projects/bepinex_be",
+          "match": [
+            { "prefix": "BepInEx-Unity.IL2CPP-win-x64-", "os": "windows", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.IL2CPP-win-x86-", "os": "windows", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.IL2CPP-linux-x64-", "os": "linux", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.IL2CPP-macos-x64-", "os": "macos", "arch": "x64" }
+          ]
+        },
+        {
+          "channel": "github",
+          "kind": "github-release",
+          "label": "GitHub release",
+          "repo": "BepInEx/BepInEx",
+          "stable_only": false,
+          "match": [
+            { "prefix": "BepInEx-Unity.IL2CPP-win-x64-", "os": "windows", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.IL2CPP-win-x86-", "os": "windows", "arch": "x86" },
+            { "prefix": "BepInEx-Unity.IL2CPP-linux-x64-", "os": "linux", "arch": "x64" },
+            { "prefix": "BepInEx-Unity.IL2CPP-macos-x64-", "os": "macos", "arch": "x64" }
+          ]
+        }
+      ],
       "assets": [
         { "os": "windows", "arch": "x64", "name": "BepInEx-Unity.IL2CPP-win-x64-6.0.0-pre.2.zip" },
         { "os": "windows", "arch": "x86", "name": "BepInEx-Unity.IL2CPP-win-x86-6.0.0-pre.2.zip" },
@@ -119,6 +209,21 @@
       "version": "0.7.3",
       "preference": 60,
       "github": { "repo": "LavaGang/MelonLoader", "tag": "v0.7.3" },
+      "sources": [
+        {
+          "channel": "release",
+          "kind": "github-release",
+          "label": "GitHub release",
+          "repo": "LavaGang/MelonLoader",
+          "stable_only": true,
+          "match": [
+            { "prefix": "MelonLoader.x64.zip", "os": "windows", "arch": "x64" },
+            { "prefix": "MelonLoader.x86.zip", "os": "windows", "arch": "x86" },
+            { "prefix": "MelonLoader.Linux.x64.zip", "os": "linux", "arch": "x64" },
+            { "prefix": "MelonLoader.macOS.x64.zip", "os": "macos", "arch": "x64" }
+          ]
+        }
+      ],
       "assets": [
         { "os": "windows", "arch": "x64", "name": "MelonLoader.x64.zip" },
         { "os": "windows", "arch": "x86", "name": "MelonLoader.x86.zip" },
