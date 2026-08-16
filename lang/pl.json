@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Czy tłumaczyć interfejs samego moda. Brak wartości znaczy, że decyduje tłumaczenie – plik zawierający wiersze interfejsu powstał przy przetłumaczonym interfejsie. true albo false rozstrzyga tutaj.",
     "docs.config.folder_hint": "Pod MelonLoaderem to nie jest folder, w którym zainstalowano moda – zobacz",
     "translation.contributions": "Wkłady",
+    "translation.you_marker": "(Ty)",
+    "translation.author_unknown": "nieznany",
     "translation.accepts_contributions": "Przyjmuje wkłady",
     "translation.accepts_contributions_hint": "Możesz wysłać swoje zmiany autorowi, który decyduje, co z nich zachowa.",
     "translation.solo_work": "Praca samodzielna",

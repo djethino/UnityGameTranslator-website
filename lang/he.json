@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "האם ממשק המוד עצמו מתורגם. היעדר ערך פירושו שהתרגום מחליט — קובץ הנושא שורות ממשק נכתב כשהממשק היה מתורגם. ‏true או false מכריעים כאן.",
     "docs.config.folder_hint": "תחת MelonLoader זו אינה התיקייה שאליה הותקן המוד — ראו",
     "translation.contributions": "תרומות",
+    "translation.you_marker": "(אתם)",
+    "translation.author_unknown": "לא ידוע",
     "translation.accepts_contributions": "מקבל תרומות",
     "translation.accepts_contributions_hint": "אפשר לשלוח את השינויים שלכם למי שכתב אותו, והוא שמחליט מה נשאר.",
     "translation.solo_work": "עבודת יחיד",

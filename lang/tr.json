@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Modun kendi arayüzünün çevrilip çevrilmeyeceği. Değer yoksa çeviri karar verir – arayüz satırları taşıyan bir dosya, arayüz çevriliyken yazılmıştır. true ya da false burada keser.",
     "docs.config.folder_hint": "MelonLoader'da bu, modun kurulduğu klasör değildir – bkz.",
     "translation.contributions": "Katkılar",
+    "translation.you_marker": "(siz)",
+    "translation.author_unknown": "bilinmiyor",
     "translation.accepts_contributions": "Katkı kabul ediyor",
     "translation.accepts_contributions_hint": "Değişikliklerinizi yazarına gönderebilirsiniz; neyin kalacağına o karar verir.",
     "translation.solo_work": "Tek başına çalışıyor",

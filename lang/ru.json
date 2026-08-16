@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Переводить ли интерфейс самого мода. Отсутствие значения означает, что решает перевод — файл со строками интерфейса писался с переведённым интерфейсом. true или false решает на месте.",
     "docs.config.folder_hint": "В MelonLoader это не та папка, куда установлен мод, — см.",
     "translation.contributions": "Вклады",
+    "translation.you_marker": "(вы)",
+    "translation.author_unknown": "неизвестно",
     "translation.accepts_contributions": "Принимает вклады",
     "translation.accepts_contributions_hint": "Вы можете отправить свои изменения автору — он решает, что оставить.",
     "translation.solo_work": "Работа в одиночку",

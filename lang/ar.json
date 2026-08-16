@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "أتُترجَم واجهة الإضافة نفسها أم لا. غياب القيمة يعني أن الترجمة هي التي تقرّر — فالملف الذي يحمل أسطر واجهة كُتب وواجهته مترجمة. أما true أو false فتحسم الأمر هنا.",
     "docs.config.folder_hint": "مع MelonLoader ليس هذا المجلد الذي ثُبِّتت فيه الإضافة — انظروا",
     "translation.contributions": "المساهمات",
+    "translation.you_marker": "(أنت)",
+    "translation.author_unknown": "غير معروف",
     "translation.accepts_contributions": "يقبل المساهمات",
     "translation.accepts_contributions_hint": "يمكنك إرسال تعديلاتك إلى صاحب الترجمة، وهو من يقرّر ما يبقى منها.",
     "translation.solo_work": "عمل فردي",

@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Ob die Oberfläche der Mod selbst übersetzt wird. Fehlt der Wert, entscheidet die Übersetzung – eine Datei mit Oberflächenzeilen wurde mit übersetzter Oberfläche verfasst. true oder false entscheidet hier vor Ort.",
     "docs.config.folder_hint": "Unter MelonLoader ist das nicht der Ordner, in den die Mod installiert wurde – siehe",
     "translation.contributions": "Beiträge",
+    "translation.you_marker": "(du)",
+    "translation.author_unknown": "unbekannt",
     "translation.accepts_contributions": "Nimmt Beiträge an",
     "translation.accepts_contributions_hint": "Du kannst deine Änderungen einschicken – der Autor entscheidet, was davon übernommen wird.",
     "translation.solo_work": "Alleinarbeit",

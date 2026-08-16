@@ -34,7 +34,7 @@
             <div class="text-xs text-gray-400 mt-1">
                 {{-- Never updated_at, whichever date is passed: a vote or a download moves it, so
                      it says neither when the work was published nor when it was last touched. --}}
-                {{ $translation->user->name ?? '[Deleted]' }} · {{ ($date ?? $translation->created_at)->diffForHumans() }}
+                <x-user-mention :user="$translation->user" /> · {{ ($date ?? $translation->created_at)->diffForHumans() }}
             </div>
             {{-- The same badges as the game pages: what catches the eye about a translation must
                  not depend on which page you meet it. --}}

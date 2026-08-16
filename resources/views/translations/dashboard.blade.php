@@ -190,7 +190,7 @@
                 @php $stats = $branchStats[$branch->id] ?? null; @endphp
                 <div class="p-4 flex justify-between items-center">
                     <div>
-                        <span class="font-medium text-white">{{ $branch->user->name }}</span>
+                        <x-user-mention :user="$branch->user" class="font-medium text-white" />
                         <span class="text-gray-500 text-sm ml-2">
                             {{-- When this branch last changed, not when it was last voted on --}}
                             {{ $branch->contentChangedAt()->diffForHumans() }}

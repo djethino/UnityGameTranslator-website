@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Giao diện của chính bản mod có được dịch hay không. Không có giá trị nghĩa là để bản dịch quyết – một tập tin mang các dòng giao diện đã được viết với giao diện đã dịch. true hay false thì quyết ngay tại đây.",
     "docs.config.folder_hint": "Với MelonLoader, đây không phải thư mục đã cài bản mod – xem",
     "translation.contributions": "Đóng góp",
+    "translation.you_marker": "(bạn)",
+    "translation.author_unknown": "không rõ",
     "translation.accepts_contributions": "Nhận đóng góp",
     "translation.accepts_contributions_hint": "Bạn có thể gửi thay đổi của mình cho tác giả; họ quyết định giữ lại gì.",
     "translation.solo_work": "Làm một mình",

@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "จะแปลหน้าตาของตัวม็อดเองหรือไม่ ถ้าไม่มีค่านี้ หมายถึงให้คำแปลเป็นผู้ตัดสิน เพราะไฟล์ที่มีบรรทัดของหน้าตาม็อดย่อมถูกเขียนขึ้นตอนที่หน้าตาถูกแปลไว้ ใส่ true หรือ false เพื่อตัดสินเองที่นี่",
     "docs.config.folder_hint": "บน MelonLoader นี่ไม่ใช่โฟลเดอร์ที่ติดตั้งม็อดไว้ ดูที่",
     "translation.contributions": "การมีส่วนร่วม",
+    "translation.you_marker": "(คุณ)",
+    "translation.author_unknown": "ไม่ทราบ",
     "translation.accepts_contributions": "รับการมีส่วนร่วม",
     "translation.accepts_contributions_hint": "คุณส่งสิ่งที่คุณแก้ไขให้ผู้เขียนได้ และผู้เขียนเป็นคนเลือกว่าจะเก็บอะไรไว้",
     "translation.solo_work": "ทำงานคนเดียว",

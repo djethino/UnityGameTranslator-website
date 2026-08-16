@@ -120,7 +120,7 @@
                         <input type="checkbox" name="branches[]" value="{{ $branch->id }}"
                             class="branch-checkbox rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
                             {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
-                        <span class="text-gray-300">{{ $branch->user->name }}</span>
+                        <x-user-mention :user="$branch->user" class="text-gray-300" />
                         <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
                     </label>
                     {{-- Rating and report sit tight against the name: the row holds one chip per

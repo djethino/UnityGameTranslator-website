@@ -44,7 +44,7 @@
                     <x-language-mark :language="$translation->target_language" named />
                     {{ $translation->target_language }}
                     <span class="text-gray-600 mx-1">·</span>
-                    <span class="text-gray-300">{{ $translation->user->name }}</span>
+                    <x-user-mention :user="$translation->user" class="text-gray-300" />
                 </p>
 
                 {{-- Where it came from, when it came from somewhere --}}

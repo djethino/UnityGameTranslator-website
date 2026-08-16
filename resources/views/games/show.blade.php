@@ -294,7 +294,7 @@
                                     @if($translation->user->avatar)
                                         <img src="{{ $translation->user->avatar }}" class="w-5 h-5 rounded-full">
                                     @endif
-                                    <span class="font-medium text-gray-300">{{ $translation->user->name }}</span>
+                                    <x-user-mention :user="$translation->user" class="font-medium text-gray-300" />
                                 </span>
                                 {{-- Two distinct facts: when it appeared, and whether it is
                                      still being worked on. Showing only one of them made an
@@ -322,7 +322,7 @@
                                 <div class="text-sm text-gray-400 mb-2">
                                     <i class="fas fa-code-branch mr-1"></i>{{ __('translation.taken_up_by') }}
                                     @foreach($translation->publicForks as $fork)
-                                        <a href="#translation-{{ $fork->id }}" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">{{ $fork->user->name }}</a>{{ !$loop->last ? ',' : '' }}
+                                        <a href="#translation-{{ $fork->id }}" class="underline underline-offset-2"><x-user-mention :user="$fork->user" link /></a>{{ !$loop->last ? ',' : '' }}
                                     @endforeach
                                 </div>
                             @endif
@@ -492,7 +492,7 @@
                                             @if($fork->user->avatar)
                                                 <img src="{{ $fork->user->avatar }}" class="w-5 h-5 rounded-full">
                                             @endif
-                                            <span class="text-gray-300">{{ $fork->user->name }}</span>
+                                            <x-user-mention :user="$fork->user" class="text-gray-300" />
                                         </span>
                                         {{-- For a fork, "still alive?" matters more than "born when?" --}}
                                         <span class="text-gray-400" title="{{ __('translation.published_on', ['date' => $fork->created_at->isoFormat('LL')]) }}">{{ $fork->created_at->isoFormat('LL') }}</span>

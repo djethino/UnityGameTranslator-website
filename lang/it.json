@@ -1039,6 +1039,8 @@
     "docs.config.translate_mod_ui": "Se l'interfaccia della mod è tradotta. Assente vuol dire che decide la traduzione – un file che porta righe di interfaccia è stato scritto con l'interfaccia tradotta. true o false decide qui.",
     "docs.config.folder_hint": "Con MelonLoader non è la cartella in cui la mod è stata installata – vedi",
     "translation.contributions": "Contributi",
+    "translation.you_marker": "(tu)",
+    "translation.author_unknown": "sconosciuto",
     "translation.accepts_contributions": "Accetta contributi",
     "translation.accepts_contributions_hint": "Puoi inviare le tue modifiche a chi la cura, che decide cosa tenere.",
     "translation.solo_work": "Lavoro in solitaria",
