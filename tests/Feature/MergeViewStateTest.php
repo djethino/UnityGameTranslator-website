@@ -319,11 +319,11 @@ class MergeViewStateTest extends TestCase
 
         // The Main's cell shows its own value or a rewording — never the taken one.
         $this->assertStringContainsString(
-            'return this.publicationValues[row.field] ?? row.mineValue;', $html);
+            'return this.publicationValues[row.id] ?? row.mineValue;', $html);
 
         // Purple on a rewording and on nothing else.
         $this->assertStringContainsString(
-            "publicationPick[row.field] === 'manual' ? 'text-purple-300' : ''", $html);
+            "publicationPick[row.id] === 'manual' ? 'text-purple-300' : ''", $html);
 
         // The value is resolved when the merge is applied, not copied on click.
         $this->assertStringContainsString("pick === 'manual'", $html);
@@ -433,7 +433,7 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString("this.publicationPick[row.field] = 'main';", $html);
+        $this->assertStringContainsString("this.publicationPick[row.id] = 'main';", $html);
         $this->assertStringContainsString('this.publicationOpen = this.hasPublicationRows;', $html);
         $this->assertStringContainsString('this.settingsOpen = this.hasSettingsRows;', $html);
 

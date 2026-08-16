@@ -453,17 +453,17 @@
                                     <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700 merge-cell"
                                         :class="publicationCellClass(row, null)"
                                         @click="publicationKeepMine(row)"
-                                        @dblclick="editCell(row.field, publicationResult(row), 'publication')">
+                                        @dblclick="editCell(row.id, publicationResult(row), 'publication')">
                                     {{-- The lines' own affordance, not a box of its own: revert
                                          what is staged, or open the shared edit modal. A textarea
                                          living in the cell was invented here — this screen already
                                          had one way to edit a value and did not need a second. --}}
                                     <span class="edit-affordance">
-                                        <button type="button" x-show="publicationPick[row.field] !== undefined"
+                                        <button type="button" x-show="publicationPick[row.id] !== undefined"
                                             @click.stop="publicationKeepMine(row)"
                                             title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
                                         <button type="button"
-                                            @click.stop="editCell(row.field, publicationResult(row), 'publication')"
+                                            @click.stop="editCell(row.id, publicationResult(row), 'publication')"
                                             title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
                                     </span>
                                     {{-- Purple on a rewording and on nothing else, exactly as on a
@@ -471,7 +471,7 @@
                                          contribution leaves this cell alone, so there is nothing
                                          here to mark. --}}
                                     <span class="editor-text break-words"
-                                        :class="publicationPick[row.field] === 'manual' ? 'text-purple-300' : ''"
+                                        :class="publicationPick[row.id] === 'manual' ? 'text-purple-300' : ''"
                                         x-text="publicationResult(row)"></span>
                                     </td>
 
@@ -495,11 +495,11 @@
                                         </td>
                                     </template>
                                     <td class="answer-rail"><button type="button"
-                                        x-show="answerRight(publicationPick[row.field])" x-cloak
-                                        @click.stop="goToAnswer(publicationPick[row.field])"
+                                        x-show="answerRight(publicationPick[row.id])" x-cloak
+                                        @click.stop="goToAnswer(publicationPick[row.id])"
                                         class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
                                         :title="offScreenHint"
-                                        ><i class="fas answer-mark" :class="answerIconClass(publicationPick[row.field])"></i></button></td>
+                                        ><i class="fas answer-mark" :class="answerIconClass(publicationPick[row.id])"></i></button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -1476,8 +1476,8 @@ document.addEventListener('alpine:init', () => {
             // ⚠ So the Main is picked, not left blank. The row is answered, it shows as
             // answered, and taking a contribution's wording stays one click away.
             for (const row of this.publicationRows) {
-                if (this.publicationPick[row.field] !== undefined) continue;
-                this.publicationPick[row.field] = 'main';
+                if (this.publicationPick[row.id] !== undefined) continue;
+                this.publicationPick[row.id] = 'main';
             }
         },
 
@@ -1627,27 +1627,27 @@ document.addEventListener('alpine:init', () => {
 
             // Re-clicking the chosen one drops the choice, the way a line behaves.
             const pick = { ...this.publicationPick };
-            if (pick[row.field] === branchId) delete pick[row.field];
-            else pick[row.field] = branchId;
+            if (pick[row.id] === branchId) delete pick[row.id];
+            else pick[row.id] = branchId;
             this.publicationPick = pick;
 
             // A pending rewording is dropped: it was written against another wording, and
             // keeping it would show the Main's cell disagreeing with the cell just chosen.
             const values = { ...this.publicationValues };
-            delete values[row.field];
+            delete values[row.id];
             this.publicationValues = values;
         },
 
         publicationKeepMine(row) {
             const pick = { ...this.publicationPick };
-            if (pick[row.field] === 'main') delete pick[row.field];
-            else pick[row.field] = 'main';
+            if (pick[row.id] === 'main') delete pick[row.id];
+            else pick[row.id] = 'main';
             this.publicationPick = pick;
 
             // Keeping one's own words drops a rewording staged over them: the two are the same
             // cell, and leaving the text behind would light "kept mine" over somebody's edit.
             const values = { ...this.publicationValues };
-            delete values[row.field];
+            delete values[row.id];
             this.publicationValues = values;
         },
 
@@ -1680,7 +1680,7 @@ document.addEventListener('alpine:init', () => {
          * contribution's own column, and only resolved into a value when the merge is applied.
          */
         publicationResult(row) {
-            return this.publicationValues[row.field] ?? row.mineValue;
+            return this.publicationValues[row.id] ?? row.mineValue;
         },
 
         /**
@@ -1706,7 +1706,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         publicationCellClass(row, branchId) {
-            const picked = this.publicationPick[row.field];
+            const picked = this.publicationPick[row.id];
 
             // The Main's cell lights for its own two answers and for nothing else: kept as it
             // stands, or reworded over. Taking a contribution lights the contribution's cell,
@@ -2067,7 +2067,7 @@ document.addEventListener('alpine:init', () => {
         get publicationTakenCount() {
             let count = 0;
             for (const row of this.publicationRows) {
-                if (this.publicationPick[row.field] === undefined) continue;
+                if (this.publicationPick[row.id] === undefined) continue;
                 if (this.publicationResolved(row) !== (row.mineRaw ?? '')) count++;
             }
             return count;
@@ -2075,9 +2075,9 @@ document.addEventListener('alpine:init', () => {
 
         /** What this row would write, whichever of the three answers it carries. */
         publicationResolved(row) {
-            const pick = this.publicationPick[row.field];
+            const pick = this.publicationPick[row.id];
             if (pick === undefined) return row.mineRaw ?? '';
-            if (pick === 'manual') return this.publicationValues[row.field] ?? '';
+            if (pick === 'manual') return this.publicationValues[row.id] ?? '';
             if (pick === 'main') return row.mineRaw ?? '';
             return row.byBranch[pick];
         },
@@ -2135,7 +2135,7 @@ document.addEventListener('alpine:init', () => {
                 if (this.settingsPick[row.id] === undefined && !row.mineRaw) count++;
             }
             for (const row of this.publicationRows) {
-                if (this.publicationPick[row.field] === undefined && !row.mineRaw) count++;
+                if (this.publicationPick[row.id] === undefined && !row.mineRaw) count++;
             }
 
             return count;
@@ -2181,12 +2181,14 @@ document.addEventListener('alpine:init', () => {
             // one text per field can end up on the page.
             const publication = {};
             for (const row of this.publicationRows) {
-                if (this.publicationPick[row.field] === undefined) continue;
+                if (this.publicationPick[row.id] === undefined) continue;
 
                 // ⚠ Nothing is sent for a row that would write back what is already stored. The
                 // endpoint refuses a merge with no changes at all, so a screen whose only answer
                 // was "keep my own words" offered a Save that the server would turn down.
                 const value = this.publicationResolved(row);
+                // ⚠ Keyed by FIELD here, not by row id: this is the server's vocabulary
+                // ("notes", "resources_url"), and the row id only happens to match it.
                 if (value !== (row.mineRaw ?? '')) publication[row.field] = value;
             }
             document.getElementById('publicationJson').value = Object.keys(publication).length > 0
