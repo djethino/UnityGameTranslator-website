@@ -340,7 +340,7 @@
                                     <template x-for="branch in branches" :key="branch.id">
                                         <td colspan="2" :data-col="'branch-' + branch.id"
                                             class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                            :class="settingsCellClass(row, branch.id)"
+                                            :class="[settingsCellClass(row, branch.id), metaCellTint(row, branch.id)]"
                                             @click="settingsTake(row, branch.id)">
                                             <template x-if="row.byBranch[branch.id] === undefined">
                                                 <span class="text-gray-600 italic">—</span>
@@ -348,11 +348,14 @@
                                             <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
                                                 <a :href="row.byBranch[branch.id]" target="_blank"
                                                    rel="noopener noreferrer nofollow" @click.stop
-                                                   class="text-blue-400 hover:underline break-all"
+                                                   class="hover:underline break-all"
+                                                   :class="metaLinkTint(row, branch.id)"
                                                    x-text="row.byBranch[branch.id]"></a>
                                             </template>
                                             <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
-                                                <span class="editor-text break-words" x-text="row.byBranch[branch.id]"></span>
+                                                <span class="editor-text break-words"
+                                                      :class="metaTextTint(row, branch.id)"
+                                                      x-text="row.byBranch[branch.id]"></span>
                                             </template>
                                         </td>
                                     </template>
@@ -478,7 +481,7 @@
                                     <template x-for="branch in branches" :key="branch.id">
                                         <td colspan="2" :data-col="'branch-' + branch.id"
                                             class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                            :class="publicationCellClass(row, branch.id)"
+                                            :class="[publicationCellClass(row, branch.id), metaCellTint(row, branch.id)]"
                                             @click="publicationTake(row, branch.id)">
                                             <template x-if="row.byBranch[branch.id] === undefined">
                                                 <span class="text-gray-600 italic">—</span>
@@ -486,11 +489,14 @@
                                             <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
                                                 <a :href="row.byBranch[branch.id]" target="_blank"
                                                    rel="noopener noreferrer nofollow" @click.stop
-                                                   class="text-blue-400 hover:underline break-all"
+                                                   class="hover:underline break-all"
+                                                   :class="metaLinkTint(row, branch.id)"
                                                    x-text="row.byBranch[branch.id]"></a>
                                             </template>
                                             <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
-                                                <span class="editor-text break-words" x-text="row.byBranch[branch.id]"></span>
+                                                <span class="editor-text break-words"
+                                                      :class="metaTextTint(row, branch.id)"
+                                                      x-text="row.byBranch[branch.id]"></span>
                                             </template>
                                         </td>
                                     </template>
@@ -2090,6 +2096,42 @@ document.addEventListener('alpine:init', () => {
                 if (this.publicationResolved(row) !== (row.mineRaw ?? '')) count++;
             }
             return count;
+        },
+
+        /**
+         * What a contribution's cell says about itself, before anything is chosen.
+         *
+         * 🔴 The lines below have marked this from the start — green where the Main holds
+         * nothing, yellow where the two disagree — and these two tables said nothing at all. The
+         * same fact was worth a colour on one row of the screen and none three rows above, which
+         * leaves a reader working out for themselves what the grid underneath tells them at a
+         * glance.
+         *
+         * ⚠ Same thresholds and same two colours, deliberately: an addition is not a
+         * disagreement, and which of the two it is decides whether there is anything to arbitrate.
+         */
+        metaDifference(row, branchId) {
+            const theirs = row.byBranch[branchId];
+            if (theirs === undefined) return '';
+            if (!row.mineRaw) return 'new';
+            return theirs === row.mineRaw ? '' : 'differs';
+        },
+
+        metaCellTint(row, branchId) {
+            const kind = this.metaDifference(row, branchId);
+            if (kind === 'new') return 'bg-green-900/20';
+            return kind === 'differs' ? 'bg-yellow-900/20' : '';
+        },
+
+        metaTextTint(row, branchId) {
+            const kind = this.metaDifference(row, branchId);
+            if (kind === 'new') return 'text-green-300';
+            return kind === 'differs' ? 'text-yellow-300' : '';
+        },
+
+        /** A link keeps its own colour when it agrees, and takes the difference's when it does not. */
+        metaLinkTint(row, branchId) {
+            return this.metaTextTint(row, branchId) || 'text-blue-400';
         },
 
         /** What this row would write, whichever of the three answers it carries. */

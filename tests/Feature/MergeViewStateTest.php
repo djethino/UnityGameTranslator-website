@@ -584,6 +584,27 @@ class MergeViewStateTest extends TestCase
             file_get_contents(resource_path('css/app.css')));
     }
 
+    public function test_the_two_tables_mark_a_difference_the_way_a_line_does(): void
+    {
+        // 🔴 The lines have marked this from the start — green where the Main holds nothing,
+        // yellow where the two disagree — and the settings and the description said nothing at
+        // all. The same fact was worth a colour on one row of the screen and none three rows
+        // above it, leaving a reader to work out for themselves what the grid underneath tells
+        // them at a glance.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        // The same two thresholds and the same two colours as branchCellTint / branchTextTint.
+        $this->assertStringContainsString('metaCellTint(row, branch.id)', $html);
+        $this->assertStringContainsString('metaTextTint(row, branch.id)', $html);
+        $this->assertStringContainsString("'bg-green-900/20'", $html);
+        $this->assertStringContainsString("'bg-yellow-900/20'", $html);
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
