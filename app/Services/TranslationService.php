@@ -913,13 +913,43 @@ class TranslationService
             ];
         }
 
-        // Different user - this is a branch
+        // 🔴 A branch, but only if the Main takes them.
+        //
+        // Refused here rather than in a controller, because determineOwnership is called from TWO
+        // of them — Api\TranslationController and TranslationController — and a check placed in
+        // one leaves the other wide open.
+        //
+        // ⚠ **A refusal is a refusal, never a quiet substitution.** Turning this into a fork would
+        // be the tempting answer and the wrong one: a fork takes a NEW uuid, so the file on
+        // somebody's disk would stop matching what the site holds, decided by a server that cannot
+        // see that file. The client offers the fork; we only ever say no.
+        if (!$original->accepts_branches) {
+            return [
+                'visibility' => null,
+                'parent_id' => null,
+                'original' => $original,
+                'refused' => self::BRANCHES_REFUSED,
+            ];
+        }
+
         return [
             'visibility' => 'branch',
             'parent_id' => $original->id,
             'original' => $original,
         ];
     }
+
+    /**
+     * Why an upload was refused, in words a mod that predates this feature can show as-is.
+     *
+     * ⚠ **This sentence is the whole interface for those versions.** The website goes live before
+     * any release of the mod, so a current mod will read is_owner:false, announce a contribution,
+     * and only meet this on the click. It cannot offer the fork, so the text has to carry the way
+     * out on its own.
+     */
+    public const BRANCHES_REFUSED =
+        'This translation does not accept contributions. You can publish your own version of it '
+        . 'instead — open it on the website and choose "Publish my own version".';
 
     /**
      * Resolve final languages based on operation type.

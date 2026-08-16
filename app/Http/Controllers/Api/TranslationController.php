@@ -289,6 +289,13 @@ class TranslationController extends Controller
                 // Told, came back, took nothing. Distinct from silence, which the mod already
                 // hears about through dormancy. Additive: older mods ignore it.
                 'main_ignoring' => $role === 'branch' ? $ownTranslation->mainIgnoresContributions() : null,
+
+                // Whether this lineage takes contributions at all, so a client can stop offering
+                // one instead of letting somebody find out on the click. ⚠ Additive: a mod that
+                // predates the field ignores it and meets the refusal at upload, which is why
+                // that refusal reads as a whole sentence.
+                'accepts_branches' => $ownTranslation->lineageAcceptsBranches(),
+                'branch_frozen' => $ownTranslation->isFrozenBranch(),
                 // The contributor's apport over time, for their own card in game.
                 'merged_lines_total' => $role === 'branch' ? $ownTranslation->merged_lines_total : null,
                 'translation' => [
@@ -523,6 +530,25 @@ class TranslationController extends Controller
 
         // Determine ownership and visibility
         $ownership = $service->determineOwnership($fileUuid, $userId);
+
+        // 🔴 **Two ways in, and the second is the one that gets forgotten.** A NEW contribution is
+        // refused by determineOwnership; an EXISTING branch never reaches that decision at all,
+        // because $existingTranslation short-circuits it — so a Main who closes would still be
+        // receiving updates from every branch already in place.
+        //
+        // Frozen means frozen: as a branch, nothing more can be done. Turning it into a fork is
+        // the one move left, and it is the client that asks for it.
+        if (isset($ownership['refused'])) {
+            return response()->json(['error' => $ownership['refused']], 403);
+        }
+
+        if ($existingTranslation && $existingTranslation->isFrozenBranch()) {
+            return response()->json([
+                'error' => 'The translation you contribute to no longer accepts contributions. '
+                         . 'Your work is untouched — turn it into your own version to carry on.',
+            ], 403);
+        }
+
         $originalTranslation = $existingTranslation ? null : $ownership['original'];
         $visibility = $existingTranslation ? $existingTranslation->visibility : $ownership['visibility'];
         $parentId = $existingTranslation ? $existingTranslation->parent_id : $ownership['parent_id'];

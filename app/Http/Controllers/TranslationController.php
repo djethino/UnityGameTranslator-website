@@ -86,6 +86,19 @@ class TranslationController extends Controller
 
         // Determine ownership and visibility
         $ownership = $service->determineOwnership($fileUuid, $userId);
+
+        // Same two doors as the API path — see the note there. This one is the website's own
+        // upload form, and it must not be the way round the decision.
+        if (isset($ownership['refused'])) {
+            return back()->withErrors(['file' => $ownership['refused']]);
+        }
+
+        if ($existingTranslation && $existingTranslation->isFrozenBranch()) {
+            return back()->withErrors(['file' =>
+                'The translation you contribute to no longer accepts contributions. '
+                . 'Your work is untouched — turn it into your own version to carry on.']);
+        }
+
         $originalTranslation = $existingTranslation ? null : $ownership['original'];
         $visibility = $existingTranslation ? $existingTranslation->visibility : $ownership['visibility'];
         $parentId = $existingTranslation ? $existingTranslation->parent_id : $ownership['parent_id'];

@@ -31,6 +31,7 @@ class Translation extends Model
         'reviewed_hash',
         'status',
         'visibility',
+        'accepts_branches',
         // 'type' is now a computed attribute from HVASM stats
         'notes',
         'resources_url',
@@ -50,6 +51,7 @@ class Translation extends Model
         'origin_user_id' => 'integer',
         'origin_resolved_lines' => 'integer',
         'merged_at' => 'datetime',
+        'accepts_branches' => 'boolean',
         'merged_lines_total' => 'integer',
         'line_count' => 'integer',
         'capture_count' => 'integer',
@@ -1382,6 +1384,36 @@ class Translation extends Model
      * own content date, and the merge stamp. Somebody who never returns triggers nothing here —
      * that case belongs to dormancy.
      */
+    /**
+     * Whether this lineage takes contributions — asked of the MAIN, whoever is asking.
+     *
+     * 🔴 The decision belongs to the Main and to nobody else, so a branch or a fork asking about
+     * itself would answer about the wrong row. Reading it here, from the Main, is what stops a
+     * caller from checking the convenient object.
+     *
+     * ⚠ Not the same question as mainIgnoresContributions(), which measures a SILENCE — a Main
+     * told long ago who did nothing. This one is a decision. An open Main can be silent; a closed
+     * Main is ignoring nobody.
+     */
+    public function lineageAcceptsBranches(): bool
+    {
+        $main = $this->isMain() ? $this : $this->getMain();
+
+        return (bool) ($main?->accepts_branches ?? false);
+    }
+
+    /**
+     * A branch on a Main that has since closed: nothing may be done with it as a branch any more.
+     *
+     * ⚠ Frozen, not deleted. The work is its author's and stays theirs — what is gone is the road
+     * it was on. The one move left is turning it into a fork, which takes it out of this lineage
+     * and gives it back a future.
+     */
+    public function isFrozenBranch(): bool
+    {
+        return $this->isBranch() && !$this->lineageAcceptsBranches();
+    }
+
     public function mainIgnoresContributions(): bool
     {
         if (!$this->isBranch()) {
