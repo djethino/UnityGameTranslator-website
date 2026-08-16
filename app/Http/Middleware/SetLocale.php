@@ -26,7 +26,7 @@ class SetLocale
         $supportedLocales = array_keys(config('locales.supported', []));
 
         // Check if locale is in URL prefix (highest priority - explicit choice)
-        $urlLocale = $this->getLocaleFromUrl($request, $supportedLocales);
+        $urlLocale = self::localeInPath($request);
 
         if ($urlLocale) {
             // URL has explicit locale - use it and update session
@@ -92,9 +92,15 @@ class SetLocale
 
     /**
      * Get locale from URL prefix (e.g., /en/games, /fr/docs)
+     *
+     * ⚠ Public and static because a second question depends on the same answer: whether this URL
+     * can be cached at all. A page reached WITHOUT a prefix is rendered in whatever language the
+     * session holds, so it must never be stored by a shared cache — see PublicCacheHeaders. Two
+     * copies of "does the path start with a locale?" would be two chances to disagree.
      */
-    protected function getLocaleFromUrl(Request $request, array $supportedLocales): ?string
+    public static function localeInPath(Request $request): ?string
     {
+        $supportedLocales = array_keys(config('locales.supported', []));
         $segment = $request->segment(1);
 
         if (!$segment) {
