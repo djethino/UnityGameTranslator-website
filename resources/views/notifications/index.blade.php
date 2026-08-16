@@ -39,6 +39,8 @@
                             <i class="fas fa-code-merge text-green-400"></i>
                         @elseif($type === 'branch_orphaned')
                             <i class="fas fa-unlink text-red-400"></i>
+                        @elseif($type === 'branches_closed')
+                            <i class="fas fa-lock text-amber-400"></i>
                         @elseif($type === 'translation_delisted' || $type === 'main_delisted')
                             <i class="fas fa-eye-slash text-amber-400"></i>
                         @elseif($type === 'announcement')
@@ -67,6 +69,12 @@
                                 {{ __('notif.branch_orphaned', [
                                     'game' => $data['game_name'] ?? '?',
                                     'lang' => $data['target_language'] ?? '?',
+                                ]) }}
+                            @elseif($type === 'branches_closed')
+                                {{ __('notif.branches_closed', [
+                                    'game' => $data['game_name'] ?? '?',
+                                    'lang' => $data['target_language'] ?? '?',
+                                    'owner' => $data['owner_username'] ?? '?',
                                 ]) }}
                             @elseif($type === 'translation_delisted')
                                 {{ __('notif.translation_delisted', [

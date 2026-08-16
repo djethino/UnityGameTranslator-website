@@ -909,11 +909,24 @@ class TranslationController extends Controller
             ], 403);
         }
 
+
+        // ⚠ A frozen branch is frozen for everything, details included. The Main it contributes to
+        // no longer takes contributions, so describing it better would be describing something
+        // that can never move again. The one action left is turning it into a fork.
+        if ($translation->isFrozenBranch()) {
+            return response()->json([
+                'error' => 'Frozen',
+                'message' => 'The translation you contribute to no longer accepts contributions. '
+                           . 'Turn this into your own version to carry on.',
+            ], 403);
+        }
+
         // Same limits as store(), so one field cannot be accepted here and refused there.
         $request->validate([
             'notes' => 'nullable|string|max:1000',
             'resources_url' => 'nullable|string|max:2048|url:http,https',
             'status' => 'nullable|in:in_progress,complete',
+            'accepts_branches' => 'nullable|boolean',
         ]);
 
         $isBranch = $translation->visibility === 'branch';
@@ -940,10 +953,23 @@ class TranslationController extends Controller
             $changes['status'] = $request->input('status');
         }
 
+        // 🔴 The Main's decision, and only the Main's. A branch sending this would be answering
+        // for the lineage it contributes to — the same reason status is refused to it above.
+        if (!$isBranch && $request->has('accepts_branches')) {
+            $changes['accepts_branches'] = (bool) $request->input('accepts_branches');
+        }
+
+        // Same transition test as the website form — see the note there.
+        $wasOpen = (bool) $translation->accepts_branches;
+
         if ($changes) {
             // ⚠ Not content_updated_at: nothing about the file changed. Bumping it would tell
             // every player the translation had moved on, and rank it as freshly worked on.
             $translation->update($changes);
+        }
+
+        if ($wasOpen && !$translation->fresh()->accepts_branches) {
+            $translation->notifyBranchesOfClosure();
         }
 
         $translation->refresh();

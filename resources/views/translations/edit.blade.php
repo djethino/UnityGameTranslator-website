@@ -94,6 +94,23 @@
                 </label>
             </div>
         </div>
+
+        {{-- Contributions: the Main's own decision, beside the other one only they can take.
+             ⚠ Off by default when nobody has said otherwise — keeping a translation open is work
+             nobody agreed to by publishing. The reminder says what a branch IS, in one line: the
+             word means nothing to somebody publishing their first translation. --}}
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.contributions') }}</label>
+            <label class="flex items-start cursor-pointer gap-2">
+                <input type="checkbox" name="accepts_branches" value="1"
+                       {{ old('accepts_branches', $translation->accepts_branches) ? 'checked' : '' }}
+                       class="mt-1 text-purple-600">
+                <span class="text-sm text-gray-300">
+                    {{ __('upload.accepts_branches') }}
+                    <span class="block text-xs text-gray-500 mt-1">{{ __('upload.accepts_branches_hint') }}</span>
+                </span>
+            </label>
+        </div>
         @else
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.status') }}</label>

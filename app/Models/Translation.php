@@ -1337,6 +1337,32 @@ class Translation extends Model
      * account does NOT come through here: accounts are anonymised and their translations kept,
      * which is why the wording talks about a deleted translation and not a departed author.
      */
+    /**
+     * Tells every contributor that this Main has stopped taking contributions.
+     *
+     * 🔴 **Because nothing on their side changes visibly.** Their file still opens, still saves.
+     * What has gone is the road it was on — and without a word they would find out at the moment
+     * they tried to publish, after the work rather than before.
+     *
+     * ⚠ Only on the transition, and only downwards. Called from wherever accepts_branches is
+     * written; sending it again on each save would turn one decision into a stream of notices, and
+     * sending it when a Main OPENS would be announcing good news as a warning.
+     */
+    public function notifyBranchesOfClosure(): void
+    {
+        if (!$this->file_uuid || !$this->isMain()) {
+            return;
+        }
+
+        static::where('file_uuid', $this->file_uuid)
+            ->where('visibility', 'branch')
+            ->with('user', 'game')
+            ->get()
+            ->each(function (self $branch) {
+                $branch->user?->notify(new \App\Notifications\BranchesClosed($branch));
+            });
+    }
+
     public function notifyBranchesOfOrphanhood(): void
     {
         if (!$this->file_uuid) {
@@ -1403,6 +1429,19 @@ class Translation extends Model
     }
 
     /**
+     * The Main of this lineage, when there still is one.
+     *
+     * ⚠ Told apart from "closed" everywhere it matters: a lineage with no head is ORPHANED, which
+     * is somebody's translation being deleted, not somebody refusing contributions. The two states
+     * already have separate notices and separate wording, and folding them here would have frozen
+     * every orphan on a decision nobody took.
+     */
+    public function lineageHasAMain(): bool
+    {
+        return $this->isMain() || $this->getMain() !== null;
+    }
+
+    /**
      * A branch on a Main that has since closed: nothing may be done with it as a branch any more.
      *
      * ⚠ Frozen, not deleted. The work is its author's and stays theirs — what is gone is the road
@@ -1411,7 +1450,11 @@ class Translation extends Model
      */
     public function isFrozenBranch(): bool
     {
-        return $this->isBranch() && !$this->lineageAcceptsBranches();
+        // ⚠ A Main that EXISTS and has closed. An orphaned branch — its Main deleted — is not
+        // frozen: nobody refused it anything, and it keeps the ways out it always had.
+        return $this->isBranch()
+               && $this->lineageHasAMain()
+               && !$this->lineageAcceptsBranches();
     }
 
     public function mainIgnoresContributions(): bool

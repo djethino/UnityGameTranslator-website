@@ -499,10 +499,20 @@ class TranslationController extends Controller
         // always rendered there, and a missing value would silently mean "in progress".
         $isBranch = $translation->visibility === 'branch';
 
+        // ⚠ Frozen means frozen, details included: the Main it contributes to no longer takes
+        // contributions, so describing it better would be describing something that can never
+        // move again. The admin screens keep their way in — moderation is not editing.
+        if (!$isAdmin && $translation->isFrozenBranch()) {
+            return back()->withErrors(['notes' =>
+                'The translation you contribute to no longer accepts contributions. '
+                . 'Turn this into your own version to carry on.']);
+        }
+
         $request->validate([
             'status' => $isBranch ? 'prohibited' : 'required|in:in_progress,complete',
             'notes' => 'nullable|string|max:1000',
             'resources_url' => 'nullable|string|max:2048|url',
+            'accepts_branches' => $isBranch ? 'prohibited' : 'nullable|boolean',
         ]);
 
         $changes = [
@@ -512,9 +522,22 @@ class TranslationController extends Controller
 
         if (!$isBranch) {
             $changes['status'] = $request->status;
+
+            // An unticked checkbox sends nothing at all, so absence IS the answer here — reading
+            // it as "leave unchanged" would make the box impossible to turn off.
+            $changes['accepts_branches'] = $request->boolean('accepts_branches');
         }
 
+        // ⚠ Read BEFORE the write, and compared: the notice belongs to the TRANSITION. Sending
+        // it on every save would turn one decision into a stream of notices for people who have
+        // already been told.
+        $wasOpen = (bool) $translation->accepts_branches;
+
         $translation->update($changes);
+
+        if ($wasOpen && !$translation->fresh()->accepts_branches) {
+            $translation->notifyBranchesOfClosure();
+        }
 
         // Redirect based on access route, not user role
         if (request()->routeIs('admin.*')) {

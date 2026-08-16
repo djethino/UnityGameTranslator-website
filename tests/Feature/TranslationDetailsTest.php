@@ -38,6 +38,12 @@ class TranslationDetailsTest extends TestCase
             'file_path' => 'translations/not-read-by-these-tests.json',
             'file_uuid' => 'uuid-details-' . uniqid(),
             'visibility' => 'public',
+
+            // ⚠ Open, because a branch cannot exist otherwise. Since 2026-08-16 a Main decides
+            // whether it takes contributions, and the default is no — so a fixture that made a
+            // branch on a closed Main was building a state the site cannot reach, and every test
+            // about branch details started life frozen.
+            'accepts_branches' => true,
             'file_hash' => 'hash-' . uniqid(),
             'line_count' => 10,
             'status' => 'in_progress',

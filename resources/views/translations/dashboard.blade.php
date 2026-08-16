@@ -302,6 +302,18 @@
         </div>
         @endif
 
+        {{-- 🔴 The Main closed after this branch was made. Said before the fork section rather
+             than instead of it: that section is an opportunity somebody may take; this is a fact
+             they have to know, because nothing they do as a branch can work any more. --}}
+        @if($translation->isFrozenBranch())
+        <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-white mb-2">
+                <i class="fas fa-lock mr-2 text-red-400"></i>{{ __('dashboard.branch_frozen_title') }}
+            </h2>
+            <p class="text-red-200 text-sm">{{ __('dashboard.branch_frozen_body') }}</p>
+        </div>
+        @endif
+
         {{-- Convert to Fork Section --}}
         <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
             <h2 class="text-lg font-semibold text-white mb-2">
