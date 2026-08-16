@@ -45,24 +45,20 @@
      source, and wrong the moment anything reads the attribute as text. Alpine tracks the VALUE
      (an ASCII tag); the label is written by Blade and swapped from the clicked entry's own text,
      so accents never leave the HTML. --}}
-{{-- ⚠ **`pick()` exists so this behaves like the field it replaces.** A hidden input bound with
-     `:value` changes silently: Alpine writes the value, and no `change` event is ever fired. Every
-     form on this site that reacts to its own fields listens for exactly that event — the
-     auto-submitting filter bars above all — so a picker that stayed quiet could not be used there,
-     and the one screen that needed a flag the most kept a bare `<select>`. Dispatched after
-     `$nextTick` so the input carries the new value by the time anything reads it. --}}
-<div x-data="{
-        open: false,
-        value: @js((string) $selected),
-        pick(next, label) {
-            this.value = next;
-            this.$refs.label.textContent = label;
-            this.open = false;
-            this.$nextTick(() => this.$refs.field.dispatchEvent(
-                new Event('change', { bubbles: true })));
-        },
-     }" class="relative">
-    <input type="hidden" name="{{ $name }}" :value="value" x-ref="field">
+{{-- 🔴 **Nothing here may leave the grammar @alpinejs/csp accepts.** A method declared in x-data,
+     or a call with arguments in @click, is not an error it reports — the CSP parser evaluates it
+     to NOTHING. `open` then never exists, x-show has nothing to hide, and every picker on the page
+     is drawn open. Which is exactly what happened when this component was given a `pick()` helper
+     so that it could fire a change event.
+
+     ⚠ So the "behaves like a real field" half is done OUTSIDE Alpine: each entry carries
+     data-language-choice, and app.js submits the surrounding auto-submitting form on click. Plain
+     JS in a bundled file, where the CSP has nothing to say. --}}
+<div x-data="{ open: false, value: @js((string) $selected) }" class="relative" data-language-picker>
+    {{-- ⚠ data-language-field, so app.js can write the chosen value itself rather than wait for
+         Alpine to flush it. Reading the picker's state from outside is guesswork about a
+         scheduler; the clicked entry carries the answer. --}}
+    <input type="hidden" name="{{ $name }}" :value="value" data-language-field>
 
     <button type="button" @click="open = !open" @click.away="open = false"
             class="w-full flex items-center gap-2 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-left text-white hover:border-gray-500 focus:ring-purple-500 focus:border-purple-500 transition">
@@ -83,16 +79,16 @@
     <div x-show="open" x-cloak x-transition
          class="absolute left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-72 overflow-y-auto">
         @if ($empty !== null)
-            <button type="button" data-label="{{ $empty }}"
-                    @click="pick('', $el.dataset.label)"
+            <button type="button" data-label="{{ $empty }}" data-language-choice
+                    @click="value = ''; $refs.label.textContent = $el.dataset.label; open = false"
                     class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition">
                 {{ $empty }}
             </button>
         @endif
 
         @foreach ($sorted as $value => $label)
-            <button type="button" data-value="{{ $value }}" data-label="{{ $label }}"
-                    @click="pick($el.dataset.value, $el.dataset.label)"
+            <button type="button" data-value="{{ $value }}" data-label="{{ $label }}" data-language-choice
+                    @click="value = $el.dataset.value; $refs.label.textContent = $el.dataset.label; open = false"
                     class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-700 transition {{ (string) $selected === (string) $value ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
                 @if (!empty($flags[$value]))
                     <x-flag :flag="$flags[$value]" />

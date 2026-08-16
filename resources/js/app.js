@@ -479,6 +479,37 @@ document.addEventListener('change', (event) => {
     if (form) form.submit();
 });
 
+/**
+ * The same gesture for the language picker, which is not a field.
+ *
+ * 🔴 It writes into a hidden input through Alpine, and a hidden input assigned in code fires no
+ * `change` — so the listener above never hears it and a filter bar built on it would look right
+ * and filter nothing.
+ *
+ * ⚠ Done HERE rather than in the component, and that is the whole point: this site runs
+ * @alpinejs/csp, whose parser refuses anything beyond a property access or a bare call — a helper
+ * method added to x-data to dispatch the event is not rejected, it is evaluated to NOTHING, which
+ * leaves `open` undefined and draws every picker on the page already open. Plain JS in a bundled
+ * file has no such limit.
+ *
+ * ⚠ And the value is written HERE, from the entry that was clicked, rather than read back from the
+ * picker. Alpine flushes `:value` on its own schedule; waiting a frame for it posted an empty
+ * filter — measured, not feared. The clicked entry already carries the answer, so there is nothing
+ * to wait for and no scheduler to guess at.
+ */
+document.addEventListener('click', (event) => {
+    const choice = event.target.closest('[data-language-choice]');
+    if (!choice) return;
+
+    const form = choice.closest('form[data-auto-submit]');
+    if (!form) return;
+
+    const field = choice.closest('[data-language-picker]')?.querySelector('[data-language-field]');
+    if (field) field.value = choice.dataset.value ?? '';
+
+    form.submit();
+});
+
 // A submit button that only existed to apply those fields has nothing left to do. It is hidden
 // HERE, by the very code that makes it redundant: the two can never fall out of step, and a
 // visitor without JavaScript keeps the only control that works for them.
