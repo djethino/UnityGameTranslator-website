@@ -64,27 +64,17 @@ class User extends Authenticatable
         return $this->hasMany(ApiToken::class);
     }
 
-    /**
-     * The language this person wants their GAMES in — the catalogue's name for it.
-     *
-     * 🔴 **Not the interface language, and the distinction is the point.** `locale` is one of the
-     * twenty this site is translated into; a game translation can be any of the catalogue's ninety.
-     * Someone reading an English interface and wanting French subtitles is ordinary, and a Tamil
-     * player has no interface language to be inferred from at all.
-     *
-     * ⚠ Falls back to the interface language when nothing was chosen, which is exactly what the
-     * site did before the column existed — so nobody's ordering changes until they say otherwise.
-     * Null out means "no idea", and the caller must not invent one: ranking by a language nobody
-     * asked for is what this separation exists to stop.
-     */
-    public function gameLanguage(): ?string
-    {
-        if ($this->game_language) {
-            return \App\Services\CatalogStore::nameOfCode($this->game_language) ?? null;
-        }
-
-        return static::detectedGameLanguage();
-    }
+    // The language somebody wants their GAMES in — the `game_language` column.
+    //
+    // 🔴 **Not the interface language, and the distinction is the point.** `locale` is one of the
+    // twenty this site is translated into; a game translation can be any of the catalogue's ninety.
+    // Someone reading an English interface and wanting French subtitles is ordinary, and a Tamil
+    // player has no interface language to be inferred from at all.
+    //
+    // ⚠ **Resolving it is NOT a method on this model**, although the column lives here: an account
+    // is only one of the places the answer can come from, and the visitor with none deserves the
+    // same answer. App\Services\GameLanguage holds the order of preference and is the only writer.
+    // What stays below is the guess, which needs no account at all.
 
     /**
      * What to assume when nobody has chosen — for a visitor as much as for an account.

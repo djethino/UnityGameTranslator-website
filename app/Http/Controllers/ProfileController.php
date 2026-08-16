@@ -30,25 +30,6 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Change only the language somebody plays in, from the title bar.
-     *
-     * ⚠ Its own action rather than a trip through update(): that one requires a username and
-     * revalidates it, so a one-click switch would fail for anybody whose name predates the current
-     * rules — and would say so about the wrong field.
-     */
-    public function gameLanguage(Request $request)
-    {
-        $request->validate([
-            'game_language' => 'nullable|string|in:'
-                . implode(',', array_keys(\App\Services\CatalogStore::languageChoices())),
-        ]);
-
-        auth()->user()->update(['game_language' => $request->game_language ?: null]);
-
-        return back();
-    }
-
     public function update(Request $request)
     {
         $supportedLocales = array_keys(config('locales.supported', []));
@@ -89,9 +70,14 @@ class ProfileController extends Controller
         $user->update([
             'name' => $request->name,
             'locale' => $request->locale,
-            // Empty means "follow the interface", which is a real answer and the default.
-            'game_language' => $request->game_language ?: null,
         ]);
+
+        // ⚠ Through the service rather than in the update above, although it is a column on this
+        // very model: the title-bar selector falls back to the session, so an account writing the
+        // column alone would leave the two disagreeing. Clearing the preference here — empty means
+        // "follow the browser", a real answer and the default — would then bring back a choice made
+        // before signing in, as if nothing had been cleared. One writer, both places.
+        \App\Services\GameLanguage::remember($request->game_language ?: null);
 
         // Update session locale immediately
         if ($request->locale) {

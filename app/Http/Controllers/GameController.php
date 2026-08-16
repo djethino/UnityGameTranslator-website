@@ -70,7 +70,7 @@ class GameController extends Controller
         // change.
         $highlightLanguage = $request->filled('target')
             ? $request->target
-            : (auth()->user()?->gameLanguage() ?: \App\Models\User::detectedGameLanguage());
+            : \App\Services\GameLanguage::name();
 
         // On by default, and turned off through the URL rather than remembered. A sort order
         // kept in a cookie is invisible: the list comes back in an order the visitor no longer
@@ -329,7 +329,7 @@ class GameController extends Controller
         // the one they read the site in. See the note there.
         $highlightLanguage = $request->filled('target')
             ? $request->target
-            : (auth()->user()?->gameLanguage() ?: \App\Models\User::detectedGameLanguage());
+            : \App\Services\GameLanguage::name();
         $languageFirst = $request->input('lang_first', '1') !== '0';
 
         if ($highlightLanguage && $languageFirst) {

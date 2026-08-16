@@ -93,8 +93,14 @@ class PublicPagesTest extends TestCase
             substr_count($html, 'bg-black/60'),
             'One badge per language available, not one per translation'
         );
-        // Japanese exists only as an unpublished branch: neither badge nor filter option
-        $this->assertStringNotContainsString('Japanese', $html);
+        // Japanese exists only as an unpublished branch: it must not be offered as a filter.
+        //
+        // ⚠ Asserted on the filter's OWN value attribute, not on the word anywhere in the page.
+        // The title bar's game-language selector lists the whole catalogue — all 136 names — and
+        // it does so for visitors too since 2026-08-16. Searching the raw HTML would conflate
+        // "this game has a Japanese translation" with "Japanese exists as a language", which is
+        // precisely the distinction the comment above draws for the badge count.
+        $this->assertStringNotContainsString('data-value="Japanese"', $html);
     }
 
     public function test_games_in_the_visitors_language_come_first_without_hiding_the_others(): void

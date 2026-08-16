@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\GameLanguageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MergeController;
@@ -39,8 +40,15 @@ Route::get('/catalog/{name}.json', [CatalogController::class, 'show'])
     ->where('name', '[a-z]+')
     ->name('catalog.show');
 
-// Language switcher
+// Language switchers — the one the site is READ in, and the one games are PLAYED in.
+//
+// ⚠ Both are open to visitors with no account. The second one used to sit inside the auth group,
+// which left anybody signed out with a guessed play language and no way to correct it; the
+// preference now lives in the session for everybody and on the account when there is one.
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
+Route::post('/game-language', [GameLanguageController::class, 'switch'])
+    ->middleware('throttle:60,1')
+    ->name('game-language.switch');
 
 // OAuth (no locale prefix - callbacks must be predictable)
 Route::get('/auth/{provider}', [SocialController::class, 'redirect'])->name('auth.redirect');
@@ -184,10 +192,6 @@ $localizableRoutes = function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/avatar', [ProfileController::class, 'avatarReroll'])->middleware('throttle:30,1')->name('profile.avatar');
-        // The game language from the title bar. Separate from the profile form on purpose:
-        // it is a one-click switch a reader makes while browsing, and routing it through
-        // the full profile update would make it require — and revalidate — the username.
-        Route::post('/profile/game-language', [ProfileController::class, 'gameLanguage'])->middleware('throttle:60,1')->name('profile.game-language');
         Route::get('/profile/export', [ProfileController::class, 'export'])->name('profile.export');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
