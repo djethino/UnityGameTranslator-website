@@ -153,43 +153,27 @@
                  Values are read-only: a font or an exclusion is edited in the mod, never here.
                  The only decision offered is WHICH SIDE wins, which is exactly what a merge
                  has to ask. --}}
-            <div x-show="settingsRowsReady" x-cloak class="mt-3 pt-3 border-t border-gray-700">
-                <button type="button" @click="toggleSettingsRows()"
-                    class="text-xs text-purple-300 hover:text-purple-200">
-                    <span x-show="showSettingsRows" x-cloak>{{ __('merge_preview.settings_hide_detail') }}</span>
-                    <span x-show="hideSettingsRows" x-cloak>{{ __('merge_preview.settings_show_detail') }}</span>
-                </button>
+            {{-- Setting by setting, on this screen's own columns.
 
-                <div x-show="showSettingsRows" x-cloak class="mt-2 overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead class="text-gray-500">
-                            <tr>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.settings_column') }}</th>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.local_file') }}</th>
-                                <th class="text-left font-normal px-2 py-1">{{ __('merge_preview.online_version') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="row in settingsRows" :key="row.key">
-                                <tr class="border-t border-gray-750">
-                                    <td class="px-2 py-1 align-top">
-                                        <span class="text-gray-500" x-text="row.sectionLabel"></span>
-                                        <span class="text-gray-300 font-mono" x-text="row.label"></span>
-                                    </td>
-                                    <td class="px-2 py-1 align-top cursor-pointer"
-                                        :class="settingCellClass(row.key, 'local')"
-                                        @click="selectSetting(row.key, 'local')"
-                                        x-text="row.localValue"></td>
-                                    <td class="px-2 py-1 align-top cursor-pointer"
-                                        :class="settingCellClass(row.key, 'online')"
-                                        @click="selectSetting(row.key, 'online')"
-                                        x-text="row.onlineValue"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                    <p class="text-xs text-gray-500 mt-2">{{ __('merge_preview.settings_pick_hint') }}</p>
-                </div>
+                 🔴 The same block as the merge view, the reading screens and the live editor,
+                 rather than a fourth hand-written table. It reads local/localTag/online here
+                 because widths are written per column name — a block that assumed another
+                 screen's names would float free of the lines below it.
+
+                 ⚠ Values stay read-only: a font or an exclusion is edited in the mod, never on a
+                 web page. What IS offered is which side wins, which is exactly what a comparison
+                 has to ask — so this screen opts into taking, and the ones that only read do not.
+
+                 ⚠ Only the mod flow leaves the local file on the server; the web flow keeps it in
+                 the browser, so there is nothing to compare against and the summary above stays
+                 the whole story there. --}}
+            <div class="mt-3 pt-3 border-t border-gray-700">
+                <x-editor.metadata-grid name="settings"
+                    :title="__('merge_preview.settings_show_detail')"
+                    :hint="__('merge_preview.settings_pick_hint')"
+                    value-col="local"
+                    tag-col="localTag"
+                    :other-span="1" />
             </div>
         </div>
 
@@ -768,11 +752,45 @@ document.addEventListener('alpine:init', () => {
         toLocal: @json($toLocal ?? false),
         settingsRows: [],
         settingsRowsReady: false,
-        settingsSelections: {},
-        showSettingsRows: false,
+
+        /**
+         * The online side, as the shared block names its other columns.
+         *
+         * ⚠ One column, and it carries no tag of its own — hence other-span="1" above. The merge
+         * view's contributions carry a tag beside their value and take two.
+         */
+        metaOtherColumns() {
+            return [{ id: 'online', col: 'online', name: @js(__('merge_preview.online_version')) }];
+        },
+
+        /**
+         * This screen arbitrates two sides, so it takes. The shared default is no, because
+         * showing a second column and being allowed to take from it are different questions —
+         * the reading screens show one and grant nothing.
+         */
+        canTakeContributions() {
+            return this.hasSettingsRows;
+        },
+
+        settingsTake(row, otherId) {
+            this.settingsPick = { ...this.settingsPick, [row.id]: otherId };
+        },
+
+        settingsKeepMine(row) {
+            this.settingsPick = { ...this.settingsPick, [row.id]: 'main' };
+        },
+
+        settingsCellClass(row, otherId) {
+            const picked = this.settingsPick[row.id];
+            if (otherId === null) return picked === 'main' ? 'selected-local' : '';
+            return picked === otherId ? 'selected-online' : '';
+        },
+
+        settingsTakenCount() {
+            return Object.keys(this.settingsPick).length;
+        },
         // The CSP build evaluates property access, not expressions, so a template cannot
         // negate a flag: it needs the opposite as its own property.
-        hideSettingsRows: true,
         allKeys: [],
         selections: {},
         stats: {
@@ -993,72 +1011,41 @@ document.addEventListener('alpine:init', () => {
                 .then(response => response.ok ? response.json() : null)
                 .then(data => {
                     if (!data || !data.local) return;
-                    this.buildSettingsRows(data.local, data.online || {});
+                    this.settingsFromBothSides(data.local, data.online || {});
                 })
                 .catch(() => {});
         },
 
-        buildSettingsRows(local, online) {
-            const labels = @js([
-                'fonts' => __('file_settings.label.fonts'),
-                'font_rules' => __('file_settings.label.font_rules'),
-                'images' => __('file_settings.label.images'),
-                'exclusions' => __('file_settings.label.exclusions'),
-                'variables' => __('file_settings.label.variables'),
-                'game_settings' => __('file_settings.game_settings'),
-            ]);
-            const absent = @js(__('merge_preview.settings_absent'));
+        /**
+         * ⚠ NOT `buildSettingsRows` — that name belongs to the shared module, and the module's
+         * buildMetadataRows calls it. Overriding it here made the two call each other until the
+         * stack ran out, on the first fetch. A page that wraps a shared method must not answer to
+         * its name.
+         */
+        settingsFromBothSides(local, online) {
+            // The shared builder, from the same shape the endpoint already returns for both
+            // sides. This screen used to derive its own rows next to three other screens
+            // deriving theirs — four definitions of what a setting row is.
+            this.metadataLabels = {
+                sections: @js([
+                    'fonts' => __('file_settings.label.fonts'),
+                    'font_rules' => __('file_settings.label.font_rules'),
+                    'images' => __('file_settings.label.images'),
+                    'exclusions' => __('file_settings.label.exclusions'),
+                    'variables' => __('file_settings.label.variables'),
+                    'game_settings' => __('file_settings.game_settings'),
+                ]),
+                fields: {},
+                absent: @js(__('merge_preview.settings_absent')),
+            };
 
-            const rows = [];
-            const keys = new Set([...Object.keys(local), ...Object.keys(online)]);
+            this.buildMetadataRows({
+                main_settings: local,
+                branches: [{ id: 'online', settings: online }],
+            });
 
-            for (const key of keys) {
-                const l = local[key];
-                const o = online[key];
-                // Both sides identical: nothing to decide, and a row per unchanged setting would
-                // bury the handful that actually moved
-                if (l && o && l.value === o.value) continue;
-
-                const meta = l || o;
-                rows.push({
-                    key,
-                    section: meta.section,
-                    sectionLabel: labels[meta.section] || meta.section,
-                    label: meta.label,
-                    localValue: l ? l.value : absent,
-                    onlineValue: o ? o.value : absent,
-                });
-            }
-
-            // Grouped by section, then by name: the order of a Set is insertion order, which
-            // here means "whatever the JSON happened to hold"
-            rows.sort((a, b) => a.section.localeCompare(b.section) || a.label.localeCompare(b.label));
-
-            for (const row of rows) {
-                // Default to the online side, like every other default on this page: the server
-                // version is the one everybody else already has.
-                if (!(row.key in this.settingsSelections)) {
-                    this.settingsSelections[row.key] = 'online';
-                }
-            }
-
-            this.settingsRows = rows;
-            this.settingsRowsReady = rows.length > 0;
-        },
-
-        toggleSettingsRows() {
-            this.showSettingsRows = !this.showSettingsRows;
-            this.hideSettingsRows = !this.showSettingsRows;
-        },
-
-        selectSetting(key, side) {
-            this.settingsSelections[key] = side;
-        },
-
-        settingCellClass(key, side) {
-            return this.settingsSelections[key] === side
-                ? 'bg-purple-900/40 text-purple-200'
-                : 'text-gray-400 hover:bg-gray-750';
+            this.settingsRowsReady = this.hasSettingsRows;
+            this.settingsOpen = this.settingsDifferenceCount() > 0;
         },
 
         /**
@@ -1625,12 +1612,15 @@ document.addEventListener('alpine:init', () => {
             const settingSideToSend = this.toLocal ? 'online' : 'local';
             let s = 0;
             for (const row of this.settingsRows) {
-                const side = this.settingsSelections[row.key];
+                // 'main' is the local side here, which is what the shared block calls the
+                // column a screen shows as its own.
+                const picked = this.settingsPick[row.id];
+                const side = picked === 'online' ? 'online' : 'local';
                 if (side !== settingSideToSend) continue;
 
                 const el = document.createElement('input');
                 el.type = 'hidden';
-                el.name = `settings[${row.key}]`;
+                el.name = `settings[${row.id}]`;
                 el.value = settingSideToSend;
                 container.appendChild(el);
                 s++;

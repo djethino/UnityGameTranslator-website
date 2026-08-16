@@ -660,6 +660,52 @@ class MergeViewStateTest extends TestCase
             $this->assertStringContainsString('<x-editor.metadata-grid name="settings"', $source, $view);
             $this->assertStringContainsString('<x-editor.metadata-grid name="publication"', $source, $view);
         }
+
+        // ⚠ These two show the settings and NOT the description, and each for its own reason: an
+        // edit session is anonymous and has no published row to describe; the mod comparison's
+        // contract is "your file against the published lines", and a page an anonymous token
+        // holder can open does not widen it in silence.
+        foreach ([
+            'views/edit-session/show.blade.php',
+            'views/translations/merge-preview.blade.php',
+        ] as $view) {
+            $source = file_get_contents(resource_path($view));
+            $this->assertStringContainsString('<x-editor.metadata-grid name="settings"', $source, $view);
+            $this->assertStringNotContainsString('name="publication"', $source, $view);
+        }
+    }
+
+    public function test_showing_a_second_side_is_not_the_right_to_take_from_it(): void
+    {
+        // 🔴 One question was doing the work of two. canTakeContributions() answered
+        // "metaOtherColumns().length > 0", which coincided everywhere it had been used — so it
+        // worked by accident. The mod comparison breaks the coincidence in one direction and the
+        // reading screens in the other, and getting it wrong offers clicks a screen must not have.
+        $module = file_get_contents(resource_path('js/components/editor-metadata.js'));
+
+        // The shared default grants nothing.
+        $this->assertMatchesRegularExpression(
+            '/canTakeContributions\(\) \{\s*return false;\s*\},/', $module);
+
+        // And a screen that arbitrates says so itself.
+        foreach ([
+            'views/merge/show.blade.php',
+            'views/translations/merge-preview.blade.php',
+        ] as $view) {
+            $this->assertStringContainsString(
+                'canTakeContributions() {', file_get_contents(resource_path($view)), $view);
+        }
+    }
+
+    public function test_a_page_wrapper_never_answers_to_a_shared_method_s_name(): void
+    {
+        // 🔴 The mod comparison wrapped the shared builder in a method of the SAME name, and the
+        // shared buildMetadataRows calls that name: the two called each other until the stack ran
+        // out, on the first fetch. Caught by running the page, not by a test — so here is the test.
+        $view = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
+
+        $this->assertStringContainsString('settingsFromBothSides(local, online) {', $view);
+        $this->assertStringNotContainsString('buildSettingsRows(local, online) {', $view);
     }
 
     public function test_a_reading_screen_says_what_the_file_carries(): void

@@ -22,6 +22,10 @@
     // Alpine expression yielding the other sides, as [{id, col, name}]. Empty on a screen that
     // reads or edits one translation.
     'others' => 'metaOtherColumns()',
+    // How many grid columns one of those sides occupies. Two on the merge view, where a
+    // contribution's tag and value share a header; one on the mod comparison, where the online
+    // side has no tag column of its own. Getting it wrong shifts every column after it.
+    'otherSpan' => 2,
 ])
 
 @php
@@ -105,7 +109,7 @@
                         <x-editor.col-resize col="{{ $valueCol }}" />
                     </th>
                     <template x-for="other in {{ $others }}" :key="other.id">
-                        <th colspan="2" :data-col="other.col"
+                        <th colspan="{{ $otherSpan }}" :data-col="other.col"
                             class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
                             <span class="text-blue-400 font-medium" x-text="other.name"></span>
                             <x-editor.col-resize :bind="true" col="other.col" />
@@ -175,7 +179,7 @@
                         </td>
 
                         <template x-for="other in {{ $others }}" :key="other.id">
-                            <td colspan="2" :data-col="other.col"
+                            <td colspan="{{ $otherSpan }}" :data-col="other.col"
                                 class="px-4 py-2 border-l border-gray-700 merge-cell"
                                 :class="[{{ $cell }}(row, other.id), metaCellTint(row, other.id)]"
                                 @click="{{ $take }}(row, other.id)">

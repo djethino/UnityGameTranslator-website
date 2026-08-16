@@ -235,15 +235,20 @@ export function editorMetadata() {
         },
 
         /**
-         * Whether anything on this screen can be taken from somebody else at all.
+         * Whether a value on this screen may be TAKEN from the other side.
          *
-         * ⚠ False on a screen that reads or edits one translation, and everything that offers a
-         * gesture has to ask: a hand cursor over a cell that answers no question, or a hint
-         * describing a click nobody can make, sends somebody looking for a control that is not
-         * there.
+         * 🔴 **Not the same question as "is there another side to show", and they were one.** It
+         * returned `metaOtherColumns().length > 0`, which coincided everywhere it had been used
+         * so far — so it worked by accident. The mod comparison breaks the coincidence: it shows
+         * an "online" column and allows nothing to be taken from it, because file settings are
+         * edited in the mod and published by a full upload, never from a web page. Shared as it
+         * was, that screen would have offered clicks it must not have.
+         *
+         * ⚠ False by default, like everything else here: a screen that CAN take says so by
+         * implementing this, and its own answer wins over the core's.
          */
         canTakeContributions() {
-            return this.metaOtherColumns().length > 0;
+            return false;
         },
     };
 }

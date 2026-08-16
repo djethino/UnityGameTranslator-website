@@ -1295,6 +1295,15 @@ document.addEventListener('alpine:init', () => {
          * broken. The day the blocks list settings that AGREE as well — they should, for
          * information — this getter is where the filter starts discriminating.
          */
+        /**
+         * This screen arbitrates contributions, so it takes — as soon as there is one to take
+         * from. The shared default is no, precisely because the other screens show a second
+         * column without granting that right.
+         */
+        canTakeContributions() {
+            return this.metaOtherColumns().length > 0;
+        },
+
         visibleSettingsRows() {
             return this.settingsRows;
         },
