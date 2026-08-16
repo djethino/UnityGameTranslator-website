@@ -94,6 +94,12 @@ class SyncStateController extends Controller
                 'file_hash' => $ownTranslation->file_hash,
                 'vote_count' => $ownTranslation->vote_count,
                 'updated_at' => $ownTranslation->updated_at->toIso8601String(),
+
+                // The Main's decision, sent on the stream the mod already reads at startup —
+                // otherwise a game would only learn it by opening the upload panel, which is the
+                // one moment it is too late to be useful.
+                'accepts_branches' => $ownTranslation->lineageAcceptsBranches(),
+                'branch_frozen' => $ownTranslation->isFrozenBranch(),
             ];
 
             if ($role === 'main') {

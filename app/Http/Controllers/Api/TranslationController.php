@@ -506,6 +506,10 @@ class TranslationController extends Controller
             'content' => 'required|string|min:2|max:104857600',
             'notes' => 'nullable|string|max:1000',
             'resources_url' => 'nullable|string|max:2048|url:http,https',
+
+            // Null from a branch — the mod sends nothing there, because the decision belongs to
+            // the Main. Applied below only where the row being written IS a Main.
+            'accepts_branches' => 'nullable|boolean',
         ]);
 
         // Parse and validate content (includes normalization)
@@ -621,6 +625,13 @@ class TranslationController extends Controller
                 'status' => $status,
                 'notes' => $request->notes,
                 'resources_url' => $request->resources_url,
+
+                // ⚠ Only when the client said something AND this row leads its lineage. Absent
+                // means "not answered" — an older mod, or a branch — and writing false there
+                // would close a Main that never asked to be closed, on every upload it makes.
+                'accepts_branches' => $request->has('accepts_branches') && $visibility !== 'branch'
+                    ? $request->boolean('accepts_branches')
+                    : $existingTranslation->accepts_branches,
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'font_config' => $parsed['font_config'],
@@ -693,6 +704,9 @@ class TranslationController extends Controller
             'visibility' => $visibility,
             'notes' => $request->notes,
             'resources_url' => $request->resources_url,
+
+            // Same rule at creation, with false as the default the whole feature rests on.
+            'accepts_branches' => $visibility !== 'branch' && $request->boolean('accepts_branches'),
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
