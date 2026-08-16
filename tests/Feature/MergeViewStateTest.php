@@ -434,8 +434,12 @@ class MergeViewStateTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString("this.publicationPick[row.id] = 'main';", $html);
-        $this->assertStringContainsString('this.publicationOpen = this.hasPublicationRows;', $html);
-        $this->assertStringContainsString('this.settingsOpen = this.hasSettingsRows;', $html);
+        // ⚠ Open on a DISAGREEMENT, not on having rows. Both tables now list what the file
+        // carries — seven fonts, two exclusions, two variables on a real one — and "this
+        // translation has settings" is true of nearly every file and not a reason to push the
+        // lines down the page.
+        $this->assertStringContainsString('this.publicationOpen = this.publicationDifferenceCount > 0;', $html);
+        $this->assertStringContainsString('this.settingsOpen = this.settingsDifferenceCount > 0;', $html);
 
         // ⚠ The footer and the Save button carry the same word; they must carry the same number.
         $this->assertStringNotContainsString(
@@ -603,6 +607,32 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('metaTextTint(row, branch.id)', $html);
         $this->assertStringContainsString("'bg-green-900/20'", $html);
         $this->assertStringContainsString("'bg-yellow-900/20'", $html);
+    }
+
+    public function test_a_translation_shows_its_own_settings_with_no_contributions(): void
+    {
+        // 🔴 The rows were built from the contributions alone, so the edit mode — a translation
+        // worked on by itself — listed nothing at all. Measured on a real file: seven fonts, an
+        // image, two exclusions, two variables and a resources link, none of them anywhere on the
+        // page, while its author was looking for exactly those.
+        //
+        // They are part of what a translation IS. The merge is one of the places they are read,
+        // not the reason they exist.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid, 'mode' => 'edit']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('for (const key of Object.keys(mainSettings)) row(key', $html);
+
+        // ⚠ And nothing on those tables pretends to be a choice when there is nobody to take
+        // from: no hand cursor, no hint describing a gesture that does not exist, no default
+        // lighting the Main's cell as "chosen".
+        $this->assertStringContainsString('canTakeContributions', $html);
+        $this->assertStringContainsString("canTakeContributions && 'merge-cell'", $html);
+        $this->assertStringContainsString('publicationOpen && canTakeContributions', $html);
     }
 
     public function test_show_is_owner_only(): void
