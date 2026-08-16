@@ -722,7 +722,7 @@
 
                                 {{-- Main Tag (clickable for tag change) --}}
                                 <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"
-                                    :class="[hasTagChange(key) ? 'tag-changed-cell' : '', isDeleted(key) ? 'deleted-cell' : '']">
+                                    :class="[mainTagCellClass(key), isDeleted(key) ? 'deleted-cell' : '']">
                                     <template x-if="mainData[key] !== undefined">
                                         {{-- Shows the tag the save will PRODUCE (edit → H,
                                              selection → A promoted to V), not just the stored one --}}
@@ -1998,6 +1998,25 @@ document.addEventListener('alpine:init', () => {
                 return 'selected-manual';
             }
             return '';
+        },
+
+        /**
+         * The tag cell's marker: set when the save will store a tag other than the one on file.
+         *
+         * 🔴 It used to be `hasTagChange(key)` — an EXPLICIT change through the dropdown, and
+         * nothing else. A tag also changes by being chosen: taking a contribution takes its tag,
+         * and a selection promotes a machine translation to validated. Those rows changed tag with
+         * nothing said, which is how somebody reads a V beside the Main's value and concludes the
+         * Main was already validated. The question is not how the tag came to change, it is
+         * whether it did.
+         *
+         * ⚠ A row the Main does not hold has no stored tag to differ from, and its cell shows a
+         * dash. Framing it would mark a change on a line that has nothing to change.
+         */
+        mainTagCellClass(key) {
+            const stored = this.mainData[key];
+            if (stored === undefined) return '';
+            return this.getTag(stored) === this.displayMainTag(key) ? '' : 'tag-changed-cell';
         },
 
         /**

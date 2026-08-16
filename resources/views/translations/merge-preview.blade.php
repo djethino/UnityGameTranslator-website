@@ -399,7 +399,7 @@
                                  side, and colouring only one of the two made the
                                  local pick look half-selected. --}}
                             <td data-col="localTag" class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="[getCellClass(key, 'local'), hasTagChange(key) ? 'tag-changed-cell' : '']">
+                                :class="[getCellClass(key, 'local'), localTagCellClass(key)]">
                                 <template x-if="localData[key] !== undefined">
                                     {{-- Shows the tag the save will PRODUCE (edit → H,
                                          sent local selection → A promoted to V), not just the stored one --}}
@@ -1355,7 +1355,26 @@ document.addEventListener('alpine:init', () => {
          * selection that will actually be SENT gets the server's A → V
          * promotion (picks identical to online are not sent → no preview).
          */
-        displayLocalTag(key) {
+        /**
+         * The tag cell's marker: set when the save will store a tag other than the one on file.
+         *
+         * 🔴 It used to be `hasTagChange(key)` — an EXPLICIT change through the dropdown, and
+         * nothing else. A tag also changes by being chosen: taking a contribution takes its tag,
+         * and a selection promotes a machine translation to validated. Those rows changed tag with
+         * nothing said, which is how somebody reads a V beside the Main's value and concludes the
+         * Main was already validated. The question is not how the tag came to change, it is
+         * whether it did.
+         *
+         * ⚠ A row the Main does not hold has no stored tag to differ from, and its cell shows a
+         * dash. Framing it would mark a change on a line that has nothing to change.
+         */
+        localTagCellClass(key) {
+            const stored = this.localData[key];
+            if (stored === undefined) return '';
+            return this.getTag(stored) === this.displayLocalTag(key) ? '' : 'tag-changed-cell';
+        },
+
+                displayLocalTag(key) {
             if (this.hasTagChange(key) || this.isEdited(key)) {
                 return this.displayTag(key, this.getTag(this.localData[key]));
             }

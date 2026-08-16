@@ -242,7 +242,7 @@
 
                             {{-- Tag (clickable for tag change) --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="hasTagChange(key) ? 'tag-changed-cell' : ''">
+                                :class="entryTagCellClass(key)">
                                 {{-- Shows the tag the save will PRODUCE (edit → H,
                                      M/S preserved), not just the stored one --}}
                                 <button type="button"
@@ -926,6 +926,24 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ── Click-to-validate (parity with the merge view's Main click) ──
+
+        /**
+         * The tag cell's marker: set when the save will store a tag other than the one on file.
+         *
+         * 🔴 Was `hasTagChange(key)` — an EXPLICIT change through the dropdown, and nothing else.
+         * A tag also changes by being edited (a rewritten line becomes human) and by being
+         * validated. Those rows changed tag with nothing said. The question is not how the tag
+         * came to change, it is whether it did.
+         *
+         * ⚠ Same rule and same class name as the two comparison screens: one gesture, one mark,
+         * whichever editor you are in.
+         */
+        entryTagCellClass(key) {
+            const stored = this.data[key];
+            if (stored === undefined) return '';
+            const tag = this.getTag(stored);
+            return tag === this.displayTag(key, tag) ? '' : 'tag-changed-cell';
+        },
 
         /** The row carries a pending validation (previewed V, green cell). */
         isValidatedPending(key) {

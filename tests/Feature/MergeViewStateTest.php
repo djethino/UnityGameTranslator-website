@@ -548,6 +548,42 @@ class MergeViewStateTest extends TestCase
         $this->assertSame([], $offenders);
     }
 
+    public function test_a_tag_cell_is_framed_whenever_the_tag_will_change(): void
+    {
+        // 🔴 The marker existed and only ever fired on an EXPLICIT change through the dropdown. A
+        // tag also changes by being chosen — taking a contribution takes its tag, and a selection
+        // promotes a machine translation to validated — and those rows changed tag with nothing
+        // said. Measured on a real lineage: 24 of the 50 rendered rows. That silence is how
+        // somebody reads a V beside the Main's value, concludes the Main was already validated,
+        // and reports the arbitration as broken when it was right.
+        //
+        // The same rule and the same class name in all three editors: one gesture, one mark.
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('mainTagCellClass(key)', $html);
+        $this->assertStringNotContainsString("hasTagChange(key) ? 'tag-changed-cell'", $html);
+
+        foreach ([
+            'views/translations/merge-preview.blade.php' => 'localTagCellClass(key)',
+            'views/edit-session/show.blade.php' => 'entryTagCellClass(key)',
+        ] as $view => $needle) {
+            $source = file_get_contents(resource_path($view));
+            $this->assertStringContainsString($needle, $source, $view);
+            $this->assertStringNotContainsString("hasTagChange(key) ? 'tag-changed-cell'", $source, $view);
+        }
+
+        // ⚠ And it carries the ring its siblings carry: a change said in a wash of colour, one
+        // pixel from a change said with a frame, reads as nothing at all.
+        $this->assertStringContainsString(
+            'box-shadow: inset 0 0 0 2px rgb(168 85 247)',
+            file_get_contents(resource_path('css/app.css')));
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();
