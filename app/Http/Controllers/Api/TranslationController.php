@@ -121,6 +121,11 @@ class TranslationController extends Controller
                     'target_language' => $t->target_language,
                     'line_count' => $t->line_count,
                     'status' => $t->status,
+
+                    // On the listing so a card can say it without asking again: whether this
+                    // lineage takes contributions is part of what a translation IS, like the
+                    // author's "finished" beside it.
+                    'accepts_branches' => (bool) $t->accepts_branches,
                     'type' => $t->type,
                     'notes' => $t->notes,
                     'resources_url' => $t->getEffectiveResourcesUrl(),

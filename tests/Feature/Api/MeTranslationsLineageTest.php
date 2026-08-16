@@ -159,6 +159,73 @@ class MeTranslationsLineageTest extends TestCase
         $this->assertSame('main', $entry['role']);
     }
 
+    /**
+     * A contribution to a Main that has since closed. Nothing on the contributor's side changes
+     * when it happens, so this listing is where a tool finds out at all — the alternative is
+     * finding out at the moment of publishing, after the work.
+     */
+    public function test_a_branch_is_told_its_main_has_closed(): void
+    {
+        $contributor = User::factory()->create();
+        $main = $this->makeTranslation(User::factory()->create(), 'public', 'uuid-frozen-branch');
+        $main->update(['accepts_branches' => true]);
+        $this->makeTranslation($contributor, 'branch', 'uuid-frozen-branch');
+
+        $read = fn () => $this->entryFor(
+            $this->getJson('/api/v1/me/translations', $this->headers($contributor))->assertOk()->json(),
+            'uuid-frozen-branch'
+        );
+
+        $this->assertTrue($read()['accepts_branches']);
+        $this->assertFalse($read()['branch_frozen']);
+
+        $main->update(['accepts_branches' => false]);
+
+        $this->assertFalse($read()['accepts_branches']);
+        $this->assertTrue($read()['branch_frozen']);
+    }
+
+    /**
+     * ⚠ An orphan is NOT frozen. Its Main was deleted — nobody refused it anything — and the two
+     * states have separate notices and separate ways out. Folding them would tell somebody their
+     * work was turned down when in fact it was left without a head.
+     */
+    public function test_an_orphaned_branch_is_not_reported_as_frozen(): void
+    {
+        $contributor = User::factory()->create();
+        $main = $this->makeTranslation(User::factory()->create(), 'public', 'uuid-orphan-not-frozen');
+        $this->makeTranslation($contributor, 'branch', 'uuid-orphan-not-frozen');
+
+        $main->delete();
+
+        $entry = $this->entryFor(
+            $this->getJson('/api/v1/me/translations', $this->headers($contributor))->assertOk()->json(),
+            'uuid-orphan-not-frozen'
+        );
+
+        $this->assertTrue($entry['main_missing']);
+        $this->assertFalse($entry['branch_frozen']);
+    }
+
+    /**
+     * A Main reads its own decision back, and is never asked the frozen question — it has nobody
+     * above it to be refused by.
+     */
+    public function test_a_main_reads_its_own_decision_and_is_never_frozen(): void
+    {
+        $owner = User::factory()->create();
+        $main = $this->makeTranslation($owner, 'public', 'uuid-main-decision');
+        $main->update(['accepts_branches' => true]);
+
+        $entry = $this->entryFor(
+            $this->getJson('/api/v1/me/translations', $this->headers($owner))->assertOk()->json(),
+            'uuid-main-decision'
+        );
+
+        $this->assertTrue($entry['accepts_branches']);
+        $this->assertNull($entry['branch_frozen']);
+    }
+
     public function test_the_endpoint_still_refuses_an_anonymous_caller(): void
     {
         $this->getJson('/api/v1/me/translations')->assertUnauthorized();

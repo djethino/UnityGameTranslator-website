@@ -59,14 +59,18 @@ class UserController extends Controller
         // The lineages that still have something published. A branch missing from this set is a
         // branch of nothing: its Main was deleted or unpublished, and no screen would ever have
         // said so — the author keeps contributing upstream to a head that no longer exists.
-        $withMain = Translation::whereIn('file_uuid', $uuids)
+        //
+        // ⚠ Carries the Main's decision alongside, rather than asking row by row: getMain() is a
+        // query, and a listing that runs one per line is a listing that gets slower the more
+        // somebody contributes.
+        $mains = Translation::whereIn('file_uuid', $uuids)
             ->public()
-            ->pluck('file_uuid')
-            ->flip();
+            ->pluck('accepts_branches', 'file_uuid');
+        $withMain = $mains->keys()->flip();
 
         return response()->json([
             'count' => $translations->count(),
-            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain) {
+            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain, $mains) {
                 $role = $t->lineageRole();
 
                 return [
@@ -88,6 +92,23 @@ class UserController extends Controller
                         : null,
                     'main_missing' => $role === 'branch'
                         ? !$withMain->has($t->file_uuid)
+                        : null,
+
+                    // Whether this lineage takes contributions: its own answer on a Main, the
+                    // Main's on a branch. Both read the same lineage, so both must say the same
+                    // thing — a contributor's card and its Main's card are two views of one fact.
+                    'accepts_branches' => $role === 'main'
+                        ? (bool) $t->accepts_branches
+                        : (bool) ($mains[$t->file_uuid] ?? false),
+
+                    // 🔴 A contribution whose Main has closed since. Told without being asked for,
+                    // because there is nothing on the contributor's side to notice: the file still
+                    // opens and still saves, and only the road it was on has gone.
+                    //
+                    // ⚠ Null off a branch, like main_missing above — "not a branch" is not "fine".
+                    // And false on an orphan: nobody refused them anything.
+                    'branch_frozen' => $role === 'branch'
+                        ? $withMain->has($t->file_uuid) && !($mains[$t->file_uuid] ?? false)
                         : null,
                     'source_language' => $t->source_language,
                     'target_language' => $t->target_language,
