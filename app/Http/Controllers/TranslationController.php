@@ -32,6 +32,10 @@ class TranslationController extends Controller
             'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
+            // The other declaration a Main makes about its own work. Asked here as well as on the
+            // edit form: it is part of publishing, and finding it only afterwards means the first
+            // contributor is turned away by a decision its author never knowingly took.
+            'accepts_branches' => 'nullable|boolean',
             'notes' => 'nullable|string|max:1000',
             'file' => 'required|file|mimes:json|max:102400', // 100MB max
             'game_source' => 'required_without:game_id|string|in:igdb,rawg',
@@ -152,6 +156,9 @@ class TranslationController extends Controller
         $fileName = $service->storeFile($parsed['normalized_content'], $fileUuid);
 
         if ($existingTranslation) {
+            // Read before the update, so the closing transition can be spotted after it.
+            $wasOpen = (bool) $existingTranslation->accepts_branches;
+
             // UPDATE: Delete old file and update record
             $service->deleteFile($existingTranslation->file_path);
 
@@ -170,7 +177,21 @@ class TranslationController extends Controller
                 'file_hash' => $parsed['file_hash'],
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
+
+                // ⚠ Only a Main answers this, and only when the form actually asked. An absent
+                // checkbox is "not asked" and must keep what was already decided — reading it as
+                // false would close a lineage every time somebody re-uploaded from a form that
+                // did not carry the question.
+                'accepts_branches' => !$isBranch && $request->has('accepts_branches')
+                    ? $request->boolean('accepts_branches')
+                    : $existingTranslation->accepts_branches,
             ]);
+
+            // Same transition as the settings form: closing is what the contributors have to hear
+            // about, and this path could close a lineage just as well.
+            if ($wasOpen && !$existingTranslation->fresh()->accepts_branches) {
+                $existingTranslation->notifyBranchesOfClosure();
+            }
 
             AuditLog::logTranslationUpload($userId, $existingTranslation->id, [
                 'game_id' => $game->id,
@@ -201,6 +222,10 @@ class TranslationController extends Controller
             'skipped_count' => $parsed['tag_counts']['skipped_count'],
             'status' => $status,
             'notes' => $request->notes,
+
+            // 🔴 Default closed, and a branch never decides it. Keeping a translation open to
+            // contributions is work nobody agreed to by publishing.
+            'accepts_branches' => $visibility !== 'branch' && $request->boolean('accepts_branches'),
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
@@ -372,6 +397,10 @@ class TranslationController extends Controller
             'source_language' => $mainTranslation->source_language,
             'target_language' => $mainTranslation->target_language,
             'uploader' => $mainTranslation->user->name,
+
+            // What this account's own row already says, so the form can show the decision back
+            // rather than presenting an unticked box as if nothing had been decided.
+            'accepts_branches' => (bool) $userTranslation?->accepts_branches,
         ]);
     }
 

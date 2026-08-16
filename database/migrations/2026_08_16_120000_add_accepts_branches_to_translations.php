@@ -27,28 +27,51 @@ return new class extends Migration
             $table->boolean('accepts_branches')->default(false)->after('visibility');
         });
 
+        self::backfill();
+    }
+
+    /**
+     * Who had plainly accepted before, and therefore keeps their door open.
+     *
+     * 🔴 **Matched on the LINEAGE (file_uuid), not on parent_id.** parent_id is "on delete set
+     * null": a branch whose Main was deleted and republished, or any row that lost the link,
+     * still belongs to the lineage and still IS a contribution somebody accepted. Reading only
+     * parent_id would have closed those Mains and frozen their contributors over a null.
+     *
+     * ⚠ merged_at counts on its own: having taken a contribution in is acceptance, even when the
+     * branch has since gone.
+     *
+     * ⚠ Separate and public so it can be tested. A migration's body normally cannot be — it runs
+     * before any row exists — and this half is a rule about data, not about schema.
+     */
+    public static function backfill(): void
+    {
         // ⚠ One statement per rule rather than a loop over rows: this runs on a table that will
         // outgrow memory long before it outgrows the database, and a backfill that pages is a
         // backfill that can stop halfway.
-        DB::table('translations')
-            ->whereNull('merged_at')
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                      ->from('translations as branches')
-                      ->whereColumn('branches.parent_id', 'translations.id')
-                      ->where('branches.visibility', 'branch');
-            })
+        $hasABranch = function ($query) {
+            $query->select(DB::raw(1))
+                  ->from('translations as branches')
+                  ->whereColumn('branches.file_uuid', 'translations.file_uuid')
+                  ->where('branches.visibility', 'branch');
+        };
+
+        // ⚠ Only a Main carries this decision. Scoped here as well as read that way everywhere
+        // else — and it also stops a branch matching ITSELF as "this lineage has a branch",
+        // which is what keying on file_uuid would otherwise do.
+        DB::table('translations')->where('visibility', '!=', 'public')
             ->update(['accepts_branches' => false]);
 
         DB::table('translations')
-            ->where(function ($query) {
-                $query->whereNotNull('merged_at')
-                      ->orWhereExists(function ($sub) {
-                          $sub->select(DB::raw(1))
-                              ->from('translations as branches')
-                              ->whereColumn('branches.parent_id', 'translations.id')
-                              ->where('branches.visibility', 'branch');
-                      });
+            ->where('visibility', 'public')
+            ->whereNull('merged_at')
+            ->whereNotExists($hasABranch)
+            ->update(['accepts_branches' => false]);
+
+        DB::table('translations')
+            ->where('visibility', 'public')
+            ->where(function ($query) use ($hasABranch) {
+                $query->whereNotNull('merged_at')->orWhereExists($hasABranch);
             })
             ->update(['accepts_branches' => true]);
     }

@@ -211,6 +211,25 @@
             </div>
         </div>
 
+        {{-- The Main's other declaration, beside the first one. Hidden with the same section as
+             the status: a branch does not decide this, and the section is only revealed once the
+             upload is known to be a Main's. --}}
+        <div id="contributionsSection" class="mb-6 hidden">
+            {{-- 🔴 An unticked checkbox sends NOTHING. Without this companion, a Main could open
+                 their lineage but never close it again from here — the form would look as if it
+                 had been answered and the server would only ever hear "yes". --}}
+            <input type="hidden" name="accepts_branches" value="0">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="accepts_branches" id="accepts_branches" value="1"
+                       {{ old('accepts_branches') ? 'checked' : '' }}
+                       class="mt-1 rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500">
+                <span class="text-sm text-gray-300">
+                    {{ __('upload.accepts_branches') }}
+                    <span class="block text-xs text-gray-500 mt-1">{{ __('upload.accepts_branches_hint') }}</span>
+                </span>
+            </label>
+        </div>
+
         <!-- Step 6: Notes (optional) -->
         <div id="notesSection" class="mb-6 hidden">
             <label class="block text-sm font-medium text-gray-300 mb-2">
@@ -256,6 +275,7 @@ const gameSection = document.getElementById('gameSection');
 const gameDisplay = document.getElementById('gameDisplay');
 const languageSection = document.getElementById('languageSection');
 const statusSection = document.getElementById('statusSection');
+const contributionsSection = document.getElementById('contributionsSection');
 const submitBtn = document.getElementById('submitBtn');
 
 // Form fields
@@ -459,8 +479,14 @@ function showAutoDetected(data) {
     // Branches cannot modify status - only show for Main owners (update type)
     if (data.type === 'update' && isMainOwner) {
         statusSection.classList.remove('hidden');
+        // 🔴 Prefilled from what the server holds, not left unticked. The hidden companion means
+        // the form always answers, so an unticked box on a re-upload would close a lineage its
+        // owner never meant to close.
+        document.getElementById('accepts_branches').checked = !!data.accepts_branches;
+        contributionsSection.classList.remove('hidden');
     } else {
         statusSection.classList.add('hidden');
+        contributionsSection.classList.add('hidden');
     }
     document.getElementById('notesSection').classList.remove('hidden');
 
@@ -478,6 +504,7 @@ async function showNewTranslation() {
     document.getElementById('compositionSection').classList.remove('hidden');
     // New translations can set status (they become Main owner)
     statusSection.classList.remove('hidden');
+    contributionsSection.classList.remove('hidden');
     document.getElementById('notesSection').classList.remove('hidden');
 
     // If we have _game metadata, try to auto-detect the game

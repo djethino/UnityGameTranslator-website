@@ -265,6 +265,11 @@
                                     </span>
                                 @endif
 
+                                {{-- Right after "Complete / In progress": the two declarations the
+                                     author made about their own work sit together, and neither can
+                                     be worked out from the file. --}}
+                                <x-contributions-badge :translation="$translation" />
+
                                 @if($hasVersionHistory)
                                     <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
                                         <i class="fas fa-layer-group"></i> v{{ $versions->count() }}

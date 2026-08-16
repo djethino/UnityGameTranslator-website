@@ -204,6 +204,8 @@
                         @else
                             <span class="text-yellow-400 text-sm"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                         @endif
+                        <x-contributions-badge :translation="$translation" plain />
+
                         @if($translation->isFork())
                             <span class="text-purple-400 text-sm"><i class="fas fa-code-fork"></i> Fork</span>
                         @elseif($translation->isBranch())
