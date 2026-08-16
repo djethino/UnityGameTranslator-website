@@ -49,6 +49,19 @@ class CatalogStore
      */
     private static array $memo = [];
 
+    /**
+     * Drop what was read, so the next question goes back to the files.
+     *
+     * ⚠ "A per-request memo cannot go stale" holds for a web request and NOT for a process that
+     * writes the catalogue and then reads it: catalog:refresh downloads a new list into the very
+     * files this memoised, and a test asserting on one file after writing another gets the first
+     * answer twice. Both need a way to say "forget it".
+     */
+    public static function forget(): void
+    {
+        self::$memo = [];
+    }
+
     public static function refreshedPath(string $name): string
     {
         return storage_path("app/catalog/{$name}.json");
@@ -95,7 +108,7 @@ class CatalogStore
         $fetched = self::refreshedPath($name);
         if (is_readable($fetched)) {
             $text = @file_get_contents($fetched);
-            if ($text !== false && self::looksLikeDocument($text)) {
+            if ($text !== false && self::looksLikeDocument($text) && self::carriesFlags($name, $text)) {
                 return $text;
             }
 
@@ -425,6 +438,42 @@ class CatalogStore
         $decoded = json_decode($text, true);
 
         return is_array($decoded) && $decoded !== [];
+    }
+
+    /**
+     * Does a fetched language list still say which flag each language wears?
+     *
+     * 🔴 **A catalogue can be perfectly valid and still be too old to use.** `languages.json` only
+     * grew its `flag` field when the flags were drawn; a copy downloaded before that is well-formed
+     * JSON of the right shape, so looksLikeDocument accepts it — and it WINS, because the fetched
+     * copy is read before the committed one. Every mark on the site then renders without a flag,
+     * everywhere at once, with nothing in the logs and nothing a deployment can fix: `git pull`
+     * does not touch storage/, and `optimize:clear` does not either.
+     *
+     * Seen in production on 2026-08-16: the whole site had lost its flags while the same code
+     * showed them locally. The one visible difference was the interface language picker, which
+     * names its flags in config/locales.php and therefore kept them — which is what made it look
+     * like a bug in one component rather than a stale file.
+     *
+     * ⚠ Scoped to `languages`, and deliberately not a general "is it recent" rule: freshness is not
+     * the question. A fetched catalogue is allowed to be older than ours in every other respect —
+     * that is the point of fetching it. What it may not be is missing a field this site READS.
+     */
+    private static function carriesFlags(string $name, string $text): bool
+    {
+        if ($name !== 'languages') {
+            return true;
+        }
+
+        $decoded = json_decode($text, true);
+
+        foreach ($decoded['languages'] ?? [] as $entry) {
+            if (($entry['flag'] ?? null) !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function assertKnown(string $name): void
