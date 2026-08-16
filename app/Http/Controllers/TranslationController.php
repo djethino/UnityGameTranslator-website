@@ -240,7 +240,7 @@ class TranslationController extends Controller
      * differently from the editing ones — no highlighting, a search that needed Enter, pages
      * instead of "show more".
      */
-    public function viewData(Translation $translation)
+    public function viewData(Translation $translation, TranslationService $service)
     {
         if (!$translation->isReadableBy(auth()->user())) {
             abort(403, 'A branch is visible to whoever wrote it, and to the Main owner for merging.');
@@ -254,6 +254,17 @@ class TranslationController extends Controller
         return response()->json([
             'ok' => $lines !== null,
             'content' => (object) ($lines ?? []),
+
+            // 🔴 What the file carries besides its lines, under the names the editors already
+            // use. This screen is where somebody decides whether to TAKE a translation, and it
+            // could not tell them which fonts it replaces, which lines it leaves alone or where
+            // the images it needs live — the only way to find out was to download it and open it.
+            //
+            // ⚠ Nothing private travels here: these are settings any downloader already has, and
+            // the page itself is behind the same isReadableBy check as the file.
+            'main_settings' => $service->comparableSettingsOf($translation),
+            'main_notes' => $translation->notes,
+            'main_resources_url' => $translation->resources_url,
         ]);
     }
 

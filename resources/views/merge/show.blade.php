@@ -241,305 +241,55 @@
 
                  ⚠ No status anywhere in either. Whether a translation is finished descends from a
                  Main to its contributions and never travels back. --}}
-            <div x-show="hasSettingsRows" x-cloak class="mb-4">
-                <button type="button" @click="settingsOpen = !settingsOpen"
-                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition">
-                    <i class="fas text-gray-500 w-3"
-                       :class="settingsOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                    <span>{{ __('merge.block_file_settings') }}</span>
+            {{-- What the contributions differ on that is not a translated line.
 
-                    {{-- Numeric badges, like the branch counter on the translations list: how many
-                         differences wait inside, and how many are already taken. Both stay
-                         readable folded, or ticking something and folding would hide it. --}}
-                    {{-- The count is of DISPUTED rows, not of rows: the table lists what the
-                         file carries, and "this translation has fonts" is not news. --}}
-                    <span x-show="settingsDifferenceCount() > 0" x-cloak
-                          class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.filter_differences') }}" x-text="settingsDifferenceCount()"></span>
-                    <span x-show="settingsTakenCount > 0" x-cloak
-                          class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.modifications') }}" x-text="settingsTakenCount"></span>
-                </button>
+                 🔴 **Two folded blocks, on the grid the lines run on.** Both were invented here
+                 as little hand-written tables — one of them prepared long ago and never once
+                 seen, because nothing ever opened it. A screen that lays out the same gesture two
+                 ways makes the reader learn it twice, so they run on the columns the lines run
+                 on: same names, therefore same widths, same drag, same pin.
 
-                {{-- Same table as the lines below, down to the column names. That is not a
-                     resemblance: the widths are written as one stylesheet rule per
-                     [data-col], so carrying the same names makes these columns line up with
-                     the lines, follow the same drag and freeze with the same pin. --}}
-                <div x-show="settingsOpen" x-cloak data-hscroll-follow
-                     class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
-                    <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                       :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
-                        <thead class="bg-gray-900">
-                            <tr>
-                                {{-- The index column holds no number here, and is kept all the
-                                     same: dropping it would shift every column after it and the
-                                     two tables would stop lining up the moment it is shown. --}}
-                                <th x-show="showIndexColumn" x-cloak
-                                    class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
-                                <th data-col="key"
-                                    class="relative px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
-                                    {{ __('merge_preview.settings_column') }}
-                                    <x-editor.col-resize col="key" />
-                                </th>
-                                {{-- The tag column is kept, empty, and its border is the only one
-                                     between the key and the Main: the two head one block, and
-                                     the title lands exactly where the lines grid puts its own. --}}
-                                <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="relative px-4 py-3 text-left min-w-[250px]">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-green-400 font-medium">Main</span>
-                                        <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
-                                    </div>
-                                    <x-editor.col-resize col="main" />
-                                </th>
-                                <template x-for="branch in branches" :key="branch.id">
-                                    <th colspan="2" :data-col="'branch-' + branch.id"
-                                        class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
-                                        <span class="text-blue-400 font-medium" x-text="branch.name"></span>
-                                        <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
-                                    </th>
-                                </template>
-                                {{-- The far end of the scrolling area. Zero width, frozen to the
-                                     right edge of the box: it takes no room and carries no data,
-                                     it is only somewhere for a mark to be. --}}
-                                <th class="answer-rail"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="row in visibleSettingsRows" :key="row.id">
-                                <tr class="hover:bg-gray-750 transition-colors">
-                                    <td x-show="showIndexColumn" x-cloak
-                                        class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
+                 ⚠ **And they are ONE component now, used twice.** They were the same table
+                 written twice in this file, each free to drift from the other — and one did: the
+                 pin froze one table's header and not the next one's body, for weeks.
 
-                                    <td data-col="key"
-                                        class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                        :class="showIndexColumn ? 'left-16' : 'left-0'"
-                                        x-text="row.label"></td>
+                 ⚠ Separate blocks, because what can be DONE differs: a font is edited in the mod
+                 and can only be taken or left, while a description is written here and is meant
+                 to be reworded before it goes on the Main's public page.
 
-                                    {{-- 🔴 One cell over the tag column and the value column.
+                 ⚠ No status anywhere in either. Whether a translation is finished descends from a
+                 Main to its contributions and never travels back. --}}
+            <x-editor.metadata-grid name="settings"
+                :title="__('merge.block_file_settings')"
+                :hint="__('merge.settings_pick_hint')">
+                <x-slot:mainCell>
+                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                </x-slot:mainCell>
+            </x-editor.metadata-grid>
 
-                                         A setting has no tag, so that column held a dash — an
-                                         empty stripe down the table, in the one place where the
-                                         lines below it carry something. Kept as a COLUMN, because
-                                         dropping it would shift everything after it and the
-                                         tables would stop lining up; merged as a CELL, because
-                                         there is nothing to put in it.
-
-                                         ⚠ No data-col on the merged cell, deliberately: the width
-                                         rules are written per column and one of them would squeeze
-                                         the pair to the width of a single column. The two headers
-                                         above still carry them, and fixed layout reads the widths
-                                         from there. Same shape as a branch column, which has been
-                                         one cell over its own pair from the start.
-
-                                         Click = keep the Main's own, as a line's Main cell does. --}}
-                                    {{-- ⚠ merge-cell only when there IS something to merge. On a
-                                         translation being worked on by itself there are no
-                                         contributions, so a hand cursor over a cell that answers
-                                         no question promises a gesture that does nothing. --}}
-                                    <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700"
-                                        :class="canTakeContributions() && 'merge-cell'"
-                                        :class="settingsCellClass(row, null)"
-                                        @click="canTakeContributions() && settingsKeepMine(row)">
-                                        <span class="editor-text break-words" x-text="row.mineValue"></span>
-                                    </td>
-
-                                    <template x-for="branch in branches" :key="branch.id">
-                                        <td colspan="2" :data-col="'branch-' + branch.id"
-                                            class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                            :class="[settingsCellClass(row, branch.id), metaCellTint(row, branch.id)]"
-                                            @click="settingsTake(row, branch.id)">
-                                            <template x-if="row.byBranch[branch.id] === undefined">
-                                                <span class="text-gray-600 italic">—</span>
-                                            </template>
-                                            <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
-                                                <a :href="row.byBranch[branch.id]" target="_blank"
-                                                   rel="noopener noreferrer nofollow" @click.stop
-                                                   class="hover:underline break-all"
-                                                   :class="metaLinkTint(row, branch.id)"
-                                                   x-text="row.byBranch[branch.id]"></a>
-                                            </template>
-                                            <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
-                                                <span class="editor-text break-words"
-                                                      :class="metaTextTint(row, branch.id)"
-                                                      x-text="row.byBranch[branch.id]"></span>
-                                            </template>
-                                        </td>
-                                    </template>
-                                    <td class="answer-rail"><button type="button"
-                                        x-show="answerRight(settingsPick[row.id])" x-cloak
-                                        @click.stop="goToAnswer(settingsPick[row.id])"
-                                        class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :title="offScreenHint"
-                                        ><i class="fas answer-mark" :class="answerIconClass(settingsPick[row.id])"></i></button></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- ⚠ Only when there IS something to take. Both sentences describe a gesture
-                     — clicking a contribution's value — and on a translation being worked on
-                     by itself there are no contributions to click. A hint for a gesture that
-                     does not exist is worse than no hint: it sends somebody looking. --}}
-                <p x-show="settingsOpen && canTakeContributions()" x-cloak
-                   class="text-xs text-gray-500 mt-2">{{ __('merge.settings_pick_hint') }}</p>
-            </div>
-
-            <div x-show="hasPublicationRows" x-cloak class="mb-4">
-                <button type="button" @click="publicationOpen = !publicationOpen"
-                    class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition">
-                    <i class="fas text-gray-500 w-3"
-                       :class="publicationOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                    <span>{{ __('merge.block_description') }}</span>
-
-                    {{-- Numeric badges, like the branch counter on the translations list: how many
-                         differences wait inside, and how many are already taken. Both stay
-                         readable folded, or ticking something and folding would hide it. --}}
-                    {{-- The count is of DISPUTED rows, not of rows: the table lists what the
-                         file carries, and "this translation has fonts" is not news. --}}
-                    <span x-show="publicationDifferenceCount() > 0" x-cloak
-                          class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.filter_differences') }}" x-text="publicationDifferenceCount()"></span>
-                    <span x-show="publicationTakenCount > 0" x-cloak
-                          class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-                          title="{{ __('merge.modifications') }}" x-text="publicationTakenCount"></span>
-                </button>
-
-                {{-- Same table as the lines below, down to the column names. That is not a
-                     resemblance: the widths are written as one stylesheet rule per
-                     [data-col], so carrying the same names makes these columns line up with
-                     the lines, follow the same drag and freeze with the same pin. --}}
-                <div x-show="publicationOpen" x-cloak data-hscroll-follow
-                     class="mt-2 overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
-                    <table class="editor-grid w-full text-sm border-separate border-spacing-0"
-                       :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
-                        <thead class="bg-gray-900">
-                            <tr>
-                                {{-- The index column holds no number here, and is kept all the
-                                     same: dropping it would shift every column after it and the
-                                     two tables would stop lining up the moment it is shown. --}}
-                                <th x-show="showIndexColumn" x-cloak
-                                    class="px-2 py-3 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-30 bg-gray-900"></th>
-                                <th data-col="key"
-                                    class="relative px-4 py-3 text-left text-gray-400 font-medium sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
-                                    {{ __('merge_preview.settings_column') }}
-                                    <x-editor.col-resize col="key" />
-                                </th>
-                                {{-- The tag column is kept, empty, and its border is the only one
-                                     between the key and the Main: the two head one block, and
-                                     the title lands exactly where the lines grid puts its own. --}}
-                                <th data-col="mainTag" class="px-2 py-3 border-l border-gray-700 w-12"></th>
-                                <th data-col="main" class="relative px-4 py-3 text-left min-w-[250px]">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-green-400 font-medium">Main</span>
-                                        <span class="text-xs text-gray-500" x-text="'(' + mainOwner + ')'"></span>
-                                    </div>
-                                    <x-editor.col-resize col="main" />
-                                </th>
-                                <template x-for="branch in branches" :key="branch.id">
-                                    <th colspan="2" :data-col="'branch-' + branch.id"
-                                        class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
-                                        <span class="text-blue-400 font-medium" x-text="branch.name"></span>
-                                        <x-editor.col-resize :bind="true" col="'branch-' + branch.id" />
-                                    </th>
-                                </template>
-                                {{-- The far end of the scrolling area. Zero width, frozen to the
-                                     right edge of the box: it takes no room and carries no data,
-                                     it is only somewhere for a mark to be. --}}
-                                <th class="answer-rail"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="row in visiblePublicationRows" :key="row.id">
-                                <tr class="hover:bg-gray-750 transition-colors">
-                                    <td x-show="showIndexColumn" x-cloak
-                                        class="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] sticky left-0 z-10 bg-gray-800"></td>
-
-                                    <td data-col="key"
-                                        class="px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                        :class="showIndexColumn ? 'left-16' : 'left-0'"
-                                        x-text="row.label"></td>
-
-
-                                    {{-- Click = keep the Main's own, which is how a line's Main
-                                         cell behaves. --}}
-                                    {{-- One cell over the tag column and the value column — see the
-                                         settings table above for why the column stays and the
-                                         cell merges. --}}
-                                    {{-- ⚠ merge-cell only when there IS something to merge. On a
-                                         translation being worked on by itself there are no
-                                         contributions, so a hand cursor over a cell that answers
-                                         no question promises a gesture that does nothing. --}}
-                                    <td colspan="2" class="main-pair px-4 py-2 border-l border-gray-700"
-                                        :class="canTakeContributions() && 'merge-cell'"
-                                        :class="publicationCellClass(row, null)"
-                                        @click="canTakeContributions() && publicationKeepMine(row)"
-                                        @dblclick="editCell(row.id, publicationResult(row), 'publication')">
-                                    {{-- The lines' own affordance, not a box of its own: revert
-                                         what is staged, or open the shared edit modal. A textarea
-                                         living in the cell was invented here — this screen already
-                                         had one way to edit a value and did not need a second. --}}
-                                    <span class="edit-affordance">
-                                        <button type="button" x-show="publicationPick[row.id] !== undefined"
-                                            @click.stop="publicationKeepMine(row)"
-                                            title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
-                                        <button type="button"
-                                            @click.stop="editCell(row.id, publicationResult(row), 'publication')"
-                                            title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
-                                    </span>
-                                    {{-- Purple on a rewording and on nothing else, exactly as on a
-                                         line: it says "this text is not what is stored". Taking a
-                                         contribution leaves this cell alone, so there is nothing
-                                         here to mark. --}}
-                                    <span class="editor-text break-words"
-                                        :class="publicationPick[row.id] === 'manual' ? 'text-purple-300' : ''"
-                                        x-text="publicationResult(row)"></span>
-                                    </td>
-
-                                    <template x-for="branch in branches" :key="branch.id">
-                                        <td colspan="2" :data-col="'branch-' + branch.id"
-                                            class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                            :class="[publicationCellClass(row, branch.id), metaCellTint(row, branch.id)]"
-                                            @click="publicationTake(row, branch.id)">
-                                            <template x-if="row.byBranch[branch.id] === undefined">
-                                                <span class="text-gray-600 italic">—</span>
-                                            </template>
-                                            <template x-if="row.byBranch[branch.id] !== undefined && isWebLink(row.byBranch[branch.id])">
-                                                <a :href="row.byBranch[branch.id]" target="_blank"
-                                                   rel="noopener noreferrer nofollow" @click.stop
-                                                   class="hover:underline break-all"
-                                                   :class="metaLinkTint(row, branch.id)"
-                                                   x-text="row.byBranch[branch.id]"></a>
-                                            </template>
-                                            <template x-if="row.byBranch[branch.id] !== undefined && !isWebLink(row.byBranch[branch.id])">
-                                                <span class="editor-text break-words"
-                                                      :class="metaTextTint(row, branch.id)"
-                                                      x-text="row.byBranch[branch.id]"></span>
-                                            </template>
-                                        </td>
-                                    </template>
-                                    <td class="answer-rail"><button type="button"
-                                        x-show="answerRight(publicationPick[row.id])" x-cloak
-                                        @click.stop="goToAnswer(publicationPick[row.id])"
-                                        class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :title="offScreenHint"
-                                        ><i class="fas answer-mark" :class="answerIconClass(publicationPick[row.id])"></i></button></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- ⚠ Only when there IS something to take. Both sentences describe a gesture
-                     — clicking a contribution's value — and on a translation being worked on
-                     by itself there are no contributions to click. A hint for a gesture that
-                     does not exist is worse than no hint: it sends somebody looking. --}}
-                <p x-show="publicationOpen && canTakeContributions()" x-cloak
-                   class="text-xs text-gray-500 mt-2">{{ __('merge.publication_pick_hint') }}</p>
-            </div>
+            <x-editor.metadata-grid name="publication"
+                :title="__('merge.block_description')"
+                :hint="__('merge.publication_pick_hint')">
+                <x-slot:mainCell>
+                    {{-- The lines' own affordance, not a box of its own: revert what is staged, or
+                         open the shared edit modal. A textarea living in the cell was invented
+                         here — this screen already had one way to edit a value. --}}
+                    <span class="edit-affordance" x-show="canTakeContributions()">
+                        <button type="button" x-show="publicationPick[row.id] !== undefined"
+                            @click.stop="publicationKeepMine(row)"
+                            title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
+                        <button type="button"
+                            @click.stop="editCell(row.id, publicationResult(row), 'publication')"
+                            title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
+                    </span>
+                    {{-- Purple on a rewording and on nothing else, exactly as on a line: it says
+                         "this text is not what is stored". Taking a contribution leaves this cell
+                         alone, so there is nothing here to mark. --}}
+                    <span class="editor-text break-words"
+                        :class="publicationPick[row.id] === 'manual' ? 'text-purple-300' : ''"
+                        x-text="publicationResult(row)"></span>
+                </x-slot:mainCell>
+            </x-editor.metadata-grid>
 
             @include('partials.editor-quality-bar')
 
@@ -1286,44 +1036,13 @@ document.addEventListener('alpine:init', () => {
          * ⚠ A rewording shows in the Main's own column, because that is where it will be
          * written — so it points there, not at the contribution it was written over.
          */
-        /** Said on the mark itself, since a bare arrow explains nothing on its own. */
+        // What the mark says when somebody rests on it. Translated server-side, so it is
+        // handed to the shared module rather than built inside it.
         offScreenHint: @js(__('merge.answer_off_screen')),
 
-        columnOfSource(source) {
-            if (source === undefined || source === null || source === '') return null;
-            if (source === 'main' || source === 'manual') return 'main';
-            if (typeof source === 'number') return 'branch-' + source;
-            if (String(source).startsWith('branch_')) return 'branch-' + String(source).slice(7);
-            return 'branch-' + source;
-        },
-
-        /**
-         * The same three answers for a translated line, asked by KEY.
-         *
-         * 🔴 Not `answerArrow(selections[key]?.source)`. This site runs the Alpine **CSP build**,
-         * whose expression parser is deliberately restricted — optional chaining is not part of
-         * the grammar it accepts, and an expression it cannot parse does not throw: it evaluates
-         * to nothing. Every mark on the screen rendered, empty and invisible, and nothing said
-         * why. No other template in the project uses `?.` inside an Alpine attribute; these were
-         * the first, and they are gone.
-         */
-        lineAnswerArrow(key) {
-            const sel = this.selections[key];
-            return sel ? this.answerArrow(sel.source) : '';
-        },
-
-        /**
-         * Shown or not, as a BOOLEAN.
-         *
-         * 🔴 The template asked `lineAnswerArrow(key) === 'left'`, which the CSP build's
-         * restricted parser cannot evaluate — and an expression it cannot parse does not throw:
-         * it comes out falsey. Every mark rendered, every one hidden, nothing in the console.
-         * The rest of the project only ever puts a bare call in an x-show (hasPlaceholderWarning,
-         * isRowModified) and that is not a style preference: it is the grammar.
-         */
-        answerLeft(source) { return this.answerArrow(source) === '«'; },
-        answerRight(source) { return this.answerArrow(source) === '»'; },
-
+        // The same three answers for a translated LINE, asked by key. The shared module speaks in
+        // sources ('main', 'branch_7'); a line keeps its own in the selection map, and these are
+        // the only place that knows it.
         lineAnswerLeft(key) {
             const sel = this.selections[key];
             return !!sel && this.answerLeft(sel.source);
@@ -1334,62 +1053,14 @@ document.addEventListener('alpine:init', () => {
             return !!sel && this.answerRight(sel.source);
         },
 
-        lineAnswerColour(key) {
-            const sel = this.selections[key];
-            return sel ? this.answerArrowColour(sel.source) : '';
-        },
-
-        goToLineAnswer(key) {
-            const sel = this.selections[key];
-            if (sel) this.goToAnswer(sel.source);
-        },
-
-        /** '«' or '»' when this row's answer is out of sight that way, empty when it can be seen. */
-        answerArrow(source) {
-            const col = this.columnOfSource(source);
-            const side = col ? this.offSide[col] : null;
-            return side === 'left' ? '«' : side === 'right' ? '»' : '';
-        },
-
-        /**
-         * The mark's colour: the same three the cells use — green kept, blue taken, purple
-         * reworded — so it says WHO as well as WHICH WAY, without a legend of its own.
-         */
-        /**
-         * The mark's icon and its colour, in one class.
-         *
-         * ⚠ A FontAwesome chevron rather than a guillemet: it is the glyph this interface already
-         * uses to mean "there is more this way" — the folded blocks above carry the same one —
-         * and it is a solid shape, where « is two thin strokes that vanish over dense text.
-         *
-         * ⚠ One binding, not two: the CSP build takes a bare call, and splitting icon from colour
-         * would have meant two expressions per mark on every rendered row.
-         */
-        answerIconClass(source) {
-            const arrow = this.answerArrow(source);
-            if (!arrow) return '';
-            const icon = arrow === '«' ? 'fa-chevron-left' : 'fa-chevron-right';
-            return icon + ' ' + this.answerArrowColour(source);
-        },
-
         lineAnswerIconClass(key) {
             const sel = this.selections[key];
             return sel ? this.answerIconClass(sel.source) : '';
         },
 
-        answerArrowColour(source) {
-            // ⚠ Brighter than the selection rings they stand for. A ring is read on a calm
-            // background; this floats over game text full of colour codes, and the tint that
-            // works behind a cell is not the one that survives on top of one.
-            if (source === 'manual') return 'text-fuchsia-300';
-            if (source === 'main') return 'text-emerald-300';
-            return 'text-sky-300';
-        },
-
-        /** Go to the answer. The mark then disappears, which is its own confirmation. */
-        goToAnswer(source) {
-            const col = this.columnOfSource(source);
-            if (col) this.scrollColumnIntoView(col);
+        goToLineAnswer(key) {
+            const sel = this.selections[key];
+            if (sel) this.goToAnswer(sel.source);
         },
 
         /**

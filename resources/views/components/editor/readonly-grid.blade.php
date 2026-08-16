@@ -29,6 +29,34 @@
     </div>
 
     <div x-show="loaded && !error" x-cloak>
+        {{-- What this translation carries besides its lines.
+
+             🔴 This screen is where somebody decides whether to TAKE a translation, and it could
+             not tell them which fonts it replaces, which lines it leaves alone or where the images
+             it needs live. The only way to find out was to download the file and open it — which
+             is the decision they came here to make.
+
+             ⚠ Read-only by construction, not by a flag: the block offers a gesture only when
+             there is somebody to take from, and a reading screen has no contributions. Both start
+             folded, since nothing is ever disputed here. --}}
+        <x-editor.metadata-grid name="settings" :title="__('merge.block_file_settings')">
+            <x-slot:mainCell>
+                <span class="editor-text break-words" x-text="row.mineValue"></span>
+            </x-slot:mainCell>
+        </x-editor.metadata-grid>
+
+        <x-editor.metadata-grid name="publication" :title="__('merge.block_description')">
+            <x-slot:mainCell>
+                <template x-if="isWebLink(row.mineValue)">
+                    <a :href="row.mineValue" target="_blank" rel="noopener noreferrer nofollow"
+                       class="text-blue-400 hover:underline break-all" x-text="row.mineValue"></a>
+                </template>
+                <template x-if="!isWebLink(row.mineValue)">
+                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                </template>
+            </x-slot:mainCell>
+        </x-editor.metadata-grid>
+
         @include('partials.editor-quality-bar')
 
         {{-- Nothing to filter on beyond the tags: reading a file offers no categories to sort

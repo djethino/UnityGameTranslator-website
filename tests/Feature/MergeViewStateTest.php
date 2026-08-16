@@ -639,6 +639,53 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('publicationOpen && canTakeContributions()', $html);
     }
 
+    public function test_the_two_blocks_are_one_component_used_by_every_screen(): void
+    {
+        // 🔴 They were the same table written twice in one file — same columns, same gestures,
+        // same marks — and each copy was free to drift from the other. One did: the pin froze one
+        // table's header and not the next one's body, for weeks, because a rule written per
+        // column could not reach a cell that had been merged in only one of them.
+        $component = resource_path('views/components/editor/metadata-grid.blade.php');
+        $this->assertFileExists($component);
+
+        foreach ([
+            'views/merge/show.blade.php',
+            'views/components/editor/readonly-grid.blade.php',
+        ] as $view) {
+            $source = file_get_contents(resource_path($view));
+            $this->assertStringContainsString('<x-editor.metadata-grid name="settings"', $source, $view);
+            $this->assertStringContainsString('<x-editor.metadata-grid name="publication"', $source, $view);
+        }
+    }
+
+    public function test_a_reading_screen_says_what_the_file_carries(): void
+    {
+        // 🔴 This is where somebody decides whether to TAKE a translation, and it could not tell
+        // them which fonts it replaces, which lines it leaves alone or where the images it needs
+        // live. The only way to find out was to download the file and open it — which is the
+        // decision they came here to make.
+        $owner = User::factory()->create()->refresh();
+        $game = Game::forceCreate(['name' => 'Read Game', 'slug' => 'read-game-' . uniqid()]);
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+
+        $translation = $this->makeTranslation($owner, $game, $uuid, 'public', [
+            '_uuid' => $uuid,
+            '_fonts' => ['Title' => ['enabled' => true, 'fallback' => 'NotoSans']],
+            'Hello' => ['v' => 'Bonjour', 't' => 'H'],
+        ]);
+        $translation->forceFill([
+            'notes' => 'Covers the whole story.',
+            'resources_url' => 'https://example.com/fonts',
+        ])->save();
+
+        $this->actingAs($owner)
+            ->getJson(route('translations.view.data', $translation))
+            ->assertOk()
+            ->assertJsonPath('main_notes', 'Covers the whole story.')
+            ->assertJsonPath('main_resources_url', 'https://example.com/fonts')
+            ->assertJsonPath('main_settings.fonts:Title.section', 'fonts');
+    }
+
     public function test_show_is_owner_only(): void
     {
         [, $uuid] = $this->makeMergeView();

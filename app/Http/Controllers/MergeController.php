@@ -144,7 +144,7 @@ class MergeController extends Controller
                         // so they travel apart. Until now a Main could see THAT a branch's fonts
                         // differed but never which one, and accepting every line accepted none
                         // of them — the merge silently kept the Main's own settings.
-                        'settings' => $this->comparableSettingsOf($branch),
+                        'settings' => $this->translationService->comparableSettingsOf($branch),
 
                         // What the contributor SAYS about their work, apart from the work.
                         //
@@ -175,7 +175,7 @@ class MergeController extends Controller
         return response()->json([
             'main' => $this->loadTranslationContent($main),
             'main_owner' => $main->user->name ?? '',
-            'main_settings' => $this->comparableSettingsOf($main),
+            'main_settings' => $this->translationService->comparableSettingsOf($main),
             'main_notes' => $main->notes,
             'main_resources_url' => $main->resources_url,
             'branches' => $branchesPayload,
@@ -546,24 +546,6 @@ class MergeController extends Controller
     /**
      * Load translation content from file, excluding metadata keys.
      */
-    /**
-     * The file settings of a translation, as rows that can be compared and picked one by one.
-     *
-     * Same extraction as the mod comparison uses — one definition of what a setting is, shared
-     * with what the mod itself writes.
-     */
-    private function comparableSettingsOf(Translation $translation): array
-    {
-        $path = $translation->getSafeFilePath();
-        if (!$path || !file_exists($path)) {
-            return [];
-        }
-
-        $json = json_decode($this->translationService->normalizeContent(file_get_contents($path)), true);
-
-        return is_array($json) ? $this->translationService->extractComparableSettings($json) : [];
-    }
-
     private function loadTranslationContent(Translation $translation): array
     {
         $path = $translation->getSafeFilePath();

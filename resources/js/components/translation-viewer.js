@@ -65,6 +65,20 @@ export function createViewer(config) {
                         }
                         this.data = payload.content || {};
                         this.allKeys = Object.keys(this.data);
+
+                        // 🔴 What the file carries besides its lines. This screen is where
+                        // somebody decides whether to TAKE a translation, and it could not tell
+                        // them which fonts it replaces, which lines it leaves alone or where the
+                        // images it needs live — the only way to find out was to download it and
+                        // open it.
+                        //
+                        // ⚠ Read-only by construction: the shared block offers a gesture only
+                        // when there is somebody to take from, and a viewer has no contributions.
+                        this.metadataLabels = config.metadataLabels || this.metadataLabels;
+                        this.buildMetadataRows(payload);
+                        this.settingsOpen = false;
+                        this.publicationOpen = false;
+
                         this.loaded = true;
                     })
                     .catch(() => {
@@ -82,6 +96,26 @@ export function createViewer(config) {
             // keyboard handler is bound to the window — without these, pressing E on a viewer
             // would silently open a modal nobody can see and leave the page in a state no
             // control can get it out of.
+            // A viewer has no branches and nothing to pick. The block reads both, so they exist
+            // and stay empty rather than being undefined on every row it draws.
+            branches: [],
+            settingsPick: {},
+            publicationPick: {},
+            settingsTakenCount: 0,
+            publicationTakenCount: 0,
+            mainOwner: config.owner || '',
+
+            settingsCellClass() { return ''; },
+            publicationCellClass() { return ''; },
+            settingsTake() {},
+            publicationTake() {},
+            settingsKeepMine() {},
+            publicationKeepMine() {},
+            publicationResult(row) { return row.mineValue; },
+
+            get visibleSettingsRows() { return this.settingsRows; },
+            get visiblePublicationRows() { return this.publicationRows; },
+
             editCell() {},
             toggleDelete() {},
             openTagDropdown() {},

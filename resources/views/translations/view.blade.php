@@ -82,6 +82,24 @@ document.addEventListener('alpine:init', () => {
         translationId: @js($translation->id),
         dataUrl: @js(route('translations.view.data', $translation)),
         unreadableMessage: @js(__('translation.content_unavailable')),
+        owner: @js($translation->user->name),
+        // The words for the settings block. Translated server-side, so they are handed to the
+        // shared module rather than built inside it.
+        metadataLabels: {
+            sections: @js([
+                'fonts' => __('file_settings.label.fonts'),
+                'font_rules' => __('file_settings.label.font_rules'),
+                'images' => __('file_settings.label.images'),
+                'exclusions' => __('file_settings.label.exclusions'),
+                'variables' => __('file_settings.label.variables'),
+                'game_settings' => __('file_settings.game_settings'),
+            ]),
+            fields: @js([
+                'notes' => __('upload.notes'),
+                'resources_url' => __('upload.resources_url'),
+            ]),
+            absent: @js(__('merge_preview.settings_absent')),
+        },
     }));
 });
 </script>

@@ -467,6 +467,29 @@ class TranslationService
      * The live edit session deliberately does NOT use this: there, ticking a line is editing,
      * not reviewing a merge, so an A stays an A.
      */
+    /**
+     * The file settings of a translation, as rows that can be compared one by one.
+     *
+     * 🔴 Here rather than on a controller because more than one screen asks it. It lived on the
+     * merge controller, so the reading screen — the one place somebody decides whether to
+     * DOWNLOAD a translation — could not tell them which fonts or exclusions it carries, and the
+     * only way to find out was to take the file and open it.
+     *
+     * Returns an empty list for a file that has gone: a translation whose file is missing is a
+     * page that shows nothing, never an exception.
+     */
+    public function comparableSettingsOf(Translation $translation): array
+    {
+        $path = $translation->getSafeFilePath();
+        if (!$path || !file_exists($path)) {
+            return [];
+        }
+
+        $json = json_decode($this->normalizeContent(file_get_contents($path)), true);
+
+        return is_array($json) ? $this->extractComparableSettings($json) : [];
+    }
+
     public static function resolveMergedTag(string $tag, string $source): string
     {
         if ($source === 'tagchange' || $tag === 'M' || $tag === 'S') {

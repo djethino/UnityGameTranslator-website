@@ -72,6 +72,63 @@ export function editorOffScreen() {
             if (JSON.stringify(this.offSide) !== JSON.stringify(next)) this.offSide = next;
         },
 
+        /** What the mark says when somebody rests on it. Set by the page: it is translated. */
+        offScreenHint: '',
+
+        /**
+         * The column a chosen source lives in.
+         *
+         * ⚠ A rewording shows in the Main's own column, because that is where it will be written
+         * — so it points there, not at the contribution it was written over.
+         */
+        columnOfSource(source) {
+            if (source === undefined || source === null || source === '') return null;
+            if (source === 'main' || source === 'manual') return 'main';
+            if (typeof source === 'number') return 'branch-' + source;
+            if (String(source).startsWith('branch_')) return 'branch-' + String(source).slice(7);
+            return 'branch-' + source;
+        },
+
+        /** '«' or '»' when this row's answer is out of sight that way, empty when it can be seen. */
+        answerArrow(source) {
+            const col = this.columnOfSource(source);
+            const side = col ? this.offSide[col] : null;
+            return side === 'left' ? '«' : side === 'right' ? '»' : '';
+        },
+
+        // 🔴 Shown or not, as a BOOLEAN. The templates asked `answerArrow(x) === 'left'`, which
+        // the Alpine CSP build's restricted parser cannot evaluate — and an expression it cannot
+        // parse does not throw, it comes out falsey. Every mark rendered, every one hidden,
+        // nothing in the console. A bare call is the grammar the whole project uses.
+        answerLeft(source) { return this.answerArrow(source) === '«'; },
+        answerRight(source) { return this.answerArrow(source) === '»'; },
+
+        /**
+         * The mark's icon and its colour, in one class.
+         *
+         * ⚠ A FontAwesome chevron rather than a guillemet: it is the glyph this interface already
+         * uses to mean "there is more this way", and it is a solid shape where « is two thin
+         * strokes that vanish over dense text.
+         *
+         * ⚠ Brighter tints than the selection rings they stand for. A ring is read on a calm
+         * background; this floats over game text full of colour codes, and the tint that works
+         * behind a cell is not the one that survives on top of one.
+         */
+        answerIconClass(source) {
+            const arrow = this.answerArrow(source);
+            if (!arrow) return '';
+            const icon = arrow === '«' ? 'fa-chevron-left' : 'fa-chevron-right';
+            const colour = source === 'manual' ? 'text-fuchsia-300'
+                : source === 'main' ? 'text-emerald-300' : 'text-sky-300';
+            return icon + ' ' + colour;
+        },
+
+        /** Go to the answer. The mark then disappears, which is its own confirmation. */
+        goToAnswer(source) {
+            const col = this.columnOfSource(source);
+            if (col) this.scrollColumnIntoView(col);
+        },
+
         /**
          * Bring a column into view, by the shortest move that makes it readable.
          *
