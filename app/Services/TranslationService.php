@@ -79,10 +79,33 @@ class TranslationService
             ]));
         }
 
+        // 🔴 A file with no entry at all is refused here, for every caller at once.
+        //
+        // Until this, `{"_uuid": …, "_game": …}` passed: valid JSON, a uuid, and validateEntries
+        // skips every key starting with an underscore, so there was nothing left to be wrong. A
+        // game set up a minute ago holds exactly that file, and both the mod and the Manager
+        // offered Publish on it — a catalogue row, a stored file and a lineage, for content that
+        // does not exist.
+        //
+        // ⚠ NOT the same question as the capture warning in the web upload, and it must not
+        // swallow it: that one is about a file whose lines are all UNTRANSLATED, which is a real
+        // starting point only its author can judge, and which the grace period already handles.
+        // countLines counts every non-metadata key, captures included — so a capture file still
+        // passes here and still gets asked the other question.
+        //
+        // ⚠ Refused rather than asked, because there is nobody to ask: with no line at all, no
+        // answer makes the upload worth keeping.
+        $lineCount = $this->countLines($json);
+        if ($lineCount === 0) {
+            throw new \InvalidArgumentException(
+                'This file has no translation line yet — there is nothing to publish.'
+            );
+        }
+
         return [
             'json' => $json,
             'uuid' => $json['_uuid'],
-            'line_count' => $this->countLines($json),
+            'line_count' => $lineCount,
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
             'font_config' => $this->extractFontConfig($json),
