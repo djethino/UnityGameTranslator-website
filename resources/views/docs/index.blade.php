@@ -256,15 +256,12 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.whatis.pitch') }}</p>
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebBrowse.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebBrowse.png') }}"
-                             alt="{{ __('docs.shot.browse_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1400" height="841"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebBrowse.webp') }}"
+                         alt="{{ __('docs.shot.browse_alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1400" height="841"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.browse_caption') }}</figcaption>
                 </figure>
 
@@ -337,15 +334,12 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-6">{{ __('docs.quick_start.intro') }}</p>
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebGamePage.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebGamePage.png') }}"
-                             alt="{{ __('docs.shot.game_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1390" height="840"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebGamePage.webp') }}"
+                         alt="{{ __('docs.shot.game_alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1390" height="840"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.game_caption') }}</figcaption>
                 </figure>
 
@@ -585,15 +579,11 @@
 
                 <!-- Wizard Screenshot -->
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/ModWizard1.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
-                             alt="{{ __('docs.wizard_screenshot_alt') }}"
-                             class="doc-img doc-img-mod block mx-auto"
-                             style="max-width: 500px;"
-                             width="551" height="434"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/ModWizard1.webp') }}"
+                         alt="{{ __('docs.wizard_screenshot_alt') }}"
+                         class="doc-img doc-img-mod block mx-auto"
+                         width="519" height="396"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.wizard_caption') }}</figcaption>
                 </figure>
 
@@ -640,14 +630,11 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
                 <p class="text-gray-300 mb-4">{{ __('docs.editing.intro') }}</p>
                 <figure class="text-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/ModToolsPanel.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/ModToolsPanel.png') }}"
-                             alt="{{ __('docs.editing.mod_tools_alt') }}"
-                             class="doc-img doc-img-tall mx-auto"
-                             width="1155" height="1231"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/ModToolsPanel.webp') }}"
+                         alt="{{ __('docs.editing.mod_tools_alt') }}"
+                         class="doc-img doc-img-tall mx-auto"
+                         width="751" height="1132"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
                 </figure>
             </div>
@@ -665,14 +652,11 @@
                         <li>{{ __('docs.editing.text_editor_step3') }}</li>
                     </ol>
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/ModTextEditor.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/ModTextEditor.png') }}"
-                                 alt="{{ __('docs.editing.text_editor_alt') }}"
-                                 class="doc-img doc-img-tall mx-auto"
-                                 width="868" height="1175"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/ModTextEditor.webp') }}"
+                             alt="{{ __('docs.editing.text_editor_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="661" height="1049"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.text_editor_caption') }}</figcaption>
                     </figure>
                 </div>
@@ -721,25 +705,19 @@
 
                 <div class="grid md:grid-cols-3 gap-6 mb-4 items-center">
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/ModBrowserSessionActive.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/ModBrowserSessionActive.png') }}"
-                                 alt="{{ __('docs.editing.session_active_alt') }}"
-                                 class="doc-img doc-img-tall mx-auto"
-                                 width="969" height="1102"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/ModBrowserSessionActive.webp') }}"
+                             alt="{{ __('docs.editing.session_active_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="821" height="1078"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.editing.session_active_caption') }}</figcaption>
                     </figure>
                     <figure class="md:col-span-2">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/WebLiveEdit.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/WebLiveEdit.png') }}"
-                                 alt="{{ __('docs.editing.live_edit_alt') }}"
-                                 class="doc-img doc-img-web"
-                                 width="1228" height="1122"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/WebLiveEdit.webp') }}"
+                             alt="{{ __('docs.editing.live_edit_alt') }}"
+                             class="doc-img doc-img-web"
+                             width="1228" height="1122"
+                             data-zoomable>
                         <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.editing.live_edit_caption') }}</figcaption>
                     </figure>
                 </div>
@@ -831,15 +809,12 @@
                     <li>{{ __('docs.collaboration.workflow3') }}</li>
                     <li>{{ __('docs.collaboration.workflow4') }}</li>
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebMerge.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebMerge.png') }}"
-                             alt="{{ __('docs.shot.merge_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1389" height="841"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebMerge.webp') }}"
+                         alt="{{ __('docs.shot.merge_alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1389" height="841"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.merge_caption') }}</figcaption>
                 </figure>
                 </ol>
@@ -847,15 +822,12 @@
                 <p class="text-gray-300 mb-4">{{ __('docs.card.intro') }}</p>
 
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebTranslationCard.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebTranslationCard.png') }}"
-                             alt="{{ __('docs.card.alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1232" height="202"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebTranslationCard.webp') }}"
+                         alt="{{ __('docs.card.alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1232" height="202"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.card.caption') }}</figcaption>
                 </figure>
 
@@ -890,15 +862,12 @@
                 </h3>
                 <p class="text-gray-300 mb-4">{{ __('docs.collaboration.upload_intro') }}</p>
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebUpload.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebUpload.png') }}"
-                             alt="{{ __('docs.shot.upload_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1400" height="841"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebUpload.webp') }}"
+                         alt="{{ __('docs.shot.upload_alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1400" height="841"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.upload_caption') }}</figcaption>
                 </figure>
 
@@ -931,14 +900,11 @@
 
                 <!-- Merge Screenshot -->
                 <figure class="mb-4">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
-                             alt="{{ __('docs.merge_screenshot_alt') }}"
-                             class="doc-img doc-img-web"
-                             width="1421" height="1276"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}"
+                         alt="{{ __('docs.merge_screenshot_alt') }}"
+                         class="doc-img doc-img-web"
+                         width="1421" height="1276"
+                         data-zoomable>
                     <figcaption class="text-center text-sm text-gray-400 mt-2">{{ __('docs.merge_caption') }}</figcaption>
                 </figure>
 
@@ -976,25 +942,19 @@
                 <!-- Screenshots side by side -->
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/ModConnect.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/ModConnect.png') }}"
-                                 alt="{{ __('docs.sync.mod_connect_alt') }}"
-                                 class="doc-img doc-img-mod mx-auto"
-                                 width="823" height="734"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/ModConnect.webp') }}"
+                             alt="{{ __('docs.sync.mod_connect_alt') }}"
+                             class="doc-img doc-img-mod mx-auto"
+                             width="823" height="734"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
                     </figure>
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/WebConnect.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/WebConnect.png') }}"
-                                 alt="{{ __('docs.sync.web_connect_alt') }}"
-                                 class="doc-img doc-img-web"
-                                 width="617" height="583"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/WebConnect.webp') }}"
+                             alt="{{ __('docs.sync.web_connect_alt') }}"
+                             class="doc-img doc-img-web"
+                             width="617" height="583"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.web_connect_caption') }}</figcaption>
                     </figure>
                 </div>
@@ -1058,15 +1018,12 @@
             <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p class="text-gray-300 mb-2">{{ __('docs.quality_system.intro') }}</p>
                 <figure class="mb-6 w-full flex flex-col items-center justify-center">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebMyTranslations.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebMyTranslations.png') }}"
-                             alt="{{ __('docs.shot.mine_alt') }}"
-                             class="doc-img doc-img-web block mx-auto"
-                             width="1400" height="841"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebMyTranslations.webp') }}"
+                         alt="{{ __('docs.shot.mine_alt') }}"
+                         class="doc-img doc-img-web block mx-auto"
+                         width="1400" height="841"
+                         loading="lazy"
+                         data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.mine_caption') }}</figcaption>
                 </figure>
                 {{-- The tags and the formulas that read them were two sections apart with nothing
@@ -1236,27 +1193,21 @@ c = 0.8 → 1.0</pre>
 
                 <div class="grid md:grid-cols-2 gap-6">
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/ModOptionsTranslationAi.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.png') }}"
-                                 alt="{{ __('docs.config.gui_ai_alt') }}"
-                                 class="doc-img doc-img-tall mx-auto"
-                                 width="579" height="916"
-                                 loading="lazy"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.webp') }}"
+                             alt="{{ __('docs.config.gui_ai_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="579" height="916"
+                             loading="lazy"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_ai_caption') }}</figcaption>
                     </figure>
                     <figure class="text-center">
-                        <picture>
-                            <source srcset="{{ asset('images/screenshots/ModOptionsTranslationTools.webp') }}" type="image/webp">
-                            <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.png') }}"
-                                 alt="{{ __('docs.config.gui_tools_alt') }}"
-                                 class="doc-img doc-img-tall mx-auto"
-                                 width="575" height="673"
-                                 loading="lazy"
-                                 data-zoomable>
-                        </picture>
+                        <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.webp') }}"
+                             alt="{{ __('docs.config.gui_tools_alt') }}"
+                             class="doc-img doc-img-tall mx-auto"
+                             width="575" height="673"
+                             loading="lazy"
+                             data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.config.gui_tools_caption') }}</figcaption>
                     </figure>
                 </div>

@@ -187,15 +187,12 @@
                 </ul>
                 <!-- Screenshot -->
                 <div class="mt-4 rounded-lg overflow-hidden border border-gray-700">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/ModWizard1.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/ModWizard1.png') }}"
-                             alt="{{ __('home.mod_screenshot_alt') }}"
-                             class="w-full h-auto cursor-zoom-in"
-                             width="551" height="434"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/ModWizard1.webp') }}"
+                         alt="{{ __('home.mod_screenshot_alt') }}"
+                         class="w-full h-auto cursor-zoom-in"
+                         width="519" height="396"
+                         loading="lazy"
+                         data-zoomable>
                 </div>
             </div>
 
@@ -305,15 +302,12 @@
                 </ul>
                 <!-- Screenshot -->
                 <div class="mt-4 rounded-lg overflow-hidden border border-gray-700">
-                    <picture>
-                        <source srcset="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}" type="image/webp">
-                        <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.png') }}"
-                             alt="{{ __('home.website_screenshot_alt') }}"
-                             class="w-full h-auto cursor-zoom-in"
-                             width="1421" height="1276"
-                             loading="lazy"
-                             data-zoomable>
-                    </picture>
+                    <img src="{{ asset('images/screenshots/WebHumanEditAndValidation.webp') }}"
+                         alt="{{ __('home.website_screenshot_alt') }}"
+                         class="w-full h-auto cursor-zoom-in"
+                         width="1421" height="1276"
+                         loading="lazy"
+                         data-zoomable>
                 </div>
             </div>
         </div>
