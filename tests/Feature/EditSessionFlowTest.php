@@ -271,6 +271,12 @@ class EditSessionFlowTest extends TestCase
      *
      * The names are written out rather than read from the catalogue on purpose: the point is that
      * THESE strings must pass, and a test that fetched them would keep passing if they changed.
+     *
+     * 🔴 **This test passed while production still failed, and could not have done otherwise.** The
+     * suite runs on SQLite, which IGNORES varchar lengths; production is MySQL, which enforces
+     * them. Fixing the request validation alone therefore turned a readable 422 into a 500, and
+     * everything here stayed green. A column width is one of the things a passing test says
+     * nothing about — the schema has to be read.
      */
     public function test_init_accepts_the_longest_language_names(): void
     {
