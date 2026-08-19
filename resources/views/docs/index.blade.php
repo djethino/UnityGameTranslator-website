@@ -945,7 +945,7 @@
                         <img src="{{ asset('images/screenshots/ModConnect.webp') }}"
                              alt="{{ __('docs.sync.mod_connect_alt') }}"
                              class="doc-img doc-img-mod mx-auto"
-                             width="823" height="734"
+                             width="761" height="732"
                              data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
                     </figure>
