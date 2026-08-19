@@ -263,6 +263,30 @@ class EditSessionFlowTest extends TestCase
             ->assertStatus(422);
     }
 
+    /**
+     * These fields carry a language NAME, not an ISO code. The bound was 16 — a code's length —
+     * so the three catalogue entries whose name is longer could never open a browser editor at
+     * all, and the refusal read as "the source language field must not be greater than 16
+     * characters", which sounds like a rule rather than a defect.
+     *
+     * The names are written out rather than read from the catalogue on purpose: the point is that
+     * THESE strings must pass, and a test that fetched them would keep passing if they changed.
+     */
+    public function test_init_accepts_the_longest_language_names(): void
+    {
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'source_language' => 'Simplified Chinese',   // 18
+            'target_language' => 'Traditional Chinese',  // 19
+        ])->assertOk();
+
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'source_language' => 'Norwegian Nynorsk',    // 17
+        ])->assertOk();
+    }
+
     public function test_save_ignores_metadata_keys(): void
     {
         $this->initSession();

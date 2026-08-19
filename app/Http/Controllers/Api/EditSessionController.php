@@ -32,8 +32,14 @@ class EditSessionController extends Controller
         $request->validate([
             'content' => 'required|array',
             'game_name' => 'nullable|string|max:255',
-            'source_language' => 'nullable|string|max:16',
-            'target_language' => 'nullable|string|max:16',
+            // ⚠ These carry a language NAME, not an ISO code — the name is what the whole
+            // ecosystem keys on (see the catalogue's README). The bound was 16, which is a code's
+            // length, and it silently made the browser editor impossible to open for the three
+            // catalogue entries whose name is longer: Traditional Chinese, Simplified Chinese and
+            // Norwegian Nynorsk. Bounded generously rather than against the catalogue itself, so
+            // adding a longer name there cannot break this endpoint without anyone noticing.
+            'source_language' => 'nullable|string|max:64',
+            'target_language' => 'nullable|string|max:64',
             // The mod advertises its OWN AI backend so the browser can offer
             // per-line retranslation — no AI credential ever reaches the site
             'ai_available' => 'sometimes|boolean',
