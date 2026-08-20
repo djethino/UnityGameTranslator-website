@@ -219,6 +219,55 @@ class SyncStateTest extends TestCase
         $this->assertNotNull($this->state($token, $uuid, 'branch-hash')['main']);
     }
 
+    /**
+     * 🔴 What became of the Main, told on the channel a contributor actually reads.
+     *
+     * These three answered on check-uuid alone, and the mod calls that endpoint from one place:
+     * the publish screen. So somebody whose Main had been deleted learned it at the moment they
+     * tried to publish — after the work. Nothing on their side shows it: the file still opens and
+     * still saves.
+     */
+    public function test_a_contribution_learns_what_became_of_its_main(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$mainOwner] = $this->makeUserWithToken();
+        [$contributor, $token] = $this->makeUserWithToken();
+
+        $main = $this->makeTranslation($mainOwner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($contributor, $uuid, 'branch', 'branch-hash');
+
+        $alive = $this->state($token, $uuid, 'branch-hash');
+        $this->assertFalse($alive['main_missing'], 'the Main is there');
+        $this->assertArrayHasKey('main_ignoring', $alive);
+        $this->assertSame(0, $alive['merged_lines_total']);
+
+        // The Main is deleted: the only way on is to publish as a translation of its own, and the
+        // contributor has to be told before they spend another evening on it.
+        $main->delete();
+
+        $this->assertTrue(
+            $this->state($token, $uuid, 'branch-hash')['main_missing'],
+            'and gone when it is gone'
+        );
+    }
+
+    /** It belongs to the lineage, so a stream leaves it out like the rest. */
+    public function test_what_became_of_the_main_is_not_on_a_stream(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$mainOwner] = $this->makeUserWithToken();
+        [$contributor, $token] = $this->makeUserWithToken();
+
+        $this->makeTranslation($mainOwner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($contributor, $uuid, 'branch', 'branch-hash');
+
+        $narrow = $this->state($token, $uuid, 'branch-hash', '0');
+
+        $this->assertArrayNotHasKey('main_missing', $narrow);
+        $this->assertArrayNotHasKey('main_ignoring', $narrow);
+        $this->assertArrayNotHasKey('merged_lines_total', $narrow);
+    }
+
     public function test_a_main_owner_is_not_told_about_a_main_of_their_own(): void
     {
         $uuid = (string) \Illuminate\Support\Str::uuid();

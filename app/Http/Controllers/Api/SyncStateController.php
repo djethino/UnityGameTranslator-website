@@ -166,6 +166,19 @@ class SyncStateController extends Controller
                 // to the rhythm they chose, not to the second it happened.
                 $main = $publicTranslation?->loadMissing('user:id,name');
 
+                // 🔴 **What became of the Main, told without being asked for** (2026-08-20).
+                //
+                // These three answered on check-uuid alone, and the mod calls that endpoint from
+                // ONE place: the publish screen. So a contributor whose Main had been deleted, or
+                // who was being ignored, learned it at the moment they tried to publish — after
+                // the work, which is the one moment it is too late to be useful. Nothing on their
+                // side shows it either: the file still opens and still saves.
+                //
+                // ⚠ Additive: a mod that does not read them behaves exactly as before.
+                $state['main_missing'] = $publicTranslation === null;
+                $state['main_ignoring'] = $ownTranslation->mainIgnoresContributions();
+                $state['merged_lines_total'] = $ownTranslation->merged_lines_total;
+
                 if ($main) {
                     $state['main'] = [
                         'id' => $main->id,
