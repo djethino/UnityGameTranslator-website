@@ -30,27 +30,25 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Never compress for the mod builds that cannot decompress.
+# 🔴 **NE PAS remettre `no-gzip` ici. Mesuré en production le 2026-08-20, et le résultat est pire
+# que l'échec attendu.**
 #
-# 🔴 Every mod published up to 2026-08-20 announces `Accept-Encoding: gzip` while its HTTP client
-# was left unable to inflate the answer. A server that takes the offer sends 0x1F 0x8B and the mod
-# dies in its JSON parser on an unprintable character — no message, no recovery, and no update can
-# reach it any more because that call fails too.
+# Le but était d'exclure de la compression les mods publiés jusqu'ici, qui annoncent
+# `Accept-Encoding: gzip` sans savoir décompresser. La règle posée était conditionnelle et ancrée :
 #
-# ⚠ It has never happened because this host does not compress `application/json`. That is luck, not
-# design: the day it does, or the day a CDN is put in front, they all fall together. This line is
-# what makes turning compression on a safe decision instead of a one-way door.
+#     <IfModule mod_setenvif.c>
+#         SetEnvIfNoCase User-Agent "^UnityGameTranslator/1\.0$" no-gzip
+#     </IfModule>
 #
-# ⚠ **Anchored at BOTH ends.** Those builds call themselves exactly "UnityGameTranslator/1.0", with
-# no version in it — that literal is the whole point. Fixed builds send
-# "UnityGameTranslator/{version} ({loader})", so they never match. Without the anchors, the mod's
-# own 1.0 release would one day be caught by a rule meant for the versions that predate it.
+# LiteSpeed (o2switch) ne l'ignore pas : **il coupe la compression pour TOUT LE MONDE**, sans
+# évaluer la condition. Page d'accueil passée de 76 Ko compressés à 2,15 Mo, pour chaque visiteur,
+# CSS et JS compris. `Vary: Accept-Encoding` restait annoncé, donc rien ne signalait la panne.
 #
-# ⚠ Note the slash: "UnityGameTranslatorManager/" starts with "UnityGameTranslator", so a pattern
-# written without it would also silence the Manager, which decompresses perfectly well.
-<IfModule mod_setenvif.c>
-    SetEnvIfNoCase User-Agent "^UnityGameTranslator/1\.0$" no-gzip
-</IfModule>
+# ⚠ Retiré après quelques minutes. La compression du HTML est revenue d'elle-même.
+#
+# **Ce qu'il reste comme voie** : décider dans Laravel, qui lit l'appelant et compresse lui-même —
+# la seule manière de servir du gzip aux clients qui savent le lire sans en envoyer aux autres.
+# Voir `TODO.md`, section compression.
 
 # Cache static assets (Vite generates hashed filenames, safe to cache long)
 <IfModule mod_expires.c>
