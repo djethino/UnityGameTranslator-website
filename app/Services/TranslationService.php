@@ -526,6 +526,116 @@ class TranslationService
         return $tag === 'A' ? 'V' : $tag;
     }
 
+    /**
+     * Is this a line OF THE GAME — the only kind a merge arbitrates and a count counts?
+     *
+     * 🔴 `M` is the mod's own interface. It travels in the same file today and will get one of its
+     * own; until then it is carried, never weighed. Counting it would inflate every measure of what
+     * a translation covers, and arbitrating it would have contributors trading each other's menus.
+     */
+    public static function isGameLine(?string $tag): bool
+    {
+        return $tag !== 'M';
+    }
+
+    /**
+     * How good a line is, as one number.
+     *
+     * 🔴 **The scale belongs to the socle** — `common/Merge.PriorityOf`, read by the mod and the
+     * Manager. This is its PHP reading, and the JS editors hold a third
+     * (`translation-editor.js::priorityOf`). `MergeLadderTest` compares all three, because a barème
+     * that decides who wins a merge must not be able to drift between two products.
+     *
+     * ⚠ Takes the VALUE too: an `H` with nothing in it is a captured line waiting for a
+     * translation — the floor, not the top.
+     *
+     * ⚠ `S` sits WITH `H`. A refusal is a person ruling the line must not be translated, which is a
+     * reading exactly as writing one is. Ranking it with the machine let a contribution overwrite a
+     * Main's refusal with nobody asked.
+     */
+    public static function priorityOf(?string $tag, ?string $value): int
+    {
+        if ($tag === 'H' && ($value === null || $value === '')) {
+            return 0;
+        }
+
+        return match ($tag) {
+            'V' => 2,
+            'H', 'S' => 3,
+            // Includes a line with no tag at all: the older file format wrote none and meant this.
+            default => 1,
+        };
+    }
+
+    /**
+     * Does a contribution offer a Main something it does not already have?
+     *
+     * 🔴 **Not a three-way merge, and the difference is the point.** A merge settles two versions of
+     * one person's file with an ancestor to say who moved. This settles somebody else's proposal
+     * against a published translation: no ancestor, and the sides are not equal — **the Main keeps
+     * its own on any tie**. Ties are the common case, not the exception: H against H, H against S
+     * and S against H all land here.
+     *
+     * ⚠ **A contribution can be a TAG and not a word.** Reading the Main's machine line and marking
+     * it validated changes no text and is precisely the work this site asks for. Comparing values
+     * alone drops every one of them — seventeen on the lineage this was first measured against.
+     *
+     * @param  array{v?: string, t?: string}|string|null  $main          null when the Main has no such key
+     * @param  array{v?: string, t?: string}|string|null  $contribution
+     */
+    public static function contributionWins($main, $contribution): bool
+    {
+        $cValue = self::entryValue($contribution);
+        $cTag = self::entryTag($contribution);
+
+        if (!self::isGameLine($cTag)) {
+            return false;
+        }
+
+        if ($contribution === null) {
+            return false;
+        }
+
+        // The case with no question in it, and the only one won without outranking anything.
+        if ($main === null) {
+            return true;
+        }
+
+        $mValue = self::entryValue($main);
+        $mTag = self::entryTag($main);
+
+        if (!self::isGameLine($mTag)) {
+            return false;
+        }
+
+        // Same words AND same tag: nothing changed hands.
+        if ($mValue === $cValue && $mTag === $cTag) {
+            return false;
+        }
+
+        return self::priorityOf($cTag, $cValue) > self::priorityOf($mTag, $mValue);
+    }
+
+    /** The text of an entry, in either file format ({v,t} object or a bare string). */
+    private static function entryValue($entry): string
+    {
+        if ($entry === null) {
+            return '';
+        }
+
+        return is_array($entry) ? (string) ($entry['v'] ?? '') : (string) $entry;
+    }
+
+    /** The tag of an entry. A missing one reads as A, which is what the older format meant. */
+    private static function entryTag($entry): string
+    {
+        if (is_array($entry) && isset($entry['t']) && $entry['t'] !== '') {
+            return (string) $entry['t'];
+        }
+
+        return 'A';
+    }
+
     /** Where each comparable section lives in the file. */
     private const SETTING_SECTION_KEYS = [
         'fonts' => '_fonts',

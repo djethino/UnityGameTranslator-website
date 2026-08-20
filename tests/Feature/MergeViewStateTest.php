@@ -365,8 +365,12 @@ class MergeViewStateTest extends TestCase
         //
         // Three rules, and the third is the one that was missing:
         //   · a line only a contribution has  -> taken
-        //   · both hold one, better tag wins  -> H over V over A
+        //   · both hold one, better tag wins  -> capture < A < V < H = S
         //   · a tie                           -> the Main keeps it, AND IT IS RECORDED
+        //
+        // ⚠ A refusal stands LEVEL with a hand-written line (2026-08-20). So H/H, H/S and S/H are
+        // all ties, and all three stay with the Main. The ladder used to rank S with the machine,
+        // which let a contribution overwrite a Main's refusal with nobody asked.
         [$owner, $uuid] = $this->makeMergeView();
 
         $html = $this->actingAs($owner)
@@ -378,8 +382,17 @@ class MergeViewStateTest extends TestCase
         // ⚠ The scale itself is no longer in the page: it went down to the shared core, because
         // two screens were ranking the same three letters from two hand-written maps and a
         // barème that decides who wins a merge is the last thing that should exist twice.
-        $this->assertStringContainsString('this.tagRank(', $html);
+        // ⚠ The whole ENTRY is weighed, never the letter alone: a captured line is an H with
+        // nothing in it, and ranking it on its tag had a blank capture on the Main outrank every
+        // real translation a contributor offered.
+        $this->assertStringContainsString('this.priorityOf(entry)', $html);
+        $this->assertStringContainsString('this.priorityOf(mainEntry)', $html);
+        $this->assertStringNotContainsString('this.tagRank(', $html);
         $this->assertStringContainsString("source: 'main',", $html);
+
+        // ⚠ The mod's own interface is not a line of the game: out of the arbitration on both
+        // sides. It travels in the same file today and will get one of its own.
+        $this->assertStringContainsString('this.isGameLine(entry)) continue;', $html);
 
         // ⚠ A contribution can be a TAG and not a word: reading the Main's machine translation
         // and marking it correct changes no text. Comparing values alone dropped every one of
@@ -499,7 +512,7 @@ class MergeViewStateTest extends TestCase
             ->merge(glob(resource_path('views/**/*.blade.php')))
             ->merge(glob(resource_path('views/*/*.blade.php')));
 
-        $copies = $js->filter(fn ($file) => str_contains(file_get_contents($file), "'H': 3, 'V': 2, 'A': 1"))
+        $copies = $js->filter(fn ($file) => str_contains(file_get_contents($file), "'H': 3, 'S': 3, 'V': 2, 'A': 1"))
             ->map(fn ($file) => basename($file))
             ->values()
             ->all();

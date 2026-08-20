@@ -1012,7 +1012,13 @@ document.addEventListener('alpine:init', () => {
          * 🔴 The other comparison screen has done this since it existed; this one never has, so
          * the same file opened from two places asked for two different amounts of work. Same
          * rule, ported: a line only a contribution has is taken, and where both hold one the
-         * better tag wins — human over validated over machine.
+         * better tag wins — the socle's ladder, capture < A < V < H = S.
+         *
+         * ⚠ **A refusal stands level with a hand-written line, and the Main keeps its own on any
+         * tie.** So H against H, H against S and S against H all stay with the Main, with nobody
+         * asked. That is what the strict `>` below means, and it is the one asymmetry separating
+         * this screen from a three-way merge: there, the two sides are equal and an ancestor says
+         * who moved; here, one side published and the other is proposing.
          *
          * ⚠ **The Main wins any tie, and that decision is RECORDED** rather than left blank. The point of
          * the screen is that everything new or contested is answered once; a line nobody marks is
@@ -1098,7 +1104,10 @@ document.addEventListener('alpine:init', () => {
                     && this.getValue(entry) === this.getValue(mainEntry)
                     && this.getTag(entry) === this.getTag(mainEntry)) continue;
 
-                const rank = this.tagRank(this.getTag(entry));
+                // The mod's own interface is not a line of the game: never offered, never taken.
+                if (!this.isGameLine(entry)) continue;
+
+                const rank = this.priorityOf(entry);
                 const rating = branch.main_rating ?? 0;
 
                 if (!best
@@ -1117,7 +1126,14 @@ document.addEventListener('alpine:init', () => {
                 if (this.isDeleted(key)) continue;
 
                 const mainEntry = this.mainData[key];
-                const mainTag = mainEntry === undefined ? -1 : this.tagRank(this.getTag(mainEntry));
+
+                // ⚠ -1, not 0: a key the Main does not hold at all must lose to anything, and the
+                // floor of the ladder is 0 (a captured line). The whole ENTRY is weighed, so a
+                // blank capture on the Main no longer outranks a contributor's real translation.
+                // ⚠ The Main's own interface lines are not arbitrated either.
+                const mainTag = mainEntry === undefined
+                    ? -1
+                    : (this.isGameLine(mainEntry) ? this.priorityOf(mainEntry) : Infinity);
 
                 const best = this.bestContributionFor(key);
 

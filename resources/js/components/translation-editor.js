@@ -749,18 +749,34 @@ export function editorCore(config) {
         },
 
         /**
-         * How good a line is, as one number: human over validated over machine.
+         * How good a line is, as one number.
          *
-         * 🔴 One scale, one copy. Two screens were ranking the same three letters from two
-         * hand-written maps, and a barème that decides who wins a merge is the last thing that
-         * should exist twice. Skipped and untranslatable rank with machine: neither is a claim
-         * that somebody read the line.
+         * 🔴 **The scale belongs to the socle** — `common/Merge.PriorityOf`, read by the mod and by
+         * the Manager. PHP holds it too (`TranslationService::priorityOf`), and a test compares
+         * that copy with this file line by line, because a barème that decides who wins a merge
+         * must not be able to drift between two products.
          *
-         * ⚠ There is a third copy, in C#, in the mod's DecideKeyWithTags. It cannot share this
-         * file — but it must say the same thing, and it does.
+         * ⚠ **It takes the VALUE, not just the tag.** An `H` with nothing in it is a captured line
+         * waiting for a translation — the floor, not the top. Ranking on the letter alone had a
+         * blank capture on the Main outrank every real translation a contributor offered.
+         *
+         * ⚠ **`S` sits WITH `H`, not below it.** A refusal is a person ruling that the line must
+         * not be translated; that is a reading, exactly as writing one is. It used to rank with the
+         * machine, which let a contribution overwrite a Main's refusal without anybody asked.
+         *
+         * ⚠ `M` is the mod's own interface, not a line of the game: it is off the ladder entirely
+         * and out of every arbitration. See `isGameLine`.
          */
-        tagRank(tag) {
-            return { 'H': 3, 'V': 2, 'A': 1, 'M': 0, 'S': 0 }[tag] ?? 0;
+        priorityOf(entry) {
+            const tag = this.getTag(entry);
+            if (tag === 'H' && !this.getValue(entry)) return 0;
+
+            return { 'H': 3, 'S': 3, 'V': 2, 'A': 1 }[tag] ?? 1;
+        },
+
+        /** Is this a line OF THE GAME — the only kind a merge arbitrates? */
+        isGameLine(entry) {
+            return this.getTag(entry) !== 'M';
         },
 
         // ── Value / tag accessors ({v, t} objects or legacy strings) ─────

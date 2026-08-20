@@ -1052,7 +1052,9 @@ document.addEventListener('alpine:init', () => {
          * Auto-select based on smart defaulting:
          * - Local-only: select LOCAL (additions to server)
          * - Online-only: select ONLINE (already on server)
-         * - Different: smart default based on tag quality (H > V > A, online wins ties)
+         * - Different: smart default on the socle's ladder — capture < A < V < H = S — with the
+         *   PUBLISHED side winning ties, which is the rule for somebody meeting their own earlier
+         *   version (a contribution against a Main is the other way round: see merge/show)
          * - Same: select ONLINE (no change needed)
          * Keys already selected are skipped: restored pending choices
          * (F5 mid-review) must not be overwritten by the defaults.
@@ -1069,11 +1071,11 @@ document.addEventListener('alpine:init', () => {
                     this.selections[key] = 'online';
                 } else if (hasLocal && hasOnline) {
                     if (this.entriesDiffer(key)) {
-                        const localTag = this.getTag(this.localData[key]);
-                        const onlineTag = this.getTag(this.onlineData[key]);
                         // The shared scale, not a copy of it: see translation-editor.js.
-                        const localPriority = this.tagRank(localTag);
-                        const onlinePriority = this.tagRank(onlineTag);
+                        // ⚠ The whole entry, not its tag: a captured line (H with nothing in it)
+                        // ranks at the floor, and the letter alone cannot tell.
+                        const localPriority = this.priorityOf(this.localData[key]);
+                        const onlinePriority = this.priorityOf(this.onlineData[key]);
 
                         this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
                     } else {
