@@ -8,12 +8,14 @@ use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
 use App\Models\Announcement;
 use App\Models\AuditLog;
+use App\Models\ClientUsageDaily;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
 use App\Services\CatalogStore;
 use App\Services\LiveEditCapacity;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -312,7 +314,20 @@ class AdminController extends Controller
      */
     public function analytics(Request $request)
     {
-        $period = max(1, min((int) $request->get('period', 30), 365)); // days, clamped
+        // 🔴 **The ceiling used to be a silent 365.** Daily aggregates are kept indefinitely — 167
+        // days of them already — so anything asked beyond a year was quietly answered with a year,
+        // and from December there would have been data this screen could no longer reach without
+        // saying so. The span now follows what is actually stored.
+        //
+        // ⚠ 1 is a real choice, not a floor: "yesterday and today" is the window for watching
+        // something happening now, and the smallest offer used to be a week.
+        $oldestDay = AnalyticsDaily::min('date');
+        $daysStored = $oldestDay
+            ? max(1, (int) Carbon::parse($oldestDay)->diffInDays(now()) + 1)
+            : 1;
+        $maxPeriod = max(365, $daysStored);
+
+        $period = max(1, min((int) $request->get('period', 30), $maxPeriod)); // days, clamped
 
         // Get aggregated daily stats for the period
         $dailyStats = AnalyticsDaily::where('date', '>=', now()->subDays($period))
@@ -473,7 +488,17 @@ class AdminController extends Controller
         $chartPeakSessions = $dailyStats->pluck('peak_edit_sessions')->toArray();
         $chartPeakStreams = $dailyStats->pluck('peak_edit_streams')->toArray();
 
+        // What versions of our own software are calling.
+        //
+        // ⚠ Its own table rather than the events, because the question is different: events answer
+        // "what happened", this answers "what is installed". Aggregated at write time, so it holds
+        // no row about anybody and cannot grow with traffic — see ClientUsageDaily.
+        $clients = ClientUsageDaily::overPeriod($period);
+
         return view('admin.analytics', compact(
+            'clients',
+            'daysStored',
+            'maxPeriod',
             'liveCapacity',
             'catalogue',
             'peaks',

@@ -2184,7 +2184,7 @@
     "src": "node_modules/flag-icons/flags/4x3/zw.svg"
   },
   "resources/css/app.css": {
-    "file": "assets/app-_pJwKvB5.css",
+    "file": "assets/app-D0rX-Im4.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -2193,7 +2193,7 @@
     ]
   },
   "resources/js/admin-charts.js": {
-    "file": "assets/admin-charts-BjH3yjAP.js",
+    "file": "assets/admin-charts-B666cMP6.js",
     "name": "admin-charts",
     "src": "resources/js/admin-charts.js",
     "isEntry": true

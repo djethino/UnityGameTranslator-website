@@ -189,12 +189,25 @@
      and everything below it, and nothing above. --}}
 <div class="mt-8 mb-3 flex flex-wrap gap-3 justify-between items-center">
     <h2 class="text-lg font-semibold text-gray-300">
-        <i class="fas fa-calendar-days mr-2 text-purple-500"></i> Last {{ $period }} days
+        <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
+        {{-- "Last 1 days" is not a sentence, and the shortest window is exactly the one somebody
+             reaches for when something is happening right now. --}}
+        {{ $period === 1 ? 'Yesterday and today' : 'Last ' . $period . ' days' }}
         <span class="text-sm font-normal text-gray-500 ml-2">— today included, counted live</span>
     </h2>
 
+    {{-- ⚠ 1 day and the full span are both real answers that used to be unreachable: the smallest
+         offer was a week, and anything past a year was silently served as a year while the daily
+         aggregates are kept forever. "All" is only offered once there is more than a year to
+         show — a duplicate button would just be a second way to ask for the same thing. --}}
     <div class="flex gap-2">
-        @foreach ([7 => '7 days', 30 => '30 days', 90 => '90 days', 365 => '1 year'] as $days => $label)
+        @php
+            $choices = [1 => '24 h', 7 => '7 days', 30 => '30 days', 90 => '90 days', 365 => '1 year'];
+            if ($maxPeriod > 365) {
+                $choices[$maxPeriod] = 'All (' . number_format($daysStored) . ' d)';
+            }
+        @endphp
+        @foreach ($choices as $days => $label)
             <a href="{{ route('admin.analytics', ['period' => $days]) }}"
                class="px-4 py-2 rounded {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
                 {{ $label }}
@@ -425,6 +438,88 @@
             <p class="text-gray-500 text-sm">No external referrers</p>
         @endif
     </div>
+</div>
+
+{{-- ─── What is running out there ──────────────────────────────────────────────
+     Placed after the visitor breakdowns and before the content ones, because it answers the same
+     kind of question they do — WHO is on the other end — while being about our software rather
+     than about browsers. Full width: it is a list of unknown length, not a fixed set of slices.
+
+     🔴 It exists because two decisions had no data behind them: whether an old release is still
+     out there in numbers (which is what allows JSON compression to be switched on — see
+     CompressJsonResponse), and whether a loader adapter is still worth maintaining. --}}
+<div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+    <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+        <h2 class="text-lg font-semibold">
+            <i class="fas fa-cubes mr-2 text-cyan-400"></i> Mod and Manager versions
+        </h2>
+        <p class="text-xs text-gray-500">
+            Counted per version, never per user — no address is stored and no copy can be followed
+            from one day to the next.
+        </p>
+    </div>
+
+    @if (count($clients) === 0)
+        <p class="text-gray-500 text-sm mt-3">
+            Nothing recorded in this period. Counting started on 2026-08-20 — before that, every
+            build called itself the same thing and nothing was written down.
+        </p>
+    @else
+        @php
+            // Installs are what decides "is this still out there"; requests only say how chatty a
+            // build is. Sorting and the bar both follow installs for that reason.
+            $mostInstalls = max(array_map(fn ($c) => $c['installs'], $clients));
+        @endphp
+        <div class="mt-3 overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-gray-400 text-left border-b border-gray-700">
+                        <th class="py-2 pr-4 font-medium">Product</th>
+                        <th class="py-2 pr-4 font-medium">Version</th>
+                        <th class="py-2 pr-4 font-medium">Loader</th>
+                        <th class="py-2 pr-4 font-medium text-right">Installs<span class="text-gray-600"> (peak day)</span></th>
+                        <th class="py-2 font-medium text-right">Calls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($clients as $client)
+                        <tr class="border-b border-gray-750 last:border-0">
+                            <td class="py-2 pr-4">
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold
+                                    {{ $client['product'] === 'mod' ? 'bg-purple-900 text-purple-200' : 'bg-blue-900 text-blue-200' }}">
+                                    {{ $client['product'] === 'mod' ? 'Mod' : 'Manager' }}
+                                </span>
+                            </td>
+                            <td class="py-2 pr-4">
+                                @if ($client['version'] === null)
+                                    {{-- 🔴 The one row that decides whether compression can be turned
+                                         on: these builds ask for gzip and cannot read it. --}}
+                                    <span class="text-amber-400">before 0.11.1</span>
+                                    <span class="block text-xs text-gray-500">cannot read compressed answers</span>
+                                @else
+                                    <span class="text-gray-200">{{ $client['version'] }}</span>
+                                @endif
+                            </td>
+                            <td class="py-2 pr-4 text-gray-400">{{ $client['variant'] ?? '—' }}</td>
+                            <td class="py-2 pr-4 text-right">
+                                <span class="text-gray-200">{{ number_format($client['installs']) }}</span>
+                                <span class="inline-block align-middle ml-2 h-1.5 w-16 bg-gray-700 rounded overflow-hidden">
+                                    <span class="block h-full bg-cyan-500"
+                                        style="width: {{ $mostInstalls > 0 ? round($client['installs'] / $mostInstalls * 100) : 0 }}%"></span>
+                                </span>
+                            </td>
+                            <td class="py-2 text-right text-gray-400">{{ number_format($client['requests']) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-3">
+            ⚠ "Installs" is the busiest single day of the period, not the days added up — the same
+            copy calling on ten days is one copy. Treat it as an order of magnitude.
+        </p>
+    @endif
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

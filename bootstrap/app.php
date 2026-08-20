@@ -62,6 +62,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('api', [
             \App\Http\Middleware\CompressJsonResponse::class,
         ]);
+
+        // Inventory of what we ship: which build of the mod or the Manager just called.
+        // API only — this is not traffic analytics (TrackPageView covers that), it is the answer
+        // to "is that old release still out there" and "is that loader adapter still used".
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\TrackClientUsage::class,
+        ]);
         $middleware->prependToGroup('web', [
             \App\Http\Middleware\CompressJsonResponse::class,
         ]);

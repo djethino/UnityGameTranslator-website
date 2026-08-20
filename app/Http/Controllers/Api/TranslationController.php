@@ -425,13 +425,22 @@ class TranslationController extends Controller
             $userAgent = $request->userAgent() ?? 'UnityGameTranslator';
             $ip = $request->ip() ?? '0.0.0.0';
 
+            // ⚠ **Every one of these used to throw.** `device` was an enum of desktop/mobile/tablet
+            // and this writes 'mod', so the insert failed on each download and the catch below hid
+            // it — months of mod downloads recorded nowhere while the site's own button was
+            // counted. Fixed 2026-08-20 by taking the list out of the database.
+            $client = AnalyticsEvent::detectClient($userAgent);
+
             AnalyticsEvent::create([
                 'route' => 'api.translations.download',
                 'game_id' => $translation->game_id,
                 'country' => null,
                 'referrer_domain' => 'mod', // Mark as mod download
-                'device' => 'mod',
-                'browser' => AnalyticsEvent::detectBrowser($userAgent),
+                'device' => $client['product'] ?? AnalyticsEvent::detectDevice($userAgent),
+                // ⚠ Null rather than "Other" for our own programs: the browser breakdown skips
+                // nulls, and a mod filed under a browser name makes that chart answer a question
+                // nobody asked. Which build called is counted properly in client_usage_daily.
+                'browser' => $client === null ? AnalyticsEvent::detectBrowser($userAgent) : null,
                 'visitor_hash' => AnalyticsEvent::generateVisitorHash($ip, $userAgent, now()->toDateString()),
                 'created_at' => now(),
             ]);

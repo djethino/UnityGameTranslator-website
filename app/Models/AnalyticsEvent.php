@@ -26,6 +26,23 @@ class AnalyticsEvent extends Model
         'created_at' => 'datetime',
     ];
 
+    /**
+     * What can be written in `device` — where a view or a download came from.
+     *
+     * 🔴 **This list lives here and not in the database.** It used to be an enum, and the day the
+     * API download started writing `'mod'` every one of those inserts threw and was swallowed:
+     * months of downloads recorded nowhere, and an analytics screen that only knew about website
+     * visitors. What can call this site is not a settled list — the Manager arrives beside the mod
+     * — so it belongs where adding to it is a one-line change, not a migration that fails silently.
+     *
+     * ⚠ `mod` and `manager` are not device types, and that is deliberate: this column answers
+     * "what was on the other end", and for a program the useful answer is which program.
+     */
+    public const DEVICES = ['desktop', 'mobile', 'tablet', 'mod', 'manager'];
+
+    /** The two of these that are our own software, shown apart from browser traffic. */
+    public const OUR_CLIENTS = ['mod', 'manager'];
+
     public function game(): BelongsTo
     {
         return $this->belongsTo(Game::class);
@@ -69,9 +86,17 @@ class AnalyticsEvent extends Model
 
     /**
      * Parse User-Agent to detect device type
+     *
+     * ⚠ Our own programs are recognised first: a mod is not a desktop, and calling it one is how
+     * the mod's traffic used to disappear into the browser figures.
      */
     public static function detectDevice(string $userAgent): string
     {
+        $client = self::detectClient($userAgent);
+        if ($client !== null) {
+            return $client['product'];
+        }
+
         $userAgent = strtolower($userAgent);
 
         if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobile))/i', $userAgent)) {
@@ -83,6 +108,50 @@ class AnalyticsEvent extends Model
         }
 
         return 'desktop';
+    }
+
+    /**
+     * Which of our programs is calling, which version, and which build of it.
+     *
+     * 🔴 **This is what makes two decisions answerable that were pure guesswork.** Whether an old
+     * release is still out there in numbers — and therefore whether compression can be turned on
+     * for JSON without cutting those installs off — and whether a mod loader adapter is still worth
+     * maintaining. Nothing measured either, because the mod called itself the bare literal
+     * `UnityGameTranslator/1.0` on every build ever shipped until 2026-08-20.
+     *
+     * ⚠ **Coarse on purpose, and that is the privacy argument.** A product, a version and, for the
+     * mod, which loader it runs under: a handful of values across the whole population, and nothing
+     * that separates one installation from another. No identifier is derived from this, and the
+     * caller's address is never stored anywhere.
+     *
+     *  - `UnityGameTranslator/0.11.1 (BepInEx6-IL2CPP)` → mod, 0.11.1, BepInEx6-IL2CPP
+     *  - `UnityGameTranslator/1.0`                      → mod, null (every build up to 2026-08-20)
+     *  - `UnityGameTranslatorManager/0.1.0`             → manager, 0.1.0
+     *
+     * ⚠ The slash matters: `UnityGameTranslatorManager/` starts with `UnityGameTranslator`, so the
+     * Manager pattern is tested first and the mod pattern requires the slash straight after.
+     */
+    public static function detectClient(?string $userAgent): ?array
+    {
+        $agent = trim((string) $userAgent);
+
+        if (preg_match('#^UnityGameTranslatorManager/(\S+)#', $agent, $m) === 1) {
+            return ['product' => 'manager', 'version' => $m[1], 'variant' => null];
+        }
+
+        if (preg_match('#^UnityGameTranslator(?:-Mod)?/(\S+)(?:\s+\(([^)]+)\))?#', $agent, $m) === 1) {
+            // "1.0" is not a version, it is the placeholder every build sent before versions
+            // existed. Recorded as unknown so it cannot be mistaken for a real 1.0 release later.
+            $version = $m[1] === '1.0' ? null : $m[1];
+
+            return [
+                'product' => 'mod',
+                'version' => $version,
+                'variant' => $m[2] ?? null,
+            ];
+        }
+
+        return null;
     }
 
     /**
