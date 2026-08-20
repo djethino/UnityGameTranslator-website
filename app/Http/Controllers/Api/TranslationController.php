@@ -448,19 +448,15 @@ class TranslationController extends Controller
 
         $content = file_get_contents($filePath);
 
-        // Check if client accepts gzip
-        $acceptEncoding = $request->header('Accept-Encoding', '');
-        if (str_contains($acceptEncoding, 'gzip')) {
-            $gzipped = gzencode($content, 9);
-            return response($gzipped)
-                ->header('Content-Type', 'application/json')
-                ->header('Content-Encoding', 'gzip')
-                ->header('Content-Disposition', 'attachment; filename="translations.json"')
-                ->header('X-Content-Type-Options', 'nosniff')
-                ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=3600');
-        }
-
+        // ⚠ **This used to gzip the answer here, guarded by `Accept-Encoding`, and that code never
+        // ran in production.** A proxy sits in front of PHP and strips the header, so the guard
+        // could not pass — verified 2026-08-20, PHP sees it as absent while the client sent it.
+        // The branch worked locally and did nothing on the live site, which is the shape of bug
+        // that survives for years.
+        //
+        // Compression now happens once, in CompressJsonResponse, which decides on something that
+        // does reach PHP. Leaving a second mechanism here would mean two answers to one question
+        // and a client served differently depending on the route it asked for.
         return response($content)
             ->header('Content-Type', 'application/json')
             ->header('Content-Disposition', 'attachment; filename="translations.json"')

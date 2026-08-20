@@ -50,6 +50,22 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\DecodeGzipRequest::class,
         ]);
 
+        // ...and compress the answers, which the host does not: it compresses HTML, CSS, JS and
+        // SVG, but never application/json — so a translation leaves as 113 KB where 34 KB would do.
+        //
+        // ⚠ Prepended, so it is the LAST thing to touch the response on the way out and sees the
+        // finished body. Both groups: the API serves the mod, and the editors fetch their JSON
+        // over web routes, where the same bytes are just as uncompressed.
+        //
+        // ⚠ It compresses only for callers verified to inflate — the reasoning, and why it cannot
+        // be the other way round on this host, is written in the middleware itself.
+        $middleware->prependToGroup('api', [
+            \App\Http\Middleware\CompressJsonResponse::class,
+        ]);
+        $middleware->prependToGroup('web', [
+            \App\Http\Middleware\CompressJsonResponse::class,
+        ]);
+
         // The sign-in page can say WHY it is asking, and the menu links already pass it
         // (?action=upload). A guest who arrives by bookmark, shared link or a redirect from
         // the middleware got the same form with no explanation at all — the mechanism was

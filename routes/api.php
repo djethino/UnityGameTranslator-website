@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Api\EditSessionController;
-use App\Http\Controllers\Api\EncodingProbeController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MergePreviewController;
 use App\Http\Controllers\Api\NotificationController;
@@ -55,12 +54,9 @@ Route::prefix('v1')->group(function () {
     Route::get('translations/{translation}/download', [TranslationController::class, 'download'])
         ->middleware(['auth.api.optional', 'throttle:30,1']);
 
-    // ⚠ TEMPORARY — remove with its controller once the question is answered.
-    // Asks the live server what it does to Accept-Encoding, because `download` has held working
-    // compression code since it was written and produces plain JSON in production only. Reads
-    // nothing, identifies nobody, and never returns a header value other than the encoding ones.
-    Route::get('_probe/encoding', EncodingProbeController::class)
-        ->middleware('throttle:10,1');
+    // (A temporary probe lived here on 2026-08-20 to ask the live server what it does to
+    // Accept-Encoding. Answered — the header never reaches PHP, and a body PHP compresses itself
+    // travels out intact — so it was removed. What it found is in CompressJsonResponse.)
 
     // ===========================================
     // DEVICE FLOW AUTHENTICATION (public)
