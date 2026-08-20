@@ -165,6 +165,42 @@ class ContributionsWaitingTest extends TestCase
         );
     }
 
+    /**
+     * 🔴 The second filter: a contribution already gone through stops asking.
+     *
+     * Counting work the Main has arbitrated and refused would bring it back every time, and a
+     * number that never falls to zero is a number nobody reads. It comes back the moment its
+     * author pushes something new — which is exactly when it should.
+     */
+    public function test_a_contribution_already_reviewed_stops_asking(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
+        );
+
+        $service = app(TranslationService::class);
+        $this->assertSame(['branches' => 1, 'lines' => 1], $service->contributionsWaiting($main));
+
+        $branch = Translation::where('file_uuid', $main->file_uuid)->branches()->first();
+        $branch->forceFill(['reviewed_hash' => $branch->file_hash])->save();
+
+        $this->assertSame(
+            ['branches' => 0, 'lines' => 0],
+            $service->contributionsWaiting($main),
+            'gone through: it stops asking'
+        );
+
+        // The author pushes something new: it asks again, without anybody clearing a flag.
+        $branch->forceFill(['file_hash' => 'moved-' . uniqid('', true)])->save();
+
+        $this->assertSame(
+            ['branches' => 1, 'lines' => 1],
+            $service->contributionsWaiting($main),
+            'moved since: it is back in front of the Main'
+        );
+    }
+
     public function test_the_same_line_from_two_contributions_is_one_line_to_recover(): void
     {
         // Adding their counts would promise twice the work that exists.

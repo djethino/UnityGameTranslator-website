@@ -645,17 +645,26 @@ class TranslationService
     }
 
     /**
-     * What a Main's contributions are actually holding for it.
+     * What is waiting on a Main: contributions it has NOT yet looked at, that are actually holding
+     * something it could take.
      *
-     * 🔴 **Not "how many branches exist".** A contributor who forked off months ago and has done
-     * nothing since has nothing to give, and counting them tells their Main to go and review
-     * emptiness. What is counted is what the merge screen would offer — the same rule, so the
-     * number on the button matches the rows behind it.
+     * 🔴 **Two filters, and dropping either one produces noise.**
+     *   · *not reviewed* alone counts a fresh contribution that offers nothing — the Main opens the
+     *     merge screen and finds rows both sides already agree on;
+     *   · *holding something* alone counts work already arbitrated and refused, which comes back
+     *     every time and teaches the reader that the number means nothing.
+     *
+     * A counter that cries wolf is worse than no counter: it hides the times there IS something to
+     * do. So this answers one question — *is there work here I have not seen* — and the screens
+     * show it as such.
+     *
+     * ⚠ Weighed with the rule the merge screen pre-selects with, so the number on the button and
+     * the rows behind it cannot disagree.
      *
      * ⚠ **Cached on the state, not on a clock.** The key carries the Main's hash and every
-     * branch's, so it changes the moment any of them does and stays valid the rest of the time.
-     * A timed cache would answer with yesterday's number for no reason, and an invalidation hook
-     * would be one more thing to remember when a file is written.
+     * branch's, so it changes the moment any of them does — including when one is reviewed — and
+     * stays valid the rest of the time. A timed cache would answer with yesterday's number for no
+     * reason, and an invalidation hook would be one more thing to remember when a file is written.
      *
      * ⚠ Frozen branches are counted: closing a lineage stops NEW contributions, it does not throw
      * away the ones already received, and their Main may still merge them.
@@ -666,14 +675,18 @@ class TranslationService
     {
         $branches = Translation::where('file_uuid', $main->file_uuid)
             ->branches()
-            ->get(['id', 'file_path', 'file_hash']);
+            ->get(['id', 'file_path', 'file_hash', 'reviewed_hash'])
+            // Never reviewed, or changed since it was: pushing new work to a contribution the Main
+            // has already been through puts it back in front of them, which is the point.
+            ->filter(fn (Translation $b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)
+            ->values();
 
         if ($branches->isEmpty()) {
             return ['branches' => 0, 'lines' => 0];
         }
 
         $signature = $branches
-            ->map(fn (Translation $b) => $b->id . ':' . ($b->file_hash ?? ''))
+            ->map(fn (Translation $b) => $b->id . ':' . ($b->file_hash ?? '') . ':' . ($b->reviewed_hash ?? ''))
             ->sort()
             ->implode('|');
 
@@ -689,7 +702,17 @@ class TranslationService
 
             foreach ($branches as $branch) {
                 $content = $branch->decodeFileContent();
+
+                // ⚠ Not counted, and SAID. A contribution whose file cannot be read offers its
+                // Main nothing — the merge screen would show an empty column — so counting it
+                // would promise work that is not there. But a missing file is a storage fault,
+                // not an empty contribution, and passing over it in silence is how one stays
+                // unnoticed for months.
                 if ($content === null) {
+                    \Illuminate\Support\Facades\Log::warning(
+                        'Contribution file unreadable, left out of the waiting count',
+                        ['translation_id' => $branch->id, 'lineage' => $main->file_uuid]
+                    );
                     continue;
                 }
 

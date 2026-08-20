@@ -125,23 +125,18 @@ class SyncStateController extends Controller
 
                 $state['branches_count'] = $branches->count();
 
-                // A count alone says nothing: it does not move when a contributor
-                // pushes new work to a branch already counted. What the Main owner
-                // needs to hear about is what has NOT been reviewed yet — never
-                // reviewed, or changed since the last review.
-                $state['branches_pending_review'] = $branches
-                    ->filter(fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)
-                    ->count();
-
-                // ⚠ **A third question, and none of the three replaces another.** `branches_count`
-                // says how many people contribute; `branches_pending_review` says how many I have
-                // not looked at in their current state; this says how many are actually HOLDING
-                // something the merge would offer me. A contributor who took the file and never
-                // came back is counted by the first two and not by this one.
+                // A count alone says nothing: it does not move when a contributor pushes new work
+                // to a branch already counted. What the Main owner needs to hear about is what has
+                // not been reviewed yet AND is holding something — see contributionsWaiting, where
+                // both filters are applied and explained.
                 //
-                // Computed with the rule the merge screen pre-selects with, so the number and the
-                // rows behind it cannot disagree.
+                // 🔴 **`branches_pending_review` is that same number, deliberately.** It used to
+                // count every unreviewed contribution, empty ones included, and it drives the
+                // status overlay's notice — so a published mod announced work that did not exist.
+                // Two fields describing one thing must not be free to differ: a player would read
+                // one figure on the overlay and another on the button beside it.
                 $waiting = $this->translationService->contributionsWaiting($ownTranslation);
+                $state['branches_pending_review'] = $waiting['branches'];
                 $state['branches_with_work'] = $waiting['branches'];
                 $state['lines_available'] = $waiting['lines'];
             } else {
