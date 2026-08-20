@@ -852,6 +852,53 @@ export function editorCore(config) {
             return storedTag;
         },
 
+        // ── The tag a row is leaving, and the one it is going to ─────────
+        //
+        // 🔴 **One question asked in three vocabularies.** Each editor had its own
+        // `mainTagCellClass` / `localTagCellClass` / `entryTagCellClass` and its own
+        // `displayMainTag` / `displayLocalTag`, all computing the same two facts from the same
+        // core. Three copies of a rule is three chances for it to drift, and the tag cell is
+        // where a merge is read: the screens must not be able to disagree about it.
+        //
+        // A page supplies at most two things — where its rows live (`entryOnFile`) and any
+        // projection of its own on top of the core's (`tagAfterSave`). Everything below is
+        // derived, once. The live editor overrides neither: the defaults ARE its behaviour.
+
+        /** Page hook: the entry as it sits on file, or undefined when the page holds no such row. */
+        entryOnFile(key) { return this.data[key]; },
+
+        /**
+         * The tag on file, or null when there is no row to have one.
+         *
+         * ⚠ null rather than a tag: a row the page does not hold has nothing to change FROM, and
+         * `getTag(undefined)` answers 'A', which would mark an absent line as machine-translated.
+         */
+        tagOnFile(key) {
+            const entry = this.entryOnFile(key);
+            return entry === undefined ? null : this.getTag(entry);
+        },
+
+        /** Page hook: the tag the save will store. Default = the core's projection, nothing more. */
+        tagAfterSave(key) {
+            const stored = this.tagOnFile(key);
+            return stored === null ? null : this.displayTag(key, stored);
+        },
+
+        tagWillChange(key) {
+            const stored = this.tagOnFile(key);
+            return stored !== null && stored !== this.tagAfterSave(key);
+        },
+
+        tagCellClass(key) {
+            return this.tagWillChange(key) ? 'tag-changed-cell' : '';
+        },
+
+        /** Page hook: this row's tag cannot be opened (a row on its way out). */
+        tagCellDisabled(key) { return false; },
+
+        /** Page hook: extra classes for the resulting chip, for a page with something more to say. */
+        tagChipExtraClass(key) { return ''; },
+
         /** Whether a tag's filter checkbox is on (filters are named tagH/tagV/...). */
         tagVisible(tag) {
             return this.filters['tag' + tag] === true;

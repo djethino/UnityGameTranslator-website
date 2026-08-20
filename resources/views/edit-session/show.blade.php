@@ -241,15 +241,8 @@
 
                             {{-- Tag (clickable for tag change) --}}
                             <td class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="entryTagCellClass(key)">
-                                {{-- Shows the tag the save will PRODUCE (edit → H,
-                                     M/S preserved), not just the stored one --}}
-                                <button type="button"
-                                    @click.stop="openTagDropdown($event, key, displayTag(key, getTag(data[key])), getValue(data[key]))"
-                                    class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
-                                    title="{{ __('merge.click_to_change_tag') }}">
-                                    <span :class="'tag-' + displayTag(key, getTag(data[key])) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayTag(key, getTag(data[key]))"></span>
-                                </button>
+                                :class="tagCellClass(key)">
+                                <x-editor-tag-cell />
                             </td>
 
                             {{-- Value: single click validates an AI line (A → V, same
@@ -910,23 +903,9 @@ document.addEventListener('alpine:init', () => {
 
         // ── Click-to-validate (parity with the merge view's Main click) ──
 
-        /**
-         * The tag cell's marker: set when the save will store a tag other than the one on file.
-         *
-         * 🔴 Was `hasTagChange(key)` — an EXPLICIT change through the dropdown, and nothing else.
-         * A tag also changes by being edited (a rewritten line becomes human) and by being
-         * validated. Those rows changed tag with nothing said. The question is not how the tag
-         * came to change, it is whether it did.
-         *
-         * ⚠ Same rule and same class name as the two comparison screens: one gesture, one mark,
-         * whichever editor you are in.
-         */
-        entryTagCellClass(key) {
-            const stored = this.data[key];
-            if (stored === undefined) return '';
-            const tag = this.getTag(stored);
-            return tag === this.displayTag(key, tag) ? '' : 'tag-changed-cell';
-        },
+        {{-- This screen overrides none of the core's tag hooks: `entryOnFile` reads `data`, and
+             the tag a save produces here IS `displayTag` — the two defaults were written from
+             this editor. See `translation-editor.js`. --}}
 
         /** The row carries a pending validation (previewed V, green cell). */
         isValidatedPending(key) {

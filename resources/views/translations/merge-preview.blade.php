@@ -385,22 +385,9 @@
                                  side, and colouring only one of the two made the
                                  local pick look half-selected. --}}
                             <td data-col="localTag" class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="[getCellClass(key, 'local'), localTagCellClass(key)]">
+                                :class="[getCellClass(key, 'local'), tagCellClass(key)]">
                                 <template x-if="localData[key] !== undefined">
-                                    {{-- Shows the tag the save will PRODUCE (edit → H,
-                                         sent local selection → A promoted to V), preceded by the
-                                         one on file when the two differ — same as the merge view,
-                                         see `.tag-was`. --}}
-                                    <button type="button"
-                                        @click.stop="openTagDropdown($event, key, displayLocalTag(key), getValue(localData[key]))"
-                                        class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
-                                        :title="getTag(localData[key]) !== displayLocalTag(key)
-                                            ? @js(__('merge.click_to_change_tag')) + ' (' + getTag(localData[key]) + ' → ' + displayLocalTag(key) + ')'
-                                            : @js(__('merge.click_to_change_tag'))">
-                                        <span x-show="getTag(localData[key]) !== displayLocalTag(key)" x-cloak
-                                            class="tag-was" x-text="getTag(localData[key])"></span><span
-                                            :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '') + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="displayLocalTag(key)"></span>
-                                    </button>
+                                    <x-editor-tag-cell />
                                 </template>
                                 <template x-if="localData[key] === undefined">
                                     <span class="text-gray-600">—</span>
@@ -1352,26 +1339,27 @@ document.addEventListener('alpine:init', () => {
          * selection that will actually be SENT gets the server's A → V
          * promotion (picks identical to online are not sent → no preview).
          */
-        /**
-         * The tag cell's marker: set when the save will store a tag other than the one on file.
-         *
-         * 🔴 It used to be `hasTagChange(key)` — an EXPLICIT change through the dropdown, and
-         * nothing else. A tag also changes by being chosen: taking a contribution takes its tag,
-         * and a selection promotes a machine translation to validated. Those rows changed tag with
-         * nothing said, which is how somebody reads a V beside the Main's value and concludes the
-         * Main was already validated. The question is not how the tag came to change, it is
-         * whether it did.
-         *
-         * ⚠ A row the Main does not hold has no stored tag to differ from, and its cell shows a
-         * dash. Framing it would mark a change on a line that has nothing to change.
-         */
-        localTagCellClass(key) {
-            const stored = this.localData[key];
-            if (stored === undefined) return '';
-            return this.getTag(stored) === this.displayLocalTag(key) ? '' : 'tag-changed-cell';
+        /** Core hook: this screen's rows are the local file's. */
+        entryOnFile(key) {
+            return this.localData[key];
         },
 
-                displayLocalTag(key) {
+        /** Core hook: the tag the save will store here — the local projection. */
+        tagAfterSave(key) {
+            return this.localData[key] === undefined ? null : this.displayLocalTag(key);
+        },
+
+        /**
+         * Core hook: this screen has a second thing to say about a tag — the two sides disagree
+         * about it, which its own ring marks. It rides on the resulting chip rather than replacing
+         * the transition, because they answer different questions: one is what the save does, the
+         * other is where the disagreement is.
+         */
+        tagChipExtraClass(key) {
+            return this.tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '';
+        },
+
+        displayLocalTag(key) {
             if (this.hasTagChange(key) || this.isEdited(key)) {
                 return this.displayTag(key, this.getTag(this.localData[key]));
             }

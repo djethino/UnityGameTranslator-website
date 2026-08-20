@@ -506,25 +506,9 @@
 
                                 {{-- Main Tag (clickable for tag change) --}}
                                 <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"
-                                    :class="[mainTagCellClass(key), isDeleted(key) ? 'deleted-cell' : '']">
+                                    :class="[tagCellClass(key), isDeleted(key) ? 'deleted-cell' : '']">
                                     <template x-if="mainData[key] !== undefined">
-                                        {{-- Shows the tag the save will PRODUCE (edit → H,
-                                             selection → A promoted to V), preceded by the one on
-                                             file when the two differ — see `.tag-was`: a
-                                             contribution is often the TAG and not the words, and
-                                             showing only the outcome hid the whole of it. --}}
-                                        <button type="button"
-                                            @click.stop="openTagDropdown($event, key, displayMainTag(key), getValue(mainData[key]))"
-                                            :class="isDeleted(key) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
-                                            :disabled="isDeleted(key)"
-                                            class="transition rounded"
-                                            :title="getTag(mainData[key]) !== displayMainTag(key)
-                                                ? @js(__('merge.click_to_change_tag')) + ' (' + getTag(mainData[key]) + ' → ' + displayMainTag(key) + ')'
-                                                : @js(__('merge.click_to_change_tag'))">
-                                            <span x-show="getTag(mainData[key]) !== displayMainTag(key)" x-cloak
-                                                class="tag-was" x-text="getTag(mainData[key])"></span><span
-                                                :class="'tag-' + displayMainTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayMainTag(key)"></span>
-                                        </button>
+                                        <x-editor-tag-cell />
                                     </template>
                                     <template x-if="mainData[key] === undefined">
                                         <span class="text-gray-600">—</span>
@@ -1649,23 +1633,19 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
-        /**
-         * The tag cell's marker: set when the save will store a tag other than the one on file.
-         *
-         * 🔴 It used to be `hasTagChange(key)` — an EXPLICIT change through the dropdown, and
-         * nothing else. A tag also changes by being chosen: taking a contribution takes its tag,
-         * and a selection promotes a machine translation to validated. Those rows changed tag with
-         * nothing said, which is how somebody reads a V beside the Main's value and concludes the
-         * Main was already validated. The question is not how the tag came to change, it is
-         * whether it did.
-         *
-         * ⚠ A row the Main does not hold has no stored tag to differ from, and its cell shows a
-         * dash. Framing it would mark a change on a line that has nothing to change.
-         */
-        mainTagCellClass(key) {
-            const stored = this.mainData[key];
-            if (stored === undefined) return '';
-            return this.getTag(stored) === this.displayMainTag(key) ? '' : 'tag-changed-cell';
+        /** Core hook: this screen's rows are the Main's. */
+        entryOnFile(key) {
+            return this.mainData[key];
+        },
+
+        /** Core hook: the tag the save will store here — the Main's projection. */
+        tagAfterSave(key) {
+            return this.mainData[key] === undefined ? null : this.displayMainTag(key);
+        },
+
+        /** Core hook: a row on its way out is not open to a tag change. */
+        tagCellDisabled(key) {
+            return this.isDeleted(key);
         },
 
         /**
@@ -1673,6 +1653,10 @@ document.addEventListener('alpine:init', () => {
          * before anything is saved. Core displayTag covers tag change → that
          * tag and manual edit → H (M/S preserved); on top of it, a selected
          * version keeps its tag with the server's A → V promotion.
+         *
+         * ⚠ Still its own method although `tagAfterSave` delegates to it: the row filter and the
+         * quality bar ask this question of rows the Main does not hold (a pending edit on a line
+         * only a branch has), where the core's hook answers null by contract.
          */
         displayMainTag(key) {
             if (this.hasTagChange(key) || this.isEdited(key)) {

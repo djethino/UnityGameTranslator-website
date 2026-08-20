@@ -578,7 +578,10 @@ class MergeViewStateTest extends TestCase
         // somebody reads a V beside the Main's value, concludes the Main was already validated,
         // and reports the arbitration as broken when it was right.
         //
-        // The same rule and the same class name in all three editors: one gesture, one mark.
+        // The same rule and the same class name in all three editors: one gesture, one mark — and
+        // since 2026-08-20 it is not merely the same rule but the SAME CODE, `tagCellClass` in the
+        // shared core. Three private copies under three names is three chances to drift, on the
+        // one cell a merge is read from.
         [$owner, $uuid] = $this->makeMergeView();
 
         $html = $this->actingAs($owner)
@@ -586,16 +589,34 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('mainTagCellClass(key)', $html);
+        $this->assertStringContainsString('tagCellClass(key)', $html);
         $this->assertStringNotContainsString("hasTagChange(key) ? 'tag-changed-cell'", $html);
 
         foreach ([
-            'views/translations/merge-preview.blade.php' => 'localTagCellClass(key)',
-            'views/edit-session/show.blade.php' => 'entryTagCellClass(key)',
-        ] as $view => $needle) {
+            'views/translations/merge-preview.blade.php',
+            'views/edit-session/show.blade.php',
+        ] as $view) {
             $source = file_get_contents(resource_path($view));
-            $this->assertStringContainsString($needle, $source, $view);
+            $this->assertStringContainsString('tagCellClass(key)', $source, $view);
             $this->assertStringNotContainsString("hasTagChange(key) ? 'tag-changed-cell'", $source, $view);
+        }
+
+        // ⚠ And it is defined once. A page that reintroduced its own would pass every assertion
+        // above while being exactly what this consolidation removed.
+        $this->assertStringContainsString(
+            'tagCellClass(key) {',
+            file_get_contents(resource_path('js/components/translation-editor.js')));
+
+        foreach (['mainTagCellClass', 'localTagCellClass', 'entryTagCellClass'] as $gone) {
+            foreach ([
+                'views/merge/show.blade.php',
+                'views/translations/merge-preview.blade.php',
+                'views/edit-session/show.blade.php',
+            ] as $view) {
+                $this->assertStringNotContainsString(
+                    $gone . '(', file_get_contents(resource_path($view)),
+                    "$view brought back a private copy of the tag marker");
+            }
         }
 
         // ⚠ And it carries the ring its siblings carry: a change said in a wash of colour, one
@@ -615,7 +636,9 @@ class MergeViewStateTest extends TestCase
      * report this test was written from. What was being offered WAS the tag, and the tag was the
      * one thing the screen kept to itself.
      *
-     * ⚠ Both comparison editors, because both preview the outcome the same way.
+     * ⚠ **All three editors, from one component.** The live editor previews a tag change too — a
+     * rewritten line becomes human, a validated one becomes V — so a reader there had the same
+     * blind spot for the same reason.
      */
     public function test_a_changing_tag_shows_the_one_it_replaces(): void
     {
@@ -626,17 +649,27 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('tag-was', $html, 'the merge view hides the tag on file');
-        $this->assertStringContainsString('getTag(mainData[key]) !== displayMainTag(key)', $html);
+        // Two real chips and the arrow between them, rendered into the page.
+        $this->assertStringContainsString("'tag-' + tagOnFile(key)", $html, 'the merge view hides the tag on file');
+        $this->assertStringContainsString("'tag-' + tagAfterSave(key)", $html);
+        $this->assertStringContainsString('tag-arrow', $html);
+        $this->assertStringContainsString('tagWillChange(key)', $html);
 
-        $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
-        $this->assertStringContainsString('tag-was', $preview, 'the mod comparison hides the tag on file');
-        $this->assertStringContainsString('getTag(localData[key]) !== displayLocalTag(key)', $preview);
+        // ⚠ One component, used by every editor — not three renderings of one idea.
+        foreach ([
+            'views/merge/show.blade.php',
+            'views/translations/merge-preview.blade.php',
+            'views/edit-session/show.blade.php',
+        ] as $view) {
+            $this->assertStringContainsString(
+                '<x-editor-tag-cell', file_get_contents(resource_path($view)), $view);
+        }
 
-        // Struck through, so it reads as "was" and not as a second answer.
-        $this->assertMatchesRegularExpression(
-            '/\.tag-was\s*\{[^}]*line-through/s',
-            file_get_contents(resource_path('css/app.css')));
+        // The chips are the ones the rest of the site uses; only the arrow is new.
+        $css = file_get_contents(resource_path('css/app.css'));
+        $this->assertMatchesRegularExpression('/\.tag-arrow\s*\{/', $css);
+        $this->assertMatchesRegularExpression('/\.tag-transition\s*\{[^}]*nowrap/s', $css,
+            'the pair may wrap, which would stack two chips and double every row');
     }
 
     public function test_the_two_tables_mark_a_difference_the_way_a_line_does(): void
