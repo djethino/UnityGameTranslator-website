@@ -37,6 +37,23 @@ class EncodingProbeController extends Controller
     {
         $sample = str_repeat('{"key":"a translated line, long enough to be worth compressing"},', 200);
 
+        // ?force=gzip — does an answer PHP compressed ITSELF survive the way out?
+        //
+        // 🔴 The first run answered the first question: `Accept-Encoding` never reaches PHP, so no
+        // application code can key off it. But `user-agent` DOES arrive, so deciding here is still
+        // conceivable — on one condition, which nothing observed so far settles: that the proxy
+        // in front passes our `Content-Encoding: gzip` through instead of inflating it.
+        //
+        // If the caller receives 0x1F 0x8B, it survives and a middleware keyed on the User-Agent
+        // is possible. If it receives readable JSON, the proxy undoes the work and the whole
+        // application route is closed.
+        if ($request->query('force') === 'gzip') {
+            return response(gzencode($sample, 6))
+                ->header('Content-Type', 'application/json')
+                ->header('Content-Encoding', 'gzip')
+                ->header('X-Probe-Plain-Bytes', (string) strlen($sample));
+        }
+
         return response()->json([
             // What reached PHP. If this is empty on the live site while curl sent it, question 1
             // is answered: the header does not survive the server.
