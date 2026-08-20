@@ -101,12 +101,10 @@ class UserController extends Controller
                     // a listing that opens one per row is a listing that gets slower the more
                     // somebody publishes. A Main with no branch costs nothing, which is the common
                     // case; the answer is then cached on the files' own hashes.
-                    'branches_with_work' => $role === 'main' && ($branchCounts[$t->file_uuid] ?? 0) > 0
-                        ? $this->translationService->contributionsWaiting($t)['branches']
-                        : ($role === 'main' ? 0 : null),
-                    'lines_available' => $role === 'main' && ($branchCounts[$t->file_uuid] ?? 0) > 0
-                        ? $this->translationService->contributionsWaiting($t)['lines']
-                        : ($role === 'main' ? 0 : null),
+                    // ⚠ Asked ONCE and read five times. It was called twice for two of its five
+                    // answers — the second call hits the same cache, but writing it that way is how
+                    // a sixth field ends up being a sixth call.
+                    ...$this->waitingFields($t, $role, ($branchCounts[$t->file_uuid] ?? 0) > 0),
                     'main_missing' => $role === 'branch'
                         ? !$withMain->has($t->file_uuid)
                         : null,
@@ -139,5 +137,46 @@ class UserController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * What is waiting on this row, in one lookup.
+     *
+     * 🔴 **Three of the five are new, and they are the ones worth having**: "38 lines" cannot tell
+     * a Main whether an evening of review is worth it, where "12 new · 7 reworded · 19 validated"
+     * can. The last kind changes no text at all — somebody read the Main's machine lines and stood
+     * behind them — and a single total hides it completely.
+     *
+     * ⚠ Null on a branch rather than 0, exactly as `branches_count` is: a contribution has no
+     * contributions to answer about, which is not the same as having none waiting.
+     *
+     * @return array<string, int|null>
+     */
+    private function waitingFields(Translation $t, string $role, bool $hasBranches): array
+    {
+        if ($role !== 'main') {
+            return [
+                'branches_with_work' => null,
+                'lines_available' => null,
+                'lines_new' => null,
+                'lines_reworded' => null,
+                'lines_validated' => null,
+            ];
+        }
+
+        // ⚠ Only asked when there is a contribution to weigh: this reads files, and a listing that
+        // opens one per row is a listing that gets slower the more somebody publishes. A Main with
+        // no branch costs nothing, which is the common case.
+        $waiting = $hasBranches
+            ? $this->translationService->contributionsWaiting($t)
+            : ['branches' => 0, 'lines' => 0, 'new' => 0, 'reworded' => 0, 'validated' => 0];
+
+        return [
+            'branches_with_work' => $waiting['branches'],
+            'lines_available' => $waiting['lines'],
+            'lines_new' => $waiting['new'],
+            'lines_reworded' => $waiting['reworded'],
+            'lines_validated' => $waiting['validated'],
+        ];
     }
 }

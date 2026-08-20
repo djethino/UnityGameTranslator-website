@@ -585,35 +585,77 @@ class TranslationService
      */
     public static function contributionWins($main, $contribution): bool
     {
+        return self::contributionGain($main, $contribution) !== null;
+    }
+
+    /**
+     * The three kinds of gain, so a Main can tell WHAT is waiting and not only how much.
+     *
+     * 🔴 **Because "38 lines" answers the wrong question.** A Main deciding whether to spend an
+     * evening reviewing needs to know what those lines are: text that exists nowhere else, text
+     * somebody retranslated, or lines they already had that somebody read and stood behind. The
+     * third is the one a single total hides completely, and it is often the bulk of the work — the
+     * site asks for exactly that reading, and it changes no words at all.
+     *
+     * ⚠ **One test, three answers.** This holds the whole rule and `contributionWins` is now its
+     * yes/no reading, so the count on a button and the rows behind it cannot drift apart — the
+     * property `contributionsWaiting` was written to protect.
+     *
+     * The order matters where a line qualifies twice: a retranslation carries a better tag as often
+     * as not, and calling it "validated" would report the smaller of the two things that happened.
+     *
+     * @param  array{v?: string, t?: string}|string|null  $main          null when the Main has no such key
+     * @param  array{v?: string, t?: string}|string|null  $contribution
+     * @return 'new'|'reworded'|'validated'|null          null when the Main keeps its own
+     */
+    public static function contributionGain($main, $contribution): ?string
+    {
         $cValue = self::entryValue($contribution);
         $cTag = self::entryTag($contribution);
 
         if (!self::isGameLine($cTag)) {
-            return false;
+            return null;
         }
 
         if ($contribution === null) {
-            return false;
+            return null;
         }
 
         // The case with no question in it, and the only one won without outranking anything.
         if ($main === null) {
-            return true;
+            return 'new';
         }
 
         $mValue = self::entryValue($main);
         $mTag = self::entryTag($main);
 
         if (!self::isGameLine($mTag)) {
-            return false;
+            return null;
         }
 
         // Same words AND same tag: nothing changed hands.
         if ($mValue === $cValue && $mTag === $cTag) {
-            return false;
+            return null;
         }
 
-        return self::priorityOf($cTag, $cValue) > self::priorityOf($mTag, $mValue);
+        if (self::priorityOf($cTag, $cValue) <= self::priorityOf($mTag, $mValue)) {
+            return null;
+        }
+
+        // Words first: the tag almost always rises with them, and reporting such a line as merely
+        // validated would name the lesser half of what the contributor did.
+        return $mValue === $cValue ? 'validated' : 'reworded';
+    }
+
+    /**
+     * Which of two gains says more, so a key offered by several contributions is filed once and
+     * under the largest thing that happened to it.
+     */
+    private static function strongerGain(?string $a, ?string $b): string
+    {
+        $rank = ['validated' => 1, 'reworded' => 2, 'new' => 3];
+
+        return ($rank[$a] ?? 0) >= ($rank[$b] ?? 0) ? (string) $a : (string) $b;
     }
 
     /**
@@ -622,9 +664,13 @@ class TranslationService
      * ⚠ Keys, not a tally: two contributions offering the same line are one line to recover, and
      * adding their counts would promise twice the work that exists.
      *
+     * ⚠ The VALUE is the kind of gain, not `true`: what a line brings is as much a part of the
+     * answer as that it brings something — see {@see contributionGain}. Callers that only want a
+     * total still `count()` it and are unaffected.
+     *
      * @param  array<string, mixed>  $main    the Main's file, decoded
      * @param  array<string, mixed>  $branch  the contribution's file, decoded
-     * @return array<string, true>            the keys this contribution wins, as a set
+     * @return array<string, string>          key => 'new'|'reworded'|'validated'
      */
     public static function keysOfferedTo(array $main, array $branch): array
     {
@@ -636,8 +682,10 @@ class TranslationService
                 continue;
             }
 
-            if (self::contributionWins($main[$key] ?? null, $entry)) {
-                $offered[$key] = true;
+            $gain = self::contributionGain($main[$key] ?? null, $entry);
+
+            if ($gain !== null) {
+                $offered[$key] = $gain;
             }
         }
 
@@ -669,7 +717,11 @@ class TranslationService
      * ⚠ Frozen branches are counted: closing a lineage stops NEW contributions, it does not throw
      * away the ones already received, and their Main may still merge them.
      *
-     * @return array{branches: int, lines: int}
+     * ⚠ The three kinds sum to `lines`, and they are the reason this answer is worth reading at
+     * all: "38 lines" says nothing about whether an evening of review is worth it, where "12 new ·
+     * 7 reworded · 19 validated" does. See {@see contributionGain}.
+     *
+     * @return array{branches: int, lines: int, new: int, reworded: int, validated: int}
      */
     public function contributionsWaiting(Translation $main): array
     {
@@ -682,7 +734,7 @@ class TranslationService
             ->values();
 
         if ($branches->isEmpty()) {
-            return ['branches' => 0, 'lines' => 0];
+            return ['branches' => 0, 'lines' => 0, 'new' => 0, 'reworded' => 0, 'validated' => 0];
         }
 
         $signature = $branches
@@ -690,7 +742,11 @@ class TranslationService
             ->sort()
             ->implode('|');
 
-        $cacheKey = 'contrib-waiting:' . $main->file_uuid
+        // ⚠ The version suffix is not decoration: entries cached before this answer carried three
+        // more keys are still valid for a day, and a screen reading `['new']` off one of them would
+        // read null and print a zero. Bumped whenever the SHAPE changes, never when the rule does —
+        // a changed rule already changes the hashes it is keyed on.
+        $cacheKey = 'contrib-waiting:v2:' . $main->file_uuid
             . ':' . ($main->file_hash ?? '')
             . ':' . md5($signature);
 
@@ -722,10 +778,29 @@ class TranslationService
                 }
 
                 $withWork++;
-                $lines += $offered;
+
+                // ⚠ Not `+=`, which keeps whichever kind was seen FIRST. Two contributions can
+                // offer the same key for different reasons — one retranslates it, another only
+                // marks it validated — and the tally must name the larger of the two, or the same
+                // key would be filed differently depending on the order the branches came back.
+                foreach ($offered as $key => $gain) {
+                    $lines[$key] = isset($lines[$key])
+                        ? self::strongerGain($lines[$key], $gain)
+                        : $gain;
+                }
             }
 
-            return ['branches' => $withWork, 'lines' => count($lines)];
+            $kinds = array_count_values($lines);
+
+            // ⚠ The three always sum to `lines`, which is what makes them readable side by side:
+            // one key is filed once, under one kind.
+            return [
+                'branches' => $withWork,
+                'lines' => count($lines),
+                'new' => $kinds['new'] ?? 0,
+                'reworded' => $kinds['reworded'] ?? 0,
+                'validated' => $kinds['validated'] ?? 0,
+            ];
         });
     }
 

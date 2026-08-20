@@ -153,6 +153,15 @@ class SyncStateController extends Controller
                     $state['branches_pending_review'] = $waiting['branches'];
                     $state['branches_with_work'] = $waiting['branches'];
                     $state['lines_available'] = $waiting['lines'];
+
+                    // 🔴 **What those lines are.** The total cannot tell a Main whether reviewing
+                    // is worth an evening: lines nobody has, lines somebody retranslated and lines
+                    // they already had that somebody read and stood behind are three different
+                    // propositions, and the third changes no text at all. They sum to
+                    // lines_available. Additive: an older mod ignores them.
+                    $state['lines_new'] = $waiting['new'];
+                    $state['lines_reworded'] = $waiting['reworded'];
+                    $state['lines_validated'] = $waiting['validated'];
                 }
             } elseif ($withLineage) {
                 // A branch used to learn nothing about the Main it derives from:

@@ -321,6 +321,15 @@ class TranslationController extends Controller
                 // ignores them and goes on showing the raw count, which is what it did before.
                 'branches_with_work' => $waiting['branches'] ?? null,
                 'lines_available' => $waiting['lines'] ?? null,
+
+                // 🔴 **What those lines ARE**, which is what decides whether a review is worth an
+                // evening. A total hides the kind that changes no text at all — somebody reading
+                // the Main's machine lines and standing behind them — and that is often the bulk of
+                // a contribution. The three sum to lines_available. Additive: an older mod ignores
+                // them and goes on printing the total alone.
+                'lines_new' => $waiting['new'] ?? null,
+                'lines_reworded' => $waiting['reworded'] ?? null,
+                'lines_validated' => $waiting['validated'] ?? null,
                 'lines_offered' => $role === 'branch'
                     ? $service->linesOfferedToMain($ownTranslation, $publicTranslation)
                     : null,
