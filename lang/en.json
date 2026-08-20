@@ -1192,5 +1192,11 @@
     "profile.game_language_follows": "Detect automatically",
     "profile.game_language_hint": "Which translations come first when you browse games. It does not have to be the language you read this site in.",
     "profile.game_language_detected": "Detected: :language",
-    "profile.game_language_detected_short": "detected"
+    "profile.game_language_detected_short": "detected",
+    "link.title": "Link your game",
+    "link.intro": "Enter the code shown in your game",
+    "link.code_label": "Device code",
+    "link.submit": "Link",
+    "link.expires": "The code is valid for 15 minutes. If it has expired, start again from your game.",
+    "link.sign_in_first": "Sign in first, then enter your code."
 }

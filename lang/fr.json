@@ -1192,5 +1192,11 @@
     "profile.game_language_follows": "Détecter automatiquement",
     "profile.game_language_hint": "Quelles traductions arrivent en premier quand vous parcourez les jeux. Ce n'est pas forcément la langue dans laquelle vous lisez ce site.",
     "profile.game_language_detected": "Détecté : :language",
-    "profile.game_language_detected_short": "détecté"
+    "profile.game_language_detected_short": "détecté",
+    "link.title": "Connecter votre jeu",
+    "link.intro": "Saisissez le code affiché dans votre jeu",
+    "link.code_label": "Code de l'appareil",
+    "link.submit": "Connecter",
+    "link.expires": "Le code est valable 15 minutes. S'il a expiré, recommencez depuis votre jeu.",
+    "link.sign_in_first": "Connectez-vous d'abord, puis saisissez votre code."
 }

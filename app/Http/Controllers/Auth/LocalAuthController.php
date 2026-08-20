@@ -20,6 +20,8 @@ use Illuminate\Validation\ValidationException;
  */
 class LocalAuthController extends Controller
 {
+    use ValidatesRedirects;
+
     private const USERNAME_RULE = 'regex:/^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,23}$/';
 
     public function showRegister()
@@ -127,8 +129,23 @@ class LocalAuthController extends Controller
 
         RateLimiter::clear($throttleKey);
         Auth::login($user, remember: true);
+
+        // 🔴 **Read AFTER regenerate(), written back by hand.** Regenerating the session is what
+        // stops a fixation attack, and it wipes url.intended along with everything else — so the
+        // address has to be carried across it. Signing in from /link and landing on the home page
+        // means finding /link again with a code still on screen in the game.
+        //
+        // ⚠ Same validation as the providers use (ValidatesRedirects): where somebody is sent
+        // after signing in must never be an address of their choosing.
+        $intended = $this->validateRedirectUrl($request->input('redirect'))
+            ?? session('url.intended');
+
         $request->session()->regenerate();
         AuditLog::logLogin($user->id, 'local', $request);
+
+        if ($intended) {
+            return redirect()->to($intended);
+        }
 
         return redirect()->intended(route('home'));
     }

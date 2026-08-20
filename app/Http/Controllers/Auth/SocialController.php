@@ -12,6 +12,8 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
+    use ValidatesRedirects;
+
     protected array $providers = ['google', 'github', 'discord', 'twitch', 'steam', 'epicgames'];
 
     public function redirect(Request $request, string $provider)
@@ -20,46 +22,14 @@ class SocialController extends Controller
             abort(404);
         }
 
-        // Store validated redirect URL in session for after login
-        // Prevent open redirect by only allowing relative URLs or same-origin
-        $redirect = $request->query('redirect');
-        if ($redirect) {
-            $redirect = $this->validateRedirectUrl($redirect);
-            if ($redirect) {
-                session(['url.intended' => $redirect]);
-            }
-        }
+        // Where to land afterwards, refused unless it is one of our own addresses.
+        $this->rememberIntendedUrl($request->query('redirect'));
 
         return Socialite::driver($provider)->redirect();
     }
 
-    /**
-     * Validate redirect URL to prevent open redirect attacks.
-     * Only allows relative URLs or URLs on the same domain.
-     */
-    protected function validateRedirectUrl(?string $url): ?string
-    {
-        if (empty($url)) {
-            return null;
-        }
-
-        // Decode if URL-encoded
-        $url = urldecode($url);
-
-        // Allow relative URLs starting with /
-        if (Str::startsWith($url, '/') && !Str::startsWith($url, '//')) {
-            return $url;
-        }
-
-        // Allow same-origin absolute URLs
-        $appUrl = config('app.url');
-        if ($appUrl && Str::startsWith($url, $appUrl)) {
-            return $url;
-        }
-
-        // Reject all other URLs (potential open redirect)
-        return null;
-    }
+    // validateRedirectUrl() and rememberIntendedUrl() now live in ValidatesRedirects, shared with
+    // the local sign-in — which had no such rule at all and ignored where somebody came from.
 
     public function callback(string $provider)
     {

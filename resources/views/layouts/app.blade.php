@@ -73,8 +73,14 @@
                     <a href="{{ route('home') }}" class="text-xl font-bold text-purple-400 flex items-center">
                         <img src="/logo.svg" alt="" class="w-8 h-8 mr-2"><span class="hidden sm:inline">UnityGameTranslator</span><span class="sm:hidden">UGT</span>
                     </a>
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex ml-10 space-x-4">
+                    {{-- Desktop Navigation
+
+                         🔴 **lg, not md.** The bar needs about 1030px of content — logo 240, links
+                         375, right side 420 — and md turns it on at 768. Between the two it did not
+                         wrap: it OVERFLOWED, pushing the avatar off screen and giving the whole page
+                         a horizontal scrollbar. Measured at 784px wide: 960px of content in a 769px
+                         box. The hidden name and label above buy back enough for lg to hold. --}}
+                    <div class="hidden lg:flex ml-10 space-x-4">
                         <a href="{{ route('games.index') }}" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-gamepad mr-1"></i> {{ __('nav.games') }}
                         </a>
@@ -82,9 +88,15 @@
                             <i class="fas fa-book mr-1"></i> {{ __('nav.docs') }}
                         </a>
                         {{-- The only main-nav entry that leaves the site. Saying so beforehand
-                             costs one glyph and spares the surprise of landing on GitHub. --}}
+                             costs one glyph and spares the surprise of landing on GitHub.
+
+                             ⚠ **Raised, like a footnote mark.** On the baseline it read as a SECOND
+                             icon — and this entry was then the only one with something on both
+                             sides, which looks like a mistake rather than a warning. Superscript is
+                             the shape a reader already knows for "there is a note about this word",
+                             so it annotates instead of competing. --}}
                         <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="text-gray-300 hover:text-white px-3 py-2 transition">
-                            <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}<i class="fas fa-arrow-up-right-from-square ml-1.5 text-[0.65em] opacity-60"></i>
+                            <i class="fas fa-comments mr-1"></i> {{ __('nav.community') }}<sup class="ml-0.5"><i class="fas fa-arrow-up-right-from-square text-[0.55em] opacity-60"></i></sup>
                         </a>
                         {{-- ⚠ Publishing is deliberately NOT here any more. It was the least-used
                              entry and the widest, and the row now carries two language switchers:
@@ -95,7 +107,7 @@
                 </div>
 
                 <!-- Desktop Right Section -->
-                <div class="hidden md:flex items-center space-x-3">
+                <div class="hidden lg:flex items-center space-x-3">
                     <!-- Language Switcher -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white px-2 py-1 rounded transition">
@@ -117,8 +129,13 @@
                     <x-game-language-switcher />
 
                     @guest
-                        <a href="{{ route('login') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                            <i class="fas fa-sign-in-alt mr-1"></i> {{ __('nav.login') }}
+                        {{-- ⚠ The word goes when the room does, the icon stays. Between the width
+                             this bar appears at and the width everything fits in, something has to
+                             give: a label the icon already carries is the cheapest thing to drop.
+                             title= keeps it readable for anyone who hovers or uses a reader. --}}
+                        <a href="{{ route('login') }}" title="{{ __('nav.login') }}"
+                           class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                            <i class="fas fa-sign-in-alt xl:mr-1"></i><span class="hidden xl:inline">{{ __('nav.login') }}</span>
                         </a>
                     @else
                         <!-- Notification bell -->
@@ -142,7 +159,10 @@
                                         <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">{{ $pendingReportsCount }}</span>
                                     @endif
                                 </div>
-                                <span class="max-w-[120px] truncate">{{ auth()->user()->name }}</span>
+                                {{-- ⚠ Same rule as the sign-in button: the name goes when the room
+                                     does, the avatar stays. The avatar IS the identity here, and
+                                     the menu behind it opens either way. --}}
+                                <span class="hidden xl:inline max-w-[120px] truncate">{{ auth()->user()->name }}</span>
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
                             <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
@@ -179,10 +199,23 @@
                     @endguest
                 </div>
 
-                <!-- Mobile Menu Button -->
-                <div class="flex items-center md:hidden">
+                {{-- Mobile Menu Button
+
+                     ⚠ **The two language switchers stay OUT of the menu, side by side.** The
+                     interface one always has been — it is how somebody who cannot read the page
+                     fixes that, and burying it behind a menu whose own label they cannot read
+                     would be a trap. The game one had simply been left in the desktop row, so
+                     below the breakpoint there was no way at all to say which language you play
+                     in. They are two questions, they are answered in the same place at every
+                     width.
+
+                     ⚠ **Same order as the desktop row: site first, then game.** A pair that swaps
+                     places when the window narrows makes the reader check which is which every
+                     time, and the two are told apart by a small controller icon — exactly the kind
+                     of difference an unstable order destroys. --}}
+                <div class="flex items-center lg:hidden">
                     <!-- Mobile Language Switcher (always visible) -->
-                    <div class="relative mr-2" x-data="{ open: false }">
+                    <div class="relative mr-1" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-300 hover:text-white p-2 rounded transition">
                             {{-- Our own drawing, not flag-icons: same catalogue as the games. --}}
                             <x-flag :flag="config('locales.supported')[app()->getLocale()]['flag'] ?? null" />
@@ -197,6 +230,7 @@
                             @endforeach
                         </div>
                     </div>
+                    <x-game-language-switcher class="mr-2" />
                     <!-- Hamburger Button -->
                     <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white p-2 rounded-lg transition" aria-label="Menu">
                         <i class="fas fa-bars text-xl" x-show="!mobileMenuOpen"></i>
@@ -207,7 +241,7 @@
         </div>
 
         <!-- Mobile Menu Overlay -->
-        <div x-show="mobileMenuOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="md:hidden bg-gray-800 border-b border-gray-700">
+        <div x-show="mobileMenuOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="lg:hidden bg-gray-800 border-b border-gray-700">
             <div class="px-4 py-4 space-y-3">
                 <!-- Navigation Links -->
                 <a href="{{ route('games.index') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
@@ -217,7 +251,7 @@
                     <i class="fas fa-book mr-3 w-5 text-center"></i> {{ __('nav.docs') }}
                 </a>
                 <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
-                    <i class="fas fa-comments mr-3 w-5 text-center"></i> {{ __('nav.community') }}<i class="fas fa-arrow-up-right-from-square ml-1.5 text-[0.65em] opacity-60"></i>
+                    <i class="fas fa-comments mr-3 w-5 text-center"></i> {{ __('nav.community') }}<sup class="ml-0.5"><i class="fas fa-arrow-up-right-from-square text-[0.55em] opacity-60"></i></sup>
                 </a>
                 @auth
                 <a href="{{ route('translations.create') }}" class="block text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition">
@@ -248,28 +282,18 @@
 
                 <!-- Auth Section -->
                 @guest
-                <p class="text-gray-400 text-sm px-4 mb-2">{{ __('nav.login_with') }}</p>
-                <div class="grid grid-cols-3 gap-2 px-4">
-                    <a href="{{ route('auth.redirect', 'steam') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg flex items-center justify-center transition" title="Steam">
-                        <i class="fab fa-steam text-lg"></i>
-                    </a>
-                    <a href="{{ route('auth.redirect', 'discord') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Discord">
-                        <i class="fab fa-discord text-lg"></i>
-                    </a>
-                    <a href="{{ route('auth.redirect', 'github') }}" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg flex items-center justify-center transition" title="GitHub">
-                        <i class="fab fa-github text-lg"></i>
-                    </a>
-                    <a href="{{ route('auth.redirect', 'google') }}" class="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Google">
-                        <i class="fab fa-google text-lg"></i>
-                    </a>
-                    <a href="{{ route('auth.redirect', 'twitch') }}" class="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg flex items-center justify-center transition" title="Twitch">
-                        <i class="fab fa-twitch text-lg"></i>
-                    </a>
-                    {{-- Epic Games: hidden until app approval --}}
-                    {{-- <a href="{{ route('auth.redirect', 'epicgames') }}" class="bg-black hover:bg-gray-900 text-white p-3 rounded-lg flex items-center justify-center border border-gray-600 transition" title="Epic Games">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.537 0C2.165 0 1.66.506 1.66 1.879V18.44a4.262 4.262 0 00.02.433c.031.3.037.59.316.92.027.033.311.245.311.245.153.075.258.13.43.2l8.335 3.491c.433.199.614.276.928.27h.002c.314.006.495-.071.928-.27l8.335-3.492c.172-.07.277-.124.43-.2 0 0 .284-.211.311-.243.28-.33.285-.621.316-.92a4.261 4.261 0 00.02-.434V1.879c0-1.373-.506-1.88-1.878-1.88zm13.366 3.11h.68c1.138 0 1.688.553 1.688 1.696v1.88h-1.374v-1.8c0-.369-.17-.54-.523-.54h-.235c-.367 0-.537.17-.537.539v5.81c0 .369.17.54.537.54h.262c.353 0 .523-.171.523-.54V8.619h1.373v2.143c0 1.144-.562 1.71-1.7 1.71h-.694c-1.138 0-1.7-.566-1.7-1.71V4.82c0-1.144.562-1.709 1.7-1.709zm-12.186.08h3.114v1.274H6.117v2.603h1.648v1.275H6.117v2.774h1.74v1.275h-3.14zm3.816 0h2.198c1.138 0 1.7.564 1.7 1.708v2.445c0 1.144-.562 1.71-1.7 1.71h-.799v3.338h-1.4zm4.53 0h1.4v9.201h-1.4zm-3.13 1.235v3.392h.575c.354 0 .523-.171.523-.54V4.965c0-.368-.17-.54-.523-.54z"/></svg>
-                    </a> --}}
-                </div>
+                {{-- 🔴 **One door to signing in, not five sixths of one.**
+
+                     This offered five providers and nothing else, so somebody with a local account
+                     — a username and a password, no platform — could not sign in from the menu at
+                     all, and nothing on this screen even hinted that /login existed. A menu LEADS
+                     to an action; it does not perform a part of it.
+
+                     ⚠ Comes back to the page it was opened from, so the menu is not a detour. --}}
+                <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}"
+                   class="block bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium text-center transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i> {{ __('nav.login') }}
+                </a>
                 @else
                 <div class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded-lg">
                     <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 hover:text-purple-400 transition">

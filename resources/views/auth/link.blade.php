@@ -1,12 +1,24 @@
 @extends('layouts.app')
 
-@section('title', 'Link Device - UnityGameTranslator')
+@section('title', __('link.title') . ' - UnityGameTranslator')
+
+{{--
+    Where the mod sends somebody to connect their account.
+
+    🔴 **This page was written in English and never translated**, while the rest of the site speaks
+    nineteen languages — and it is precisely the page a player reaches FROM THEIR GAME, whatever
+    language they play in.
+
+    🔴 **And it listed the providers itself**, so when local accounts arrived they were added to
+    /login and not here: somebody with a username and a password had no way in, on the one screen
+    the mod points at. The list now lives in ONE component, used by both.
+--}}
 
 @section('content')
 <div class="max-w-md mx-auto mt-16">
     <div class="bg-gray-800 rounded-lg p-8 border border-gray-700 text-center">
-        <h1 class="text-2xl font-bold mb-2">Link Your Game</h1>
-        <p class="text-gray-400 mb-6">Enter the code displayed in your Unity game</p>
+        <h1 class="text-2xl font-bold mb-2">{{ __('link.title') }}</h1>
+        <p class="text-gray-400 mb-6">{{ __('link.intro') }}</p>
 
         @if(session('success'))
             <div class="bg-green-900 border border-green-700 text-green-100 px-4 py-4 rounded mb-6">
@@ -14,7 +26,7 @@
                 {{ session('success') }}
             </div>
             <a href="{{ route('home') }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
-                <i class="fas fa-home mr-2"></i> Back to Home
+                <i class="fas fa-home mr-2"></i> {{ __('auth.back_to_home') }}
             </a>
         @else
             @auth
@@ -23,7 +35,7 @@
 
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-300 mb-2">
-                            Device Code
+                            {{ __('link.code_label') }}
                         </label>
                         <input
                             type="text"
@@ -42,49 +54,32 @@
                     </div>
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-link mr-2"></i> Link Device
+                        <i class="fas fa-link mr-2"></i> {{ __('link.submit') }}
                     </button>
                 </form>
 
                 <div class="mt-8 pt-6 border-t border-gray-700">
                     <p class="text-gray-400 text-sm">
                         <i class="fas fa-info-circle mr-1"></i>
-                        The code expires in 15 minutes. If it has expired, restart the linking process in your game.
+                        {{ __('link.expires') }}
                     </p>
                 </div>
             @else
                 <div class="bg-blue-900 border border-blue-700 text-blue-100 px-4 py-4 rounded mb-6">
                     <i class="fas fa-info-circle mr-2"></i>
-                    Please sign in first to link your device.
+                    {{ __('link.sign_in_first') }}
                 </div>
 
-                <div class="space-y-3">
-                    <a href="{{ route('auth.redirect', 'steam') }}" class="block w-full bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg border border-gray-600">
-                        <i class="fab fa-steam mr-2"></i> Sign in with Steam
-                    </a>
-                    {{-- Epic Games: hidden until app approval --}}
-                    {{-- <a href="{{ route('auth.redirect', 'epicgames') }}" class="block w-full bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-lg border border-gray-600">
-                        <i class="fas fa-gamepad mr-2"></i> Sign in with Epic Games
-                    </a> --}}
-                    <a href="{{ route('auth.redirect', 'discord') }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
-                        <i class="fab fa-discord mr-2"></i> Sign in with Discord
-                    </a>
-                    <a href="{{ route('auth.redirect', 'github') }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
-                        <i class="fab fa-github mr-2"></i> Sign in with GitHub
-                    </a>
-                    <a href="{{ route('auth.redirect', 'google') }}" class="block w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">
-                        <i class="fab fa-google mr-2"></i> Sign in with Google
-                    </a>
-                    <a href="{{ route('auth.redirect', 'twitch') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
-                        <i class="fab fa-twitch mr-2"></i> Sign in with Twitch
-                    </a>
-                </div>
+                {{-- ⚠ Comes back HERE once signed in: the code is still on screen in the game, and
+                     sending somebody to the home page with it in their hand would make them find
+                     this page again by themselves. --}}
+                <x-auth-methods :redirect="route('link')" />
             @endauth
         @endif
 
         <p class="text-gray-500 text-sm mt-8">
             <a href="{{ route('home') }}" class="text-purple-400 hover:text-purple-300">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                <i class="fas fa-arrow-left mr-1"></i> {{ __('auth.back_to_home') }}
             </a>
         </p>
     </div>

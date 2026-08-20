@@ -1192,5 +1192,11 @@
     "profile.game_language_follows": "الكشف تلقائيًا",
     "profile.game_language_hint": "أي الترجمات تظهر أولًا عند تصفح الألعاب. ليس بالضرورة أن تكون اللغة التي تقرأ بها هذا الموقع.",
     "profile.game_language_detected": "تم الكشف: :language",
-    "profile.game_language_detected_short": "مكتشفة"
+    "profile.game_language_detected_short": "مكتشفة",
+    "link.title": "[MISSING] Link your game",
+    "link.intro": "[MISSING] Enter the code shown in your game",
+    "link.code_label": "[MISSING] Device code",
+    "link.submit": "[MISSING] Link",
+    "link.expires": "[MISSING] The code is valid for 15 minutes. If it has expired, start again from your game.",
+    "link.sign_in_first": "[MISSING] Sign in first, then enter your code."
 }

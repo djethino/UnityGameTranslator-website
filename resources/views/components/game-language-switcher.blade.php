@@ -21,7 +21,9 @@
     $__gameMark = \App\Services\CatalogStore::languageMark(\App\Services\GameLanguage::name());
 @endphp
 
-<div class="relative" x-data="{ open: false }">
+{{-- ⚠ Takes whatever class the caller passes so the same component sits in the desktop row and in
+     the mobile bar without a second copy of itself. --}}
+<div {{ $attributes->merge(['class' => 'relative']) }} x-data="{ open: false }">
     <button @click="open = !open" @click.away="open = false"
             title="{{ __('profile.game_language') }}"
             class="flex items-center gap-1 text-gray-300 hover:text-white px-2 py-1 rounded transition">
@@ -31,8 +33,13 @@
              letting a guess look like a decision somebody made is the small lie this avoids —
              especially now that the guess comes from the browser and can name a language the
              site has no interface for at all. --}}
+        {{-- ⚠ Hidden below xl, like the account name and the sign-in label beside it: between the
+             width the desktop bar appears at (lg) and the width everything fits in, something has
+             to give. Measured in GERMAN, the widest of the nineteen — "Spiele · Dokumentation"
+             against "Games · Docs" costs about 80px — this word is what keeps the row inside 1024.
+             The title on the button says the same thing at any width. --}}
         @unless ($__gameTag)
-            <span class="text-[9px] text-gray-500 leading-none">{{ __('profile.game_language_detected_short') }}</span>
+            <span class="hidden xl:inline text-[9px] text-gray-500 leading-none">{{ __('profile.game_language_detected_short') }}</span>
         @endunless
         <i class="fas fa-chevron-down text-xs"></i>
     </button>
