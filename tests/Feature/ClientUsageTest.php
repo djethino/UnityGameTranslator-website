@@ -263,6 +263,26 @@ class ClientUsageTest extends TestCase
         $this->assertSame(1, DB::table('client_daily_seen')->count());
     }
 
+    /**
+     * ⚠ A row written by the first version of the collector, before the markers had names. It
+     * stored the empty string for a build that did not say its version — and the screen rendered
+     * an empty cell, which reads as a broken page rather than as an unidentifiable build.
+     */
+    public function test_a_row_with_no_version_is_still_named_on_screen(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true])->refresh();
+
+        ClientUsageDaily::insert([
+            'date' => now()->toDateString(), 'product' => 'mod',
+            'version' => '', 'variant' => '', 'installs' => 3,
+        ]);
+
+        $html = $this->actingAs($admin)->get('/admin/analytics?period=1')->assertOk()->getContent();
+
+        $this->assertStringContainsString('before versioning', $html,
+            'a row with no version rendered as an empty cell');
+    }
+
     public function test_installs_over_a_period_are_the_busiest_day_not_the_total(): void
     {
         ClientUsageDaily::insert([

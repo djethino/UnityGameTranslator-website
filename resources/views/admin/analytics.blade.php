@@ -501,9 +501,15 @@
                                 </span>
                             </td>
                             <td class="py-2 pr-4">
-                                @if ($client['version'] === \App\Models\ClientUsageDaily::LEGACY)
+                                @if ($client['version'] === \App\Models\ClientUsageDaily::LEGACY || $client['version'] === '')
                                     {{-- 🔴 The one row that decides whether compression can be turned
-                                         on: these builds ask for gzip and cannot read it. --}}
+                                         on: these builds ask for gzip and cannot read it.
+
+                                         ⚠ The empty string is the SAME thing, written by the first
+                                         version of this collector before the marker had a name. A
+                                         cell that renders blank says nothing at all, which is worse
+                                         than saying the wrong thing — it reads as a bug in the page
+                                         rather than as a build nobody can identify. --}}
                                     <span class="text-amber-400">before versioning</span>
                                     <span class="block text-xs text-gray-500">cannot read compressed answers</span>
                                 @elseif ($client['version'] === \App\Models\ClientUsageDaily::UNRECOGNISED)
