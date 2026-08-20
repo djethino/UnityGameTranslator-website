@@ -92,6 +92,16 @@ class CompressJsonResponse
 
         // 🔴 The answer now depends on WHO asked. Without this, a cache anywhere on the way could
         // hand a compressed body to one of the very builds this whitelist exists to protect.
+        //
+        // ⚠ **The live host strips it back out** — measured 2026-08-20: sent from here, absent on
+        // arrival. Harmless as things stand, because every one of these answers carries
+        // `Cache-Control: private` (the listings add `no-cache`), so no shared cache may store
+        // them in the first place and there is nothing for a `Vary` to disambiguate.
+        //
+        // ⚠ It stays, and it is not decoration: it is correct HTTP, it works on any other host,
+        // and the day one of these endpoints is made publicly cacheable it is the only thing
+        // standing between a CDN and a mod that cannot inflate. Whoever loosens a `Cache-Control`
+        // here must check that this header survives to the client.
         $response->headers->set('Vary', trim(
             ($response->headers->get('Vary') ? $response->headers->get('Vary') . ', ' : '')
             . 'User-Agent, Accept-Encoding', ', '
