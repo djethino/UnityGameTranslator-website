@@ -672,6 +672,47 @@ class MergeViewStateTest extends TestCase
             'the pair may wrap, which would stack two chips and double every row');
     }
 
+    /**
+     * A tag column has to be wide enough for two chips, and they all have to agree.
+     *
+     * 🔴 **A declared width stops being a hint the moment anything is dragged.** The grids switch
+     * to `table-layout: fixed` then, where a class width is honoured to the pixel and a cell that
+     * needs more simply spills over its neighbour — which is exactly what `A → V` did in a 3rem
+     * column. Reported from the live editor, invisible on a grid nobody had resized.
+     *
+     * ⚠ And the metadata tables above the lines align on the SAME column name, so their tag column
+     * carries the same class or the whole block sits half a chip off.
+     */
+    public function test_every_tag_column_fits_a_transition_and_they_agree(): void
+    {
+        $tagColumnViews = [
+            'views/merge/show.blade.php',
+            'views/translations/merge-preview.blade.php',
+            'views/edit-session/show.blade.php',
+            'views/components/editor/metadata-grid.blade.php',
+        ];
+
+        foreach ($tagColumnViews as $view) {
+            $source = file_get_contents(resource_path($view));
+
+            // Whole opening tags, then filtered — an attribute order is not something to assert.
+            preg_match_all('/<th\b[^>]*>/s', $source, $headers);
+
+            $tagHeaders = array_filter($headers[0], fn ($th) =>
+                str_contains($th, 'data-col="mainTag"')
+                || str_contains($th, 'data-col="localTag"')
+                || str_contains($th, 'data-col="{{ $tagCol }}"')
+                || str_contains($th, "toggleSort('tag')"));
+
+            $this->assertNotEmpty($tagHeaders, "$view: no tag column found — has the markup moved?");
+
+            foreach ($tagHeaders as $th) {
+                $this->assertMatchesRegularExpression('/\bw-20\b/', $th,
+                    "$view declares a tag column too narrow for a transition: $th");
+            }
+        }
+    }
+
     public function test_the_two_tables_mark_a_difference_the_way_a_line_does(): void
     {
         // 🔴 The lines have marked this from the start — green where the Main holds nothing,

@@ -410,8 +410,13 @@
                             </th>
                             {{-- data-col on the tag column too: the pin freezes the pair, since a
                                  value without its tag says only half of what the row holds. --}}
+                            {{-- w-20, not w-12: this cell shows `A → V` when a save will change the
+                                 tag, and under `table-layout: fixed` (the moment any column is
+                                 dragged) a declared width is honoured to the pixel — the pair
+                                 simply spilled over its neighbour. ⚠ The same width is written on
+                                 the metadata grids above, which align on this column by name. --}}
                             <th data-col="mainTag"
-                                class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                                class="px-2 py-3 text-center border-l border-gray-700 w-20 cursor-pointer hover:text-white transition"
                                 @click="toggleSort('mainTag')">
                                 <div class="flex items-center justify-center gap-1">
                                     <span class="text-green-400 font-medium text-xs">Tag</span>

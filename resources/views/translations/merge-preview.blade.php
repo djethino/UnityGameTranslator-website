@@ -304,8 +304,11 @@
                         </th>
                         {{-- Local Tag. data-col so the pin can freeze the pair: a value without
                              its tag says only half of what the row holds. --}}
+                        {{-- w-20: this column previews `A → V`. See the merge view's own note —
+                             the online column beside it stays narrow, it only ever shows what the
+                             server holds and never a transition. --}}
                         <th data-col="localTag"
-                            class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                            class="px-2 py-3 text-center border-l border-gray-700 w-20 cursor-pointer hover:text-white transition"
                             @click="toggleSort('localTag')">
                             <div class="flex items-center justify-center gap-1">
                                 <span class="text-green-400 font-medium text-xs">Tag</span>

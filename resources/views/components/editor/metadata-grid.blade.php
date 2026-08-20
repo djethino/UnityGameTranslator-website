@@ -97,8 +97,12 @@
                     {{-- The tag column is kept, empty, and its border is the only one between the
                          key and the value: the two head one block, and the title lands exactly
                          where the lines grid puts its own. --}}
+                    {{-- ⚠ w-20, the width the lines grid gives the same column. These two tables
+                         align by column NAME, and only once widths have been declared; until then
+                         each is laid out on its own content, so a class that disagreed with the
+                         one below put the whole block half a chip off. --}}
                     @if($tagCol)
-                        <th data-col="{{ $tagCol }}" class="px-2 py-3 border-l border-gray-700 w-12"></th>
+                        <th data-col="{{ $tagCol }}" class="px-2 py-3 border-l border-gray-700 w-20"></th>
                     @endif
                     <th data-col="{{ $valueCol }}"
                         class="relative px-4 py-3 text-left min-w-[250px] {{ $tagCol ? '' : 'border-l border-gray-700' }}">

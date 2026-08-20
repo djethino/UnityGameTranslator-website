@@ -24,13 +24,14 @@
         ? @js(__('merge.click_to_change_tag')) + ' (' + tagOnFile(key) + ' → ' + tagAfterSave(key) + ')'
         : @js(__('merge.click_to_change_tag'))">
     {{-- The chip on file, then the arrow. Absent entirely when nothing changes, so an untouched
-         row reads exactly as it always has. --}}
-    <template x-if="tagWillChange(key)">
-        <span class="tag-transition-from">
-            <span :class="'tag-' + tagOnFile(key)" x-text="tagOnFile(key)"></span>
-            <i class="fas fa-arrow-right tag-arrow"></i>
-        </span>
-    </template>
-    <span :class="'tag-' + tagAfterSave(key) + (isCaptureRow(key) ? ' opacity-40' : '') + tagChipExtraClass(key)"
+         row reads exactly as it always has.
+
+         ⚠ The tags are written with no whitespace between them, on purpose: these are inline
+         elements, so a newline in the template becomes a real space on screen. Three of them added
+         fourteen pixels to a column measured in tens. --}}
+    <template x-if="tagWillChange(key)"><span class="tag-transition-from"><span
+        :class="'tag-' + tagOnFile(key)" x-text="tagOnFile(key)"></span><i
+        class="fas fa-arrow-right tag-arrow"></i></span></template><span
+        :class="'tag-' + tagAfterSave(key) + (isCaptureRow(key) ? ' opacity-40' : '') + tagChipExtraClass(key)"
         x-text="tagAfterSave(key)"></span>
 </button>

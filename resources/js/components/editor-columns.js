@@ -118,7 +118,13 @@ export function editorColumns() {
          * Honouring a width means `table-layout: fixed`. Switching to it would itself rearrange
          * every column, so the current widths are photographed first: the grid enters the new
          * mode looking exactly as it did. Columns sized by a class (the index at 4rem, the tag
-         * columns at 3rem) keep theirs — fixed layout reads those too.
+         * columns at 5rem) keep theirs — fixed layout reads those too.
+         *
+         * ⚠ **And it reads them to the pixel, which is what makes those classes a contract.** The
+         * tag columns were 3rem until a cell had two chips to show (`A → V`); under this mode the
+         * declared width does not give, so the pair spilled over the column beside it. A class
+         * that no longer fits its own content is a defect that only appears once something has
+         * been dragged.
          */
         _enterSizedMode() {
             if (this.columnsSized) return;

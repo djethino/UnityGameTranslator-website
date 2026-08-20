@@ -187,7 +187,9 @@
                             </div>
                             <x-editor.col-resize col="key" />
                         </th>
-                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
+                        {{-- w-20: this column previews `A → V` — a rewritten line becomes human, a
+                             validated one becomes V. See the merge view's own note. --}}
+                        <th class="px-2 py-3 text-center border-l border-gray-700 w-20 cursor-pointer hover:text-white transition"
                             @click="toggleSort('tag')">
                             <div class="flex items-center justify-center gap-1">
                                 <span class="text-gray-400 font-medium text-xs">Tag</span>
