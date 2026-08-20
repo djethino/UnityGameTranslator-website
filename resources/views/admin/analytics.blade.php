@@ -317,9 +317,27 @@
     <!-- Concurrency: daily peaks against the ceiling -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 lg:col-span-2">
         <h2 class="text-lg font-semibold mb-1"><i class="fas fa-gauge-high mr-2 text-cyan-400"></i> Live edit concurrency</h2>
+        @php
+            // What the chart can no longer say by itself once the ceiling is off the plot.
+            $observedPeak = max([0, ...$chartPeakSessions, ...$chartPeakStreams]);
+            $ceiling = $liveCapacity['streams_max'];
+            $ceilingPlotted = $ceiling && $observedPeak >= $ceiling * 0.2;
+        @endphp
         <p class="text-xs text-gray-500 mb-4">
-            Daily peaks against the stream ceiling. Sampled every 5 minutes, so a shorter spike can slip
-            through — "Sessions refused" above is the exact count.
+            Daily peaks. Sampled every 5 minutes, so a shorter spike can slip through —
+            "Sessions refused" above is the exact count.
+            @if ($ceiling && !$ceilingPlotted)
+                {{-- ⚠ The ceiling is 1000 and real use is a handful, so plotting it flattened
+                     every reading onto the baseline. The scale now follows the data and the
+                     headroom is said here, where it reads better than off an axis. --}}
+                <span class="text-gray-400">
+                    Scaled to the readings: the ceiling of {{ number_format($ceiling) }} is far above
+                    the highest peak seen here ({{ number_format($observedPeak) }}), so drawing it
+                    would flatten the curve. It joins the chart once a peak reaches a fifth of it.
+                </span>
+            @elseif ($ceiling)
+                <span class="text-gray-400">Plotted against the ceiling of {{ number_format($ceiling) }}.</span>
+            @endif
         </p>
         {{-- Drawn even when every reading is zero: a flat line under the ceiling
              is the answer to "am I close to saturating", and a far better one

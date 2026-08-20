@@ -115,7 +115,23 @@ if (!data) {
             }
         ];
 
-        if (data.streamCeiling) {
+        // 🔴 **The ceiling is only drawn when it fits the readings.**
+        //
+        // It used to be plotted unconditionally, as a flat line, so the headroom could be seen at
+        // a glance. That works while the two are the same order of magnitude — and the ceiling is
+        // deliberately roomy (1000 streams) while real use sits at a handful. Chart.js scales the
+        // axis on every dataset, so one line at 1000 flattened the actual readings onto the
+        // baseline: the chart showed a red line and, underneath it, nothing legible. The very
+        // question it exists to answer — how does concurrency MOVE — had no answer left.
+        //
+        // So: the ceiling joins the plot once the peak reaches a fifth of it, where the comparison
+        // is the interesting part. Below that, the axis follows the data and the headroom is said
+        // in words under the title, which is where it reads better anyway. The cards above already
+        // give the exact ratio ("Peak SSE streams  3 / 1000").
+        const observedPeak = Math.max(0, ...data.peakSessions, ...data.peakStreams);
+        const ceilingIsInRange = data.streamCeiling && observedPeak >= data.streamCeiling * 0.2;
+
+        if (ceilingIsInRange) {
             datasets.push({
                 label: `Stream ceiling (${data.streamCeiling})`,
                 data: data.chartLabels.map(() => data.streamCeiling),
@@ -134,9 +150,19 @@ if (!data) {
                 ...lineBarOptions,
                 scales: {
                     ...lineBarOptions.scales,
-                    // Start at zero: a truncated axis would make a quiet day
-                    // look like a saturated one
-                    y: { ...lineBarOptions.scales.y, beginAtZero: true }
+                    y: {
+                        ...lineBarOptions.scales.y,
+                        // Start at zero: a truncated axis would make a quiet day
+                        // look like a saturated one
+                        beginAtZero: true,
+                        // ⚠ Room above the highest reading so the curve is not glued to the top,
+                        // and a floor of 4 so a run of zeroes still draws a readable grid instead
+                        // of one squashed band. Ignored by Chart.js when the ceiling dataset is
+                        // present, which is exactly what should happen then.
+                        suggestedMax: Math.max(4, Math.ceil(observedPeak * 1.4)),
+                        // Half a session does not exist.
+                        ticks: { ...lineBarOptions.scales.y.ticks, precision: 0 }
+                    }
                 }
             }
         });
