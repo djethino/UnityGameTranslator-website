@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Translation;
+use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,10 @@ use Illuminate\Http\Request;
  */
 class SyncStateController extends Controller
 {
+    public function __construct(private readonly TranslationService $translationService)
+    {
+    }
+
     /**
      * Get the combined sync state for a UUID.
      * Combines the logic of check-uuid + check in one payload.
@@ -127,6 +132,18 @@ class SyncStateController extends Controller
                 $state['branches_pending_review'] = $branches
                     ->filter(fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)
                     ->count();
+
+                // ⚠ **A third question, and none of the three replaces another.** `branches_count`
+                // says how many people contribute; `branches_pending_review` says how many I have
+                // not looked at in their current state; this says how many are actually HOLDING
+                // something the merge would offer me. A contributor who took the file and never
+                // came back is counted by the first two and not by this one.
+                //
+                // Computed with the rule the merge screen pre-selects with, so the number and the
+                // rows behind it cannot disagree.
+                $waiting = $this->translationService->contributionsWaiting($ownTranslation);
+                $state['branches_with_work'] = $waiting['branches'];
+                $state['lines_available'] = $waiting['lines'];
             } else {
                 // A branch used to learn nothing about the Main it derives from:
                 // this block stopped here, so `main` stayed null and the branch

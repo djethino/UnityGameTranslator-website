@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Translation;
+use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly TranslationService $translationService)
+    {
+    }
+
     /**
      * Get the authenticated user's profile.
      *
@@ -90,6 +95,18 @@ class UserController extends Controller
                     'branches_count' => $role === 'main'
                         ? (int) ($branchCounts[$t->file_uuid] ?? 0)
                         : null,
+
+                    // How many of them are actually holding something, and how many lines that is.
+                    // ⚠ **Only asked when there is a contribution to weigh**: this reads files, and
+                    // a listing that opens one per row is a listing that gets slower the more
+                    // somebody publishes. A Main with no branch costs nothing, which is the common
+                    // case; the answer is then cached on the files' own hashes.
+                    'branches_with_work' => $role === 'main' && ($branchCounts[$t->file_uuid] ?? 0) > 0
+                        ? $this->translationService->contributionsWaiting($t)['branches']
+                        : ($role === 'main' ? 0 : null),
+                    'lines_available' => $role === 'main' && ($branchCounts[$t->file_uuid] ?? 0) > 0
+                        ? $this->translationService->contributionsWaiting($t)['lines']
+                        : ($role === 'main' ? 0 : null),
                     'main_missing' => $role === 'branch'
                         ? !$withMain->has($t->file_uuid)
                         : null,

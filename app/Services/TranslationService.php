@@ -616,6 +616,123 @@ class TranslationService
         return self::priorityOf($cTag, $cValue) > self::priorityOf($mTag, $mValue);
     }
 
+    /**
+     * The keys one contribution offers a Main — the ones it would actually win.
+     *
+     * ⚠ Keys, not a tally: two contributions offering the same line are one line to recover, and
+     * adding their counts would promise twice the work that exists.
+     *
+     * @param  array<string, mixed>  $main    the Main's file, decoded
+     * @param  array<string, mixed>  $branch  the contribution's file, decoded
+     * @return array<string, true>            the keys this contribution wins, as a set
+     */
+    public static function keysOfferedTo(array $main, array $branch): array
+    {
+        $offered = [];
+
+        foreach ($branch as $key => $entry) {
+            // Underscore keys are metadata (_uuid, _game, _fonts…), not translated lines.
+            if (str_starts_with((string) $key, '_')) {
+                continue;
+            }
+
+            if (self::contributionWins($main[$key] ?? null, $entry)) {
+                $offered[$key] = true;
+            }
+        }
+
+        return $offered;
+    }
+
+    /**
+     * What a Main's contributions are actually holding for it.
+     *
+     * 🔴 **Not "how many branches exist".** A contributor who forked off months ago and has done
+     * nothing since has nothing to give, and counting them tells their Main to go and review
+     * emptiness. What is counted is what the merge screen would offer — the same rule, so the
+     * number on the button matches the rows behind it.
+     *
+     * ⚠ **Cached on the state, not on a clock.** The key carries the Main's hash and every
+     * branch's, so it changes the moment any of them does and stays valid the rest of the time.
+     * A timed cache would answer with yesterday's number for no reason, and an invalidation hook
+     * would be one more thing to remember when a file is written.
+     *
+     * ⚠ Frozen branches are counted: closing a lineage stops NEW contributions, it does not throw
+     * away the ones already received, and their Main may still merge them.
+     *
+     * @return array{branches: int, lines: int}
+     */
+    public function contributionsWaiting(Translation $main): array
+    {
+        $branches = Translation::where('file_uuid', $main->file_uuid)
+            ->branches()
+            ->get(['id', 'file_path', 'file_hash']);
+
+        if ($branches->isEmpty()) {
+            return ['branches' => 0, 'lines' => 0];
+        }
+
+        $signature = $branches
+            ->map(fn (Translation $b) => $b->id . ':' . ($b->file_hash ?? ''))
+            ->sort()
+            ->implode('|');
+
+        $cacheKey = 'contrib-waiting:' . $main->file_uuid
+            . ':' . ($main->file_hash ?? '')
+            . ':' . md5($signature);
+
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addDay(), function () use ($main, $branches) {
+            $mainContent = $main->decodeFileContent() ?? [];
+
+            $withWork = 0;
+            $lines = [];
+
+            foreach ($branches as $branch) {
+                $content = $branch->decodeFileContent();
+                if ($content === null) {
+                    continue;
+                }
+
+                $offered = self::keysOfferedTo($mainContent, $content);
+                if ($offered === []) {
+                    continue;
+                }
+
+                $withWork++;
+                $lines += $offered;
+            }
+
+            return ['branches' => $withWork, 'lines' => count($lines)];
+        });
+    }
+
+    /**
+     * The other direction: what THIS contribution is holding for its Main.
+     *
+     * ⚠ Its own question, and its own answer. A contributor needs to know whether their work has
+     * anything left to give — not what the other contributions are doing, which is none of their
+     * business and which `isReadableBy` keeps out of their reach anyway.
+     */
+    public function linesOfferedToMain(Translation $branch, ?Translation $main): int
+    {
+        if ($main === null) {
+            return 0;
+        }
+
+        $cacheKey = 'contrib-offered:' . $branch->id
+            . ':' . ($branch->file_hash ?? '')
+            . ':' . ($main->file_hash ?? '');
+
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addDay(), function () use ($branch, $main) {
+            $branchContent = $branch->decodeFileContent();
+            if ($branchContent === null) {
+                return 0;
+            }
+
+            return count(self::keysOfferedTo($main->decodeFileContent() ?? [], $branchContent));
+        });
+    }
+
     /** The text of an entry, in either file format ({v,t} object or a bare string). */
     private static function entryValue($entry): string
     {

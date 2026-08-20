@@ -249,7 +249,7 @@ class TranslationController extends Controller
      * - exists: true, role: 'branch' → UPDATE (user is Branch contributor)
      * - exists: true, role: 'none' → Would become BRANCH (Main exists, different user)
      */
-    public function checkUuid(Request $request): JsonResponse
+    public function checkUuid(Request $request, TranslationService $service): JsonResponse
     {
         $request->validate([
             'uuid' => 'required|string|max:36',
@@ -283,6 +283,19 @@ class TranslationController extends Controller
                 ? Translation::where('file_uuid', $uuid)->branches()->count()
                 : null;
 
+            // 🔴 **How many of them are actually holding something.** `branches_count` says how
+            // many people contribute — true, useful, and not the same question. A contributor who
+            // took the file months ago and never came back has nothing to give, and counting them
+            // sends their Main to review emptiness. Computed with the rule the merge screen
+            // pre-selects with, so the number matches the rows behind the button.
+            //
+            // ⚠ Each side gets its own question and no more: a Main learns what its contributions
+            // hold, a contributor learns what THEIRS holds — never what the others are doing,
+            // which is none of their business and which `isReadableBy` keeps out of reach anyway.
+            $waiting = $role === 'main'
+                ? $service->contributionsWaiting($ownTranslation)
+                : null;
+
             return response()->json([
                 'exists' => true,
                 'role' => $role,
@@ -303,6 +316,14 @@ class TranslationController extends Controller
                 'branch_frozen' => $ownTranslation->isFrozenBranch(),
                 // The contributor's apport over time, for their own card in game.
                 'merged_lines_total' => $role === 'branch' ? $ownTranslation->merged_lines_total : null,
+
+                // Additive, both null on the side the question does not apply to. An older mod
+                // ignores them and goes on showing the raw count, which is what it did before.
+                'branches_with_work' => $waiting['branches'] ?? null,
+                'lines_available' => $waiting['lines'] ?? null,
+                'lines_offered' => $role === 'branch'
+                    ? $service->linesOfferedToMain($ownTranslation, $publicTranslation)
+                    : null,
                 'translation' => [
                     'id' => $ownTranslation->id,
                     'source_language' => $ownTranslation->source_language,
