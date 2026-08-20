@@ -355,22 +355,26 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
     }
 
-    public function test_every_contested_line_arrives_already_answered(): void
+    public function test_a_line_arrives_answered_only_where_somebody_did_the_reading(): void
     {
-        // 🔴 Measured on a real lineage (2536 keys): 56 rows need a decision, and the screen now
-        // arrives with 56 answers — 38 taken from a contribution, 18 settled on the Main, none
-        // left blank. What is left blank is what never gets settled: the row vanishes from any
-        // filtered view, the merge saves without it, and the contributor never learns whether
-        // they were read.
+        // 🔴 Measured on a real lineage (2536 keys): 56 rows need a decision. 38 of them arrive
+        // taken — a contribution outranks what the Main holds, so somebody has already read those
+        // lines. The other 18 arrive BLANK and that is the point.
         //
-        // Three rules, and the third is the one that was missing:
-        //   · a line only a contribution has  -> taken
-        //   · both hold one, better tag wins  -> capture < A < V < H = S
-        //   · a tie                           -> the Main keeps it, AND IT IS RECORDED
+        // Two rules, and the second was wrong until 2026-08-20:
+        //   · a line only a contribution has, or one whose tag outranks the Main's  -> taken
+        //   · a tie                                                                 -> nothing
         //
-        // ⚠ A refusal stands LEVEL with a hand-written line (2026-08-20). So H/H, H/S and S/H are
-        // all ties, and all three stay with the Main. The ladder used to rank S with the machine,
-        // which let a contribution overwrite a Main's refusal with nobody asked.
+        // ⚠ **Why a tie may not be pre-answered.** Every selection is written back with A promoted
+        // to V (TranslationService::resolveMergedTag) — picking a version means "I read this". The
+        // screen used to pre-select the Main on ties, so opening it and pressing Merge marked 18
+        // machine lines human-checked without anyone reading one, and the file's quality bar rose
+        // on its own. The comment that defended it claimed the tie was "recorded" as an answer: it
+        // was not — `source: 'main'` writes no merged_at, no merged_lines_total, no reviewed_hash.
+        //
+        // ⚠ A refusal stands LEVEL with a hand-written line. So H/H, H/S and S/H are ties too, and
+        // the ladder used to rank S with the machine — which let a contribution overwrite a Main's
+        // refusal with nobody asked.
         [$owner, $uuid] = $this->makeMergeView();
 
         $html = $this->actingAs($owner)
@@ -388,7 +392,13 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('this.priorityOf(entry)', $html);
         $this->assertStringContainsString('this.priorityOf(mainEntry)', $html);
         $this->assertStringNotContainsString('this.tagRank(', $html);
-        $this->assertStringContainsString("source: 'main',", $html);
+
+        // 🔴 **The defaults never write a pick pointing at the Main.** That is the whole rule
+        // above, and the one line of code that would break it is this one — so it is asserted
+        // absent rather than described in a comment nobody re-reads. A click still produces it;
+        // `select()` builds its own object, which is why this string is unique to the defaults.
+        $this->assertStringContainsString('if (best.rank > mainTag) {', $html);
+        $this->assertStringNotContainsString('} else if (mainEntry !== undefined) {', $html);
 
         // ⚠ The mod's own interface is not a line of the game: out of the arbitration on both
         // sides. It travels in the same file today and will get one of its own.

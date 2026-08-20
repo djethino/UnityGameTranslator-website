@@ -1074,7 +1074,14 @@ document.addEventListener('alpine:init', () => {
                         const localPriority = this.priorityOf(this.localData[key]);
                         const onlinePriority = this.priorityOf(this.onlineData[key]);
 
-                        this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
+                        // 🔴 **Nothing on a tie** — the same rule as the merge screen, and for the
+                        // same reason: a pick is written back with A promoted to V, so answering a
+                        // tie by default records a validation nobody performed. Two machine
+                        // translations that differ is exactly that case, and it is the common one.
+                        // The row is shown and waits for a click.
+                        if (localPriority !== onlinePriority) {
+                            this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
+                        }
                     } else {
                         this.selections[key] = 'online';
                     }

@@ -142,15 +142,15 @@ class UserController extends Controller
     /**
      * What is waiting on this row, in one lookup.
      *
-     * 🔴 **Three of the five are new, and they are the ones worth having**: "38 lines" cannot tell
-     * a Main whether an evening of review is worth it, where "12 new · 7 reworded · 19 validated"
-     * can. The last kind changes no text at all — somebody read the Main's machine lines and stood
-     * behind them — and a single total hides it completely.
+     * 🔴 **`lines_waiting` is the one worth having**: "38 lines" cannot tell a Main whether an
+     * evening of review is worth it. What can is how many rows need a decision at all, and what
+     * they are made of — 21 new lines written by hand is a different proposition from 21 the
+     * machine produced, and a single total tells the two apart from neither.
      *
      * ⚠ Null on a branch rather than 0, exactly as `branches_count` is: a contribution has no
      * contributions to answer about, which is not the same as having none waiting.
      *
-     * @return array<string, int|null>
+     * @return array<string, mixed>
      */
     private function waitingFields(Translation $t, string $role, bool $hasBranches): array
     {
@@ -158,9 +158,7 @@ class UserController extends Controller
             return [
                 'branches_with_work' => null,
                 'lines_available' => null,
-                'lines_new' => null,
-                'lines_reworded' => null,
-                'lines_validated' => null,
+                'lines_waiting' => null,
             ];
         }
 
@@ -169,14 +167,21 @@ class UserController extends Controller
         // no branch costs nothing, which is the common case.
         $waiting = $hasBranches
             ? $this->translationService->contributionsWaiting($t)
-            : ['branches' => 0, 'lines' => 0, 'new' => 0, 'reworded' => 0, 'validated' => 0];
+            : TranslationService::noContributionsWaiting();
 
         return [
             'branches_with_work' => $waiting['branches'],
+
+            // ⚠ Unchanged to the byte: a published mod prints this as "N lines to take", and
+            // handing it the review figure would have every installed client lie the same way.
             'lines_available' => $waiting['lines'],
-            'lines_new' => $waiting['new'],
-            'lines_reworded' => $waiting['reworded'],
-            'lines_validated' => $waiting['validated'],
+
+            'lines_waiting' => [
+                'review' => $waiting['review'],
+                'take' => $waiting['lines'],
+                'new' => $waiting['new'],
+                'differing' => $waiting['differing'],
+            ],
         ];
     }
 }

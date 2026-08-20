@@ -76,20 +76,21 @@ class ContributionsWaitingTest extends TestCase
     }
 
     /**
-     * The answer, written the way a reader of these tests should think about it: not a total, but
-     * how many lines of each kind are waiting.
+     * The answer, written the way a reader of these tests should think about it: two measures that
+     * do not follow from each other, each broken down by the contribution's tag.
      *
-     * ⚠ `lines` is derived rather than given, so a case cannot claim a total its own breakdown
-     * contradicts — the property the API relies on when it prints the three side by side.
+     * @param  int  $take  what would be taken — the figure a published mod prints
+     * @param  array<string,int>  $new        lines the Main does not hold, by tag
+     * @param  array<string,int>  $differing  lines both hold differently, by tag
      */
-    private function waiting(int $branches, int $new = 0, int $reworded = 0, int $validated = 0): array
+    private function waiting(int $branches, int $take = 0, array $new = [], array $differing = []): array
     {
         return [
             'branches' => $branches,
-            'lines' => $new + $reworded + $validated,
+            'lines' => $take,
+            'review' => array_sum($new) + array_sum($differing),
             'new' => $new,
-            'reworded' => $reworded,
-            'validated' => $validated,
+            'differing' => $differing,
         ];
     }
 
@@ -139,7 +140,7 @@ class ContributionsWaitingTest extends TestCase
         );
 
         $this->assertSame(
-            $this->waiting(1, new: 1),
+            $this->waiting(1, take: 1, new: ['A' => 1]),
             app(TranslationService::class)->contributionsWaiting($main)
         );
     }
@@ -153,11 +154,11 @@ class ContributionsWaitingTest extends TestCase
             ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'V')]
         );
 
-        // ⚠ Counted as VALIDATED, not as a line of text: nothing was written, somebody read what
-        // was there and stood behind it. That distinction is the whole reason the answer carries
-        // three numbers — a Main weighing an evening of review needs to know which it is.
+        // ⚠ Reported under the contribution's TAG — `V`, not the letter the Main holds. Nothing was
+        // written here: somebody read what was there and stood behind it, and that is the work this
+        // site asks for. A Main weighing an evening needs to see it apart from new prose.
         $this->assertSame(
-            $this->waiting(1, validated: 1),
+            $this->waiting(1, take: 1, differing: ['V' => 1]),
             app(TranslationService::class)->contributionsWaiting($main)
         );
     }
@@ -180,8 +181,12 @@ class ContributionsWaitingTest extends TestCase
             ]
         );
 
+        // 🔴 **Nothing to take, three rows to look at** — and that is the pair of measures this
+        // answer exists to keep apart. The old shape could only say "0", which told the Main there
+        // was nothing here at all; there are three lines a contributor changed, and the Main is the
+        // one who decides they stay as they are.
         $this->assertSame(
-            $this->waiting(0),
+            $this->waiting(0, take: 0, differing: ['H' => 2, 'S' => 1]),
             app(TranslationService::class)->contributionsWaiting($main)
         );
     }
@@ -201,7 +206,10 @@ class ContributionsWaitingTest extends TestCase
         );
 
         $service = app(TranslationService::class);
-        $this->assertSame($this->waiting(1, reworded: 1), $service->contributionsWaiting($main));
+        $this->assertSame(
+            $this->waiting(1, take: 1, differing: ['H' => 1]),
+            $service->contributionsWaiting($main)
+        );
 
         $branch = Translation::where('file_uuid', $main->file_uuid)->branches()->first();
         $branch->forceFill(['reviewed_hash' => $branch->file_hash])->save();
@@ -216,7 +224,7 @@ class ContributionsWaitingTest extends TestCase
         $branch->forceFill(['file_hash' => 'moved-' . uniqid('', true)])->save();
 
         $this->assertSame(
-            $this->waiting(1, reworded: 1),
+            $this->waiting(1, take: 1, differing: ['H' => 1]),
             $service->contributionsWaiting($main),
             'moved since: it is back in front of the Main'
         );
@@ -232,7 +240,7 @@ class ContributionsWaitingTest extends TestCase
         );
 
         $this->assertSame(
-            $this->waiting(2, reworded: 1),
+            $this->waiting(2, take: 1, differing: ['H' => 1]),
             app(TranslationService::class)->contributionsWaiting($main)
         );
     }
@@ -342,9 +350,12 @@ class ContributionsWaitingTest extends TestCase
         $this->assertSame(1, $asOwner['branches_count'], 'one person contributes');
         $this->assertSame(1, $asOwner['branches_with_work'], 'and they are holding something');
         $this->assertSame(2, $asOwner['lines_available'], 'a review and a new line');
-        $this->assertSame(1, $asOwner['lines_new'], 'and the endpoint says which is which');
-        $this->assertSame(1, $asOwner['lines_validated']);
-        $this->assertSame(0, $asOwner['lines_reworded']);
+
+        // And the endpoint says what they are, on both axes.
+        $this->assertSame(2, $asOwner['lines_waiting']['review']);
+        $this->assertSame(2, $asOwner['lines_waiting']['take']);
+        $this->assertSame(['H' => 1], $asOwner['lines_waiting']['new']);
+        $this->assertSame(['V' => 1], $asOwner['lines_waiting']['differing']);
         $this->assertNull($asOwner['lines_offered'], 'a Main offers nothing to itself');
 
         // The contributor: what they are holding, and nothing about the lineage's other rows.
@@ -356,7 +367,7 @@ class ContributionsWaitingTest extends TestCase
         $this->assertSame(2, $asContributor['lines_offered']);
         $this->assertNull($asContributor['branches_with_work'], 'not their question');
         $this->assertNull($asContributor['lines_available'], 'nor their business');
-        $this->assertNull($asContributor['lines_validated'], 'and neither is the breakdown');
+        $this->assertNull($asContributor['lines_waiting'], 'and neither is the breakdown');
     }
 
     public function test_a_listing_carries_the_same_answer_as_the_single_check(): void
@@ -391,9 +402,9 @@ class ContributionsWaitingTest extends TestCase
         // breakdown included, which is the half a listing is most tempted to compute differently.
         $this->assertSame(1, $row['branches_with_work']);
         $this->assertSame(1, $row['lines_available']);
-        $this->assertSame(1, $row['lines_validated']);
-        $this->assertSame(0, $row['lines_new']);
-        $this->assertSame(0, $row['lines_reworded']);
+        $this->assertSame(1, $row['lines_waiting']['review']);
+        $this->assertSame(['V' => 1], $row['lines_waiting']['differing']);
+        $this->assertSame([], $row['lines_waiting']['new']);
     }
 
     public function test_an_orphaned_contribution_offers_nothing_rather_than_failing(): void
@@ -423,7 +434,10 @@ class ContributionsWaitingTest extends TestCase
         );
 
         $service = app(TranslationService::class);
-        $this->assertSame($this->waiting(1, validated: 1), $service->contributionsWaiting($main));
+        $this->assertSame(
+            $this->waiting(1, take: 1, differing: ['V' => 1]),
+            $service->contributionsWaiting($main)
+        );
 
         $this->makeTranslation(
             User::factory()->create()->refresh(),
@@ -433,53 +447,61 @@ class ContributionsWaitingTest extends TestCase
             ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'V'), 'extra' => $this->line('Plus', 'H')]
         );
 
-        $this->assertSame($this->waiting(2, new: 1, validated: 1), $service->contributionsWaiting($main));
+        $this->assertSame(
+            $this->waiting(2, take: 2, new: ['H' => 1], differing: ['V' => 1]),
+            $service->contributionsWaiting($main)
+        );
     }
 
     /**
-     * 🔴 One key, one kind — the largest thing that happened to it.
+     * 🔴 One key, one row — under the best tag any contribution offers for it.
      *
-     * Two contributions can offer the same line for different reasons: one retranslates it, another
-     * only marks it validated. The total already counts that key once; the breakdown has to file it
-     * once too, or the three numbers stop summing to it. And it must not depend on the order the
-     * contributions came back — which a plain array union would.
+     * Two contributions can offer the same line at different qualities. "Two contributions offering
+     * the same line are one line to recover" has to hold for the breakdown as well, or the two
+     * halves stop summing to the total — and which tag is reported must not depend on the order the
+     * files came back, which a plain array union would decide.
      */
-    public function test_one_key_offered_twice_is_filed_under_the_larger_kind(): void
+    public function test_one_key_offered_twice_is_filed_once_under_its_best_tag(): void
     {
         $main = $this->lineage(
             ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
-            // Validated only: same words, better tag.
+            // Read and stood behind: same words, better tag.
             ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'V')],
-            // Retranslated: the words change too.
+            // Written by hand, which outranks it.
             ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
         );
 
         $this->assertSame(
-            $this->waiting(2, reworded: 1),
+            $this->waiting(2, take: 1, differing: ['H' => 1]),
             app(TranslationService::class)->contributionsWaiting($main),
-            'one line to recover, and it is a retranslation'
+            'one line to look at, reported at the best quality offered for it'
         );
     }
 
     /**
-     * A retranslation carries a better tag as often as not. Reporting it as "validated" would name
-     * the lesser half of what the contributor did.
+     * 🔴 A captured line is an `H` with nothing in it, and it sits at the FLOOR of the ladder.
+     *
+     * Reading the letter alone would report it as hand-written and rank it above every real
+     * translation — which is why the rank is kept beside the tag rather than recomputed from it.
      */
-    public function test_new_words_are_reported_as_reworded_even_when_the_tag_also_rises(): void
+    public function test_a_capture_is_not_reported_as_hand_written(): void
     {
         $main = $this->lineage(
             ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
-            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
+            // A capture, and a real translation of the same line from somebody else.
+            ['_uuid' => 'x', 'greet' => $this->line('', 'H')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'V')]
         );
 
         $this->assertSame(
-            $this->waiting(1, reworded: 1),
-            app(TranslationService::class)->contributionsWaiting($main)
+            $this->waiting(1, take: 1, differing: ['V' => 1]),
+            app(TranslationService::class)->contributionsWaiting($main),
+            'the V outranks the empty H, and only one contribution is holding anything'
         );
     }
 
-    /** The three kinds at once, which is what a real contribution looks like. */
-    public function test_the_three_kinds_are_counted_apart(): void
+    /** The two axes at once, which is what a real contribution looks like. */
+    public function test_the_two_axes_are_counted_apart(): void
     {
         $main = $this->lineage(
             [
@@ -492,19 +514,21 @@ class ContributionsWaitingTest extends TestCase
                 '_uuid' => 'x',
                 // Read and stood behind: no word changes.
                 'greet' => $this->line('Bonjour', 'V'),
-                // Retranslated.
+                // Retranslated by hand.
                 'bye' => $this->line('Salut', 'H'),
-                // The Main keeps its own: a tie never displaces it.
+                // A tie: the Main keeps its own, but the row still needs looking at.
                 'kept' => $this->line('Autre', 'H'),
                 // Text nobody else has.
                 'extra' => $this->line('Plus', 'H'),
             ]
         );
 
+        // 🔴 Four rows to review, three worth taking — the pair of measures a single total cannot
+        // carry. And the tags say what they are: one new line written by hand, one validation, two
+        // hand-written rewordings of which one the Main will keep.
         $this->assertSame(
-            $this->waiting(1, new: 1, reworded: 1, validated: 1),
-            app(TranslationService::class)->contributionsWaiting($main),
-            'three lines waiting, of three different kinds, and the tie left out'
+            $this->waiting(1, take: 3, new: ['H' => 1], differing: ['V' => 1, 'H' => 2]),
+            app(TranslationService::class)->contributionsWaiting($main)
         );
     }
 }

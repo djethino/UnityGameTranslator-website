@@ -1012,22 +1012,22 @@ document.addEventListener('alpine:init', () => {
          * rule, ported: a line only a contribution has is taken, and where both hold one the
          * better tag wins — the socle's ladder, capture < A < V < H = S.
          *
-         * ⚠ **A refusal stands level with a hand-written line, and the Main keeps its own on any
-         * tie.** So H against H, H against S and S against H all stay with the Main, with nobody
-         * asked. That is what the strict `>` below means, and it is the one asymmetry separating
-         * this screen from a three-way merge: there, the two sides are equal and an ancestor says
-         * who moved; here, one side published and the other is proposing.
+         * ⚠ **A refusal stands level with a hand-written line, and nothing is pre-selected on a
+         * tie.** So H against H, H against S and S against H are shown and left alone — as is the
+         * commonest tie of all, two machine translations that differ. That is what the strict `>`
+         * below means, and it is the one asymmetry separating this screen from a three-way merge:
+         * there, the two sides are equal and an ancestor says who moved; here, one side published
+         * and the other is proposing.
          *
-         * ⚠ **The Main wins any tie, and that decision is RECORDED** rather than left blank. The point of
-         * the screen is that everything new or contested is answered once; a line nobody marks is
-         * a line that comes back at the next merge, and the contributor never learns whether they
-         * were read. Recording it is also what makes the count truthful — the Save button says
-         * how many lines were gone through, not how many changed hands.
+         * 🔴 **A tie is NOT pre-answered, and this is the rule the screen turns on.** Every
+         * selection is written back with A promoted to V (TranslationService::resolveMergedTag) —
+         * picking a version means "I read this". Pre-selecting the Main on a tie therefore wrote a
+         * validation nobody performed: on the lineage this was measured against, opening the page
+         * and pressing Merge marked 18 machine lines human-checked without anyone reading one.
          *
-         * ⚠ Every selection is written back with A promoted to V (TranslationService::
-         * resolveMergedTag), and that is the intended meaning here, not a side effect: these rows
-         * have been put in front of their owner, who re-reads them and saves. Nothing is written
-         * until they do.
+         * ⚠ Validating stays one click away, and the click is what makes it true: pick a column,
+         * switch the tag, or edit the value. What the defaults may do is take what OUTRANKS what
+         * the Main holds — there, a contributor has already done the reading.
          *
          * ⚠ Keys already chosen are skipped, so a review interrupted and resumed (the pending
          * state is restored on load) does not have its decisions overwritten by the defaults.
@@ -1138,21 +1138,26 @@ document.addEventListener('alpine:init', () => {
                 // No contribution holds anything different: nothing to settle on this line.
                 if (!best) continue;
 
+                // 🔴 **Only when one side actually outranks the other.** A tie is left untouched,
+                // and that is the whole rule: pre-selecting the Main on a line where both sides are
+                // machine translations WROTE A VALIDATION nobody performed — the apply endpoint
+                // reads `source: 'main'` as "I checked this", and promotes A to V. On the lineage
+                // this was measured against, opening the page and pressing Merge would have marked
+                // 18 lines human-checked that nobody had read, and the file's quality bar would
+                // have risen on its own.
+                //
+                // ⚠ The comment that used to defend it claimed a tie was "recorded" as an answer.
+                // It was not: `source: 'main'` writes no merged_at, no merged_lines_total and no
+                // reviewed_hash, so nothing was ever settled by it — see TODO.md, where the real
+                // gap (a refused contribution stays waiting for ever) is written down.
+                //
+                // Validating stays one click away: picking a column, switching the tag or editing
+                // the value all say it deliberately.
                 if (best.rank > mainTag) {
                     this.selections[key] = {
                         source: 'branch_' + best.branch.id,
                         value: this.getValue(best.entry),
                         tag: this.getTag(best.entry),
-                    };
-                } else if (mainEntry !== undefined) {
-                    // 🔴 **A tie is a decision too, and it is recorded.** Leaving it unmarked
-                    // meant the line simply vanished from a screen filtered on pending changes,
-                    // and nothing ever settled it — the contribution stayed unanswered for good.
-                    // Keeping the Main IS the answer; it just has to be written down.
-                    this.selections[key] = {
-                        source: 'main',
-                        value: this.getValue(mainEntry),
-                        tag: this.getTag(mainEntry),
                     };
                 }
             }

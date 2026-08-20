@@ -154,14 +154,21 @@ class SyncStateController extends Controller
                     $state['branches_with_work'] = $waiting['branches'];
                     $state['lines_available'] = $waiting['lines'];
 
-                    // 🔴 **What those lines are.** The total cannot tell a Main whether reviewing
-                    // is worth an evening: lines nobody has, lines somebody retranslated and lines
-                    // they already had that somebody read and stood behind are three different
-                    // propositions, and the third changes no text at all. They sum to
-                    // lines_available. Additive: an older mod ignores them.
-                    $state['lines_new'] = $waiting['new'];
-                    $state['lines_reworded'] = $waiting['reworded'];
-                    $state['lines_validated'] = $waiting['validated'];
+                    // 🔴 **What there is to look at, and what it is made of.** `lines_available`
+                    // above is what would be TAKEN; this is what needs a decision — new lines plus
+                    // lines both sides hold differently, the Main's own included. Neither can be
+                    // derived from the other, and a review is weighed on both: how long it takes,
+                    // and whether anything comes out of it.
+                    //
+                    // Each broken down by the contribution's tag, which is what says it is worth
+                    // the evening — 21 new lines written by hand is not 21 the machine produced.
+                    // Additive: an older mod ignores the field and prints the total alone.
+                    $state['lines_waiting'] = [
+                        'review' => $waiting['review'],
+                        'take' => $waiting['lines'],
+                        'new' => $waiting['new'],
+                        'differing' => $waiting['differing'],
+                    ];
                 }
             } elseif ($withLineage) {
                 // A branch used to learn nothing about the Main it derives from:

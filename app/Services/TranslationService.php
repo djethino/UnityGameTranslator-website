@@ -585,77 +585,79 @@ class TranslationService
      */
     public static function contributionWins($main, $contribution): bool
     {
-        return self::contributionGain($main, $contribution) !== null;
-    }
-
-    /**
-     * The three kinds of gain, so a Main can tell WHAT is waiting and not only how much.
-     *
-     * 🔴 **Because "38 lines" answers the wrong question.** A Main deciding whether to spend an
-     * evening reviewing needs to know what those lines are: text that exists nowhere else, text
-     * somebody retranslated, or lines they already had that somebody read and stood behind. The
-     * third is the one a single total hides completely, and it is often the bulk of the work — the
-     * site asks for exactly that reading, and it changes no words at all.
-     *
-     * ⚠ **One test, three answers.** This holds the whole rule and `contributionWins` is now its
-     * yes/no reading, so the count on a button and the rows behind it cannot drift apart — the
-     * property `contributionsWaiting` was written to protect.
-     *
-     * The order matters where a line qualifies twice: a retranslation carries a better tag as often
-     * as not, and calling it "validated" would report the smaller of the two things that happened.
-     *
-     * @param  array{v?: string, t?: string}|string|null  $main          null when the Main has no such key
-     * @param  array{v?: string, t?: string}|string|null  $contribution
-     * @return 'new'|'reworded'|'validated'|null          null when the Main keeps its own
-     */
-    public static function contributionGain($main, $contribution): ?string
-    {
         $cValue = self::entryValue($contribution);
         $cTag = self::entryTag($contribution);
 
         if (!self::isGameLine($cTag)) {
-            return null;
+            return false;
         }
 
         if ($contribution === null) {
-            return null;
+            return false;
         }
 
         // The case with no question in it, and the only one won without outranking anything.
         if ($main === null) {
-            return 'new';
+            return true;
         }
 
         $mValue = self::entryValue($main);
         $mTag = self::entryTag($main);
 
         if (!self::isGameLine($mTag)) {
-            return null;
+            return false;
         }
 
         // Same words AND same tag: nothing changed hands.
         if ($mValue === $cValue && $mTag === $cTag) {
-            return null;
+            return false;
         }
 
-        if (self::priorityOf($cTag, $cValue) <= self::priorityOf($mTag, $mValue)) {
-            return null;
-        }
-
-        // Words first: the tag almost always rises with them, and reporting such a line as merely
-        // validated would name the lesser half of what the contributor did.
-        return $mValue === $cValue ? 'validated' : 'reworded';
+        return self::priorityOf($cTag, $cValue) > self::priorityOf($mTag, $mValue);
     }
 
     /**
-     * Which of two gains says more, so a key offered by several contributions is filed once and
-     * under the largest thing that happened to it.
+     * Where a contributed line stands relative to the Main — the FIRST of the two axes a review
+     * screen counts on, and the one this service could not answer.
+     *
+     * 🔴 **"38 lines" and "56 rows" are two true measures of one lineage**, and the two screens
+     * that show them were built from different questions: the merge view counts what needs a
+     * decision (new + differing), this service counted what would be TAKEN. Neither is wrong and
+     * neither can be derived from the other — on the lineage they were first measured against, 56
+     * rows to decide and 38 worth taking, the 18 in between being machine translations that
+     * differ, where the Main keeps its own.
+     *
+     * Crossed with the contribution's TAG (see {@see contributionsWaiting}), this is what tells a
+     * Main whether an evening of review is worth it: 21 new lines all written by hand is a very
+     * different proposition from 21 the machine produced.
+     *
+     * @param  array{v?: string, t?: string}|string|null  $main          null when the Main has no such key
+     * @param  array{v?: string, t?: string}|string|null  $contribution
+     * @return 'new'|'differing'|null                     null when the two agree, or it is not a game line
      */
-    private static function strongerGain(?string $a, ?string $b): string
+    public static function lineKind($main, $contribution): ?string
     {
-        $rank = ['validated' => 1, 'reworded' => 2, 'new' => 3];
+        $cTag = self::entryTag($contribution);
 
-        return ($rank[$a] ?? 0) >= ($rank[$b] ?? 0) ? (string) $a : (string) $b;
+        if ($contribution === null || !self::isGameLine($cTag)) {
+            return null;
+        }
+
+        if ($main === null) {
+            return 'new';
+        }
+
+        $mTag = self::entryTag($main);
+
+        if (!self::isGameLine($mTag)) {
+            return null;
+        }
+
+        // ⚠ Tag included, never the words alone: a contribution that only validated a line has
+        // genuinely diverged from the Main, and that is the whole work this site asks for.
+        return self::entryValue($main) === self::entryValue($contribution) && $mTag === $cTag
+            ? null
+            : 'differing';
     }
 
     /**
@@ -664,13 +666,9 @@ class TranslationService
      * ⚠ Keys, not a tally: two contributions offering the same line are one line to recover, and
      * adding their counts would promise twice the work that exists.
      *
-     * ⚠ The VALUE is the kind of gain, not `true`: what a line brings is as much a part of the
-     * answer as that it brings something — see {@see contributionGain}. Callers that only want a
-     * total still `count()` it and are unaffected.
-     *
      * @param  array<string, mixed>  $main    the Main's file, decoded
      * @param  array<string, mixed>  $branch  the contribution's file, decoded
-     * @return array<string, string>          key => 'new'|'reworded'|'validated'
+     * @return array<string, true>            the keys this contribution wins, as a set
      */
     public static function keysOfferedTo(array $main, array $branch): array
     {
@@ -682,10 +680,8 @@ class TranslationService
                 continue;
             }
 
-            $gain = self::contributionGain($main[$key] ?? null, $entry);
-
-            if ($gain !== null) {
-                $offered[$key] = $gain;
+            if (self::contributionWins($main[$key] ?? null, $entry)) {
+                $offered[$key] = true;
             }
         }
 
@@ -717,11 +713,21 @@ class TranslationService
      * ⚠ Frozen branches are counted: closing a lineage stops NEW contributions, it does not throw
      * away the ones already received, and their Main may still merge them.
      *
-     * ⚠ The three kinds sum to `lines`, and they are the reason this answer is worth reading at
-     * all: "38 lines" says nothing about whether an evening of review is worth it, where "12 new ·
-     * 7 reworded · 19 validated" does. See {@see contributionGain}.
+     * 🔴 **Two measures, both true, and neither derivable from the other.** `lines` is what would
+     * be TAKEN; `review` is what needs a decision — new lines plus lines both sides hold
+     * differently, including those where the Main keeps its own. On the lineage this was measured
+     * against: 56 to review, 38 to take, the 18 in between being two machine translations that
+     * differ. A screen showing only one of them cannot answer both "is there work here for me" and
+     * "how long will this take".
      *
-     * @return array{branches: int, lines: int, new: int, reworded: int, validated: int}
+     * ⚠ `lines` keeps its meaning to the byte: a published mod prints it as "N lines to take", and
+     * handing it the larger figure would have every installed client lie in the same direction.
+     *
+     * Each of the two is broken down by the contribution's TAG, which is what says whether it is
+     * worth an evening: 21 new lines all written by hand is not the same proposition as 21 the
+     * machine produced. `new` and `differing` sum to `review`.
+     *
+     * @return array{branches: int, lines: int, review: int, new: array<string,int>, differing: array<string,int>}
      */
     public function contributionsWaiting(Translation $main): array
     {
@@ -734,7 +740,7 @@ class TranslationService
             ->values();
 
         if ($branches->isEmpty()) {
-            return ['branches' => 0, 'lines' => 0, 'new' => 0, 'reworded' => 0, 'validated' => 0];
+            return self::noContributionsWaiting();
         }
 
         $signature = $branches
@@ -756,6 +762,18 @@ class TranslationService
             $withWork = 0;
             $lines = [];
 
+            // One pass over every contribution, two questions per line. Reading the files twice —
+            // once for what is taken, once for what is reviewed — would double the cost of the one
+            // expensive thing here for an answer already in hand.
+            //
+            // Per key: the kind (new or differing) and the BEST tag any contribution offers for it.
+            // Best rather than first, because "two contributions offering the same line are one
+            // line to recover" has to hold for the breakdown too, and reading a set of keys in file
+            // order is not a decision anybody took.
+            $kindOf = [];
+            $tagOf = [];
+            $rankOf = [];
+
             foreach ($branches as $branch) {
                 $content = $branch->decodeFileContent();
 
@@ -772,36 +790,69 @@ class TranslationService
                     continue;
                 }
 
+                foreach ($content as $key => $entry) {
+                    if (str_starts_with((string) $key, '_')) {
+                        continue;
+                    }
+
+                    $kind = self::lineKind($mainContent[$key] ?? null, $entry);
+
+                    if ($kind === null) {
+                        continue;
+                    }
+
+                    // ⚠ The rank is kept beside the letter, never recomputed from it: a captured
+                    // line is an `H` with nothing in it and sits at the FLOOR of the ladder, so
+                    // asking priorityOf() for a letter alone would rank it above every real
+                    // translation a contributor offered.
+                    $tag = self::entryTag($entry) ?? 'A';
+                    $rank = self::priorityOf($tag, self::entryValue($entry));
+
+                    $kindOf[$key] = $kind;
+
+                    if (!isset($rankOf[$key]) || $rank > $rankOf[$key]) {
+                        $tagOf[$key] = $tag;
+                        $rankOf[$key] = $rank;
+                    }
+                }
+
                 $offered = self::keysOfferedTo($mainContent, $content);
                 if ($offered === []) {
                     continue;
                 }
 
                 $withWork++;
-
-                // ⚠ Not `+=`, which keeps whichever kind was seen FIRST. Two contributions can
-                // offer the same key for different reasons — one retranslates it, another only
-                // marks it validated — and the tally must name the larger of the two, or the same
-                // key would be filed differently depending on the order the branches came back.
-                foreach ($offered as $key => $gain) {
-                    $lines[$key] = isset($lines[$key])
-                        ? self::strongerGain($lines[$key], $gain)
-                        : $gain;
-                }
+                $lines += $offered;
             }
 
-            $kinds = array_count_values($lines);
+            $tally = ['new' => [], 'differing' => []];
 
-            // ⚠ The three always sum to `lines`, which is what makes them readable side by side:
-            // one key is filed once, under one kind.
+            foreach ($kindOf as $key => $kind) {
+                $tag = $tagOf[$key];
+                $tally[$kind][$tag] = ($tally[$kind][$tag] ?? 0) + 1;
+            }
+
             return [
                 'branches' => $withWork,
                 'lines' => count($lines),
-                'new' => $kinds['new'] ?? 0,
-                'reworded' => $kinds['reworded'] ?? 0,
-                'validated' => $kinds['validated'] ?? 0,
+                'review' => count($kindOf),
+                'new' => $tally['new'],
+                'differing' => $tally['differing'],
             ];
         });
+    }
+
+    /**
+     * The shape of "nothing is waiting", in one place.
+     *
+     * ⚠ Written out rather than left to callers: five keys, and a caller that forgets one produces
+     * a screen reading a null as a zero — which is the one thing this answer must never do.
+     *
+     * @return array{branches: int, lines: int, review: int, new: array<string,int>, differing: array<string,int>}
+     */
+    public static function noContributionsWaiting(): array
+    {
+        return ['branches' => 0, 'lines' => 0, 'review' => 0, 'new' => [], 'differing' => []];
     }
 
     /**
