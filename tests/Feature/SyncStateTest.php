@@ -86,11 +86,14 @@ class SyncStateTest extends TestCase
         return $translation;
     }
 
-    private function state(string $token, string $uuid, ?string $hash = null): array
+    private function state(string $token, string $uuid, ?string $hash = null, ?string $lineage = null): array
     {
         $query = ['uuid' => $uuid];
         if ($hash !== null) {
             $query['hash'] = $hash;
+        }
+        if ($lineage !== null) {
+            $query['lineage'] = $lineage;
         }
 
         return $this->withHeader('Authorization', 'Bearer ' . $token)
@@ -144,6 +147,76 @@ class SyncStateTest extends TestCase
         // published mod announced work that did not exist.
         $this->assertSame(2, $state['branches_with_work']);
         $this->assertSame(1, $state['lines_available'], 'one line, reviewed by two of them');
+    }
+
+    /**
+     * 🔴 A stream carries the caller's OWN line, and nothing about other people.
+     *
+     * This endpoint is re-read every time ANYBODY publishes into the lineage, and weighing
+     * contributions reads their files. A Main whose contributor publishes every ten minutes would
+     * pay that read every ten minutes — for something nobody can act on in the second anyway.
+     */
+    public function test_a_caller_can_ask_about_their_own_line_alone(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$owner, $token] = $this->makeUserWithToken();
+        [$alice] = $this->makeUserWithToken();
+
+        $this->makeTranslation($owner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($alice, $uuid, 'branch', 'a1');
+
+        $narrow = $this->state($token, $uuid, 'main-hash', '0');
+
+        $this->assertSame('main', $narrow['role'], 'who they are is still answered');
+        $this->assertNotNull($narrow['translation'], 'and so is their own line');
+        $this->assertArrayNotHasKey('branches_with_work', $narrow);
+        $this->assertArrayNotHasKey('lines_available', $narrow);
+        $this->assertArrayNotHasKey('branches_pending_review', $narrow);
+
+        // ⚠ ABSENT, never zero: a client that asked not to be told has not been told
+        // that nothing is waiting. The mod reads a missing field as unknown.
+        $this->assertSame(0, $narrow['branches_count'], 'the initial value, never counted');
+    }
+
+    /** A mod that predates the parameter must go on receiving what it always received. */
+    public function test_the_full_payload_is_what_arrives_by_default(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$owner, $token] = $this->makeUserWithToken();
+        [$alice] = $this->makeUserWithToken();
+
+        $this->makeTranslation($owner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($alice, $uuid, 'branch', 'a1');
+
+        $full = $this->state($token, $uuid, 'main-hash');
+
+        $this->assertSame(1, $full['branches_count']);
+        $this->assertSame(1, $full['branches_with_work']);
+        $this->assertSame(1, $full['branches_pending_review']);
+    }
+
+    /**
+     * The same rule from the other side: a contribution learns that its Main moved at the rhythm
+     * it chose, not the instant it happens. Somebody publishing every ten minutes would otherwise
+     * wake each of their contributors just as often.
+     */
+    public function test_a_branch_is_not_told_about_its_main_on_a_stream(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$mainOwner] = $this->makeUserWithToken();
+        [$contributor, $token] = $this->makeUserWithToken();
+
+        $this->makeTranslation($mainOwner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($contributor, $uuid, 'branch', 'branch-hash');
+
+        $narrow = $this->state($token, $uuid, 'branch-hash', '0');
+
+        $this->assertSame('branch', $narrow['role']);
+        $this->assertNotNull($narrow['translation'], 'their own line is still there');
+        $this->assertNull($narrow['main'], 'the Main they derive from is not');
+
+        // And it is there when they ask the ordinary way.
+        $this->assertNotNull($this->state($token, $uuid, 'branch-hash')['main']);
     }
 
     public function test_a_main_owner_is_not_told_about_a_main_of_their_own(): void

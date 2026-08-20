@@ -42,12 +42,24 @@ class SyncStateController extends Controller
         $request->validate([
             'uuid' => 'required|string|max:36',
             'hash' => 'nullable|string|max:100',
+            'lineage' => 'nullable|in:0,1',
         ]);
 
         $uuid = $request->query('uuid');
         $clientHash = $request->query('hash');
 
-        $state = $this->buildSyncState($uuid, $request->user(), $clientHash);
+        // 🔴 **`lineage=0` asks only about the caller's OWN line.** What other people are doing —
+        // contributions received, a Main that moved — is weighed against their files, and a stream
+        // re-asks this on every push anybody makes to the lineage. A Main whose contributor
+        // publishes every ten minutes would pay that read every ten minutes, for nothing they can
+        // act on in the moment.
+        //
+        // ⚠ Included by DEFAULT: a mod that predates the parameter must go on receiving what it
+        // has always received. The three fields are then simply ABSENT, never zero — a client that
+        // asked not to be told has not been told there is nothing.
+        $withLineage = $request->query('lineage') !== '0';
+
+        $state = $this->buildSyncState($uuid, $request->user(), $clientHash, $withLineage);
 
         return response()->json($state);
     }
@@ -56,7 +68,8 @@ class SyncStateController extends Controller
      * Build the combined sync state.
      * Extracted from SseController for reuse as REST endpoint.
      */
-    private function buildSyncState(string $uuid, \App\Models\User $user, ?string $clientHash): array
+    private function buildSyncState(string $uuid, \App\Models\User $user, ?string $clientHash,
+                                    bool $withLineage = true): array
     {
         $state = [
             'exists' => false,
@@ -119,31 +132,38 @@ class SyncStateController extends Controller
             ];
 
             if ($role === 'main') {
-                $branches = Translation::where('file_uuid', $uuid)
-                    ->where('visibility', 'branch')
-                    ->get(['id', 'file_hash', 'reviewed_hash']);
+                if ($withLineage) {
+                    $branches = Translation::where('file_uuid', $uuid)
+                        ->where('visibility', 'branch')
+                        ->get(['id', 'file_hash', 'reviewed_hash']);
 
-                $state['branches_count'] = $branches->count();
+                    $state['branches_count'] = $branches->count();
 
-                // A count alone says nothing: it does not move when a contributor pushes new work
-                // to a branch already counted. What the Main owner needs to hear about is what has
-                // not been reviewed yet AND is holding something — see contributionsWaiting, where
-                // both filters are applied and explained.
-                //
-                // 🔴 **`branches_pending_review` is that same number, deliberately.** It used to
-                // count every unreviewed contribution, empty ones included, and it drives the
-                // status overlay's notice — so a published mod announced work that did not exist.
-                // Two fields describing one thing must not be free to differ: a player would read
-                // one figure on the overlay and another on the button beside it.
-                $waiting = $this->translationService->contributionsWaiting($ownTranslation);
-                $state['branches_pending_review'] = $waiting['branches'];
-                $state['branches_with_work'] = $waiting['branches'];
-                $state['lines_available'] = $waiting['lines'];
-            } else {
+                    // A count alone says nothing: it does not move when a contributor pushes new
+                    // work to a branch already counted. What the Main owner needs to hear about is
+                    // what has not been reviewed yet AND is holding something — see
+                    // contributionsWaiting, where both filters are applied and explained.
+                    //
+                    // 🔴 **`branches_pending_review` is that same number, deliberately.** It used
+                    // to count every unreviewed contribution, empty ones included, and it drives
+                    // the status overlay's notice — so a published mod announced work that did not
+                    // exist. Two fields describing one thing must not be free to differ: a player
+                    // would read one figure on the overlay and another on the button beside it.
+                    $waiting = $this->translationService->contributionsWaiting($ownTranslation);
+                    $state['branches_pending_review'] = $waiting['branches'];
+                    $state['branches_with_work'] = $waiting['branches'];
+                    $state['lines_available'] = $waiting['lines'];
+                }
+            } elseif ($withLineage) {
                 // A branch used to learn nothing about the Main it derives from:
                 // this block stopped here, so `main` stayed null and the branch
                 // diverged in silence, however long the Main kept moving.
                 // Additive field: an older mod simply ignores it.
+                //
+                // ⚠ **Part of the lineage, not of one's own line** — so a stream does not carry it.
+                // A Main publishing every ten minutes signals the lineage every time, and each
+                // signal would tell every contributor connected that upstream moved. That belongs
+                // to the rhythm they chose, not to the second it happened.
                 $main = $publicTranslation?->loadMissing('user:id,name');
 
                 if ($main) {

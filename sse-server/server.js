@@ -330,7 +330,17 @@ async function handleDeviceFlow(req, res, deviceCode) {
 
 // ─── Route: Sync SSE ─────────────────────────────────────────────────────────
 
-async function handleSync(req, res, uuid, clientHash) {
+/**
+ * The scope the client asked for, as a query fragment.
+ *
+ * Only '0' means anything: everything else — absent, '1', a stray value — leaves the payload
+ * whole, which is what every mod published before this parameter existed expects.
+ */
+function lineageParam(lineage) {
+    return lineage === '0' ? '&lineage=0' : '';
+}
+
+async function handleSync(req, res, uuid, clientHash, lineage) {
     // Extract Bearer token
     const authHeader = req.headers['authorization'] || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -363,7 +373,7 @@ async function handleSync(req, res, uuid, clientHash) {
     try {
         const hashParam = clientHash ? `&hash=${encodeURIComponent(clientHash)}` : '';
         const stateResult = await fetchFromLaravel(
-            `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}`,
+            `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}`,
             bearerToken
         );
         if (stateResult.status !== 200) {
@@ -418,10 +428,15 @@ async function handleSync(req, res, uuid, clientHash) {
             const parsed = JSON.parse(message);
 
             if (parsed.event === 'uuid_changed') {
-                // UUID lineage changed — re-fetch full state
+                // Something in the lineage moved — re-read the caller's state.
+                //
+                // ⚠ **The client's scope is kept here too.** This fires whenever ANYBODY publishes
+                // into the lineage, so asking for the full payload would weigh every contribution
+                // against its Main's files on every push — the exact cost the scope exists to
+                // avoid, arriving through the back door.
                 const hashParam = clientHash ? `&hash=${encodeURIComponent(clientHash)}` : '';
                 const stateResult = await fetchFromLaravel(
-                    `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}`,
+                    `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}`,
                     bearerToken
                 );
                 if (stateResult.status === 200) {
@@ -686,7 +701,16 @@ const server = http.createServer(async (req, res) => {
             emitError(res, 400, 'Invalid hash parameter');
             return;
         }
-        await handleSync(req, res, uuid, hash);
+        // 🔴 A stream carries the caller's OWN line. `lineage=0` tells Laravel to leave out what
+        // other people are doing — contributions received, a Main that moved — because weighing
+        // those reads their files, and this endpoint is re-asked every time ANYBODY pushes to the
+        // lineage. A Main whose contributor publishes every ten minutes would pay that read every
+        // ten minutes, for something they cannot act on in the second anyway.
+        //
+        // ⚠ Relayed verbatim rather than forced here: the client decides what it wants, and an
+        // older mod that sends nothing goes on receiving the full payload it has always received.
+        const lineage = parsedUrl.searchParams.get('lineage') === '0' ? '0' : null;
+        await handleSync(req, res, uuid, hash, lineage);
         return;
     }
 
