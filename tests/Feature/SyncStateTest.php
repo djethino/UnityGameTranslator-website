@@ -169,13 +169,17 @@ class SyncStateTest extends TestCase
 
         $this->assertSame('main', $narrow['role'], 'who they are is still answered');
         $this->assertNotNull($narrow['translation'], 'and so is their own line');
+        // ⚠ **ABSENT, never zero** — including branches_count, which the skeleton initialises to 0.
+        // A client that asked not to be told has not been told that nothing is waiting: it keeps
+        // what it already knew, and it can only do that if the key is missing. Present at zero, it
+        // overwrites the real count with a claim.
+        //
+        // ⚠ This assertion used to read `assertSame(0, ...)` — the bug written down as an
+        // expectation. Calling the endpoint for real is what showed it.
+        $this->assertArrayNotHasKey('branches_count', $narrow);
         $this->assertArrayNotHasKey('branches_with_work', $narrow);
         $this->assertArrayNotHasKey('lines_available', $narrow);
         $this->assertArrayNotHasKey('branches_pending_review', $narrow);
-
-        // ⚠ ABSENT, never zero: a client that asked not to be told has not been told
-        // that nothing is waiting. The mod reads a missing field as unknown.
-        $this->assertSame(0, $narrow['branches_count'], 'the initial value, never counted');
     }
 
     /** A mod that predates the parameter must go on receiving what it always received. */

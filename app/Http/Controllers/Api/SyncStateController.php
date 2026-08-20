@@ -196,6 +196,17 @@ class SyncStateController extends Controller
                 $state['has_update'] = $ownTranslation->file_hash !== $clientHash;
             }
 
+            // 🔴 **Absent, not zero.** branches_count is initialised to 0 in the skeleton above, so
+            // leaving it in a narrow answer would state "nobody contributes" — a claim, and a false
+            // one. The client keeps what it already knew only when the key is missing; present at
+            // zero, it overwrites the real count with a lie.
+            //
+            // ⚠ Found by calling the endpoint, not by the tests: they asserted the value was 0,
+            // which is exactly the bug written down as an expectation.
+            if (!$withLineage) {
+                unset($state['branches_count']);
+            }
+
             return $state;
         }
 
