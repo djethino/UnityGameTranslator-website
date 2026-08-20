@@ -509,14 +509,21 @@
                                     :class="[mainTagCellClass(key), isDeleted(key) ? 'deleted-cell' : '']">
                                     <template x-if="mainData[key] !== undefined">
                                         {{-- Shows the tag the save will PRODUCE (edit → H,
-                                             selection → A promoted to V), not just the stored one --}}
+                                             selection → A promoted to V), preceded by the one on
+                                             file when the two differ — see `.tag-was`: a
+                                             contribution is often the TAG and not the words, and
+                                             showing only the outcome hid the whole of it. --}}
                                         <button type="button"
                                             @click.stop="openTagDropdown($event, key, displayMainTag(key), getValue(mainData[key]))"
                                             :class="isDeleted(key) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800'"
                                             :disabled="isDeleted(key)"
                                             class="transition rounded"
-                                            title="{{ __('merge.click_to_change_tag') }}">
-                                            <span :class="'tag-' + displayMainTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayMainTag(key)"></span>
+                                            :title="getTag(mainData[key]) !== displayMainTag(key)
+                                                ? @js(__('merge.click_to_change_tag')) + ' (' + getTag(mainData[key]) + ' → ' + displayMainTag(key) + ')'
+                                                : @js(__('merge.click_to_change_tag'))">
+                                            <span x-show="getTag(mainData[key]) !== displayMainTag(key)" x-cloak
+                                                class="tag-was" x-text="getTag(mainData[key])"></span><span
+                                                :class="'tag-' + displayMainTag(key) + (isCaptureRow(key) ? ' opacity-40' : '')" x-text="displayMainTag(key)"></span>
                                         </button>
                                     </template>
                                     <template x-if="mainData[key] === undefined">
@@ -1745,9 +1752,16 @@ document.addEventListener('alpine:init', () => {
 
         get totalChanges() {
             // Settings count as changes: taking a branch's font without touching a single line
-            // is a merge, and the Apply button must not stay disabled on it
+            // is a merge, and the Apply button must not stay disabled on it.
+            //
+            // 🔴 **One pair of parentheses, not two.** `settingsTakenCount()()` called the NUMBER
+            // the first call returned, so this getter threw on every evaluation — and a getter that
+            // throws inside Alpine takes the whole binding down silently: the counter stayed at 0,
+            // the Save button stayed disabled, and no Main could merge a single contribution.
+            // Four days in production, invisible to the tests, which read the rendered HTML and
+            // never run the script.
             return this.selectionCount + this.deleteCount + this.tagChangeCount
-                   + this.settingsTakenCount()() + this.publicationTakenCount();
+                   + this.settingsTakenCount() + this.publicationTakenCount();
         },
 
         clearAll() {

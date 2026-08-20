@@ -605,6 +605,40 @@ class MergeViewStateTest extends TestCase
             file_get_contents(resource_path('css/app.css')));
     }
 
+    /**
+     * The frame says a tag WILL change. This says what it changes FROM.
+     *
+     * 🔴 **The commonest contribution of all moves no text.** Somebody re-reads the Main's machine
+     * translation, marks it correct, and offers that: same words, better tag. The cell showed the
+     * tag the save would produce and nothing else, so the screen put a V beside a V, the same
+     * sentence twice, and asked its owner to settle a line that read as already settled — the very
+     * report this test was written from. What was being offered WAS the tag, and the tag was the
+     * one thing the screen kept to itself.
+     *
+     * ⚠ Both comparison editors, because both preview the outcome the same way.
+     */
+    public function test_a_changing_tag_shows_the_one_it_replaces(): void
+    {
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('tag-was', $html, 'the merge view hides the tag on file');
+        $this->assertStringContainsString('getTag(mainData[key]) !== displayMainTag(key)', $html);
+
+        $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
+        $this->assertStringContainsString('tag-was', $preview, 'the mod comparison hides the tag on file');
+        $this->assertStringContainsString('getTag(localData[key]) !== displayLocalTag(key)', $preview);
+
+        // Struck through, so it reads as "was" and not as a second answer.
+        $this->assertMatchesRegularExpression(
+            '/\.tag-was\s*\{[^}]*line-through/s',
+            file_get_contents(resource_path('css/app.css')));
+    }
+
     public function test_the_two_tables_mark_a_difference_the_way_a_line_does(): void
     {
         // 🔴 The lines have marked this from the start — green where the Main holds nothing,

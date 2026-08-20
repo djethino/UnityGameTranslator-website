@@ -328,6 +328,26 @@
     background-color: rgba(88, 28, 135, 0.3) !important;
     box-shadow: inset 0 0 0 2px rgb(168 85 247);
 }
+
+/* The tag a row holds TODAY, beside the one the save will store.
+ *
+ * 🔴 **The tag cell shows the future, and used to show only that.** Take a contribution that
+ * re-read the Main's machine translation and marked it correct — the commonest contribution there
+ * is, seventeen of them on the lineage this was found on — and the text does not move: the cell
+ * simply turns V. So the screen showed V beside V, the same words twice, and asked its owner to
+ * settle a line that read as already settled. The work being offered WAS the tag, and the tag was
+ * the one thing not shown.
+ *
+ * ⚠ Struck through and grey rather than a second coloured chip: the column is `w-12`, two chips do
+ * not fit, and this is the price-tag idiom — what it was, crossed out, before what it becomes. */
+.tag-was {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: rgb(156 163 175);
+    text-decoration: line-through;
+    margin-right: 0.125rem;
+    vertical-align: middle;
+}
 .deleted-cell { background-color: rgba(127, 29, 29, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(239 68 68); }
 
 /* Search: highlighted query occurrences + the row the match cursor is on.

@@ -388,12 +388,18 @@
                                 :class="[getCellClass(key, 'local'), localTagCellClass(key)]">
                                 <template x-if="localData[key] !== undefined">
                                     {{-- Shows the tag the save will PRODUCE (edit → H,
-                                         sent local selection → A promoted to V), not just the stored one --}}
+                                         sent local selection → A promoted to V), preceded by the
+                                         one on file when the two differ — same as the merge view,
+                                         see `.tag-was`. --}}
                                     <button type="button"
                                         @click.stop="openTagDropdown($event, key, displayLocalTag(key), getValue(localData[key]))"
                                         class="transition rounded cursor-pointer hover:ring-2 hover:ring-purple-400 hover:ring-offset-1 hover:ring-offset-gray-800"
-                                        title="{{ __('merge.click_to_change_tag') }}">
-                                        <span :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '') + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="displayLocalTag(key)"></span>
+                                        :title="getTag(localData[key]) !== displayLocalTag(key)
+                                            ? @js(__('merge.click_to_change_tag')) + ' (' + getTag(localData[key]) + ' → ' + displayLocalTag(key) + ')'
+                                            : @js(__('merge.click_to_change_tag'))">
+                                        <span x-show="getTag(localData[key]) !== displayLocalTag(key)" x-cloak
+                                            class="tag-was" x-text="getTag(localData[key])"></span><span
+                                            :class="'tag-' + displayLocalTag(key) + (isCaptureRow(key) ? ' opacity-40' : '') + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="displayLocalTag(key)"></span>
                                     </button>
                                 </template>
                                 <template x-if="localData[key] === undefined">
