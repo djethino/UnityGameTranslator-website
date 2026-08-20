@@ -459,6 +459,19 @@
         </p>
     </div>
 
+    @unless ($releasesKnown)
+        {{-- ⚠ Without the published list, nothing can be told apart from an invented number, so
+             everything is filed as unrecognised. Saying so beats a table that looks like a
+             measurement — this is precisely the failure mode this screen spent the day repairing. --}}
+        <p class="text-sm text-amber-400 mt-3">
+            The list of published versions has never been fetched, so nothing below can be matched
+            to a real release.
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+            Check that the scheduler runs <code class="text-gray-400">releases:refresh</code> (hourly).
+        </p>
+    @endunless
+
     @if (count($clients) === 0)
         <p class="text-gray-500 text-sm mt-3">
             Nothing recorded in this period. Counting started on 2026-08-20 — before that, every
@@ -466,8 +479,6 @@
         </p>
     @else
         @php
-            // Installs are what decides "is this still out there"; requests only say how chatty a
-            // build is. Sorting and the bar both follow installs for that reason.
             $mostInstalls = max(array_map(fn ($c) => $c['installs'], $clients));
         @endphp
         <div class="mt-3 overflow-x-auto">
@@ -477,8 +488,7 @@
                         <th class="py-2 pr-4 font-medium">Product</th>
                         <th class="py-2 pr-4 font-medium">Version</th>
                         <th class="py-2 pr-4 font-medium">Loader</th>
-                        <th class="py-2 pr-4 font-medium text-right">Installs<span class="text-gray-600"> (peak day)</span></th>
-                        <th class="py-2 font-medium text-right">Calls</th>
+                        <th class="py-2 font-medium text-right">Copies<span class="text-gray-600"> (busiest day)</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -491,24 +501,29 @@
                                 </span>
                             </td>
                             <td class="py-2 pr-4">
-                                @if ($client['version'] === null)
+                                @if ($client['version'] === \App\Models\ClientUsageDaily::LEGACY)
                                     {{-- 🔴 The one row that decides whether compression can be turned
                                          on: these builds ask for gzip and cannot read it. --}}
-                                    <span class="text-amber-400">before 0.11.1</span>
+                                    <span class="text-amber-400">before versioning</span>
                                     <span class="block text-xs text-gray-500">cannot read compressed answers</span>
+                                @elseif ($client['version'] === \App\Models\ClientUsageDaily::UNRECOGNISED)
+                                    {{-- ⚠ Not a version: everything that matches no published release
+                                         lands here together — local builds, and anyone inventing a
+                                         number. Kept apart from the row above on purpose. --}}
+                                    <span class="text-gray-400">unrecognised</span>
+                                    <span class="block text-xs text-gray-500">no matching release</span>
                                 @else
                                     <span class="text-gray-200">{{ $client['version'] }}</span>
                                 @endif
                             </td>
                             <td class="py-2 pr-4 text-gray-400">{{ $client['variant'] ?? '—' }}</td>
-                            <td class="py-2 pr-4 text-right">
+                            <td class="py-2 text-right">
                                 <span class="text-gray-200">{{ number_format($client['installs']) }}</span>
                                 <span class="inline-block align-middle ml-2 h-1.5 w-16 bg-gray-700 rounded overflow-hidden">
                                     <span class="block h-full bg-cyan-500"
                                         style="width: {{ $mostInstalls > 0 ? round($client['installs'] / $mostInstalls * 100) : 0 }}%"></span>
                                 </span>
                             </td>
-                            <td class="py-2 text-right text-gray-400">{{ number_format($client['requests']) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -516,8 +531,9 @@
         </div>
 
         <p class="text-xs text-gray-500 mt-3">
-            ⚠ "Installs" is the busiest single day of the period, not the days added up — the same
-            copy calling on ten days is one copy. Treat it as an order of magnitude.
+            ⚠ The busiest single day of the period, not the days added up — the same copy calling on
+            ten days is one copy. Treat it as an order of magnitude. Counted once a day per copy, so
+            a build that polls often weighs no more than a quiet one.
         </p>
     @endif
 </div>

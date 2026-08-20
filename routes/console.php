@@ -19,6 +19,17 @@ Schedule::command('analytics:aggregate')->dailyAt('02:00');
 // a failure. The command refuses anything malformed or truncated rather than overwrite with it.
 Schedule::command('catalog:refresh')->dailyAt('04:30');
 
+// Which versions of the mod and the Manager have actually been published.
+//
+// It is what tells a real release from a number somebody made up: a User-Agent is written by
+// whoever is calling, and without this list anyone could invent versions and both fill the usage
+// table and shape what it says. Anything unrecognised is folded into a single line instead.
+//
+// ⚠ Hourly, not daily like the catalogues: a release published at 10 a.m. would otherwise spend
+// the whole day filed as unrecognised, and those first hours are exactly the ones worth watching
+// when a version starts to spread. One request an hour to a public endpoint costs nothing.
+Schedule::command('releases:refresh')->hourly();
+
 // Being delisted is computed on every query, so nothing here decides anything: the state is
 // already true the moment the thirtieth day passes. What no code can do on its own is say so —
 // there is no event when a date is crossed — and the banners only reach somebody who came back

@@ -139,5 +139,15 @@ class AggregateAnalytics extends Command
         if ($deleted > 0) {
             $this->info("  Purged {$deleted} old events (> 90 days)");
         }
+
+        // ⚠ The client fingerprints only serve the day they are written — they answer "already
+        // counted today" and nothing else. Without this they would accumulate forever for a
+        // question nobody asks about yesterday. The daily counts themselves are kept: they are the
+        // history of what is installed out there.
+        $fingerprints = \App\Models\ClientUsageDaily::purgeFingerprints();
+
+        if ($fingerprints > 0) {
+            $this->info("  Purged {$fingerprints} client fingerprints (> 2 days)");
+        }
     }
 }

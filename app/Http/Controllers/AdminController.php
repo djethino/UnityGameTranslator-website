@@ -14,6 +14,7 @@ use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
 use App\Services\CatalogStore;
+use App\Services\KnownReleases;
 use App\Services\LiveEditCapacity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -495,8 +496,13 @@ class AdminController extends Controller
         // no row about anybody and cannot grow with traffic — see ClientUsageDaily.
         $clients = ClientUsageDaily::overPeriod($period);
 
+        // ⚠ Without the published list, every caller is filed as unrecognised — the screen says so
+        // rather than showing a table that looks like a measurement.
+        $releasesKnown = KnownReleases::known();
+
         return view('admin.analytics', compact(
             'clients',
+            'releasesKnown',
             'daysStored',
             'maxPeriod',
             'liveCapacity',

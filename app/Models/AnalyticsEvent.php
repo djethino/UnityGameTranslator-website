@@ -125,8 +125,15 @@ class AnalyticsEvent extends Model
      * caller's address is never stored anywhere.
      *
      *  - `UnityGameTranslator/0.11.1 (BepInEx6-IL2CPP)` → mod, 0.11.1, BepInEx6-IL2CPP
-     *  - `UnityGameTranslator/1.0`                      → mod, null (every build up to 2026-08-20)
+     *  - `UnityGameTranslator/1.0`                      → mod, legacy (every build up to 2026-08-20)
      *  - `UnityGameTranslatorManager/0.1.0`             → manager, 0.1.0
+     *
+     * 🔴 **A build from before is recognised by the ABSENCE of the loader, not by the number.**
+     * Testing for the literal "1.0" would work until the mod actually reaches 1.0 — and that
+     * release would then be filed among the builds that cannot decompress, which is the one row
+     * that decides whether JSON compression can be turned on. Versions carry three components
+     * (`0.11.0`), so a real v1 will be `1.0.0`, but relying on that is relying on a convention
+     * nothing enforces. The parenthesis is the thing that changed on 2026-08-20.
      *
      * ⚠ The slash matters: `UnityGameTranslatorManager/` starts with `UnityGameTranslator`, so the
      * Manager pattern is tested first and the mod pattern requires the slash straight after.
@@ -136,22 +143,64 @@ class AnalyticsEvent extends Model
         $agent = trim((string) $userAgent);
 
         if (preg_match('#^UnityGameTranslatorManager/(\S+)#', $agent, $m) === 1) {
-            return ['product' => 'manager', 'version' => $m[1], 'variant' => null];
+            return [
+                'product' => 'manager',
+                'version' => self::cleanVersion($m[1]),
+                'variant' => null,
+                'legacy' => false,
+            ];
         }
 
         if (preg_match('#^UnityGameTranslator(?:-Mod)?/(\S+)(?:\s+\(([^)]+)\))?#', $agent, $m) === 1) {
-            // "1.0" is not a version, it is the placeholder every build sent before versions
-            // existed. Recorded as unknown so it cannot be mistaken for a real 1.0 release later.
-            $version = $m[1] === '1.0' ? null : $m[1];
+            $loader = self::cleanVariant($m[2] ?? null);
 
             return [
                 'product' => 'mod',
-                'version' => $version,
-                'variant' => $m[2] ?? null,
+                'version' => self::cleanVersion($m[1]),
+                'variant' => $loader,
+                // No loader named = a build published before the User-Agent carried one, i.e. one
+                // that asks for gzip and cannot read it.
+                'legacy' => ($m[2] ?? null) === null,
             ];
         }
 
         return null;
+    }
+
+    /**
+     * 🔴 **A User-Agent is written by whoever is calling, so none of it is trusted.**
+     *
+     * Anyone can send `UnityGameTranslator/<script>alert(1)</script> (AAAA…)` and, without this,
+     * it lands in a table and then on an admin screen. Blade escapes it, so this is not about
+     * script injection — it is about a stranger choosing what our own measurements say, and about
+     * a table whose row count they control.
+     *
+     * Anything not shaped like a version becomes null: "we do not know", which is true, rather
+     * than a value invented by the caller. The count of distinct rows is bounded separately, in
+     * ClientUsageDaily.
+     */
+    private static function cleanVersion(?string $raw): ?string
+    {
+        $value = trim((string) $raw);
+
+        return preg_match('/^\d{1,4}(\.\d{1,4}){0,3}(-[A-Za-z0-9.]{1,12})?$/', $value) === 1
+            ? $value
+            : null;
+    }
+
+    /**
+     * The mod loader, in the shape the adapters actually report ("BepInEx6-IL2CPP",
+     * "MelonLoader-Mono"). Deliberately a shape and not a fixed list: a new adapter must not need
+     * a website deployment to be counted. What stops the shape from being abused is the row
+     * ceiling in ClientUsageDaily, not this.
+     */
+    private static function cleanVariant(?string $raw): ?string
+    {
+        $value = trim((string) $raw);
+
+        return preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,23}$/', $value) === 1
+            ? $value
+            : null;
     }
 
     /**

@@ -110,8 +110,30 @@ class CompressJsonResponse
         return $response;
     }
 
+    /**
+     * Never compressed, whatever the caller.
+     *
+     * 🔴 **A compressed answer leaks its own size, and BREACH turns that into a way of reading a
+     * secret** when the same body carries both a secret and something the attacker influences.
+     * These carry tokens: the device-flow codes, the access token, the account behind a bearer.
+     *
+     * ⚠ They are all far under the 1 KB floor today, so nothing here changes what goes over the
+     * wire — which is exactly why it is written down. The protection was accidental, resting on a
+     * size that could grow with one added field, and a compressed token endpoint would be a
+     * genuine hole nobody would have thought to look for.
+     */
+    private const NEVER_COMPRESSED = [
+        'api/v1/auth/*',
+        'api/v1/me',
+        'api/v1/me/*',
+    ];
+
     private function shouldCompress(Request $request, Response $response): bool
     {
+        if ($request->is(self::NEVER_COMPRESSED)) {
+            return false;
+        }
+
         // Streaming and file responses have no body to read here, and buffering one would defeat
         // the reason it streams: the live-edit endpoint readfile()s a translation to the mod.
         if ($response instanceof StreamedResponse || $response instanceof BinaryFileResponse) {
