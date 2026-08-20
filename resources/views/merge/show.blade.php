@@ -803,7 +803,9 @@
         </div>
 
         {{-- Tag Dropdown Menu (V = validate, A = invalidate, S = skip — same in every editor) --}}
-        <div x-show="tagDropdown.open" x-cloak
+        {{-- x-ref so the core can measure it and keep it inside the window (see
+             _keepTagDropdownOnScreen): its height depends on what this screen offers. --}}
+        <div x-show="tagDropdown.open" x-cloak x-ref="tagMenu"
             class="fixed z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-1 min-w-[160px]"
             :style="'left: ' + tagDropdown.x + 'px; top: ' + tagDropdown.y + 'px;'"
             @click.outside="closeTagDropdown()"

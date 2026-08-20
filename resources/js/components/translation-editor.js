@@ -1192,21 +1192,74 @@ export function editorCore(config) {
 
         // ── Tag dropdown (branches/sessions can only set Skip) ───────────
 
+        /**
+         * Open the tag menu under the cell that was clicked.
+         *
+         * 🔴 **The menu is `position: fixed`, so its coordinates are the viewport's — and the page
+         * scroll must NOT be added to them.** It was, from the day the feature was written: the
+         * menu drifted down by exactly how far the page had been scrolled, which on a long grid
+         * put it below the screen entirely. Nothing looked broken; the menu simply did not appear.
+         *
+         * ⚠ `currentTarget`, not `target`: the button holds several elements (the tag on file, an
+         * arrow, the resulting tag), so `target` is whichever one the pointer happened to be over
+         * and the menu hung off a five-pixel arrow.
+         */
         openTagDropdown(event, key, currentTag, value) {
             event.stopPropagation();
-            const rect = event.target.getBoundingClientRect();
+
+            const anchor = (event.currentTarget || event.target).getBoundingClientRect();
             this.tagDropdown = {
                 open: true,
                 key: key,
                 currentTag: this.hasTagChange(key) ? this.tagChanges[key].newTag : currentTag,
                 originalTag: currentTag,
                 value: value,
-                x: rect.left,
-                y: rect.bottom + window.scrollY
+                x: anchor.left,
+                y: anchor.bottom + 4
             };
+
+            // A menu anchored to a cell has nothing to say once that cell has moved. Capture, so a
+            // scroll inside the grid counts as much as one on the page.
+            this._closeTagOnScroll = () => this.closeTagDropdown();
+            window.addEventListener('scroll', this._closeTagOnScroll, { capture: true, once: true });
+
+            this.$nextTick(() => this._keepTagDropdownOnScreen(anchor));
+        },
+
+        /**
+         * Bring the menu back inside the window once its real size is known.
+         *
+         * ⚠ Measured rather than estimated: it is as tall as the number of tags a screen offers,
+         * plus a "cancel" entry that only exists on rows already changed. A row near the bottom
+         * opens it upwards instead.
+         */
+        _keepTagDropdownOnScreen(anchor) {
+            const menu = this.$refs.tagMenu;
+            if (!menu || !this.tagDropdown.open) return;
+
+            const box = menu.getBoundingClientRect();
+            const margin = 8;
+            let { x, y } = this.tagDropdown;
+
+            if (x + box.width > window.innerWidth - margin) {
+                x = Math.max(margin, window.innerWidth - box.width - margin);
+            }
+
+            if (y + box.height > window.innerHeight - margin) {
+                const above = anchor.top - box.height - 4;
+                y = above >= margin
+                    ? above
+                    : Math.max(margin, window.innerHeight - box.height - margin);
+            }
+
+            this.tagDropdown = Object.assign({}, this.tagDropdown, { x: x, y: y });
         },
 
         closeTagDropdown() {
+            if (this._closeTagOnScroll) {
+                window.removeEventListener('scroll', this._closeTagOnScroll, { capture: true });
+                this._closeTagOnScroll = null;
+            }
             this.tagDropdown = { open: false, key: '', currentTag: '', originalTag: '', value: '', x: 0, y: 0 };
         },
 
