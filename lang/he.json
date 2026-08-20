@@ -1193,10 +1193,10 @@
     "profile.game_language_hint": "אילו תרגומים יופיעו ראשונים כשאתם מעיינים במשחקים. זו לא בהכרח השפה שבה אתם קוראים את האתר.",
     "profile.game_language_detected": "זוהתה: :language",
     "profile.game_language_detected_short": "זוהתה",
-    "link.title": "[MISSING] Link your game",
-    "link.intro": "[MISSING] Enter the code shown in your game",
-    "link.code_label": "[MISSING] Device code",
-    "link.submit": "[MISSING] Link",
-    "link.expires": "[MISSING] The code is valid for 15 minutes. If it has expired, start again from your game.",
-    "link.sign_in_first": "[MISSING] Sign in first, then enter your code."
+    "link.title": "קישור המשחק שלך",
+    "link.intro": "הזינו את הקוד המוצג במשחק",
+    "link.code_label": "קוד מכשיר",
+    "link.submit": "קישור",
+    "link.expires": "הקוד תקף למשך 15 דקות. אם פג תוקפו, התחילו מחדש מתוך המשחק.",
+    "link.sign_in_first": "התחברו תחילה, ולאחר מכן הזינו את הקוד."
 }

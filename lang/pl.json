@@ -1193,10 +1193,10 @@
     "profile.game_language_hint": "Które tłumaczenia pojawiają się jako pierwsze przy przeglądaniu gier. Nie musi to być język, w którym czytasz tę stronę.",
     "profile.game_language_detected": "Wykryto: :language",
     "profile.game_language_detected_short": "wykryto",
-    "link.title": "[MISSING] Link your game",
-    "link.intro": "[MISSING] Enter the code shown in your game",
-    "link.code_label": "[MISSING] Device code",
-    "link.submit": "[MISSING] Link",
-    "link.expires": "[MISSING] The code is valid for 15 minutes. If it has expired, start again from your game.",
-    "link.sign_in_first": "[MISSING] Sign in first, then enter your code."
+    "link.title": "Połącz swoją grę",
+    "link.intro": "Wprowadź kod wyświetlony w grze",
+    "link.code_label": "Kod urządzenia",
+    "link.submit": "Połącz",
+    "link.expires": "Kod jest ważny przez 15 minut. Jeśli wygasł, zacznij ponownie z poziomu gry.",
+    "link.sign_in_first": "Najpierw zaloguj się, a następnie wprowadź kod."
 }

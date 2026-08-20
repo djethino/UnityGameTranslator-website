@@ -1193,10 +1193,10 @@
     "profile.game_language_hint": "Quais traduções aparecem primeiro quando você navega pelos jogos. Não precisa ser o idioma em que você lê este site.",
     "profile.game_language_detected": "Detectado: :language",
     "profile.game_language_detected_short": "detectado",
-    "link.title": "[MISSING] Link your game",
-    "link.intro": "[MISSING] Enter the code shown in your game",
-    "link.code_label": "[MISSING] Device code",
-    "link.submit": "[MISSING] Link",
-    "link.expires": "[MISSING] The code is valid for 15 minutes. If it has expired, start again from your game.",
-    "link.sign_in_first": "[MISSING] Sign in first, then enter your code."
+    "link.title": "Vincule seu jogo",
+    "link.intro": "Digite o código exibido no seu jogo",
+    "link.code_label": "Código do dispositivo",
+    "link.submit": "Vincular",
+    "link.expires": "O código é válido por 15 minutos. Se expirou, comece de novo pelo jogo.",
+    "link.sign_in_first": "Entre na sua conta primeiro e depois digite o código."
 }
