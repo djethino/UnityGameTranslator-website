@@ -766,12 +766,20 @@ class EditSessionFlowTest extends TestCase
 
         $state = $this->get('/edit-session-state')->assertOk()->json();
 
-        // Presence comes from the mod's open stream, which only the SSE server
-        // knows about. There is none here — and no Redis either — so the field
-        // must be present and null: the page shows nothing rather than
-        // declaring a running game dead because the infrastructure is missing.
+        // Presence comes from the mod's open stream, which only the SSE server knows about — and
+        // no mod is streaming here. What the page must never do is declare a running game dead
+        // because the infrastructure is missing, so the field is always PRESENT and never true.
+        //
+        // 🔴 **The value depends on the machine, and asserting one of them was the fault.** With no
+        // Redis reachable, presence is unknown and the answer is null; with a Redis answering and
+        // no presence key in it, the answer is a truthful false. This test asserted null and was
+        // therefore green only on a machine without Redis — it turned red the day one was started
+        // beside it, for a reason that had nothing to do with the code.
         $this->assertArrayHasKey('game_connected', $state);
-        $this->assertNull($state['game_connected']);
+        $this->assertNotTrue(
+            $state['game_connected'],
+            'null when unknown, false when Redis says nobody is streaming — never true'
+        );
 
         // ...and the timestamp fallback still answers, which is what the page
         // falls back on in exactly this situation
