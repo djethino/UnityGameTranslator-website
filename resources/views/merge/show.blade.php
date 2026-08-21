@@ -1688,9 +1688,20 @@ document.addEventListener('alpine:init', () => {
             return this.mainData[key];
         },
 
-        /** Core hook: the tag the save will store here — the Main's projection. */
+        /**
+         * Core hook: the tag the save will store here.
+         *
+         * ⚠ **Answered even where the Main holds nothing.** The core's default returns null there,
+         * and rightly so for the tag a row is LEAVING — an absent line has none. But a row about to
+         * be added does get one, and returning null left the cell blank: a new line held as `A`
+         * showed no letter at all, so the one thing the paler colour promises — that this stays
+         * machine-written until somebody says otherwise — could not be read anywhere.
+         *
+         * The arrow stays absent all the same: `tagWillChange` asks for a tag on file, and there is
+         * none. Nothing to leave, something to arrive.
+         */
         tagAfterSave(key) {
-            return this.mainData[key] === undefined ? null : this.displayMainTag(key);
+            return this.displayMainTag(key);
         },
 
         /** Core hook: a row on its way out is not open to a tag change. */
@@ -1710,7 +1721,11 @@ document.addEventListener('alpine:init', () => {
          */
         displayMainTag(key) {
             if (this.hasTagChange(key) || this.isEdited(key)) {
-                return this.displayTag(key, this.getTag(this.mainData[key]));
+                // ⚠ tagOnFile, not getTag(mainData): on a row the Main does not hold, getTag reads
+                // undefined and answers 'A', so writing one's own translation of a line only a
+                // branch has showed A instead of the H the save produces. tagOnFile answers null
+                // there, and the core reads null as "nothing stored" — which is what it is.
+                return this.displayTag(key, this.tagOnFile(key));
             }
             const sel = this.selections[key];
             if (sel) {
@@ -1719,7 +1734,7 @@ document.addEventListener('alpine:init', () => {
                 // the row shows a V nobody is going to get.
                 return sel.tag === 'A' && !sel.auto ? 'V' : sel.tag;
             }
-            return this.getTag(this.mainData[key]);
+            return this.tagOnFile(key);
         },
 
         branchCellTint(branch, key) {
