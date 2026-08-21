@@ -237,9 +237,10 @@
                                         title="{{ __('edit_session.retranslate') }}{{ $editSession->ai_model ? ' — ' . $editSession->ai_model : '' }}"><i class="fas fa-wand-magic-sparkles"></i></button>
                                     <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
                                         title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
-                                    <button type="button" @click.stop="editCell(key, getValue(data[key]))"
+                                    <button type="button" x-show="canEdit(key)" @click.stop="editCell(key, storedValue(key))"
                                         title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
-                                    <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+                                    <button type="button" class="delete-btn" x-show="canDelete(key)"
+                                        @click.stop="toggleDelete(key)"
                                         title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
                                 </span>
                                 <span x-show="underlyingChanged[key]"

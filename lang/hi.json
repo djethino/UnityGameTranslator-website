@@ -631,7 +631,6 @@
     "merge.no_branches": "इस अनुवाद के लिए कोई Branch नहीं। आप अभी भी डबल-क्लिक करके अपनी वैल्यू एडिट कर सकते हैं।",
     "merge.filters": "फ़िल्टर्स:",
     "merge.filter_new_keys": "नई कुंजियाँ",
-    "merge.filter_differences": "अंतर",
     "merge.reset_filters": "रीसेट",
     "merge.key": "की",
     "merge.empty_value": "- खाली -",

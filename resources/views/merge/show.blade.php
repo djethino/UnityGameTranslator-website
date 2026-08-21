@@ -215,7 +215,7 @@
                 </div>
                 <div class="bg-gray-800 rounded-lg p-4 border border-yellow-700 text-center">
                     <p class="text-2xl font-bold text-yellow-400" x-text="stats.different"></p>
-                    <p class="text-sm text-gray-400">{{ __('merge.filter_differences') }}</p>
+                    <p class="text-sm text-gray-400">{{ __('merge_preview.different') }}</p>
                 </div>
                 @endif
                 <div class="bg-gray-800 rounded-lg p-4 border border-purple-700 text-center">
@@ -306,12 +306,12 @@
                             <span class="text-green-400">{{ __('merge.filter_new_keys') }}</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" :checked="filters.catDiff" @change="toggleFilter('catDiff')"
+                            <input type="checkbox" :checked="filters.catDiffering" @change="toggleFilter('catDiffering')"
                                 class="rounded bg-gray-700 border-gray-600 text-yellow-600">
-                            <span class="text-yellow-400">{{ __('merge.filter_differences') }}</span>
+                            <span class="text-yellow-400">{{ __('merge_preview.different') }}</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" :checked="filters.catOther" @change="toggleFilter('catOther')"
+                            <input type="checkbox" :checked="filters.catSame" @change="toggleFilter('catSame')"
                                 class="rounded bg-gray-700 border-gray-600 text-gray-600">
                             <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
                         </label>
@@ -344,13 +344,13 @@
                                class="rounded bg-gray-700 border-gray-600 text-green-600">
                         <span class="text-green-400">+</span>
                     </label>
-                    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge.filter_differences') }}">
-                        <input type="checkbox" :checked="filters.catDiff" @change="toggleFilter('catDiff')"
+                    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.different') }}">
+                        <input type="checkbox" :checked="filters.catDiffering" @change="toggleFilter('catDiffering')"
                                class="rounded bg-gray-700 border-gray-600 text-yellow-600">
                         <span class="text-yellow-400">≠</span>
                     </label>
                     <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.same') }}">
-                        <input type="checkbox" :checked="filters.catOther" @change="toggleFilter('catOther')"
+                        <input type="checkbox" :checked="filters.catSame" @change="toggleFilter('catSame')"
                                class="rounded bg-gray-700 border-gray-600 text-gray-600">
                         <span class="text-gray-500">=</span>
                     </label>
@@ -516,12 +516,19 @@
                                         :title="offScreenHint"
                                         ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
                                     </template>
-                                    <span class="edit-affordance" x-show="mainData[key] !== undefined">
+                                    {{-- ⚠ Each button asks its own question — the block used to be
+                                         hidden whole on a row the Main does not hold, which shut
+                                         off the pencil on exactly the rows where writing one's own
+                                         translation is the point. The double-click below never was,
+                                         so the same row answered twice. `canDelete` is the one that
+                                         is genuinely false there: nothing to strike out. --}}
+                                    <span class="edit-affordance">
                                         <button type="button" x-show="isRowModified(key)" @click.stop="revertRow(key)"
                                             title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
-                                        <button type="button" x-show="!isDeleted(key)" @click.stop="editCell(key, getValue(mainData[key]))"
+                                        <button type="button" x-show="canEdit(key)" @click.stop="editCell(key, storedValue(key))"
                                             title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
-                                        <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+                                        <button type="button" class="delete-btn" x-show="canDelete(key)"
+                                            @click.stop="toggleDelete(key)"
                                             title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
                                     </span>
                                     <template x-if="mainData[key] !== undefined || isEdited(key)">
@@ -870,13 +877,16 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('mergeView', () => window.UGT.composeEditor({
         persistKey: 'merge_view_{{ $uuid }}',
+        // ⚠ Named after the SITUATIONS the core counts (`catNew`, `catDiffering`, `catSame`), not
+        // after boxes this screen invented. `catSame` also carries `onlyOnTarget` here — see
+        // categoryFilter below, where that fold is stated once.
         filters: {
             catNew: true,
-            catDiff: true,
+            catDiffering: true,
             // 🔴 Off: on a real lineage this is 2497 rows out of 2536 — the lines both sides
             // already agree on. Leaving them in means the few that need a decision are found by
             // scrolling past a hundred that do not. The box is in the bar, one click away.
-            catOther: false,
+            catSame: false,
             tagH: true,
             tagV: true,
             tagA: true,
@@ -893,7 +903,7 @@ document.addEventListener('alpine:init', () => {
             // promotes a machine translation to human-checked. Marking 35 lines as reviewed
             // because nobody looked at them is the one outcome worse than scrolling.
             //
-            // What the screen opens on instead is catOther off: everything that needs a decision,
+            // What the screen opens on instead is catSame off: everything that needs a decision,
             // nothing that does not.
             modifiedOnly: false
         }
@@ -1377,33 +1387,24 @@ document.addEventListener('alpine:init', () => {
             return value;
         },
 
-        /**
-         * The tiles, from the core's one vocabulary.
-         *
-         * ⚠ `catOther` still covers `same` AND `onlyOnTarget` here, because that is what this
-         * screen has always shown and step 2 changes nothing on screen — see
-         * analyse/editors-mutualisation.md. The distinction exists in the core now; exposing it is
-         * the next step's business.
-         */
+        /** The tiles, from the core's one vocabulary. */
         calculateStats() {
             const counts = this.categoryCounts;
             this.stats = { newKeys: counts.new, different: counts.differing };
         },
 
         /**
-         * This screen's three filter boxes, over the core's four categories.
+         * Three boxes over the core's four situations: this screen folds `onlyOnTarget` onto
+         * `catSame`.
          *
-         * ⚠ `catOther` covers `same` AND `onlyOnTarget`, which is what this screen has always
-         * shown: a line no contribution carries reads as "nothing to settle here", exactly like one
-         * they all agree on. The core tells them apart now — giving this screen a fourth box is a
-         * decision for the step that redraws the bar, not a side effect of this one.
+         * ⚠ **A choice, not an omission.** A line no contribution carries reads here as "nothing to
+         * settle", exactly like one they all agree on — and on a Main of two thousand lines with
+         * two branches, that is nearly the whole file. The comparison screen keeps them apart
+         * because there the two situations are two columns somebody is arbitrating between.
          */
-        rowCategoryFilter(key) {
-            const category = this.rowCategory(key);
-
-            if (category === 'new') return 'catNew';
-            if (category === 'differing') return 'catDiff';
-            return 'catOther';
+        categoryFilter(category) {
+            if (category === 'onlyOnTarget') return 'catSame';
+            return 'cat' + category.charAt(0).toUpperCase() + category.slice(1);
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────

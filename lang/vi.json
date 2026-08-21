@@ -631,7 +631,6 @@
     "merge.no_branches": "Không có Branch cho bản dịch này. Bạn vẫn có thể chỉnh sửa giá trị bằng cách nhấp đúp.",
     "merge.filters": "Bộ lọc:",
     "merge.filter_new_keys": "Khóa mới",
-    "merge.filter_differences": "Khác biệt",
     "merge.reset_filters": "Đặt lại",
     "merge.key": "Khóa",
     "merge.empty_value": "- trống -",

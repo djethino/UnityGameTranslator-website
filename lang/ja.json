@@ -631,7 +631,6 @@
     "merge.no_branches": "この翻訳には Branch がありません。ダブルクリックで値を編集できます。",
     "merge.filters": "フィルター：",
     "merge.filter_new_keys": "新規キー",
-    "merge.filter_differences": "差分",
     "merge.reset_filters": "リセット",
     "merge.key": "キー",
     "merge.empty_value": "- 空 -",

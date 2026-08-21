@@ -631,7 +631,6 @@
     "merge.no_branches": "이 번역에 Branch가 없습니다. 더블클릭하여 값을 편집할 수 있습니다.",
     "merge.filters": "필터:",
     "merge.filter_new_keys": "새 키",
-    "merge.filter_differences": "차이점",
     "merge.reset_filters": "초기화",
     "merge.key": "키",
     "merge.empty_value": "- 비어 있음 -",

@@ -631,7 +631,6 @@
     "merge.no_branches": "Geen Branches voor deze vertaling. Je kunt nog steeds je waarden bewerken door te dubbelklikken.",
     "merge.filters": "Filters:",
     "merge.filter_new_keys": "Nieuwe sleutels",
-    "merge.filter_differences": "Verschillen",
     "merge.reset_filters": "Resetten",
     "merge.key": "Sleutel",
     "merge.empty_value": "- leeg -",

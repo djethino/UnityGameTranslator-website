@@ -631,7 +631,6 @@
     "merge.no_branches": "Bu çeviri için Branch yok. Çift tıklayarak değerlerinizi düzenleyebilirsiniz.",
     "merge.filters": "Filtreler:",
     "merge.filter_new_keys": "Yeni anahtarlar",
-    "merge.filter_differences": "Farklılıklar",
     "merge.reset_filters": "Sıfırla",
     "merge.key": "Anahtar",
     "merge.empty_value": "- boş -",

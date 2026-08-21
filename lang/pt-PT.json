@@ -631,7 +631,6 @@
     "merge.no_branches": "Sem Branches para esta tradução. Pode ainda editar os seus valores clicando duas vezes.",
     "merge.filters": "Filtros:",
     "merge.filter_new_keys": "Novas chaves",
-    "merge.filter_differences": "Diferenças",
     "merge.reset_filters": "Reiniciar",
     "merge.key": "Chave",
     "merge.empty_value": "- vazio -",

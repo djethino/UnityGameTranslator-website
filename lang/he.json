@@ -631,7 +631,6 @@
     "merge.no_branches": "אין Branches לתרגום זה. עדיין תוכלו לערוך את הערכים שלכם בלחיצה כפולה.",
     "merge.filters": "מסננים:",
     "merge.filter_new_keys": "מפתחות חדשים",
-    "merge.filter_differences": "הבדלים",
     "merge.reset_filters": "איפוס",
     "merge.key": "מפתח",
     "merge.empty_value": "- ריק -",

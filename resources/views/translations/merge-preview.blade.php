@@ -66,6 +66,53 @@
         </a>
     </div>
 
+    @php
+        // 🔴 **The left-hand side is always the result being built** — the file this screen is about
+        // to write. It is the local one when comparing into the game, the server's one when
+        // publishing, and putting it first is what makes this screen read like the merge view and
+        // the live editor rather than like its own dialect.
+        //
+        // ⚠ Written once, here, and read by the head tiles, the filter boxes, the workbench strip,
+        // the select-all buttons, the header row and the body row. Each of those used to spell the
+        // two sides out for itself, which is how they were free to disagree — and they did: the
+        // tiles and the boxes listed the local file first while the grid below put it second.
+        //
+        // What follows the SIDE (colour, label, icon, its own counter) and what follows the ROLE
+        // (its place, and which situation its box hides) are separated on purpose — see
+        // x-editor.side-head.
+        $local = [
+            'id' => 'local',
+            'label' => __('merge_preview.local_file'),
+            'byline' => null,
+            'target' => $toLocal,
+            'tone' => 'text-green-400',
+            'box' => 'text-green-600',
+            'border' => 'border-green-700',
+            'icon' => 'fa-desktop',
+            // The box hides "only this side holds it" — which IS the `new` situation when this side
+            // is the one offering, and `onlyOnTarget` when it is the one being written.
+            'filter' => $toLocal ? 'catOnlyOnTarget' : 'catNew',
+            'stat' => 'localOnly',
+            'onlyLabel' => __('merge_preview.local_only'),
+            'selectAllLabel' => __('merge_preview.select_all_local'),
+        ];
+        $online = [
+            'id' => 'online',
+            'label' => __('merge_preview.online_version'),
+            'byline' => $translation->user->name,
+            'target' => !$toLocal,
+            'tone' => 'text-blue-400',
+            'box' => 'text-blue-600',
+            'border' => 'border-blue-700',
+            'icon' => 'fa-cloud',
+            'filter' => $toLocal ? 'catNew' : 'catOnlyOnTarget',
+            'stat' => 'onlineOnly',
+            'onlyLabel' => __('merge_preview.online_only'),
+            'selectAllLabel' => __('merge_preview.select_all_online'),
+        ];
+        $sides = $toLocal ? [$local, $online] : [$online, $local];
+    @endphp
+
     {{-- Main content --}}
     <div x-show="loaded && !error" x-cloak>
         {{-- Stats --}}
@@ -74,14 +121,14 @@
                 <p class="text-2xl font-bold text-white" x-text="stats.total"></p>
                 <p class="text-sm text-gray-400">{{ __('merge_preview.total_keys') }}</p>
             </div>
-            <div class="bg-gray-800 rounded-lg p-4 border border-green-700 text-center">
-                <p class="text-2xl font-bold text-green-400" x-text="stats.localOnly"></p>
-                <p class="text-sm text-gray-400">{{ __('merge_preview.local_only') }}</p>
-            </div>
-            <div class="bg-gray-800 rounded-lg p-4 border border-blue-700 text-center">
-                <p class="text-2xl font-bold text-blue-400" x-text="stats.onlineOnly"></p>
-                <p class="text-sm text-gray-400">{{ __('merge_preview.online_only') }}</p>
-            </div>
+            {{-- Target first, like the boxes below and the columns below those: three blocks
+                 listing the same two sides, and a reader learns their order once. --}}
+            @foreach ($sides as $side)
+                <div class="bg-gray-800 rounded-lg p-4 border {{ $side['border'] }} text-center">
+                    <p class="text-2xl font-bold {{ $side['tone'] }}" x-text="stats.{{ $side['stat'] }}"></p>
+                    <p class="text-sm text-gray-400">{{ $side['onlyLabel'] }}</p>
+                </div>
+            @endforeach
             <div class="bg-gray-800 rounded-lg p-4 border border-yellow-700 text-center">
                 <p class="text-2xl font-bold text-yellow-400" x-text="stats.different"></p>
                 <p class="text-sm text-gray-400">{{ __('merge_preview.different') }}</p>
@@ -185,29 +232,31 @@
         @include('partials.editor-quality-bar')
 
         {{-- Ahead of the tags, where a row COMES FROM — the question this screen exists to
-             answer. After them, what to do with the answer. --}}
+             answer. After them, what to do with the answer.
+
+             ⚠ **In the columns' order, target first**, because these boxes ARE the columns: each
+             one hides the rows only that side holds, and reading them left to right in one order
+             while the grid below reads them in the other is a layout somebody has to re-learn at
+             every glance. Same list, one order — see $sides. --}}
         <x-editor.filter-bar>
             <x-slot:before>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
-                        class="rounded bg-gray-700 border-gray-600 text-green-600">
-                    <span class="text-green-400">{{ __('merge_preview.local_only') }}</span>
-                </label>
+                @foreach ($sides as $side)
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
+                            @change="toggleFilter('{{ $side['filter'] }}')"
+                            class="rounded bg-gray-700 border-gray-600 {{ $side['box'] }}">
+                        <span class="{{ $side['tone'] }}">{{ $side['onlyLabel'] }}</span>
+                    </label>
+                @endforeach
 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
-                        class="rounded bg-gray-700 border-gray-600 text-blue-600">
-                    <span class="text-blue-400">{{ __('merge_preview.online_only') }}</span>
-                </label>
-
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
+                    <input type="checkbox" :checked="filters.catDiffering" @change="toggleFilter('catDiffering')"
                         class="rounded bg-gray-700 border-gray-600 text-yellow-600">
                     <span class="text-yellow-400">{{ __('merge_preview.different') }}</span>
                 </label>
 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
+                    <input type="checkbox" :checked="filters.catSame" @change="toggleFilter('catSame')"
                         class="rounded bg-gray-700 border-gray-600 text-gray-600">
                     <span class="text-gray-400">{{ __('merge_preview.same') }}</span>
                 </label>
@@ -225,13 +274,14 @@
 
             <x-editor.filter-sep />
 
-            <button type="button" @click="selectAllLocal()" class="text-green-400 hover:text-green-300">
-                <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_local') }}
-            </button>
-
-            <button type="button" @click="selectAllOnline()" class="text-blue-400 hover:text-blue-300">
-                <i class="fas fa-check-double mr-1"></i> {{ __('merge_preview.select_all_online') }}
-            </button>
+            {{-- Same order as the columns and as the boxes above: take everything from the result
+                 being built, or everything from what is being offered. --}}
+            @foreach ($sides as $side)
+                <button type="button" @click="selectAllFrom('{{ $side['id'] }}')"
+                    class="{{ $side['tone'] }} hover:text-white">
+                    <i class="fas fa-check-double mr-1"></i> {{ $side['selectAllLabel'] }}
+                </button>
+            @endforeach
         </x-editor.filter-bar>
 
         @include('partials.editor-floating-search')
@@ -243,51 +293,26 @@
              components/editor/workbench-bar.blade.php. Only the category filters differ from one
              screen to the next, so only those are passed in. --}}
         <x-editor.workbench-bar save="saveToServer()" save-disabled="saving || totalChanges === 0">
-            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.local_only') }}">
-                <input type="checkbox" :checked="filters.localOnly" @change="toggleFilter('localOnly')"
-                       class="rounded bg-gray-700 border-gray-600 text-green-600">
-                <span class="text-green-400"><i class="fas fa-desktop"></i></span>
-            </label>
-            <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.online_only') }}">
-                <input type="checkbox" :checked="filters.onlineOnly" @change="toggleFilter('onlineOnly')"
-                       class="rounded bg-gray-700 border-gray-600 text-blue-600">
-                <span class="text-blue-400"><i class="fas fa-cloud"></i></span>
-            </label>
+            @foreach ($sides as $side)
+                <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $side['onlyLabel'] }}">
+                    <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
+                           @change="toggleFilter('{{ $side['filter'] }}')"
+                           class="rounded bg-gray-700 border-gray-600 {{ $side['box'] }}">
+                    <span class="{{ $side['tone'] }}"><i class="fas {{ $side['icon'] }}"></i></span>
+                </label>
+            @endforeach
             <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.different') }}">
-                <input type="checkbox" :checked="filters.different" @change="toggleFilter('different')"
+                <input type="checkbox" :checked="filters.catDiffering" @change="toggleFilter('catDiffering')"
                        class="rounded bg-gray-700 border-gray-600 text-yellow-600">
                 <span class="text-yellow-400">≠</span>
             </label>
             <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge_preview.same') }}">
-                <input type="checkbox" :checked="filters.same" @change="toggleFilter('same')"
+                <input type="checkbox" :checked="filters.catSame" @change="toggleFilter('catSame')"
                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="text-gray-500">=</span>
             </label>
             <span class="w-px h-5 bg-gray-700 shrink-0"></span>
         </x-editor.workbench-bar>
-
-        @php
-            // 🔴 **The left column is always the result being built** — the file this screen is
-            // about to write. It is the local one when comparing into the game, the server's one
-            // when publishing, and putting it first is what makes this table read like the merge
-            // view and the live editor rather than like its own dialect.
-            //
-            // ⚠ Written once, here, and both the header row and the body row loop over it. They
-            // used to spell their columns out separately, which is how they were free to disagree.
-            $local = [
-                'id' => 'local',
-                'label' => __('merge_preview.local_file'),
-                'byline' => null,
-                'target' => $toLocal,
-            ];
-            $online = [
-                'id' => 'online',
-                'label' => __('merge_preview.online_version'),
-                'byline' => $translation->user->name,
-                'target' => !$toLocal,
-            ];
-            $sides = $toLocal ? [$local, $online] : [$online, $local];
-        @endphp
 
         {{-- Table. An ordinary block that the page scrolls, until the workbench tears it out and
              hands it the window — then the scrollbars belong to the box and sit at the edges of
@@ -611,11 +636,18 @@ document.addEventListener('alpine:init', () => {
         // columns after it off the screen. See translation-editor.js (_widthsKey).
         widthsKey: 'merge_preview_{{ $translation->id }}_cols',
         pendingKey: 'merge_preview_{{ $translation->id }}_pending',
+        // 🔴 Open on what needs DECIDING: what the other side is offering, and where the two
+        // disagree. What only the result already holds, and what both say identically, ask nothing.
+        //
+        // ⚠ Written per situation, not per column, and that fixed a real refusal: it used to read
+        // `localOnly: true, onlineOnly: false` ("already on server, nothing to merge") — true when
+        // publishing and exactly backwards the other way, where the screen opened with the server's
+        // new lines HIDDEN. Those are the lines somebody opened it to fetch.
         filters: {
-            localOnly: true,
-            onlineOnly: false,  // Already on server, nothing to merge
-            different: true,
-            same: false,
+            catNew: true,
+            catOnlyOnTarget: false,
+            catDiffering: true,
+            catSame: false,
             // Tag filters (HVASM) - all enabled by default
             tagH: true,
             tagV: true,
@@ -1102,27 +1134,14 @@ document.addEventListener('alpine:init', () => {
         onlineValueHtml(key) { return this.valueHtmlOf(key, 'online'); },
 
         /**
-         * This screen's two "only on one side" boxes, over the core's categories.
+         * The head tiles, in this screen's own words.
          *
-         * 🔴 **They swap meaning with the direction, and that is the whole reason the core names
-         * situations rather than columns.** Publishing, a line only the local file holds is
-         * something the SOURCE adds — `new`. Comparing into the game, that same line is one the
-         * TARGET already holds — `onlyOnTarget`. One word, two situations, depending on which way
-         * the mod opened the screen.
-         *
-         * ⚠ The boxes keep their names here: this step changes no wording. What changes is that
-         * they stop deciding for themselves what they mean.
+         * 🔴 **The count is the core's, the WORDING is this screen's, and the two are not the same
+         * question.** "Only on the local file" is one situation when publishing (`new` — the local
+         * file is offering it) and the other when comparing into the game (`onlyOnTarget` — the
+         * local file already has it). The tile says which FILE, because that is what somebody
+         * reads; the category says which SITUATION, because that is what the screen acts on.
          */
-        rowCategoryFilter(key) {
-            const category = this.rowCategory(key);
-
-            if (category === 'differing') return 'different';
-            if (category === 'same') return 'same';
-
-            const heldByLocalAlone = category === (this.toLocal ? 'onlyOnTarget' : 'new');
-            return heldByLocalAlone ? 'localOnly' : 'onlineOnly';
-        },
-
         calculateStats() {
             const counts = this.categoryCounts;
 
@@ -1131,8 +1150,6 @@ document.addEventListener('alpine:init', () => {
                 different: counts.differing,
                 same: counts.same,
 
-                // Same swap as the filters above: which side "only" refers to follows the
-                // direction, not the column name.
                 localOnly: this.toLocal ? counts.onlyOnTarget : counts.new,
                 onlineOnly: this.toLocal ? counts.new : counts.onlyOnTarget,
             };
@@ -1460,27 +1477,26 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
-        // ⚠ Claimed, both of them: pressing "take every line from this side" is a decision about
-        // every one of them, said once instead of row by row. It is the defaults — what the screen
-        // answers on its own — that must not claim anything.
-        selectAllLocal() {
+        /**
+         * Take every line this side holds.
+         *
+         * ⚠ Claimed: pressing "take everything from this side" is a decision about every one of
+         * those lines, said once instead of row by row. It is the DEFAULTS — what the screen
+         * answers on its own — that must not claim anything.
+         *
+         * ⚠ One method for both sides, keyed on the column. It was two, and only one of them
+         * dropped pending edits — so sweeping one way replaced the values and sweeping the other
+         * left somebody's typing on top of the lines it had just replaced.
+         */
+        selectAllFrom(source) {
             for (const key of this.allKeys) {
-                const entry = this.localData[key];
-                if (entry !== undefined && !this.isDeleted(key)) {
-                    this.selections[key] = this.pick('local', this.getValue(entry), this.getTag(entry), false);
-                }
-            }
-            this.persistPendingState();
-        },
+                const entry = this.entryOf(key, source);
+                if (entry === undefined || this.isDeleted(key)) continue;
 
-        selectAllOnline() {
-            for (const key of this.allKeys) {
-                const entry = this.onlineData[key];
-                if (entry !== undefined && !this.isDeleted(key)) {
-                    this.selections[key] = this.pick('online', this.getValue(entry), this.getTag(entry), false);
-                    // Clear any manual edits when selecting online
-                    delete this.editedValues[key];
-                }
+                this.selections[key] = this.pick(source, this.getValue(entry), this.getTag(entry), false);
+
+                // An edit belongs to the target: taking the offered side replaces what it was on.
+                if (source !== this.targetSource()) delete this.editedValues[key];
             }
             this.persistPendingState();
         },

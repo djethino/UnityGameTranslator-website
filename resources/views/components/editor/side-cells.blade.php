@@ -51,12 +51,16 @@
     @click="select(key, '{{ $side }}')"
     @if ($target) @dblclick="editCell(key, storedValue(key))" @endif>
     @if ($target)
+        {{-- Each button asks its own question, like the merge view's: `canDelete` is false on a row
+             the target does not hold — there is nothing to strike out — while writing one's own
+             translation of such a row is exactly what this screen is for. --}}
         <span class="edit-affordance">
             <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
                     title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
-            <button type="button" @click.stop="editCell(key, storedValue(key))"
+            <button type="button" x-show="canEdit(key)" @click.stop="editCell(key, storedValue(key))"
                     title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
-            <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
+            <button type="button" class="delete-btn" x-show="canDelete(key)"
+                    @click.stop="toggleDelete(key)"
                     title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
         </span>
     @endif

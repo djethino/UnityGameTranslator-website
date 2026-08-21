@@ -631,7 +631,6 @@
     "merge.no_branches": "ไม่มี Branches สำหรับการแปลนี้ คุณยังสามารถแก้ไขค่าของคุณโดยดับเบิลคลิก",
     "merge.filters": "ตัวกรอง:",
     "merge.filter_new_keys": "คีย์ใหม่",
-    "merge.filter_differences": "ความแตกต่าง",
     "merge.reset_filters": "รีเซ็ต",
     "merge.key": "คีย์",
     "merge.empty_value": "- ว่าง -",

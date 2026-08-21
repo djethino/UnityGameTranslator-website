@@ -631,7 +631,6 @@
     "merge.no_branches": "لا توجد Branches لهذه الترجمة. يمكنك مع ذلك تعديل قيمك بالنقر المزدوج.",
     "merge.filters": "المرشحات:",
     "merge.filter_new_keys": "مفاتيح جديدة",
-    "merge.filter_differences": "الاختلافات",
     "merge.reset_filters": "إعادة تعيين",
     "merge.key": "المفتاح",
     "merge.empty_value": "- فارغ -",

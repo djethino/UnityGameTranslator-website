@@ -80,7 +80,7 @@
              would hide it. --}}
         <span x-show="{{ $count }} > 0" x-cloak
               class="bg-yellow-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
-              title="{{ __('merge.filter_differences') }}" x-text="{{ $count }}"></span>
+              title="{{ __('merge_preview.different') }}" x-text="{{ $count }}"></span>
         <span x-show="{{ $taken }} > 0" x-cloak
               class="bg-purple-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center font-bold px-1"
               title="{{ __('merge.modifications') }}" x-text="{{ $taken }}"></span>

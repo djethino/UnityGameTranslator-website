@@ -403,6 +403,65 @@ export function editorCore(config) {
         },
 
         /**
+         * The filter box that governs a category: `catNew`, `catDiffering`, `catSame`,
+         * `catOnlyOnTarget`.
+         *
+         * 🔴 **Derived, so a box cannot mean something the counts do not.** The boxes used to carry
+         * their own names — `catNew`/`catDiff`/`catOther` here, `localOnly`/`onlineOnly`/`different`
+         * /`same` there — and the mapping between the two lived in a method each screen wrote for
+         * itself. Two vocabularies for four situations is two chances to disagree about which rows
+         * a box hides, on the screens where hiding a row is how somebody misses a contribution.
+         *
+         * ⚠ **Prefixed rather than the bare category.** `filters.new` reads as the `new` OPERATOR to
+         * a restricted expression parser, and this site runs @alpinejs/csp — where an expression it
+         * cannot parse does not throw, it evaluates to nothing. The prefix also matches `tagH`,
+         * `tagV`… so every filter in the object is named the same way.
+         *
+         * Page hook: a screen that does not tell two situations apart folds one onto the other —
+         * see the merge view, where a line no contribution mentions is not news.
+         */
+        categoryFilter(category) {
+            return 'cat' + category.charAt(0).toUpperCase() + category.slice(1);
+        },
+
+        /** The filter box governing a row. */
+        rowCategoryFilter(key) {
+            return this.categoryFilter(this.rowCategory(key));
+        },
+
+        // ── What this screen lets somebody DO ────────────────────────────
+        //
+        // 🔴 **Rights are the second thing that legitimately differs between the three editors**
+        // (the first being the targets) — the user's own division. Written as hooks rather than as
+        // `@if`s scattered through the markup: a control that appears on one screen and not on
+        // another is a decision, and a decision needs somewhere to be read.
+        //
+        // ⚠ **Two, not four.** The plan named `canChangeTag` and `canPick` as well; both turned out
+        // to be second names for questions already answered here — `tagCellDisabled`, which the tag
+        // cell component already reads, and `arbitratesAnotherSide`, which the defaults already
+        // read. A synonym with no caller is the parallel path the project forbids, so neither was
+        // written. See analyse/editors-mutualisation.md.
+
+        /**
+         * May somebody reword a line here?
+         *
+         * ⚠ True even where the target does not hold the row yet: writing one's own translation of
+         * a line only a contribution carries is a normal act, and the screens already render the
+         * result (`entryOnFile(key) !== undefined || isEdited(key)`). What was not normal was the
+         * merge view hiding the pencil there while its double-click went on working.
+         */
+        canEdit(key) { return true; },
+
+        /**
+         * May somebody strike a line out?
+         *
+         * 🔴 Not on a row the target does not hold: there is nothing to remove. Deleting is about
+         * what the saved file carries, which is why this one asks `targetEntry` and `canEdit` does
+         * not — the two look alike and answer different questions.
+         */
+        canDelete(key) { return this.targetEntry(key) !== undefined; },
+
+        /**
          * A pick built from whatever column somebody clicked, or null when that column holds
          * nothing for this key.
          *

@@ -435,8 +435,10 @@ class MergeViewStateTest extends TestCase
 
         // The screen opens on the categories, not on "only what is already picked": unticking a
         // row must not make it disappear from the review it belongs to.
+        // ⚠ The boxes are named after the core's situations (`catSame` folds `onlyOnTarget` in
+        // here); they used to carry names this screen invented.
         $this->assertStringContainsString('modifiedOnly: false', $html);
-        $this->assertStringContainsString('catOther: false', $html);
+        $this->assertStringContainsString('catSame: false', $html);
     }
 
     public function test_the_merge_data_carries_what_the_owner_thinks_of_each_contribution(): void

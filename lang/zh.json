@@ -631,7 +631,6 @@
     "merge.no_branches": "此翻译没有 Branch。你仍然可以通过双击来编辑你的值。",
     "merge.filters": "筛选条件：",
     "merge.filter_new_keys": "新键",
-    "merge.filter_differences": "差异",
     "merge.reset_filters": "重置",
     "merge.key": "键",
     "merge.empty_value": "- 空 -",

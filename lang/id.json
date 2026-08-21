@@ -631,7 +631,6 @@
     "merge.no_branches": "Tidak ada Branch untuk terjemahan ini. Kamu masih bisa mengedit nilaimu dengan klik dua kali.",
     "merge.filters": "Filter:",
     "merge.filter_new_keys": "Kunci baru",
-    "merge.filter_differences": "Perbedaan",
     "merge.reset_filters": "Reset",
     "merge.key": "Kunci",
     "merge.empty_value": "- kosong -",

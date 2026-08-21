@@ -631,7 +631,6 @@
     "merge.no_branches": "Для этого перевода нет ни одного Branch. Вы всё ещё можете редактировать значения двойным щелчком.",
     "merge.filters": "Фильтры:",
     "merge.filter_new_keys": "Новые ключи",
-    "merge.filter_differences": "Различия",
     "merge.reset_filters": "Сбросить",
     "merge.key": "Ключ",
     "merge.empty_value": "- пусто -",
