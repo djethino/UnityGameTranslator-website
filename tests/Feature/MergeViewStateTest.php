@@ -404,22 +404,10 @@ class MergeViewStateTest extends TestCase
         // the first time either was touched.
         $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);
 
-        // 🔴 **`auto` is set exactly when the tag kept is A**, because that is the only tag the save
-        // promotes. Widening it would put a second, half-meant state on rows that never needed one;
-        // narrowing it would let a machine line be marked human-checked by a page load.
-        $this->assertStringContainsString('auto: auto === null ? tag === \'A\' : auto', $html);
-
-        // A click on a column already held automatically validates it rather than undoing it —
-        // otherwise the paler colour would be a state with no way out of it.
-        $this->assertStringContainsString('if (current.auto) {', $html);
-
-        // 🔴 And the click after that goes back to held on the Main's own column, instead of
-        // blanking it: keeping the Main writes the line it already has, so blank and held are the
-        // same file and a third state would change a colour and nothing else. Everywhere else
-        // blank stays reachable — on a line only a contribution has it is the only way to refuse
-        // it, deletions being able to remove a key the Main holds and nothing more.
-        $this->assertStringContainsString(
-            'back && (back.source !== current.source || back.auto !== current.auto)', $html);
+        // ⚠ And the three states themselves are the CORE's, not this page's: the preview screen
+        // runs the identical gesture on the identical grid, and two copies of it is how the same
+        // promotion stayed open on one screen after being closed on the other.
+        $this->assertStringContainsString('if (this.advancePick(key, source)) return;', $html);
 
         // And the cell previews what will actually be written: an unclaimed hold keeps its A.
         $this->assertStringContainsString("sel.tag === 'A' && !sel.auto ? 'V' : sel.tag", $html);
@@ -752,6 +740,45 @@ class MergeViewStateTest extends TestCase
     }
 
     /**
+     * 🔴 Both arbitrating screens run ONE mechanic, and neither keeps a copy of it.
+     *
+     * They show the same grid, the same columns and the same gesture, and each had written its own
+     * answer to "what is this row on" — one an object, the other a bare string. So a rule fixed in
+     * one went on being wrong in the other: the A → V promotion was closed on the merge view and
+     * stayed open here, marking machine lines human-checked in a player's own file.
+     *
+     * ⚠ What legitimately differs is which columns exist and which one the result is built from,
+     * and that is exactly what the two hooks carry — nothing else.
+     */
+    public function test_both_arbitrating_screens_share_one_selection_mechanic(): void
+    {
+        $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
+        $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
+
+        foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
+            $this->assertStringContainsString('if (this.advancePick(key, source)) return;', $html, $name);
+            $this->assertStringContainsString('homeSource() {', $html, $name);
+            $this->assertStringContainsString("selection-unclaimed", $html, $name);
+        }
+
+        // 🔴 The preview runs BOTH ways, and the column its result is built from follows: comparing
+        // into the game starts from the player's file, publishing starts from the server's. Asking
+        // one hook both questions held the wrong side the moment somebody published.
+        $this->assertStringContainsString("return this.toLocal ? 'local' : 'online';", $preview);
+        $this->assertStringContainsString(
+            'return this.toLocal ? this.localData[key] : this.onlineData[key];', $preview);
+
+        // And nothing reads the selection's shape directly any more.
+        $this->assertStringNotContainsString("this.selections[key] === 'local'", $preview);
+        $this->assertStringNotContainsString("this.selections[key] = 'local'", $preview);
+        $this->assertStringNotContainsString("this.selections[key] = 'online'", $preview);
+
+        // ⚠ A draft saved before selections became objects still opens. Dropping it would lose a
+        // review somebody had half finished.
+        $this->assertStringContainsString("if (typeof sel !== 'string')", $preview);
+    }
+
+    /**
      * 🔴 Two kinds of work arrive on this screen, and the chip tells them apart.
      *
      * A line taken from a contribution exactly as offered, and a line somebody wrote themselves
@@ -800,13 +827,33 @@ class MergeViewStateTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('defaultSelection(key) {', $html);
-        $this->assertStringContainsString('const back = this.defaultSelection(key);', $html);
+        // 🔴 The mechanic lives in the CORE, so both arbitrating screens run it. Each supplies only
+        // what differs: which column already holds its rows.
+        $core = file_get_contents(resource_path('js/components/translation-editor.js'));
+
+        $this->assertStringContainsString('defaultSelection(key) {', $core);
+        $this->assertStringContainsString('const back = this.defaultSelection(key);', $core);
+        $this->assertStringContainsString('advancePick(key, source, value, tag) {', $core);
+
+        // `auto` is set exactly where the save promotes — on an A and nowhere else. Wider, it is a
+        // half-meant state on rows that never needed one; narrower, a machine line is marked
+        // human-checked by a page load.
+        $this->assertStringContainsString("auto: auto === null ? tag === 'A' : auto", $core);
+
+        // ⚠ Holding one's own line is only recorded where it VALIDATES. Anything else would be a
+        // no-op wearing the colours of a decision — and a dead click when somebody undoes it.
+        $this->assertStringContainsString("if (tag !== 'A') return null;", $core);
+
+        // The page opens on the same definition the undo returns to.
         $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);
 
-        // ⚠ Holding the Main is only recorded where it VALIDATES. Anything else would be a no-op
-        // wearing the colours of a decision — and a dead click when somebody tries to undo it.
-        $this->assertStringContainsString("if (tag !== 'A') return null;", $html);
+        // And each screen names its own home column rather than the core guessing.
+        foreach ([
+            'views/merge/show.blade.php' => "homeSource() { return 'main'; }",
+            'views/translations/merge-preview.blade.php' => 'homeSource() {',
+        ] as $view => $needle) {
+            $this->assertStringContainsString($needle, file_get_contents(resource_path($view)), $view);
+        }
     }
 
     /**

@@ -1135,6 +1135,9 @@ class TranslationController extends Controller
             'selections.*.value' => 'present|string',
             'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string',
+            // Whether the screen answered this row on its own — see resolveMergedTag's $claimed.
+            // Optional: a client that predates it only ever sent rows somebody had picked.
+            'selections.*.auto' => 'sometimes',
             'deletions' => 'sometimes|array',
             'deletions.*' => 'string',
             'settings' => 'sometimes|array',
@@ -1168,7 +1171,12 @@ class TranslationController extends Controller
                 continue;
             }
 
-            $tag = TranslationService::resolveMergedTag($sel['tag'], $sel['source']);
+            // ⚠ `auto` marks a row the screen answered on its own: kept as it is, tag untouched.
+            // Without it, a machine line the comparison brought down landed in the player's own
+            // file marked human-checked, and their quality bar rose with nobody having read a word.
+            // Absent on an older client, which only ever sent rows somebody had picked.
+            $tag = TranslationService::resolveMergedTag(
+                $sel['tag'], $sel['source'], claimed: !filter_var($sel['auto'] ?? false, FILTER_VALIDATE_BOOL));
 
             $result[$key] = TranslationService::rebuildEntry(
                 $result[$key] ?? null,
@@ -1235,6 +1243,9 @@ class TranslationController extends Controller
             'selections.*.value' => 'present|string',
             'selections.*.tag' => 'required|in:H,A,V,M,S',
             'selections.*.source' => 'required|string', // 'local', 'online', or 'manual'
+            // Whether the screen answered this row on its own — see resolveMergedTag's $claimed.
+            // Optional: a client that predates it only ever sent rows somebody had picked.
+            'selections.*.auto' => 'sometimes',
             'deletions' => 'sometimes|array',
             'deletions.*' => 'string',
             // Only a side is accepted per setting: the entry itself is copied server-side from
@@ -1270,8 +1281,10 @@ class TranslationController extends Controller
             $tag = $sel['tag'];
             $source = $sel['source'];
 
-            // Shared rule — see TranslationService::resolveMergedTag
-            $tag = TranslationService::resolveMergedTag($tag, $source);
+            // Shared rule — see TranslationService::resolveMergedTag. `auto` marks a row the screen
+            // answered on its own, which may not claim a reading.
+            $tag = TranslationService::resolveMergedTag(
+                $tag, $source, claimed: !filter_var($sel['auto'] ?? false, FILTER_VALIDATE_BOOL));
 
             // rebuildEntry keeps the ordering index "i" of the existing entry
             $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);

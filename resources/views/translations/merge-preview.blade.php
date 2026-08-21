@@ -1065,10 +1065,16 @@ document.addEventListener('alpine:init', () => {
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;
 
+                // ⚠ Every default goes through `staged`, which carries the one flag deciding
+                // whether the pick VALIDATES — see the core's `pick`. Written as bare strings, an
+                // arriving machine line was promoted to V by a page load, in the player's own file.
+                const staged = (source, entry) =>
+                    this.pick(source, this.getValue(entry), this.getTag(entry));
+
                 if (hasLocal && !hasOnline) {
-                    this.selections[key] = 'local';
+                    this.selections[key] = staged('local', this.localData[key]);
                 } else if (!hasLocal && hasOnline) {
-                    this.selections[key] = 'online';
+                    this.selections[key] = staged('online', this.onlineData[key]);
                 } else if (hasLocal && hasOnline) {
                     if (this.entriesDiffer(key)) {
                         // The shared scale, not a copy of it: see translation-editor.js.
@@ -1077,16 +1083,16 @@ document.addEventListener('alpine:init', () => {
                         const localPriority = this.priorityOf(this.localData[key]);
                         const onlinePriority = this.priorityOf(this.onlineData[key]);
 
-                        // 🔴 **Nothing on a tie** — the same rule as the merge screen, and for the
-                        // same reason: a pick is written back with A promoted to V, so answering a
-                        // tie by default records a validation nobody performed. Two machine
-                        // translations that differ is exactly that case, and it is the common one.
-                        // The row is shown and waits for a click.
-                        if (localPriority !== onlinePriority) {
-                            this.selections[key] = localPriority > onlinePriority ? 'local' : 'online';
-                        }
+                        // 🔴 **A tie is answered, and the answer does not claim a reading** — the
+                        // same three states as the merge screen, from the same core. Blank would
+                        // leave the row out of every filtered view; a plain pick would record a
+                        // validation nobody performed, two machine translations that differ being
+                        // exactly that case, and the common one.
+                        this.selections[key] = localPriority >= onlinePriority
+                            ? staged('local', this.localData[key])
+                            : staged('online', this.onlineData[key]);
                     } else {
-                        this.selections[key] = 'online';
+                        this.selections[key] = staged('online', this.onlineData[key]);
                     }
                 }
             }
@@ -1264,9 +1270,12 @@ document.addEventListener('alpine:init', () => {
             return null;
         },
 
-        /** Core hook: a staged manual edit selects the local side. */
+        /** Core hook: a staged manual edit selects the local side — claimed, since somebody typed. */
         onEditStaged(key) {
-            this.selections[key] = 'local';
+            const entry = this.localData[key];
+            this.selections[key] = this.pick(
+                'local', entry === undefined ? '' : this.getValue(entry),
+                entry === undefined ? 'A' : this.getTag(entry), false);
         },
 
         /** Core hook: a deletion cancels any side selection for the key. */
@@ -1288,9 +1297,25 @@ document.addEventListener('alpine:init', () => {
         },
 
         restorePendingExtra(extra) {
-            if (extra && extra.selections && typeof extra.selections === 'object') {
-                this.selections = extra.selections;
+            if (!extra || !extra.selections || typeof extra.selections !== 'object') return;
+
+            // ⚠ A draft saved before selections became objects holds bare strings. Read as they
+            // are, `isUnclaimed` answers false on every one of them — which is right: they were all
+            // picked under the rules of the day, and treating them as unclaimed would silently drop
+            // a promotion somebody had already decided on. Normalised on the way in so nothing
+            // downstream has to know two shapes.
+            const restored = {};
+
+            for (const [key, sel] of Object.entries(extra.selections)) {
+                if (typeof sel !== 'string') { restored[key] = sel; continue; }
+
+                const entry = sel === 'local' ? this.localData[key] : this.onlineData[key];
+                if (entry === undefined) continue;
+
+                restored[key] = this.pick(sel, this.getValue(entry), this.getTag(entry), false);
             }
+
+            this.selections = restored;
         },
 
         // ── Merge selection logic ────────────────────────────────────────
@@ -1301,7 +1326,7 @@ document.addEventListener('alpine:init', () => {
          * a differing key where local was selected.
          */
         isRowModified(key) {
-            const source = this.selections[key];
+            const source = this.pickedSource(key);
             const hasLocal = key in this.localData;
             const hasOnline = key in this.onlineData;
 
@@ -1338,11 +1363,23 @@ document.addEventListener('alpine:init', () => {
             this.focusRow(key);
             // A deleted key must be un-deleted before picking a side again
             if (this.isDeleted(key)) return;
-            this.selections[key] = source;
+
+            // Clicking the column this row is already on: held → claimed → back to its own
+            // default. The three states and their reasons are the core's, shared with the merge
+            // view, which runs the identical gesture on the identical grid.
+            if (this.advancePick(key, source)) return;
+
+            const entry = source === 'local' ? this.localData[key] : this.onlineData[key];
+            if (entry === undefined) return;
+
             // If selecting online, clear any manual edit
             if (source === 'online') {
                 delete this.editedValues[key];
             }
+
+            // ⚠ Claimed, never auto: this ran because somebody clicked, and a pick made by hand on
+            // an `A` line is exactly the validation the defaults refuse to invent.
+            this.selections[key] = this.pick(source, this.getValue(entry), this.getTag(entry), false);
             this.persistPendingState();
         },
 
@@ -1356,6 +1393,23 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: this screen's rows are the local file's. */
         entryOnFile(key) {
             return this.localData[key];
+        },
+
+        /**
+         * Core hooks: which column the RESULT is built from — and it is not always the one the tag
+         * cell describes.
+         *
+         * 🔴 This screen runs both ways. Comparing INTO the game starts from the player's own file,
+         * so keeping a local line writes what is already there; publishing starts from the server's
+         * file, where the same is true of the online column. The tag cell shows the local side
+         * either way, which is why this is asked separately.
+         */
+        homeSource() {
+            return this.toLocal ? 'local' : 'online';
+        },
+
+        homeEntry(key) {
+            return this.toLocal ? this.localData[key] : this.onlineData[key];
         },
 
         /** Core hook: the tag the save will store here — the local projection. */
@@ -1377,7 +1431,7 @@ document.addEventListener('alpine:init', () => {
             if (this.hasTagChange(key) || this.isEdited(key)) {
                 return this.displayTag(key, this.getTag(this.localData[key]));
             }
-            if (this.selections[key] === 'local' && key in this.localData) {
+            if (this.pickedSource(key) === 'local' && key in this.localData) {
                 const hasOnline = key in this.onlineData;
                 // Same condition as "will actually be sent" (see entriesDiffer),
                 // so the previewed tag never promises a promotion the save drops
@@ -1395,17 +1449,25 @@ document.addEventListener('alpine:init', () => {
                 return 'selected-manual';
             }
 
-            const selected = this.selections[key] === source;
+            const selected = this.pickedSource(key) === source;
             if (selected) {
-                return source === 'local' ? 'selected-local' : 'selected-online';
+                const held = source === 'local' ? 'selected-local' : 'selected-online';
+
+                // ⚠ The colour still says WHICH column is held; the modifier says how firmly. Two
+                // separate facts, so two classes rather than four names — same as the merge view.
+                return this.isUnclaimed(key) ? held + ' selection-unclaimed' : held;
             }
             return '';
         },
 
+        // ⚠ Claimed, both of them: pressing "take every line from this side" is a decision about
+        // every one of them, said once instead of row by row. It is the defaults — what the screen
+        // answers on its own — that must not claim anything.
         selectAllLocal() {
             for (const key of this.allKeys) {
-                if (key in this.localData && !this.isDeleted(key)) {
-                    this.selections[key] = 'local';
+                const entry = this.localData[key];
+                if (entry !== undefined && !this.isDeleted(key)) {
+                    this.selections[key] = this.pick('local', this.getValue(entry), this.getTag(entry), false);
                 }
             }
             this.persistPendingState();
@@ -1413,8 +1475,9 @@ document.addEventListener('alpine:init', () => {
 
         selectAllOnline() {
             for (const key of this.allKeys) {
-                if (key in this.onlineData && !this.isDeleted(key)) {
-                    this.selections[key] = 'online';
+                const entry = this.onlineData[key];
+                if (entry !== undefined && !this.isDeleted(key)) {
+                    this.selections[key] = this.pick('online', this.getValue(entry), this.getTag(entry), false);
                     // Clear any manual edits when selecting online
                     delete this.editedValues[key];
                 }
@@ -1456,7 +1519,7 @@ document.addEventListener('alpine:init', () => {
 
             // Build merged translations
             for (const key of this.allKeys) {
-                const source = this.selections[key];
+                const source = this.pickedSource(key);
                 const isEdited = this.editedValues[key] !== undefined;
                 const hasTagChange = key in this.tagChanges;
 
@@ -1526,7 +1589,7 @@ document.addEventListener('alpine:init', () => {
 
             let i = 0;
             for (const key of this.allKeys) {
-                const source = this.selections[key];
+                const source = this.pickedSource(key);
                 const isEdited = this.editedValues[key] !== undefined;
                 const hasTagChange = key in this.tagChanges;
                 const hasLocal = key in this.localData;
@@ -1587,7 +1650,11 @@ document.addEventListener('alpine:init', () => {
                     { name: `selections[${i}][key]`, value: key },
                     { name: `selections[${i}][value]`, value: value },
                     { name: `selections[${i}][tag]`, value: tag },
-                    { name: `selections[${i}][source]`, value: sourceType }
+                    { name: `selections[${i}][source]`, value: sourceType },
+
+                    // Whether anybody claimed this row. The server promotes A to V on a pick, and
+                    // this is what tells that apart from a row the screen answered on its own.
+                    { name: `selections[${i}][auto]`, value: this.isUnclaimed(key) ? '1' : '0' }
                 ];
 
                 for (const input of inputs) {

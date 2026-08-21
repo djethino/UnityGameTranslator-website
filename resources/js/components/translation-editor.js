@@ -268,6 +268,119 @@ export function editorCore(config) {
         /** Page hook: extra per-row state to drop on revert (e.g. selections). */
         onRowReverted(key) {},
 
+        // ── Which version a row is on, and how firmly ────────────────────
+        //
+        // 🔴 **One mechanic for every screen that arbitrates two sides.** The merge view and the
+        // merge preview show the same grid, the same columns and the same gesture, and each had
+        // written its own answer to "what is this row on": one an object, the other a bare string.
+        // So a rule fixed in one went on being wrong in the other — the promotion below was closed
+        // on the merge view and stayed open here, marking machine lines human-checked in a player's
+        // own file. Nothing about the two screens justified two mechanics; what differs is which
+        // columns exist and what a click means there, and that is what the hooks are for.
+
+        /**
+         * One selection, with the one flag that decides whether it VALIDATES.
+         *
+         * 🔴 `auto` is set exactly when the tag kept is `A`, because that is the only tag a save
+         * promotes (`TranslationService::resolveMergedTag`). On V, H or S, writing the pick changes
+         * no tag — nothing is claimed and nothing is held back. Keeping the rule that narrow is what
+         * stops it from becoming a second, half-understood state on rows that never needed one.
+         */
+        pick(source, value, tag, auto = null) {
+            return { source, value, tag, auto: auto === null ? tag === 'A' : auto };
+        },
+
+        /**
+         * The source a row is on, whatever shape the selection has.
+         *
+         * ⚠ Tolerates the bare string the merge preview used to store, because a reader may come
+         * back to a draft saved before this existed. A pending state that throws is a review
+         * somebody loses.
+         */
+        pickedSource(key) {
+            const sel = this.selections?.[key];
+            if (sel === undefined || sel === null) return null;
+            return typeof sel === 'string' ? sel : sel.source;
+        },
+
+        /** Held by the screen rather than claimed by a person — see {@link pick}. */
+        isUnclaimed(key) {
+            const sel = this.selections?.[key];
+            return typeof sel === 'object' && sel !== null && sel.auto === true;
+        },
+
+        /**
+         * What a row answers when nobody has said anything about it — null where that answer is
+         * "nothing", which is a real answer too.
+         *
+         * 🔴 **Keeping one's own line is only worth recording when it VALIDATES.** Writing it back
+         * over itself changes no byte; the one case where it does something is an `A` promoted to
+         * `V`, and that is precisely the case that must not happen by itself. So an `A` is held,
+         * unclaimed; anything else is left alone, because selecting it would be a no-op wearing the
+         * colours of a decision — and re-clicking it a dead click.
+         *
+         * ⚠ Read twice, defined once: by the defaults when a page opens, and by {@link advancePick}
+         * when somebody undoes. Written separately, they drifted the first time either was touched.
+         */
+        defaultSelection(key) {
+            const own = this.homeEntry(key);
+            if (own === undefined) return null;
+
+            const tag = this.getTag(own);
+            if (tag !== 'A') return null;
+
+            return this.pick(this.homeSource(), this.getValue(own), tag);
+        },
+
+        /**
+         * Page hook: the column the RESULT is built from — the one where picking writes the line it
+         * already holds, and therefore changes nothing.
+         *
+         * ⚠ Not always `entryOnFile`, and the difference is real: the preview screen shows the tag
+         * of the local file whichever way it runs, but publishing builds its result from the SERVER
+         * file. Asking one hook both questions had it hold the wrong side the moment somebody
+         * published instead of comparing into the game.
+         */
+        homeSource() { return 'main'; },
+
+        /** Page hook: the entry on that column. Defaults to the one the tag cell describes. */
+        homeEntry(key) { return this.entryOnFile(key); },
+
+        /**
+         * Clicking the column a row is already on. Three states, in the order somebody meets them:
+         * held → claimed → back to whatever the row answers on its own.
+         *
+         * 🔴 The last step is not "blank". Blank and "keep your own line" write the identical file,
+         * so a row whose own side holds it has no third state — and blanking it lost the marks that
+         * said the row had been answered at all. Where the screen's own side holds nothing, blank IS
+         * the answer: on a line only the other side has, it is the only way to refuse it.
+         *
+         * @returns {boolean} true when it handled the click.
+         */
+        advancePick(key, source, value, tag) {
+            const current = this.selections[key];
+            if (this.pickedSource(key) !== source || source === 'manual') return false;
+
+            if (this.isUnclaimed(key)) {
+                this.selections[key] = this.pick(source, current.value, current.tag, false);
+                this.persistPendingState();
+                return true;
+            }
+
+            const back = this.defaultSelection(key);
+
+            if (back && (back.source !== source || back.auto !== (current && current.auto))) {
+                delete this.editedValues[key];
+                this.selections[key] = back;
+            } else {
+                delete this.selections[key];
+                delete this.editedValues[key];
+            }
+
+            this.persistPendingState();
+            return true;
+        },
+
         // ── Pending-state persistence (survives F5 until the save) ───────
 
         persistPendingState() {

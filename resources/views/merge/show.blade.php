@@ -1613,87 +1613,18 @@ document.addEventListener('alpine:init', () => {
          * (toggle, same behavior as before). Selecting main = validate it
          * (A -> V server-side).
          */
-        /**
-         * One selection, with the one flag that decides whether it VALIDATES.
-         *
-         * 🔴 `auto` is set exactly when the tag being kept is `A`, because that is the only tag the
-         * save promotes. On anything else — V, H, S — writing the pick changes no tag, so there is
-         * nothing to claim and nothing to hold back. Keeping the rule that narrow is what stops it
-         * from becoming a second, half-understood state on rows that never needed one.
-         */
-        pick(source, value, tag, auto = null) {
-            return { source, value, tag, auto: auto === null ? tag === 'A' : auto };
-        },
-
-        /**
-         * What this row answers when nobody has said anything about it — and null where the answer
-         * is "nothing", which is a real answer too.
-         *
-         * 🔴 **Keeping the Main is only worth recording when it VALIDATES.** Writing the Main's own
-         * line back over itself changes no byte; the one case where it does something is an `A`
-         * being promoted to `V`, and that is precisely the case that must not happen by itself.
-         * Hence: an `A` is held, unclaimed; anything else is left alone, because selecting it would
-         * be a no-op wearing the colours of a decision — and re-clicking it a dead click.
-         *
-         * ⚠ One definition, read twice: by the defaults when the page opens, and by `select` when
-         * somebody undoes a pick. They used to be written separately, which is how undoing a branch
-         * pick left the row blank instead of putting it back where it started.
-         */
-        defaultSelection(key) {
-            const mainEntry = this.mainData[key];
-            if (mainEntry === undefined) return null;
-
-            const tag = this.getTag(mainEntry);
-            if (tag !== 'A') return null;
-
-            return this.pick('main', this.getValue(mainEntry), tag);
-        },
+        /** Core hook: the column that already holds this screen's rows. */
+        homeSource() { return 'main'; },
 
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)
             this.focusRow(key);
             if (this.isDeleted(key)) return;
 
-            const current = this.selections[key];
-
-            // ── Clicking the column this row is already on ────────────────
-            //
-            // 🔴 **The first click VALIDATES rather than undoes.** That is what the paler colour is
-            // for: the row arrived answered but unclaimed, and the one gesture somebody makes on it
-            // is "yes, I read this one".
-            //
-            // 🔴 **And the click after that only has somewhere to go where "nothing" would DO
-            // something.** Keeping the Main's own line writes the line it already holds — so on
-            // that column, blank and held produce the identical file, and a third state would be a
-            // click that changes a colour and nothing else. Undoing a validation there returns to
-            // held. Anywhere else, blank is a real answer: on a line only a contribution has it is
-            // the ONLY way to refuse it, since deletions can only remove a key the Main has.
-            if (current?.source === source && source !== 'manual') {
-                if (current.auto) {
-                    this.selections[key] = this.pick(source, current.value, current.tag, false);
-                    this.persistPendingState();
-                    return;
-                }
-
-                // 🔴 **Undoing puts the row back where it started, not to blank.** Blank and "the
-                // Main keeps its own" write the identical file, so a row the Main holds has no
-                // third state — and leaving it blank lost the dashes that said the row had been
-                // answered. Reported: undoing a pick on the Main brought them back, undoing one on
-                // a contribution did not.
-                const back = this.defaultSelection(key);
-
-                if (back && (back.source !== current.source || back.auto !== current.auto)) {
-                    delete this.editedValues[key];
-                    this.selections[key] = back;
-                    this.persistPendingState();
-                    return;
-                }
-
-                delete this.selections[key];
-                delete this.editedValues[key];
-                this.persistPendingState();
-                return;
-            }
+            // Clicking the column this row is already on: held → claimed → back to its own
+            // default. The three states and their reasons live in the core, because the preview
+            // screen runs the identical gesture on the identical grid.
+            if (this.advancePick(key, source)) return;
 
             let value = '';
             let tag = 'A';
