@@ -139,27 +139,17 @@
  * for the layout's guess, never for a deliberate width (see the rule above). */
 .editor-grid [data-col="key"] { min-width: 200px; }
 
-/* The pinned reference column (see js/components/editor-pin.js).
+/* 🔴 The pinned reference column is NOT styled here — see js/components/editor-pin.js.
  *
- * `left` is not here: it depends on how wide the key column has been dragged,
- * so it is measured and injected by the module. Everything that does NOT
- * depend on that lives here, once, for every grid that offers the pin. */
-.editor-grid.pin-main thead [data-col="mainTag"],
-.editor-grid.pin-main thead [data-col="main"],
-.editor-grid.pin-main thead [data-col="localTag"],
-.editor-grid.pin-main thead [data-col="local"] {
-    position: sticky;
-    z-index: 30;
-    background-color: rgb(17 24 39);
-}
-.editor-grid.pin-main tbody [data-col="mainTag"],
-.editor-grid.pin-main tbody [data-col="main"],
-.editor-grid.pin-main tbody [data-col="localTag"],
-.editor-grid.pin-main tbody [data-col="local"] {
-    position: sticky;
-    z-index: 10;
-    background-color: rgb(31 41 55);
-}
+ * Every rule that names the frozen columns is written by that module, from the two names the page
+ * gives it. This block used to list them: `mainTag, main, localTag, local`. The comparison screen
+ * then started swapping its target with the direction — publishing freezes the SERVER's column —
+ * and a list cannot know a name nobody has written in it yet. What it does instead of failing is
+ * nothing at all: the pin looks on, the columns scroll away, and no rule is missing from anywhere
+ * anyone would think to look.
+ *
+ * What stays below is what does NOT name a column: the key column, and the merged `main-pair` cell
+ * of the metadata tables. */
 
 /* The edge of the frozen block moves with it: the key column stops being the
  * last frozen thing, so the shadow that says "content passes behind here"
@@ -192,58 +182,17 @@
 .editor-grid.pin-main tbody td.main-pair.selected-manual { background-color: rgb(60 35 95) !important; }
 
 .editor-grid.pin-main [data-col="key"] { box-shadow: none; border-right-color: rgb(55 65 81); }
-.editor-grid.pin-main [data-col="main"],
-.editor-grid.pin-main [data-col="local"] {
-    border-right: 1px solid rgb(55 65 81);
-    box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
-.editor-grid.pin-main [data-col="main"].selected-main,
-.editor-grid.pin-main [data-col="local"].selected-local {
-    box-shadow: inset 0 0 0 2px rgb(34 197 94), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
-.editor-grid.pin-main [data-col="main"].selected-manual,
-.editor-grid.pin-main [data-col="local"].selected-manual {
-    box-shadow: inset 0 0 0 2px rgb(168 85 247), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
-.editor-grid.pin-main [data-col="main"].deleted-cell,
-.editor-grid.pin-main [data-col="local"].deleted-cell {
-    box-shadow: inset 0 0 0 2px rgb(239 68 68), 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-}
 
-/* Selection tints are 50% alpha because they were designed to sit ON a row.
- * Frozen, there is no row behind them — only the columns scrolling past, which
- * showed straight through the Main you were trying to keep in sight. The same
- * colours, flattened onto the cell background they used to blend with, so the
- * pinned column looks identical and is opaque. */
-.editor-grid.pin-main tbody [data-col="main"].selected-main,
-.editor-grid.pin-main tbody [data-col="local"].selected-local { background-color: rgb(26 62 50) !important; }
-.editor-grid.pin-main tbody [data-col="main"].selected-manual,
-.editor-grid.pin-main tbody [data-col="local"].selected-manual { background-color: rgb(60 35 95) !important; }
-.editor-grid.pin-main tbody [data-col="main"].deleted-cell,
-.editor-grid.pin-main tbody [data-col="local"].deleted-cell,
-.editor-grid.pin-main tbody [data-col="mainTag"].deleted-cell,
-.editor-grid.pin-main tbody [data-col="localTag"].deleted-cell { background-color: rgb(79 35 42) !important; }
-
-/* An unclaimed hold, pinned. Same reasoning as the block above — flattened rather than translucent,
- * because there is no row behind a frozen column — and the same reasoning as .selection-unclaimed
- * further down: the hue keeps saying which column is held, the wash and the dashes say how firmly.
+/* Selection tints are 50% alpha because they were designed to sit ON a row. Frozen, there is no row
+ * behind them — only the columns scrolling past, which showed straight through the column you were
+ * trying to keep in sight. The same colours, flattened onto the cell background they used to blend
+ * with, so the pinned column looks identical and is opaque.
  *
- * ⚠ Repeated here rather than left to the plain rule: these selectors carry `!important` and a far
- * higher specificity, so the plain one loses the moment somebody pins the Main — and pinning is
- * what people do to read a long merge. */
-.editor-grid.pin-main tbody td.main-pair.selected-main.selection-unclaimed,
-.editor-grid.pin-main tbody [data-col="main"].selected-main.selection-unclaimed,
-.editor-grid.pin-main tbody [data-col="local"].selected-local.selection-unclaimed {
+ * ⚠ The frozen column's own version of all this is written by editor-pin.js; only the merged cell
+ * below is named here, because it has no data-col to be found by. */
+.editor-grid.pin-main tbody td.main-pair.selected-main.selection-unclaimed {
     background-color: rgb(23 44 39) !important;
 }
-.editor-grid.pin-main [data-col="main"].selected-main.selection-unclaimed,
-.editor-grid.pin-main [data-col="local"].selected-local.selection-unclaimed {
-    box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.6);
-    outline: 2px dashed rgb(34 197 94);
-    outline-offset: -2px;
-}
-.editor-grid.pin-main tbody [data-col="mainTag"].tag-changed-cell,
-.editor-grid.pin-main tbody [data-col="localTag"].tag-changed-cell { background-color: rgb(48 37 79) !important; }
 
 /* The mirrored horizontal scrollbar (see js/components/editor-hscroll.js).
  *

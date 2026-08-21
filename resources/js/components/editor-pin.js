@@ -90,9 +90,7 @@ export function editorPin() {
             // longer exists for an instant is not something a compositor is obliged to keep up
             // with. A custom property is a value change on an element — the offset moves without
             // the rule ever going away.
-            const rules =
-                `.editor-grid.pin-main [data-col="${this.pinTagCol}"]{left:var(--pin-tag-left,0px)}\n`
-                + `.editor-grid.pin-main [data-col="${this.pinValueCol}"]{left:var(--pin-value-left,0px)}`;
+            const rules = this._pinRules();
             if (style.textContent !== rules) {
                 style.textContent = rules;
             }
@@ -109,6 +107,75 @@ export function editorPin() {
             const root = box.closest('[x-data]') || box;
             root.style.setProperty('--pin-tag-left', tagLeft + 'px');
             root.style.setProperty('--pin-value-left', valueLeft + 'px');
+        },
+
+        /**
+         * Everything the frozen pair looks like, built from the two column NAMES the page gives.
+         *
+         * 🔴 **Written here rather than in the stylesheet, and that is the whole point.** These
+         * rules used to list the columns they applied to — `mainTag, main, localTag, local`. Then
+         * the comparison screen started swapping its target with the direction (publishing freezes
+         * the server's column, not the player's), and a hand-written list cannot know a name nobody
+         * has added to it. Its failure is silence: the pin turns on, reports itself on, and freezes
+         * nothing — with no rule missing from any file a reader would open.
+         *
+         * ⚠ The selection tint is keyed on `selected-<column>`, the class every editor's
+         * `getCellClass` produces. Same single source: name the column, get its colour.
+         *
+         * ⚠ Rebuilt only when the two names change — never during a drag, where replacing a
+         * stylesheet's text tore the frozen block apart (see applyPinOffsets).
+         */
+        _pinRules() {
+            const tag = `.editor-grid.pin-main [data-col="${this.pinTagCol}"]`;
+            const value = `.editor-grid.pin-main [data-col="${this.pinValueCol}"]`;
+            const both = (where) =>
+                `.editor-grid.pin-main ${where} [data-col="${this.pinTagCol}"],`
+                + `.editor-grid.pin-main ${where} [data-col="${this.pinValueCol}"]`;
+            // The tint class the page's own getCellClass puts on a chosen cell.
+            const held = '.selected-' + this.pinValueCol;
+            const edge = '4px 0 8px -4px rgba(0,0,0,0.6)';
+
+            return [
+                // Frozen, and opaque: a translucent cell would let the scrolled columns through.
+                `${both('thead')}{position:sticky;z-index:30;background-color:rgb(17 24 39)}`,
+                `${both('tbody')}{position:sticky;z-index:10;background-color:rgb(31 41 55)}`,
+                `${tag}{left:var(--pin-tag-left,0px)}`,
+                `${value}{left:var(--pin-value-left,0px)}`,
+
+                // The edge of the frozen block moves with it: the key column stops being the last
+                // frozen thing, so the shadow that says "content passes behind here" belongs on the
+                // reference column. A box-shadow, and it has to be — an element sticking out to the
+                // right ENLARGES the scrollable area, and invented eight pixels of scroll on a grid
+                // where nothing overflowed. Which means sharing box-shadow with the selection
+                // rings, so each state below restates the edge.
+                `${value}{border-right:1px solid rgb(55 65 81);box-shadow:${edge}}`,
+                `${value}${held}{box-shadow:inset 0 0 0 2px rgb(34 197 94),${edge}}`,
+                `${value}.selected-manual{box-shadow:inset 0 0 0 2px rgb(168 85 247),${edge}}`,
+                `${value}.deleted-cell{box-shadow:inset 0 0 0 2px rgb(239 68 68),${edge}}`,
+
+                // Flattened tints, for the reason given in app.css: there is no row behind a frozen
+                // column, only the columns scrolling past it.
+                `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"]${held}`
+                    + `{background-color:rgb(26 62 50)!important}`,
+                `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"].selected-manual`
+                    + `{background-color:rgb(60 35 95)!important}`,
+                // A row on its way out, on both cells of the pair — the tag included, or half the
+                // frozen block would go on looking ordinary.
+                `.editor-grid.pin-main tbody [data-col="${this.pinTagCol}"].deleted-cell,`
+                    + `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"].deleted-cell`
+                    + `{background-color:rgb(79 35 42)!important}`,
+
+                // An unclaimed hold: the hue keeps saying which column is held, the wash and the
+                // dashes say how firmly. Restated at this specificity because these selectors carry
+                // `!important` — and pinning is what people do to read a long merge.
+                `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"]${held}.selection-unclaimed`
+                    + `{background-color:rgb(23 44 39)!important}`,
+                `${value}${held}.selection-unclaimed`
+                    + `{box-shadow:${edge};outline:2px dashed rgb(34 197 94);outline-offset:-2px}`,
+
+                `.editor-grid.pin-main tbody [data-col="${this.pinTagCol}"].tag-changed-cell`
+                    + `{background-color:rgb(48 37 79)!important}`,
+            ].join('\n');
         },
 
         _pinStyleElement() {

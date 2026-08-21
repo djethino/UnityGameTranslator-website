@@ -15,6 +15,15 @@
     // so a block that assumed one screen's names lined up on that screen and floated free on the
     // next — which is the whole reason it is worth sharing at all.
     'valueCol' => 'main',
+    // What that column is CALLED on this screen. 'Main' on the merge view and the reading screens,
+    // where the translation being read is the Main; the target's own name on the comparison screen,
+    // where "Main" names nothing the reader can see.
+    'mineLabel' => 'Main',
+    // ⚠ And its colour, because the colour names a FILE, not a role: on the comparison screen the
+    // target is the local file one way round and the server's version the other, and the lines
+    // grid colours each of them the same way whichever side it sits on. A label left green over a
+    // blue column would be the one place the two tables disagree.
+    'mineTone' => 'text-green-400',
     // The tag column, kept EMPTY and merged into the value cell: neither a setting nor a
     // description has a tag, and dropping the column would shift everything after it. Null on a
     // grid that has no tag column of its own.
@@ -107,7 +116,7 @@
                     <th data-col="{{ $valueCol }}"
                         class="relative px-4 py-3 text-left min-w-[250px] {{ $tagCol ? '' : 'border-l border-gray-700' }}">
                         <div class="flex items-center gap-2">
-                            <span class="text-green-400 font-medium">Main</span>
+                            <span class="{{ $mineTone }} font-medium">{{ $mineLabel }}</span>
                             <span class="text-xs text-gray-500" x-show="mainOwner" x-text="'(' + mainOwner + ')'"></span>
                         </div>
                         <x-editor.col-resize col="{{ $valueCol }}" />
@@ -115,7 +124,11 @@
                     <template x-for="other in {{ $others }}" :key="other.id">
                         <th colspan="{{ $otherSpan }}" :data-col="other.col"
                             class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[280px]">
-                            <span class="text-blue-400 font-medium" x-text="other.name"></span>
+                            {{-- Its colour comes with the column, for the reason spelled out on
+                                 `mineTone`: on a screen whose two sides swap roles, blue is not a
+                                 property of "the other one". --}}
+                            <span class="font-medium" :class="other.tone || 'text-blue-400'"
+                                  x-text="other.name"></span>
                             <x-editor.col-resize :bind="true" col="other.col" />
                         </th>
                     </template>

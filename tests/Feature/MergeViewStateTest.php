@@ -614,8 +614,10 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('tagCellClass(key)', $html);
         $this->assertStringNotContainsString("hasTagChange(key) ? 'tag-changed-cell'", $html);
 
+        // ⚠ The comparison screen declares its cells in x-editor.side-cells, which it renders twice
+        // — once per side. The markup left the page; the rule did not.
         foreach ([
-            'views/translations/merge-preview.blade.php',
+            'views/components/editor/side-cells.blade.php',
             'views/edit-session/show.blade.php',
         ] as $view) {
             $source = file_get_contents(resource_path($view));
@@ -680,7 +682,7 @@ class MergeViewStateTest extends TestCase
         // ⚠ One component, used by every editor — not three renderings of one idea.
         foreach ([
             'views/merge/show.blade.php',
-            'views/translations/merge-preview.blade.php',
+            'views/components/editor/side-cells.blade.php',
             'views/edit-session/show.blade.php',
         ] as $view) {
             $this->assertStringContainsString(
@@ -727,15 +729,20 @@ class MergeViewStateTest extends TestCase
         // 🔴 And the cell is RENDERED on such a row. It was wrapped in a guard on the page holding
         // the line, so the arriving tag had nowhere to go: the cell took the frame that says "this
         // is not what will be stored" and then showed a grey dash.
+        //
+        // ⚠ The comparison screen asks it of `entryOnFile`, not of a column by name: its target
+        // swaps with the direction, and naming one side would have guarded the wrong one every
+        // time somebody published.
         foreach ([
             'views/merge/show.blade.php' => 'mainData',
-            'views/translations/merge-preview.blade.php' => 'localData',
+            'views/components/editor/side-cells.blade.php' => 'entryOnFile(key)',
         ] as $view => $side) {
+            $held = str_ends_with($side, ')') ? $side : "{$side}[key]";
             $html = file_get_contents(resource_path($view));
             $this->assertStringContainsString(
-                "x-if=\"{$side}[key] !== undefined || tagArrives(key)\"", $html, $view);
+                "x-if=\"{$held} !== undefined || tagArrives(key)\"", $html, $view);
             $this->assertStringContainsString(
-                "x-if=\"{$side}[key] === undefined && !tagArrives(key)\"", $html, $view);
+                "x-if=\"{$held} === undefined && !tagArrives(key)\"", $html, $view);
         }
     }
 
@@ -790,9 +797,20 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('const target = this.targetSource();', $preview);
 
         // And the cell previews what the save writes: an unclaimed hold keeps its A here too.
+        // ⚠ Asked of the picked side, not of the local column — the tag being previewed is the
+        // TARGET's, and the target is the server's file when publishing.
         $this->assertStringContainsString(
-            "this.pickedSource(key) === 'local' && key in this.localData && !this.isUnclaimed(key)",
-            $preview);
+            "return (tag === 'A' && sent && !this.isUnclaimed(key)) ? 'V' : tag;", $preview);
+        $this->assertStringContainsString('const written = this.tagOnFile(key);', $preview);
+
+        // 🔴 And the promotion also needs the save to be WRITING that row. Publishing, a value
+        // already on the server is sent by nobody, so announcing a V there promised a reading the
+        // file would never record. One statement of it, read by the chip AND by the counter — they
+        // each had their own, and the counter offered to save nine lines it would not have moved.
+        $this->assertStringContainsString('const sent = this.willWriteFromSource(key);', $preview);
+        $this->assertStringContainsString('return this.willWriteFromSource(key);', $preview);
+        $this->assertStringContainsString(
+            "if (picked === null || picked === this.targetSource()) return false;", $preview);
     }
 
     /**
@@ -944,7 +962,10 @@ class MergeViewStateTest extends TestCase
     {
         $tagColumnViews = [
             'views/merge/show.blade.php',
-            'views/translations/merge-preview.blade.php',
+            // The comparison screen's header, rendered once per side. Only the target's tag column
+            // gets the wide class — the other never shows a transition — so the ternary below is
+            // what carries it.
+            'views/components/editor/side-head.blade.php',
             'views/edit-session/show.blade.php',
             'views/components/editor/metadata-grid.blade.php',
         ];

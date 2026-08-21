@@ -168,11 +168,16 @@
                  the browser, so there is nothing to compare against and the summary above stays
                  the whole story there. --}}
             <div class="mt-3 pt-3 border-t border-gray-700">
+                {{-- ⚠ The TARGET's columns, not the local file's: these two tables align by column
+                     NAME, so naming a column the lines grid no longer carries would let this block
+                     float free of the lines it sits above. --}}
                 <x-editor.metadata-grid name="settings"
                     :title="__('merge_preview.settings_show_detail')"
                     :hint="__('merge_preview.settings_pick_hint')"
-                    value-col="local"
-                    tag-col="localTag"
+                    :value-col="$toLocal ? 'local' : 'online'"
+                    :tag-col="$toLocal ? 'localTag' : 'onlineTag'"
+                    :mine-label="$toLocal ? __('merge_preview.local_file') : __('merge_preview.online_version')"
+                    :mine-tone="$toLocal ? 'text-green-400' : 'text-blue-400'"
                     :other-span="1" />
             </div>
         </div>
@@ -261,6 +266,29 @@
             <span class="w-px h-5 bg-gray-700 shrink-0"></span>
         </x-editor.workbench-bar>
 
+        @php
+            // 🔴 **The left column is always the result being built** — the file this screen is
+            // about to write. It is the local one when comparing into the game, the server's one
+            // when publishing, and putting it first is what makes this table read like the merge
+            // view and the live editor rather than like its own dialect.
+            //
+            // ⚠ Written once, here, and both the header row and the body row loop over it. They
+            // used to spell their columns out separately, which is how they were free to disagree.
+            $local = [
+                'id' => 'local',
+                'label' => __('merge_preview.local_file'),
+                'byline' => null,
+                'target' => $toLocal,
+            ];
+            $online = [
+                'id' => 'online',
+                'label' => __('merge_preview.online_version'),
+                'byline' => $translation->user->name,
+                'target' => !$toLocal,
+            ];
+            $sides = $toLocal ? [$local, $online] : [$online, $local];
+        @endphp
+
         {{-- Table. An ordinary block that the page scrolls, until the workbench tears it out and
              hands it the window — then the scrollbars belong to the box and sit at the edges of
              the screen, where they can be reached without leaving the line being read. --}}
@@ -283,53 +311,10 @@
                              nothing where the scrolled columns show through. --}}
                         <x-editor.head-index />
                         <x-editor.head-key />
-                        {{-- Local Tag. data-col so the pin can freeze the pair: a value without
-                             its tag says only half of what the row holds. --}}
-                        {{-- w-20: this column previews `A → V`. See the merge view's own note —
-                             the online column beside it stays narrow, it only ever shows what the
-                             server holds and never a transition. --}}
-                        <th data-col="localTag"
-                            class="px-2 py-3 text-center border-l border-gray-700 w-20 cursor-pointer hover:text-white transition"
-                            @click="toggleSort('localTag')">
-                            <div class="flex items-center justify-center gap-1">
-                                <span class="text-green-400 font-medium text-xs">Tag</span>
-                                <i class="fas text-xs" :class="getSortIcon('localTag')"></i>
-                            </div>
-                        </th>
-                        {{-- Local Value --}}
-                        {{-- min-w on both value columns, like every other grid: a key that
-                             exists on one side only leaves the other cell empty, and with
-                             automatic layout that column would shrink to nothing — exactly when
-                             the reader needs to see what is missing. --}}
-                        <th data-col="local"
-                            class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
-                            @click="toggleSort('localValue')">
-                            <div class="flex items-center gap-2">
-                                <span class="text-green-400 font-medium">{{ __('merge_preview.local_file') }}</span>
-                                <i class="fas" :class="getSortIcon('localValue')"></i>
-                                <x-editor.pin-toggle />
-                            </div>
-                            <x-editor.col-resize col="local" />
-                        </th>
-                        {{-- Online Tag --}}
-                        <th class="px-2 py-3 text-center border-l border-gray-700 w-12 cursor-pointer hover:text-white transition"
-                            @click="toggleSort('onlineTag')">
-                            <div class="flex items-center justify-center gap-1">
-                                <span class="text-blue-400 font-medium text-xs">Tag</span>
-                                <i class="fas text-xs" :class="getSortIcon('onlineTag')"></i>
-                            </div>
-                        </th>
-                        {{-- Online Value --}}
-                        <th data-col="online"
-                            class="relative px-4 py-3 text-left border-l border-gray-700 min-w-[250px] cursor-pointer hover:text-white transition"
-                            @click="toggleSort('onlineValue')">
-                            <div class="flex items-center gap-2">
-                                <span class="text-blue-400 font-medium">{{ __('merge_preview.online_version') }}</span>
-                                <span class="text-xs text-gray-500">({{ $translation->user->name }})</span>
-                                <i class="fas" :class="getSortIcon('onlineValue')"></i>
-                            </div>
-                            <x-editor.col-resize col="online" />
-                        </th>
+                        @foreach ($sides as $side)
+                            <x-editor.side-head :side="$side['id']" :target="$side['target']"
+                                                :label="$side['label']" :byline="$side['byline']" />
+                        @endforeach
                     </tr>
                 </thead>
                 <tbody>
@@ -353,78 +338,9 @@
                             <x-editor.cell-index />
                             <x-editor.cell-key />
 
-                            {{-- Local Tag column (clickable for tag change).
-                                 Carries the selection colour like its online
-                                 counterpart: both cells of a side belong to that
-                                 side, and colouring only one of the two made the
-                                 local pick look half-selected. --}}
-                            <td data-col="localTag" class="px-2 py-2 text-center border-l border-gray-700"
-                                :class="[getCellClass(key, 'local'), tagCellClass(key)]">
-                                {{-- Same rule as the merge view: a row this side does not hold yet
-                                     still gets a tag cell once one is on its way in. The dash is
-                                     for a line that would be written nowhere. --}}
-                                <template x-if="localData[key] !== undefined || tagArrives(key)">
-                                    <x-editor-tag-cell />
-                                </template>
-                                <template x-if="localData[key] === undefined && !tagArrives(key)">
-                                    <span class="text-gray-600">—</span>
-                                </template>
-                            </td>
-
-                            {{-- Local Value column --}}
-                            <td data-col="local" class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="[getCellClass(key, 'local'), isDeleted(key) ? 'deleted-cell' : '']"
-                                @click="select(key, 'local')"
-                                @dblclick="editCell(key, getValue(localData[key]))">
-                                <span class="edit-affordance">
-                                    <button type="button" x-show="rowHasPending(key)" @click.stop="revertRow(key)"
-                                        title="{{ __('merge.revert_row') }}"><i class="fas fa-undo"></i></button>
-                                    <button type="button" @click.stop="editCell(key, getValue(localData[key]))"
-                                        title="{{ __('translation.edit') }}"><i class="fas fa-pen"></i></button>
-                                    <button type="button" class="delete-btn" @click.stop="toggleDelete(key)"
-                                        title="{{ __('translation.delete') }}"><i class="fas fa-trash"></i></button>
-                                </span>
-                                <template x-if="localData[key] !== undefined">
-                                    <span class="break-words"
-                                        :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '', valueUnchanged(key) ? 'opacity-50' : '']">
-                                        {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
-                                        <span x-show="hasPlaceholderWarning(key)" x-cloak
-                                            class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
-                                            title="{{ __('merge.placeholder_warning') }}">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
-                                        </span>
-                                        <span class="editor-text" x-safe-html="localValueHtml(key)"></span>
-                                    </span>
-                                </template>
-                                <template x-if="localData[key] === undefined">
-                                    <span class="text-gray-600 italic">—</span>
-                                </template>
-                            </td>
-
-                            {{-- Online Tag column --}}
-                            <td class="px-2 py-2 text-center border-l border-gray-700 merge-cell"
-                                :class="getCellClass(key, 'online')"
-                                @click="select(key, 'online')">
-                                <template x-if="onlineData[key] !== undefined">
-                                    <span :class="'tag-' + getTag(onlineData[key]) + (tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '')" x-text="getTag(onlineData[key])"></span>
-                                </template>
-                                <template x-if="onlineData[key] === undefined">
-                                    <span class="text-gray-600">—</span>
-                                </template>
-                            </td>
-
-                            {{-- Online Value column --}}
-                            <td data-col="online" class="px-4 py-2 border-l border-gray-700 merge-cell"
-                                :class="getCellClass(key, 'online')"
-                                @click="select(key, 'online')">
-                                <template x-if="onlineData[key] !== undefined">
-                                    <span class="editor-text" :class="valueUnchanged(key) ? 'opacity-50' : ''"
-                                        x-safe-html="onlineValueHtml(key)"></span>
-                                </template>
-                                <template x-if="onlineData[key] === undefined">
-                                    <span class="text-gray-600 italic">—</span>
-                                </template>
-                            </td>
+                            @foreach ($sides as $side)
+                                <x-editor.side-cells :side="$side['id']" :target="$side['target']" />
+                            @endforeach
                         </tr>
                     </template>
 
@@ -712,10 +628,12 @@ document.addEventListener('alpine:init', () => {
         loaded: false,
         error: null,
         saving: false,
-        // Which columns the pin freezes here: the local file is this screen's reference, the
-        // way Main is the merge view's (see js/components/editor-pin.js)
-        pinTagCol: 'localTag',
-        pinValueCol: 'local',
+        // Which columns the pin freezes here: the TARGET pair, the way Main is the merge view's
+        // (see js/components/editor-pin.js). ⚠ Written from PHP rather than derived from
+        // `targetSource()`: the pin reads these before the component is alive, and freezing the
+        // column somebody is not building would keep the wrong half of the row in sight.
+        pinTagCol: @json($toLocal ? 'localTag' : 'onlineTag'),
+        pinValueCol: @json($toLocal ? 'local' : 'online'),
         localData: {},
         onlineData: {},
         onlineMetadata: {},
@@ -735,13 +653,27 @@ document.addEventListener('alpine:init', () => {
         settingsRowsReady: false,
 
         /**
-         * The online side, as the shared block names its other columns.
+         * The side being OFFERED, as the shared block names its other columns — the local file when
+         * publishing, the server's version when comparing into the game.
          *
          * ⚠ One column, and it carries no tag of its own — hence other-span="1" above. The merge
          * view's contributions carry a tag beside their value and take two.
          */
         metaOtherColumns() {
-            return [{ id: 'online', col: 'online', name: @js(__('merge_preview.online_version')) }];
+            const id = this.sourceIds()[0];
+            return [{ id, col: id, name: this.sideLabel(id), tone: this.sideTone(id) }];
+        },
+
+        /** The two columns' names, in one place: the header, the settings grid and the hints. */
+        sideLabel(id) {
+            return id === 'local'
+                ? @js(__('merge_preview.local_file'))
+                : @js(__('merge_preview.online_version'));
+        },
+
+        /** ⚠ The colour names the FILE, so it travels with the side and never with the role. */
+        sideTone(id) {
+            return id === 'local' ? 'text-green-400' : 'text-blue-400';
         },
 
         /**
@@ -1020,9 +952,13 @@ document.addEventListener('alpine:init', () => {
                 absent: @js(__('merge_preview.settings_absent')),
             };
 
+            // ⚠ The shared builder's "main" is the column a screen shows as its own — the TARGET
+            // here, so this pair swaps with the direction exactly as the lines below do. Feeding it
+            // the local file either way put the settings grid in the reverse order of the lines it
+            // is meant to line up with.
             this.buildMetadataRows({
-                main_settings: local,
-                branches: [{ id: 'online', settings: online }],
+                main_settings: this.toLocal ? local : online,
+                branches: [{ id: this.sourceIds()[0], settings: this.toLocal ? online : local }],
             });
 
             this.settingsRowsReady = this.hasSettingsRows;
@@ -1136,28 +1072,34 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ── Cell rendering with the difference underlined ─────────────────
-        // One method per side rather than an expression in the template: the
-        // CSP build of Alpine evaluates a restricted subset, and "which text
-        // am I compared against" is a question worth naming anyway.
-        //
-        // A pending edit is what the user sees, so it is what gets compared —
-        // otherwise the underline would describe a value no longer on screen.
-        // A key present on one side only passes null: nothing is underlined,
-        // because underlining a whole new line tells the reader nothing.
+        // A pending edit is what the user sees, so it is what gets compared — otherwise the
+        // underline would describe a value no longer on screen. A key present on one side only
+        // passes null: nothing is underlined, because underlining a whole new line tells the
+        // reader nothing.
 
-        localValueHtml(key) {
-            const mine = this.isEdited(key) ? this.editedValues[key] : this.getValue(this.localData[key]);
-            const other = key in this.onlineData ? this.getValue(this.onlineData[key]) : null;
-            return this.highlightDifference(mine, other);
+        /**
+         * What a side reads as, pending edit included.
+         *
+         * ⚠ The edit belongs to the TARGET, not to the local file. Publishing, typing a line used
+         * to leave the text under the column nothing was written to, while the receiving column
+         * went on showing the version being replaced.
+         */
+        sideValue(key, id) {
+            if (id === this.targetSource() && this.isEdited(key)) return this.editedValues[key];
+            return this.getValue(this.entryOf(key, id));
         },
 
-        onlineValueHtml(key) {
-            const mine = this.getValue(this.onlineData[key]);
-            const other = key in this.localData
-                ? (this.isEdited(key) ? this.editedValues[key] : this.getValue(this.localData[key]))
-                : null;
-            return this.highlightDifference(mine, other);
+        {{-- One method per side rather than an expression in the template: the CSP build of Alpine
+             evaluates a restricted subset. Both go through the same pair, so the two columns cannot
+             disagree about which text is being compared. --}}
+        valueHtmlOf(key, id) {
+            const facing = id === 'local' ? 'online' : 'local';
+            const other = this.entryOf(key, facing) === undefined ? null : this.sideValue(key, facing);
+            return this.highlightDifference(this.sideValue(key, id), other);
         },
+
+        localValueHtml(key) { return this.valueHtmlOf(key, 'local'); },
+        onlineValueHtml(key) { return this.valueHtmlOf(key, 'online'); },
 
         /**
          * This screen's two "only on one side" boxes, over the core's categories.
@@ -1209,12 +1151,13 @@ document.addEventListener('alpine:init', () => {
             // Category filter, from the core's one vocabulary
             if (!this.filters[this.rowCategoryFilter(key)]) return false;
 
-            // Tag filter: local matches on its STORED and its PREVIEWED tag
-            // (a pending change must not make its row vanish mid-work)
-            const localTagPass = hasLocal
-                && (this.tagVisible(this.getTag(this.localData[key])) || this.tagVisible(this.displayLocalTag(key)));
-            const onlineTagPass = hasOnline && this.tagVisible(this.getTag(this.onlineData[key]));
-            return !!(localTagPass || onlineTagPass);
+            // Tag filter: either side's STORED tag keeps its row, and the TARGET's previewed one
+            // too — a pending change must not make the row vanish mid-work. ⚠ Previewed on the
+            // target, not on the local file: it is the target's tag that a pick moves.
+            const stored = (hasLocal && this.tagVisible(this.getTag(this.localData[key])))
+                || (hasOnline && this.tagVisible(this.getTag(this.onlineData[key])));
+            const previewed = this.tagVisible(this.displayLocalTag(key));
+            return !!(stored || previewed);
         },
 
         rowMatchesSearch(key, query) {
@@ -1255,24 +1198,24 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
-        /** Core hook: the stored editable value (replace, placeholder guard). */
+        /** Core hook: the stored editable value — the target's, since that is what a save writes. */
         storedValue(key) {
-            return this.getValue(this.localData[key]);
+            return this.getValue(this.targetEntry(key));
         },
 
-        /** Core hook: projected LOCAL tag for the quality bar. */
+        /** Core hook: the target's projected tag for the quality bar. */
         rowQualityTag(key) {
-            if (key in this.localData || this.isEdited(key)) {
+            if (this.targetEntry(key) !== undefined || this.isEdited(key)) {
                 return this.displayLocalTag(key);
             }
             return null;
         },
 
-        /** Core hook: a staged manual edit selects the local side — claimed, since somebody typed. */
+        /** Core hook: a staged manual edit selects the target side — claimed, since somebody typed. */
         onEditStaged(key) {
-            const entry = this.localData[key];
+            const entry = this.targetEntry(key);
             this.selections[key] = this.pick(
-                'local', entry === undefined ? '' : this.getValue(entry),
+                this.targetSource(), entry === undefined ? '' : this.getValue(entry),
                 entry === undefined ? 'A' : this.getTag(entry), false);
         },
 
@@ -1319,23 +1262,36 @@ document.addEventListener('alpine:init', () => {
         // ── Merge selection logic ────────────────────────────────────────
 
         /**
-         * A row counts as modified when the user did something meaningful:
-         * manual edit, explicit tag change, a local-only addition kept, or
-         * a differing key where local was selected.
+         * A row counts as modified when the user did something meaningful: manual edit, explicit
+         * tag change, or a line taken from the side that is not the target.
+         *
+         * ⚠ It read "local was selected" either way, which is a change only when publishing.
+         * Comparing into the game, keeping the player's own line changes nothing — and the screen
+         * offered to save nine of them.
          */
         isRowModified(key) {
-            const source = this.pickedSource(key);
-            const hasLocal = key in this.localData;
-            const hasOnline = key in this.onlineData;
-
             if (this.isDeleted(key)) return true;
             if (this.editedValues[key] !== undefined) return true;
             if (key in this.tagChanges) return true;
-            if (hasLocal && !hasOnline && source === 'local') return true;
-            if (hasLocal && hasOnline && source === 'local') {
-                return this.entriesDiffer(key);
-            }
-            return false;
+            return this.willWriteFromSource(key);
+        },
+
+        /**
+         * The save will write this row, because its value comes from the side being OFFERED.
+         *
+         * 🔴 One statement of "what actually travels", read by the counter, by the button and by the
+         * tag cell's A → V. They each had their own, and the tag cell promised promotions the save
+         * dropped. The two build functions still spell the same test out per direction — they carry
+         * the value and the tag with it — but they must agree with this, and the tests below hold
+         * them to it.
+         */
+        willWriteFromSource(key) {
+            const picked = this.pickedSource(key);
+            if (picked === null || picked === this.targetSource()) return false;
+            if (this.entryOf(key, picked) === undefined) return false;
+
+            const bothSides = key in this.localData && key in this.onlineData;
+            return !bothSides || this.entriesDiffer(key);
         },
 
         get totalChanges() {
@@ -1372,8 +1328,9 @@ document.addEventListener('alpine:init', () => {
             const picked = this.pickFrom(key, source);
             if (!picked) return;
 
-            // If selecting online, clear any manual edit
-            if (source === 'online') {
+            // Taking the offered side drops what somebody typed: an edit belongs to the target, and
+            // keeping it would leave the row showing a value the pick just replaced.
+            if (source !== this.targetSource()) {
                 delete this.editedValues[key];
             }
 
@@ -1388,24 +1345,35 @@ document.addEventListener('alpine:init', () => {
          * selection that will actually be SENT gets the server's A → V
          * promotion (picks identical to online are not sent → no preview).
          */
-        /** Core hook: this screen's rows are the local file's. */
+        /**
+         * Core hook: the row the tag cell describes — the one being WRITTEN.
+         *
+         * 🔴 It used to be the local file whichever way the screen ran, so publishing previewed a
+         * tag against a file it was never going to touch: the column that actually receives the
+         * lines showed a frozen chip, and the transition sat on the column beside it. The tag cell
+         * belongs to the target, exactly as it does on the merge view, where it has always sat
+         * against the Main.
+         */
         entryOnFile(key) {
-            return this.localData[key];
+            return this.targetEntry(key);
         },
 
         // ── The roles this screen plays, and they SWAP ───────────────────
         //
         // 🔴 This screen runs both ways, and which column receives changes with it. Comparing into
         // the game builds its result from the player's own file; publishing builds it from the
-        // server's. The tag cell shows the local side either way — which is exactly why the role
-        // has to be asked separately from the column, and why publishing currently previews a tag
-        // against a file it will not write. See analyse/editors-mutualisation.md.
+        // server's. So neither "local" nor "online" is the answer to "which one is being written" —
+        // the role has to be asked separately from the column, and everything the editor does to a
+        // target (its tag transition, its edit affordances, its place on the row) reads the role.
+        // See analyse/editors-mutualisation.md.
 
         /** Core hook: the column the result is built on — the one that receives. */
         targetSource() {
             return this.toLocal ? 'local' : 'online';
         },
 
+        {{-- ⚠ Reads entryOf directly, never entryOnFile: that one now answers "the target's row",
+             so routing it back through here would be a loop. --}}
         targetEntry(key) {
             return this.entryOf(key, this.targetSource());
         },
@@ -1420,9 +1388,16 @@ document.addEventListener('alpine:init', () => {
             return id === 'local' ? this.localData[key] : this.onlineData[key];
         },
 
-        /** Core hook: the tag the save will store here — the local projection. */
+        /**
+         * Core hook: the tag the save will store on the target.
+         *
+         * ⚠ No "does the target hold this row" guard, deliberately — the merge view has none
+         * either. A line the target does not have yet still gets a tag the moment one is picked,
+         * and that is precisely what `tagArrives` reads to draw the arrow with nothing on its left.
+         * Guarding here answered null on exactly those rows, so the arrival could never show.
+         */
         tagAfterSave(key) {
-            return this.localData[key] === undefined ? null : this.displayLocalTag(key);
+            return this.displayLocalTag(key);
         },
 
         /**
@@ -1435,23 +1410,37 @@ document.addEventListener('alpine:init', () => {
             return this.tagChangedBetweenSides(key) ? ' ring-2 ring-amber-400/80' : '';
         },
 
+        /**
+         * The tag the save will store — on the column being WRITTEN, whichever way this runs.
+         *
+         * ⚠ It read the local file either way, which is the receiving side only when comparing into
+         * the game. Publishing, it previewed a tag against a file nothing was going to touch.
+         */
         displayLocalTag(key) {
+            const written = this.tagOnFile(key);
+
             if (this.hasTagChange(key) || this.isEdited(key)) {
-                return this.displayTag(key, this.getTag(this.localData[key]));
+                return this.displayTag(key, written);
             }
-            // ⚠ An unclaimed hold keeps its tag: the save promotes A to V only where somebody said
-            // so, and this cell has to preview what will actually be written. Without the test it
-            // showed a V on a row nobody had claimed — the promotion the save was about to skip.
-            if (this.pickedSource(key) === 'local' && key in this.localData && !this.isUnclaimed(key)) {
-                const hasOnline = key in this.onlineData;
-                // Same condition as "will actually be sent" (see entriesDiffer),
-                // so the previewed tag never promises a promotion the save drops
-                if (!hasOnline || this.entriesDiffer(key)) {
-                    const tag = this.getTag(this.localData[key]);
-                    return tag === 'A' ? 'V' : tag;
-                }
-            }
-            return this.getTag(this.localData[key]);
+
+            // 🔴 A picked row shows the tag it brings, ALWAYS — the same shape as the merge view's
+            // `displayMainTag`. Read only when the row was also claimed, this cell said nothing at
+            // all on a line the target does not hold yet: no chip, no arrow, a grey dash where the
+            // screen was about to add a line.
+            const picked = this.pickedSource(key);
+            const chosen = picked === null ? undefined : this.entryOf(key, picked);
+
+            if (chosen === undefined) return written;
+
+            const tag = this.getTag(chosen);
+
+            // A → V says "somebody read this", so it needs BOTH: a row somebody claimed, and a save
+            // that actually writes it. An unclaimed hold keeps its A (the save sends `auto` and the
+            // server leaves it alone), and so does a row the save has nothing to send for — a value
+            // already on the target, or one identical on both sides.
+            const sent = this.willWriteFromSource(key);
+
+            return (tag === 'A' && sent && !this.isUnclaimed(key)) ? 'V' : tag;
         },
 
         getCellClass(key, source) {
@@ -1575,8 +1564,10 @@ document.addEventListener('alpine:init', () => {
                         t: this.tagChanges[key].newTag
                     };
                 } else if (isEdited) {
-                    // Manual edit -> becomes H tag (M and S are preserved)
-                    let tag = this.getTag(this.localData[key]);
+                    // Manual edit -> becomes H tag (M and S are preserved).
+                    // ⚠ Read off the TARGET, the row being rewritten — the same place the tag cell
+                    // previews from, so what the chip announced is what gets written.
+                    let tag = this.getTag(this.targetEntry(key));
                     if (tag !== 'M' && tag !== 'S') {
                         tag = 'H';
                     }
@@ -1641,9 +1632,10 @@ document.addEventListener('alpine:init', () => {
                     sourceType = 'tagchange';
                     isRealChange = true;
                 } else if (isEdited) {
-                    // Manual edit = always a change (server: → H unless M/S)
+                    // Manual edit = always a change (server: → H unless M/S).
+                    // ⚠ Tag read off the TARGET, like the cell that previewed it.
                     value = this.editedValues[key];
-                    tag = this.getTag(this.localData[key]);
+                    tag = this.getTag(this.targetEntry(key));
                     sourceType = 'manual';
                     isRealChange = true;
                 } else if (this.toLocal) {
@@ -1717,16 +1709,15 @@ document.addEventListener('alpine:init', () => {
             // from the file it belongs to — what this page displays is a readable summary that
             // drops fields it does not render, so rebuilding from it would strip them.
             //
-            // Which side needs sending depends on where the result is built: publishing starts
-            // from the server file, so only 'local' picks change anything; comparing into the
-            // game starts from the player's file, so only 'online' picks do.
-            const settingSideToSend = this.toLocal ? 'online' : 'local';
+            // Which side needs sending depends on where the result is built: only a pick on the
+            // SOURCE changes anything, since the target's own settings are already in place.
+            const settingSideToSend = this.sourceIds()[0];
             let s = 0;
             for (const row of this.settingsRows) {
-                // 'main' is the local side here, which is what the shared block calls the
-                // column a screen shows as its own.
+                // 'main' is what the shared block calls the column a screen shows as its own —
+                // here the target, which swaps with the direction.
                 const picked = this.settingsPick[row.id];
-                const side = picked === 'online' ? 'online' : 'local';
+                const side = (picked === undefined || picked === 'main') ? this.targetSource() : picked;
                 if (side !== settingSideToSend) continue;
 
                 const el = document.createElement('input');
