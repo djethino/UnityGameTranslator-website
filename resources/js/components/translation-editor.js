@@ -1043,6 +1043,40 @@ export function editorCore(config) {
         },
 
         /** Cell text for the index column ('' for entries without one). */
+        /**
+         * The capture index of a row, wherever it is to be found — target first, then the sources.
+         *
+         * 🔴 **A row only a source carries still has one**, and the column exists to say in what
+         * order the game met these lines. Reading the target alone left every added line blank in a
+         * column whose whole job is ordering.
+         *
+         * ⚠ Target first, deliberately: when both sides hold the line, what the receiving file
+         * already records is the one that stays after the merge.
+         */
+        orderIndexFor(key) {
+            const own = this.getOrderIndex(this.targetEntry(key));
+            if (own !== Infinity) return own;
+
+            for (const id of this.sourceIds()) {
+                const idx = this.getOrderIndex(this.entryOf(key, id));
+                if (idx !== Infinity) return idx;
+            }
+
+            return Infinity;
+        },
+
+        /**
+         * What the index column prints — the number, or nothing at all.
+         *
+         * ⚠ It was written three times, and two of them disagreed on the empty case: one tested
+         * `Infinity`, the other `undefined`, so a row with no index showed a blank cell on one
+         * screen and the word "undefined" on the other the day the helper changed.
+         */
+        indexCellText(key) {
+            const idx = this.orderIndexFor(key);
+            return idx === Infinity || idx === undefined ? '' : String(idx);
+        },
+
         displayIndex(entry) {
             const idx = this.getOrderIndex(entry);
             return idx === Infinity ? '' : String(idx);

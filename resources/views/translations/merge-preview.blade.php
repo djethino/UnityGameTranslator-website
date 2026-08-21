@@ -1637,20 +1637,9 @@ document.addEventListener('alpine:init', () => {
             return merged;
         },
 
-        orderIndexFor(key) {
-            for (const src of [this.localData[key], this.onlineData[key]]) {
-                if (src && typeof src === 'object' && Number.isInteger(src.i) && src.i > 0) {
-                    return src.i;
-                }
-            }
-            return undefined;
-        },
-
-        /** Index cell text (local file is the authority, online fallback). */
-        indexCellText(key) {
-            const idx = this.orderIndexFor(key);
-            return idx === undefined ? '' : String(idx);
-        },
+        {{-- Capture-order index: the core reads the target first, then the sources. This screen
+             hard-coded "local, then online", which is right one way round and wrong the other —
+             publishing, the receiving file is the server's. --}}
 
         saveToServer() {
             this.saving = true;

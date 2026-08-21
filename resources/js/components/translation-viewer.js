@@ -150,9 +150,6 @@ export function createViewer(config) {
                 return this.highlightValue(this.getValue(this.data[key]));
             },
 
-            indexCellText(key) {
-                return this.displayIndex(this.data[key]);
-            },
 
             /** A captured line has no translation yet: saying so beats an empty cell. */
             isEmptyValue(key) {

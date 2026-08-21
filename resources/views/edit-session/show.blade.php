@@ -231,7 +231,7 @@
                                  is required, or the scrolled columns show through underneath. --}}
                             <td x-show="showIndexColumn" x-cloak
                                 class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
-                                x-text="displayIndex(data[key])"></td>
+                                x-text="indexCellText(key)"></td>
 
                             {{-- Key. editor-text on the cell itself: its whole content is written
                                  by highlightKey, so there is no markup here whose indentation

@@ -1491,21 +1491,8 @@ document.addEventListener('alpine:init', () => {
             return this.getValue(this.mainData[key]);
         },
 
-        /** Capture-order index: Main first, branches as fallback (branch-only keys). */
-        orderIndexFor(key) {
-            const mainIdx = this.getOrderIndex(this.mainData[key]);
-            if (mainIdx !== Infinity) return mainIdx;
-            for (const branch of this.branches) {
-                const idx = this.getOrderIndex(branch.content[key]);
-                if (idx !== Infinity) return idx;
-            }
-            return Infinity;
-        },
-
-        indexCellText(key) {
-            const idx = this.orderIndexFor(key);
-            return idx === Infinity ? '' : String(idx);
-        },
+        {{-- Capture-order index: the core reads the target first, then the sources — which is
+             exactly what this screen used to spell out for itself. --}}
 
         /** Core hook: projected Main tag for the quality bar (rows the
          *  save will put in the Main file: existing, edited or selected). */
