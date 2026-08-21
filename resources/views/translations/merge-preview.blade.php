@@ -389,10 +389,13 @@
                                  local pick look half-selected. --}}
                             <td data-col="localTag" class="px-2 py-2 text-center border-l border-gray-700"
                                 :class="[getCellClass(key, 'local'), tagCellClass(key)]">
-                                <template x-if="localData[key] !== undefined">
+                                {{-- Same rule as the merge view: a row this side does not hold yet
+                                     still gets a tag cell once one is on its way in. The dash is
+                                     for a line that would be written nowhere. --}}
+                                <template x-if="localData[key] !== undefined || tagArrives(key)">
                                     <x-editor-tag-cell />
                                 </template>
-                                <template x-if="localData[key] === undefined">
+                                <template x-if="localData[key] === undefined && !tagArrives(key)">
                                     <span class="text-gray-600">—</span>
                                 </template>
                             </td>

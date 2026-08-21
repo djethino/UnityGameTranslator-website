@@ -968,6 +968,17 @@ export function editorCore(config) {
          */
         isCaptureRow(key) {
             if (this.rowQualityTag(key) !== 'H') return false;
+
+            // 🔴 **A row the page does not hold is an arrival, not a capture.** storedValue reads
+            // the file, and on such a row it answers undefined — which the test below counted as
+            // empty. Every hand-written line a contribution ADDS was therefore greyed out, reading
+            // "nothing has been written here" beside a real translation somebody had typed.
+            //
+            // ⚠ What this gives up: a contribution offering a genuine capture — an H with nothing
+            // in it — shows a full-strength chip. Rare, and the wrong way round is the one that
+            // mislabels ordinary work.
+            if (this.entryOnFile(key) === undefined && !this.isEdited(key)) return false;
+
             const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
             return value === '' || value === null || value === undefined;
         },

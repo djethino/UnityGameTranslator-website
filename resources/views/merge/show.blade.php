@@ -512,10 +512,21 @@
                                 {{-- Main Tag (clickable for tag change) --}}
                                 <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"
                                     :class="[tagCellClass(key), isDeleted(key) ? 'deleted-cell' : '']">
-                                    <template x-if="mainData[key] !== undefined">
+                                    {{-- 🔴 **A row the Main does not hold gets a tag cell too, from the
+                                         moment a tag is on its way in.** The dash belongs to a line
+                                         that would be written nowhere — nothing taken, nothing typed
+                                         — and it used to cover EVERY such row. So the arriving tag
+                                         had nowhere to be drawn however right the core's answer was:
+                                         the cell turned purple, meaning "this is not what will be
+                                         stored", and showed a dash.
+
+                                         ⚠ tagArrives, never a list of gestures rebuilt here: which
+                                         ones produce a tag is the core's business, and a second
+                                         list is a list that drifts. --}}
+                                    <template x-if="mainData[key] !== undefined || tagArrives(key)">
                                         <x-editor-tag-cell />
                                     </template>
-                                    <template x-if="mainData[key] === undefined">
+                                    <template x-if="mainData[key] === undefined && !tagArrives(key)">
                                         <span class="text-gray-600">—</span>
                                     </template>
                                 </td>
