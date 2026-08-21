@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Batalkan semua modifikasi?",
     "merge_preview.download_merged": "Unduh",
     "merge_preview.save_to_server": "Simpan ke server",
+    "merge_preview.send_to_game": "Kirim ke game",
     "merge_preview.save_success": ":count modifikasi berhasil diterapkan.",
     "merge_preview.select_all_local": "Pilih semua lokal",
     "merge_preview.select_all_online": "Pilih semua online",

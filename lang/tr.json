@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Tüm değişiklikler iptal edilsin mi?",
     "merge_preview.download_merged": "İndir",
     "merge_preview.save_to_server": "Sunucuya kaydet",
+    "merge_preview.send_to_game": "Oyuna gönder",
     "merge_preview.save_success": ":count değişiklik başarıyla uygulandı.",
     "merge_preview.select_all_local": "Tüm yerelleri seç",
     "merge_preview.select_all_online": "Tüm çevrimiçileri seç",

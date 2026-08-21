@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Cancel all modifications?",
     "merge_preview.download_merged": "Download",
     "merge_preview.save_to_server": "Save to server",
+    "merge_preview.send_to_game": "Send to the game",
     "merge_preview.save_success": ":count modification applied successfully.|:count modifications applied successfully.",
     "merge_preview.select_all_local": "Select all local",
     "merge_preview.select_all_online": "Select all online",

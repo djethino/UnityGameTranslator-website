@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "לבטל את כל השינויים?",
     "merge_preview.download_merged": "הורדה",
     "merge_preview.save_to_server": "שמירה לשרת",
+    "merge_preview.send_to_game": "שליחה למשחק",
     "merge_preview.save_success": "שינוי אחד הוחל בהצלחה.|:count שינויים הוחלו בהצלחה.",
     "merge_preview.select_all_local": "לקחת הכול מהקובץ המקומי",
     "merge_preview.select_all_online": "לקחת הכול מהגרסה המקוונת",

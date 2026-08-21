@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Alle wijzigingen annuleren?",
     "merge_preview.download_merged": "Downloaden",
     "merge_preview.save_to_server": "Opslaan op server",
+    "merge_preview.send_to_game": "Verzenden naar de game",
     "merge_preview.save_success": ":count wijziging succesvol toegepast.|:count wijzigingen succesvol toegepast.",
     "merge_preview.select_all_local": "Alles uit het lokale bestand overnemen",
     "merge_preview.select_all_online": "Alles uit de online versie overnemen",

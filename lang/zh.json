@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "取消所有修改？",
     "merge_preview.download_merged": "下载",
     "merge_preview.save_to_server": "保存到服务器",
+    "merge_preview.send_to_game": "发送到游戏",
     "merge_preview.save_success": "成功应用 :count 处修改。",
     "merge_preview.select_all_local": "全选本地",
     "merge_preview.select_all_online": "全选在线",

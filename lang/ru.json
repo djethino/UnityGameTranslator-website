@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Отменить все изменения?",
     "merge_preview.download_merged": "Скачать",
     "merge_preview.save_to_server": "Сохранить на сервер",
+    "merge_preview.send_to_game": "Отправить в игру",
     "merge_preview.save_success": "Применено :count изменение.|Применено :count изменения.|Применено :count изменений.",
     "merge_preview.select_all_local": "Выбрать все локальные",
     "merge_preview.select_all_online": "Выбрать все онлайн",

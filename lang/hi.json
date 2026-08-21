@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "सभी संशोधन रद्द करें?",
     "merge_preview.download_merged": "डाउनलोड",
     "merge_preview.save_to_server": "सर्वर पर सेव करें",
+    "merge_preview.send_to_game": "गेम में भेजें",
     "merge_preview.save_success": ":count संशोधन सफलतापूर्वक लागू किया गया।|:count संशोधन सफलतापूर्वक लागू किए गए।",
     "merge_preview.select_all_local": "सभी लोकल चुनें",
     "merge_preview.select_all_online": "सभी ऑनलाइन चुनें",

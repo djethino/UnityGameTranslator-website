@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "إلغاء جميع التعديلات؟",
     "merge_preview.download_merged": "تحميل",
     "merge_preview.save_to_server": "حفظ على الخادم",
+    "merge_preview.send_to_game": "إرسال إلى اللعبة",
     "merge_preview.save_success": "لم يُطبَّق أي تعديل.|تم تطبيق تعديل واحد بنجاح.|تم تطبيق تعديلين بنجاح.|تم تطبيق :count تعديلات بنجاح.|تم تطبيق :count تعديلًا بنجاح.|تم تطبيق :count تعديل بنجاح.",
     "merge_preview.select_all_local": "أخذ كل شيء من الملف المحلي",
     "merge_preview.select_all_online": "أخذ كل شيء من النسخة المتصلة",

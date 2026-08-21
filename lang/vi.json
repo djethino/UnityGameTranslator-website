@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Hủy tất cả thay đổi?",
     "merge_preview.download_merged": "Tải xuống",
     "merge_preview.save_to_server": "Lưu lên server",
+    "merge_preview.send_to_game": "Gửi về game",
     "merge_preview.save_success": "Đã áp dụng thành công :count thay đổi.",
     "merge_preview.select_all_local": "Chọn tất cả cục bộ",
     "merge_preview.select_all_online": "Chọn tất cả online",

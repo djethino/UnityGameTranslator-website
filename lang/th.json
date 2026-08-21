@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "ยกเลิกการแก้ไขทั้งหมด?",
     "merge_preview.download_merged": "ดาวน์โหลด",
     "merge_preview.save_to_server": "บันทึกไปยังเซิร์ฟเวอร์",
+    "merge_preview.send_to_game": "ส่งไปยังเกม",
     "merge_preview.save_success": "ใช้ :count การแก้ไขสำเร็จ",
     "merge_preview.select_all_local": "เลือกทั้งหมดในเครื่อง",
     "merge_preview.select_all_online": "เลือกทั้งหมดออนไลน์",

@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "すべての変更をキャンセルしますか？",
     "merge_preview.download_merged": "ダウンロード",
     "merge_preview.save_to_server": "サーバーに保存",
+    "merge_preview.send_to_game": "ゲームに送信",
     "merge_preview.save_success": ":count件の変更が正常に適用されました。",
     "merge_preview.select_all_local": "すべてローカルを選択",
     "merge_preview.select_all_online": "すべてオンラインを選択",

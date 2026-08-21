@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "Alle Änderungen verwerfen?",
     "merge_preview.download_merged": "Herunterladen",
     "merge_preview.save_to_server": "Auf Server speichern",
+    "merge_preview.send_to_game": "An das Spiel senden",
     "merge_preview.save_success": ":count Änderung erfolgreich angewendet.|:count Änderungen erfolgreich angewendet.",
     "merge_preview.select_all_local": "Alles aus der lokalen Datei übernehmen",
     "merge_preview.select_all_online": "Alles aus der Online-Version übernehmen",

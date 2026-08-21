@@ -292,7 +292,7 @@
         {{-- The workbench strip, shared with the merge view — see
              components/editor/workbench-bar.blade.php. Only the category filters differ from one
              screen to the next, so only those are passed in. --}}
-        <x-editor.workbench-bar save="saveToServer()" save-disabled="saving || totalChanges === 0">
+        <x-editor.workbench-bar save="submitResult()" save-disabled="saving || totalChanges === 0">
             @foreach ($sides as $side)
                 <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $side['onlyLabel'] }}">
                     <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
@@ -459,11 +459,16 @@
                     <i class="fas fa-download mr-2"></i> {{ __('merge_preview.download_merged') }}
                 </button>
 
-                <button type="button" @click="saveToServer()" :disabled="saving || totalChanges === 0"
+                {{-- 🔴 **The button names where the result GOES, and the two places are not the
+                     same.** It said "Save to server" whichever way the comparison ran, three inches
+                     under a banner reading "Nothing is published" — and nothing does go to the
+                     server that way round: the result waits in the token's own file for the mod to
+                     collect it. One verb, one destination, per direction. --}}
+                <button type="button" @click="submitResult()" :disabled="saving || totalChanges === 0"
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
-                    <i class="fas fa-save mr-2" x-show="!saving"></i>
-                    <i class="fas fa-spinner fa-spin mr-2" x-show="saving"></i>
-                    {{ __('merge_preview.save_to_server') }} (<span x-text="totalChanges">0</span>)
+                    <i class="fas mr-2" :class="saving ? 'fa-spinner fa-spin' : '{{ $toLocal ? 'fa-download' : 'fa-save' }}'"></i>
+                    {{ $toLocal ? __('merge_preview.send_to_game') : __('merge_preview.save_to_server') }}
+                    (<span x-text="totalChanges">0</span>)
                 </button>
                 <div class="flex flex-col gap-1 shrink-0">
                     <button type="button" @click="scrollToTop()"
@@ -1574,7 +1579,7 @@ document.addEventListener('alpine:init', () => {
                 const hasTagChange = key in this.tagChanges;
 
                 if (hasTagChange) {
-                    // Explicit tag change wins as-is — same rule as saveToServer
+                    // Explicit tag change wins as-is — same rule as submitResult
                     merged[key] = {
                         v: isEdited ? this.editedValues[key] : this.tagChanges[key].value,
                         t: this.tagChanges[key].newTag
@@ -1619,7 +1624,15 @@ document.addEventListener('alpine:init', () => {
              hard-coded "local, then online", which is right one way round and wrong the other —
              publishing, the receiving file is the server's. --}}
 
-        saveToServer() {
+        /**
+         * Hand the arbitrated result to whichever side this comparison is for.
+         *
+         * ⚠ Named for what it does, not for one of its two destinations: it was `saveToServer`, and
+         * comparing into the game it posts to `merge-preview.apply-local`, which publishes nothing
+         * — the mod collects the result from the token's own file. The form's action already knew;
+         * only this name and the button's label were still saying the other thing.
+         */
+        submitResult() {
             this.saving = true;
 
             // Build selections array for the form - only include REAL changes

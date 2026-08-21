@@ -838,6 +838,7 @@
     "merge_preview.confirm_cancel": "모든 수정을 취소하시겠습니까?",
     "merge_preview.download_merged": "다운로드",
     "merge_preview.save_to_server": "서버에 저장",
+    "merge_preview.send_to_game": "게임으로 보내기",
     "merge_preview.save_success": ":count개의 수정이 적용되었습니다.",
     "merge_preview.select_all_local": "모두 로컬 선택",
     "merge_preview.select_all_online": "모두 온라인 선택",
