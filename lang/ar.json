@@ -818,7 +818,6 @@
     "merge_preview.same": "أسطر متطابقة",
     "merge_preview.edited": "معدل",
     "merge_preview.show": "عرض",
-    "merge_preview.key": "المفتاح",
     "merge_preview.local_file": "الملف المحلي",
     "merge_preview.online_version": "النسخة المتصلة",
     "merge_preview.no_differences": "لم يتم العثور على اختلافات بين النسختين المحلية والمتصلة.",

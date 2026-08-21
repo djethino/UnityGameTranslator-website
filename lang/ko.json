@@ -818,7 +818,6 @@
     "merge_preview.same": "같은 줄",
     "merge_preview.edited": "편집됨",
     "merge_preview.show": "표시",
-    "merge_preview.key": "키",
     "merge_preview.local_file": "로컬 파일",
     "merge_preview.online_version": "온라인 버전",
     "merge_preview.no_differences": "로컬 버전과 온라인 버전 간에 차이가 없습니다.",

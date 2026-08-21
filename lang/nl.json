@@ -818,7 +818,6 @@
     "merge_preview.same": "Identieke regels",
     "merge_preview.edited": "Bewerkt",
     "merge_preview.show": "Tonen",
-    "merge_preview.key": "Sleutel",
     "merge_preview.local_file": "Lokaal bestand",
     "merge_preview.online_version": "Online versie",
     "merge_preview.no_differences": "Geen verschillen gevonden tussen lokale en online versies.",

@@ -818,7 +818,6 @@
     "merge_preview.same": "Aynı satırlar",
     "merge_preview.edited": "Düzenlendi",
     "merge_preview.show": "Göster",
-    "merge_preview.key": "Anahtar",
     "merge_preview.local_file": "Yerel dosya",
     "merge_preview.online_version": "Çevrimiçi sürüm",
     "merge_preview.no_differences": "Yerel ve çevrimiçi sürümler arasında fark bulunamadı.",

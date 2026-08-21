@@ -818,7 +818,6 @@
     "merge_preview.same": "שורות זהות",
     "merge_preview.edited": "נערך",
     "merge_preview.show": "הצגה",
-    "merge_preview.key": "מפתח",
     "merge_preview.local_file": "קובץ מקומי",
     "merge_preview.online_version": "גרסה מקוונת",
     "merge_preview.no_differences": "לא נמצאו הבדלים בין הגרסאות המקומית והמקוונת.",

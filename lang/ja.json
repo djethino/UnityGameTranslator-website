@@ -818,7 +818,6 @@
     "merge_preview.same": "同じ行",
     "merge_preview.edited": "編集済み",
     "merge_preview.show": "表示",
-    "merge_preview.key": "キー",
     "merge_preview.local_file": "ローカルファイル",
     "merge_preview.online_version": "オンラインバージョン",
     "merge_preview.no_differences": "ローカルバージョンとオンラインバージョン間に違いはありません。",

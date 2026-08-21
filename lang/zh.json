@@ -818,7 +818,6 @@
     "merge_preview.same": "相同的行",
     "merge_preview.edited": "已编辑",
     "merge_preview.show": "显示",
-    "merge_preview.key": "键",
     "merge_preview.local_file": "本地文件",
     "merge_preview.online_version": "在线版本",
     "merge_preview.no_differences": "本地版本与在线版本之间没有发现差异。",

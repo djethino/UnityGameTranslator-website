@@ -281,27 +281,8 @@
                              fit their content, so "w-16" alone is a hint it may ignore, and the
                              key column frozen at a hard left-16 would then leave a strip of
                              nothing where the scrolled columns show through. --}}
-                        <th x-show="showIndexColumn" x-cloak
-                            class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
-                            @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
-                            <div class="flex items-center justify-end gap-1">
-                                <span class="text-xs">#</span>
-                                <i class="fas text-xs" :class="getSortIcon('index')"></i>
-                            </div>
-                        </th>
-                        {{-- A right edge, because a frozen column is not an overlapping one:
-                             without it, the columns sliding underneath read as a rendering fault
-                             rather than as content passing behind a fixed edge. --}}
-                        <th data-col="key"
-                            class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                            :class="showIndexColumn ? 'left-16' : 'left-0'"
-                            @click="toggleSort('key')">
-                            <div class="flex items-center gap-2">
-                                {{ __('merge_preview.key') }}
-                                <i class="fas" :class="getSortIcon('key')"></i>
-                            </div>
-                            <x-editor.col-resize col="key" />
-                        </th>
+                        <x-editor.head-index />
+                        <x-editor.head-key />
                         {{-- Local Tag. data-col so the pin can freeze the pair: a value without
                              its tag says only half of what the row holds. --}}
                         {{-- w-20: this column previews `A → V`. See the merge view's own note —
@@ -369,18 +350,8 @@
                             :data-row-index="idx">
                             {{-- Capture-order index. Frozen with its header: an opaque background
                                  is required, or the scrolled columns show through underneath. --}}
-                            <td x-show="showIndexColumn" x-cloak
-                                class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
-                                x-text="indexCellText(key)"></td>
-
-                            {{-- Key column --}}
-                            {{-- editor-text on the cell itself: its whole content is written by
-                                 highlightKey, so there is no markup here whose indentation
-                                 pre-wrap could turn into visible whitespace. --}}
-                            <td data-col="key"
-                                class="editor-text px-4 py-2 font-mono text-xs text-gray-500 sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                :class="showIndexColumn ? 'left-16' : 'left-0'"
-                                x-safe-html="highlightKey(key)"></td>
+                            <x-editor.cell-index />
+                            <x-editor.cell-key />
 
                             {{-- Local Tag column (clickable for tag change).
                                  Carries the selection colour like its online

@@ -818,7 +818,6 @@
     "merge_preview.same": "Lignes identiques",
     "merge_preview.edited": "Édité",
     "merge_preview.show": "Afficher",
-    "merge_preview.key": "Clé",
     "merge_preview.local_file": "Fichier local",
     "merge_preview.online_version": "Version en ligne",
     "merge_preview.no_differences": "Aucune différence trouvée entre les versions locale et en ligne.",

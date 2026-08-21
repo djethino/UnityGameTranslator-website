@@ -818,7 +818,6 @@
     "merge_preview.same": "Одинаковые строки",
     "merge_preview.edited": "Изменено",
     "merge_preview.show": "Показать",
-    "merge_preview.key": "Ключ",
     "merge_preview.local_file": "Локальный файл",
     "merge_preview.online_version": "Онлайн версия",
     "merge_preview.no_differences": "Различий между локальной и онлайн версиями не найдено.",

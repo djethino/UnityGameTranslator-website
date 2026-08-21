@@ -378,36 +378,12 @@
                    :class="[showLineBreaks && 'show-linebreaks', pinMain && !resizingColumns && 'pin-main', columnsSized && 'cols-sized']">
                     <thead class="bg-gray-900 sticky top-0 z-20">
                         <tr>
-                            {{-- Capture-order index (toggleable, sortable) --}}
                             {{-- The line's identity travels with it. Scrolling sideways used to
                                  carry the key off screen, and past the third column nobody could
-                                 tell which line they were looking at. --}}
-                            {{-- The width is PINNED, not suggested. A table lays its columns out
-                                 to fit their content, so "w-16" was a hint the browser was free
-                                 to ignore — and the key column, frozen at a hard left-16, then
-                                 left a strip of nothing where the scrolled columns showed
-                                 through. --}}
-                            <th x-show="showIndexColumn" x-cloak
-                                class="px-2 py-3 text-right text-gray-400 font-medium w-16 min-w-[4rem] max-w-[4rem] cursor-pointer hover:text-white transition sticky left-0 z-30 bg-gray-900"
-                                @click="toggleSort('index')" title="{{ __('editor.capture_order_hint') }}">
-                                <div class="flex items-center justify-end gap-1">
-                                    <span class="text-xs">#</span>
-                                    <i class="fas text-xs" :class="getSortIcon('index')"></i>
-                                </div>
-                            </th>
-                            {{-- A right edge, because a frozen column is not an overlapping one:
-                                 without it, the columns sliding underneath read as a rendering
-                                 fault rather than as content passing behind a fixed edge. --}}
-                            <th data-col="key"
-                                class="relative px-4 py-3 text-left text-gray-400 font-medium cursor-pointer hover:text-white transition sticky z-30 bg-gray-900 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                :class="showIndexColumn ? 'left-16' : 'left-0'"
-                                @click="toggleSort('key')">
-                                <div class="flex items-center gap-2">
-                                    {{ __('merge.key') }}
-                                    <i class="fas" :class="getSortIcon('key')"></i>
-                                </div>
-                                <x-editor.col-resize col="key" />
-                            </th>
+                                 tell which line they were looking at. Both columns, their frozen
+                                 offsets and the reasons for them are in the shared components. --}}
+                            <x-editor.head-index />
+                            <x-editor.head-key />
                             {{-- data-col on the tag column too: the pin freezes the pair, since a
                                  value without its tag says only half of what the row holds. --}}
                             {{-- w-20, not w-12: this cell shows `A → V` when a save will change the
@@ -477,16 +453,10 @@
                                 {{-- Capture-order index --}}
                                 {{-- Frozen with its header: an opaque background is required, or
                                      the scrolled columns show through underneath. --}}
-                                <td x-show="showIndexColumn" x-cloak
-                                    class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"
-                                    x-text="indexCellText(key)"></td>
+                                <x-editor.cell-index />
 
                                 {{-- Key --}}
-                                <td data-col="key"
-                                    class="relative px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
-                                    :class="showIndexColumn ? 'left-16' : 'left-0'">
-                                    <span class="editor-text" :class="isDeleted(key) ? 'line-through text-red-400' : ''" x-safe-html="highlightKey(key)"></span>
-
+                                <x-editor.cell-key>
                                     {{-- The answer is that way.
 
                                          🔴 A row whose answer is off screen reads as a row
@@ -507,7 +477,7 @@
                                         :title="offScreenHint"
                                         ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
                                     </template>
-                                </td>
+                                </x-editor.cell-key>
 
                                 {{-- Main Tag (clickable for tag change) --}}
                                 <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"

@@ -818,7 +818,6 @@
     "merge_preview.same": "Identische Zeilen",
     "merge_preview.edited": "Bearbeitet",
     "merge_preview.show": "Anzeigen",
-    "merge_preview.key": "Schlüssel",
     "merge_preview.local_file": "Lokale Datei",
     "merge_preview.online_version": "Online-Version",
     "merge_preview.no_differences": "Keine Unterschiede zwischen lokaler und Online-Version gefunden.",

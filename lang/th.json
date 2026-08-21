@@ -818,7 +818,6 @@
     "merge_preview.same": "บรรทัดที่เหมือนกัน",
     "merge_preview.edited": "แก้ไขแล้ว",
     "merge_preview.show": "แสดง",
-    "merge_preview.key": "คีย์",
     "merge_preview.local_file": "ไฟล์ในเครื่อง",
     "merge_preview.online_version": "เวอร์ชันออนไลน์",
     "merge_preview.no_differences": "ไม่พบความแตกต่างระหว่างเวอร์ชันในเครื่องและออนไลน์",
