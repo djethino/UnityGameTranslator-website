@@ -407,7 +407,14 @@ class MergeViewStateTest extends TestCase
 
         // A click on a column already held automatically validates it rather than undoing it —
         // otherwise the paler colour would be a state with no way out of it.
-        $this->assertStringContainsString('current.auto && source !== \'manual\'', $html);
+        $this->assertStringContainsString('if (current.auto) {', $html);
+
+        // 🔴 And the click after that goes back to held on the Main's own column, instead of
+        // blanking it: keeping the Main writes the line it already has, so blank and held are the
+        // same file and a third state would change a colour and nothing else. Everywhere else
+        // blank stays reachable — on a line only a contribution has it is the only way to refuse
+        // it, deletions being able to remove a key the Main holds and nothing more.
+        $this->assertStringContainsString("if (source === 'main' && current.tag === 'A') {", $html);
 
         // And the cell previews what will actually be written: an unclaimed hold keeps its A.
         $this->assertStringContainsString("sel.tag === 'A' && !sel.auto ? 'V' : sel.tag", $html);
@@ -692,6 +699,37 @@ class MergeViewStateTest extends TestCase
         $this->assertMatchesRegularExpression('/\.tag-arrow\s*\{/', $css);
         $this->assertMatchesRegularExpression('/\.tag-transition\s*\{[^}]*nowrap/s', $css,
             'the pair may wrap, which would stack two chips and double every row');
+    }
+
+    /**
+     * 🔴 A tag on a row the page does not hold is an ARRIVAL, and reads as one.
+     *
+     * Printed on its own, `H` says "this line is hand-written". The line is not there at all: what
+     * is true is that it WILL BE one. Reported from the merge view, on a line only a contribution
+     * had, where writing one's own translation showed a bare `H` beside three columns that
+     * disagreed about whether the row existed.
+     *
+     * ⚠ The same arrow the rest of the cell already uses, with nothing on its left — there is no
+     * chip to leave from. And the frame goes round it like any other cell whose content is not what
+     * will be stored.
+     */
+    public function test_a_tag_arriving_where_the_page_holds_none_reads_as_an_arrival(): void
+    {
+        $core = file_get_contents(resource_path('js/components/translation-editor.js'));
+
+        // Its own question, kept apart from tagWillChange: that one needs a stored tag to be about.
+        $this->assertStringContainsString('tagArrives(key) {', $core);
+        $this->assertStringContainsString(
+            "return this.tagOnFile(key) === null && this.tagAfterSave(key) != null;", $core);
+
+        // Both mean "not what will be saved", so both carry the frame.
+        $this->assertStringContainsString(
+            'this.tagWillChange(key) || this.tagArrives(key)', $core);
+
+        // The arrow is drawn for it, in the one component every editor uses.
+        $cell = file_get_contents(resource_path('views/components/editor-tag-cell.blade.php'));
+        $this->assertStringContainsString('x-if="tagArrives(key)"', $cell);
+        $this->assertStringContainsString('tag-arrow', $cell);
     }
 
     /**

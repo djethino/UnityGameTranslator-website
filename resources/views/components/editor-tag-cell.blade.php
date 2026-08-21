@@ -22,7 +22,9 @@
     class="tag-transition transition rounded"
     :title="tagWillChange(key)
         ? @js(__('merge.click_to_change_tag')) + ' (' + tagOnFile(key) + ' → ' + tagAfterSave(key) + ')'
-        : @js(__('merge.click_to_change_tag'))">
+        : tagArrives(key)
+            ? @js(__('merge.click_to_change_tag')) + ' (→ ' + tagAfterSave(key) + ')'
+            : @js(__('merge.click_to_change_tag'))">
     {{-- The chip on file, then the arrow. Absent entirely when nothing changes, so an untouched
          row reads exactly as it always has.
 
@@ -31,6 +33,11 @@
          fourteen pixels to a column measured in tens. --}}
     <template x-if="tagWillChange(key)"><span class="tag-transition-from"><span
         :class="'tag-' + tagOnFile(key)" x-text="tagOnFile(key)"></span><i
+        class="fas fa-arrow-right tag-arrow"></i></span></template>{{--
+         An ARRIVING tag: the same arrow, with nothing on its left. A row the page does not hold
+         has no chip to leave from, and printing the destination alone read as a statement about a
+         line that is not there — "this is an H" instead of "this becomes one". --}}<template
+        x-if="tagArrives(key)"><span class="tag-transition-from"><i
         class="fas fa-arrow-right tag-arrow"></i></span></template><span
         :class="'tag-' + tagAfterSave(key) + (isCaptureRow(key) ? ' opacity-40' : '') + tagChipExtraClass(key)"
         x-text="tagAfterSave(key)"></span>

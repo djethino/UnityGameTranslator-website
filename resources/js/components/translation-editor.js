@@ -889,8 +889,27 @@ export function editorCore(config) {
             return stored !== null && stored !== this.tagAfterSave(key);
         },
 
+        /**
+         * A row the page does not hold yet, and that a save would ADD.
+         *
+         * 🔴 **Its tag is an arrival, not a state, and the difference is the whole point.** Printed
+         * on its own, `H` reads as "this line is hand-written" — but the line is not there at all
+         * yet; what is true is that it WILL BE one. The cell says so the way it already says it
+         * everywhere else, with an arrow, simply with nothing on the left of it: there is nothing
+         * to leave.
+         *
+         * ⚠ Kept apart from `tagWillChange` rather than folded into it. That one answers "does the
+         * stored tag change", which needs a stored tag to be about; this answers "is there a tag
+         * arriving where there was none". Two questions, and the transition markup reads them
+         * separately — one draws a chip and an arrow, the other an arrow alone.
+         */
+        tagArrives(key) {
+            return this.tagOnFile(key) === null && this.tagAfterSave(key) != null;
+        },
+
         tagCellClass(key) {
-            return this.tagWillChange(key) ? 'tag-changed-cell' : '';
+            // Both mean "this cell is not what it will be saved as", which is what the frame says.
+            return this.tagWillChange(key) || this.tagArrives(key) ? 'tag-changed-cell' : '';
         },
 
         /** Page hook: this row's tag cannot be opened (a row on its way out). */

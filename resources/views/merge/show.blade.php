@@ -1618,18 +1618,34 @@ document.addEventListener('alpine:init', () => {
 
             const current = this.selections[key];
 
-            // 🔴 **A click on a column already held automatically VALIDATES it**, rather than
-            // undoing it. That is the whole point of the paler colour: the row arrived answered but
-            // unclaimed, and the one gesture somebody makes on it is "yes, I read this one". Only
-            // the click after that unpicks — so the three states run in the order a person meets
-            // them, and nothing is ever validated without a deliberate act.
-            if (current?.source === source && current.auto && source !== 'manual') {
-                this.selections[key] = this.pick(source, current.value, current.tag, false);
-                this.persistPendingState();
-                return;
-            }
-
+            // ── Clicking the column this row is already on ────────────────
+            //
+            // 🔴 **The first click VALIDATES rather than undoes.** That is what the paler colour is
+            // for: the row arrived answered but unclaimed, and the one gesture somebody makes on it
+            // is "yes, I read this one".
+            //
+            // 🔴 **And the click after that only has somewhere to go where "nothing" would DO
+            // something.** Keeping the Main's own line writes the line it already holds — so on
+            // that column, blank and held produce the identical file, and a third state would be a
+            // click that changes a colour and nothing else. Undoing a validation there returns to
+            // held. Anywhere else, blank is a real answer: on a line only a contribution has it is
+            // the ONLY way to refuse it, since deletions can only remove a key the Main has.
             if (current?.source === source && source !== 'manual') {
+                if (current.auto) {
+                    this.selections[key] = this.pick(source, current.value, current.tag, false);
+                    this.persistPendingState();
+                    return;
+                }
+
+                // ⚠ Only where the tag is A. On anything else the hold was never `auto` — nothing
+                // is promoted, so there is nothing to step back to — and returning it here would
+                // rebuild the identical object: a dead click, which is worse than an undo.
+                if (source === 'main' && current.tag === 'A') {
+                    this.selections[key] = this.pick(source, current.value, current.tag, true);
+                    this.persistPendingState();
+                    return;
+                }
+
                 delete this.selections[key];
                 delete this.editedValues[key];
                 this.persistPendingState();
