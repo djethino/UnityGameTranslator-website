@@ -398,7 +398,11 @@ class MergeViewStateTest extends TestCase
         // absent rather than described in a comment nobody re-reads. A click still produces it;
         // `select()` builds its own object, which is why this string is unique to the defaults.
         $this->assertStringContainsString('if (best.rank > mainTag) {', $html);
-        $this->assertStringContainsString('} else if (mainEntry !== undefined) {', $html);
+
+        // ⚠ The Main's side of the defaults goes through defaultSelection, which is also what an
+        // undo returns to — see the test below. Written inline here once, it drifted from the undo
+        // the first time either was touched.
+        $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);
 
         // 🔴 **`auto` is set exactly when the tag kept is A**, because that is the only tag the save
         // promotes. Widening it would put a second, half-meant state on rows that never needed one;
@@ -414,7 +418,8 @@ class MergeViewStateTest extends TestCase
         // same file and a third state would change a colour and nothing else. Everywhere else
         // blank stays reachable — on a line only a contribution has it is the only way to refuse
         // it, deletions being able to remove a key the Main holds and nothing more.
-        $this->assertStringContainsString("if (source === 'main' && current.tag === 'A') {", $html);
+        $this->assertStringContainsString(
+            'back && (back.source !== current.source || back.auto !== current.auto)', $html);
 
         // And the cell previews what will actually be written: an unclaimed hold keeps its A.
         $this->assertStringContainsString("sel.tag === 'A' && !sel.auto ? 'V' : sel.tag", $html);
@@ -730,6 +735,78 @@ class MergeViewStateTest extends TestCase
         $cell = file_get_contents(resource_path('views/components/editor-tag-cell.blade.php'));
         $this->assertStringContainsString('x-if="tagArrives(key)"', $cell);
         $this->assertStringContainsString('tag-arrow', $cell);
+
+        // 🔴 And the cell is RENDERED on such a row. It was wrapped in a guard on the page holding
+        // the line, so the arriving tag had nowhere to go: the cell took the frame that says "this
+        // is not what will be stored" and then showed a grey dash.
+        foreach ([
+            'views/merge/show.blade.php' => 'mainData',
+            'views/translations/merge-preview.blade.php' => 'localData',
+        ] as $view => $side) {
+            $html = file_get_contents(resource_path($view));
+            $this->assertStringContainsString(
+                "x-if=\"{$side}[key] !== undefined || tagArrives(key)\"", $html, $view);
+            $this->assertStringContainsString(
+                "x-if=\"{$side}[key] === undefined && !tagArrives(key)\"", $html, $view);
+        }
+    }
+
+    /**
+     * 🔴 Two kinds of work arrive on this screen, and the chip tells them apart.
+     *
+     * A line taken from a contribution exactly as offered, and a line somebody wrote themselves
+     * over what was offered. Side by side in a column of new keys, that difference is what says how
+     * much of the page is yours — and the chip is where the eye already is.
+     *
+     * ⚠ Its own question, never isCaptureRow. That one's faded chip means "an H with nothing in
+     * it", a line the mod captured and nobody translated; it was doing this job by accident,
+     * because it read the value on file and found none — which also had it call a contributor's
+     * real translation empty.
+     */
+    public function test_an_arriving_row_says_whether_anybody_reworded_it(): void
+    {
+        $core = file_get_contents(resource_path('js/components/translation-editor.js'));
+
+        $this->assertStringContainsString('tagArrivesUntouched(key) {', $core);
+        $this->assertStringContainsString(
+            'return this.tagArrives(key) && !this.isEdited(key);', $core);
+
+        // isCaptureRow keeps its own meaning, and stops answering for rows it cannot see.
+        $this->assertStringContainsString(
+            'if (this.entryOnFile(key) === undefined && !this.isEdited(key)) return false;', $core);
+
+        $cell = file_get_contents(resource_path('views/components/editor-tag-cell.blade.php'));
+        $this->assertStringContainsString(
+            'isCaptureRow(key) || tagArrivesUntouched(key)', $cell);
+    }
+
+    /**
+     * 🔴 Undoing a pick puts the row back where it started, never to blank.
+     *
+     * Blank and "the Main keeps its own" write the identical file, so a row the Main holds has no
+     * third state. Reported: undoing a pick on the Main brought the dashes back, undoing one on a
+     * contribution left the row bare — two gestures, two outcomes, for one idea.
+     *
+     * ⚠ And the default is defined ONCE, read by the smart defaults when the page opens and by the
+     * undo when somebody steps back, so the row a page opens on and the row an undo lands on are
+     * the same row.
+     */
+    public function test_undoing_a_pick_returns_to_the_row_s_own_default(): void
+    {
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $html = $this->actingAs($owner)
+            ->get(route('translations.merge', ['uuid' => $uuid]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('defaultSelection(key) {', $html);
+        $this->assertStringContainsString('const back = this.defaultSelection(key);', $html);
+        $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);
+
+        // ⚠ Holding the Main is only recorded where it VALIDATES. Anything else would be a no-op
+        // wearing the colours of a decision — and a dead click when somebody tries to undo it.
+        $this->assertStringContainsString("if (tag !== 'A') return null;", $html);
     }
 
     /**

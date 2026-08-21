@@ -39,6 +39,8 @@
          line that is not there — "this is an H" instead of "this becomes one". --}}<template
         x-if="tagArrives(key)"><span class="tag-transition-from"><i
         class="fas fa-arrow-right tag-arrow"></i></span></template><span
-        :class="'tag-' + tagAfterSave(key) + (isCaptureRow(key) ? ' opacity-40' : '') + tagChipExtraClass(key)"
+        :class="'tag-' + tagAfterSave(key)
+            + (isCaptureRow(key) || tagArrivesUntouched(key) ? ' opacity-40' : '')
+            + tagChipExtraClass(key)"
         x-text="tagAfterSave(key)"></span>
 </button>

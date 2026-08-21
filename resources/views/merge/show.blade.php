@@ -1172,11 +1172,14 @@ document.addEventListener('alpine:init', () => {
                     this.selections[key] = this.pick('branch_' + best.branch.id,
                                                      this.getValue(best.entry),
                                                      this.getTag(best.entry));
-                } else if (mainEntry !== undefined) {
-                    this.selections[key] = this.pick('main',
-                                                     this.getValue(mainEntry),
-                                                     this.getTag(mainEntry));
+                    continue;
                 }
+
+                // ⚠ The same definition `select` returns to when a pick is undone, so the row the
+                // page opens on and the row an undo lands on are the same row. It answers null
+                // where holding the Main would write nothing at all — see defaultSelection.
+                const held = this.defaultSelection(key);
+                if (held) this.selections[key] = held;
             }
 
             this.applyMetadataDefaults();
@@ -1622,6 +1625,30 @@ document.addEventListener('alpine:init', () => {
             return { source, value, tag, auto: auto === null ? tag === 'A' : auto };
         },
 
+        /**
+         * What this row answers when nobody has said anything about it — and null where the answer
+         * is "nothing", which is a real answer too.
+         *
+         * 🔴 **Keeping the Main is only worth recording when it VALIDATES.** Writing the Main's own
+         * line back over itself changes no byte; the one case where it does something is an `A`
+         * being promoted to `V`, and that is precisely the case that must not happen by itself.
+         * Hence: an `A` is held, unclaimed; anything else is left alone, because selecting it would
+         * be a no-op wearing the colours of a decision — and re-clicking it a dead click.
+         *
+         * ⚠ One definition, read twice: by the defaults when the page opens, and by `select` when
+         * somebody undoes a pick. They used to be written separately, which is how undoing a branch
+         * pick left the row blank instead of putting it back where it started.
+         */
+        defaultSelection(key) {
+            const mainEntry = this.mainData[key];
+            if (mainEntry === undefined) return null;
+
+            const tag = this.getTag(mainEntry);
+            if (tag !== 'A') return null;
+
+            return this.pick('main', this.getValue(mainEntry), tag);
+        },
+
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)
             this.focusRow(key);
@@ -1648,11 +1675,16 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
-                // ⚠ Only where the tag is A. On anything else the hold was never `auto` — nothing
-                // is promoted, so there is nothing to step back to — and returning it here would
-                // rebuild the identical object: a dead click, which is worse than an undo.
-                if (source === 'main' && current.tag === 'A') {
-                    this.selections[key] = this.pick(source, current.value, current.tag, true);
+                // 🔴 **Undoing puts the row back where it started, not to blank.** Blank and "the
+                // Main keeps its own" write the identical file, so a row the Main holds has no
+                // third state — and leaving it blank lost the dashes that said the row had been
+                // answered. Reported: undoing a pick on the Main brought them back, undoing one on
+                // a contribution did not.
+                const back = this.defaultSelection(key);
+
+                if (back && (back.source !== current.source || back.auto !== current.auto)) {
+                    delete this.editedValues[key];
+                    this.selections[key] = back;
                     this.persistPendingState();
                     return;
                 }

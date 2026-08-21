@@ -907,6 +907,23 @@ export function editorCore(config) {
             return this.tagOnFile(key) === null && this.tagAfterSave(key) != null;
         },
 
+        /**
+         * An arriving row taken exactly as it was offered — nobody has reworded it here.
+         *
+         * 🔴 **Two things arrive on this screen and they are not the same work.** A line taken from
+         * a contribution as it stands, and a line somebody wrote themselves over what was offered.
+         * Read side by side in a column of new keys, telling them apart is what says how much of
+         * this page is yours — and the chip is where the eye already is.
+         *
+         * ⚠ Deliberately NOT isCaptureRow, whose faded chip means something else entirely: "an H
+         * with nothing in it", a line the mod captured and nobody translated. That one was doing
+         * this job by accident, because it read the value on file and found none — which also had
+         * it call a contributor's real translation empty. One signal, one meaning.
+         */
+        tagArrivesUntouched(key) {
+            return this.tagArrives(key) && !this.isEdited(key);
+        },
+
         tagCellClass(key) {
             // Both mean "this cell is not what it will be saved as", which is what the frame says.
             return this.tagWillChange(key) || this.tagArrives(key) ? 'tag-changed-cell' : '';
