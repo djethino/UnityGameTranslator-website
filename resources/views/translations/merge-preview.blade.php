@@ -1088,9 +1088,21 @@ document.addEventListener('alpine:init', () => {
                         // leave the row out of every filtered view; a plain pick would record a
                         // validation nobody performed, two machine translations that differ being
                         // exactly that case, and the common one.
-                        this.selections[key] = localPriority >= onlinePriority
-                            ? staged('local', this.localData[key])
-                            : staged('online', this.onlineData[key]);
+                        //
+                        // ⚠ **A tie goes to the side the result is BUILT FROM**, which is not the
+                        // same column in both directions — comparing into the game keeps the
+                        // player's line, publishing keeps the server's. Written as 'local' either
+                        // way it was right one time in two, and the wrong way round it swaps a
+                        // line for another nobody preferred.
+                        if (localPriority === onlinePriority) {
+                            const home = this.homeSource();
+                            this.selections[key] = staged(
+                                home, home === 'local' ? this.localData[key] : this.onlineData[key]);
+                        } else {
+                            this.selections[key] = localPriority > onlinePriority
+                                ? staged('local', this.localData[key])
+                                : staged('online', this.onlineData[key]);
+                        }
                     } else {
                         this.selections[key] = staged('online', this.onlineData[key]);
                     }
@@ -1431,7 +1443,10 @@ document.addEventListener('alpine:init', () => {
             if (this.hasTagChange(key) || this.isEdited(key)) {
                 return this.displayTag(key, this.getTag(this.localData[key]));
             }
-            if (this.pickedSource(key) === 'local' && key in this.localData) {
+            // ⚠ An unclaimed hold keeps its tag: the save promotes A to V only where somebody said
+            // so, and this cell has to preview what will actually be written. Without the test it
+            // showed a V on a row nobody had claimed — the promotion the save was about to skip.
+            if (this.pickedSource(key) === 'local' && key in this.localData && !this.isUnclaimed(key)) {
                 const hasOnline = key in this.onlineData;
                 // Same condition as "will actually be sent" (see entriesDiffer),
                 // so the previewed tag never promises a promotion the save drops

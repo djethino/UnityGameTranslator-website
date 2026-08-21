@@ -323,6 +323,13 @@ export function editorCore(config) {
          * when somebody undoes. Written separately, they drifted the first time either was touched.
          */
         defaultSelection(key) {
+            // 🔴 **Nothing to hold where there is nobody to answer.** "Held, not claimed" says a
+            // contribution was dealt with without being validated; on a screen with no other side —
+            // the merge view opened in edit mode, where somebody is simply correcting their own
+            // file — it says nothing at all. Undoing a validation there brought the dashes back on
+            // a row nobody had proposed anything about.
+            if (!this.arbitratesAnotherSide()) return null;
+
             const own = this.homeEntry(key);
             if (own === undefined) return null;
 
@@ -345,6 +352,15 @@ export function editorCore(config) {
 
         /** Page hook: the entry on that column. Defaults to the one the tag cell describes. */
         homeEntry(key) { return this.entryOnFile(key); },
+
+        /**
+         * Page hook: is there a second side whose proposal would go unanswered?
+         *
+         * False on a screen where somebody is working on their own file alone. Everything about
+         * "held, not claimed" exists to answer a contribution without validating it — with no
+         * contribution, the state has no subject.
+         */
+        arbitratesAnotherSide() { return true; },
 
         /**
          * Clicking the column a row is already on. Three states, in the order somebody meets them:

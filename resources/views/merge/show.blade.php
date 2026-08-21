@@ -1616,6 +1616,13 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the column that already holds this screen's rows. */
         homeSource() { return 'main'; },
 
+        /**
+         * Core hook: in edit mode this screen shows one file and no contribution, so there is
+         * nothing to answer and nothing to hold — see defaultSelection. Clicking a row there is a
+         * validation, and undoing it means undoing it, not falling back to a held state.
+         */
+        arbitratesAnotherSide() { return !isEditMode; },
+
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)
             this.focusRow(key);

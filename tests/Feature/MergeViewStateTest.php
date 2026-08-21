@@ -776,6 +776,35 @@ class MergeViewStateTest extends TestCase
         // ⚠ A draft saved before selections became objects still opens. Dropping it would lose a
         // review somebody had half finished.
         $this->assertStringContainsString("if (typeof sel !== 'string')", $preview);
+
+        // 🔴 A tie goes to the side the RESULT is built from, which is not the same column in both
+        // directions. Written as one column either way it was right one time in two — and the wrong
+        // way round it swaps a line for another nobody preferred.
+        $this->assertStringContainsString('if (localPriority === onlinePriority) {', $preview);
+        $this->assertStringContainsString('const home = this.homeSource();', $preview);
+
+        // And the cell previews what the save writes: an unclaimed hold keeps its A here too.
+        $this->assertStringContainsString(
+            "this.pickedSource(key) === 'local' && key in this.localData && !this.isUnclaimed(key)",
+            $preview);
+    }
+
+    /**
+     * 🔴 On a screen with nobody to answer, there is nothing to hold either.
+     *
+     * "Held, not claimed" says a contribution was dealt with without being validated. The merge view
+     * opened in edit mode shows one file and no contribution — somebody correcting their own work —
+     * so undoing a validation there means undoing it, not falling back to a state whose subject
+     * does not exist. Reported: the dashes came back on a row nobody had proposed anything about.
+     */
+    public function test_a_screen_with_no_second_side_holds_nothing(): void
+    {
+        $core = file_get_contents(resource_path('js/components/translation-editor.js'));
+        $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
+
+        $this->assertStringContainsString('if (!this.arbitratesAnotherSide()) return null;', $core);
+        $this->assertStringContainsString('arbitratesAnotherSide() { return true; }', $core);
+        $this->assertStringContainsString('arbitratesAnotherSide() { return !isEditMode; }', $merge);
     }
 
     /**
