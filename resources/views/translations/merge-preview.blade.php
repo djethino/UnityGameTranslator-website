@@ -1188,27 +1188,41 @@ document.addEventListener('alpine:init', () => {
             return this.highlightDifference(mine, other);
         },
 
+        /**
+         * This screen's two "only on one side" boxes, over the core's categories.
+         *
+         * 🔴 **They swap meaning with the direction, and that is the whole reason the core names
+         * situations rather than columns.** Publishing, a line only the local file holds is
+         * something the SOURCE adds — `new`. Comparing into the game, that same line is one the
+         * TARGET already holds — `onlyOnTarget`. One word, two situations, depending on which way
+         * the mod opened the screen.
+         *
+         * ⚠ The boxes keep their names here: this step changes no wording. What changes is that
+         * they stop deciding for themselves what they mean.
+         */
+        rowCategoryFilter(key) {
+            const category = this.rowCategory(key);
+
+            if (category === 'differing') return 'different';
+            if (category === 'same') return 'same';
+
+            const heldByLocalAlone = category === (this.toLocal ? 'onlyOnTarget' : 'new');
+            return heldByLocalAlone ? 'localOnly' : 'onlineOnly';
+        },
+
         calculateStats() {
-            this.stats = { total: 0, localOnly: 0, onlineOnly: 0, different: 0, same: 0 };
+            const counts = this.categoryCounts;
 
-            for (const key of this.allKeys) {
-                this.stats.total++;
+            this.stats = {
+                total: counts.total,
+                different: counts.differing,
+                same: counts.same,
 
-                const hasLocal = key in this.localData;
-                const hasOnline = key in this.onlineData;
-
-                if (hasLocal && !hasOnline) {
-                    this.stats.localOnly++;
-                } else if (!hasLocal && hasOnline) {
-                    this.stats.onlineOnly++;
-                } else if (hasLocal && hasOnline) {
-                    if (this.entriesDiffer(key)) {
-                        this.stats.different++;
-                    } else {
-                        this.stats.same++;
-                    }
-                }
-            }
+                // Same swap as the filters above: which side "only" refers to follows the
+                // direction, not the column name.
+                localOnly: this.toLocal ? counts.onlyOnTarget : counts.new,
+                onlineOnly: this.toLocal ? counts.new : counts.onlyOnTarget,
+            };
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────
@@ -1221,16 +1235,8 @@ document.addEventListener('alpine:init', () => {
             const hasLocal = key in this.localData;
             const hasOnline = key in this.onlineData;
 
-            // Category filter
-            let passesCategory = false;
-            if (hasLocal && !hasOnline) {
-                passesCategory = this.filters.localOnly;
-            } else if (!hasLocal && hasOnline) {
-                passesCategory = this.filters.onlineOnly;
-            } else if (hasLocal && hasOnline) {
-                passesCategory = this.entriesDiffer(key) ? this.filters.different : this.filters.same;
-            }
-            if (!passesCategory) return false;
+            // Category filter, from the core's one vocabulary
+            if (!this.filters[this.rowCategoryFilter(key)]) return false;
 
             // Tag filter: local matches on its STORED and its PREVIEWED tag
             // (a pending change must not make its row vanish mid-work)

@@ -1407,42 +1407,33 @@ document.addEventListener('alpine:init', () => {
             return value;
         },
 
+        /**
+         * The tiles, from the core's one vocabulary.
+         *
+         * ⚠ `catOther` still covers `same` AND `onlyOnTarget` here, because that is what this
+         * screen has always shown and step 2 changes nothing on screen — see
+         * analyse/editors-mutualisation.md. The distinction exists in the core now; exposing it is
+         * the next step's business.
+         */
         calculateStats() {
-            this.stats = { newKeys: 0, different: 0 };
-            for (const key of this.allKeys) {
-                const category = this.rowCategory(key);
-                if (category === 'new') this.stats.newKeys++;
-                else if (category === 'diff') this.stats.different++;
-            }
+            const counts = this.categoryCounts;
+            this.stats = { newKeys: counts.new, different: counts.differing };
         },
 
         /**
-         * Category of a row relative to the branches:
-         * 'new'  = missing in Main, present in at least one branch
-         * 'diff' = present in Main, at least one branch differs
-         * 'other' = everything else (identical everywhere or Main-only)
+         * This screen's three filter boxes, over the core's four categories.
+         *
+         * ⚠ `catOther` covers `same` AND `onlyOnTarget`, which is what this screen has always
+         * shown: a line no contribution carries reads as "nothing to settle here", exactly like one
+         * they all agree on. The core tells them apart now — giving this screen a fourth box is a
+         * decision for the step that redraws the bar, not a side effect of this one.
          */
-        rowCategory(key) {
-            const hasMain = key in this.mainData;
-            if (!hasMain) {
-                for (const branch of this.branches) {
-                    if (key in branch.content) return 'new';
-                }
-                return 'other';
-            }
-            // Tag included, not just the text: a branch that only validated a
-            // line (A → V) has genuinely diverged from Main, and treating it as
-            // identical hides the very change the branch was made for.
-            const mainValue = this.getValue(this.mainData[key]);
-            const mainTag = this.getTag(this.mainData[key]);
-            for (const branch of this.branches) {
-                if (!(key in branch.content)) continue;
-                if (this.getValue(branch.content[key]) !== mainValue
-                    || this.getTag(branch.content[key]) !== mainTag) {
-                    return 'diff';
-                }
-            }
-            return 'other';
+        rowCategoryFilter(key) {
+            const category = this.rowCategory(key);
+
+            if (category === 'new') return 'catNew';
+            if (category === 'differing') return 'catDiff';
+            return 'catOther';
         },
 
         // ── Shared-core callbacks ────────────────────────────────────────
@@ -1453,10 +1444,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (!isEditMode && this.branches.length > 0) {
-                const category = this.rowCategory(key);
-                if (category === 'new' && !this.filters.catNew) return false;
-                if (category === 'diff' && !this.filters.catDiff) return false;
-                if (category === 'other' && !this.filters.catOther) return false;
+                if (!this.filters[this.rowCategoryFilter(key)]) return false;
             }
 
             // Tag filter: the row passes if ANY of its tags (Main or branch)

@@ -339,6 +339,69 @@ export function editorCore(config) {
             return this.pick(this.targetSource(), this.getValue(own), tag);
         },
 
+        // ── What kind of row this is ─────────────────────────────────────
+        //
+        // 🔴 **One vocabulary, derived from the roles.** The same four situations were named three
+        // ways — `catNew`/`catDiff`/`catOther` on the merge view, `localOnly`/`onlineOnly`/
+        // `different`/`same` on the comparison, nothing at all in a live edit — and two of those
+        // names swap meaning with the direction: on the comparison, "local only" is what the
+        // SOURCE adds when publishing and what the TARGET already holds when comparing into the
+        // game. Naming the situation instead of the column is what stops that.
+
+        /**
+         * Where this row stands between the target and the sources.
+         *
+         * @returns {'new'|'onlyOnTarget'|'differing'|'same'}
+         *   · `new`          — a source has it, the target does not
+         *   · `onlyOnTarget` — the target has it, no source does
+         *   · `differing`    — both, and at least one source says something else
+         *   · `same`         — both, and every source agrees
+         *
+         * ⚠ **Tag included, never the words alone.** A contribution that only validated a line
+         * (A → V) has genuinely diverged, and calling that identical hides the very thing it was
+         * made for — the commonest contribution of all.
+         */
+        rowCategory(key) {
+            const own = this.targetEntry(key);
+            const ids = this.sourceIds();
+
+            if (own === undefined) {
+                return ids.some(id => this.entryOf(key, id) !== undefined) ? 'new' : 'same';
+            }
+
+            const value = this.getValue(own);
+            const tag = this.getTag(own);
+            let seen = false;
+
+            for (const id of ids) {
+                const entry = this.entryOf(key, id);
+                if (entry === undefined) continue;
+
+                seen = true;
+                if (this.getValue(entry) !== value || this.getTag(entry) !== tag) return 'differing';
+            }
+
+            return seen ? 'same' : 'onlyOnTarget';
+        },
+
+        /**
+         * How many rows of each kind, counted once over the whole file.
+         *
+         * ⚠ Recomputed on demand rather than cached: it is read by the tiles and by the filter bar,
+         * and a stale count beside a live grid is worse than a slow one. The loop is over keys, not
+         * over rendered rows — the tiles describe the file, not the window onto it.
+         */
+        get categoryCounts() {
+            const counts = { new: 0, onlyOnTarget: 0, differing: 0, same: 0, total: 0 };
+
+            for (const key of this.allKeys) {
+                counts[this.rowCategory(key)]++;
+                counts.total++;
+            }
+
+            return counts;
+        },
+
         /**
          * A pick built from whatever column somebody clicked, or null when that column holds
          * nothing for this key.
