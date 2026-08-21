@@ -223,6 +223,25 @@
 .editor-grid.pin-main tbody [data-col="local"].deleted-cell,
 .editor-grid.pin-main tbody [data-col="mainTag"].deleted-cell,
 .editor-grid.pin-main tbody [data-col="localTag"].deleted-cell { background-color: rgb(79 35 42) !important; }
+
+/* An unclaimed hold, pinned. Same reasoning as the block above — flattened rather than translucent,
+ * because there is no row behind a frozen column — and the same reasoning as .selection-unclaimed
+ * further down: the hue keeps saying which column is held, the wash and the dashes say how firmly.
+ *
+ * ⚠ Repeated here rather than left to the plain rule: these selectors carry `!important` and a far
+ * higher specificity, so the plain one loses the moment somebody pins the Main — and pinning is
+ * what people do to read a long merge. */
+.editor-grid.pin-main tbody td.main-pair.selected-main.selection-unclaimed,
+.editor-grid.pin-main tbody [data-col="main"].selected-main.selection-unclaimed,
+.editor-grid.pin-main tbody [data-col="local"].selected-local.selection-unclaimed {
+    background-color: rgb(23 44 39) !important;
+}
+.editor-grid.pin-main [data-col="main"].selected-main.selection-unclaimed,
+.editor-grid.pin-main [data-col="local"].selected-local.selection-unclaimed {
+    box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.6);
+    outline: 2px dashed rgb(34 197 94);
+    outline-offset: -2px;
+}
 .editor-grid.pin-main tbody [data-col="mainTag"].tag-changed-cell,
 .editor-grid.pin-main tbody [data-col="localTag"].tag-changed-cell { background-color: rgb(48 37 79) !important; }
 
@@ -318,6 +337,34 @@
 .selected-local, .selected-main { background-color: rgba(20, 83, 45, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(34 197 94); }
 .selected-online, .selected-branch { background-color: rgba(30, 58, 138, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(59 130 246); }
 .selected-manual { background-color: rgba(88, 28, 135, 0.5) !important; box-shadow: inset 0 0 0 2px rgb(168 85 247); }
+
+/* 🔴 **Held, but not claimed** — a row the screen answered on its own so the contribution is not
+ * left hanging, on a line where both sides are machine translations. Taking a version is written
+ * back as a validation (A → V), and nobody read this one, so it keeps its tag until somebody
+ * clicks the column.
+ *
+ * ⚠ **The hue is not changed, the commitment is.** The colour answers "which column is held" and
+ * has to keep answering it; what a paler wash and a dashed frame add is "and not firmly". Giving
+ * these rows a colour of their own would have made the reader learn a fourth meaning for a
+ * question already answered three inches to the left.
+ *
+ * ⚠ `outline` rather than the inset ring: a box-shadow cannot be dashed, and dashes are what every
+ * interface has meant by provisional for thirty years. Drawn inside the cell (negative offset) so
+ * it lands exactly where the solid ring does on a claimed row. */
+.selected-main.selection-unclaimed,
+.selected-local.selection-unclaimed {
+    background-color: rgba(20, 83, 45, 0.22) !important;
+    box-shadow: none;
+    outline: 2px dashed rgb(34 197 94);
+    outline-offset: -2px;
+}
+.selected-branch.selection-unclaimed,
+.selected-online.selection-unclaimed {
+    background-color: rgba(30, 58, 138, 0.22) !important;
+    box-shadow: none;
+    outline: 2px dashed rgb(59 130 246);
+    outline-offset: -2px;
+}
 /* A tag that will not be saved as it is stored.
  *
  * ⚠ It carries the RING as well as the tint, like every other cell that says "this will change":

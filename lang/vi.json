@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Chọn Main",
     "merge.legend_selection_branch": "Chọn Branch",
     "merge.legend_manual_edit": "Chỉnh sửa thủ công",
+    "merge.legend_selection_unclaimed": "Giữ nguyên - nhấp vào cột để xác thực",
     "merge.legend_difference": "Khác biệt",
     "merge.legend_new_key": "Khóa mới",
     "merge.legend_deletion": "Xóa",

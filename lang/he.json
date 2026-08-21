@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "בחירת Main",
     "merge.legend_selection_branch": "בחירת Branch",
     "merge.legend_manual_edit": "עריכה ידנית",
+    "merge.legend_selection_unclaimed": "נשמר כפי שהוא - לחצו על העמודה כדי לאמת",
     "merge.legend_difference": "הבדל",
     "merge.legend_new_key": "מפתח חדש",
     "merge.legend_deletion": "מחיקה",

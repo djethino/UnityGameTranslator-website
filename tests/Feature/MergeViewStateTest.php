@@ -355,22 +355,22 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
     }
 
-    public function test_a_line_arrives_answered_only_where_somebody_did_the_reading(): void
+    public function test_every_contested_line_arrives_answered_and_only_some_are_claimed(): void
     {
-        // 🔴 Measured on a real lineage (2536 keys): 56 rows need a decision. 38 of them arrive
-        // taken — a contribution outranks what the Main holds, so somebody has already read those
-        // lines. The other 18 arrive BLANK and that is the point.
+        // 🔴 Measured on a real lineage (2536 keys): 56 rows need a decision, and all 56 arrive
+        // answered — leaving any of them blank means the contribution is never replied to and the
+        // row vanishes from every filtered view. 38 are taken from a contribution that outranks
+        // what the Main holds; the other 18 keep the Main's own machine line.
         //
-        // Two rules, and the second was wrong until 2026-08-20:
-        //   · a line only a contribution has, or one whose tag outranks the Main's  -> taken
-        //   · a tie                                                                 -> nothing
+        // 🔴 **And those 18 are held WITHOUT being claimed.** Taking a version is written back with
+        // A promoted to V (TranslationService::resolveMergedTag) — picking means "I read this". So
+        // an answer the screen made on its own may not carry that promotion: opening the page and
+        // pressing Merge used to mark 18 machine lines human-checked with nobody having read one,
+        // and the file's quality bar rose by itself.
         //
-        // ⚠ **Why a tie may not be pre-answered.** Every selection is written back with A promoted
-        // to V (TranslationService::resolveMergedTag) — picking a version means "I read this". The
-        // screen used to pre-select the Main on ties, so opening it and pressing Merge marked 18
-        // machine lines human-checked without anyone reading one, and the file's quality bar rose
-        // on its own. The comment that defended it claimed the tie was "recorded" as an answer: it
-        // was not — `source: 'main'` writes no merged_at, no merged_lines_total, no reviewed_hash.
+        // They arrive with `auto`, drawn paler and dashed, and one click on the same column turns
+        // the hold into an ordinary pick — which is what validating is, said deliberately by
+        // somebody with both versions in front of them.
         //
         // ⚠ A refusal stands LEVEL with a hand-written line. So H/H, H/S and S/H are ties too, and
         // the ladder used to rank S with the machine — which let a contribution overwrite a Main's
@@ -398,7 +398,19 @@ class MergeViewStateTest extends TestCase
         // absent rather than described in a comment nobody re-reads. A click still produces it;
         // `select()` builds its own object, which is why this string is unique to the defaults.
         $this->assertStringContainsString('if (best.rank > mainTag) {', $html);
-        $this->assertStringNotContainsString('} else if (mainEntry !== undefined) {', $html);
+        $this->assertStringContainsString('} else if (mainEntry !== undefined) {', $html);
+
+        // 🔴 **`auto` is set exactly when the tag kept is A**, because that is the only tag the save
+        // promotes. Widening it would put a second, half-meant state on rows that never needed one;
+        // narrowing it would let a machine line be marked human-checked by a page load.
+        $this->assertStringContainsString('auto: auto === null ? tag === \'A\' : auto', $html);
+
+        // A click on a column already held automatically validates it rather than undoing it —
+        // otherwise the paler colour would be a state with no way out of it.
+        $this->assertStringContainsString('current.auto && source !== \'manual\'', $html);
+
+        // And the cell previews what will actually be written: an unclaimed hold keeps its A.
+        $this->assertStringContainsString("sel.tag === 'A' && !sel.auto ? 'V' : sel.tag", $html);
 
         // ⚠ The mod's own interface is not a line of the game: out of the arbitration on both
         // sides. It travels in the same file today and will get one of its own.
@@ -941,6 +953,67 @@ class MergeViewStateTest extends TestCase
         $this->assertArrayNotHasKey('MainOnly', $stored);
         // Metadata untouched
         $this->assertSame($uuid, $stored['_uuid']);
+    }
+
+    /**
+     * 🔴 An answer the screen made on its own does not claim a reading.
+     *
+     * `auto` is what tells a row somebody picked from a row that merely arrived answered. Without
+     * it, opening the merge view and pressing the button marked every machine line the Main keeps
+     * as human-checked — 18 of them on the lineage this was measured against — and the file's
+     * quality bar rose with nobody having read a word.
+     */
+    public function test_an_unclaimed_hold_keeps_its_machine_tag(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $response = $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'merge',
+            'branches' => [$branch->id],
+            'selections_json' => json_encode([
+                // Held by the screen: the row is answered, the tag is not touched.
+                ['key' => 'MainOnly', 'value' => 'Main only', 'tag' => 'A',
+                 'source' => 'main', 'auto' => true],
+                // Picked by hand on the same page: that one IS a reading.
+                ['key' => 'BranchOnly', 'value' => 'Branch only', 'tag' => 'A',
+                 'source' => 'branch_' . $branch->id, 'auto' => false],
+            ]),
+            'deletions_json' => '',
+            'tag_changes_json' => '',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+
+        $this->assertSame(['v' => 'Main only', 't' => 'A'], $stored['MainOnly'],
+            'nobody read this one, so it is still the machine\'s');
+        $this->assertSame(['v' => 'Branch only', 't' => 'V'], $stored['BranchOnly'],
+            'this one was picked, and picking is what validating means here');
+    }
+
+    /**
+     * ⚠ A client that predates `auto` only ever sent rows somebody had picked, so its silence must
+     * read as "claimed" — the behaviour it has always had.
+     */
+    public function test_a_selection_with_no_auto_flag_is_treated_as_picked(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'merge',
+            'branches' => [$branch->id],
+            'selections_json' => json_encode([
+                ['key' => 'BranchOnly', 'value' => 'Branch only', 'tag' => 'A',
+                 'source' => 'branch_' . $branch->id],
+            ]),
+            'deletions_json' => '',
+            'tag_changes_json' => '',
+        ])->assertRedirect();
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+        $this->assertSame(['v' => 'Branch only', 't' => 'V'], $stored['BranchOnly']);
     }
 
     public function test_apply_accepts_explicit_validate_tag_change(): void

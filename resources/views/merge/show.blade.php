@@ -753,6 +753,9 @@
                 <span><span class="inline-block w-3 h-3 bg-green-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_main') }}</span>
                 <span><span class="inline-block w-3 h-3 bg-blue-900/50 rounded mr-1"></span> {{ __('merge.legend_selection_branch') }}</span>
                 <span><span class="inline-block w-3 h-3 bg-purple-900/50 rounded mr-1"></span> {{ __('merge.legend_manual_edit') }}</span>
+                {{-- The dashed swatch, beside the two solid ones it modifies: the reader meets the
+                     colour first and the frame second, which is the order the cells present them. --}}
+                <span><span class="inline-block w-3 h-3 rounded mr-1 border-2 border-dashed border-green-500"></span> {{ __('merge.legend_selection_unclaimed') }}</span>
                 <span><span class="inline-block w-3 h-3 bg-yellow-900/30 rounded mr-1"></span> {{ __('merge.legend_difference') }}</span>
                 <span><span class="inline-block w-3 h-3 bg-green-900/30 rounded mr-1"></span> {{ __('merge.legend_new_key') }}</span>
                 <span><span class="inline-block w-3 h-3 bg-red-900/50 rounded mr-1"></span> {{ __('merge.legend_deletion') }}</span>
@@ -1138,27 +1141,30 @@ document.addEventListener('alpine:init', () => {
                 // No contribution holds anything different: nothing to settle on this line.
                 if (!best) continue;
 
-                // 🔴 **Only when one side actually outranks the other.** A tie is left untouched,
-                // and that is the whole rule: pre-selecting the Main on a line where both sides are
-                // machine translations WROTE A VALIDATION nobody performed — the apply endpoint
-                // reads `source: 'main'` as "I checked this", and promotes A to V. On the lineage
-                // this was measured against, opening the page and pressing Merge would have marked
-                // 18 lines human-checked that nobody had read, and the file's quality bar would
-                // have risen on its own.
+                // 🔴 **Every contested row arrives answered — and an answer that keeps a machine
+                // line does NOT claim somebody read it.**
                 //
-                // ⚠ The comment that used to defend it claimed a tie was "recorded" as an answer.
-                // It was not: `source: 'main'` writes no merged_at, no merged_lines_total and no
-                // reviewed_hash, so nothing was ever settled by it — see TODO.md, where the real
-                // gap (a refused contribution stays waiting for ever) is written down.
+                // Taking a version is written back with A promoted to V (resolveMergedTag): picking
+                // means "I checked this". So a default that lands on an `A` used to state a
+                // validation nobody performed — on the lineage this was measured against, opening
+                // the page and pressing Merge marked 18 machine lines human-checked with nobody
+                // having read one, and the file's quality bar rose on its own.
                 //
-                // Validating stays one click away: picking a column, switching the tag or editing
-                // the value all say it deliberately.
+                // Leaving those rows blank instead was worse in the other direction: the
+                // contribution stayed unanswered, and the row vanished from any filtered view.
+                //
+                // So they are answered, and the answer carries `auto`: taken as they are, tag
+                // untouched, drawn in a paler colour with a dashed ring. One click on the same
+                // column turns it into an ordinary pick — which is what validating IS, said once,
+                // deliberately, by somebody who has the two versions in front of them.
                 if (best.rank > mainTag) {
-                    this.selections[key] = {
-                        source: 'branch_' + best.branch.id,
-                        value: this.getValue(best.entry),
-                        tag: this.getTag(best.entry),
-                    };
+                    this.selections[key] = this.pick('branch_' + best.branch.id,
+                                                     this.getValue(best.entry),
+                                                     this.getTag(best.entry));
+                } else if (mainEntry !== undefined) {
+                    this.selections[key] = this.pick('main',
+                                                     this.getValue(mainEntry),
+                                                     this.getTag(mainEntry));
                 }
             }
 
@@ -1593,12 +1599,37 @@ document.addEventListener('alpine:init', () => {
          * (toggle, same behavior as before). Selecting main = validate it
          * (A -> V server-side).
          */
+        /**
+         * One selection, with the one flag that decides whether it VALIDATES.
+         *
+         * 🔴 `auto` is set exactly when the tag being kept is `A`, because that is the only tag the
+         * save promotes. On anything else — V, H, S — writing the pick changes no tag, so there is
+         * nothing to claim and nothing to hold back. Keeping the rule that narrow is what stops it
+         * from becoming a second, half-understood state on rows that never needed one.
+         */
+        pick(source, value, tag, auto = null) {
+            return { source, value, tag, auto: auto === null ? tag === 'A' : auto };
+        },
+
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)
             this.focusRow(key);
             if (this.isDeleted(key)) return;
 
-            if (this.selections[key]?.source === source && source !== 'manual') {
+            const current = this.selections[key];
+
+            // 🔴 **A click on a column already held automatically VALIDATES it**, rather than
+            // undoing it. That is the whole point of the paler colour: the row arrived answered but
+            // unclaimed, and the one gesture somebody makes on it is "yes, I read this one". Only
+            // the click after that unpicks — so the three states run in the order a person meets
+            // them, and nothing is ever validated without a deliberate act.
+            if (current?.source === source && current.auto && source !== 'manual') {
+                this.selections[key] = this.pick(source, current.value, current.tag, false);
+                this.persistPendingState();
+                return;
+            }
+
+            if (current?.source === source && source !== 'manual') {
                 delete this.selections[key];
                 delete this.editedValues[key];
                 this.persistPendingState();
@@ -1628,7 +1659,10 @@ document.addEventListener('alpine:init', () => {
 
             // Choosing a version discards a pending manual edit
             delete this.editedValues[key];
-            this.selections[key] = { source, value, tag };
+
+            // ⚠ Chosen, never auto: this ran because somebody clicked. A pick made by hand on an
+            // `A` line is exactly the validation the defaults refuse to invent.
+            this.selections[key] = this.pick(source, value, tag, false);
             this.persistPendingState();
         },
 
@@ -1636,7 +1670,11 @@ document.addEventListener('alpine:init', () => {
             const sel = this.selections[key];
             if (!sel) return '';
             if (sel.source === source) {
-                return source === 'main' ? 'selected-main' : 'selected-branch';
+                const held = source === 'main' ? 'selected-main' : 'selected-branch';
+
+                // ⚠ The colour still says WHICH column is held; the modifier says how firmly. Two
+                // separate facts, so they are two separate classes rather than four names.
+                return sel.auto ? held + ' selection-unclaimed' : held;
             }
             // A manual edit displays in the Main column
             if (source === 'main' && sel.source === 'manual') {
@@ -1676,7 +1714,10 @@ document.addEventListener('alpine:init', () => {
             }
             const sel = this.selections[key];
             if (sel) {
-                return sel.tag === 'A' ? 'V' : sel.tag;
+                // ⚠ An unclaimed pick keeps its tag: the save promotes A to V only where somebody
+                // said so, and the cell has to preview what will actually be written — otherwise
+                // the row shows a V nobody is going to get.
+                return sel.tag === 'A' && !sel.auto ? 'V' : sel.tag;
             }
             return this.getTag(this.mainData[key]);
         },
@@ -1822,6 +1863,10 @@ document.addEventListener('alpine:init', () => {
                 value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
                 tag: data.tag,
                 source: data.source,
+
+                // Whether anybody actually claimed this row. The server promotes A to V on a pick,
+                // and this is what tells it apart from a row that merely arrived answered.
+                auto: data.auto === true,
                 // The value this page loaded — the common ancestor. The server
                 // refuses to overwrite a line whose stored value no longer
                 // matches it, which is how a save from here stops clobbering

@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Sélection Main",
     "merge.legend_selection_branch": "Sélection Branch",
     "merge.legend_manual_edit": "Édition manuelle",
+    "merge.legend_selection_unclaimed": "Conservé tel quel - cliquez sur la colonne pour le valider",
     "merge.legend_difference": "Différence",
     "merge.legend_new_key": "Nouvelle clé",
     "merge.legend_deletion": "Suppression",

@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main 선택",
     "merge.legend_selection_branch": "Branch 선택",
     "merge.legend_manual_edit": "수동 편집",
+    "merge.legend_selection_unclaimed": "그대로 유지 - 열을 클릭하면 검증됨",
     "merge.legend_difference": "차이점",
     "merge.legend_new_key": "새 키",
     "merge.legend_deletion": "삭제",

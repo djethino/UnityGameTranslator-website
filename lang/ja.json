@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main 選択",
     "merge.legend_selection_branch": "Branch 選択",
     "merge.legend_manual_edit": "手動編集",
+    "merge.legend_selection_unclaimed": "そのまま維持 - 列をクリックして検証",
     "merge.legend_difference": "差分",
     "merge.legend_new_key": "新規キー",
     "merge.legend_deletion": "削除",

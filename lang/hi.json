@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main चयन",
     "merge.legend_selection_branch": "Branch चयन",
     "merge.legend_manual_edit": "मैनुअल एडिट",
+    "merge.legend_selection_unclaimed": "जैसा है वैसा ही रखा गया - मान्य करने के लिए कॉलम पर क्लिक करें",
     "merge.legend_difference": "अंतर",
     "merge.legend_new_key": "नई कुंजी",
     "merge.legend_deletion": "हटाव",

@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "اختيار Main",
     "merge.legend_selection_branch": "اختيار Branch",
     "merge.legend_manual_edit": "تعديل يدوي",
+    "merge.legend_selection_unclaimed": "يُحتفظ به كما هو - انقر على العمود لاعتماده",
     "merge.legend_difference": "اختلاف",
     "merge.legend_new_key": "مفتاح جديد",
     "merge.legend_deletion": "حذف",

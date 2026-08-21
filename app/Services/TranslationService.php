@@ -513,7 +513,21 @@ class TranslationService
         return is_array($json) ? $this->extractComparableSettings($json) : [];
     }
 
-    public static function resolveMergedTag(string $tag, string $source): string
+    /**
+     * The tag a picked line is stored with.
+     *
+     * 🔴 **Picking promotes A to V, because picking means "I read this".** That is the rule these
+     * screens turn on — the commonest contribution of all moves no text, and taking it has to
+     * record that somebody stood behind the words.
+     *
+     * @param  bool  $claimed
+     *   False for a row the screen answered on its own. Every contested row arrives answered so the
+     *   contribution is not left hanging, but an answer nobody made may not claim a reading: on a
+     *   real lineage, 18 machine lines would have been marked human-checked by opening the page and
+     *   pressing Merge. Such a row keeps its tag until somebody clicks its column, which is the one
+     *   gesture that says it deliberately.
+     */
+    public static function resolveMergedTag(string $tag, string $source, bool $claimed = true): string
     {
         if ($source === 'tagchange' || $tag === 'M' || $tag === 'S') {
             return $tag;
@@ -523,7 +537,7 @@ class TranslationService
             return 'H';
         }
 
-        return $tag === 'A' ? 'V' : $tag;
+        return $tag === 'A' && $claimed ? 'V' : $tag;
     }
 
     /**

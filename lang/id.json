@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Seleksi Main",
     "merge.legend_selection_branch": "Seleksi Branch",
     "merge.legend_manual_edit": "Edit manual",
+    "merge.legend_selection_unclaimed": "Dipertahankan apa adanya - klik kolom untuk memvalidasi",
     "merge.legend_difference": "Perbedaan",
     "merge.legend_new_key": "Kunci baru",
     "merge.legend_deletion": "Penghapusan",

@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main-selectie",
     "merge.legend_selection_branch": "Branch-selectie",
     "merge.legend_manual_edit": "Handmatige bewerking",
+    "merge.legend_selection_unclaimed": "Blijft zoals het is - klik op de kolom om te valideren",
     "merge.legend_difference": "Verschil",
     "merge.legend_new_key": "Nieuwe sleutel",
     "merge.legend_deletion": "Verwijdering",

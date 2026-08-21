@@ -318,8 +318,13 @@ class MergeController extends Controller
                     }
                 }
 
-                // Shared rule — see TranslationService::resolveMergedTag
-                $tag = TranslationService::resolveMergedTag($tag, $source);
+                // Shared rule — see TranslationService::resolveMergedTag.
+                //
+                // ⚠ `auto` means the screen answered this row rather than the owner: it is kept as
+                // it is, tag untouched. Absent on an older client, which only ever sent rows
+                // somebody had picked — so the default is "claimed", and nothing changes for them.
+                $tag = TranslationService::resolveMergedTag(
+                    $tag, $source, claimed: !($sel['auto'] ?? false));
 
                 // rebuildEntry keeps the ordering index "i" of the existing entry
                 $content[$key] = TranslationService::rebuildEntry($content[$key] ?? null, $value, $tag);

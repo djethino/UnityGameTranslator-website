@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Выбор Main",
     "merge.legend_selection_branch": "Выбор Branch",
     "merge.legend_manual_edit": "Ручное редактирование",
+    "merge.legend_selection_unclaimed": "Оставлено как есть — нажмите столбец, чтобы проверить",
     "merge.legend_difference": "Различие",
     "merge.legend_new_key": "Новый ключ",
     "merge.legend_deletion": "Удаление",

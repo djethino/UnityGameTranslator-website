@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main seçimi",
     "merge.legend_selection_branch": "Branch seçimi",
     "merge.legend_manual_edit": "Manuel düzenleme",
+    "merge.legend_selection_unclaimed": "Olduğu gibi bırakıldı - doğrulamak için sütuna tıklayın",
     "merge.legend_difference": "Farklılık",
     "merge.legend_new_key": "Yeni anahtar",
     "merge.legend_deletion": "Silme",

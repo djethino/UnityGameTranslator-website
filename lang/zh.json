@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main 选择",
     "merge.legend_selection_branch": "Branch 选择",
     "merge.legend_manual_edit": "手动编辑",
+    "merge.legend_selection_unclaimed": "保持原样 - 点击该列以验证",
     "merge.legend_difference": "差异",
     "merge.legend_new_key": "新键",
     "merge.legend_deletion": "删除",

@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "เลือก Main",
     "merge.legend_selection_branch": "เลือก Branch",
     "merge.legend_manual_edit": "แก้ไขด้วยตนเอง",
+    "merge.legend_selection_unclaimed": "คงไว้ตามเดิม - คลิกที่คอลัมน์เพื่อตรวจสอบ",
     "merge.legend_difference": "ความแตกต่าง",
     "merge.legend_new_key": "คีย์ใหม่",
     "merge.legend_deletion": "การลบ",

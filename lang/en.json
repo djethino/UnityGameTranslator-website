@@ -654,6 +654,7 @@
     "merge.legend_selection_main": "Main selection",
     "merge.legend_selection_branch": "Branch selection",
     "merge.legend_manual_edit": "Manual edit",
+    "merge.legend_selection_unclaimed": "Kept as it is - click the column to validate it",
     "merge.legend_difference": "Difference",
     "merge.legend_new_key": "New key",
     "merge.legend_deletion": "Deletion",
