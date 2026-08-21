@@ -1105,9 +1105,8 @@ document.addEventListener('alpine:init', () => {
                         // way it was right one time in two, and the wrong way round it swaps a
                         // line for another nobody preferred.
                         if (localPriority === onlinePriority) {
-                            const home = this.homeSource();
-                            this.selections[key] = staged(
-                                home, home === 'local' ? this.localData[key] : this.onlineData[key]);
+                            const target = this.targetSource();
+                            this.selections[key] = staged(target, this.entryOf(key, target));
                         } else {
                             this.selections[key] = localPriority > onlinePriority
                                 ? staged('local', this.localData[key])
@@ -1391,17 +1390,17 @@ document.addEventListener('alpine:init', () => {
             // view, which runs the identical gesture on the identical grid.
             if (this.advancePick(key, source)) return;
 
-            const entry = source === 'local' ? this.localData[key] : this.onlineData[key];
-            if (entry === undefined) return;
+            // ⚠ Claimed, never auto: this ran because somebody clicked, and a pick made by hand on
+            // an `A` line is exactly the validation the defaults refuse to invent.
+            const picked = this.pickFrom(key, source);
+            if (!picked) return;
 
             // If selecting online, clear any manual edit
             if (source === 'online') {
                 delete this.editedValues[key];
             }
 
-            // ⚠ Claimed, never auto: this ran because somebody clicked, and a pick made by hand on
-            // an `A` line is exactly the validation the defaults refuse to invent.
-            this.selections[key] = this.pick(source, this.getValue(entry), this.getTag(entry), false);
+            this.selections[key] = picked;
             this.persistPendingState();
         },
 
@@ -1417,21 +1416,31 @@ document.addEventListener('alpine:init', () => {
             return this.localData[key];
         },
 
-        /**
-         * Core hooks: which column the RESULT is built from — and it is not always the one the tag
-         * cell describes.
-         *
-         * 🔴 This screen runs both ways. Comparing INTO the game starts from the player's own file,
-         * so keeping a local line writes what is already there; publishing starts from the server's
-         * file, where the same is true of the online column. The tag cell shows the local side
-         * either way, which is why this is asked separately.
-         */
-        homeSource() {
+        // ── The roles this screen plays, and they SWAP ───────────────────
+        //
+        // 🔴 This screen runs both ways, and which column receives changes with it. Comparing into
+        // the game builds its result from the player's own file; publishing builds it from the
+        // server's. The tag cell shows the local side either way — which is exactly why the role
+        // has to be asked separately from the column, and why publishing currently previews a tag
+        // against a file it will not write. See analyse/editors-mutualisation.md.
+
+        /** Core hook: the column the result is built on — the one that receives. */
+        targetSource() {
             return this.toLocal ? 'local' : 'online';
         },
 
-        homeEntry(key) {
-            return this.toLocal ? this.localData[key] : this.onlineData[key];
+        targetEntry(key) {
+            return this.entryOf(key, this.targetSource());
+        },
+
+        /** Core hook: exactly one column proposes here, and it is the other one. */
+        sourceIds() {
+            return [this.toLocal ? 'online' : 'local'];
+        },
+
+        /** Core hook: what a given column holds for this key. */
+        entryOf(key, id) {
+            return id === 'local' ? this.localData[key] : this.onlineData[key];
         },
 
         /** Core hook: the tag the save will store here — the local projection. */

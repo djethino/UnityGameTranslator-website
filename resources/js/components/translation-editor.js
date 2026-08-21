@@ -330,37 +330,82 @@ export function editorCore(config) {
             // a row nobody had proposed anything about.
             if (!this.arbitratesAnotherSide()) return null;
 
-            const own = this.homeEntry(key);
+            const own = this.targetEntry(key);
             if (own === undefined) return null;
 
             const tag = this.getTag(own);
             if (tag !== 'A') return null;
 
-            return this.pick(this.homeSource(), this.getValue(own), tag);
+            return this.pick(this.targetSource(), this.getValue(own), tag);
         },
 
         /**
-         * Page hook: the column the RESULT is built from — the one where picking writes the line it
-         * already holds, and therefore changes nothing.
+         * A pick built from whatever column somebody clicked, or null when that column holds
+         * nothing for this key.
          *
-         * ⚠ Not always `entryOnFile`, and the difference is real: the preview screen shows the tag
-         * of the local file whichever way it runs, but publishing builds its result from the SERVER
-         * file. Asking one hook both questions had it hold the wrong side the moment somebody
-         * published instead of comparing into the game.
+         * ⚠ Claimed, always: this is the shape a CLICK produces. What a screen answers on its own
+         * goes through {@link defaultSelection}, and the difference between the two is the whole of
+         * "held, not claimed".
          */
-        homeSource() { return 'main'; },
+        pickFrom(key, id) {
+            const entry = this.entryOf(key, id);
+            if (entry === undefined) return null;
 
-        /** Page hook: the entry on that column. Defaults to the one the tag cell describes. */
-        homeEntry(key) { return this.entryOnFile(key); },
+            return this.pick(id, this.getValue(entry), this.getTag(entry), false);
+        },
+
+        // ── The two roles every arbitrating screen has ───────────────────
+        //
+        // 🔴 **Roles, not sides.** These screens were written in their own vocabularies — main /
+        // branch, local / online, and one with no second column at all — so every rule had to be
+        // restated three times and drifted three times. What actually differs between them is
+        // short: who receives, who proposes, and what each may do. Naming those two roles is what
+        // lets the rest be written once.
+        //
+        // ⚠ **The target is the RESULT BEING BUILT, not "the file as it stands".** It starts from
+        // what the receiving side holds, takes in what is picked from the sources, is edited, and
+        // carries the previewed tag. That is already exactly what the Main column is on the merge
+        // view; saying it out loud is what makes the comparison screen able to agree with it.
 
         /**
-         * Page hook: is there a second side whose proposal would go unanswered?
+         * Page hook: the id of the column the result is built on.
          *
-         * False on a screen where somebody is working on their own file alone. Everything about
-         * "held, not claimed" exists to answer a contribution without validating it — with no
-         * contribution, the state has no subject.
+         * ⚠ Not always the column the tag cell describes: the comparison shows the local file's tag
+         * whichever way it runs, but publishing builds its result from the SERVER file. Asking one
+         * hook both questions held the wrong side the moment somebody published.
          */
-        arbitratesAnotherSide() { return true; },
+        targetSource() { return 'main'; },
+
+        /** Page hook: the entry on the target. Defaults to the one the tag cell describes. */
+        targetEntry(key) { return this.entryOnFile(key); },
+
+        /**
+         * Page hook: the ids of the columns proposing something — one on the comparison screen, as
+         * many as there are contributions on the merge view, none in a live edit.
+         */
+        sourceIds() { return []; },
+
+        /**
+         * Page hook: the entry a given column holds for this key, target included.
+         *
+         * ⚠ One lookup for every column, so that everything reading "what does this side say" stops
+         * needing to know whether it is a branch, an upload or a server file.
+         */
+        entryOf(key, id) {
+            return id === this.targetSource() ? this.targetEntry(key) : undefined;
+        },
+
+        /**
+         * Is there a second side whose proposal would go unanswered?
+         *
+         * False on a screen where somebody works on their own file alone. Everything about "held,
+         * not claimed" exists to answer a contribution without validating it — with no contribution
+         * the state has no subject.
+         *
+         * ⚠ Derived from the roles rather than declared: a screen with no source has nobody to
+         * answer, and that is the whole of it. A page that needs to say otherwise overrides it.
+         */
+        arbitratesAnotherSide() { return this.sourceIds().length > 0; },
 
         /**
          * Clicking the column a row is already on. Three states, in the order somebody meets them:

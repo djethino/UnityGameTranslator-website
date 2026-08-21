@@ -1613,15 +1613,27 @@ document.addEventListener('alpine:init', () => {
          * (toggle, same behavior as before). Selecting main = validate it
          * (A -> V server-side).
          */
-        /** Core hook: the column that already holds this screen's rows. */
-        homeSource() { return 'main'; },
+        // ── The roles this screen plays ──────────────────────────────────
+        //
+        // The Main receives; the contributions propose. In edit mode there are no contributions at
+        // all — somebody is correcting their own file — which is what makes the core answer that
+        // there is nobody to answer, and therefore nothing to hold unclaimed.
 
-        /**
-         * Core hook: in edit mode this screen shows one file and no contribution, so there is
-         * nothing to answer and nothing to hold — see defaultSelection. Clicking a row there is a
-         * validation, and undoing it means undoing it, not falling back to a held state.
-         */
-        arbitratesAnotherSide() { return !isEditMode; },
+        /** Core hook: the result is built on the Main. */
+        targetSource() { return 'main'; },
+
+        /** Core hook: one column per contribution being reviewed. */
+        sourceIds() {
+            return this.branches.map(branch => 'branch_' + branch.id);
+        },
+
+        /** Core hook: what a given column holds for this key. */
+        entryOf(key, id) {
+            if (id === 'main') return this.mainData[key];
+
+            const branch = this.branches.find(b => 'branch_' + b.id === id);
+            return branch ? branch.content[key] : undefined;
+        },
 
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)
@@ -1633,33 +1645,22 @@ document.addEventListener('alpine:init', () => {
             // screen runs the identical gesture on the identical grid.
             if (this.advancePick(key, source)) return;
 
-            let value = '';
-            let tag = 'A';
-            if (source === 'main') {
-                if (this.mainData[key] === undefined) return;
-                value = this.getValue(this.mainData[key]);
-                tag = this.getTag(this.mainData[key]);
-                // A click only ever produces a REAL change (see
-                // analyse/editors-gestures-parity.md): picking Main acts
-                // when it validates an A line, or when it replaces an
-                // existing selection (branch pick / manual edit) — on a
-                // V/H/M/S line with nothing selected it would rewrite the
-                // line identically and count a phantom modification
-                if (tag !== 'A' && !this.selections[key]) return;
-            } else {
-                const branchId = parseInt(source.replace('branch_', ''), 10);
-                const branch = this.branches.find(b => b.id === branchId);
-                if (!branch || branch.content[key] === undefined) return;
-                value = this.getValue(branch.content[key]);
-                tag = this.getTag(branch.content[key]);
-            }
+            // ⚠ Claimed, never auto: this ran because somebody clicked. A pick made by hand on an
+            // `A` line is exactly the validation the defaults refuse to invent. Null when the
+            // column holds nothing for this key.
+            const picked = this.pickFrom(key, source);
+            if (!picked) return;
+
+            // A click only ever produces a REAL change (see analyse/editors-gestures-parity.md):
+            // picking Main acts when it validates an A line, or when it replaces an existing
+            // selection (branch pick / manual edit) — on a V/H/M/S line with nothing selected it
+            // would rewrite the line identically and count a phantom modification.
+            if (source === 'main' && picked.tag !== 'A' && !this.selections[key]) return;
 
             // Choosing a version discards a pending manual edit
             delete this.editedValues[key];
 
-            // ⚠ Chosen, never auto: this ran because somebody clicked. A pick made by hand on an
-            // `A` line is exactly the validation the defaults refuse to invent.
-            this.selections[key] = this.pick(source, value, tag, false);
+            this.selections[key] = picked;
             this.persistPendingState();
         },
 

@@ -757,16 +757,22 @@ class MergeViewStateTest extends TestCase
 
         foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
             $this->assertStringContainsString('if (this.advancePick(key, source)) return;', $html, $name);
-            $this->assertStringContainsString('homeSource() {', $html, $name);
+            $this->assertStringContainsString('targetSource() {', $html, $name);
             $this->assertStringContainsString("selection-unclaimed", $html, $name);
         }
 
-        // 🔴 The preview runs BOTH ways, and the column its result is built from follows: comparing
-        // into the game starts from the player's file, publishing starts from the server's. Asking
+        // 🔴 The preview runs BOTH ways, and its two roles swap with the direction: comparing into
+        // the game builds its result from the player's file, publishing from the server's. Asking
         // one hook both questions held the wrong side the moment somebody published.
         $this->assertStringContainsString("return this.toLocal ? 'local' : 'online';", $preview);
-        $this->assertStringContainsString(
-            'return this.toLocal ? this.localData[key] : this.onlineData[key];', $preview);
+        $this->assertStringContainsString("return [this.toLocal ? 'online' : 'local'];", $preview);
+
+        // ⚠ And every screen answers "what does this column hold" in one place, so that nothing
+        // reading a side has to know whether it is a branch, an upload or a server file.
+        foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
+            $this->assertStringContainsString('entryOf(key, id) {', $html, $name);
+            $this->assertStringContainsString('sourceIds() {', $html, $name);
+        }
 
         // And nothing reads the selection's shape directly any more.
         $this->assertStringNotContainsString("this.selections[key] === 'local'", $preview);
@@ -781,7 +787,7 @@ class MergeViewStateTest extends TestCase
         // directions. Written as one column either way it was right one time in two — and the wrong
         // way round it swaps a line for another nobody preferred.
         $this->assertStringContainsString('if (localPriority === onlinePriority) {', $preview);
-        $this->assertStringContainsString('const home = this.homeSource();', $preview);
+        $this->assertStringContainsString('const target = this.targetSource();', $preview);
 
         // And the cell previews what the save writes: an unclaimed hold keeps its A here too.
         $this->assertStringContainsString(
@@ -833,8 +839,16 @@ class MergeViewStateTest extends TestCase
         $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
 
         $this->assertStringContainsString('if (!this.arbitratesAnotherSide()) return null;', $core);
-        $this->assertStringContainsString('arbitratesAnotherSide() { return true; }', $core);
-        $this->assertStringContainsString('arbitratesAnotherSide() { return !isEditMode; }', $merge);
+
+        // 🔴 **Derived from the roles, not declared.** A screen with no source column has nobody to
+        // answer — that is the whole of it, and it covers the merge view opened in edit mode
+        // without that screen having to remember to say so. Written as its own flag, it was one
+        // more thing to keep in step with the columns.
+        $this->assertStringContainsString(
+            'arbitratesAnotherSide() { return this.sourceIds().length > 0; }', $core);
+
+        // The merge view's edit mode has no contributions at all, so its source list is empty.
+        $this->assertStringContainsString("return this.branches.map(branch => 'branch_' + branch.id);", $merge);
     }
 
     /**
@@ -908,8 +922,8 @@ class MergeViewStateTest extends TestCase
 
         // And each screen names its own home column rather than the core guessing.
         foreach ([
-            'views/merge/show.blade.php' => "homeSource() { return 'main'; }",
-            'views/translations/merge-preview.blade.php' => 'homeSource() {',
+            'views/merge/show.blade.php' => "targetSource() { return 'main'; }",
+            'views/translations/merge-preview.blade.php' => 'targetSource() {',
         ] as $view => $needle) {
             $this->assertStringContainsString($needle, file_get_contents(resource_path($view)), $view);
         }
