@@ -930,19 +930,32 @@ class TranslationController extends Controller
             abort(404, 'Translation file not found.');
         }
 
+        $session = session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id
+                ? MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
+                : null;
+
         // Which way this comparison runs. It decides far more than a form action: what counts
         // as a change to send is reversed, and Delete stops meaning "remove it from the server"
         // to mean "remove it from my file".
-        $toLocal = session('merge_preview_token')
-            && (int) session('merge_preview_translation_id') === (int) $translation->id
-            && (MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
-                ?->isLocalDestination() ?? false);
+        $toLocal = $session?->isLocalDestination() ?? false;
+
+        // 🔴 **Which comparison this is** — the row's id, so the page can file its draft under the
+        // snapshot it was made on. A review is not about "translation 29", it is about the local
+        // file the mod sent at that moment; keyed on the translation alone, decisions taken on an
+        // earlier snapshot came back on top of a newer one, and decisions taken in one direction
+        // came back in the other, pointing at the column that is no longer the target.
+        //
+        // ⚠ The ROW's id, never the token itself: the token authenticates — it reads the player's
+        // file and can publish — and this value ends up in the page and in the browser's storage.
+        $comparisonId = $session?->id;
 
         return view('translations.merge-preview', compact(
             'translation',
             'hasTokenContent',
             'tokenError',
-            'toLocal'
+            'toLocal',
+            'comparisonId'
         ));
     }
 
