@@ -790,6 +790,36 @@ class MergeViewStateTest extends TestCase
     }
 
     /**
+     * 🔴 Cancelling and proposing are two acts, on both screens.
+     *
+     * The preview's Cancel emptied every answer and re-applied the defaults in the same breath,
+     * putting back exactly what it had just cleared. On a screen where every contested row arrives
+     * answered, the two operations cancel out — so the button looked inert, and the only thing it
+     * really undid was the handful of edits somebody had typed. Reported as "cancel changes ne fait
+     * rien"; the merge view has had the two as separate buttons since it existed.
+     */
+    public function test_cancelling_and_proposing_are_two_buttons_on_both_screens(): void
+    {
+        $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
+        $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
+
+        foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
+            $this->assertStringContainsString('suggestTheRest() {', $html, $name);
+            $this->assertStringContainsString('@click="suggestTheRest()"', $html, $name);
+            $this->assertStringContainsString('@click="clearAll()"', $html, $name);
+
+            // Shown only while something is left to answer: a button that does nothing teaches
+            // nothing.
+            $this->assertStringContainsString('x-show="undecidedCount > 0"', $html, $name);
+        }
+
+        // 🔴 The one line that made Cancel inert. Asserted absent rather than described in a
+        // comment nobody re-reads.
+        $this->assertStringNotContainsString(
+            "this.clearPendingState();\n                this.applySmartDefaults();", $preview);
+    }
+
+    /**
      * 🔴 On a screen with nobody to answer, there is nothing to hold either.
      *
      * "Held, not claimed" says a contribution was dealt with without being validated. The merge view

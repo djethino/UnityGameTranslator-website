@@ -527,6 +527,16 @@
             </div>
 
             <div class="flex gap-4 items-center shrink-0">
+                {{-- Proposing and cancelling are two acts, and the same two buttons as the merge
+                     view — in the same order, so the gesture is learnt once.
+
+                     Shown only while something is left to answer: a button that does nothing is a
+                     button that teaches nothing. --}}
+                <button type="button" @click="suggestTheRest()"
+                    x-show="undecidedCount > 0" x-cloak
+                    class="text-gray-400 hover:text-white text-sm transition">
+                    <i class="fas fa-wand-magic-sparkles mr-1"></i> {{ __('merge.suggest_rest') }}
+                </button>
                 <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
                     <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
@@ -1504,8 +1514,42 @@ document.addEventListener('alpine:init', () => {
             if (confirm(@js(__('merge_preview.confirm_cancel')))) {
                 this.selections = {};
                 this.clearPendingState();
-                this.applySmartDefaults();
             }
+        },
+
+        /**
+         * Put the proposal back on whatever is still unanswered.
+         *
+         * 🔴 **Cancel used to do this itself, which made it look inert.** It emptied every answer
+         * and re-applied the defaults in the same breath, putting back exactly what had just been
+         * cleared — and on a screen where every contested row arrives answered, the two cancel out
+         * and nothing moves. Cancelling and proposing are two acts. The merge view has always had
+         * them as two buttons; this screen now agrees with it.
+         *
+         * ⚠ It touches only what has no answer yet, so it is safe to press at any point, and
+         * pressing it twice does nothing the second time.
+         */
+        suggestTheRest() {
+            this.applySmartDefaults();
+            this.persistPendingState();
+        },
+
+        /**
+         * Rows on screen that nobody and nothing has answered.
+         *
+         * ⚠ Counted the way the button ACTS: a key the defaults would not touch is not one of "the
+         * rest", and counting it would promise work the button is not about to do.
+         */
+        get undecidedCount() {
+            let count = 0;
+
+            for (const key of this.allKeys) {
+                if (key in this.selections) continue;
+                if (this.isDeleted(key)) continue;
+                if (key in this.localData || key in this.onlineData) count++;
+            }
+
+            return count;
         },
 
         // ── Export / save ────────────────────────────────────────────────
