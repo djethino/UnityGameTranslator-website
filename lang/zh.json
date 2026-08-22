@@ -631,6 +631,8 @@
     "merge.no_branches": "此翻译没有 Branch。你仍然可以通过双击来编辑你的值。",
     "merge.filters": "筛选条件：",
     "merge.filter_new_keys": "新键",
+    "merge.hide_branch_one": "隐藏 :name？从该贡献采用的 1 行将恢复为建议的版本。你自己改写的内容会保留。",
+    "merge.hide_branch_many": "隐藏 :name？从该贡献采用的 :count 行将恢复为建议的版本。你自己改写的内容会保留。",
     "merge.reset_filters": "重置",
     "merge.key": "键",
     "merge.empty_value": "- 空 -",

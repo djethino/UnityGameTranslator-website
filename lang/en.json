@@ -631,6 +631,8 @@
     "merge.no_branches": "No branches for this translation. You can still edit your values by double-clicking.",
     "merge.filters": "Filters:",
     "merge.filter_new_keys": "New keys",
+    "merge.hide_branch_one": "Hide :name? 1 line you took from it goes back to the suggested version. What you reworded yourself is kept.",
+    "merge.hide_branch_many": "Hide :name? :count lines you took from it go back to the suggested version. What you reworded yourself is kept.",
     "merge.reset_filters": "Reset",
     "merge.key": "Key",
     "merge.empty_value": "- empty -",

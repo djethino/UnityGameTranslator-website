@@ -631,6 +631,8 @@
     "merge.no_branches": "Tidak ada Branch untuk terjemahan ini. Kamu masih bisa mengedit nilaimu dengan klik dua kali.",
     "merge.filters": "Filter:",
     "merge.filter_new_keys": "Kunci baru",
+    "merge.hide_branch_one": "Sembunyikan :name? 1 baris yang Anda ambil dari kontribusi ini kembali ke versi yang disarankan. Yang Anda tulis ulang sendiri tetap dipertahankan.",
+    "merge.hide_branch_many": "Sembunyikan :name? :count baris yang Anda ambil dari kontribusi ini kembali ke versi yang disarankan. Yang Anda tulis ulang sendiri tetap dipertahankan.",
     "merge.reset_filters": "Reset",
     "merge.key": "Kunci",
     "merge.empty_value": "- kosong -",

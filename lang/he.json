@@ -631,6 +631,8 @@
     "merge.no_branches": "אין Branches לתרגום זה. עדיין תוכלו לערוך את הערכים שלכם בלחיצה כפולה.",
     "merge.filters": "מסננים:",
     "merge.filter_new_keys": "מפתחות חדשים",
+    "merge.hide_branch_one": "להסתיר את :name? שורה אחת שלקחתם מהתרומה הזו תחזור לגרסה המוצעת. מה שניסחתם מחדש בעצמכם יישמר.",
+    "merge.hide_branch_many": "להסתיר את :name? :count שורות שלקחתם מהתרומה הזו יחזרו לגרסה המוצעת. מה שניסחתם מחדש בעצמכם יישמר.",
     "merge.reset_filters": "איפוס",
     "merge.key": "מפתח",
     "merge.empty_value": "- ריק -",

@@ -521,7 +521,30 @@ export function editorCore(config) {
             const entry = this.entryOf(key, id);
             if (entry === undefined) return null;
 
-            return this.pick(id, this.getValue(entry), this.getTag(entry), false);
+            return this.byHand(this.pick(id, this.getValue(entry), this.getTag(entry), false));
+        },
+
+        /**
+         * Mark an answer as one somebody CLICKED.
+         *
+         * 🔴 **Not the same question as `auto`, and they look alike enough to be mistaken for each
+         * other — they were.** `auto` says "do not promote this A to V"; the defaults leave it false
+         * on every line that is not an `A`, because there is nothing to promote. So reading `auto`
+         * to mean "a human chose this" counted 18 rows nobody had touched, on a page just opened.
+         *
+         * This one says only what it says, and nothing reads it but the warning shown before hiding
+         * a contribution: what is about to be lost is work, and the defaults are not work.
+         *
+         * ⚠ Stays in the browser: the save builds its own payload field by field.
+         */
+        byHand(sel) {
+            return sel === null ? null : { ...sel, byHand: true };
+        },
+
+        /** Did somebody click this row's answer, as opposed to the screen answering for them? */
+        isByHand(key) {
+            const sel = this.selections?.[key];
+            return typeof sel === 'object' && sel !== null && sel.byHand === true;
         },
 
         // ── The two roles every arbitrating screen has ───────────────────
@@ -593,7 +616,9 @@ export function editorCore(config) {
             if (this.pickedSource(key) !== source || source === 'manual') return false;
 
             if (this.isUnclaimed(key)) {
-                this.selections[key] = this.pick(source, current.value, current.tag, false);
+                // Claiming a held row IS a click — see byHand.
+                this.selections[key] = this.byHand(
+                    this.pick(source, current.value, current.tag, false));
                 this.persistPendingState();
                 return true;
             }

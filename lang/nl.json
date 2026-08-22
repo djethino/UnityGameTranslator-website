@@ -631,6 +631,8 @@
     "merge.no_branches": "Geen Branches voor deze vertaling. Je kunt nog steeds je waarden bewerken door te dubbelklikken.",
     "merge.filters": "Filters:",
     "merge.filter_new_keys": "Nieuwe sleutels",
+    "merge.hide_branch_one": ":name verbergen? 1 regel die je uit deze bijdrage hebt overgenomen, gaat terug naar de voorgestelde versie. Wat je zelf hebt herschreven, blijft behouden.",
+    "merge.hide_branch_many": ":name verbergen? :count regels die je uit deze bijdrage hebt overgenomen, gaan terug naar de voorgestelde versie. Wat je zelf hebt herschreven, blijft behouden.",
     "merge.reset_filters": "Resetten",
     "merge.key": "Sleutel",
     "merge.empty_value": "- leeg -",

@@ -21,7 +21,11 @@
     );
     $dataUrl = route('translations.merge.data', ['uuid' => $uuid]) . '?' . http_build_query($stateParams);
 @endphp
-<div class="container mx-auto px-4 py-8" x-data="mergeTable">
+{{-- The two confirmation sentences ride on the element rather than through an Alpine expression:
+     the CSP build parses a restricted subset, and an object literal in x-data is not in it. --}}
+<div class="container mx-auto px-4 py-8" x-data="mergeTable"
+     data-hide-one="{{ __('merge.hide_branch_one') }}"
+     data-hide-many="{{ __('merge.hide_branch_many') }}">
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
@@ -124,7 +128,11 @@
                 @foreach($branches as $branch)
                 <div class="flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600">
                     <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
+                        {{-- data-branch-name: the confirmation before hiding a contribution names
+                             it, and the page chrome is a separate component with no access to the
+                             translated markup below. --}}
                         <input type="checkbox" name="branches[]" value="{{ $branch->id }}"
+                            data-branch-name="{{ $branch->user->name }}"
                             class="branch-checkbox rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
                             {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
                         <x-user-mention :user="$branch->user" class="text-gray-300" />
@@ -947,6 +955,13 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.initEditorCore();
 
+            // The page chrome asks before hiding a contribution — see merge-table.js. A plain
+            // window event rather than shared state: it is one question with one answer, and the
+            // two components have no other reason to know about each other.
+            window.addEventListener('ugt-count-picks-from', (e) => {
+                e.detail.count = this.countClaimedPicksFrom(e.detail.branchId);
+            });
+
             fetch(@js($dataUrl), { headers: { 'Accept': 'application/json' } })
                 .then(response => response.ok ? response.json() : Promise.reject(new Error('load_failed')))
                 .then(payload => this.loadContent(payload))
@@ -1004,9 +1019,56 @@ document.addEventListener('alpine:init', () => {
             // from the first paint, not only after somebody scrolls.
             this.$nextTick(() => this.refreshOffScreenSides());
 
+            // 🔴 Before the defaults, and only now: the branches did not exist when the sitting's
+            // pending work was restored (that happens in initEditorCore, before the fetch), so
+            // "does this column exist" could not be asked yet. applySmartDefaults then fills the
+            // rows this just emptied — it skips keys that still hold an answer.
+            this.dropAnswersWithNoColumn();
+
             this.calculateStats();
             this.applySmartDefaults();
             this.loaded = true;
+        },
+
+        /**
+         * Forget every answer pointing at a contribution this screen is not showing.
+         *
+         * 🔴 **Hiding a contribution is closing it, and closing is a cancel** — the user's own rule,
+         * the same one that makes reopening a screen start afresh. Keeping such answers inert and
+         * bringing them back later is precisely the "you think one thing, it does another" this
+         * screen must not do. `merge` → `?mode=edit` is the same story: no contribution is shown
+         * there, so none of their answers survives the crossing.
+         *
+         * ⚠ Rewordings are untouched. Rewriting a line makes its answer `manual` (onEditStaged), so
+         * it names no contribution and belongs to whoever typed it.
+         */
+        dropAnswersWithNoColumn() {
+            for (const key of Object.keys(this.selections)) {
+                const source = this.selections[key].source;
+                if (source === 'main' || source === 'manual') continue;
+                if (this.entryOf(key, source) !== undefined) continue;
+
+                delete this.selections[key];
+            }
+        },
+
+        /**
+         * Answer the page chrome's question before it hides a contribution — see merge-table.js.
+         *
+         * ⚠ **Clicked answers only** (`byHand`), never `auto`: the two look interchangeable and are
+         * not. `auto` says "do not promote this A to V", so the defaults leave it false on every
+         * line that is not an `A` — reading it here counted 18 rows nobody had touched, on a page
+         * just opened, and would have asked for a confirmation about nothing.
+         */
+        countClaimedPicksFrom(branchId) {
+            const source = 'branch_' + branchId;
+            let count = 0;
+
+            for (const key of Object.keys(this.selections)) {
+                if (this.selections[key].source === source && this.isByHand(key)) count++;
+            }
+
+            return count;
         },
 
         /**
@@ -1706,40 +1768,15 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
-        /**
-         * 🔴 A pick whose column is not on screen does not count, and is not sent.
-         *
-         * Unticking a contribution in the selector is an ordinary gesture — you hide it to work on
-         * the others. Measured: 25 picks aimed at the hidden contribution stayed live, on rows the
-         * filters no longer showed, and Save would have written every one of them. On a Main of
-         * 2500 lines, that is somebody's file changed from a screen displaying none of it.
-         *
-         * ⚠ Only picks are affected. A rewording is text somebody typed: `editedValues[key]` names
-         * no contribution, so it survives whatever is on screen.
-         *
-         * ⚠ Kept in `selections` rather than dropped: ticking the contribution back brings the
-         * answers back with it. What should happen to them if it is never ticked back is still
-         * open — see analyse/editors-mutualisation.md.
-         */
-        isLivePick(key) {
-            const sel = this.selections[key];
-            if (!sel) return false;
-            if (sel.source === 'main' || sel.source === 'manual') return true;
-
-            return this.entryOf(key, sel.source) !== undefined;
-        },
-
         isRowModified(key) {
-            return this.isLivePick(key)
+            return key in this.selections
                 || this.editedValues[key] !== undefined
                 || key in this.tagChanges
                 || this.isDeleted(key);
         },
 
-        /** ⚠ Live picks only — see isLivePick. The number on the button is the number of lines the
-         *  save writes, and a pick aimed at a contribution nobody is showing writes nothing. */
         get selectionCount() {
-            return Object.keys(this.selections).filter(key => this.isLivePick(key)).length;
+            return Object.keys(this.selections).length;
         },
 
         get deleteCount() {
@@ -1853,11 +1890,9 @@ document.addEventListener('alpine:init', () => {
         submitMerge() {
             if (this.totalChanges === 0) return;
 
-            // ⚠ Only what is on screen travels — see isLivePick. The counter above uses the same
-            // test, so the number on the button is the number of lines the save writes.
-            const selectionsArr = Object.entries(this.selections)
-                .filter(([key]) => this.isLivePick(key))
-                .map(([key, data]) => ({
+            // ⚠ Everything here is on screen: answers pointing at a contribution this view does not
+            // show were dropped when it loaded — see dropAnswersWithNoColumn.
+            const selectionsArr = Object.entries(this.selections).map(([key, data]) => ({
                 key,
                 value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
                 tag: data.tag,

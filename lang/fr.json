@@ -631,6 +631,8 @@
     "merge.no_branches": "Aucune Branch pour cette traduction. Vous pouvez quand même éditer vos valeurs en double-cliquant.",
     "merge.filters": "Filtres :",
     "merge.filter_new_keys": "Nouvelles clés",
+    "merge.hide_branch_one": "Masquer :name ? 1 ligne que vous aviez reprise de cette contribution revient à la version proposée. Ce que vous avez reformulé vous-même est conservé.",
+    "merge.hide_branch_many": "Masquer :name ? :count lignes que vous aviez reprises de cette contribution reviennent à la version proposée. Ce que vous avez reformulé vous-même est conservé.",
     "merge.reset_filters": "Réinitialiser",
     "merge.key": "Clé",
     "merge.empty_value": "- vide -",

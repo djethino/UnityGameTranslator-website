@@ -20,12 +20,21 @@ export default function mergeTable() {
          */
         workSession: workSessionId(),
 
+        hideOneText: '',
+        hideManyText: '',
+
         init() {
-            // Branch checkboxes: auto-submit on change (server reloads the
-            // page with the new branch set; pending table state survives via
-            // the shared core's sessionStorage persistence)
+            this.hideOneText = this.$el.dataset.hideOne || '';
+            this.hideManyText = this.$el.dataset.hideMany || '';
+
+            // Branch checkboxes: auto-submit on change (server reloads the page with the new
+            // branch set; the sitting's pending work survives — see the shared core)
             document.querySelectorAll('.branch-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
+                    if (!this.confirmHiding(this.hiddenBy(checkbox))) {
+                        checkbox.checked = !checkbox.checked;
+                        return;
+                    }
                     document.getElementById('branchForm')?.submit();
                 });
             });
@@ -34,14 +43,73 @@ export default function mergeTable() {
             document.querySelectorAll('.branch-quick-filter').forEach((btn) => {
                 btn.addEventListener('click', () => {
                     const ids = btn.dataset.ids ? btn.dataset.ids.split(',') : [];
-                    document.querySelectorAll('.branch-checkbox').forEach((cb) => {
-                        cb.checked = ids.includes(cb.value);
-                    });
+                    const boxes = [...document.querySelectorAll('.branch-checkbox')];
+                    const dropped = boxes.filter((cb) => cb.checked && !ids.includes(cb.value));
+
+                    if (!this.confirmHiding(dropped)) return;
+
+                    boxes.forEach((cb) => { cb.checked = ids.includes(cb.value); });
                     document.getElementById('branchForm')?.submit();
                 });
             });
 
             this.initBranchRating();
+        },
+
+        /** The boxes this change is turning OFF — nothing to warn about when it turns one on. */
+        hiddenBy(checkbox) {
+            return checkbox.checked ? [] : [checkbox];
+        },
+
+        /**
+         * Ask before hiding a contribution somebody has taken lines from.
+         *
+         * 🔴 **Hiding a contribution is closing it, and closing is a cancel** — the same rule as
+         * closing the page: what was decided about it goes, and showing it again starts afresh.
+         * Kept-but-inert answers coming back later is exactly the "you think one thing, it does
+         * another" this screen must not do.
+         *
+         * ⚠ **Only picks are at stake, never rewordings.** Rewriting a line makes its answer
+         * `manual` (see onEditStaged): it stops naming any contribution, so it survives whatever is
+         * shown. The message says so, because "you will lose your work" would be false and is
+         * exactly the kind of warning that teaches people to click through warnings.
+         *
+         * ⚠ Silent when nothing was taken from it. A confirmation for a decision that costs
+         * nothing is a confirmation nobody reads the next time.
+         */
+        confirmHiding(boxes) {
+            if (!boxes.length) return true;
+
+            const asked = boxes
+                .map((cb) => ({ name: cb.dataset.branchName || '', count: this.picksFrom(cb.value) }))
+                .filter((b) => b.count > 0);
+
+            if (!asked.length) return true;
+
+            const lines = asked.map((b) => {
+                const template = b.count === 1 ? this.hideOneText : this.hideManyText;
+                return template.replace(':name', b.name).replace(':count', b.count);
+            });
+
+            return window.confirm(lines.join('\n\n'));
+        },
+
+        /**
+         * How many answers somebody CHOSE by hand from that contribution.
+         *
+         * 🔴 **Claimed picks only, never what the screen answered on its own.** A pick the defaults
+         * made is not work: hiding the contribution recomputes an equivalent one from those still
+         * shown, so warning about it would be a warning about nothing — and warnings about nothing
+         * are how people learn to click through the ones that matter.
+         *
+         * ⚠ The table is a separate Alpine component (the page chrome cannot reach into it), so it
+         * is asked rather than read: the event carries a box the answering side fills in. One
+         * question, one answer, no shared mutable state between the two.
+         */
+        picksFrom(branchId) {
+            const ask = { branchId: String(branchId), count: 0 };
+            window.dispatchEvent(new CustomEvent('ugt-count-picks-from', { detail: ask }));
+            return ask.count;
         },
 
         /**

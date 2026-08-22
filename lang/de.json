@@ -631,6 +631,8 @@
     "merge.no_branches": "Keine Branches für diese Übersetzung. Du kannst deine Werte trotzdem per Doppelklick bearbeiten.",
     "merge.filters": "Filter:",
     "merge.filter_new_keys": "Neue Schlüssel",
+    "merge.hide_branch_one": ":name ausblenden? 1 Zeile, die du aus diesem Beitrag übernommen hast, kehrt zur vorgeschlagenen Version zurück. Was du selbst umformuliert hast, bleibt erhalten.",
+    "merge.hide_branch_many": ":name ausblenden? :count Zeilen, die du aus diesem Beitrag übernommen hast, kehren zur vorgeschlagenen Version zurück. Was du selbst umformuliert hast, bleibt erhalten.",
     "merge.reset_filters": "Zurücksetzen",
     "merge.key": "Schlüssel",
     "merge.empty_value": "- leer -",

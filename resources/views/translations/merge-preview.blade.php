@@ -1494,7 +1494,10 @@ document.addEventListener('alpine:init', () => {
                 const entry = this.entryOf(key, source);
                 if (entry === undefined || this.isDeleted(key)) continue;
 
-                this.selections[key] = this.pick(source, this.getValue(entry), this.getTag(entry), false);
+                // Pressing "take everything from this side" is a click, once, about every one of
+                // them — see byHand in the core.
+                this.selections[key] = this.byHand(
+                    this.pick(source, this.getValue(entry), this.getTag(entry), false));
 
                 // An edit belongs to the target: taking the offered side replaces what it was on.
                 if (source !== this.targetSource()) delete this.editedValues[key];

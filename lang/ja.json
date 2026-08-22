@@ -631,6 +631,8 @@
     "merge.no_branches": "この翻訳には Branch がありません。ダブルクリックで値を編集できます。",
     "merge.filters": "フィルター：",
     "merge.filter_new_keys": "新規キー",
+    "merge.hide_branch_one": ":name を非表示にしますか？この貢献から取り込んだ 1 行は提案された版に戻ります。ご自身で書き直した内容は残ります。",
+    "merge.hide_branch_many": ":name を非表示にしますか？この貢献から取り込んだ :count 行は提案された版に戻ります。ご自身で書き直した内容は残ります。",
     "merge.reset_filters": "リセット",
     "merge.key": "キー",
     "merge.empty_value": "- 空 -",

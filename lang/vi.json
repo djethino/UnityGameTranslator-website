@@ -631,6 +631,8 @@
     "merge.no_branches": "Không có Branch cho bản dịch này. Bạn vẫn có thể chỉnh sửa giá trị bằng cách nhấp đúp.",
     "merge.filters": "Bộ lọc:",
     "merge.filter_new_keys": "Khóa mới",
+    "merge.hide_branch_one": "Ẩn :name? 1 dòng bạn đã lấy từ đóng góp này sẽ trở lại phiên bản được gợi ý. Những gì bạn tự viết lại vẫn được giữ.",
+    "merge.hide_branch_many": "Ẩn :name? :count dòng bạn đã lấy từ đóng góp này sẽ trở lại phiên bản được gợi ý. Những gì bạn tự viết lại vẫn được giữ.",
     "merge.reset_filters": "Đặt lại",
     "merge.key": "Khóa",
     "merge.empty_value": "- trống -",

@@ -631,6 +631,8 @@
     "merge.no_branches": "Bu çeviri için Branch yok. Çift tıklayarak değerlerinizi düzenleyebilirsiniz.",
     "merge.filters": "Filtreler:",
     "merge.filter_new_keys": "Yeni anahtarlar",
+    "merge.hide_branch_one": ":name gizlensin mi? Bu katkıdan aldığınız 1 satır önerilen sürüme geri döner. Kendi yeniden yazdıklarınız korunur.",
+    "merge.hide_branch_many": ":name gizlensin mi? Bu katkıdan aldığınız :count satır önerilen sürüme geri döner. Kendi yeniden yazdıklarınız korunur.",
     "merge.reset_filters": "Sıfırla",
     "merge.key": "Anahtar",
     "merge.empty_value": "- boş -",
