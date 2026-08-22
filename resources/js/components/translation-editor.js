@@ -1553,29 +1553,48 @@ export function editorCore(config) {
         restoreUiState() {
             try {
                 const raw = sessionStorage.getItem(persistKey);
-                if (!raw) return;
-                const state = JSON.parse(raw);
-                if (typeof state.searchQuery === 'string') this.searchQuery = state.searchQuery;
-                if (['both', 'keys', 'values'].includes(state.searchScope)) this.searchScope = state.searchScope;
-                if (state.filters && typeof state.filters === 'object') {
-                    for (const name of Object.keys(this.filters)) {
-                        if (typeof state.filters[name] === 'boolean') {
-                            this.filters[name] = state.filters[name];
+                const state = raw ? JSON.parse(raw) : null;
+
+                // 🔴 **Widths are restored even when there is NO sitting to restore**, and this
+                // `if` used to be a `return`. That was harmless while both lived in sessionStorage
+                // and were written together — no sitting meant no widths either. Once widths moved
+                // to localStorage to outlive the sitting, the early exit killed them on every
+                // opening: dragged, refreshed, gone.
+                if (state) {
+                    if (typeof state.searchQuery === 'string') this.searchQuery = state.searchQuery;
+                    if (['both', 'keys', 'values'].includes(state.searchScope)) this.searchScope = state.searchScope;
+                    if (state.filters && typeof state.filters === 'object') {
+                        for (const name of Object.keys(this.filters)) {
+                            if (typeof state.filters[name] === 'boolean') {
+                                this.filters[name] = state.filters[name];
+                            }
                         }
                     }
+                    if (typeof state.sortColumn === 'string') this.sortColumn = state.sortColumn;
+                    if (['asc', 'desc'].includes(state.sortDirection)) this.sortDirection = state.sortDirection;
+                    if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
+                    if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
+                    if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
                 }
-                if (typeof state.sortColumn === 'string') this.sortColumn = state.sortColumn;
-                if (['asc', 'desc'].includes(state.sortDirection)) this.sortDirection = state.sortDirection;
-                if (typeof state.replaceOpen === 'boolean') this.replaceOpen = state.replaceOpen;
-                if (typeof state.replaceValue === 'string') this.replaceValue = state.replaceValue;
-                if (typeof state.pinMain === 'boolean') this.pinMain = state.pinMain;
             } catch (e) { /* corrupted state: keep defaults */ }
 
-            // After a frame, never during init: $refs.gridBox has no width yet when Alpine runs
-            // this, so every check against the box compared with zero and let anything through —
-            // which is how a grid came back sized to 3147px inside a box of 1182 and started
-            // scrolling before anyone had touched it.
-            requestAnimationFrame(() => this._restoreColumnWidths());
+            // 🔴 **When the CONTENT is there, not a frame after init.** Two conditions have to hold
+            // for a remembered layout to be judged: the box must have a width, and the columns must
+            // be the ones it was measured on. A frame after init only satisfies the first — the
+            // fetch has not returned, a merge view has no contribution columns yet, so the stored
+            // layout never matched the current one and was dropped on every opening. Dragged,
+            // refreshed, gone.
+            //
+            // ⚠ `loaded` is each page's own "the file is here" flag, and all three set it. Watching
+            // it rather than calling from three places is what keeps the rule in one.
+            // ⚠ `$nextTick` and THEN a frame: the flag turning true is what makes Alpine render the
+            // columns, so a bare `requestAnimationFrame` still runs against the old header — the
+            // same "too early" as before, one step further along. nextTick waits for the render,
+            // the frame waits for the layout that gives the box its width.
+            this.$watch('loaded', (ready) => {
+                if (!ready) return;
+                this.$nextTick(() => requestAnimationFrame(() => this._restoreColumnWidths()));
+            });
         },
 
         /**
