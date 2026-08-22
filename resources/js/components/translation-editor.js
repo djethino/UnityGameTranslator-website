@@ -137,6 +137,23 @@ export function editorCore(config) {
         // ── Pinning the reference column (see editor-pin.js) ──────────────
         ...editorPin(),
 
+        /**
+         * The grid's geometry just changed — everything measured FROM it has to be told.
+         *
+         * 🔴 **Defined here because TWO modules need it and a hook has one implementation.** The
+         * modules are spread into this object, so the last one to define a name wins: the pin did,
+         * silently, and the off-screen marks never heard about a resize. Dragging a column left the
+         * arrows describing the layout as it was before the drag — pointing at a contribution now in
+         * plain sight, or silent about one that had just left it.
+         *
+         * ⚠ Announced rather than observed: the width map is mutated key by key, so an effect that
+         * merely reads it subscribes to nothing.
+         */
+        onColumnsResized() {
+            this.applyPinOffsets();
+            this.refreshOffScreenSides();
+        },
+
         // ── Pending work (kept until the page-specific save) ─────────────
         editedValues: {},   // key -> new value
         tagChanges: {},     // key -> { newTag, originalTag, value }
@@ -1642,6 +1659,18 @@ export function editorCore(config) {
                 Object.assign(this.columnWidths, widths);
                 if (typeof state.columnsSized === 'boolean') this.columnsSized = state.columnsSized;
                 if (typeof state.gridWidth === 'number' && state.gridWidth > 0) this.gridWidth = state.gridWidth;
+
+                // 🔴 **Restoring is two acts, and only the first was done.** The numbers go back
+                // into the map, and the map is written as a stylesheet — it is not bound in the
+                // markup, so nothing happens until somebody says so. Left out, the widths came back
+                // correctly and the columns still showed the browser's own layout: right in the
+                // state, wrong on screen, which is the hardest kind to see.
+                //
+                // ⚠ And the pin measures its offsets FROM these widths, so it has to be told too
+                // (onColumnsResized) — otherwise the frozen block stays at the old offset and
+                // overlaps its neighbour.
+                this.applyColumnWidths();
+                this.onColumnsResized();
             } catch (e) { /* corrupted state: automatic layout */ }
         },
 

@@ -211,9 +211,9 @@ export function editorPin() {
          * column left the pinned columns stuck at their old offset, sitting on top of the column
          * next to them.
          */
-        onColumnsResized() {
-            this.applyPinOffsets();
-        },
+        // ⚠ The hook itself lives in translation-editor.js, and calls applyPinOffsets from there:
+        // the off-screen marks need the same signal, and a hook has one implementation — the last
+        // module spread in used to take it, which left the other one deaf. See onColumnsResized.
 
         /** Call from the host component's init(), after restoreUiState. */
         initEditorPin() {
