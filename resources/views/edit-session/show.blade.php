@@ -559,15 +559,15 @@ document.addEventListener('alpine:init', () => {
     // window.UGT is set by app.js (deferred module): it exists by the time
     // Alpine fires alpine:init, but NOT during the initial HTML parse
     Alpine.data('editSession', () => window.UGT.composeEditor({
-        // UI state (filters/search) is shared across sessions of the same
-        // browser tab; PENDING work is scoped to THIS session — restored
-        // edits from a previous session would be ghost modifications on
-        // keys this file may not even contain
-        persistKey: 'edit_session_ui',
-        // Widths are about this session's file, not about how one likes to read — see
-        // translation-editor.js (_widthsKey)
-        widthsKey: 'edit_session_{{ $editSession->id }}_cols',
-        pendingKey: 'edit_session_{{ $editSession->id }}_pending',
+        view: 'live',
+        // ⚠ The GAME, not the live session: a width is measured on this file's content, and the
+        // next live session on the same game is the same content. Keyed on the session, the edge
+        // had to be dragged back every time the mod opened one.
+        //
+        // ⚠ A digest of the name rather than the name — and never `mod_key`, which pairs the mod
+        // with the site: nothing that authenticates belongs in browser storage. There is no
+        // translation id to use here; a live session edits the player's own file, published or not.
+        scope: '{{ $editSession->game_name ? substr(sha1($editSession->game_name), 0, 12) : 's' . $editSession->id }}',
         filters: {
             tagH: true,
             tagV: true,

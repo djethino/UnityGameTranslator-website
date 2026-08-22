@@ -51,12 +51,10 @@ export function composeEditor(config, page) {
  * Shared editor state + behaviors.
  *
  * config:
- *  - persistKey  : sessionStorage key for UI state (search/filters/sort)
- *  - pendingKey  : sessionStorage key for PENDING work (edits/tags/deletions).
- *                  Defaults to persistKey + '_pending'. Pages whose persistKey
- *                  is shared across documents (edit sessions, translations)
- *                  MUST scope this one per document: restored pending edits
- *                  from another file would show up as ghost modifications
+ *  - view        : which SCREEN this is — 'merge', 'edit', 'preview', 'live'. Every storage key
+ *                  below is built from it, so two screens can never read each other's state.
+ *                  A merge and an edit of the same file are two screens, not two settings of one
+ *  - scope       : what identifies the DOCUMENT (uuid, translation id…), for column widths only
  *  - filters     : default filter map (page-specific names allowed)
  *
  * The consuming component must define (used by the core):
@@ -72,8 +70,57 @@ export function composeEditor(config, page) {
  *                                   replace and the placeholder guard
  *  - allKeys                        array of keys to list
  */
+/**
+ * The id of the WORK SESSION this page is part of.
+ *
+ * 🔴 **Survives a refresh, never a reopening — and that is the whole rule.** Closing a page without
+ * applying is a cancel in anybody's head: coming back later to decisions made in a previous sitting,
+ * silently restored and possibly far down the list, is how somebody presses Save on work they no
+ * longer remember doing. A refresh is the opposite: nothing was decided, the page simply came back.
+ *
+ * `history.state` draws exactly that line — the browser keeps it across F5 and gives a fresh entry
+ * nothing. Verified in Chrome rather than assumed.
+ *
+ * ⚠ `?w=` wins over the stored state, for screens whose own controls NAVIGATE: the merge view
+ * changes which contributions it shows through a GET form, so without carrying the id in it, hiding
+ * one contribution would throw away everything decided about the others.
+ *
+ * ⚠ Not `crypto.randomUUID()`: it does not exist outside a secure context, and the development site
+ * is plain http — so it would work in production and be missing exactly where it gets written.
+ */
+export function workSessionId(search) {
+    const fromUrl = new URLSearchParams(search ?? window.location.search).get('w');
+    if (fromUrl && /^[a-z0-9]{6,32}$/.test(fromUrl)) return fromUrl;
+
+    try {
+        if (window.history.state?.ugtWork) return window.history.state.ugtWork;
+    } catch (e) { /* history blocked: fall through to a fresh one */ }
+
+    const bytes = new Uint32Array(2);
+    window.crypto.getRandomValues(bytes);
+    const id = bytes[0].toString(36) + bytes[1].toString(36);
+
+    try {
+        // Merged, never replaced: the entry may already carry somebody else's state.
+        window.history.replaceState({ ...(window.history.state || {}), ugtWork: id }, '');
+    } catch (e) { /* history blocked: the id lives for this page only, which still beats sharing */ }
+
+    return id;
+}
+
 export function editorCore(config) {
-    const pendingKey = config.pendingKey || (config.persistKey + '_pending');
+    // 🔴 **Three scopes, and each one is a decision.** See workSessionId above for the first.
+    //
+    // | what | kept for | why |
+    // |---|---|---|
+    // | how you read + what you decided | this SITTING, on this VIEW | a merge and an edit of the same file are two screens, not two settings of one; and reopening either is a new sitting |
+    // | column widths | this VIEW, on this DOCUMENT | measured against this file's content: carried to a file with source lines ten times longer, they pushed the translation column off screen, grab edges included |
+    // | show the index column, show line breaks | this VIEW | a way of reading a grid, worth keeping — but the grids do not hold the same columns, so one answer for all four was one answer too few |
+    const view = config.view;
+    const workKey = 'ugt_work_' + view + '_' + workSessionId();
+    const persistKey = workKey + '_ui';
+    const pendingKey = workKey + '_pending';
+    const widthsKey = 'ugt_cols_' + view + (config.scope ? '_' + config.scope : '');
 
     return {
         // ── Workbench mode (see editor-workbench.js) ──────────────────────
@@ -81,7 +128,7 @@ export function editorCore(config) {
         // ── Resizable columns (see editor-columns.js) ─────────────────────
         ...editorColumns(),
         // ── Flowing text or line breaks (see editor-text-mode.js) ─────────
-        ...editorTextMode(),
+        ...editorTextMode(config.view),
         // ── Reachable horizontal scrollbar (see editor-hscroll.js) ────────
         ...editorHScroll(),
         ...editorOffScreen(),
@@ -170,6 +217,7 @@ export function editorCore(config) {
          * component's init().
          */
         initEditorCore() {
+            this._forgetStaleSittings();
             this.initEditorWorkbench();
             this.initTextMode();
             this.restoreUiState();
@@ -178,7 +226,7 @@ export function editorCore(config) {
             this.initHScroll();
             this.restorePendingState();
             try {
-                const storedIndexPref = localStorage.getItem('ugt_editor_show_index');
+                const storedIndexPref = localStorage.getItem(this._indexPrefKey());
                 if (storedIndexPref !== null) {
                     this.showIndexColumn = storedIndexPref === '1';
                 }
@@ -564,11 +612,13 @@ export function editorCore(config) {
             return true;
         },
 
-        // ── Pending-state persistence (survives F5 until the save) ───────
+        // ── Pending-state persistence (survives F5, never a reopening) ───
 
         persistPendingState() {
             try {
                 sessionStorage.setItem(pendingKey, JSON.stringify({
+                    // When this sitting was last touched — read by _forgetStaleSittings.
+                    at: Date.now(),
                     editedValues: this.editedValues,
                     tagChanges: this.tagChanges,
                     deletions: this.deletions,
@@ -1153,10 +1203,19 @@ export function editorCore(config) {
             return this.sortDirection === 'desc' ? -Infinity : Infinity;
         },
 
+        /**
+         * ⚠ Per VIEW, not per editor. Showing the capture order is a way of reading a grid, and the
+         * four grids do not hold the same columns — one answer for all of them was one answer too
+         * few. It outlives the sitting all the same: it decides nothing, it only shows.
+         */
+        _indexPrefKey() {
+            return 'ugt_editor_show_index_' + config.view;
+        },
+
         toggleIndexColumn() {
             this.showIndexColumn = !this.showIndexColumn;
             try {
-                localStorage.setItem('ugt_editor_show_index', this.showIndexColumn ? '1' : '0');
+                localStorage.setItem(this._indexPrefKey(), this.showIndexColumn ? '1' : '0');
             } catch (e) { /* non-essential */ }
         },
 
@@ -1378,23 +1437,50 @@ export function editorCore(config) {
         },
 
         /**
-         * Where column widths are remembered.
+         * Where column widths are remembered — see the table on editorCore.
          *
-         * NOT with the rest of the UI state, and this is the whole point. Which tags to show,
-         * what to search for and how to sort are ways of READING, so screens share them on
-         * purpose. A column width is about one document's content: carried over to a file whose
-         * source lines are ten times longer, it pushed the tag and translation columns clean off
-         * the screen — with the grab edges out there too, so nothing could be dragged back.
-         *
-         * Pages that show a single fixed document can leave widthsKey unset.
+         * ⚠ **In localStorage, unlike everything else here.** A width is not part of a sitting: it
+         * is how this document reads on this screen, and losing it every time the page is reopened
+         * means dragging the same edge back every time.
          */
         _widthsKey() {
-            return config.widthsKey || config.persistKey + '_cols';
+            return widthsKey;
+        },
+
+        /**
+         * Drop the storage of sittings nobody is coming back to.
+         *
+         * ⚠ **Comes WITH the per-sitting keys, not as an extra.** Each one writes under a name of
+         * its own, so without this they pile up for the life of the tab — and a draft of a 2500-line
+         * merge is hundreds of kilobytes. Nothing warns when they stop fitting: a full quota is
+         * swallowed on purpose (a draft is a convenience, never worth breaking the screen for), so
+         * the failure would be a draft that silently stops being saved.
+         *
+         * ⚠ **By age, not "everything but mine".** Going back in history returns to the entry that
+         * held a sitting, and its id comes back with it — so the reader expects their work to still
+         * be there. Two hours leaves that intact while bounding what a long tab accumulates.
+         */
+        _forgetStaleSittings() {
+            const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+
+            try {
+                for (const name of Object.keys(sessionStorage)) {
+                    if (!name.startsWith('ugt_work_')) continue;
+                    if (name === persistKey || name === pendingKey) continue;
+
+                    let at = 0;
+                    try { at = JSON.parse(sessionStorage.getItem(name))?.at ?? 0; } catch (e) { /* unreadable */ }
+                    if (at > cutoff) continue;
+
+                    sessionStorage.removeItem(name);
+                }
+            } catch (e) { /* storage blocked: nothing to clean, nothing to report */ }
         },
 
         persistUiState() {
             try {
-                sessionStorage.setItem(config.persistKey, JSON.stringify({
+                sessionStorage.setItem(persistKey, JSON.stringify({
+                    at: Date.now(),
                     searchQuery: this.searchQuery,
                     searchScope: this.searchScope,
                     filters: this.filters,
@@ -1404,7 +1490,7 @@ export function editorCore(config) {
                     replaceValue: this.replaceValue,
                     pinMain: this.pinMain
                 }));
-                sessionStorage.setItem(this._widthsKey(), JSON.stringify({
+                localStorage.setItem(this._widthsKey(), JSON.stringify({
                     // Which columns these widths were measured against — see _restoreColumnWidths
                     columns: this._columnOrder().join('|'),
                     columnWidths: this.columnWidths,
@@ -1416,7 +1502,7 @@ export function editorCore(config) {
 
         restoreUiState() {
             try {
-                const raw = sessionStorage.getItem(config.persistKey);
+                const raw = sessionStorage.getItem(persistKey);
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (typeof state.searchQuery === 'string') this.searchQuery = state.searchQuery;
@@ -1454,7 +1540,7 @@ export function editorCore(config) {
          */
         _restoreColumnWidths() {
             try {
-                const raw = sessionStorage.getItem(this._widthsKey());
+                const raw = localStorage.getItem(this._widthsKey());
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 const box = (this.$refs.gridBox && this.$refs.gridBox.clientWidth) || 0;

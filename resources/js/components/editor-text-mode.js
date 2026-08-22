@@ -19,21 +19,27 @@
  * are as deliberate as a break in a game string, and a mode that claims to show the text as it is
  * cannot quietly drop half of it.
  *
- * ONE preference for the whole site (localStorage, like the capture-order column): the three
- * editors get it by composing the editor core, and any other screen that lists lines can declare
- * x-data="editorTextMode" and read the very same setting.
+ * Kept in localStorage, like the capture-order column: it decides nothing and only shows, so it
+ * outlives the sitting.
+ *
+ * ⚠ **Per VIEW.** It used to be one answer for the whole site, which reads well until you notice
+ * the four grids do not hold the same columns — wanting the breaks while arbitrating a merge and
+ * not while re-reading a file is an ordinary thing to want. A screen that does not name a view
+ * (the admin inspection list) shares the plain one.
  */
 
 const STORAGE_KEY = 'ugt_editor_line_breaks';
 
-export function editorTextMode() {
+export function editorTextMode(view) {
+    const storageKey = view ? STORAGE_KEY + '_' + view : STORAGE_KEY;
+
     return {
         showLineBreaks: false,
 
         toggleLineBreaks() {
             this.showLineBreaks = !this.showLineBreaks;
             try {
-                localStorage.setItem(STORAGE_KEY, this.showLineBreaks ? '1' : '0');
+                localStorage.setItem(storageKey, this.showLineBreaks ? '1' : '0');
             } catch (e) { /* storage blocked: the mode still works for this visit */ }
         },
 
@@ -44,7 +50,7 @@ export function editorTextMode() {
          */
         initTextMode() {
             try {
-                const stored = localStorage.getItem(STORAGE_KEY);
+                const stored = localStorage.getItem(storageKey);
                 if (stored !== null) this.showLineBreaks = stored === '1';
             } catch (e) { /* storage blocked: keep the default */ }
         },

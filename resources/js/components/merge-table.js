@@ -6,8 +6,20 @@
  * filters, search, sort, windowing) is the shared translation-editor core —
  * see the inline mergeView component in resources/views/merge/show.blade.php.
  */
+import { workSessionId } from './translation-editor.js';
+
 export default function mergeTable() {
     return {
+        /**
+         * The id of the sitting, carried through the branch form's GET.
+         *
+         * 🔴 **This form navigates, and a navigation normally starts a fresh sitting** — the rule
+         * everywhere else, and exactly wrong here: hiding one contribution would throw away
+         * everything already decided about the others. Read (and created, once) from the shared
+         * core, so the table below reads the same one.
+         */
+        workSession: workSessionId(),
+
         init() {
             // Branch checkboxes: auto-submit on change (server reloads the
             // page with the new branch set; pending table state survives via

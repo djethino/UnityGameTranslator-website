@@ -88,6 +88,13 @@
                 <input type="hidden" name="mode" value="{{ $mode }}">
                 {{-- Submitting this form IS the choice, even when it selects nothing --}}
                 <input type="hidden" name="branches_chosen" value="1">
+                {{-- 🔴 **Which sitting this is, carried across the reload this form causes.**
+                     Choosing which contributions to show is a GET, so it navigates — and a new
+                     history entry means a new sitting, which is the rule everywhere else and
+                     exactly wrong here: hiding one contribution would throw away everything already
+                     decided about the others. The Edit/Merge link deliberately does NOT carry it:
+                     those are two screens, and crossing between them starts afresh. --}}
+                <input type="hidden" name="w" :value="workSession">
                 <span class="text-sm text-gray-400 font-medium">{{ __('merge.branches') }}</span>
 
                 {{-- Quick filters --}}
@@ -876,7 +883,11 @@ document.addEventListener('alpine:init', () => {
     const isEditMode = @json($mode === 'edit');
 
     Alpine.data('mergeView', () => window.UGT.composeEditor({
-        persistKey: 'merge_view_{{ $uuid }}',
+        // 🔴 Two screens, never one. Arbitrating contributions and correcting one's own file show
+        // different columns and answer different questions; sharing a filter or a pick between them
+        // put picks aimed at contributions on a screen that shows none — and sent them.
+        view: isEditMode ? 'edit' : 'merge',
+        scope: '{{ $uuid }}',
         // ⚠ Named after the SITUATIONS the core counts (`catNew`, `catDiffering`, `catSame`), not
         // after boxes this screen invented. `catSame` also carries `onlyOnTarget` here — see
         // categoryFilter below, where that fold is stated once.
@@ -1695,15 +1706,40 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
+        /**
+         * 🔴 A pick whose column is not on screen does not count, and is not sent.
+         *
+         * Unticking a contribution in the selector is an ordinary gesture — you hide it to work on
+         * the others. Measured: 25 picks aimed at the hidden contribution stayed live, on rows the
+         * filters no longer showed, and Save would have written every one of them. On a Main of
+         * 2500 lines, that is somebody's file changed from a screen displaying none of it.
+         *
+         * ⚠ Only picks are affected. A rewording is text somebody typed: `editedValues[key]` names
+         * no contribution, so it survives whatever is on screen.
+         *
+         * ⚠ Kept in `selections` rather than dropped: ticking the contribution back brings the
+         * answers back with it. What should happen to them if it is never ticked back is still
+         * open — see analyse/editors-mutualisation.md.
+         */
+        isLivePick(key) {
+            const sel = this.selections[key];
+            if (!sel) return false;
+            if (sel.source === 'main' || sel.source === 'manual') return true;
+
+            return this.entryOf(key, sel.source) !== undefined;
+        },
+
         isRowModified(key) {
-            return key in this.selections
+            return this.isLivePick(key)
                 || this.editedValues[key] !== undefined
                 || key in this.tagChanges
                 || this.isDeleted(key);
         },
 
+        /** ⚠ Live picks only — see isLivePick. The number on the button is the number of lines the
+         *  save writes, and a pick aimed at a contribution nobody is showing writes nothing. */
         get selectionCount() {
-            return Object.keys(this.selections).length;
+            return Object.keys(this.selections).filter(key => this.isLivePick(key)).length;
         },
 
         get deleteCount() {
@@ -1817,7 +1853,11 @@ document.addEventListener('alpine:init', () => {
         submitMerge() {
             if (this.totalChanges === 0) return;
 
-            const selectionsArr = Object.entries(this.selections).map(([key, data]) => ({
+            // ⚠ Only what is on screen travels — see isLivePick. The counter above uses the same
+            // test, so the number on the button is the number of lines the save writes.
+            const selectionsArr = Object.entries(this.selections)
+                .filter(([key]) => this.isLivePick(key))
+                .map(([key, data]) => ({
                 key,
                 value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
                 tag: data.tag,

@@ -632,18 +632,11 @@ document.addEventListener('alpine:init', () => {
     // Alpine fires alpine:init, but NOT during the initial HTML parse
     const normalizeLineEndings = window.UGT.normalizeLineEndings;
     Alpine.data('mergePreview', () => window.UGT.composeEditor({
-        // 🔴 **Three keys, three scopes, and each answers a different question.**
-        //
-        // | what | scoped to | why |
-        // |---|---|---|
-        // | how you READ (filters, search, sort, pin) | the DIRECTION | a preference worth keeping from one comparison to the next — but the boxes name sides, and "only on the local file" hides the incoming lines one way round and the settled ones the other. Shared outright, unticking one while publishing hid the server's new lines on the next comparison into the game (measured) |
-        // | what you DECIDED (picks, edits, tags, deletions) | the COMPARISON | a review is about the snapshot the mod sent at that moment, not about the translation. Keyed on the translation, decisions came back on top of a newer snapshot — and in the other direction, pointing at the column that is no longer the target |
-        // | how WIDE the columns are | the translation | a width is measured on this file's content and has nothing to do with either. Shared across files, one taken on long source lines followed the reader and pushed the next columns off screen |
-        persistKey: 'merge_preview_ui_{{ $toLocal ? 'local' : 'server' }}',
-        widthsKey: 'merge_preview_{{ $translation->id }}_cols',
-        // ⚠ Falls back to the translation when there is no comparison to name (a page opened
-        // without a live token — it renders, and its draft has to land somewhere).
-        pendingKey: 'merge_preview_{{ $comparisonId ? 'c' . $comparisonId : 't' . $translation->id }}_pending',
+        // ⚠ One view whichever way it runs: the two directions show the same two columns and answer
+        // the same question, only the target swaps. What must not be shared is the SITTING, and the
+        // core sees to that (see workSessionId) — reopening a comparison starts a fresh one.
+        view: 'preview',
+        scope: '{{ $translation->id }}',
         // 🔴 Open on what needs DECIDING: what the other side is offering, and where the two
         // disagree. What only the result already holds, and what both say identically, ask nothing.
         //
@@ -755,7 +748,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
-            this.dropDraftsOfOtherComparisons();
             this.initEditorCore();
 
             // Server-side token session error (expired / content file gone)
@@ -826,30 +818,6 @@ document.addEventListener('alpine:init', () => {
                         : @js(__('merge_preview.error_load_failed'));
                     this.loaded = true;
                 });
-        },
-
-        /**
-         * Throw away the drafts of comparisons that are over.
-         *
-         * ⚠ Comes WITH keying the draft on the comparison, not as an extra: every comparison now
-         * writes under a name of its own, so without this they pile up for the life of the tab.
-         * Nothing warns when they stop fitting — the core swallows a full quota on purpose (a
-         * draft is a convenience, never worth breaking the screen for), so the failure would be a
-         * draft that silently stops being saved.
-         *
-         * ⚠ Only this page's own names (`merge_preview_…_pending`), and never the one in use.
-         */
-        dropDraftsOfOtherComparisons() {
-            const mine = '{{ $comparisonId ? 'c' . $comparisonId : 't' . $translation->id }}_pending';
-
-            try {
-                for (const name of Object.keys(sessionStorage)) {
-                    if (!name.startsWith('merge_preview_') || !name.endsWith('_pending')) continue;
-                    if (name === 'merge_preview_' + mine) continue;
-
-                    sessionStorage.removeItem(name);
-                }
-            } catch (e) { /* storage blocked: nothing to clean, nothing to report */ }
         },
 
         loadContent(content, onlineContent) {
