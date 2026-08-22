@@ -1237,6 +1237,27 @@ document.addEventListener('alpine:init', () => {
                 entry === undefined ? 'A' : this.getTag(entry), false);
         },
 
+        /**
+         * Core hook: setting a tag by hand claims this row's answer — same rule as the merge view.
+         *
+         * ⚠ On the TARGET, whichever way this screen runs: a tag is about the line that will be
+         * written, and that is the local file one way round and the server's the other.
+         */
+        onTagSet(key) {
+            const held = this.selections[key];
+
+            if (held) {
+                this.selections[key] = this.byHand({ ...held, auto: false });
+                return;
+            }
+
+            const entry = this.targetEntry(key);
+            if (entry === undefined) return;
+
+            this.selections[key] = this.byHand(
+                this.pick(this.targetSource(), this.getValue(entry), this.getTag(entry), false));
+        },
+
         /** Core hook: a deletion cancels any side selection for the key. */
         onDeleteToggled(key) {
             delete this.selections[key];
@@ -1326,9 +1347,6 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.editedValues).length;
         },
 
-        get tagChangeCount() {
-            return Object.keys(this.tagChanges).length;
-        },
 
         select(key, source) {
             // Even on inert rows the click moves the search cursor (IDE caret)

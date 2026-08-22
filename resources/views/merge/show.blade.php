@@ -1597,6 +1597,29 @@ document.addEventListener('alpine:init', () => {
             this.selections[key] = { source: 'manual', value: this.editedValues[key], tag: this.getTag(this.mainData[key]) };
         },
 
+        /**
+         * Core hook: setting a tag by hand claims this row's answer.
+         *
+         * A row the screen proposed for itself (dashed) becomes an ordinary pick, exactly as a
+         * click on its column would make it. A row nobody had answered gets one, on the Main and
+         * with the Main's current value — a tag is about the line that will be written, and here
+         * that line is the Main's.
+         */
+        onTagSet(key) {
+            const held = this.selections[key];
+
+            if (held) {
+                this.selections[key] = this.byHand({ ...held, auto: false });
+                return;
+            }
+
+            const entry = this.mainData[key];
+            if (entry === undefined) return;
+
+            this.selections[key] = this.byHand(
+                this.pick('main', this.getValue(entry), this.getTag(entry), false));
+        },
+
         /** Core hook: an edit reverted to the original drops its selection. */
         onEditUnstaged(key) {
             if (this.selections[key]?.source === 'manual') {
@@ -1775,10 +1798,6 @@ document.addEventListener('alpine:init', () => {
                 || this.isDeleted(key);
         },
 
-        get selectionCount() {
-            return Object.keys(this.selections).length;
-        },
-
         get deleteCount() {
             return Object.keys(this.deletions).length;
         },
@@ -1829,8 +1848,19 @@ document.addEventListener('alpine:init', () => {
             // the Save button stayed disabled, and no Main could merge a single contribution.
             // Four days in production, invisible to the tests, which read the rendered HTML and
             // never run the script.
-            return this.selectionCount + this.deleteCount + this.tagChangeCount
-                   + this.settingsTakenCount() + this.publicationTakenCount();
+            // 🔴 **Lines, not gestures.** This added its counters together, so a row somebody
+            // picked AND tagged counted twice — measured: 59 rows touched, the button said 61. The
+            // comparison screen has always counted rows; only this one summed. `isRowModified` is
+            // the one test for "this row has an answer", and every gesture on a row goes through it.
+            let rows = 0;
+            for (const key of this.allKeys) {
+                if (this.isRowModified(key)) rows++;
+            }
+
+            // The two metadata blocks are not lines and cannot collide with them: taking a
+            // contribution's font without touching a single line is a merge, and the Save button
+            // must not stay disabled on it.
+            return rows + this.settingsTakenCount() + this.publicationTakenCount();
         },
 
         clearAll() {

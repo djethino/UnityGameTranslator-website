@@ -521,7 +521,28 @@ export function editorCore(config) {
             const entry = this.entryOf(key, id);
             if (entry === undefined) return null;
 
+            this.forgetTagSetByHand(key);
             return this.byHand(this.pick(id, this.getValue(entry), this.getTag(entry), false));
+        },
+
+        /**
+         * A later gesture on the row wipes a tag somebody had set by hand.
+         *
+         * 🔴 **The last gesture wins — and until this existed, none of them did.** A tag set from
+         * the menu lived in its own store that nothing ever cleared, so it outlived every click and
+         * every rewording that followed: taking a version tagged `A` still wrote `V`, and editing a
+         * line after setting `V` no longer produced the `H` an edit produces. The result depended on
+         * the order of OUR code (selections applied first, tags second), never on the order the
+         * reader worked in.
+         *
+         * ⚠ Called from the three gestures that state a new answer for the row — picking a column,
+         * claiming a held one, rewording — and from nowhere else. The defaults must not clear it:
+         * they run on load, after a draft has been restored.
+         */
+        forgetTagSetByHand(key) {
+            if (!(key in this.tagChanges)) return;
+
+            delete this.tagChanges[key];
         },
 
         /**
@@ -614,6 +635,10 @@ export function editorCore(config) {
         advancePick(key, source, value, tag) {
             const current = this.selections[key];
             if (this.pickedSource(key) !== source || source === 'manual') return false;
+
+            // Clicking the column states a new answer, so a tag set by hand on this row goes —
+            // whichever of the three steps below the click lands on. See forgetTagSetByHand.
+            this.forgetTagSetByHand(key);
 
             if (this.isUnclaimed(key)) {
                 // Claiming a held row IS a click — see byHand.
@@ -1655,6 +1680,9 @@ export function editorCore(config) {
                 this.editedValues[key] = value;
                 // Editing a key cancels a pending deletion of it
                 delete this.deletions[key];
+                // ...and a tag somebody had set by hand: rewriting the line states a new answer,
+                // whose tag is H. See forgetTagSetByHand.
+                this.forgetTagSetByHand(key);
                 this.onEditStaged(key);
             } else {
                 delete this.editedValues[key];
@@ -1755,6 +1783,16 @@ export function editorCore(config) {
          * Explicit tag change: S (skip) everywhere, A (invalidate — send back
          * to AI) where the page offers it. Setting the original tag back
          * removes the pending change.
+         *
+         * 🔴 **Setting a tag IS answering the row**, not opening a second track beside the answer.
+         * A row held by the screen's own proposal (dashed) becomes claimed, exactly as if its
+         * column had been clicked — otherwise the screen writes `V` and says in the same breath that
+         * nobody validated it, and the column stays clickable on top of a decision already made.
+         *
+         * ⚠ Same rule for every tag, `S` included. `S` is not "this line leaves the game": our own
+         * ladder ranks it with `H`, above `V` (common/Merge.cs), and the review coverage counts it
+         * with the human lines. Making it the one tag that clears the answer would drop the value
+         * that was picked, in silence, and give one gesture two behaviours.
          */
         setTag(newTag) {
             const { key, originalTag, value } = this.tagDropdown;
@@ -1762,10 +1800,20 @@ export function editorCore(config) {
                 delete this.tagChanges[key];
             } else {
                 this.tagChanges[key] = { newTag: newTag, originalTag: originalTag, value: value };
+                this.onTagSet(key, newTag);
             }
             this.persistPendingState();
             this.closeTagDropdown();
         },
+
+        /**
+         * Page hook: a tag was set by hand, so the row's answer is claimed.
+         *
+         * ⚠ Not called when the original tag is set back — there is nothing to claim, and the row
+         * has no memory of what its answer was before the first tag gesture. It keeps whatever it
+         * holds; only the tag returns to the screen's own projection.
+         */
+        onTagSet(key, newTag) {},
 
         cancelTagChange(key) {
             delete this.tagChanges[key];
