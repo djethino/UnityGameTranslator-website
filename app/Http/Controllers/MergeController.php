@@ -225,7 +225,18 @@ class MergeController extends Controller
             if (!in_array($sel['tag'], ['H', 'A', 'V', 'M', 'S'], true)) {
                 return back()->withErrors(['error' => 'Invalid tag value.']);
             }
+            // ⚠ A tag set by hand now rides in its row's own entry (`source: tagchange`), where
+            // resolveMergedTag writes it AS IS — no H forcing, no A → V promotion. The dropdown
+            // offers three gestures and no more, and that restriction used to live on the separate
+            // channel: it moves here rather than being lost with it.
+            if ($sel['source'] === 'tagchange' && !in_array($sel['tag'], ['V', 'A', 'S'], true)) {
+                return back()->withErrors(['error' => 'Invalid tag change value.']);
+            }
         }
+        // ⚠ **The old separate channel, kept for reading only.** The page stopped filling it: a tag
+        // set by hand travels in its row's own entry above. What still arrives here comes from a tab
+        // that was open with the previous script when this shipped, and dropping it would lose that
+        // person's work in silence. Nothing new is built on it.
         foreach ($tagChanges as $change) {
             if (!isset($change['key'], $change['tag']) || !array_key_exists('value', $change)) {
                 return back()->withErrors(['error' => 'Invalid tag change entry.']);

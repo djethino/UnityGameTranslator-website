@@ -1278,8 +1278,8 @@ class MergeViewStateTest extends TestCase
     {
         [$owner, $uuid, $main] = $this->makeMergeView();
 
-        // The tag dropdown offers V (validate), A (invalidate) and S (skip):
-        // all three must be written as-is
+        // ⚠ The OLD channel, kept readable for a tab still running the previous script when the
+        // one-entry-per-row format shipped. Dropping it would lose that person's work in silence.
         $response = $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
             'mode' => 'edit',
             'selections_json' => '',
@@ -1294,6 +1294,50 @@ class MergeViewStateTest extends TestCase
 
         $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
         $this->assertSame(['v' => 'Main only', 't' => 'V'], $stored['MainOnly']);
+    }
+
+    /**
+     * 🔴 A tag set by hand rides in its ROW's entry, and is written exactly as chosen.
+     *
+     * It used to travel in a channel of its own, applied after the picks — so the file was right
+     * only because of the order our code happened to run in, and the same row was counted twice on
+     * the way out. `source: 'tagchange'` is what tells `resolveMergedTag` to write the tag as it
+     * stands: no `H` forcing on an edited line, no `A → V` promotion on a claimed one.
+     */
+    public function test_a_hand_set_tag_travels_with_its_row_and_is_written_as_chosen(): void
+    {
+        [$owner, $uuid, $main] = $this->makeMergeView();
+
+        $response = $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'edit',
+            'selections_json' => json_encode([
+                // Claimed (auto false) AND tagged A: the promotion must not fire.
+                ['key' => 'MainOnly', 'value' => 'Main only', 'tag' => 'A',
+                 'source' => 'tagchange', 'auto' => false, 'base' => 'Main only'],
+            ]),
+            'deletions_json' => '',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $stored = json_decode(file_get_contents($main->fresh()->getSafeFilePath()), true);
+        $this->assertSame(['v' => 'Main only', 't' => 'A'], $stored['MainOnly']);
+    }
+
+    /** The dropdown offers three gestures; the guard moved with them, it was not lost. */
+    public function test_a_hand_set_tag_is_refused_outside_the_three_gestures(): void
+    {
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'mode' => 'edit',
+            'selections_json' => json_encode([
+                ['key' => 'MainOnly', 'value' => 'Main only', 'tag' => 'H',
+                 'source' => 'tagchange', 'auto' => false, 'base' => 'Main only'],
+            ]),
+            'deletions_json' => '',
+        ])->assertSessionHasErrors();
     }
 
     // ── Branch authors edit their own work too ───────────────────────────

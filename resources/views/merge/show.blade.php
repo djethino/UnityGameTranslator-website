@@ -645,7 +645,9 @@
                 {{-- JSON-encoded data (avoids Laravel TrimStrings corrupting keys with whitespace) --}}
                 <input type="hidden" id="selectionsJson" name="selections_json" value="">
                 <input type="hidden" id="deletionsJson" name="deletions_json" value="">
-                <input type="hidden" id="tagChangesJson" name="tag_changes_json" value="">
+                {{-- ⚠ No tag_changes_json any more: a tag set by hand rides in its row's own entry,
+                     with `source: tagchange`. The endpoint still READS the old field, for the tab
+                     that was open with the previous script when this shipped. --}}
                 <input type="hidden" id="settingsJson" name="settings_json" value="">
                 <input type="hidden" id="publicationJson" name="publication_json" value="">
 
@@ -1920,13 +1922,33 @@ document.addEventListener('alpine:init', () => {
         submitMerge() {
             if (this.totalChanges === 0) return;
 
+            // 🔴 **One entry per row, tag included.** The tag used to travel in a channel of its
+            // own, applied after the picks, so the file was right only because of the order our
+            // code happened to run in — and the same row was counted twice on the way out. The
+            // comparison screen has always sent one entry per row; this is the same shape.
+            //
             // ⚠ Everything here is on screen: answers pointing at a contribution this view does not
             // show were dropped when it loaded — see dropAnswersWithNoColumn.
-            const selectionsArr = Object.entries(this.selections).map(([key, data]) => ({
+            const answered = new Set([
+                ...Object.keys(this.selections),
+                // A tag set on a row with no answer at all — not reachable from the UI today (the
+                // tag cell needs one), kept so that a stored draft cannot lose one in silence.
+                ...Object.keys(this.tagChanges),
+            ]);
+
+            const selectionsArr = [...answered].map((key) => {
+                const data = this.selections[key] || {};
+                const tagged = this.tagChanges[key];
+
+                return {
                 key,
-                value: data.source === 'manual' ? (this.editedValues[key] ?? data.value) : data.value,
-                tag: data.tag,
-                source: data.source,
+                value: data.source === 'manual'
+                    ? (this.editedValues[key] ?? data.value)
+                    : (data.value ?? this.getValue(this.mainData[key])),
+                // A tag somebody set by hand is written AS IS by the server (no H forcing, no
+                // A → V promotion), which is what `tagchange` means to resolveMergedTag.
+                tag: tagged ? tagged.newTag : data.tag,
+                source: tagged ? 'tagchange' : data.source,
 
                 // Whether anybody actually claimed this row. The server promotes A to V on a pick,
                 // and this is what tells it apart from a row that merely arrived answered.
@@ -1936,13 +1958,9 @@ document.addEventListener('alpine:init', () => {
                 // matches it, which is how a save from here stops clobbering
                 // captures the game uploaded while the page was open.
                 base: this.getValue(this.mainData[key]) ?? ''
-            }));
+                };
+            });
             const deletionsArr = Object.keys(this.deletions);
-            const tagChangesArr = Object.entries(this.tagChanges).map(([key, data]) => ({
-                key,
-                tag: data.newTag,
-                value: data.value
-            }));
 
             // Settings: only WHICH branch entry is taken. The entry itself is copied server-side
             // from that branch's file — the page shows a readable summary that drops fields it
@@ -1976,7 +1994,6 @@ document.addEventListener('alpine:init', () => {
 
             document.getElementById('selectionsJson').value = selectionsArr.length > 0 ? JSON.stringify(selectionsArr) : '';
             document.getElementById('deletionsJson').value = deletionsArr.length > 0 ? JSON.stringify(deletionsArr) : '';
-            document.getElementById('tagChangesJson').value = tagChangesArr.length > 0 ? JSON.stringify(tagChangesArr) : '';
 
             // Pending work is about to be applied server-side
             this.clearPendingState();
