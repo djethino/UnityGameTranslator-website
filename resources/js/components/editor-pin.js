@@ -124,8 +124,18 @@ export function editorPin() {
          *
          * ⚠ Rebuilt only when the two names change — never during a drag, where replacing a
          * stylesheet's text tore the frozen block apart (see applyPinOffsets).
+         *
+         * 🔴 **The two names are pasted into a stylesheet, so they are checked first.** Today they
+         * are constants written in the pages (`mainTag`, `local`, `online`…) and nothing else can
+         * reach them — but "nothing else reaches it" is a property of today's code, not of this
+         * function, and a column named after anything a contributor supplies would be writing CSS
+         * from user input. A name that fails the check freezes nothing, which is visible; the
+         * alternative is a rule nobody wrote.
          */
         _pinRules() {
+            const named = /^[A-Za-z][A-Za-z0-9_-]*$/;
+            if (!named.test(this.pinTagCol || '') || !named.test(this.pinValueCol || '')) return '';
+
             const tag = `.editor-grid.pin-main [data-col="${this.pinTagCol}"]`;
             const value = `.editor-grid.pin-main [data-col="${this.pinValueCol}"]`;
             const both = (where) =>

@@ -636,7 +636,7 @@ document.addEventListener('alpine:init', () => {
         // the same question, only the target swaps. What must not be shared is the SITTING, and the
         // core sees to that (see workSessionId) — reopening a comparison starts a fresh one.
         view: 'preview',
-        scope: '{{ $translation->id }}',
+        scope: @json((string) $translation->id),
         // 🔴 Open on what needs DECIDING: what the other side is offering, and where the two
         // disagree. What only the result already holds, and what both say identically, ask nothing.
         //

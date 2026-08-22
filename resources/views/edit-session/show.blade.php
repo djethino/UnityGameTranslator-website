@@ -567,7 +567,7 @@ document.addEventListener('alpine:init', () => {
         // ⚠ A digest of the name rather than the name — and never `mod_key`, which pairs the mod
         // with the site: nothing that authenticates belongs in browser storage. There is no
         // translation id to use here; a live session edits the player's own file, published or not.
-        scope: '{{ $editSession->game_name ? substr(sha1($editSession->game_name), 0, 12) : 's' . $editSession->id }}',
+        scope: @json($editSession->game_name ? substr(sha1($editSession->game_name), 0, 12) : 's' . $editSession->id),
         filters: {
             tagH: true,
             tagV: true,

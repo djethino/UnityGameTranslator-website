@@ -897,7 +897,9 @@ document.addEventListener('alpine:init', () => {
         // different columns and answer different questions; sharing a filter or a pick between them
         // put picks aimed at contributions on a screen that shows none — and sent them.
         view: isEditMode ? 'edit' : 'merge',
-        scope: '{{ $uuid }}',
+        // ⚠ Encoded, never echoed between quotes: inside a <script>, HTML escaping protects
+        // nothing, and this value comes from the URL. The rule the rest of this file follows.
+        scope: @json($uuid),
         // ⚠ Named after the SITUATIONS the core counts (`catNew`, `catDiffering`, `catSame`), not
         // after boxes this screen invented. `catSame` also carries `onlyOnTarget` here — see
         // categoryFilter below, where that fold is stated once.
