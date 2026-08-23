@@ -110,6 +110,12 @@ export function editorMetadata() {
                     id: field,
                     field,
                     label: fields[field] || field,
+                    // 🔴 Prose, so the words that differ are worth underlining one by one, exactly
+                    // as they are on the lines below. The other rows here are ATOMIC — a font
+                    // name, a link, an excluded object — where two values usually share no word
+                    // at all: underlining every one of them marks nothing, which is why the core
+                    // already refuses to mark a line that exists on one side only.
+                    prose: field === 'notes',
                     // What is SHOWN when nothing is staged, and what this side actually holds.
                     // They differ when it holds nothing: the cell then shows a placeholder, and
                     // comparing an edit against that placeholder would call it a change.
@@ -135,6 +141,22 @@ export function editorMetadata() {
             if (theirs === undefined) return '';
             if (!row.mineRaw) return 'new';
             return theirs === row.mineRaw ? '' : 'differs';
+        },
+
+        /**
+         * A contribution's value, with the words that differ underlined — on PROSE rows only.
+         *
+         * ⚠ Against `mineRaw`, never `mineValue`: the second is a placeholder when this side holds
+         * nothing, and diffing against "not set" would underline the whole value as a change from
+         * a phrase nobody wrote. `mineRaw` empty means the row is an addition, and the core's own
+         * rule then marks nothing — which is the right answer here too.
+         */
+        metaValueHtml(row, branchId) {
+            const theirs = row.byBranch[branchId];
+            if (theirs === undefined) return '';
+            if (!row.prose) return this.escapeHtml(String(theirs));
+
+            return this.highlightDifference(theirs, row.mineRaw || null);
         },
 
         metaCellTint(row, branchId) {

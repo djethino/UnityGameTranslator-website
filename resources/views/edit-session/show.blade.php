@@ -323,20 +323,6 @@
                 <span x-show="totalChanges > 0">
                     <span class="text-white font-bold" x-text="totalChanges"></span> {{ __('merge_preview.modifications') }}
                 </span>
-                {{-- One line per gesture, with the same icons as the table --}}
-                {{-- Smaller than the rest of the bar on purpose: these are
-                     read once and then only glanced at, while the bar they sit
-                     in is pinned over the rows being edited. Same treatment in
-                     the merge and merge-preview editors. --}}
-                <div x-show="totalChanges === 0 && !saveMessage" class="text-gray-500 text-xs leading-snug space-y-0.5">
-                    <p>
-                        <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('edit_session.instructions_validate') }}
-                        <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
-                    </p>
-                    <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('edit_session.instructions') }}</p>
-                    <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
-                    <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
-                </div>
                 {{-- Amber while the game is away: the save landed on the site,
                      but "applied in-game" would be a lie --}}
                 <span x-show="saveMessage" :class="gameConnected === false ? 'text-amber-300' : 'text-green-400'">
@@ -350,7 +336,16 @@
                 </span>
             </div>
 
+            {{-- ⚠ The four help lines that used to sit above these buttons now live in the panel:
+                 they were pushing Save onto a second row on a narrow window, and they had no room
+                 to explain the colours. This screen has one file and no version to pick between,
+                 so it words the first two gestures its own way and shows no column marks.
+                 See components/editor/help-tip.blade.php. --}}
             <div class="flex gap-4 items-center shrink-0">
+                <x-editor.help-tip :arbitrates="false"
+                    :select-hint="__('edit_session.instructions_validate')"
+                    :edit-hint="__('edit_session.instructions')" />
+
                 <button type="button" @click="clearAll()" x-show="totalChanges > 0"
                     class="text-gray-400 hover:text-white text-sm transition">
                     <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}

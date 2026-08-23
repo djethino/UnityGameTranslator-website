@@ -692,21 +692,12 @@
                                 <span class="text-purple-400 font-bold" x-text="tagChangeCount"></span> {{ __('merge.tag_changes') }}
                             </span>
                         </span>
-                        {{-- One line per gesture, with the same icons as the table --}}
-                        {{-- Small type: read once, then only glanced at, in a
-                             bar pinned over the rows being edited (parity with
-                             the edit-session and merge-preview editors) --}}
-                        <div x-show="totalChanges === 0" class="text-gray-500 text-xs leading-snug space-y-0.5">
-                            <p>
-                                <i class="fas fa-arrow-pointer w-4 text-center mr-1"></i>{{ __('merge.instructions_select') }}
-                                <span class="tag-A">A</span> <i class="fas fa-arrow-right text-xs"></i> <span class="tag-V">V</span>
-                            </p>
-                            <p><i class="fas fa-pen w-4 text-center mr-1"></i>{{ __('merge.instructions_edit') }}</p>
-                            <p><i class="fas fa-trash w-4 text-center mr-1"></i>{{ __('merge.instructions_delete') }}</p>
-                            <p><i class="fas fa-keyboard w-4 text-center mr-1"></i>{{ __('merge.instructions_keyboard') }}</p>
-                        </div>
                     </div>
+                    {{-- ⚠ The four help lines that used to sit here now live in the panel: they
+                         were pushing Save onto a second row on a narrow window, and they had no
+                         room to explain the colours. See components/editor/help-tip.blade.php. --}}
                     <div class="flex gap-4 items-center shrink-0">
+                        <x-editor.help-tip />
                         {{-- The way back to the proposal.
 
                              🔴 The screen arrives already answered, and until now nothing could

@@ -214,10 +214,15 @@
                                        :class="metaLinkTint(row, other.id)"
                                        x-text="row.byBranch[other.id]"></a>
                                 </template>
+                                {{-- ⚠ x-safe-html, not x-text: a PROSE row (the description) comes
+                                     back with the words that differ underlined, exactly as the
+                                     lines below are — metaValueHtml escapes everything itself and
+                                     leaves the other rows plain, since a font name and another
+                                     font name share no word to underline. --}}
                                 <template x-if="row.byBranch[other.id] !== undefined && !isWebLink(row.byBranch[other.id])">
                                     <span class="editor-text break-words"
                                           :class="metaTextTint(row, other.id)"
-                                          x-text="row.byBranch[other.id]"></span>
+                                          x-safe-html="metaValueHtml(row, other.id)"></span>
                                 </template>
                             </td>
                         </template>
