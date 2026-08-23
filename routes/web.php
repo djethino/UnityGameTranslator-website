@@ -162,6 +162,8 @@ $localizableRoutes = function () {
     Route::get('/translations/{translation}/merge-preview/data', [TranslationController::class, 'mergePreviewData'])->name('translations.merge-preview.data');
     // Settings travel apart from the lines: see TranslationController::mergePreviewSettings
     Route::get('/translations/{translation}/merge-preview/settings', [TranslationController::class, 'mergePreviewSettings'])->name('translations.merge-preview.settings');
+// Asked when the tab comes back into view, never on a timer — see the controller.
+Route::get('/translations/{translation}/merge-preview/state', [TranslationController::class, 'mergePreviewState'])->name('translations.merge-preview.state');
 
     // Live edit session pages — anonymous, token-based auth from the mod.
     // The entry route consumes the one-time token and redirects to the
@@ -204,6 +206,8 @@ $localizableRoutes = function () {
         // Merge View (Main owner only)
         Route::get('/translations/{uuid}/merge', [MergeController::class, 'show'])->name('translations.merge');
         Route::get('/translations/{uuid}/merge/data', [MergeController::class, 'data'])->name('translations.merge.data');
+// Asked when the tab comes back into view, never on a timer — see the controller.
+Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state'])->name('translations.merge.state');
         Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
         Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
     });

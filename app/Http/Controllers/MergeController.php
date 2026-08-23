@@ -33,6 +33,40 @@ class MergeController extends Controller
     }
 
     /**
+     * Is what this page shows still what the server holds?
+     *
+     * 🔴 **Asked once, when the tab comes back into view — never on a timer.** A merge can sit open
+     * for hours while the file is rewritten elsewhere: another tab of the same person, the mod
+     * uploading captures, a contribution updated by its author. Until now the only thing that
+     * noticed was the per-line guard at save time, which is late — the reading was done against a
+     * file that had moved.
+     *
+     * ⚠ Deliberately tiny: hashes only, no content. The data endpoint next door serves the whole
+     * lineage, which is exactly what must not happen every time somebody alt-tabs.
+     *
+     * ⚠ Same ownership rule as every other endpoint here (`ownTranslation`), and the contributions
+     * are reported one by one: a merge reads several files, and any of them moving matters.
+     *
+     * ⚠ The shape mirrors the mod's own `sync/state` (`file_hash` per translation): the same
+     * question already has an answer over there, and two vocabularies for "is my copy current"
+     * would be one too many.
+     */
+    public function state(Request $request, string $uuid): \Illuminate\Http\JsonResponse
+    {
+        $main = $this->ownTranslation($uuid);
+
+        $branches = Translation::where('file_uuid', $uuid)
+            ->where('visibility', 'branch')
+            ->where('id', '!=', $main->id)
+            ->get(['id', 'file_hash']);
+
+        return response()->json([
+            'file_hash' => $main->file_hash,
+            'branches' => $branches->pluck('file_hash', 'id'),
+        ], 200, ['Cache-Control' => 'no-store, private']);
+    }
+
+    /**
      * Show the editor for the caller's own translation in this lineage.
      * Branches get the edit mode only; merge is the Main's view.
      */

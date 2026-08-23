@@ -960,6 +960,34 @@ class TranslationController extends Controller
      * where the local file lives in the browser's sessionStorage).
      */
     /**
+     * Is what this page shows still what the server holds?
+     *
+     * 🔴 **Asked once, when the tab comes back into view — never on a timer.** A comparison can sit
+     * open for hours; meanwhile the online version may be rewritten (another tab, another device),
+     * and the session that authorises writing it back expires on its own (15 minutes, 2 hours once
+     * opened). Both were only discovered by pressing Save, after the work was done.
+     *
+     * ⚠ Deliberately tiny: an empty envelope and a hash, no content. The heavy endpoint next door
+     * streams megabytes, which is exactly what must not happen every time somebody alt-tabs.
+     *
+     * ⚠ **Authorisation is the SAME call the data endpoint makes**, not a second rule that looks
+     * like it — and the 410 it raises on a dead session is what tells the page to stop offering to
+     * save. `session` says which flow this is, because a web-flow page has no session to lose.
+     */
+    public function mergePreviewState(Translation $translation): \Illuminate\Http\JsonResponse
+    {
+        $this->resolveMergePreviewPaths($translation);
+
+        $live = session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id;
+
+        return response()->json([
+            'file_hash' => $translation->file_hash,
+            'session' => $live ? 'mod' : 'web',
+        ], 200, ['Cache-Control' => 'no-store, private']);
+    }
+
+    /**
      * Who may read the two sides of a comparison, and where they are.
      *
      * Extracted so every endpoint serving comparison data enforces the SAME rule. Two copies of

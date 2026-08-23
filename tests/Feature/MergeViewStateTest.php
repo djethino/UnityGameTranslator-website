@@ -441,6 +441,36 @@ class MergeViewStateTest extends TestCase
         $this->assertStringContainsString('catSame: false', $html);
     }
 
+    /**
+     * 🔴 A merge can sit open for hours while the files move under it — another tab of the same
+     * person, the mod uploading captures, a contribution updated by its author. Until now the only
+     * thing that noticed was the per-line guard at save time, which is late: the reading was already
+     * done against a file that had moved.
+     *
+     * ⚠ Every file it reads, not only the Main: a merge weighs several, and any of them moving
+     * changes what the screen is proposing.
+     */
+    public function test_a_merge_can_be_asked_whether_its_files_have_moved(): void
+    {
+        [$owner, $uuid, $main, $branch] = $this->makeMergeView();
+
+        $this->actingAs($owner)
+            ->getJson(route('translations.merge.state', ['uuid' => $uuid]))
+            ->assertOk()
+            ->assertJsonPath('file_hash', $main->fresh()->file_hash)
+            ->assertJsonPath('branches.' . $branch->id, $branch->fresh()->file_hash);
+    }
+
+    /** Same ownership rule as everything else here — a state is still somebody's business. */
+    public function test_the_state_of_a_merge_is_owner_only(): void
+    {
+        [, $uuid] = $this->makeMergeView();
+
+        $this->actingAs(User::factory()->create())
+            ->getJson(route('translations.merge.state', ['uuid' => $uuid]))
+            ->assertNotFound();
+    }
+
     public function test_the_merge_data_carries_what_the_owner_thinks_of_each_contribution(): void
     {
         // The stars are the tie-break, so they have to reach the client. They were rendered in

@@ -253,6 +253,57 @@ class MergePreviewLocalFlowTest extends TestCase
             ->assertSee(route('translations.merge-preview.apply-local', $main));
     }
 
+    /**
+     * 🔴 A page left open for hours has two ways of going stale, and only one of them is its own
+     * doing: the online version can be rewritten under it, and the session that authorises writing
+     * back expires on its own. Both were discovered by pressing Save, after the work was done.
+     *
+     * ⚠ The endpoint is deliberately tiny — a hash and an envelope. Asked when the tab comes back
+     * into view, never on a timer, so it must cost nothing.
+     */
+    public function test_a_comparison_can_be_asked_whether_it_is_still_current(): void
+    {
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE);
+
+        $token = $this->init($contributor, $main, self::LOCAL)->json('token');
+        $this->get("/translations/{$main->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $this->get(route('translations.merge-preview.state', $main))
+            ->assertOk()
+            ->assertJsonPath('file_hash', $main->fresh()->file_hash)
+            ->assertJsonPath('session', 'mod');
+    }
+
+    /** A dead session answers 410 — the same refusal the data endpoint gives, from the same guard. */
+    public function test_an_expired_comparison_says_so_before_anything_is_saved(): void
+    {
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE);
+
+        $token = $this->init($contributor, $main, self::LOCAL)->json('token');
+        $this->get("/translations/{$main->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        MergePreviewToken::where('translation_id', $main->id)
+            ->update(['expires_at' => now()->subMinute()]);
+
+        $this->get(route('translations.merge-preview.state', $main))->assertStatus(410);
+    }
+
+    /** Nobody else's business: the state endpoint is as guarded as the data it describes. */
+    public function test_the_state_of_a_comparison_is_not_public(): void
+    {
+        $owner = User::factory()->create()->refresh();
+        $stranger = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($owner, self::ONLINE);
+
+        $this->actingAs($stranger)
+            ->get(route('translations.merge-preview.state', $main))
+            ->assertForbidden();
+    }
+
     public function test_a_publishing_comparison_says_nothing_about_going_to_the_game(): void
     {
         $owner = User::factory()->create()->refresh();
