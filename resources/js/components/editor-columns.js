@@ -76,11 +76,76 @@ export function editorColumns() {
                 rules.push(`.editor-grid.cols-sized{table-layout:fixed;width:${Math.round(gridWidth)}px}`);
             }
 
-            style.textContent = rules.join('\n');
+            const text = rules.join('\n');
+            // ⚠ Only when it actually changed. Writing the same rules back re-lays the table out,
+            // which the observer below hears as a resize, which writes them again: applying this
+            // from a ResizeObserver without the guard is a loop.
+            if (style.textContent !== text) style.textContent = text;
         },
 
+        /** The widths the grid is actually drawn with, which is not always what was asked for. */
+        _renderedWidths() {
+            const root = this.$refs.gridBox || document;
+            const out = {};
+            root.querySelectorAll('table.editor-grid thead th[data-col]').forEach((th) => {
+                out[th.dataset.col] = Math.round(th.getBoundingClientRect().width);
+            });
+            return out;
+        },
+
+        /**
+         * Fill the box when there is room to spare, WITHOUT touching what anybody set.
+         *
+         * 🔴 The rule "a grid must not end short of its box" was enforced during a drag and
+         * nowhere else — so the workbench, which hands the grid some 520 more pixels, left them
+         * blank. Measured: columns narrowed until they fit a 1182 box exactly, then the workbench
+         * showed them in a 1703 one with 521px of nothing on the right, on a screen entered
+         * precisely to gain room.
+         *
+         * ⚠ **The spare room is shared out for DISPLAY and never written back.** `columnWidths`
+         * stays what was set by hand, so going back to the narrow view recomputes a spare of zero
+         * and returns the grid exactly as it was. A round trip that changed the widths would
+         * compound at every switch — which is the whole reason this is not simply "resize on
+         * toggle".
+         *
+         * ⚠ Shared out in proportion to what each column already holds, and only among the ones
+         * with a handle: the same rule `_distribute` applies when a drag leaves slack, so there is
+         * one behaviour to learn rather than two. A tag column holds a badge and keeps its width.
+         */
         applyColumnWidths() {
-            this._writeColumnWidths(this.columnWidths, this.columnsSized ? this.gridWidth : 0);
+            if (!this.columnsSized) {
+                this._writeColumnWidths(this.columnWidths, 0);
+                this.refreshGridFits();
+                return;
+            }
+
+            const box = this.$refs.gridBox;
+            const flexible = Object.keys(this.columnWidths).filter((col) => this._isFlexible(col));
+            const declared = Object.values(this.columnWidths).reduce((sum, w) => sum + w, 0);
+            // What the grid carries besides the declared columns — the index, the answer rail,
+            // the borders. Derived from the width photographed on entry, never re-measured here:
+            // measuring mid-spread would read the width this very function just wrote.
+            const fixedPart = Math.max(0, this.gridWidth - declared);
+            const spare = box ? box.clientWidth - (declared + fixedPart) : 0;
+
+            if (spare <= 0 || flexible.length === 0) {
+                this._writeColumnWidths(this.columnWidths, this.gridWidth);
+                this.refreshGridFits();
+                return;
+            }
+
+            const shown = { ...this.columnWidths };
+            const base = flexible.reduce((sum, col) => sum + (this.columnWidths[col] || 0), 0) || 1;
+            let given = 0;
+            flexible.forEach((col, index) => {
+                const share = index === flexible.length - 1
+                    ? spare - given
+                    : Math.round(spare * ((this.columnWidths[col] || 0) / base));
+                given += share;
+                shown[col] = (this.columnWidths[col] || 0) + share;
+            });
+
+            this._writeColumnWidths(shown, box.clientWidth);
             this.refreshGridFits();
         },
 
@@ -333,7 +398,11 @@ export function editorColumns() {
                 width: null,
                 // Photographed once, at the start: distributing from the LIVE widths would
                 // compound its own rounding at every mouse move and drift across a long drag
-                baseWidths: { ...this.columnWidths },
+                // ⚠ What is ON SCREEN, not what was set: with spare room shared out for display
+                // (see applyColumnWidths) the two differ, and starting from the stored numbers
+                // would move every column the moment the edge did. Dropping the edge writes these
+                // back, so a width set in the workbench is the width you saw yourself set.
+                baseWidths: this._renderedWidths(),
                 // 🔴 **MEASURED, like everything else on this line — never read from `gridWidth`.**
                 //
                 // That number is written by _distribute, which pins it to the box width whenever a
@@ -413,7 +482,14 @@ export function editorColumns() {
             if (typeof ResizeObserver !== 'undefined') {
                 const table = (this.$refs.gridBox || document).querySelector('table.editor-grid');
                 if (table) {
-                    this._gridFitsObserver = new ResizeObserver(() => this.refreshGridFits());
+                    // ⚠ Also re-shares the spare room: the box changes size when the workbench
+                    // takes the window and when the browser is resized, and the grid must not be
+                    // left ending short of it. Not while a drag is in flight — _distribute owns
+                    // the widths for its duration.
+                    this._gridFitsObserver = new ResizeObserver(() => {
+                        if (this._resize) { this.refreshGridFits(); return; }
+                        this.applyColumnWidths();
+                    });
                     this._gridFitsObserver.observe(table);
                     if (this.$refs.gridBox) this._gridFitsObserver.observe(this.$refs.gridBox);
                 }
