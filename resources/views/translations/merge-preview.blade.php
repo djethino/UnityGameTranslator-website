@@ -115,6 +115,20 @@
 
     {{-- Main content --}}
     <div x-show="loaded && !error" x-cloak>
+        <x-editor.stale-banner />
+
+        {{-- 🔴 La session est morte : recharger n'y changera rien, il faut relancer depuis le jeu.
+             Un message à part, parce que la suite n'est pas la même — et il nomme la sortie qui
+             reste, `Download`, qui ne consulte pas le serveur et rend donc exactement l'écran. --}}
+        <div x-show="sessionLost" x-cloak
+             class="mb-6 flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-red-600/60 bg-red-900/30">
+            <i class="fas fa-circle-xmark text-red-400"></i>
+            <div class="flex-1 min-w-[16rem] text-sm">
+                <p class="text-red-200 font-medium">{{ __('merge_preview.session_lost_title') }}</p>
+                <p class="text-red-100/80">{{ __('merge_preview.session_lost_body') }}</p>
+            </div>
+        </div>
+
         {{-- Stats --}}
         <div class="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center">
@@ -292,7 +306,8 @@
         {{-- The workbench strip, shared with the merge view — see
              components/editor/workbench-bar.blade.php. Only the category filters differ from one
              screen to the next, so only those are passed in. --}}
-        <x-editor.workbench-bar save="submitResult()" save-disabled="saving || totalChanges === 0">
+        <x-editor.workbench-bar save="submitResult()"
+            save-disabled="saving || totalChanges === 0 || sessionLost">
             @foreach ($sides as $side)
                 <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $side['onlyLabel'] }}">
                     <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
@@ -464,7 +479,15 @@
                      under a banner reading "Nothing is published" — and nothing does go to the
                      server that way round: the result waits in the token's own file for the mod to
                      collect it. One verb, one destination, per direction. --}}
-                <button type="button" @click="submitResult()" :disabled="saving || totalChanges === 0"
+                {{-- ⚠ Grisé quand la session est morte, et il DIT pourquoi : l'échec est certain, donc
+                     faire cliquer serait révéler un refus qu'on connaissait déjà. Le `Download` à
+                     gauche reste actif — il ne consulte pas le serveur et rend exactement l'écran. --}}
+                {{-- ⚠ La raison vient d'une propriété du composant, pas d'un @js() posé ici : dans un
+                     ATTRIBUT, les échappements `\uXXXX` que produit @js ne sont pas réinterprétés —
+                     le tiret cadratin s'affichait « u2014 ». Dans un <script>, @js reste correct. --}}
+                <button type="button" @click="submitResult()"
+                    :disabled="saving || totalChanges === 0 || sessionLost"
+                    :title="sessionLost ? sessionLostWhy : ''"
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
                     <i class="fas mr-2" :class="saving ? 'fa-spinner fa-spin' : '{{ $toLocal ? 'fa-download' : 'fa-save' }}'"></i>
                     {{ $toLocal ? __('merge_preview.send_to_game') : __('merge_preview.save_to_server') }}
@@ -1406,6 +1429,25 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the column the result is built on — the one that receives. */
         targetSource() {
             return this.toLocal ? 'local' : 'online';
+        },
+
+        /** Why the save is greyed out, in words — read by its tooltip (see the button). */
+        sessionLostWhy: @js(__('merge_preview.session_lost_why')),
+
+        /** Core hook: where to ask whether this comparison still describes the file — and still may
+         *  write it. A dead session answers 410 there, which the core reads on its own. */
+        freshnessUrl() {
+            return @js(route('translations.merge-preview.state', $translation));
+        },
+
+        /**
+         * Core hook: only the ONLINE side can move.
+         *
+         * ⚠ The local file is a snapshot the mod handed over when the comparison opened; it is
+         * frozen for the life of the session and cannot go stale under the page.
+         */
+        freshnessMark(state) {
+            return state.file_hash ?? '';
         },
 
         {{-- ⚠ Reads entryOf directly, never entryOnFile: that one now answers "the target's row",

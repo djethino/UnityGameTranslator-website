@@ -137,6 +137,78 @@ export function editorCore(config) {
         // ── Pinning the reference column (see editor-pin.js) ──────────────
         ...editorPin(),
 
+        // ── Is this page still describing the file as it is? ─────────────
+        //
+        // 🔴 **A page left open goes stale in two different ways, and neither used to be visible
+        // until Save.** The file can be rewritten underneath — another tab, another machine, the mod
+        // uploading captures, a contribution updated by its author — and a comparison's session
+        // expires on its own (15 minutes, 2 hours once opened). The per-line guard at save time
+        // protects the FILE; it does nothing for the person who spent an hour reading a state that
+        // no longer exists.
+        //
+        // ⚠ **Asked when the page comes back into view, never on a timer.** These screens are not
+        // connected to anything live — the live editor is, and polls for that reason. Here the only
+        // moment worth asking is the moment somebody returns to the page.
+
+        /** The file moved under this page. */
+        stale: false,
+        /** The session that authorises writing is gone — reloading will not bring it back. */
+        sessionLost: false,
+        /** The mark the last answer carried, or null until the first one establishes it. */
+        _freshMark: null,
+
+        /** Page hook: where to ask. Null on a screen with nothing to check. */
+        freshnessUrl() { return null; },
+
+        /** Page hook: the answer reduced to one comparable string — see the pages for what counts. */
+        freshnessMark(state) { return JSON.stringify(state); },
+
+        initFreshness() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') this.checkFreshness();
+            });
+        },
+
+        /**
+         * One request, and nothing to say when it fails.
+         *
+         * ⚠ **The first answer establishes the mark rather than reporting a change** — same shape as
+         * the live editor's first poll. Without it, opening a page would announce that it is already
+         * out of date.
+         *
+         * ⚠ **Silent on a network error**: a hiccup in the Wi-Fi is not news about the file, and an
+         * alarm that cries wolf is worse than no alarm. Only a definite answer speaks.
+         *
+         * ⚠ Stops asking once it knows: the message stays until the page is reloaded, and asking
+         * again could only say the same thing.
+         */
+        checkFreshness() {
+            const url = this.freshnessUrl();
+            if (!url || this.stale || this.sessionLost) return;
+
+            fetch(url, { headers: { Accept: 'application/json' } })
+                .then((response) => {
+                    // The comparison's own guard already answers this on a dead token, with the
+                    // words to match — see resolveMergePreviewPaths.
+                    if (response.status === 410) {
+                        this.sessionLost = true;
+                        return null;
+                    }
+                    return response.ok ? response.json() : null;
+                })
+                .then((state) => {
+                    if (!state) return;
+
+                    const mark = this.freshnessMark(state);
+                    if (this._freshMark === null) {
+                        this._freshMark = mark;
+                        return;
+                    }
+                    if (mark !== this._freshMark) this.stale = true;
+                })
+                .catch(() => { /* network hiccup: not news about the file */ });
+        },
+
         /**
          * The grid's geometry just changed — everything measured FROM it has to be told.
          *
@@ -235,6 +307,7 @@ export function editorCore(config) {
          */
         initEditorCore() {
             this._forgetStaleSittings();
+            this.initFreshness();
             this.initEditorWorkbench();
             this.initTextMode();
             this.restoreUiState();
@@ -1611,6 +1684,8 @@ export function editorCore(config) {
             this.$watch('loaded', (ready) => {
                 if (!ready) return;
                 this.$nextTick(() => requestAnimationFrame(() => this._restoreColumnWidths()));
+                // Establishes the mark to compare against later — see checkFreshness.
+                this.checkFreshness();
             });
         },
 

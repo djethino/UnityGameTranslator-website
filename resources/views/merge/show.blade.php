@@ -217,6 +217,8 @@
         </div>
 
         <div x-show="loaded && !error" x-cloak>
+            <x-editor.stale-banner />
+
             {{-- Stats --}}
             <div class="mb-6 grid {{ $mode === 'edit' ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4' }} gap-4">
                 <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center">
@@ -1667,6 +1669,24 @@ document.addEventListener('alpine:init', () => {
 
         /** Core hook: the result is built on the Main. */
         targetSource() { return 'main'; },
+
+        /** Core hook: where to ask whether the files still say what this page shows. */
+        freshnessUrl() {
+            return @js(route('translations.merge.state', ['uuid' => $uuid]));
+        },
+
+        /**
+         * Core hook: what counts as "the files moved".
+         *
+         * ⚠ **The contributions on screen, not every contribution in the lineage.** A merge reads
+         * several files and any of them moving changes what it proposes — but one being updated
+         * while nobody is showing it changes nothing here, and announcing it would be an alarm
+         * about a column that is not on the page.
+         */
+        freshnessMark(state) {
+            const shown = this.branches.map(b => b.id + ':' + (state.branches?.[b.id] ?? ''));
+            return [state.file_hash, ...shown].join('|');
+        },
 
         /** Core hook: one column per contribution being reviewed. */
         sourceIds() {
