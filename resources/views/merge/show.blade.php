@@ -103,7 +103,9 @@
 
                 {{-- Quick filters --}}
                 @php
-                    $unreviewedIds = $branches->filter(fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash)->pluck('id');
+                    $isUnread = fn($b) => !$b->reviewed_hash || $b->file_hash !== $b->reviewed_hash;
+                    $unreviewedIds = $branches->filter($isUnread)->pluck('id');
+                    $readCount = $branches->count() - $unreviewedIds->count();
                 @endphp
                 <div class="flex gap-1 text-xs">
                     <button type="button" class="branch-quick-filter px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition"
@@ -124,9 +126,47 @@
 
                 <span class="text-gray-600">|</span>
 
+                {{-- 🔴 **Folded, this list holds what is still to go through.**
+                     Contributions already read stay reachable — one click — but they are not the
+                     work in front of you, and a Main with twenty of them was reading a wall to
+                     find the two that had moved. Unfolding shows them with what a Main actually
+                     wants to know about a contribution over time: when it was last gone through,
+                     how many of its lines have ever been taken, and its mark.
+
+                     ⚠ Reading one does NOT hide it from the list you are working in: they are
+                     rendered all the same and simply carry `data-read`, so saving in stages during
+                     a long review cannot make a column vanish mid-way. That was reported before it
+                     could happen. --}}
+                @php $readShown = $readCount > 0; @endphp
+                @if($readShown)
+                <button type="button" id="toggleReadBranches"
+                        class="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition shrink-0"
+                        title="{{ __('merge.show_reviewed') }}">
+                    <i class="fas fa-chevron-down mr-1" id="toggleReadIcon"></i>{{ trans_choice('merge.reviewed_count', $readCount, ['count' => $readCount]) }}
+                </button>
+
+                {{-- ⚠ Offered only once there is a pile to look through — with two contributions
+                     in front of you, a way to reorder them is a control that answers nothing.
+
+                     ⚠ Whatever is chosen, what has NOT been gone through stays first: the order
+                     answers "which of the ones I have seen", never "what is left to do". --}}
+                <select id="branchSort"
+                        class="shrink-0 bg-gray-700 border border-gray-600 rounded px-1 py-1 text-xs text-gray-300"
+                        title="{{ __('merge.sort_branches') }}">
+                    <option value="reviewed">{{ __('merge.sort_by_reviewed') }}</option>
+                    <option value="rating">{{ __('merge.sort_by_rating') }}</option>
+                    <option value="name">{{ __('merge.sort_by_name') }}</option>
+                </select>
+                @endif
+
                 {{-- Individual branch checkboxes --}}
                 @foreach($branches as $branch)
-                <div class="flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600">
+                <div class="branch-chip flex items-center gap-2 px-2 py-1 rounded bg-gray-700/50 border border-gray-600
+                            {{ $isUnread($branch) ? '' : 'is-read hidden' }}"
+                     data-read="{{ $isUnread($branch) ? '0' : '1' }}"
+                     data-reviewed-at="{{ $branch->reviewed_at?->timestamp ?? 0 }}"
+                     data-rating="{{ $branch->main_rating ?? 0 }}"
+                     data-name="{{ Str::lower($branch->user->name ?? '') }}">
                     <label class="flex items-center gap-2 cursor-pointer hover:text-white transition">
                         {{-- data-branch-name: the confirmation before hiding a contribution names
                              it, and the page chrome is a separate component with no access to the
@@ -138,6 +178,21 @@
                         <x-user-mention :user="$branch->user" class="text-gray-300" />
                         <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
                     </label>
+
+                    {{-- What a Main wants to know about a contribution they have already been
+                         through, and could not see anywhere: when, and how much of it has ever
+                         been taken. Shown only on those — on an unread one both are noise. --}}
+                    @unless($isUnread($branch))
+                        <span class="text-xs text-gray-500 whitespace-nowrap"
+                              title="{{ $branch->reviewed_at?->toDayDateTimeString() }}">
+                            @if($branch->reviewed_at)
+                                {{ $branch->reviewed_at->diffForHumans() }}
+                            @endif
+                            @if($branch->merged_lines_total > 0)
+                                · <span class="text-gray-400">{{ number_format($branch->merged_lines_total) }}</span>
+                            @endif
+                        </span>
+                    @endunless
                     {{-- Rating and report sit tight against the name: the row holds one chip per
                          branch and has to stay on ONE line — three of them wrapped the moment the
                          report flag was added, and a name longer than these would have done it
@@ -157,6 +212,27 @@
                         </span>
                         @endif
                     </div>
+
+                    {{-- 🔴 **Read / unread, and it is not the mark beside it.**
+
+                         The mark judges a contributor over time and only the Main ever sees it;
+                         this says one state of one file has been gone through. They were the same
+                         column until 2026-08-23, so the only way to stop a contribution coming
+                         back for ever was to GRADE its author — and taking nothing from somebody
+                         is never a verdict on them: the Main may have had those lines already, or
+                         preferred another contribution's wording.
+
+                         ⚠ An envelope, because that is the shape everyone has read for thirty
+                         years, and reversible for the same reason: a review interrupted halfway
+                         goes back in the queue. Placed before the flag — mark, then read, then
+                         report — so the two judgements of a person stay together and this fact
+                         about a file sits apart from them. --}}
+                    <button type="button" data-read-id="{{ $branch->id }}"
+                        data-read="{{ $isUnread($branch) ? '0' : '1' }}"
+                        class="read-btn text-xs transition {{ $isUnread($branch) ? 'text-orange-300 hover:text-orange-200' : 'text-gray-500 hover:text-gray-300' }}"
+                        title="{{ $isUnread($branch) ? __('merge.mark_read') : __('merge.mark_unread') }}">
+                        <i class="fas {{ $isUnread($branch) ? 'fa-envelope' : 'fa-envelope-open' }}"></i>
+                    </button>
 
                     {{-- Reporting a branch.
 

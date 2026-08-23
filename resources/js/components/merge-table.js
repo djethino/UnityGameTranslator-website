@@ -54,6 +54,7 @@ export default function mergeTable() {
             });
 
             this.initBranchRating();
+            this.initBranchRead();
         },
 
         /** The boxes this change is turning OFF — nothing to warn about when it turns one on. */
@@ -153,6 +154,109 @@ export default function mergeTable() {
                         }
                     });
                 });
+            });
+        },
+
+        /**
+         * Read / unread on a contribution, and the fold that hides the ones already gone through.
+         *
+         * 🔴 **Reading one does not remove it from the list you are working in.** The chip keeps
+         * its place and its checkbox; only the fold decides what is shown, and only on the next
+         * load. Saving in stages during a long review must never make a column disappear halfway —
+         * which is exactly what would happen if this hid the chip on the spot.
+         *
+         * ⚠ The envelope is not the mark beside it: the mark judges a contributor over time and
+         * only the Main sees it, this says one state of one file has been gone through.
+         */
+        initBranchRead() {
+            const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+
+            document.querySelectorAll('.read-btn').forEach((button) => {
+                button.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const wasRead = button.dataset.read === '1';
+                    const read = !wasRead;
+
+                    try {
+                        const response = await fetch(`/translations/${button.dataset.readId}/read-branch`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                            body: JSON.stringify({ read }),
+                        });
+                        const data = await response.json();
+                        if (!data.success) {
+                            console.error('Read state failed:', data.error);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Read state error:', error);
+                        return;
+                    }
+
+                    button.dataset.read = read ? '1' : '0';
+                    const icon = button.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fa-envelope', !read);
+                        icon.classList.toggle('fa-envelope-open', read);
+                    }
+                    button.classList.toggle('text-orange-300', !read);
+                    button.classList.toggle('hover:text-orange-200', !read);
+                    button.classList.toggle('text-gray-500', read);
+                    button.classList.toggle('hover:text-gray-300', read);
+
+                    // ⚠ The chip stays where it is. `is-read` only tells the fold what it is,
+                    // and the fold is read on the NEXT load: a list that rearranged itself under
+                    // a review in progress would be worse than one that waits.
+                    const chip = button.closest('.branch-chip');
+                    if (chip) chip.classList.toggle('is-read', read);
+                });
+            });
+
+            const sort = document.getElementById('branchSort');
+            if (sort) {
+                sort.addEventListener('change', () => {
+                    const chips = [...document.querySelectorAll('.branch-chip')];
+                    if (chips.length === 0) return;
+
+                    const parent = chips[0].parentElement;
+                    const by = sort.value;
+
+                    chips.sort((a, b) => {
+                        // ⚠ What has not been gone through stays first, whatever is chosen: this
+                        // orders the ones already seen, it never buries the work still waiting.
+                        const unread = Number(b.dataset.read === '0') - Number(a.dataset.read === '0');
+                        if (unread !== 0) return unread;
+
+                        if (by === 'name') {
+                            return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+                        }
+                        if (by === 'rating') {
+                            return Number(b.dataset.rating) - Number(a.dataset.rating);
+                        }
+                        // Most recently gone through first — the pile you were just in.
+                        return Number(b.dataset.reviewedAt) - Number(a.dataset.reviewedAt);
+                    });
+
+                    chips.forEach((chip) => parent.appendChild(chip));
+                });
+            }
+
+            const toggle = document.getElementById('toggleReadBranches');
+            if (!toggle) return;
+
+            toggle.addEventListener('click', () => {
+                const icon = document.getElementById('toggleReadIcon');
+                const hidden = document.querySelector('.branch-chip.is-read.hidden') !== null;
+
+                document.querySelectorAll('.branch-chip.is-read').forEach((chip) => {
+                    chip.classList.toggle('hidden', !hidden);
+                });
+                if (icon) {
+                    icon.classList.toggle('fa-chevron-down', !hidden);
+                    icon.classList.toggle('fa-chevron-up', hidden);
+                }
             });
         },
 

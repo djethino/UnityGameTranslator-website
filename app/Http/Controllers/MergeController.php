@@ -537,6 +537,7 @@ class MergeController extends Controller
                     }
                     $branch->timestamps = false;
                     $branch->reviewed_hash = $branch->file_hash;
+                    $branch->reviewed_at = now();
                     $branch->save();
                 });
         }
@@ -695,9 +696,19 @@ class MergeController extends Controller
         // any list ordered by freshness.
         $translation->timestamps = false;
         $translation->reviewed_hash = $read ? $translation->file_hash : null;
+        // ⚠ The date is only ever moved FORWARD, never cleared: putting a contribution back in the
+        // queue does not undo having read it on the 12th, and "read on the 12th, new work since"
+        // is exactly what the list needs to say.
+        if ($read) {
+            $translation->reviewed_at = now();
+        }
         $translation->save();
 
-        return response()->json(['success' => true, 'read' => $read]);
+        return response()->json([
+            'success' => true,
+            'read' => $read,
+            'reviewed_at' => $translation->reviewed_at?->toIso8601String(),
+        ]);
     }
 
     /**
@@ -746,6 +757,7 @@ class MergeController extends Controller
         $translation->main_rating = $rating;
         if ($rating !== null) {
             $translation->reviewed_hash = $translation->file_hash;
+            $translation->reviewed_at = now();
         }
         $translation->save();
 
