@@ -1523,8 +1523,10 @@ document.addEventListener('alpine:init', () => {
                 this.selections[key] = this.byHand(
                     this.pick(source, this.getValue(entry), this.getTag(entry), false));
 
-                // An edit belongs to the target: taking the offered side replaces what it was on.
-                if (source !== this.targetSource()) delete this.editedValues[key];
+                // 🔴 From EITHER side, the target's included — the very defect the note above
+                // describes, left standing for one of the two columns: a rewording kept here goes
+                // on being shown and painted as a rewording while the save writes the swept value.
+                delete this.editedValues[key];
             }
             this.persistPendingState();
         },

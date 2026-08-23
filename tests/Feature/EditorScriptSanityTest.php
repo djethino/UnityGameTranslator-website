@@ -88,4 +88,42 @@ class EditorScriptSanityTest extends TestCase
             );
         }
     }
+
+    /**
+     * 🔴 Picking a version drops a pending rewording — from ANY column, the target's included.
+     *
+     * ⚠ What a conditional `delete` costs is not a lost keystroke, it is a screen that STATES one
+     * thing and DOES another: the row goes on showing the reworded text (`x-show="isEdited(key)"`)
+     * and painted as reworded, while the save writes the version that was picked. Nothing warns,
+     * because both halves are individually correct.
+     *
+     * The condition that caused it read `source !== this.targetSource()` and came from the
+     * comparison screen, where `advancePick` swallows a click on the column already held so it
+     * never ran. Moved into the core it reached the merge view, where a rewording holds the row as
+     * `manual` and the click does get through. A guard that never fires where it was written is
+     * exactly the kind that survives review and breaks somewhere else.
+     */
+    public function test_taking_a_version_drops_a_pending_rewording_from_any_column(): void
+    {
+        foreach ($this->sources() as $file => $source) {
+            foreach (explode("\n", $source) as $number => $line) {
+                if (!str_contains($line, 'delete this.editedValues[key]')) {
+                    continue;
+                }
+
+                $this->assertSame(
+                    'delete this.editedValues[key];',
+                    trim($line),
+                    "$file:" . ($number + 1) . ' conditions the drop of a rewording on which column '
+                    . 'the value came from; the row would then show one value and save another'
+                );
+            }
+        }
+
+        $this->assertStringContainsString(
+            'delete this.editedValues[key];',
+            file_get_contents(base_path('resources/js/components/translation-editor.js')),
+            'the core stopped dropping the rewording when a version is taken'
+        );
+    }
 }

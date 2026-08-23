@@ -632,9 +632,14 @@ export function editorCore(config) {
             if (!picked) return;
             if (!this.pickIsWorthRecording(key, source, picked)) return;
 
-            // Taking a version discards a pending rewording: it belonged to the target, and the
-            // pick just replaced what it was written over.
-            if (source !== this.targetSource()) delete this.editedValues[key];
+            // 🔴 Taking a version discards a pending rewording — from ANY column, the target's
+            // included. Keeping it when the target itself was picked leaves the row showing the
+            // reworded text and painted as reworded, while the save writes the picked version:
+            // the screen would state one thing and do another. (The condition this replaces came
+            // from the comparison screen, where `advancePick` swallows a click on the column
+            // already held, so it never ran and its absence went unnoticed. On the merge view a
+            // rewording holds the row as `manual`, so the click DOES reach here.)
+            delete this.editedValues[key];
 
             this.selections[key] = picked;
             this.persistPendingState();
