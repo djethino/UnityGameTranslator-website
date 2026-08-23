@@ -473,7 +473,7 @@
                              toggle on a value you did not want to change. Buttons inside
                              stop propagation, so their own actions are unaffected. --}}
                         <tr @click="focusRow(key)" class="cursor-default hover:bg-gray-750 transition-colors"
-                                :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
+                                :class="isCurrentMatchRow(key) ? 'current-match-row' : ''"
                                 :data-row-index="idx">
                                 {{-- Capture-order index --}}
                                 {{-- Frozen with its header: an opaque background is required, or

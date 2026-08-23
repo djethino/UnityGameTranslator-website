@@ -116,7 +116,7 @@
                              toggle on a value you did not want to change. Buttons inside
                              stop propagation, so their own actions are unaffected. --}}
                         <tr @click="focusRow(key)" class="cursor-default hover:bg-gray-750 transition-colors"
-                            :class="isCurrentMatchRow(idx) ? 'current-match-row' : ''"
+                            :class="isCurrentMatchRow(key) ? 'current-match-row' : ''"
                             :data-row-index="idx">
                             <td x-show="showIndexColumn" x-cloak
                                 class="px-2 py-2 text-right font-mono text-xs text-gray-600 tabular-nums align-top sticky left-0 z-10 bg-gray-800 w-16 min-w-[4rem] max-w-[4rem]"

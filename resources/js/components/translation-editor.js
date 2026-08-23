@@ -1012,10 +1012,23 @@ export function editorCore(config) {
             return this.matchCount === 0 ? '0/0' : (this.safeMatchIndex + 1) + '/' + this.matchCount;
         },
 
-        /** Stronger highlight on the row the cursor points at. */
-        isCurrentMatchRow(index) {
-            if (this.filteredKeys.length === 0 || index !== this.safeMatchIndex) return false;
-            return (this.hasQuery && this.matchCount > 0) || this.cursorActive;
+        /**
+         * Stronger highlight on the row the cursor points at.
+         *
+         * 🔴 **Asked by KEY, never by position.** The rows are rendered by an `x-for` keyed on the
+         * translation key — deliberately, so that a reordering moves nodes instead of rewriting
+         * their contents — and a marker decided by comparing `idx` to a stored index is then a
+         * position compared against a list that has just been permuted. Two rows wearing the
+         * cursor at once was reported on 2026-08-23; the row's identity is what the loop is built
+         * on, so it is what this asks about.
+         *
+         * ⚠ I could not reproduce the two-row state from filters, sorting or the workbench, so
+         * this is not a confirmed fix for that report — it removes the class of fault, not a
+         * demonstrated path to it.
+         */
+        isCurrentMatchRow(key) {
+            if (this.hasQuery && this.matchCount === 0) return false;
+            return key !== undefined && key === this.cursorKey;
         },
 
         /** Enter = next, Shift+Enter = previous (IDE convention). */
