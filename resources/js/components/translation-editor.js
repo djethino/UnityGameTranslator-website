@@ -648,6 +648,17 @@ export function editorCore(config) {
             // A deleted key must be un-deleted before picking a side again
             if (this.isDeleted(key)) return;
 
+            // 🔴 Clicking typing a pick had set aside takes it back. The value under the cursor IS
+            // that typing — it is what the cell shows — and clicking a value is how every other
+            // cell on this grid is taken. Without this the click ran into advancePick, which
+            // answers for the column and left the screen visibly unchanged: reported as "nothing
+            // happens and the row looks unselected".
+            if (source === this.targetSource() && this.isEdited(key) && !this.editIsHeld(key)) {
+                this.onEditStaged(key);
+                this.persistPendingState();
+                return;
+            }
+
             // Clicking the column this row is already on: held → claimed → back to its own default.
             if (this.advancePick(key, source)) return;
 

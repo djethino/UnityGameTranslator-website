@@ -141,10 +141,21 @@ class EditorScriptSanityTest extends TestCase
                 "$screen answers a rewording with something other than 'manual'");
         }
 
+        $core = file_get_contents(base_path('resources/js/components/translation-editor.js'));
+
         $this->assertStringContainsString(
             "return picked === null || picked === 'manual';",
-            file_get_contents(base_path('resources/js/components/translation-editor.js')),
+            $core,
             'the core no longer decides in one place whether a rewording is the answer'
+        );
+
+        // ⚠ And the way back. Set aside, the typing is what the cell SHOWS, so clicking it takes it
+        // back — reported as "nothing happens, and nothing on the row looks selected" when the
+        // click fell through to advancePick, which answers for the column instead.
+        $this->assertStringContainsString(
+            'if (source === this.targetSource() && this.isEdited(key) && !this.editIsHeld(key)) {',
+            $core,
+            'clicking typing that a pick set aside no longer takes it back'
         );
     }
 }
