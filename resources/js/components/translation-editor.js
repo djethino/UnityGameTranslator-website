@@ -567,6 +567,97 @@ export function editorCore(config) {
             return this.categoryFilter(this.rowCategory(key));
         },
 
+        // ── Reading a row: which column holds it, and how firmly ─────────
+
+        /**
+         * Page hook: the tint a column answers to, without its `selected-` prefix.
+         *
+         * ⚠ It is a COLOUR, not an identifier: the merge view paints every contribution the same
+         * (`branch`), whichever one it is. Default = the column's own name, which is what a screen
+         * with two named sides wants.
+         */
+        cellTone(source) { return source; },
+
+        /**
+         * What a cell looks like: whose version this row is on, and whether somebody said so.
+         *
+         * 🔴 One rule, one place. It was written twice, and the copies had drifted: the comparison
+         * tested `source === 'local'` for a rewording, which was the target only one way round —
+         * so publishing painted a hand-written line as an ordinary pick, in the colour of the
+         * column rather than the colour of "somebody typed this".
+         *
+         * ⚠ **A rewording belongs to the TARGET.** It is written there and nowhere else, so that is
+         * the only column that can wear its colour.
+         *
+         * ⚠ The tint says WHICH column is held; the modifier says how firmly. Two facts, two
+         * classes, rather than four names — and the pin's stylesheet builds on `selected-<column>`,
+         * so the two must keep agreeing (see editor-pin.js).
+         */
+        getCellClass(key, source) {
+            if (source === this.targetSource() && this.isEdited(key)) return 'selected-manual';
+            if (this.pickedSource(key) !== source) return '';
+
+            const held = 'selected-' + this.cellTone(source);
+            return this.isUnclaimed(key) ? held + ' selection-unclaimed' : held;
+        },
+
+        /**
+         * Page hook: is this pick worth recording at all?
+         *
+         * ⚠ The merge view answers no on a row whose own version is picked with nothing to change:
+         * writing it back changes no byte and would count a modification nobody made. Default yes —
+         * a screen that has no such case says nothing.
+         */
+        pickIsWorthRecording(key, source, picked) { return true; },
+
+        /**
+         * Clicking a column: hold it, claim it, let it go — then take it.
+         *
+         * 🔴 The same gesture on the same grid, written twice. What legitimately differed is one
+         * screen's guard against a pick that writes nothing, and that is now a hook rather than a
+         * second copy of the whole gesture.
+         */
+        select(key, source) {
+            // Even on inert rows the click moves the search cursor (IDE caret)
+            this.focusRow(key);
+            // A deleted key must be un-deleted before picking a side again
+            if (this.isDeleted(key)) return;
+
+            // Clicking the column this row is already on: held → claimed → back to its own default.
+            if (this.advancePick(key, source)) return;
+
+            // ⚠ Claimed, never auto: this ran because somebody clicked, and a pick made by hand on
+            // an `A` line is exactly the validation the defaults refuse to invent.
+            const picked = this.pickFrom(key, source);
+            if (!picked) return;
+            if (!this.pickIsWorthRecording(key, source, picked)) return;
+
+            // Taking a version discards a pending rewording: it belonged to the target, and the
+            // pick just replaced what it was written over.
+            if (source !== this.targetSource()) delete this.editedValues[key];
+
+            this.selections[key] = picked;
+            this.persistPendingState();
+        },
+
+        /**
+         * Drop every pending answer on this screen, after asking.
+         *
+         * ⚠ Asked with the page's own words (`clearAllPrompt`), because the three screens name what
+         * is being dropped differently — but the act is one, and it was written three times.
+         */
+        clearAll() {
+            if (!window.confirm(this.clearAllPrompt)) return;
+
+            // ⚠ Only where there are columns to pick between: the live editor has none, and
+            // creating the map here would be inventing state nothing reads.
+            if (this.selections) this.selections = {};
+            this.clearPendingState();
+        },
+
+        /** Page hook: what the confirmation says. */
+        clearAllPrompt: '',
+
         // ── What this screen lets somebody DO ────────────────────────────
         //
         // 🔴 **Rights are the second thing that legitimately differs between the three editors**

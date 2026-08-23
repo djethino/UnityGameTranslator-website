@@ -1097,11 +1097,7 @@ document.addEventListener('alpine:init', () => {
 
         // ── Actions ──────────────────────────────────────────────────────
 
-        clearAll() {
-            if (confirm(@js(__('merge_preview.confirm_cancel')))) {
-                this.clearPendingState();
-            }
-        },
+        clearAllPrompt: @js(__('merge_preview.confirm_cancel')),
 
         save() {
             if (this.saving || this.totalChanges === 0) return;

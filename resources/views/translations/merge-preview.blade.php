@@ -307,7 +307,10 @@
              components/editor/workbench-bar.blade.php. Only the category filters differ from one
              screen to the next, so only those are passed in. --}}
         <x-editor.workbench-bar save="submitResult()"
-            save-disabled="saving || totalChanges === 0 || sessionLost">
+            save-disabled="saving || totalChanges === 0 || sessionLost"
+            save-title="sessionLost ? sessionLostWhy : ''"
+            save-icon="{{ $toLocal ? 'fa-download' : 'fa-save' }}"
+            save-label="{{ $toLocal ? __('merge_preview.send_to_game') : __('merge_preview.save_to_server') }}">
             @foreach ($sides as $side)
                 <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $side['onlyLabel'] }}">
                     <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
@@ -1371,31 +1374,6 @@ document.addEventListener('alpine:init', () => {
         },
 
 
-        select(key, source) {
-            // Even on inert rows the click moves the search cursor (IDE caret)
-            this.focusRow(key);
-            // A deleted key must be un-deleted before picking a side again
-            if (this.isDeleted(key)) return;
-
-            // Clicking the column this row is already on: held → claimed → back to its own
-            // default. The three states and their reasons are the core's, shared with the merge
-            // view, which runs the identical gesture on the identical grid.
-            if (this.advancePick(key, source)) return;
-
-            // ⚠ Claimed, never auto: this ran because somebody clicked, and a pick made by hand on
-            // an `A` line is exactly the validation the defaults refuse to invent.
-            const picked = this.pickFrom(key, source);
-            if (!picked) return;
-
-            // Taking the offered side drops what somebody typed: an edit belongs to the target, and
-            // keeping it would leave the row showing a value the pick just replaced.
-            if (source !== this.targetSource()) {
-                delete this.editedValues[key];
-            }
-
-            this.selections[key] = picked;
-            this.persistPendingState();
-        },
 
         /**
          * Tag the save will PRODUCE for the local side — previewed live,
@@ -1430,6 +1408,8 @@ document.addEventListener('alpine:init', () => {
         targetSource() {
             return this.toLocal ? 'local' : 'online';
         },
+
+        clearAllPrompt: @js(__('merge_preview.confirm_cancel')),
 
         /** Why the save is greyed out, in words — read by its tooltip (see the button). */
         sessionLostWhy: @js(__('merge_preview.session_lost_why')),
@@ -1521,22 +1501,6 @@ document.addEventListener('alpine:init', () => {
             return (tag === 'A' && sent && !this.isUnclaimed(key)) ? 'V' : tag;
         },
 
-        getCellClass(key, source) {
-            // Check if manually edited (only applies to local column)
-            if (source === 'local' && this.editedValues[key] !== undefined) {
-                return 'selected-manual';
-            }
-
-            const selected = this.pickedSource(key) === source;
-            if (selected) {
-                const held = source === 'local' ? 'selected-local' : 'selected-online';
-
-                // ⚠ The colour still says WHICH column is held; the modifier says how firmly. Two
-                // separate facts, so two classes rather than four names — same as the merge view.
-                return this.isUnclaimed(key) ? held + ' selection-unclaimed' : held;
-            }
-            return '';
-        },
 
         /**
          * Take every line this side holds.
@@ -1565,12 +1529,6 @@ document.addEventListener('alpine:init', () => {
             this.persistPendingState();
         },
 
-        clearAll() {
-            if (confirm(@js(__('merge_preview.confirm_cancel')))) {
-                this.selections = {};
-                this.clearPendingState();
-            }
-        },
 
         /**
          * Put the proposal back on whatever is still unanswered.

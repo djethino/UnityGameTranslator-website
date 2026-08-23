@@ -1670,6 +1670,22 @@ document.addEventListener('alpine:init', () => {
         /** Core hook: the result is built on the Main. */
         targetSource() { return 'main'; },
 
+        /** Core hook: every contribution wears the same colour — which one it is says nothing. */
+        cellTone(source) { return source === 'main' ? 'main' : 'branch'; },
+
+        /**
+         * Core hook: a click only ever produces a REAL change (see analyse/editors-gestures-parity.md).
+         *
+         * Picking the Main acts when it validates an `A` line, or when it replaces an existing
+         * answer (a contribution's version, a rewording). On a V/H/M/S line with nothing selected it
+         * would rewrite the line identically and count a modification nobody made.
+         */
+        pickIsWorthRecording(key, source, picked) {
+            return !(source === 'main' && picked.tag !== 'A' && !this.selections[key]);
+        },
+
+        clearAllPrompt: @js(__('merge.cancel_all')),
+
         /** Core hook: where to ask whether the files still say what this page shows. */
         freshnessUrl() {
             return @js(route('translations.merge.state', ['uuid' => $uuid]));
@@ -1701,51 +1717,6 @@ document.addEventListener('alpine:init', () => {
             return branch ? branch.content[key] : undefined;
         },
 
-        select(key, source) {
-            // Even on inert rows the click moves the search cursor (IDE caret)
-            this.focusRow(key);
-            if (this.isDeleted(key)) return;
-
-            // Clicking the column this row is already on: held → claimed → back to its own
-            // default. The three states and their reasons live in the core, because the preview
-            // screen runs the identical gesture on the identical grid.
-            if (this.advancePick(key, source)) return;
-
-            // ⚠ Claimed, never auto: this ran because somebody clicked. A pick made by hand on an
-            // `A` line is exactly the validation the defaults refuse to invent. Null when the
-            // column holds nothing for this key.
-            const picked = this.pickFrom(key, source);
-            if (!picked) return;
-
-            // A click only ever produces a REAL change (see analyse/editors-gestures-parity.md):
-            // picking Main acts when it validates an A line, or when it replaces an existing
-            // selection (branch pick / manual edit) — on a V/H/M/S line with nothing selected it
-            // would rewrite the line identically and count a phantom modification.
-            if (source === 'main' && picked.tag !== 'A' && !this.selections[key]) return;
-
-            // Choosing a version discards a pending manual edit
-            delete this.editedValues[key];
-
-            this.selections[key] = picked;
-            this.persistPendingState();
-        },
-
-        getCellClass(key, source) {
-            const sel = this.selections[key];
-            if (!sel) return '';
-            if (sel.source === source) {
-                const held = source === 'main' ? 'selected-main' : 'selected-branch';
-
-                // ⚠ The colour still says WHICH column is held; the modifier says how firmly. Two
-                // separate facts, so they are two separate classes rather than four names.
-                return sel.auto ? held + ' selection-unclaimed' : held;
-            }
-            // A manual edit displays in the Main column
-            if (source === 'main' && sel.source === 'manual') {
-                return 'selected-manual';
-            }
-            return '';
-        },
 
         /** Core hook: this screen's rows are the Main's. */
         entryOnFile(key) {
@@ -1887,12 +1858,6 @@ document.addEventListener('alpine:init', () => {
             return rows + this.settingsTakenCount() + this.publicationTakenCount();
         },
 
-        clearAll() {
-            if (confirm(@js(__('merge.cancel_all')))) {
-                this.selections = {};
-                this.clearPendingState();
-            }
-        },
 
         /**
          * Put the proposal back on whatever is still unanswered.

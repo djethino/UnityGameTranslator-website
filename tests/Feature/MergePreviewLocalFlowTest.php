@@ -247,10 +247,18 @@ class MergePreviewLocalFlowTest extends TestCase
 
         // Delete means the opposite here than when publishing; leaving that unsaid is how
         // someone erases their own work believing they are tidying up the Main
-        $this->get(route('translations.merge-preview', $main))
+        $page = $this->get(route('translations.merge-preview', $main))
             ->assertOk()
             ->assertSee(__('merge_preview.direction_to_game'))
             ->assertSee(route('translations.merge-preview.apply-local', $main));
+
+        // 🔴 BOTH buttons, not just the page's. The workbench strip carries the same one, and it
+        // said "Save" whichever way the comparison ran — the exact wording already fixed once
+        // below, left standing in the strip that HIDES the page, so the two could never be read
+        // side by side and caught disagreeing.
+        $this->assertSame(2, substr_count($page->getContent(), __('merge_preview.send_to_game')),
+            'both the page button and the workbench strip should name the direction');
+        $this->assertStringNotContainsString(__('merge_preview.save_to_server'), $page->getContent());
     }
 
     /**
@@ -312,10 +320,14 @@ class MergePreviewLocalFlowTest extends TestCase
         $token = $this->init($owner, $translation, self::LOCAL, 'server')->json('token');
         $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
 
-        $this->get(route('translations.merge-preview', $translation))
+        $page = $this->get(route('translations.merge-preview', $translation))
             ->assertOk()
             ->assertDontSee(__('merge_preview.direction_to_game'))
             ->assertSee(route('translations.merge-preview.apply', $translation));
+
+        // And the other way round, on the same two buttons
+        $this->assertSame(2, substr_count($page->getContent(), __('merge_preview.save_to_server')));
+        $this->assertStringNotContainsString(__('merge_preview.send_to_game'), $page->getContent());
     }
 
     public function test_a_token_meant_for_the_mod_cannot_publish(): void

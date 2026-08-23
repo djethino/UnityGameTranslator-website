@@ -1,6 +1,12 @@
 @props([
     'save' => null,
     'saveLabel' => null,
+    // ⚠ The comparison screen runs BOTH ways, and this button is the same one as the page's:
+    // returning a result to the game is not "Save", and an icon of a diskette says the wrong
+    // direction. Whatever the screen writes on its own button, it writes here too — the strip
+    // hides the page behind it, so the two can never be read side by side and disagree.
+    'saveIcon' => 'fa-save',
+    'saveTitle' => null,
     'saveDisabled' => 'totalChanges === 0',
     // Same filter, one name per screen: pending work is "modifiedOnly" where two versions are
     // being reconciled, "pendingOnly" where a single file is being written
@@ -110,9 +116,10 @@
 
     @if($save)
         <button type="button" @click="{{ $save }}" :disabled="{{ $saveDisabled }}"
+                @if($saveTitle) :title="{{ $saveTitle }}" @endif
                 class="shrink-0 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600
                        text-white px-3 py-1 rounded text-xs transition">
-            <i class="fas fa-save mr-1"></i>{{ $saveLabel ?? __('common.save') }} (<span x-text="totalChanges">0</span>)
+            <i class="fas {{ $saveIcon }} mr-1"></i>{{ $saveLabel ?? __('common.save') }} (<span x-text="totalChanges">0</span>)
         </button>
     @endif
 

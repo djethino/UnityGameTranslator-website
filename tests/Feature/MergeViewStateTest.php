@@ -404,10 +404,15 @@ class MergeViewStateTest extends TestCase
         // the first time either was touched.
         $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);
 
-        // ⚠ And the three states themselves are the CORE's, not this page's: the preview screen
-        // runs the identical gesture on the identical grid, and two copies of it is how the same
-        // promotion stayed open on one screen after being closed on the other.
-        $this->assertStringContainsString('if (this.advancePick(key, source)) return;', $html);
+        // ⚠ And the gesture itself is the CORE's, not this page's: the preview screen runs the
+        // identical one on the identical grid, and two copies of it is how the same promotion
+        // stayed open on one screen after being closed on the other. The page keeps only what
+        // legitimately differs — its guard against a pick that would write nothing.
+        $this->assertStringContainsString(
+            'if (this.advancePick(key, source)) return;',
+            file_get_contents(resource_path('js/components/translation-editor.js')));
+        $this->assertStringNotContainsString('select(key, source) {', $html);
+        $this->assertStringContainsString('pickIsWorthRecording(key, source, picked) {', $html);
 
         // And the cell previews what will actually be written: an unclaimed hold keeps its A.
         $this->assertStringContainsString("sel.tag === 'A' && !sel.auto ? 'V' : sel.tag", $html);
@@ -794,11 +799,29 @@ class MergeViewStateTest extends TestCase
         $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
         $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
 
-        foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
-            $this->assertStringContainsString('if (this.advancePick(key, source)) return;', $html, $name);
-            $this->assertStringContainsString('targetSource() {', $html, $name);
-            $this->assertStringContainsString("selection-unclaimed", $html, $name);
+        $core = file_get_contents(resource_path('js/components/translation-editor.js'));
+
+        // 🔴 **The gesture, the cell's colour and "cancel everything" live in the core — once.**
+        // They were written twice and had drifted: the comparison decided a rewording belonged to
+        // the `local` column, which is the target only one way round, so publishing painted a
+        // hand-written line in the colour of an ordinary pick.
+        foreach (['select(key, source) {', 'getCellClass(key, source) {', 'clearAll() {'] as $shared) {
+            $this->assertStringContainsString($shared, $core, "the core should own {$shared}");
+
+            foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
+                $this->assertStringNotContainsString($shared, $html, "{$name} kept its own {$shared}");
+            }
         }
+
+        // ⚠ A rewording belongs to the TARGET, whichever column that is — the whole point of the
+        // consolidation, and the line that was wrong before it.
+        $this->assertStringContainsString(
+            "if (source === this.targetSource() && this.isEdited(key)) return 'selected-manual';", $core);
+
+        foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
+            $this->assertStringContainsString('targetSource() {', $html, $name);
+        }
+        $this->assertStringContainsString('selection-unclaimed', $core);
 
         // 🔴 The preview runs BOTH ways, and its two roles swap with the direction: comparing into
         // the game builds its result from the player's file, publishing from the server's. Asking
