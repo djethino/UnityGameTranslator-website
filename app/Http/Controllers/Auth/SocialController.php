@@ -93,6 +93,25 @@ class SocialController extends Controller
                     'avatar' => $socialUser->getAvatar(),
                     'email_verified_at' => now(),
                 ]);
+
+                // 🔴 **A generated avatar from the start, so nothing links this account to the
+                // one it signed in with.** The provider's avatar URL carries the provider's own
+                // user id — `avatars.githubusercontent.com/u/12345` — and GitHub resolves that id
+                // to a login through a public, unauthenticated endpoint. Rendered on a game page,
+                // it tied a site pseudonym to a real GitHub account for any visitor reading the
+                // HTML, on a site whose sign-up is advertised as anonymous.
+                //
+                // ⚠ It also stopped every visitor's browser from fetching an image from GitHub or
+                // Discord on public pages, which handed those hosts the IP of everyone reading us.
+                //
+                // ⚠ Not taken away: profile.avatar still offers "use my platform avatar", and the
+                // URL above is kept for exactly that. What changes is that keeping it becomes a
+                // decision instead of what happens to somebody who never opened their profile.
+                //
+                // ⚠ forceFill, because avatar_seed is deliberately outside $fillable — mass
+                // assignment must not reach it. Passing it to create() would have been dropped in
+                // silence, which is the whole trap.
+                $user->forceFill(['avatar_seed' => Str::random(20)])->save();
             }
         } else {
             // Update avatar if changed
