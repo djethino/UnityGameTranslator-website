@@ -291,9 +291,12 @@
                             <!-- Meta info -->
                             <div class="text-gray-400 text-sm flex items-center gap-4 flex-wrap mb-2">
                                 <span class="flex items-center gap-1">
-                                    @if($translation->user->avatar)
-                                        <img src="{{ $translation->user->avatar }}" class="w-5 h-5 rounded-full">
-                                    @endif
+                                    {{-- Through the component, always: it prefers the generated
+                                         avatar and only falls back to the provider URL, which
+                                         carries the provider's user id. Written out here, this
+                                         published that id on a public page — and showed nothing
+                                         at all for an account that has no provider avatar. --}}
+                                    <x-avatar :user="$translation->user" :size="20" />
                                     <x-user-mention :user="$translation->user" class="font-medium text-gray-300" />
                                 </span>
                                 {{-- Two distinct facts: when it appeared, and whether it is
@@ -489,9 +492,8 @@
                                 <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700">
                                     <div class="flex items-center gap-4 text-sm">
                                         <span class="flex items-center gap-1">
-                                            @if($fork->user->avatar)
-                                                <img src="{{ $fork->user->avatar }}" class="w-5 h-5 rounded-full">
-                                            @endif
+                                            {{-- Same as the list above: the component, never the raw URL. --}}
+                                            <x-avatar :user="$fork->user" :size="20" />
                                             <x-user-mention :user="$fork->user" class="text-gray-300" />
                                         </span>
                                         {{-- For a fork, "still alive?" matters more than "born when?" --}}

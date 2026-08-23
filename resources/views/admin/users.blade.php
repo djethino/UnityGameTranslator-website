@@ -66,13 +66,10 @@
                 <tr class="border-t border-gray-700 {{ $user->isBanned() ? 'bg-red-900/20' : '' }}">
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
-                            @if($user->avatar)
-                                <img src="{{ $user->avatar }}" alt="" class="w-8 h-8 rounded-full">
-                            @else
-                                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                                    <i class="fas fa-user text-gray-400"></i>
-                                </div>
-                            @endif
+                            {{-- The component rather than a hand-rolled fallback: an admin row
+                                 shows the same face the rest of the site shows, and the generic
+                                 silhouette here made every seeded account look identical. --}}
+                            <x-avatar :user="$user" :size="32" />
                             <div>
                                 <div class="font-medium">
                                     {{ $user->name }}

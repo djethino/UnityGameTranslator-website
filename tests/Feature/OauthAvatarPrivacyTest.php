@@ -93,6 +93,46 @@ class OauthAvatarPrivacyTest extends TestCase
         $this->assertSame('https://avatars.githubusercontent.com/u/999?v=2', $user->fresh()->avatar);
     }
 
+    /**
+     * 🔴 The original defect was not the component — it was going around it.
+     *
+     * `<x-avatar>` prefers the generated avatar and only falls back to the provider URL. Four
+     * templates wrote `<img src="{{ $user->avatar }}">` by hand instead, and two of them were
+     * public game pages: the provider's user id went out in the HTML for months while a
+     * "privacy-first" component sat unused a directory away. A rendering test would only catch
+     * the page it renders; this catches the next template written the wrong way.
+     */
+    public function test_no_template_renders_the_avatar_url_by_hand(): void
+    {
+        $root = resource_path('views');
+        $component = $root . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'avatar.blade.php';
+
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
+        $offenders = [];
+
+        foreach ($files as $file) {
+            if (!$file->isFile() || !str_ends_with($file->getFilename(), '.blade.php')) continue;
+            if ($file->getPathname() === $component) continue; // the one place allowed to
+
+            // ⚠ The rule is "do not PUBLISH the URL", not "do not read the field": profile/edit
+            // tests `$user->avatar` to decide whether the "use my platform avatar" button has
+            // anything to offer, which is exactly right. So this looks for the URL reaching a
+            // src attribute — and never matches ->avatar_seed.
+            if (preg_match('/src\s*=\s*["\']?\{\{[^}]*->avatar(?![_a-z])/i',
+                           file_get_contents($file->getPathname()))) {
+                $offenders[] = str_replace($root . DIRECTORY_SEPARATOR, '', $file->getPathname());
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            "These templates reach for the avatar URL themselves instead of using <x-avatar>. "
+            . "That URL carries the provider's user id: rendered on a public page it ties a site "
+            . "pseudonym to a real GitHub or Discord account."
+        );
+    }
+
     public function test_a_seeded_user_renders_no_provider_url(): void
     {
         $user = User::factory()->create([

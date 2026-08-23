@@ -297,9 +297,9 @@
                 @else
                 <div class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded-lg">
                     <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 hover:text-purple-400 transition">
-                        @if(auth()->user()->avatar)
-                            <img src="{{ auth()->user()->avatar }}" alt="" class="w-10 h-10 rounded-full">
-                        @endif
+                        {{-- The component, so an account with no provider avatar still has one
+                             here rather than a nameplate with a gap where a face should be. --}}
+                        <x-avatar :user="auth()->user()" :size="40" />
                         <span class="text-white font-medium">{{ auth()->user()->name }}</span>
                     </a>
                     <form action="{{ route('logout') }}" method="POST">
