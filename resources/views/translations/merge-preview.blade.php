@@ -758,8 +758,23 @@ document.addEventListener('alpine:init', () => {
             return picked === otherId ? 'selected-online' : '';
         },
 
+        /**
+         * The save will write this setting, because it is taken from the side being OFFERED.
+         *
+         * 🔴 One statement of "what actually travels", like willWriteFromSource for the lines, and
+         * read by BOTH the counter and the send. Counting the picks instead counted `keep mine`,
+         * which writes nothing — a number that would have been wrong in the other direction.
+         */
+        settingsWillWrite(row) {
+            return this.settingsPick[row.id] === this.sourceIds()[0];
+        },
+
         settingsTakenCount() {
-            return Object.keys(this.settingsPick).length;
+            let n = 0;
+            for (const row of this.settingsRows) {
+                if (this.settingsWillWrite(row)) n++;
+            }
+            return n;
         },
         // The CSP build evaluates property access, not expressions, so a template cannot
         // negate a flag: it needs the opposite as its own property.
@@ -1377,7 +1392,12 @@ document.addEventListener('alpine:init', () => {
             for (const key of this.allKeys) {
                 if (this.isRowModified(key)) count++;
             }
-            return count;
+            // 🔴 The settings grid at the top is not lines, and cannot collide with them: taking
+            // the other side's font without touching a single line IS something to send, and the
+            // button must not stay disabled on it. It did — submitResult has always known how to
+            // send them (its own guard counts them), so the two halves of this screen disagreed
+            // and the working half was the one nobody could reach. Same fix as the merge view's.
+            return count + this.settingsTakenCount();
         },
 
         get editedCount() {
@@ -1775,11 +1795,10 @@ document.addEventListener('alpine:init', () => {
             const settingSideToSend = this.sourceIds()[0];
             let s = 0;
             for (const row of this.settingsRows) {
-                // 'main' is what the shared block calls the column a screen shows as its own —
-                // here the target, which swaps with the direction.
-                const picked = this.settingsPick[row.id];
-                const side = (picked === undefined || picked === 'main') ? this.targetSource() : picked;
-                if (side !== settingSideToSend) continue;
+                // ⚠ The same test the counter uses, not a second spelling of it: 'main' is what
+                // the shared block calls the column a screen shows as its own — here the target,
+                // which swaps with the direction — and keeping it writes nothing.
+                if (!this.settingsWillWrite(row)) continue;
 
                 const el = document.createElement('input');
                 el.type = 'hidden';

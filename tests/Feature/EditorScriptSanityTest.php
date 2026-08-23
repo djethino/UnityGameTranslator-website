@@ -90,6 +90,35 @@ class EditorScriptSanityTest extends TestCase
     }
 
     /**
+     * 🔴 **Everything the save can send is counted by the button.**
+     *
+     * The settings grid at the top is not lines. Taking the other side's font without touching a
+     * single line IS something to send — `submitResult` has always built those hidden inputs and
+     * counted them in its own guard — but the comparison's `totalChanges` only walked the rows, so
+     * the button stayed disabled at (0) and that pick could not be sent at all. The two halves of
+     * the screen disagreed, and the one nobody could reach was the working one. The merge view had
+     * already met this and fixed it (`rows + settingsTakenCount() + publicationTakenCount()`).
+     *
+     * ⚠ Counted through the same test the send uses, never a second spelling of it: counting the
+     * picks would have counted "keep mine", which writes nothing — wrong in the other direction.
+     */
+    public function test_the_button_counts_the_settings_the_save_would_send(): void
+    {
+        $preview = file_get_contents(base_path('resources/views/translations/merge-preview.blade.php'));
+
+        $this->assertStringContainsString('return count + this.settingsTakenCount();', $preview);
+        $this->assertStringContainsString('settingsWillWrite(row) {', $preview);
+
+        // One test, read by both — the counter and the loop that builds the hidden inputs.
+        $this->assertSame(2, substr_count($preview, 'this.settingsWillWrite(row)'),
+            'the counter and the send should read the same test');
+
+        $merge = file_get_contents(base_path('resources/views/merge/show.blade.php'));
+        $this->assertStringContainsString(
+            'return rows + this.settingsTakenCount() + this.publicationTakenCount();', $merge);
+    }
+
+    /**
      * 🔴 **Picking a column never destroys typing.** It sets it aside; reverting the row removes it.
      *
      * ⚠ The cost of getting this wrong is not one keystroke: fifty reworded lines go to a single
