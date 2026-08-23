@@ -210,6 +210,10 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
 Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state'])->name('translations.merge.state');
         Route::post('/translations/{uuid}/merge', [MergeController::class, 'apply'])->name('translations.merge.apply');
         Route::post('/translations/{translation}/rate-branch', [MergeController::class, 'rateBranch'])->name('translations.rate-branch');
+        // Read/unread, beside the mark and deliberately not the same thing: the mark judges a
+        // contributor over time and only the Main sees it; this says one state of one file has
+        // been looked at.
+        Route::post('/translations/{translation}/read-branch', [MergeController::class, 'readBranch'])->name('translations.read-branch');
     });
 
     // Admin routes

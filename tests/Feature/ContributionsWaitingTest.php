@@ -230,6 +230,175 @@ class ContributionsWaitingTest extends TestCase
         );
     }
 
+    /**
+     * 🔴 **Taking nothing from a contribution is a decision, and it had no way to be recorded.**
+     *
+     * `reviewed_hash` had one writer: the 1-to-5 mark. So a Main who went through a contribution
+     * and kept none of it could only stop it coming back by GRADING its author — a private
+     * judgement about a person over time, asked in place of a fact about one state of one file.
+     * The contribution returned for ever, which is the counter that cries wolf.
+     *
+     * ⚠ Marked when the merge is SAVED, not when the screen is opened: opening two thousand lines
+     * is not reading them, and the two mistakes do not cost the same — marking read by accident
+     * takes somebody's work out of the queue in silence, marking unread costs a reminder.
+     *
+     * 🔴 **And a save covers only half the ground.** `apply` refuses an empty submission ("No
+     * changes to apply"), so a Main who keeps nothing from anybody has nothing to save and this
+     * path never runs for them. That case belongs to the read/unread control, which is why that
+     * control is not a convenience but the only road for it — see the test below.
+     *
+     * What a save does settle is the ordinary case: several contributions on screen, lines taken
+     * from one of them. The others were arbitrated too, and stop asking.
+     */
+    public function test_saving_a_merge_marks_every_contribution_on_screen_read(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')],
+            ['_uuid' => 'x', 'greet' => $this->line('Coucou', 'H')]
+        );
+
+        $service = app(TranslationService::class);
+        $this->assertSame(2, $service->contributionsWaiting($main)['branches']);
+
+        $branches = Translation::where('file_uuid', $main->file_uuid)->branches()->get();
+
+        // A line taken from the FIRST one only. The second was read all the same.
+        $this->actingAs($main->user)
+            ->post(route('translations.merge.apply', $main->file_uuid), [
+                'mode' => 'merge',
+                'branches' => [$branches[0]->id, $branches[1]->id],
+                'selections_json' => json_encode([[
+                    'key' => 'greet', 'value' => 'Salut', 'tag' => 'H',
+                    'source' => 'branch_' . $branches[0]->id, 'auto' => false, 'base' => 'Bonjour',
+                ]]),
+                'deletions_json' => '[]',
+            ])->assertSessionHasNoErrors();
+
+        foreach ($branches as $branch) {
+            $this->assertSame($branch->file_hash, $branch->fresh()->reviewed_hash,
+                'every contribution on screen was arbitrated');
+            $this->assertNull($branch->fresh()->main_rating,
+                'and none of it judged its author');
+        }
+
+        $this->assertSame(0, $service->contributionsWaiting($main->fresh())['branches']);
+    }
+
+    /** Hiding a contribution is closing it, so it was not arbitrated and keeps its place. */
+    public function test_a_contribution_left_off_the_screen_is_not_marked_read(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')],
+            ['_uuid' => 'x', 'bye' => $this->line('Ciao', 'H')]
+        );
+
+        $branches = Translation::where('file_uuid', $main->file_uuid)->branches()->get();
+
+        $this->actingAs($main->user)
+            ->post(route('translations.merge.apply', $main->file_uuid), [
+                'mode' => 'merge',
+                'branches' => [$branches[0]->id],
+                'selections_json' => json_encode([[
+                    'key' => 'greet', 'value' => 'Salut', 'tag' => 'H',
+                    'source' => 'branch_' . $branches[0]->id, 'auto' => false, 'base' => 'Bonjour',
+                ]]),
+                'deletions_json' => '[]',
+            ])->assertSessionHasNoErrors();
+
+        $this->assertSame($branches[0]->file_hash, $branches[0]->fresh()->reviewed_hash);
+        $this->assertNull($branches[1]->fresh()->reviewed_hash, 'never on screen, never read');
+    }
+
+    /**
+     * 🔴 **The case the whole thing exists for, and a save cannot reach it.**
+     *
+     * Keeping nothing from anybody leaves nothing to submit — `apply` refuses an empty one — so
+     * the only way to say "I went through this" is the read control. Without it the contribution
+     * would come back for ever, and the Main's only exit would be to grade its author.
+     */
+    public function test_a_main_who_keeps_nothing_can_still_close_the_review(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
+        );
+
+        $service = app(TranslationService::class);
+        $branch = Translation::where('file_uuid', $main->file_uuid)->branches()->first();
+        $this->assertSame(1, $service->contributionsWaiting($main)['branches']);
+
+        // Nothing to save: the server refuses an empty merge, which is why the control exists.
+        $this->actingAs($main->user)
+            ->post(route('translations.merge.apply', $main->file_uuid), [
+                'mode' => 'merge',
+                'branches' => [$branch->id],
+                'selections_json' => '[]',
+                'deletions_json' => '[]',
+            ])->assertSessionHasErrors();
+
+        $this->actingAs($main->user)
+            ->post(route('translations.read-branch', $branch), ['read' => true])->assertOk();
+
+        $this->assertSame(0, $service->contributionsWaiting($main->fresh())['branches']);
+        $this->assertNull($branch->fresh()->main_rating, 'closed without grading anybody');
+    }
+
+    /**
+     * The way back, and the reason the automatic mark is not a trap: a Main interrupted mid-review
+     * puts the contribution back in the queue. Nothing here judges anybody.
+     */
+    public function test_a_contribution_can_be_put_back_in_the_queue_by_hand(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
+        );
+
+        $branch = Translation::where('file_uuid', $main->file_uuid)->branches()->first();
+
+        $this->actingAs($main->user)
+            ->post(route('translations.read-branch', $branch), ['read' => true])
+            ->assertOk();
+        $this->assertSame($branch->file_hash, $branch->fresh()->reviewed_hash);
+
+        $this->actingAs($main->user)
+            ->post(route('translations.read-branch', $branch), ['read' => false])
+            ->assertOk();
+        $this->assertNull($branch->fresh()->reviewed_hash);
+
+        // And it is the Main's alone: a contributor cannot mark their own work read.
+        $this->actingAs($branch->user)
+            ->post(route('translations.read-branch', $branch), ['read' => true])
+            ->assertForbidden();
+    }
+
+    /**
+     * 🔴 The mark judges a CONTRIBUTOR over time; the review states that one file was looked at.
+     * Written as one ternary, taking a mark back also un-read the contribution.
+     */
+    public function test_taking_back_a_mark_does_not_unread_the_contribution(): void
+    {
+        $main = $this->lineage(
+            ['_uuid' => 'x', 'greet' => $this->line('Bonjour', 'A')],
+            ['_uuid' => 'x', 'greet' => $this->line('Salut', 'H')]
+        );
+
+        $branch = Translation::where('file_uuid', $main->file_uuid)->branches()->first();
+
+        $this->actingAs($main->user)
+            ->post(route('translations.rate-branch', $branch), ['rating' => 4])->assertOk();
+        $this->assertSame($branch->file_hash, $branch->fresh()->reviewed_hash);
+
+        $this->actingAs($main->user)
+            ->post(route('translations.rate-branch', $branch), ['rating' => null])->assertOk();
+
+        $this->assertNull($branch->fresh()->main_rating);
+        $this->assertSame($branch->file_hash, $branch->fresh()->reviewed_hash,
+            'what was seen stays seen');
+    }
+
     public function test_the_same_line_from_two_contributions_is_one_line_to_recover(): void
     {
         // Adding their counts would promise twice the work that exists.

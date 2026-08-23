@@ -1492,6 +1492,17 @@ class Translation extends Model
             return false;
         }
 
+        // 🔴 **Or simply read it.** Being read and not drawn from is not indifference: the Main
+        // may have had those lines already, or preferred another contribution's wording. This
+        // banner is for the Main who came back, worked, and never opened the contribution at all —
+        // and it was accusing one who had, because only `merged_at` cleared it.
+        //
+        // ⚠ Compared against the CURRENT hash: work sent since it was read has not been seen, so
+        // the count of missed occasions starts again on its own.
+        if ($this->reviewed_hash && $this->reviewed_hash === $this->file_hash) {
+            return false;
+        }
+
         return $workedSince->diffInDays(now()) >= self::IGNORED_AFTER_DAYS;
     }
 

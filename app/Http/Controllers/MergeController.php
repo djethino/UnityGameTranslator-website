@@ -167,6 +167,8 @@ class MergeController extends Controller
                     $branchesPayload[] = [
                         'id' => $branch->id,
                         'name' => $branch->user->name ?? '',
+                        // Read/unread, so the screen can show it and offer to change it.
+                        'read' => $branch->reviewed_hash === $branch->file_hash,
                         'human_count' => $branch->human_count,
                         'validated_count' => $branch->validated_count,
                         'ai_count' => $branch->ai_count,
@@ -497,6 +499,48 @@ class MergeController extends Controller
 
         $main->save();
 
+        // 🔴 **Read, in the mail sense — and marked by the ACTION, never by the opening.**
+        //
+        // `reviewed_hash` had a single writer: the 1-to-5 mark. So a Main who went through a
+        // contribution and took nothing could only stop it coming back by GRADING it — the one
+        // thing they should not have to do, since the mark is a private judgement about a person
+        // over time while this is a fact about one state of one file. And the contributor was
+        // told the Main "does not seem interested" in work the Main had read.
+        //
+        // ⚠ **Why saving and not opening.** Opening a contribution of two thousand lines is not
+        // reading it, and the two mistakes do not cost the same: marking read by accident takes
+        // somebody's work out of the queue silently, marking unread by accident costs a reminder.
+        // Saving a merge with a contribution on screen IS having arbitrated with it in view. The
+        // case this leaves out — read it, take nothing, save nothing — is covered by the
+        // read/unread control, which is explicit and reversible.
+        //
+        // ⚠ Only the branches ON SCREEN. Hiding one is closing it, so an unchecked contribution
+        // was not arbitrated and keeps its place in the queue.
+        //
+        // ⚠ It re-arms itself: new work changes file_hash, and `file_hash !== reviewed_hash` makes
+        // the contribution unread again — a new message in the same thread. timestamps stay off,
+        // for the reason given below on merged_at.
+        $onScreenIds = $request->input('branches', []);
+        if (is_string($onScreenIds)) {
+            $onScreenIds = explode(',', $onScreenIds);
+        }
+        $onScreenIds = array_map('intval', array_filter((array) $onScreenIds));
+
+        if (!empty($onScreenIds)) {
+            Translation::whereIn('id', $onScreenIds)
+                ->where('file_uuid', $uuid)
+                ->where('visibility', 'branch')
+                ->get()
+                ->each(function (Translation $branch) {
+                    if ($branch->reviewed_hash === $branch->file_hash) {
+                        return;
+                    }
+                    $branch->timestamps = false;
+                    $branch->reviewed_hash = $branch->file_hash;
+                    $branch->save();
+                });
+        }
+
         // Tell each contributor whose lines were actually merged (per-branch counts
         // from the selections' source markers: 'branch_{id}')
         $mergedPerBranch = [];
@@ -625,6 +669,38 @@ class MergeController extends Controller
 
 
     /**
+     * Mark a contribution read or unread, by hand (Main owner only).
+     *
+     * 🔴 **The other half of "opened is read".** A mail client marks on opening AND lets you put a
+     * message back — because reading is not always deciding: the Main may open a contribution,
+     * be interrupted, and want it back in the queue. Without the way back, the automatic mark
+     * would be a trap rather than a convenience.
+     *
+     * ⚠ Nothing here is a judgement. Read means read; taking nothing from a contribution says the
+     * Main already had those lines or preferred another wording, and neither this endpoint nor
+     * anything it writes records which.
+     */
+    public function readBranch(Request $request, Translation $translation)
+    {
+        $user = auth()->user();
+        $main = $translation->getMain();
+
+        if (!$main || $main->user_id !== $user->id || $translation->id === $main->id) {
+            return response()->json(['success' => false, 'error' => __('rating.not_main_owner')], 403);
+        }
+
+        $read = $request->boolean('read');
+
+        // ⚠ Same as on opening: reading is not a content change, so it must not move the branch in
+        // any list ordered by freshness.
+        $translation->timestamps = false;
+        $translation->reviewed_hash = $read ? $translation->file_hash : null;
+        $translation->save();
+
+        return response()->json(['success' => true, 'read' => $read]);
+    }
+
+    /**
      * Rate a branch translation (Main owner only).
      * Stores the rating and the hash of the branch at the time of review.
      */
@@ -658,9 +734,19 @@ class MergeController extends Controller
 
         $rating = $validated['rating'] ?? null;
 
-        // Update the branch with the rating
+        // 🔴 **A mark and a review are two different facts, and clearing one is not clearing the
+        // other.** The mark says whether this person contributes well OVER TIME; only the Main
+        // ever sees it. `reviewed_hash` says a given state of a given file has been looked at.
+        // Written as `$rating !== null ? … : null`, taking a mark back also un-read the
+        // contribution — it came straight back into the queue, and the contributor was told the
+        // Main did not seem interested in work the Main had read and graded.
+        //
+        // Marking still implies having looked, so it stamps the review. Removing the mark leaves
+        // it alone: what was seen stays seen.
         $translation->main_rating = $rating;
-        $translation->reviewed_hash = $rating !== null ? $translation->file_hash : null;
+        if ($rating !== null) {
+            $translation->reviewed_hash = $translation->file_hash;
+        }
         $translation->save();
 
         return response()->json([
