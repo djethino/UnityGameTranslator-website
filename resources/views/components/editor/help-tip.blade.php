@@ -6,6 +6,9 @@
     // versions ("validate this capture" vs "take that version"), so the screen supplies them.
     'selectHint' => null,
     'editHint' => null,
+    // In the workbench strip the word gives way below xl, like every other action there: the
+    // strip is one row that must not become two, and the icon is the recognised part anyway.
+    'compact' => false,
 ])
 
 @php
@@ -35,9 +38,9 @@
      @mouseenter="open = true" @mouseleave="open = false">
 
     <button type="button" @click="open = !open" @click.away="open = false"
-            :aria-expanded="open"
-            class="text-gray-500 hover:text-gray-300 text-sm transition cursor-help">
-        <i class="fas fa-circle-info mr-1"></i>{{ __('merge.help') }}
+            :aria-expanded="open" title="{{ __('merge.help') }}"
+            class="text-gray-500 hover:text-gray-300 text-sm transition cursor-help whitespace-nowrap">
+        <i class="fas fa-circle-info mr-1"></i><span class="{{ $compact ? 'hidden xl:inline' : '' }}">{{ __('merge.help') }}</span>
     </button>
 
     {{-- Opens UPWARD: this bar is pinned to the bottom of the window, so a panel hanging below it

@@ -23,6 +23,23 @@ export function editorWorkbench() {
             this.wide = !this.wide;
             // The page behind must not scroll under a fixed workbench
             document.body.classList.toggle('overflow-hidden', this.wide);
+            this.$nextTick(() => this._measureWorkbenchBar());
+        },
+
+        /**
+         * How tall the strip is, published for the grid to hang from.
+         *
+         * 🔴 The strip used to be `h-12` and the grid `top-12` — the same number written twice, in
+         * five files. Then the strip was allowed to take a second row on a narrow window (see
+         * workbench-bar), and a constant would have parked the grid's first line underneath it.
+         *
+         * ⚠ A custom property rather than a class per height: the value changes with the window,
+         * and it is read by four templates that must not each learn to measure.
+         */
+        _measureWorkbenchBar() {
+            const bar = this.$refs.workbenchBar;
+            const height = this.wide && bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+            document.documentElement.style.setProperty('--wb-bar-h', height ? height + 'px' : '3rem');
         },
 
         /**
@@ -33,6 +50,17 @@ export function editorWorkbench() {
             window.addEventListener('pagehide', () => {
                 document.body.classList.remove('overflow-hidden');
             });
+
+            // The strip grows and shrinks with the window, not only with the mode — a filter row
+            // appears the moment it runs out of width.
+            if (typeof ResizeObserver !== 'undefined') {
+                this.$nextTick(() => {
+                    const bar = this.$refs.workbenchBar;
+                    if (!bar) return;
+                    this._workbenchBarObserver = new ResizeObserver(() => this._measureWorkbenchBar());
+                    this._workbenchBarObserver.observe(bar);
+                });
+            }
         },
     };
 }

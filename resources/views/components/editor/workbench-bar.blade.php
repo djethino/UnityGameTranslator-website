@@ -31,10 +31,32 @@
     filters.tag*, showIndexColumn — bound to the very same properties as the panel behind, so the
     two copies can never disagree.
 --}}
-<div x-show="wide" x-cloak
-     class="fixed top-0 inset-x-0 h-12 z-[60] flex items-center gap-2 overflow-x-auto
-            border-b border-gray-700 bg-gray-900/95 backdrop-blur px-3 text-sm">
+{{--
+    🔴 **THREE ZONES, and a stated order for who gives way.**
 
+    It was twenty-five controls as siblings, every one `shrink-0`, on a bar of fixed height with
+    `overflow-x-auto`. Nothing could wrap as a block, so narrowing the window produced a horizontal
+    scrollbar over the toolbar itself — measured: 53px of overflow at 1085. And a scrollbar on a
+    toolbar hides controls without saying so, which is the one thing this strip must never do,
+    since it is all there is while the workbench covers the page.
+
+    Who gives way, in order:
+      1. the REPLACE field drops under the search it belongs to — same zone, so it never lands
+         beside a filter;
+      2. the FILTERS take a line of their own, whole. They are the many small things, and the ones
+         you read as a set;
+      3. the ACTIONS never wrap and never split: they lose their words instead, becoming icons.
+
+    ⚠ The bar's height is no longer fixed, so the grid below cannot be anchored at a constant
+    `top-12` any more — it reads `--wb-bar-h`, which editor-workbench measures. A second row that
+    hid the first line of the table would be a worse bargain than the scrollbar.
+--}}
+<div x-show="wide" x-cloak x-ref="workbenchBar"
+     class="fixed top-0 inset-x-0 z-[60] flex flex-wrap items-center gap-x-2 gap-y-1
+            border-b border-gray-700 bg-gray-900/95 backdrop-blur px-3 py-1.5 text-sm">
+
+    {{-- ── 1. Search, with its replace field as part of it ────────────────── --}}
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
     <div class="relative shrink-0">
         <i class="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
         <input type="text" x-model="searchQuery"
@@ -79,8 +101,20 @@
             </button>
         </div>
     </template>
+    </div>
 
-    <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+    {{-- ── 2. Filters — the zone that takes a line of its own when room runs out ──
+         ⚠ **A breakpoint, and 2xl rather than lg.** Flexbox wraps whatever comes LAST in visual
+         order, which is the actions — the opposite of what is wanted, and what a first attempt at
+         `lg` produced: measured at 1085, the filters kept the row and Save went to the second
+         line. So the row is decided rather than discovered. The three zones measure 305 + 748 +
+         241 on the merge view, so a single line needs about 1330px: `xl` (1280) would still
+         overflow, `2xl` (1536) always fits. Between 1330 and 1536 there is a second row that
+         could have been avoided — the price of a rule that never puts Save where it is missed. --}}
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0
+                basis-full order-last 2xl:basis-auto 2xl:order-none 2xl:flex-1">
+
+    <span class="w-px h-5 bg-gray-700 shrink-0 hidden 2xl:inline-block"></span>
 
     {{-- Screen-specific categories --}}
     {{ $slot }}
@@ -111,8 +145,13 @@
     </label>
     {{-- The same two icons, from the same file, as the ordinary bar behind --}}
     <x-editor.view-options />
+    </div>
 
-    <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+    {{-- ── 3. Actions — never wrapped, never split, pinned right ──────────────
+         ⚠ They lose their WORDS before they lose their line: a label is decoration next to an
+         icon everyone already recognises, and a Save button on a second row is a Save button
+         somebody scrolls past. Each keeps its title attribute, so the word is a hover away. --}}
+    <div class="flex flex-nowrap items-center gap-2 shrink-0 ml-auto">
 
     {{-- 🔴 Everything the bottom bar offers besides Save. That bar is COVERED while this strip is
          on (it is z-40 under a z-50 grid), so an action left out of here cannot be reached at all.
@@ -121,10 +160,16 @@
 
     @if($save)
         <button type="button" @click="{{ $save }}" :disabled="{{ $saveDisabled }}"
-                @if($saveTitle) :title="{{ $saveTitle }}" @endif
+                {{-- ⚠ One title, not two: a screen that supplies a reason for being refused keeps
+                     it, the others fall back to the label the button hides below xl. Written as
+                     an either/or because two `title` attributes on one element is a silent
+                     overwrite, and the Alpine one wins with an empty string when nothing is
+                     wrong. --}}
+                @if($saveTitle) :title="{{ $saveTitle }}"
+                @else title="{{ $saveLabel ?? __('common.save') }}" @endif
                 class="shrink-0 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600
-                       text-white px-3 py-1 rounded text-xs transition">
-            <i class="fas {{ $saveIcon }} mr-1"></i>{{ $saveLabel ?? __('common.save') }} (<span x-text="totalChanges">0</span>)
+                       text-white px-3 py-1 rounded text-xs transition whitespace-nowrap">
+            <i class="fas {{ $saveIcon }} mr-1"></i><span class="hidden xl:inline">{{ $saveLabel ?? __('common.save') }} </span>(<span x-text="totalChanges">0</span>)
         </button>
     @endif
 
@@ -133,4 +178,5 @@
             title="{{ __('merge.wide_off') }} (Échap)">
         <i class="fas fa-compress"></i>
     </button>
+    </div>
 </div>

@@ -27,11 +27,16 @@
          couple of pixels at a common window width. Row gap stays larger so the two lines, when a
          language forces them, read as two lines. --}}
     <div class="flex flex-wrap gap-x-3 gap-y-2 items-center flex-1 min-w-0">
-        <span class="text-gray-500">{{ __('merge_preview.show') }}:</span>
+        <span class="text-gray-500 shrink-0">{{ __('merge_preview.show') }}:</span>
 
-        {{ $before ?? '' }}
+        {{-- ⚠ **Each family is one block that wraps whole.** Flat in a single flex-wrap, a tag
+             checkbox could end up on a second line under a category one, and the two read as a
+             set each: what kind of row this is, then how good its translation is. What wraps is a
+             family, never half of one. --}}
+        <div class="flex items-center gap-x-3 shrink-0">{{ $before ?? '' }}</div>
 
         @if($tags)
+        <div class="flex items-center gap-x-3 shrink-0">
             {{-- Tag filters in HVASM order --}}
             <label class="flex items-center gap-2 cursor-pointer" title="{{ __('merge.legend_human') }}">
                 <input type="checkbox" :checked="filters.tagH" @change="toggleFilter('tagH')"
@@ -60,9 +65,10 @@
                     class="rounded bg-gray-700 border-gray-600 text-teal-600">
                 <span class="tag-M">M</span>
             </label>
+        </div>
         @endif
 
-        {{ $slot }}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0">{{ $slot }}</div>
     </div>
 
     {{-- How a row is drawn, and how much room the grid gets. Pinned: this group is never what a

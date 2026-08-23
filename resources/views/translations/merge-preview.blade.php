@@ -341,7 +341,7 @@
              the screen, where they can be reached without leaving the line being read. --}}
         <div x-ref="gridBox"
              class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
-             :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 mb-0 rounded-none border-0 overflow-auto'">
+             :class="wide && 'workbench-grid fixed inset-x-0 bottom-0 z-50 mb-0 rounded-none border-0 overflow-auto'">
             {{-- border-separate, and it is not cosmetic: with the default collapsed borders, a
                  browser does not paint the background of a sticky cell — only its text, so the
                  frozen key column would let every scrolled column show through behind its own

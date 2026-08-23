@@ -166,7 +166,7 @@
              than the code. The horizontal scrollbar mirror and the pinned column measure it too. --}}
         <div x-ref="gridBox"
              class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700 mb-6"
-             :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 mb-0 rounded-none border-0 overflow-auto'">
+             :class="wide && 'workbench-grid fixed inset-x-0 bottom-0 z-50 mb-0 rounded-none border-0 overflow-auto'">
             {{-- border-separate, like the other editor grids: a browser does not paint the
                  background of a sticky cell under collapsed borders, and the frozen key column
                  would let the value column show through behind its own words. The line between

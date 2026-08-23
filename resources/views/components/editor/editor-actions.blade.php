@@ -34,31 +34,39 @@
     live in this one component and are rendered from it in both places.
 --}}
 <div class="flex items-center {{ $compact ? 'gap-2' : 'gap-4' }} shrink-0">
-    <x-editor.help-tip :arbitrates="$arbitrates" :select-hint="$selectHint" :edit-hint="$editHint" />
+    <x-editor.help-tip :arbitrates="$arbitrates" :select-hint="$selectHint" :edit-hint="$editHint"
+                       :compact="$compact" />
 
     {{ $slot }}
+
+    {{-- ⚠ In the strip the words are hidden below xl, never the buttons: the strip is one row that
+         must not become two, and an icon with its label a hover away is readable where a control
+         pushed onto a second line is simply missed. Outside the strip there is room, so the words
+         stay. --}}
+    @php $word = $compact ? 'hidden xl:inline' : ''; @endphp
 
     @if($suggest)
         {{-- Shown while something is left to answer: a button that does nothing teaches nothing. --}}
         <button type="button" @click="{{ $suggest }}"
-            x-show="undecidedCount > 0" x-cloak
-            class="text-gray-400 hover:text-white {{ $compact ? 'text-xs' : 'text-sm' }} transition shrink-0">
-            <i class="fas fa-wand-magic-sparkles mr-1"></i> {{ __('merge.suggest_rest') }}
+            x-show="undecidedCount > 0" x-cloak title="{{ __('merge.suggest_rest') }}"
+            class="text-gray-400 hover:text-white whitespace-nowrap {{ $compact ? 'text-xs' : 'text-sm' }} transition shrink-0">
+            <i class="fas fa-wand-magic-sparkles mr-1"></i><span class="{{ $word }}">{{ __('merge.suggest_rest') }}</span>
         </button>
     @endif
 
     @if($cancel)
         <button type="button" @click="{{ $cancel }}" x-show="totalChanges > 0" x-cloak
-            class="text-gray-400 hover:text-white {{ $compact ? 'text-xs' : 'text-sm' }} transition shrink-0">
-            <i class="fas fa-times mr-1"></i> {{ $cancelLabel ?? __('merge.cancel_all') }}
+            title="{{ $cancelLabel ?? __('merge.cancel_all') }}"
+            class="text-gray-400 hover:text-white whitespace-nowrap {{ $compact ? 'text-xs' : 'text-sm' }} transition shrink-0">
+            <i class="fas fa-times mr-1"></i><span class="{{ $word }}">{{ $cancelLabel ?? __('merge.cancel_all') }}</span>
         </button>
     @endif
 
     @if($download)
-        <button type="button" @click="{{ $download }}"
-            class="bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition shrink-0
+        <button type="button" @click="{{ $download }}" title="{{ $downloadLabel }}"
+            class="bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition shrink-0 whitespace-nowrap
                    {{ $compact ? 'px-2 py-1 text-xs' : 'px-4 py-2' }}">
-            <i class="fas fa-download mr-1"></i> {{ $downloadLabel }}
+            <i class="fas fa-download mr-1"></i><span class="{{ $word }}">{{ $downloadLabel }}</span>
         </button>
     @endif
 

@@ -314,6 +314,14 @@
     outline: 2px dashed rgb(59 130 246);
     outline-offset: -2px;
 }
+/* The grid hangs from the bottom of the workbench strip, whatever height that strip has taken.
+ *
+ * ⚠ It was `top-12` in four templates against an `h-12` strip — the same number written five
+ * times. The strip may now take a second row when the window is narrow (its filters move down
+ * rather than hiding behind a scrollbar), and a constant would have parked the table's first line
+ * underneath it. editor-workbench measures and publishes the value. */
+.workbench-grid { top: var(--wb-bar-h, 3rem); }
+
 /* 🔴 **Typing that is still here and will NOT be saved** — a rewording a pick has set aside.
  *
  * Picking a column never throws typing away (fifty reworded lines would go to one press of "take
