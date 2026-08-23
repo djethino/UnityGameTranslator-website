@@ -314,6 +314,32 @@
     outline: 2px dashed rgb(59 130 246);
     outline-offset: -2px;
 }
+/* 🔴 **Typing that is still here and will NOT be saved** — a rewording a pick has set aside.
+ *
+ * Picking a column never throws typing away (fifty reworded lines would go to one press of "take
+ * everything from this side"), so the text stays on screen and in the draft, and this says it is
+ * not the answer any more. Reverting the row is the gesture that removes it.
+ *
+ * ⚠ **No ring, and that is the whole message.** This file already spells out that the ring is what
+ * every cell wears to mean "this will change" (see .tag-changed-cell below). Somebody who learnt
+ * that reads the absence at once, with nothing new to learn — where a fourth colour would have
+ * been a fourth meaning. The purple stays, faint: it is still a rewording, still recoverable by
+ * typing it again, just not going anywhere.
+ *
+ * ⚠ Not `opacity` on the cell: that would fade the placeholder warning and the tag chip sitting in
+ * it, which report on the row and not on this value. */
+.edit-set-aside {
+    background-color: rgba(88, 28, 135, 0.3) !important;
+    box-shadow: none;
+    outline: none;
+}
+.edit-set-aside .editor-text {
+    color: rgb(148 163 184);
+    text-decoration: line-through;
+    text-decoration-color: rgba(148, 163, 184, 0.5);
+}
+.editor-grid.pin-main tbody td.main-pair.edit-set-aside { background-color: rgb(41 37 61) !important; }
+
 /* A tag that will not be saved as it is stored.
  *
  * ⚠ It carries the RING as well as the tint, like every other cell that says "this will change":

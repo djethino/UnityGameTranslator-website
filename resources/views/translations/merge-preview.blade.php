@@ -1255,11 +1255,20 @@ document.addEventListener('alpine:init', () => {
             return null;
         },
 
-        /** Core hook: a staged manual edit selects the target side — claimed, since somebody typed. */
+        /**
+         * Core hook: a staged manual edit answers the row itself — claimed, since somebody typed.
+         *
+         * 🔴 **`manual`, not the target's column name**, and the same as the merge view writes.
+         * This screen used to answer with the target's own id, which reads the same until you ask
+         * "is this row on its typed value or on the file's?" — two different facts under one name.
+         * The cost was real: clicking the target column then ran through `advancePick` (the row
+         * being already on it) and its third step DELETED the typing. `manual` is not a column, so
+         * that click now takes the target's stored value and sets the typing aside instead.
+         */
         onEditStaged(key) {
             const entry = this.targetEntry(key);
             this.selections[key] = this.pick(
-                this.targetSource(), entry === undefined ? '' : this.getValue(entry),
+                'manual', entry === undefined ? '' : this.getValue(entry),
                 entry === undefined ? 'A' : this.getTag(entry), false);
         },
 
@@ -1336,7 +1345,9 @@ document.addEventListener('alpine:init', () => {
          */
         isRowModified(key) {
             if (this.isDeleted(key)) return true;
-            if (this.editedValues[key] !== undefined) return true;
+            // ⚠ Held, not merely present: a rewording set aside by a pick writes nothing, and
+            // counting it would put rows in the button that the save does not touch.
+            if (this.editIsHeld(key)) return true;
             if (key in this.tagChanges) return true;
             return this.willWriteFromSource(key);
         },
@@ -1523,10 +1534,9 @@ document.addEventListener('alpine:init', () => {
                 this.selections[key] = this.byHand(
                     this.pick(source, this.getValue(entry), this.getTag(entry), false));
 
-                // 🔴 From EITHER side, the target's included — the very defect the note above
-                // describes, left standing for one of the two columns: a rewording kept here goes
-                // on being shown and painted as a rewording while the save writes the swept value.
-                delete this.editedValues[key];
+                // ⚠ Rewordings are NOT dropped: fifty of them would go to one press of this
+                // button, and a sweep is not the gesture for throwing typing away. The pick above
+                // decides what travels; anything set aside says so on screen. See editIsHeld.
             }
             this.persistPendingState();
         },
@@ -1594,7 +1604,9 @@ document.addEventListener('alpine:init', () => {
             // Build merged translations
             for (const key of this.allKeys) {
                 const source = this.pickedSource(key);
-                const isEdited = this.editedValues[key] !== undefined;
+                // ⚠ HELD, not merely present: a rewording a pick has set aside stays on screen and
+                // in the draft, and must not reach the file. See editIsHeld.
+                const isEdited = this.editIsHeld(key);
                 const hasTagChange = key in this.tagChanges;
 
                 if (hasTagChange) {
@@ -1663,7 +1675,8 @@ document.addEventListener('alpine:init', () => {
             let i = 0;
             for (const key of this.allKeys) {
                 const source = this.pickedSource(key);
-                const isEdited = this.editedValues[key] !== undefined;
+                // ⚠ HELD, not merely present — same reason as buildMergedContent above.
+                const isEdited = this.editIsHeld(key);
                 const hasTagChange = key in this.tagChanges;
                 const hasLocal = key in this.localData;
                 const hasOnline = key in this.onlineData;

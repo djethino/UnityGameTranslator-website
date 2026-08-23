@@ -594,11 +594,36 @@ export function editorCore(config) {
          * so the two must keep agreeing (see editor-pin.js).
          */
         getCellClass(key, source) {
-            if (source === this.targetSource() && this.isEdited(key)) return 'selected-manual';
+            if (source === this.targetSource() && this.isEdited(key)) {
+                // Still shown, and shown as NOT going anywhere — see editIsHeld.
+                return this.editIsHeld(key) ? 'selected-manual' : 'edit-set-aside';
+            }
             if (this.pickedSource(key) !== source) return '';
 
             const held = 'selected-' + this.cellTone(source);
             return this.isUnclaimed(key) ? held + ' selection-unclaimed' : held;
+        },
+
+        /**
+         * Is the pending rewording of this row the answer, or set aside by a pick elsewhere?
+         *
+         * 🔴 **A rewording is never destroyed by picking a column.** Somebody who reworded fifty
+         * lines and then pressed "take everything from this side" would lose all fifty to one
+         * click — and picking a column is not the gesture for throwing typing away; reverting the
+         * row is. So the draft stays in `editedValues`, the SELECTION decides what gets written,
+         * and the cell says which of the two it is looking at (`edit-set-aside`).
+         *
+         * ⚠ **One test, no per-screen hook.** Typing answers the row as `manual` on every screen
+         * that arbitrates (onEditStaged), and `null` means nothing was picked at all — a live edit,
+         * where the typing is the only answer there is. The comparison used to answer with the
+         * target's column id instead, which reads the same right up to this question; aligning it
+         * removed the second definition rather than adding a hook to reconcile them.
+         */
+        editIsHeld(key) {
+            if (!this.isEdited(key)) return false;
+
+            const picked = this.pickedSource(key);
+            return picked === null || picked === 'manual';
         },
 
         /**
@@ -632,15 +657,8 @@ export function editorCore(config) {
             if (!picked) return;
             if (!this.pickIsWorthRecording(key, source, picked)) return;
 
-            // 🔴 Taking a version discards a pending rewording — from ANY column, the target's
-            // included. Keeping it when the target itself was picked leaves the row showing the
-            // reworded text and painted as reworded, while the save writes the picked version:
-            // the screen would state one thing and do another. (The condition this replaces came
-            // from the comparison screen, where `advancePick` swallows a click on the column
-            // already held, so it never ran and its absence went unnoticed. On the merge view a
-            // rewording holds the row as `manual`, so the click DOES reach here.)
-            delete this.editedValues[key];
-
+            // ⚠ A pending rewording is NOT dropped here — it is set aside, and stays visible and
+            // recoverable. What decides the file is the line below. See editIsHeld.
             this.selections[key] = picked;
             this.persistPendingState();
         },
@@ -836,12 +854,13 @@ export function editorCore(config) {
 
             const back = this.defaultSelection(key);
 
+            // ⚠ The typing is not touched by any of the three steps: `manual` is not a column, so a
+            // row holding its own rewording never reaches here at all (the guard above returns).
+            // What does reach here is a row on a real column, which has no typing to lose.
             if (back && (back.source !== source || back.auto !== (current && current.auto))) {
-                delete this.editedValues[key];
                 this.selections[key] = back;
             } else {
                 delete this.selections[key];
-                delete this.editedValues[key];
             }
 
             this.persistPendingState();
@@ -1316,9 +1335,9 @@ export function editorCore(config) {
             return matches ? matches.sort().join('') : '';
         },
 
-        /** A pending edit changed the row's placeholders. */
+        /** A pending edit changed the row's placeholders. Silent on one set aside: nothing goes. */
         hasPlaceholderWarning(key) {
-            if (!this.isEdited(key)) return false;
+            if (!this.editIsHeld(key)) return false;
             return this._placeholderSignature(this.storedValue(key))
                 !== this._placeholderSignature(this.editedValues[key]);
         },
@@ -1473,7 +1492,7 @@ export function editorCore(config) {
          */
         displayTag(key, storedTag) {
             if (this.tagChanges[key]) return this.tagChanges[key].newTag;
-            if (this.isEdited(key) && storedTag !== 'M' && storedTag !== 'S') return 'H';
+            if (this.editIsHeld(key) && storedTag !== 'M' && storedTag !== 'S') return 'H';
             return storedTag;
         },
 
@@ -1546,7 +1565,7 @@ export function editorCore(config) {
          * it call a contributor's real translation empty. One signal, one meaning.
          */
         tagArrivesUntouched(key) {
-            return this.tagArrives(key) && !this.isEdited(key);
+            return this.tagArrives(key) && !this.editIsHeld(key);
         },
 
         tagCellClass(key) {
@@ -1590,7 +1609,7 @@ export function editorCore(config) {
                 // the same way the mod's bar and the site's composition bar count them: hiding
                 // the untranslated share flatters the result.
                 if (tag === 'H') {
-                    const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
+                    const value = this.editIsHeld(key) ? this.editedValues[key] : this.storedValue(key);
                     if (value === '' || value === null || value === undefined) {
                         counts.C++;
                         counts.total++;
@@ -1619,9 +1638,9 @@ export function editorCore(config) {
             // ⚠ What this gives up: a contribution offering a genuine capture — an H with nothing
             // in it — shows a full-strength chip. Rare, and the wrong way round is the one that
             // mislabels ordinary work.
-            if (this.entryOnFile(key) === undefined && !this.isEdited(key)) return false;
+            if (this.entryOnFile(key) === undefined && !this.editIsHeld(key)) return false;
 
-            const value = this.isEdited(key) ? this.editedValues[key] : this.storedValue(key);
+            const value = this.editIsHeld(key) ? this.editedValues[key] : this.storedValue(key);
             return value === '' || value === null || value === undefined;
         },
 

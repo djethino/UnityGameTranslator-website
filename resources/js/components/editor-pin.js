@@ -169,6 +169,12 @@ export function editorPin() {
                     + `{background-color:rgb(26 62 50)!important}`,
                 `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"].selected-manual`
                     + `{background-color:rgb(60 35 95)!important}`,
+                // Typing set aside by a pick: opaque like its neighbours, and still ringless —
+                // that absence is what says it is not going anywhere. Restated here or the frozen
+                // column would paint it the ordinary cell colour and lose the whole signal.
+                `.editor-grid.pin-main tbody [data-col="${this.pinValueCol}"].edit-set-aside`
+                    + `{background-color:rgb(41 37 61)!important}`,
+                `${value}.edit-set-aside{box-shadow:${edge};outline:none}`,
                 // A row on its way out, on both cells of the pair — the tag included, or half the
                 // frozen block would go on looking ordinary.
                 `.editor-grid.pin-main tbody [data-col="${this.pinTagCol}"].deleted-cell,`

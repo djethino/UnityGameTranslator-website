@@ -814,9 +814,12 @@ class MergeViewStateTest extends TestCase
         }
 
         // ⚠ A rewording belongs to the TARGET, whichever column that is — the whole point of the
-        // consolidation, and the line that was wrong before it.
+        // consolidation, and the line that was wrong before it. It shows there either way: as the
+        // answer, or as typing a pick has set aside and the save will not take.
         $this->assertStringContainsString(
-            "if (source === this.targetSource() && this.isEdited(key)) return 'selected-manual';", $core);
+            'if (source === this.targetSource() && this.isEdited(key)) {', $core);
+        $this->assertStringContainsString(
+            "return this.editIsHeld(key) ? 'selected-manual' : 'edit-set-aside';", $core);
 
         foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
             $this->assertStringContainsString('targetSource() {', $html, $name);
@@ -940,13 +943,16 @@ class MergeViewStateTest extends TestCase
     {
         $core = file_get_contents(resource_path('js/components/translation-editor.js'));
 
+        // ⚠ editIsHeld, not isEdited: typing a pick has set aside will not be written, so the row
+        // does arrive as it was offered. "There is a draft" and "the draft is the answer" are two
+        // questions, and every chip and count here asks the second.
         $this->assertStringContainsString('tagArrivesUntouched(key) {', $core);
         $this->assertStringContainsString(
-            'return this.tagArrives(key) && !this.isEdited(key);', $core);
+            'return this.tagArrives(key) && !this.editIsHeld(key);', $core);
 
         // isCaptureRow keeps its own meaning, and stops answering for rows it cannot see.
         $this->assertStringContainsString(
-            'if (this.entryOnFile(key) === undefined && !this.isEdited(key)) return false;', $core);
+            'if (this.entryOnFile(key) === undefined && !this.editIsHeld(key)) return false;', $core);
 
         $cell = file_get_contents(resource_path('views/components/editor-tag-cell.blade.php'));
         $this->assertStringContainsString(

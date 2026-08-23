@@ -90,40 +90,61 @@ class EditorScriptSanityTest extends TestCase
     }
 
     /**
-     * 🔴 Picking a version drops a pending rewording — from ANY column, the target's included.
+     * 🔴 **Picking a column never destroys typing.** It sets it aside; reverting the row removes it.
      *
-     * ⚠ What a conditional `delete` costs is not a lost keystroke, it is a screen that STATES one
-     * thing and DOES another: the row goes on showing the reworded text (`x-show="isEdited(key)"`)
-     * and painted as reworded, while the save writes the version that was picked. Nothing warns,
-     * because both halves are individually correct.
+     * ⚠ The cost of getting this wrong is not one keystroke: fifty reworded lines go to a single
+     * press of "take everything from this side", with no undo. So neither the gesture that takes a
+     * version (`select`) nor the one that sweeps a whole column (`selectAllFrom`) may delete from
+     * `editedValues` — what decides the file is the SELECTION, read through `editIsHeld`.
      *
-     * The condition that caused it read `source !== this.targetSource()` and came from the
-     * comparison screen, where `advancePick` swallows a click on the column already held so it
-     * never ran. Moved into the core it reached the merge view, where a rewording holds the row as
-     * `manual` and the click does get through. A guard that never fires where it was written is
-     * exactly the kind that survives review and breaks somewhere else.
+     * ⚠ This does not forbid the deletion outright: `revertRow`, `toggleDelete`, `stageEdit`
+     * (typing the original value back) and the third click of `advancePick` all legitimately drop
+     * it, and each is a gesture aimed at that one row.
      */
-    public function test_taking_a_version_drops_a_pending_rewording_from_any_column(): void
+    public function test_picking_a_column_sets_typing_aside_instead_of_destroying_it(): void
     {
+        $forbidden = ['select(key, source) {', 'selectAllFrom(source) {'];
+
         foreach ($this->sources() as $file => $source) {
-            foreach (explode("\n", $source) as $number => $line) {
-                if (!str_contains($line, 'delete this.editedValues[key]')) {
+            foreach ($forbidden as $signature) {
+                $at = strpos($source, $signature);
+                if ($at === false) {
                     continue;
                 }
 
-                $this->assertSame(
-                    'delete this.editedValues[key];',
-                    trim($line),
-                    "$file:" . ($number + 1) . ' conditions the drop of a rewording on which column '
-                    . 'the value came from; the row would then show one value and save another'
+                // The body up to the next method at the same indentation
+                $body = substr($source, $at, strpos($source, "\n        },", $at) - $at);
+
+                $this->assertStringNotContainsString(
+                    'delete this.editedValues[key]',
+                    $body,
+                    "$file: $signature destroys a pending rewording; a pick must only set it aside"
                 );
             }
         }
 
+        // 🔴 And "is the typing the answer" is ONE test, in the core — which is only possible
+        // because every arbitrating screen answers a rewording the same way. A screen that names
+        // the target's column instead reads identically until this question, and then its click on
+        // that column runs through advancePick and deletes the typing.
+        foreach (['merge/show', 'translations/merge-preview'] as $screen) {
+            $source = file_get_contents(base_path("resources/views/$screen.blade.php"));
+
+            if (!str_contains($source, 'onEditStaged(key) {')) {
+                continue;
+            }
+
+            $body = substr($source, strpos($source, 'onEditStaged(key) {'));
+            $body = substr($body, 0, strpos($body, "\n        },"));
+
+            $this->assertStringContainsString("'manual'", $body,
+                "$screen answers a rewording with something other than 'manual'");
+        }
+
         $this->assertStringContainsString(
-            'delete this.editedValues[key];',
+            "return picked === null || picked === 'manual';",
             file_get_contents(base_path('resources/js/components/translation-editor.js')),
-            'the core stopped dropping the rewording when a version is taken'
+            'the core no longer decides in one place whether a rewording is the answer'
         );
     }
 }
