@@ -28,6 +28,39 @@ export function editorOffScreen() {
         offSide: {},
 
         /**
+         * Keep the answer up to date, whatever moved.
+         *
+         * 🔴 **This used to be a single `@scroll` written in ONE screen's template.** Two
+         * consequences, and the second is the worse one. The comparison screen never had that
+         * line, so its marks were frozen at whatever the first measurement said. And even where it
+         * was written, scrolling is not the only thing that changes the answer: the workbench
+         * takes the window (the box gains some 150px), the browser is resized, a filter shortens
+         * the table, a panel opens. Every one of those moves a column across an edge in silence.
+         *
+         * ⚠ An observer on the box catches all of them at once, which is the same reasoning — and
+         * the same words — as `initEditorColumns` a module away. A hook per cause misses the next
+         * cause; a screen that must remember to add the hook misses it from the start.
+         *
+         * ⚠ Bound here rather than in a template so that no screen can be the one that forgot.
+         */
+        initOffScreen() {
+            const box = this.$refs.gridBox;
+            if (!box) return;
+
+            box.addEventListener('scroll', () => this.refreshOffScreenSides(), { passive: true });
+
+            if (typeof ResizeObserver !== 'undefined') {
+                this._offScreenObserver = new ResizeObserver(() => this.refreshOffScreenSides());
+                this._offScreenObserver.observe(box);
+
+                const table = box.querySelector('table.editor-grid');
+                if (table) this._offScreenObserver.observe(table);
+            }
+
+            this.refreshOffScreenSides();
+        },
+
+        /**
          * Where the scrolling area starts, and which columns are moored there.
          *
          * ⚠ A frozen column can never be off screen: it is drawn where it is pinned, whatever the
@@ -72,21 +105,31 @@ export function editorOffScreen() {
             if (JSON.stringify(this.offSide) !== JSON.stringify(next)) this.offSide = next;
         },
 
-        /** What the mark says when somebody rests on it. Set by the page: it is translated. */
-        offScreenHint: '',
+        // ⚠ No `offScreenHint` property any more. It was set by the page, and only ONE page set
+        // it — so the comparison screen and the shared metadata grid rendered an empty tooltip on
+        // every mark. The wording depends on nothing at run time, so it is written straight into
+        // the templates by Blade, where the translator is already available.
 
         /**
          * The column a chosen source lives in.
          *
-         * ⚠ A rewording shows in the Main's own column, because that is where it will be written
-         * — so it points there, not at the contribution it was written over.
+         * ⚠ A rewording shows in the TARGET's own column, because that is where it will be written
+         * — so it points there, not at the version it was written over. `main` on a merge screen,
+         * the player's file or the server's on a comparison, depending on which way it runs.
+         *
+         * ⚠ Everything else IS its column: `main`, `local`, `online` are the `data-col` names. Only
+         * a contribution needs translating, because its id travels as `branch_7` and the column is
+         * written `branch-7` (a `data-col` goes through CSS, where the underscore was avoided).
+         * This used to end at `return 'branch-' + source`, which turned the comparison's `local`
+         * into `branch-local` — a column that exists nowhere, so no mark could ever be shown.
          */
         columnOfSource(source) {
             if (source === undefined || source === null || source === '') return null;
-            if (source === 'main' || source === 'manual') return 'main';
+            if (source === 'manual') return this.targetSource();
             if (typeof source === 'number') return 'branch-' + source;
-            if (String(source).startsWith('branch_')) return 'branch-' + String(source).slice(7);
-            return 'branch-' + source;
+
+            const name = String(source);
+            return name.startsWith('branch_') ? 'branch-' + name.slice(7) : name;
         },
 
         /** '«' or '»' when this row's answer is out of sight that way, empty when it can be seen. */
@@ -118,9 +161,39 @@ export function editorOffScreen() {
             const arrow = this.answerArrow(source);
             if (!arrow) return '';
             const icon = arrow === '«' ? 'fa-chevron-left' : 'fa-chevron-right';
+            // ⚠ Keyed on the ROLE, not on the name: the target wears the green of `selected-main`
+            // / `selected-local`, anything offered wears the blue. Naming `main` here meant the
+            // comparison's own side would have been drawn in the colour of the other one.
             const colour = source === 'manual' ? 'text-fuchsia-300'
-                : source === 'main' ? 'text-emerald-300' : 'text-sky-300';
+                : source === this.targetSource() ? 'text-emerald-300' : 'text-sky-300';
             return icon + ' ' + colour;
+        },
+
+        // ── The same three answers for a translated LINE, asked by key ────
+        //
+        // 🔴 These lived in the merge view's own script, and nothing in them is about merging: a
+        // row's answer is in `selections`, which every arbitrating screen has. Written there, the
+        // comparison screen had no off-screen marks AT ALL — its rows could hold an answer two
+        // columns past the edge with nothing to say so.
+
+        lineAnswerLeft(key) {
+            const sel = this.selections[key];
+            return !!sel && this.answerLeft(sel.source);
+        },
+
+        lineAnswerRight(key) {
+            const sel = this.selections[key];
+            return !!sel && this.answerRight(sel.source);
+        },
+
+        lineAnswerIconClass(key) {
+            const sel = this.selections[key];
+            return sel ? this.answerIconClass(sel.source) : '';
+        },
+
+        goToLineAnswer(key) {
+            const sel = this.selections[key];
+            if (sel) this.goToAnswer(sel.source);
         },
 
         /** Go to the answer. The mark then disappears, which is its own confirmation. */

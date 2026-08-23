@@ -11,8 +11,16 @@
     column that never scrolls away — the column somebody keeps in sight precisely to know which line
     they are looking at.
 
-    The slot is for what a screen adds beside the key: the mark saying its answer is off to one
-    side. Nothing else belongs here.
+    🔴 **The off-screen mark is drawn HERE, not passed in by the screen.** It was a slot, filled by
+    the merge view and by nobody else — so the comparison, whose grid is just as wide and whose rows
+    hold answers just the same, showed nothing. A capacity of the core is not something each screen
+    should have to remember to plug in.
+
+    ⚠ Only when nothing is pinned. With the pin on, the key is no longer the last frozen cell, and a
+    mark riding on it would sit UNDER the frozen block: it moves to the pinned value cell instead
+    (see side-cells / the merge view's main cell).
+
+    The slot stays for anything else a screen adds beside the key.
 --}}
 <td data-col="key"
     class="relative px-4 py-2 font-mono text-xs text-gray-500 break-words sticky z-10 bg-gray-800 border-r border-gray-700 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.6)]"
@@ -20,5 +28,13 @@
     <span class="editor-text"
           :class="isDeleted(key) ? 'line-through text-red-400' : ''"
           x-safe-html="highlightKey(key)"></span>
+    <template x-if="!pinMain">
+        <button type="button"
+            x-show="lineAnswerLeft(key)" x-cloak
+            @click.stop="goToLineAnswer(key)"
+            class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
+            title="{{ __('merge.answer_off_screen') }}"
+            ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
+    </template>
     {{ $slot }}
 </td>

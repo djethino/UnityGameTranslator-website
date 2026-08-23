@@ -90,6 +90,57 @@ class EditorScriptSanityTest extends TestCase
     }
 
     /**
+     * 🔴 **A capacity of the core is wired by the core, in every screen at once.**
+     *
+     * The off-screen marks — "your answer is two columns that way" — were wired by ONE template:
+     * a single `@scroll` on the merge view's grid, and the four `lineAnswer*` helpers written in
+     * that page's script. Two consequences, and neither is visible from the screen that has them.
+     * The comparison, whose grid is just as wide and whose rows hold answers just the same, had no
+     * marks at all. And scrolling is not the only thing that moves a column across an edge: the
+     * workbench takes the window, the browser is resized, a filter shortens the table.
+     *
+     * ⚠ The same reasoning is already written a module away, in `initEditorColumns`: an observer
+     * catches every cause at once, where a hook per cause misses the next one. What this test adds
+     * is the other half — a screen must not be able to be the one that forgot to plug it in.
+     */
+    public function test_the_off_screen_marks_are_wired_by_the_core(): void
+    {
+        $module = file_get_contents(base_path('resources/js/components/editor-offscreen.js'));
+
+        $this->assertStringContainsString('initOffScreen() {', $module);
+        $this->assertStringContainsString(
+            'this.initOffScreen();',
+            file_get_contents(base_path('resources/js/components/translation-editor.js')),
+            'the core builds every editor but never starts the off-screen marks'
+        );
+
+        // A row's answer lives in `selections`, which every arbitrating screen has — so asking
+        // where it is belongs to the module, not to one page.
+        foreach (['lineAnswerLeft(key) {', 'lineAnswerRight(key) {', 'goToLineAnswer(key) {'] as $shared) {
+            $this->assertStringContainsString($shared, $module);
+        }
+
+        foreach ($this->sources() as $file => $source) {
+            if (str_contains($file, 'editor-offscreen.js')) {
+                continue;
+            }
+
+            $this->assertStringNotContainsString('lineAnswerLeft(key) {', $source,
+                "$file answers for itself where the core already answers for everyone");
+            $this->assertStringNotContainsString('@scroll="refreshOffScreenSides()"', $source,
+                "$file wires the marks to scrolling only — the workbench and a resize move them too");
+        }
+
+        // And the mark is drawn by the shared key cell, not passed in: it was a slot, and only one
+        // screen ever filled it.
+        $this->assertStringContainsString(
+            'x-show="lineAnswerLeft(key)"',
+            file_get_contents(base_path('resources/views/components/editor/cell-key.blade.php')),
+            'the shared key cell no longer draws the off-screen mark itself'
+        );
+    }
+
+    /**
      * 🔴 **Everything the save can send is counted by the button.**
      *
      * The settings grid at the top is not lines. Taking the other side's font without touching a

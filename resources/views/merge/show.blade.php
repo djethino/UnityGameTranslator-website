@@ -382,8 +382,11 @@
                  A guessed height was the mistake here before: the box was capped at "100vh minus
                  14rem" while the chrome above it runs to some four hundred pixels, so it hung below
                  the fold and took its horizontal scrollbar with it. --}}
+            {{-- ⚠ No @scroll here any more: the off-screen marks are kept up to date by the core
+                 (initOffScreen), which also catches the workbench taking the window and a browser
+                 resize. Written in this one template, it was missing from the comparison screen
+                 entirely and answered only one of the four things that move a column. --}}
             <div x-ref="gridBox"
-                 @scroll="refreshOffScreenSides()"
                  class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
                  :class="wide && 'fixed inset-x-0 bottom-0 top-12 z-50 rounded-none border-0 overflow-auto'">
                 {{-- border-separate, and it is not cosmetic: with the default collapsed borders,
@@ -473,28 +476,12 @@
                                 <x-editor.cell-index />
 
                                 {{-- Key --}}
-                                <x-editor.cell-key>
-                                    {{-- The answer is that way.
-
-                                         🔴 A row whose answer is off screen reads as a row
-                                         nobody answered. With four contributions the grid is
-                                         twice the width of the window, so this is the ordinary
-                                         case, not an edge one.
-
-                                         It rides the last frozen cell — this one, unless the pin
-                                         moved the edge past Main — so it needs no measuring: it
-                                         follows the pin, the index column and every drag on its
-                                         own. It floats OVER the scrolling content rather than
-                                         taking width, and it goes there when clicked. --}}
-                                    <template x-if="!pinMain">
-                                        <button type="button"
-                                        x-show="lineAnswerLeft(key)" x-cloak
-                                        @click.stop="goToLineAnswer(key)"
-                                        class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
-                                        :title="offScreenHint"
-                                        ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
-                                    </template>
-                                </x-editor.cell-key>
+                                {{-- The "answer is that way" mark rides the last frozen cell, and
+                                     the component draws it itself now — see cell-key. It was
+                                     passed in from here, which made it a merge-view feature by
+                                     accident: the comparison, whose grid is twice the window wide
+                                     too, had none. --}}
+                                <x-editor.cell-key />
 
                                 {{-- Main Tag (clickable for tag change) --}}
                                 <td data-col="mainTag" class="px-2 py-2 text-center border-l border-gray-700"
@@ -530,7 +517,7 @@
                                         x-show="lineAnswerLeft(key)" x-cloak
                                         @click.stop="goToLineAnswer(key)"
                                         class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
-                                        :title="offScreenHint"
+                                        title="{{ __('merge.answer_off_screen') }}"
                                         ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
                                     </template>
                                     {{-- ⚠ Each button asks its own question — the block used to be
@@ -596,7 +583,7 @@
                                         x-show="lineAnswerRight(key)" x-cloak
                                         @click.stop="goToLineAnswer(key)"
                                         class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                        :title="offScreenHint"
+                                        title="{{ __('merge.answer_off_screen') }}"
                                         ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button></td>
                             </tr>
                         </template>
@@ -1106,32 +1093,11 @@ document.addEventListener('alpine:init', () => {
          * ⚠ A rewording shows in the Main's own column, because that is where it will be
          * written — so it points there, not at the contribution it was written over.
          */
-        // What the mark says when somebody rests on it. Translated server-side, so it is
-        // handed to the shared module rather than built inside it.
-        offScreenHint: @js(__('merge.answer_off_screen')),
 
-        // The same three answers for a translated LINE, asked by key. The shared module speaks in
-        // sources ('main', 'branch_7'); a line keeps its own in the selection map, and these are
-        // the only place that knows it.
-        lineAnswerLeft(key) {
-            const sel = this.selections[key];
-            return !!sel && this.answerLeft(sel.source);
-        },
-
-        lineAnswerRight(key) {
-            const sel = this.selections[key];
-            return !!sel && this.answerRight(sel.source);
-        },
-
-        lineAnswerIconClass(key) {
-            const sel = this.selections[key];
-            return sel ? this.answerIconClass(sel.source) : '';
-        },
-
-        goToLineAnswer(key) {
-            const sel = this.selections[key];
-            if (sel) this.goToAnswer(sel.source);
-        },
+        {{-- ⚠ lineAnswerLeft / lineAnswerRight / lineAnswerIconClass / goToLineAnswer are the
+             CORE's (editor-offscreen.js). Written here, they were a merge-view feature by
+             accident — the comparison screen has selections and a grid wider than the window too,
+             and had no off-screen marks at all. --}}
 
         /**
          * The best a contribution offers for one line, or null when none offers anything.

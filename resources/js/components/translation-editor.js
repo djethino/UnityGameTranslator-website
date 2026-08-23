@@ -313,6 +313,7 @@ export function editorCore(config) {
             this.restoreUiState();
             this.initEditorColumns();
             this.initEditorPin();
+            this.initOffScreen();
             this.initHScroll();
             this.restorePendingState();
             try {

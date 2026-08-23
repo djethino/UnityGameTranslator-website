@@ -46,11 +46,22 @@
     </td>
 @endif
 
-<td data-col="{{ $side }}" class="px-4 py-2 border-l border-gray-700 merge-cell"
+<td data-col="{{ $side }}" class="relative px-4 py-2 border-l border-gray-700 merge-cell"
     :class="[getCellClass(key, '{{ $side }}'), {{ $target ? "isDeleted(key) ? 'deleted-cell' : ''" : "''" }}]"
     @click="select(key, '{{ $side }}')"
     @if ($target) @dblclick="editCell(key, storedValue(key))" @endif>
     @if ($target)
+        {{-- With the pin on, THIS is the last frozen cell, so the "answer is off to the left" mark
+             rides here rather than on the key — same arrangement as the merge view's Main cell. A
+             mark left on the key would be drawn under the frozen block. --}}
+        <template x-if="pinMain">
+            <button type="button"
+                x-show="lineAnswerLeft(key)" x-cloak
+                @click.stop="goToLineAnswer(key)"
+                class="absolute left-full top-1/2 -translate-y-1/2 ml-1 z-20"
+                title="{{ __('merge.answer_off_screen') }}"
+                ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button>
+        </template>
         {{-- Each button asks its own question, like the merge view's: `canDelete` is false on a row
              the target does not hold — there is nothing to strike out — while writing one's own
              translation of such a row is exactly what this screen is for. --}}

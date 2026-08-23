@@ -358,6 +358,10 @@
                             <x-editor.side-head :side="$side['id']" :target="$side['target']"
                                                 :label="$side['label']" :byline="$side['byline']" />
                         @endforeach
+                        {{-- Where the "answer is off to the right" mark rides. Zero width, like the
+                             merge view's: it exists so the mark has somewhere to be anchored at the
+                             edge of the box, not so it takes a column. --}}
+                        <th class="answer-rail"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -384,11 +388,18 @@
                             @foreach ($sides as $side)
                                 <x-editor.side-cells :side="$side['id']" :target="$side['target']" />
                             @endforeach
+                            <td class="answer-rail"><button type="button"
+                                    x-show="lineAnswerRight(key)" x-cloak
+                                    @click.stop="goToLineAnswer(key)"
+                                    class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
+                                    title="{{ __('merge.answer_off_screen') }}"
+                                    ><i class="fas answer-mark" :class="lineAnswerIconClass(key)"></i></button></td>
                         </tr>
                     </template>
 
                     <tr x-show="filteredKeys.length === 0">
-                        <td :colspan="showIndexColumn ? 6 : 5" class="py-12 text-center text-gray-500">
+                        {{-- +1 for the answer rail --}}
+                        <td :colspan="showIndexColumn ? 7 : 6" class="py-12 text-center text-gray-500">
                             {{-- Kept where the eye is, not where the table is: see .grid-visible-center --}}
                             <div class="grid-visible-center">
                             <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
