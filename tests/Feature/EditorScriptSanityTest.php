@@ -90,6 +90,44 @@ class EditorScriptSanityTest extends TestCase
     }
 
     /**
+     * 🔴 **A drag measures the grid it is about to move — it never reads a remembered width.**
+     *
+     * `gridWidth` is written by `_distribute`, which pins it to the box width whenever a drag ends
+     * against the right edge. Let the columns grow afterwards — narrowing one hands its width to
+     * those on its right — and their sum passes the box while `gridWidth` stays behind. Nothing
+     * recalculates it.
+     *
+     * Measured on a real grid: `gridWidth` said 1182, the columns added up to 1388, the table
+     * rendered 1452. `fixedPart` — the undeclared part, so zero or more by construction — came out
+     * at MINUS 206, and every total in `_distribute` was that much short. The refusal to shrink the
+     * last column then fired while the grid was still 270px wider than its box and visibly
+     * scrolling: asked for 900, 700, 300 or 60, it returned 985 every time. The edge did not move
+     * at all.
+     *
+     * ⚠ The rule this protects is unchanged — a grid must not end short of its box — and the
+     * two-column grids that rule was written for still refuse (verified: the live editor's last
+     * column stays put, its neighbour still gives ground when the key is widened). What was
+     * restored is the measurement that rule is decided on, which is exactly "is there still a
+     * horizontal scrollbar".
+     */
+    public function test_a_column_drag_measures_the_grid_rather_than_remembering_it(): void
+    {
+        $columns = file_get_contents(base_path('resources/js/components/editor-columns.js'));
+
+        $this->assertStringNotContainsString('baseGridWidth: this.gridWidth', $columns,
+            'a drag reads the remembered grid width again — it drifts, see this test');
+        $this->assertMatchesRegularExpression(
+            '/baseGridWidth: Math\.round\(\s*\(root\.querySelector\(.table\.editor-grid.\)/',
+            $columns,
+            'baseGridWidth is no longer measured from the table at mousedown'
+        );
+
+        // Everything else on that line is measured at mousedown too; this one was the exception.
+        $this->assertStringContainsString('startWidth: cell.getBoundingClientRect().width', $columns);
+        $this->assertStringContainsString('boxWidth: (this.$refs.gridBox && this.$refs.gridBox.clientWidth)', $columns);
+    }
+
+    /**
      * 🔴 **A capacity of the core is wired by the core, in every screen at once.**
      *
      * The off-screen marks — "your answer is two columns that way" — were wired by ONE template:

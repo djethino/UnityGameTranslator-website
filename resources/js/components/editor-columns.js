@@ -334,7 +334,24 @@ export function editorColumns() {
                 // Photographed once, at the start: distributing from the LIVE widths would
                 // compound its own rounding at every mouse move and drift across a long drag
                 baseWidths: { ...this.columnWidths },
-                baseGridWidth: this.gridWidth,
+                // 🔴 **MEASURED, like everything else on this line — never read from `gridWidth`.**
+                //
+                // That number is written by _distribute, which pins it to the box width whenever a
+                // drag ends up against the right edge. If the columns then grow (narrowing one
+                // hands its width to those on its right), their sum passes the box while
+                // `gridWidth` stays behind — and nothing ever recalculates it.
+                //
+                // Measured live on a real grid: gridWidth said 1182, the columns added up to 1388,
+                // the table rendered 1452. `fixedPart` — meant to be the undeclared part, so zero
+                // or more — came out at MINUS 206, and every `total` in _distribute was that much
+                // short. The refusal to shrink the last column therefore fired while the grid was
+                // still 270px wider than its box and visibly scrolling.
+                //
+                // ⚠ The rule it protects is unchanged: a grid must not end short of its box. This
+                // only restores the measurement that rule is decided on, which is exactly "is
+                // there still a horizontal scrollbar".
+                baseGridWidth: Math.round(
+                    (root.querySelector('table.editor-grid') || cell).getBoundingClientRect().width),
                 // What gives and takes room: the columns to the right that ARE resizable. A
                 // column with no handle — the tag columns, a badge wide — was never meant to
                 // stretch, and sharing the slack equally with one made it grow a hundred pixels.
