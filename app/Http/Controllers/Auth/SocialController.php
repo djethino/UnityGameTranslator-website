@@ -85,36 +85,45 @@ class SocialController extends Controller
                     . 'Please log in with your original provider to access your account.'
                 );
             } else {
+                // 🔴 **The provider's avatar is not taken at all — see the note below.**
                 $user = User::create([
                     'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
                     'email' => $email,
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
-                    'avatar' => $socialUser->getAvatar(),
                     'email_verified_at' => now(),
                 ]);
 
-                // 🔴 **A generated avatar from the start, so nothing links this account to the
-                // one it signed in with.** The provider's avatar URL carries the provider's own
-                // user id — `avatars.githubusercontent.com/u/12345` — and GitHub resolves that id
-                // to a login through a public, unauthenticated endpoint. Rendered on a game page,
-                // it tied a site pseudonym to a real GitHub account for any visitor reading the
-                // HTML, on a site whose sign-up is advertised as anonymous.
+                // 🔴 **Nothing here may link this account to the one it signed in with.**
                 //
-                // ⚠ It also stopped every visitor's browser from fetching an image from GitHub or
-                // Discord on public pages, which handed those hosts the IP of everyone reading us.
+                // The provider's avatar URL carries the provider's own user id —
+                // `avatars.githubusercontent.com/u/12345` — and GitHub resolves that id to a login
+                // through a public, unauthenticated endpoint. Rendered on a game page, it tied a
+                // site pseudonym to a real GitHub account for any visitor reading the HTML, on a
+                // site whose sign-up is advertised as anonymous. It also had every visitor's
+                // browser fetch an image from GitHub or Discord, handing those hosts the IP of
+                // everyone reading a public page.
                 //
-                // ⚠ Not taken away: profile.avatar still offers "use my platform avatar", and the
-                // URL above is kept for exactly that. What changes is that keeping it becomes a
-                // decision instead of what happens to somebody who never opened their profile.
+                // ⚠ **Not stored rather than stored-and-not-shown.** Keeping the URL for an opt-in
+                // would have left the identifier in our database, and an identifier we hold is one
+                // we can leak later — through an export, an admin screen, a future template. The
+                // choice it would have served is thin: a generated avatar is what somebody signing
+                // in anonymously came for. So the field stays empty and there is nothing to publish.
+                //
+                // ⚠ A seed all the same, so "reroll" has something to move. Without it the
+                // component still generates one from the user id, so this is comfort, not cover.
                 //
                 // ⚠ forceFill, because avatar_seed is deliberately outside $fillable — mass
                 // assignment must not reach it. Passing it to create() would have been dropped in
                 // silence, which is the whole trap.
                 $user->forceFill(['avatar_seed' => Str::random(20)])->save();
             }
-        } else {
-            // Update avatar if changed
+        } elseif (!empty($user->avatar)) {
+            // 🔴 **Only follows an avatar this account ALREADY holds.** Accounts created before
+            // 2026-08-24 kept the provider URL, and somebody still using it should see it change
+            // when they change it upstream. Without the guard this line would put the URL back on
+            // every account at the next sign-in, undoing the whole point above — the kind of
+            // repair that reads as harmless and quietly reopens what was closed.
             $user->update(['avatar' => $socialUser->getAvatar()]);
         }
 

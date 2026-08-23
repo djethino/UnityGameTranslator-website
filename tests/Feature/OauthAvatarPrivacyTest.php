@@ -52,16 +52,45 @@ class OauthAvatarPrivacyTest extends TestCase
         );
     }
 
-    public function test_the_provider_url_is_kept_so_the_choice_stays_available(): void
+    public function test_the_provider_url_is_never_stored(): void
     {
-        $url = 'https://avatars.githubusercontent.com/u/12345?v=4';
-        $this->signInWith('github', '12345', $url);
+        $this->signInWith('github', '12345', 'https://avatars.githubusercontent.com/u/12345?v=4');
 
         $user = User::where('provider_id', '12345')->firstOrFail();
 
-        // Storing it is what makes "use my platform avatar" possible at all. The seed is what
-        // decides whether it is ever rendered.
-        $this->assertSame($url, $user->avatar);
+        // An identifier we hold is one we can leak later — an export, an admin screen, a future
+        // template. Not keeping it is what makes that impossible rather than merely unlikely.
+        $this->assertEmpty(
+            $user->avatar,
+            'The provider avatar URL must not be stored at all: it carries the provider user id.'
+        );
+    }
+
+    public function test_signing_in_again_does_not_bring_the_url_back(): void
+    {
+        $this->signInWith('github', '12345', 'https://avatars.githubusercontent.com/u/12345?v=4');
+        $this->signInWith('github', '12345', 'https://avatars.githubusercontent.com/u/12345?v=5');
+
+        $user = User::where('provider_id', '12345')->firstOrFail();
+
+        $this->assertEmpty(
+            $user->avatar,
+            'The refresh on sign-in must only follow an avatar the account already holds.'
+        );
+    }
+
+    public function test_an_account_that_already_holds_one_still_follows_it(): void
+    {
+        // Created before 2026-08-24: the URL is theirs, and it must keep tracking upstream.
+        $user = User::factory()->create([
+            'provider' => 'github',
+            'provider_id' => '999',
+            'avatar' => 'https://avatars.githubusercontent.com/u/999?v=1',
+        ]);
+
+        $this->signInWith('github', '999', 'https://avatars.githubusercontent.com/u/999?v=2');
+
+        $this->assertSame('https://avatars.githubusercontent.com/u/999?v=2', $user->fresh()->avatar);
     }
 
     public function test_a_seeded_user_renders_no_provider_url(): void
