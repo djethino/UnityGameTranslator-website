@@ -114,6 +114,11 @@
 
     <span class="w-px h-5 bg-gray-700 shrink-0"></span>
 
+    {{-- 🔴 Everything the bottom bar offers besides Save. That bar is COVERED while this strip is
+         on (it is z-40 under a z-50 grid), so an action left out of here cannot be reached at all.
+         The same component renders it in both, guards included — see editor-actions. --}}
+    {{ $actions ?? '' }}
+
     @if($save)
         <button type="button" @click="{{ $save }}" :disabled="{{ $saveDisabled }}"
                 @if($saveTitle) :title="{{ $saveTitle }}" @endif

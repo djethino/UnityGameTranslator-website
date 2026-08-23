@@ -885,14 +885,26 @@ class MergeViewStateTest extends TestCase
         $preview = file_get_contents(resource_path('views/translations/merge-preview.blade.php'));
         $merge = file_get_contents(resource_path('views/merge/show.blade.php'));
 
+        $actions = file_get_contents(resource_path('views/components/editor/editor-actions.blade.php'));
+
+        // The two buttons and their guards are the shared component's — written per screen, they
+        // were also written for ONE of the two bars, and the workbench covers the other.
+        $this->assertStringContainsString('@click="{{ $suggest }}"', $actions);
+        $this->assertStringContainsString('@click="{{ $cancel }}"', $actions);
+        // Shown only while something is left to answer: a button that does nothing teaches nothing.
+        $this->assertStringContainsString('x-show="undecidedCount > 0"', $actions);
+        $this->assertStringContainsString('x-show="totalChanges > 0"', $actions);
+
         foreach (['merge view' => $merge, 'merge preview' => $preview] as $name => $html) {
             $this->assertStringContainsString('suggestTheRest() {', $html, $name);
-            $this->assertStringContainsString('@click="suggestTheRest()"', $html, $name);
-            $this->assertStringContainsString('@click="clearAll()"', $html, $name);
+            $this->assertStringContainsString('suggest="suggestTheRest()"', $html, $name);
+            $this->assertStringContainsString('cancel="clearAll()"', $html, $name);
 
-            // Shown only while something is left to answer: a button that does nothing teaches
-            // nothing.
-            $this->assertStringContainsString('x-show="undecidedCount > 0"', $html, $name);
+            // 🔴 BOTH bars. The bottom one is covered by the workbench grid (z-40 under z-50), so
+            // an action offered only there cannot be clicked at all while the workbench is on.
+            $this->assertSame(2, substr_count($html, '<x-editor.editor-actions'),
+                "$name offers its actions in only one of the two bars");
+            $this->assertStringContainsString('<x-slot:actions>', $html, $name);
         }
 
         // 🔴 The one line that made Cancel inert. Asserted absent rather than described in a

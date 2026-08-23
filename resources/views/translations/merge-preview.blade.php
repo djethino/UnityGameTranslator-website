@@ -288,14 +288,7 @@
 
             <x-editor.filter-sep />
 
-            {{-- Same order as the columns and as the boxes above: take everything from the result
-                 being built, or everything from what is being offered. --}}
-            @foreach ($sides as $side)
-                <button type="button" @click="selectAllFrom('{{ $side['id'] }}')"
-                    class="{{ $side['tone'] }} hover:text-white">
-                    <i class="fas fa-check-double mr-1"></i> {{ $side['selectAllLabel'] }}
-                </button>
-            @endforeach
+            <x-editor.select-all-sides :sides="$sides" />
         </x-editor.filter-bar>
 
         @include('partials.editor-floating-search')
@@ -311,6 +304,14 @@
             save-title="sessionLost ? sessionLostWhy : ''"
             save-icon="{{ $toLocal ? 'fa-download' : 'fa-save' }}"
             save-label="{{ $toLocal ? __('merge_preview.send_to_game') : __('merge_preview.save_to_server') }}">
+            {{-- The same actions as the bar this strip covers, from the same components. --}}
+            <x-slot:actions>
+                <x-editor.editor-actions
+                    suggest="suggestTheRest()"
+                    cancel="clearAll()" :cancel-label="__('merge_preview.cancel_changes')"
+                    download="downloadMerged()" :download-label="__('merge_preview.download_merged')"
+                    compact />
+            </x-slot:actions>
             @foreach ($sides as $side)
                 <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ $side['onlyLabel'] }}">
                     <input type="checkbox" :checked="filters.{{ $side['filter'] }}"
@@ -329,6 +330,9 @@
                        class="rounded bg-gray-700 border-gray-600 text-gray-600">
                 <span class="text-gray-500">=</span>
             </label>
+            {{-- Beside the side filters, as in the bar below: same question, same place. --}}
+            <span class="w-px h-5 bg-gray-700 shrink-0"></span>
+            <x-editor.select-all-sides :sides="$sides" />
             <span class="w-px h-5 bg-gray-700 shrink-0"></span>
         </x-editor.workbench-bar>
 
@@ -456,28 +460,13 @@
 
             {{-- ⚠ The four help lines that used to sit above these buttons now live in the panel —
                  they were pushing Save onto a second row on a narrow window, and they had no room
-                 to explain the colours. See components/editor/help-tip.blade.php. --}}
+                 to explain the colours. The panel travels with the other actions, so the workbench
+                 strip gets it too — see components/editor/editor-actions.blade.php. --}}
             <div class="flex gap-4 items-center shrink-0">
-                <x-editor.help-tip />
-                {{-- Proposing and cancelling are two acts, and the same two buttons as the merge
-                     view — in the same order, so the gesture is learnt once.
-
-                     Shown only while something is left to answer: a button that does nothing is a
-                     button that teaches nothing. --}}
-                <button type="button" @click="suggestTheRest()"
-                    x-show="undecidedCount > 0" x-cloak
-                    class="text-gray-400 hover:text-white text-sm transition">
-                    <i class="fas fa-wand-magic-sparkles mr-1"></i> {{ __('merge.suggest_rest') }}
-                </button>
-                <button type="button" @click="clearAll()" x-show="totalChanges > 0"
-                    class="text-gray-400 hover:text-white text-sm transition">
-                    <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
-                </button>
-
-                <button type="button" @click="downloadMerged()"
-                    class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition">
-                    <i class="fas fa-download mr-2"></i> {{ __('merge_preview.download_merged') }}
-                </button>
+                <x-editor.editor-actions
+                    suggest="suggestTheRest()"
+                    cancel="clearAll()" :cancel-label="__('merge_preview.cancel_changes')"
+                    download="downloadMerged()" :download-label="__('merge_preview.download_merged')" />
 
                 {{-- 🔴 **The button names where the result GOES, and the two places are not the
                      same.** It said "Save to server" whichever way the comparison ran, three inches
@@ -498,6 +487,7 @@
                     {{ $toLocal ? __('merge_preview.send_to_game') : __('merge_preview.save_to_server') }}
                     (<span x-text="totalChanges">0</span>)
                 </button>
+                {{-- The other end of the pair that opens this bar. --}}
                 <div class="flex flex-col gap-1 shrink-0">
                     <button type="button" @click="scrollToTop()"
                         class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">

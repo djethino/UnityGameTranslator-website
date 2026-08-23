@@ -355,6 +355,11 @@
                  components/editor/workbench-bar.blade.php. Only the category filters differ from
                  one screen to the next, so only those are passed in. --}}
             <x-editor.workbench-bar save="submitMerge()">
+                {{-- The same actions as the bar this strip covers, from the same component. --}}
+                <x-slot:actions>
+                    <x-editor.editor-actions suggest="suggestTheRest()" cancel="clearAll()" compact />
+                </x-slot:actions>
+
                 @if($mode === 'merge')
                     <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('merge.filter_new_keys') }}">
                         <input type="checkbox" :checked="filters.catNew" @change="toggleFilter('catNew')"
@@ -682,9 +687,9 @@
                     </div>
                     {{-- ⚠ The four help lines that used to sit here now live in the panel: they
                          were pushing Save onto a second row on a narrow window, and they had no
-                         room to explain the colours. See components/editor/help-tip.blade.php. --}}
+                         room to explain the colours. The panel travels with the other actions —
+                         see components/editor/editor-actions.blade.php. --}}
                     <div class="flex gap-4 items-center shrink-0">
-                        <x-editor.help-tip />
                         {{-- The way back to the proposal.
 
                              🔴 The screen arrives already answered, and until now nothing could
@@ -699,20 +704,15 @@
 
                              Shown when there is something left to answer, rather than always: a
                              button that does nothing is a button that teaches nothing. --}}
-                        <button type="button" @click="suggestTheRest()"
-                            x-show="undecidedCount > 0" x-cloak
-                            class="text-gray-400 hover:text-white text-sm transition">
-                            <i class="fas fa-wand-magic-sparkles mr-1"></i> {{ __('merge.suggest_rest') }}
-                        </button>
-                        <button type="button" @click="clearAll()" x-show="totalChanges > 0"
-                            class="text-gray-400 hover:text-white text-sm transition">
-                            <i class="fas fa-times mr-1"></i> {{ __('merge.cancel_all') }}
-                        </button>
+                        <x-editor.editor-actions suggest="suggestTheRest()" cancel="clearAll()" />
+
                         <button type="button" @click="submitMerge()" :disabled="totalChanges === 0"
                             class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-bold transition">
                             <i class="fas fa-save mr-2"></i>
                             {{ __('common.save') }} (<span x-text="totalChanges">0</span>)
                         </button>
+                        {{-- The other end of the pair that opens this bar: reachable whichever
+                             side of a wide bar the eye is on. --}}
                         <div class="flex flex-col gap-1 shrink-0">
                             <button type="button" @click="scrollToTop()"
                                 class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">

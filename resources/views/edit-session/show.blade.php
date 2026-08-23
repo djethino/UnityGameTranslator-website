@@ -139,6 +139,14 @@
              so what the mode buys is height: the whole window for the list of captures. --}}
         <x-editor.workbench-bar save="save()" save-disabled="saving || totalChanges === 0"
                                 modified-filter="pendingOnly" save-label="{{ __('edit_session.save') }}">
+            {{-- The same actions as the bar this strip covers, from the same component. --}}
+            <x-slot:actions>
+                <x-editor.editor-actions :arbitrates="false"
+                    :select-hint="__('edit_session.instructions_validate')"
+                    :edit-hint="__('edit_session.instructions')"
+                    cancel="clearAll()" :cancel-label="__('merge_preview.cancel_changes')" compact />
+            </x-slot:actions>
+
             <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0"
                    title="{{ __('edit_session.new_from_game') }}">
                 <input type="checkbox" :checked="sessionNewOnly" @change="toggleSessionNewOnly()"
@@ -342,15 +350,15 @@
                  so it words the first two gestures its own way and shows no column marks.
                  See components/editor/help-tip.blade.php. --}}
             <div class="flex gap-4 items-center shrink-0">
-                <x-editor.help-tip :arbitrates="false"
+                <x-editor.editor-actions :arbitrates="false"
                     :select-hint="__('edit_session.instructions_validate')"
-                    :edit-hint="__('edit_session.instructions')" />
+                    :edit-hint="__('edit_session.instructions')"
+                    cancel="clearAll()" :cancel-label="__('merge_preview.cancel_changes')" />
 
-                <button type="button" @click="clearAll()" x-show="totalChanges > 0"
-                    class="text-gray-400 hover:text-white text-sm transition">
-                    <i class="fas fa-times mr-1"></i> {{ __('merge_preview.cancel_changes') }}
-                </button>
-
+                {{-- ⚠ Ending the session is a POST with its own confirmation, and it stays HERE
+                     rather than travelling into the workbench strip: it is not an editing action
+                     but the way out of the whole session, and a form cannot be handed to a slot
+                     the way a click expression can. Reachable by leaving the workbench. --}}
                 <form method="POST" action="{{ route('edit-session.end', ['s' => $editSession->id]) }}"
                     data-confirm="{{ __('edit_session.end_confirm') }}">
                     @csrf
@@ -366,6 +374,7 @@
                     <i class="fas fa-spinner fa-spin mr-2" x-show="saving"></i>
                     {{ __('edit_session.save') }} (<span x-text="totalChanges">0</span>)
                 </button>
+                {{-- The other end of the pair that opens this bar. --}}
                 <div class="flex flex-col gap-1 shrink-0">
                     <button type="button" @click="scrollToTop()"
                         class="text-gray-500 hover:text-white transition" title="{{ __('merge.scroll_top') }}">
