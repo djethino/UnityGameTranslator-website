@@ -52,8 +52,10 @@ class RecalculateHashes extends Command
                 $this->warn("  #{$translation->id}: Failed to parse JSON or compute hash");
                 $failed++;
             } else {
-                $translation->file_hash = $newHash;
-                $translation->save();
+                // ⚠ Through updateHash, which carries the guards: a repair must not move
+                // updated_at nor ping the search engines. Written out here, this command was a
+                // second copy of that write — and the copy without them.
+                $translation->updateHash($newHash);
 
                 if ($oldHash !== $newHash) {
                     $updated++;

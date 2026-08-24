@@ -90,4 +90,68 @@ class BackfillDerivedColumnsTest extends TestCase
         $this->assertSame($before, $translation->updated_at->timestamp);
         $this->assertSame($contentBefore, $translation->content_updated_at->timestamp);
     }
+
+    /**
+     * The same rule, on the other repair — and the one that reaches production without anybody
+     * running a command.
+     *
+     * 🔴 `updateHash()` is called by `check` and by `download`, both public read endpoints, when a
+     * translation has no stored hash. A plain save there moved `updated_at` on a file nobody had
+     * opened: a READ made a translation look freshly worked on, and the ranking reads that as
+     * freshness. The recalculate command did the same over the whole table.
+     */
+    public function test_filling_in_a_missing_hash_does_not_date_the_translation(): void
+    {
+        $translation = $this->makeTranslation(['Hello' => ['v' => 'Bonjour', 't' => 'H']]);
+
+        $this->travel(-90)->days();
+        $translation->forceFill([
+            'updated_at' => now(),
+            'content_updated_at' => now(),
+            'file_hash' => null,
+        ])->saveQuietly();
+        $translation->refresh();
+
+        $before = $translation->updated_at->timestamp;
+        $contentBefore = $translation->content_updated_at->timestamp;
+
+        $this->travelBack();
+
+        // The endpoint a mod polls on a timer, asked by anybody, with no account.
+        $this->getJson("/api/v1/translations/{$translation->id}/check")->assertSuccessful();
+
+        $translation->refresh();
+
+        $this->assertNotNull($translation->file_hash, 'the hash was filled in');
+        $this->assertSame($before, $translation->updated_at->timestamp,
+            'and reading it did not date the translation');
+        $this->assertSame($contentBefore, $translation->content_updated_at->timestamp);
+    }
+
+    /**
+     * ⚠ And the repair must stay silent: the `updated` event pings IndexNow for a page that did
+     * not change, and touches the GAME, moving its date too.
+     */
+    public function test_recalculating_hashes_leaves_the_game_alone(): void
+    {
+        $translation = $this->makeTranslation(['Hello' => ['v' => 'Bonjour', 't' => 'H']]);
+
+        $this->travel(-90)->days();
+        $translation->forceFill(['updated_at' => now(), 'file_hash' => 'stale'])->saveQuietly();
+        $translation->game->forceFill(['updated_at' => now()])->saveQuietly();
+        $translation->refresh();
+
+        $before = $translation->updated_at->timestamp;
+        $gameBefore = $translation->game->refresh()->updated_at->timestamp;
+
+        $this->travelBack();
+        $this->artisan('translations:recalculate-hashes')->assertSuccessful();
+
+        $translation->refresh();
+
+        $this->assertNotSame('stale', $translation->file_hash, 'the hash was rebuilt');
+        $this->assertSame($before, $translation->updated_at->timestamp);
+        $this->assertSame($gameBefore, $translation->game->refresh()->updated_at->timestamp,
+            'and the game it belongs to was not touched either');
+    }
 }

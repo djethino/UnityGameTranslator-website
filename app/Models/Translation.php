@@ -210,12 +210,34 @@ class Translation extends Model
     }
 
     /**
-     * Update the file hash from current file content
+     * Update the file hash from current file content.
+     *
+     * 🔴 **A REPAIR, never a change.** Every caller recomputes a value derived from a file nobody
+     * touched: the two API endpoints fill it in when it was never stored, and the recalculate
+     * command rebuilds it over the whole table. A plain save() made all three lie in three ways at
+     * once — `updated_at` moved to the day of the repair, which the ranking still reads as
+     * freshness and which a translation with no content date of its own shows as its last change;
+     * the `updated` event fired, pinging IndexNow for a page that did not change; and that event
+     * touches the GAME, moving its date too.
+     *
+     * ⚠ This has already cost real production data once: a maintenance script overwrote the true
+     * update date of translations last worked on in April, and they have read as August since.
+     * `saveQuietly()` alone does NOT prevent it — it silences the events and still writes the
+     * timestamps. Both guards, or neither works.
+     *
+     * ⚠ Nothing that changes CONTENT comes through here. Uploading and writing a merge set
+     * file_hash themselves, as part of a save that carries new lines and must be dated.
+     *
+     * @param string|null $hash A hash already computed by the caller, to avoid reading the file
+     *                          twice. Recomputed here when absent.
      */
-    public function updateHash(): void
+    public function updateHash(?string $hash = null): void
     {
-        $this->file_hash = $this->computeHash();
-        $this->save();
+        $this->file_hash = $hash ?? $this->computeHash();
+
+        $this->timestamps = false;
+        $this->saveQuietly();
+        $this->timestamps = true;
     }
 
     public const TYPES = [
