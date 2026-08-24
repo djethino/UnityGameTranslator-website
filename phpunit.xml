@@ -18,6 +18,21 @@
         </include>
     </source>
     <php>
+        <!--
+            🔴 The suite peaks at 126 MB against PHP's 128 MB default, and nothing here said so.
+
+            Measured rather than guessed, because the symptom looked like a leak: it failed every
+            other run with "Allowed memory size exhausted" in PhpEngine, which is a compiled view
+            being included. Three points settle it — 70 tests 54 MB, 433 tests 126 MB, 503 tests
+            126 MB. It PLATEAUS: between 433 and 503 the figure does not move, so nothing is
+            accumulating per test. What costs the memory is Laravel booted and views rendered, and
+            the gap between 126 and 128 is what a run needs when it also has to compile them.
+
+            ⚠ Declared here rather than left to each machine's php.ini: the limit that decides
+            whether the suite passes must not be a property of the laptop it runs on. A CI with a
+            lower default would have failed on a codebase everyone else called green.
+        -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
