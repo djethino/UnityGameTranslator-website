@@ -100,4 +100,76 @@ class ForkOriginTest extends TestCase
         $this->assertNull($translation->origin_translation_id);
         $this->assertFalse($translation->hasOrigin());
     }
+
+    /**
+     * The credit was recorded and then never left the website.
+     *
+     * The mod's community list and the Manager's translation window are where somebody actually
+     * chooses between translations of a game, and a fork is a Main in every other respect: nothing
+     * else in either screen tells one apart from a translation written from scratch.
+     */
+    public function test_the_listing_credits_a_fork_source(): void
+    {
+        $author = User::factory()->create(['name' => 'sourcewriter']);
+        $source = $this->original($author);
+
+        $this->upload(User::factory()->create(), [
+            'forked_from_id' => $source->id,
+            'forked_from_hash' => 'origin-hash',
+            'forked_from_lines' => 3000,
+        ])->assertSuccessful();
+
+        $fork = Translation::latest('id')->first();
+
+        $response = $this->getJson('/api/v1/translations?game=origin-game&lang=French');
+        $response->assertSuccessful();
+
+        $row = collect($response->json('translations'))->firstWhere('id', $fork->id);
+        $this->assertNotNull($row, 'the fork is listed');
+        $this->assertSame('sourcewriter', $row['origin']['author']);
+        $this->assertSame(3000, $row['origin']['lines']);
+    }
+
+    /**
+     * The column carries no foreign key on purpose, so the credit outlives the account it names.
+     * What must not happen is the whole block vanishing: "forked from somebody who left" is still
+     * a truer answer than "written from scratch".
+     */
+    public function test_the_credit_survives_the_account_it_names(): void
+    {
+        $author = User::factory()->create(['name' => 'sourcewriter']);
+        $source = $this->original($author);
+
+        $this->upload(User::factory()->create(), [
+            'forked_from_id' => $source->id,
+            'forked_from_hash' => 'origin-hash',
+            'forked_from_lines' => 3000,
+        ])->assertSuccessful();
+
+        $fork = Translation::latest('id')->first();
+        $author->delete();
+
+        $row = collect($this->getJson('/api/v1/translations?game=origin-game&lang=French')
+            ->json('translations'))->firstWhere('id', $fork->id);
+
+        $this->assertNotNull($row['origin'], 'the block stays');
+        $this->assertNull($row['origin']['author'], 'without a name');
+        $this->assertSame(3000, $row['origin']['lines'], 'and the snapshot is still true');
+    }
+
+    /**
+     * Silence for anything nobody forked. A present block whose members are null would read as a
+     * fork whose source is unknown, which is a different — and false — statement.
+     */
+    public function test_a_translation_nobody_forked_carries_no_origin_block(): void
+    {
+        $this->upload(User::factory()->create())->assertSuccessful();
+        $translation = Translation::latest('id')->first();
+
+        $row = collect($this->getJson('/api/v1/translations?q=Origin&lang=French')
+            ->json('translations'))->firstWhere('id', $translation->id);
+
+        $this->assertNotNull($row, 'the translation is listed');
+        $this->assertNull($row['origin']);
+    }
 }

@@ -32,8 +32,15 @@ class TranslationController extends Controller
         // Public AND still listed: the mod's community list is a listing like any other, and a
         // player must not be offered a file that hands the game's own text back. The lineage
         // endpoints below keep plain visibility — a delisted Main is still the Main.
-        $query = Translation::with(['game:id,name,slug,steam_id,image_url', 'user:id,name'])
-            ->publiclyListed();
+        // originAuthor is eager-loaded like the uploader: the listing credits a fork's source on
+        // every row, and reading that per row is fifty queries on a screen that already runs one.
+        // The relation has no foreign key on purpose (a credit outlives the account it names), so
+        // it simply resolves to null when the account is gone — which is a state the payload says.
+        $query = Translation::with([
+            'game:id,name,slug,steam_id,image_url',
+            'user:id,name',
+            'originAuthor:id,name',
+        ])->publiclyListed();
 
         // Filter by Steam ID (exact match)
         if ($request->filled('steam_id')) {
@@ -126,6 +133,18 @@ class TranslationController extends Controller
                     // lineage takes contributions is part of what a translation IS, like the
                     // author's "finished" beside it.
                     'accepts_branches' => (bool) $t->accepts_branches,
+
+                    // Where a fork came from. The site has credited this since the origin_* columns
+                    // were added and the mod credited nobody, so the same file named its source in
+                    // a browser and looked home-grown in the game it came from.
+                    //
+                    // ⚠ The line count is the SNAPSHOT taken at the fork and never recomputed — the
+                    // original keeps growing, so asking again would answer a different question.
+                    // Null when the account is gone: the credit stands without a name.
+                    'origin' => $t->hasOrigin() ? [
+                        'author' => $t->originAuthor?->name,
+                        'lines' => $t->origin_resolved_lines,
+                    ] : null,
                     'type' => $t->type,
                     'notes' => $t->notes,
                     'resources_url' => $t->getEffectiveResourcesUrl(),
