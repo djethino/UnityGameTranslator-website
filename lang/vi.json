@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Hiển thị mỗi dòng kèm các ngắt dòng bên trong. Khi chỉnh sửa, chúng luôn được giữ, bất kể tùy chọn này.",
     "dashboard.title": "Bảng điều khiển",
     "dashboard.back_to_translations": "Quay lại Bản dịch của tôi",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "dòng",
     "dashboard.downloads": "lượt tải",
     "dashboard.votes": "bình chọn",

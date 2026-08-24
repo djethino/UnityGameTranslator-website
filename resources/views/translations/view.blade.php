@@ -47,8 +47,18 @@
                     <x-user-mention :user="$translation->user" class="text-gray-300" />
                 </p>
 
+                {{-- What this file IS, in the same chips and the same order as everywhere else:
+                     its role in the lineage, then the two things its author declared about it.
+                     This page opens the whole script of somebody's translation and said nothing
+                     about whether corrections could be sent back to them — the reader found out
+                     by trying. --}}
+                <div class="flex items-center gap-2 flex-wrap mt-2">
+                    <x-translation-role :translation="$translation" />
+                    <x-contributions-badge :translation="$translation" />
+                </div>
+
                 {{-- Where it came from, when it came from somewhere --}}
-                <x-translation-origin :translation="$translation" />
+                <x-translation-origin :translation="$translation" class="mt-2 block" />
             </div>
 
             <div class="shrink-0 flex items-center gap-3">

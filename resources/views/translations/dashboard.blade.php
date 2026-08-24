@@ -26,17 +26,17 @@
                     <i class="fas fa-arrow-right text-xs mx-1"></i>
                     @langflag($translation->target_language) {{ $translation->target_language }}
                 </p>
-                <div class="flex items-center gap-3 mt-1">
-                    @if($isMain)
-                        <span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-sm">
-                            <i class="fas fa-crown mr-1"></i> {{ __('dashboard.main_owner') }}
-                        </span>
-                    @else
-                        <span class="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-sm">
-                            <i class="fas fa-code-branch mr-1"></i> {{ __('dashboard.branch') }}
-                        </span>
-                    @endif
+                <div class="flex items-center gap-3 mt-1 flex-wrap">
+                    {{-- Through the component, like every other screen. This header used to write
+                         the role itself — a green crown for a Main, blue for a Branch — and knew
+                         nothing of a Fork, so somebody leading a lineage they started from
+                         another's work was shown the same badge as somebody who started alone. --}}
+                    <x-translation-role :translation="$translation" />
                 </div>
+
+                {{-- Where it came from, when it came from somebody. Its own line rather than a
+                     chip, exactly as on the read-only view — it is a credit, not a state. --}}
+                <x-translation-origin :translation="$translation" class="mt-1 block" />
             </div>
         </div>
     </div>
@@ -111,6 +111,12 @@
                 @else
                     <span class="text-yellow-400 text-xs"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                 @endif
+
+                {{-- Beside it, as on the game page: the two things the author DECLARED about their
+                     own work, neither of which can be read off the bar. Missing exactly here —
+                     the one screen where they can be changed — so an anonymous visitor had more
+                     to go on than the owner. --}}
+                <x-contributions-badge :translation="$translation" plain size="text-xs" />
             </div>
             {{-- The step, and what is left to read. No mark: this is the author's own screen,
                  and a grade motivates nobody — the remaining count does, because it moves as

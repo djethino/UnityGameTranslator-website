@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Zeigt jede Zeile mit ihren Umbrüchen. Beim Bearbeiten bleiben sie in jedem Fall erhalten.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Zurück zu meinen Übersetzungen",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "Zeilen",
     "dashboard.downloads": "Downloads",
     "dashboard.votes": "Stimmen",

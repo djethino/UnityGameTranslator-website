@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "प्रत्येक पंक्ति को उसमें मौजूद विरामों के साथ दिखाता है। संपादन में ये हमेशा बने रहते हैं, यह सेटिंग चाहे जो भी हो।",
     "dashboard.title": "डैशबोर्ड",
     "dashboard.back_to_translations": "मेरे अनुवादों पर वापस",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "पंक्तियाँ",
     "dashboard.downloads": "डाउनलोड",
     "dashboard.votes": "वोट्स",

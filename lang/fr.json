@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Affiche chaque ligne avec les retours qu'elle contient. L'édition les conserve toujours, quel que soit ce réglage.",
     "dashboard.title": "Tableau de bord",
     "dashboard.back_to_translations": "Retour à mes traductions",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "lignes",
     "dashboard.downloads": "téléchargements",
     "dashboard.votes": "votes",

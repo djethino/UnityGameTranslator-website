@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "按文本自带的换行显示每一条。无论此项如何设置，编辑时都会保留它们。",
     "dashboard.title": "控制面板",
     "dashboard.back_to_translations": "返回我的翻译",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "行",
     "dashboard.downloads": "下载",
     "dashboard.votes": "票",

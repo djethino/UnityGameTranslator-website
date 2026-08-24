@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Muestra cada línea con los saltos que contiene. Al editar siempre se conservan, esté como esté esta opción.",
     "dashboard.title": "Panel de control",
     "dashboard.back_to_translations": "Volver a mis traducciones",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "líneas",
     "dashboard.downloads": "descargas",
     "dashboard.votes": "votos",

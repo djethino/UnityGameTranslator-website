@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Menampilkan setiap baris beserta pergantian baris di dalamnya. Saat menyunting, semuanya selalu dipertahankan, apa pun pengaturan ini.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Kembali ke Terjemahan Saya",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "baris",
     "dashboard.downloads": "unduhan",
     "dashboard.votes": "vote",

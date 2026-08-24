@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Mostra cada linha com as quebras que contém. Ao editar elas são sempre mantidas, seja qual for esta opção.",
     "dashboard.title": "Painel",
     "dashboard.back_to_translations": "Voltar para minhas traduções",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "linhas",
     "dashboard.downloads": "downloads",
     "dashboard.votes": "votos",

@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "يعرض كل سطر بما يحويه من فواصل. تُحفظ دائمًا عند التحرير، مهما كان هذا الإعداد.",
     "dashboard.title": "لوحة التحكم",
     "dashboard.back_to_translations": "العودة لترجماتي",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "سطر",
     "dashboard.downloads": "تحميل",
     "dashboard.votes": "صوت",

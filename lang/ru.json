@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Показывает каждую строку с её переносами. При редактировании они сохраняются всегда, независимо от этой настройки.",
     "dashboard.title": "Панель управления",
     "dashboard.back_to_translations": "Назад к моим переводам",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "строк",
     "dashboard.downloads": "загрузок",
     "dashboard.votes": "голосов",

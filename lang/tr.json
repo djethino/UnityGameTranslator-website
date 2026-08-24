@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Her satırı içerdiği satır sonlarıyla gösterir. Düzenlerken bu ayar ne olursa olsun her zaman korunurlar.",
     "dashboard.title": "Kontrol Paneli",
     "dashboard.back_to_translations": "Çevirilerime Dön",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "satır",
     "dashboard.downloads": "indirme",
     "dashboard.votes": "oy",

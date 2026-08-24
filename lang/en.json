@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Show each line with the breaks it contains. Editing always keeps them, whichever way this is set.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Back to My Translations",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "lines",
     "dashboard.downloads": "downloads",
     "dashboard.votes": "votes",

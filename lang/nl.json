@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Toont elke regel met de regeleinden die erin staan. Bij het bewerken blijven ze altijd behouden, hoe dit ook staat.",
     "dashboard.title": "Dashboard",
     "dashboard.back_to_translations": "Terug naar mijn vertalingen",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "regels",
     "dashboard.downloads": "downloads",
     "dashboard.votes": "stemmen",

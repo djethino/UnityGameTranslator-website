@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "Pokazuje każdy wiersz z zawartymi w nim łamaniami. Podczas edycji zawsze są zachowywane, niezależnie od tego ustawienia.",
     "dashboard.title": "Panel",
     "dashboard.back_to_translations": "Powrót do moich tłumaczeń",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "wierszy",
     "dashboard.downloads": "pobrań",
     "dashboard.votes": "głosów",

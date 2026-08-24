@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "מציג כל שורה עם מעברי השורה שבה. בעריכה הם נשמרים תמיד, ללא קשר להגדרה הזו.",
     "dashboard.title": "לוח בקרה",
     "dashboard.back_to_translations": "חזרה לתרגומים שלי",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "שורות",
     "dashboard.downloads": "הורדות",
     "dashboard.votes": "הצבעות",

@@ -1,4 +1,4 @@
-@props(['translation', 'plain' => false])
+@props(['translation', 'plain' => false, 'size' => 'text-sm'])
 
 {{--
     Whether this lineage takes contributions — its Main's own decision.
@@ -17,6 +17,11 @@
     `plain` is for the rows that carry text-and-icon rather than chips (my translations). The
     WORDS never change between the two — a reader meeting the same fact on two pages must not
     have to work out that it is the same fact.
+
+    `size` exists because a plain variant has to match the line it sits on: `text-sm` beside the
+    my-translations row, `text-xs` beside the dashboard's quality header. Stated rather than merged
+    through $attributes — two competing size classes resolve by stylesheet order, not by the order
+    they were written, so the caller would be gambling on which one wins.
 --}}
 @php
     $open = (bool) $translation->accepts_branches;
@@ -27,7 +32,7 @@
 
 @if($translation->lineageRole() === 'main')
     @if($plain)
-        <span class="{{ $open ? 'text-gray-400' : 'text-gray-500' }} text-sm" title="{{ $tip }}">
+        <span class="{{ $open ? 'text-gray-400' : 'text-gray-500' }} {{ $size }}" title="{{ $tip }}">
             <i class="fas {{ $icon }}"></i> {{ $text }}
         </span>
     @else

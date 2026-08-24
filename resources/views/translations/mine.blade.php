@@ -206,11 +206,11 @@
                         @endif
                         <x-contributions-badge :translation="$translation" plain />
 
-                        @if($translation->isFork())
-                            <span class="text-purple-400 text-sm"><i class="fas fa-code-fork"></i> Fork</span>
-                        @elseif($translation->isBranch())
-                            <span class="text-gray-400 text-sm"><i class="fas fa-code-branch"></i> Branch</span>
-                        @endif
+                        {{-- Through the component, like the chip beside it. Written out here, this
+                             row had its own purple fork and its own grey branch, neither of which
+                             matched the admin screens or the dashboard — and the words were in
+                             English only, hard-coded, on a page translated into nineteen. --}}
+                        <x-translation-role :translation="$translation" plain hide-main />
                     </div>
                     @php
                         $forkCount = $translation->forks->where('visibility', 'public')->count();

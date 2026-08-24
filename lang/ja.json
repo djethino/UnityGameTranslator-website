@@ -930,8 +930,6 @@
     "editor.line_breaks_hint": "各行を含まれる改行ごとに表示します。編集時はこの設定に関係なく常に保持されます。",
     "dashboard.title": "ダッシュボード",
     "dashboard.back_to_translations": "マイ翻訳に戻る",
-    "dashboard.main_owner": "Main",
-    "dashboard.branch": "Branch",
     "dashboard.lines": "行",
     "dashboard.downloads": "ダウンロード",
     "dashboard.votes": "投票",

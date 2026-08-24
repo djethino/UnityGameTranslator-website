@@ -80,6 +80,15 @@
                                 <span class="text-yellow-400"><i class="fas fa-clock"></i> {{ __('translation.in_progress') }}</span>
                             @endif
                         </p>
+                        {{-- Under it, because they are the author's TWO declarations and this
+                             screen acts on what somebody declared: a report about an unwanted
+                             contribution cannot be judged without knowing whether the lineage
+                             invited them. Its own cell would need a label, and a new key on a
+                             screen translated into nineteen languages buys nothing here — the
+                             chip already says the whole fact in its own words. --}}
+                        <p class="mt-1">
+                            <x-contributions-badge :translation="$translation" plain />
+                        </p>
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('admin.created_at') }}</p>
