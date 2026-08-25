@@ -116,15 +116,39 @@ class DuplicateContentUploadTest extends TestCase
         $this->assertSame(2, Translation::count());
     }
 
-    public function test_the_same_account_may_hold_the_same_content_twice(): void
+    public function test_a_branch_left_behind_is_never_a_reason_to_refuse(): void
     {
-        // Forking one's own translation, or publishing the same file for a second game entry.
-        // Nobody is taking anybody's work here.
+        // Leaving a lineage from the mod does not remove the branch already on the site: the mod
+        // changes the local uuid and uploads, so the same person legitimately holds the same
+        // content twice for a moment — as a branch, and as the fork that left it.
+        $owner = User::factory()->create();
+        $this->upload($owner, $this->file('uuid-lineage'))->assertSuccessful();
+        Translation::latest('id')->first()->update(['accepts_branches' => true]);
+
+        $contributor = User::factory()->create();
+        $mine = self::LINES;
+        $mine['Play'] = ['v' => 'Démarrer', 't' => 'H'];
+        $this->upload($contributor, $this->file('uuid-lineage', $mine))->assertSuccessful();
+        $this->assertSame('branch', Translation::latest('id')->first()->visibility);
+
+        // Now they leave, carrying exactly what their branch holds.
+        $this->upload($contributor, $this->file('uuid-forked', $mine))->assertSuccessful();
+
+        $this->assertSame(3, Translation::count());
+    }
+
+    public function test_but_only_once_the_fork_cannot_be_forked_again(): void
+    {
+        // Once the fork is published, the next identical upload matches a row of one's own that is
+        // public — a second entry competing with the first, by the same author.
         $author = User::factory()->create();
         $this->upload($author, $this->file('uuid-one'))->assertSuccessful();
-        $this->upload($author, $this->file('uuid-two'))->assertSuccessful();
 
-        $this->assertSame(2, Translation::count());
+        $response = $this->upload($author, $this->file('uuid-two'));
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('already published this exact file', $response->json('error') ?? '');
+        $this->assertSame(1, Translation::count());
     }
 
     public function test_updating_your_own_translation_is_never_refused(): void

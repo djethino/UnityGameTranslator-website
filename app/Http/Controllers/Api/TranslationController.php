@@ -628,29 +628,48 @@ class TranslationController extends Controller
         // happens to match another's is a different situation — a branch whose work has all been
         // merged, for one — and refusing it would strand somebody on a row they already own.
         //
-        // ⚠ **Only against another account.** The same content twice in one person's own history
-        // is ordinary: a fork of one's own translation, a second game entry, a re-upload.
-        //
         // ⚠ **The author is named only if their translation is public.** A branch is visible to its
         // author and the Main's owner alone; saying "identical to @someone's" would report the
         // existence of a private contribution to a stranger.
+        //
+        // 🔴 **One's own account is checked too, with ONE exception: the branch being left behind.**
+        // Leaving a lineage from the mod does not remove the branch already on the site — the mod
+        // changes the local uuid and uploads, so for a moment the same content is legitimately held
+        // twice by the same person, as a branch and as the fork that left it. That is the case, and
+        // it happens once. Anything else identical to one's own PUBLISHED row is a second entry
+        // competing with the first for the same readers, by the same author — which is what makes
+        // "fork the fork, again and again" impossible rather than merely discouraged.
         if (!$existingTranslation) {
-            $twin = Translation::where('content_hash', $parsed['content_hash'])
-                ->where('user_id', '!=', $userId)
+            $twins = Translation::where('content_hash', $parsed['content_hash'])
                 ->with('user:id,name')
-                ->first();
+                ->get();
 
             // ⚠ **The link to the assets is not in the file.** Image replacements name PNG files
             // that live on the player's disk; resources_url is where they are downloaded from, and
             // it is a column, sent beside the content. Somebody publishing the same replacements
             // pointed at a pack of their own has made something — the one part of this decision the
             // fingerprint cannot see, so it is asked separately rather than left to refuse them.
-            if ($twin && $request->filled('resources_url')
-                && $request->resources_url !== $twin->resources_url) {
-                $twin = null;
+            if ($request->filled('resources_url')) {
+                $twins = $twins->filter(
+                    fn (Translation $t) => $t->resources_url === $request->resources_url
+                );
             }
 
-            if ($twin) {
+            // The branch this upload is leaving: mine, and not published. Never a reason to refuse.
+            $twins = $twins->reject(
+                fn (Translation $t) => $t->user_id === $userId && $t->visibility === 'branch'
+            );
+
+            if ($twins->isNotEmpty()) {
+                $twin = $twins->first();
+
+                if ($twin->user_id === $userId) {
+                    return response()->json([
+                        'error' => 'You have already published this exact file. Update that '
+                                 . 'translation instead of putting a second copy of it on the site.',
+                    ], 422);
+                }
+
                 $whose = $twin->visibility === 'public' && $twin->user
                     ? ' by @' . $twin->user->name
                     : '';
