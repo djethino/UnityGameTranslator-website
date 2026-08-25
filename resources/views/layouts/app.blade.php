@@ -318,8 +318,15 @@
     @if($siteBanner)
     <div x-data="announceBanner" data-banner-id="{{ $siteBanner->id }}" x-show="visible" x-cloak
          class="bg-purple-900/80 border-b border-purple-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm">
-            <i class="fas fa-bullhorn text-purple-300"></i>
+        {{-- items-start, not items-center: the message can now run to several lines, and centring
+             floated the megaphone and the close button somewhere in the middle of the paragraph —
+             a cross halfway down a banner does not read as "close this banner".
+
+             ⚠ leading-5 on both, which is what text-sm already gives the paragraph. It makes each
+             icon's box exactly one line tall, so the glyph sits on the FIRST line rather than at
+             the top of a box whose height nobody chose. --}}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-start gap-3 text-sm">
+            <i class="fas fa-bullhorn text-purple-300 leading-5"></i>
             <p class="flex-1 text-purple-100 min-w-0">
                 <span class="font-semibold">{{ $siteBanner->title }}</span>
                 {{-- whitespace-pre-line, because the message is written in a TEXTAREA and HTML
@@ -341,7 +348,7 @@
                     </span>
                 @endif
             </p>
-            <button @click="dismiss" class="text-purple-300 hover:text-white transition" aria-label="{{ __('notif.dismiss') }}">
+            <button @click="dismiss" class="text-purple-300 hover:text-white transition leading-5" aria-label="{{ __('notif.dismiss') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
