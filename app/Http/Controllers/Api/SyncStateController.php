@@ -123,6 +123,7 @@ class SyncStateController extends Controller
                 'file_hash' => $ownTranslation->file_hash,
                 'vote_count' => $ownTranslation->vote_count,
                 'updated_at' => $ownTranslation->updated_at->toIso8601String(),
+                'content_updated_at' => $ownTranslation->contentChangedAt()->toIso8601String(),
 
                 // The Main's decision, sent on the stream the mod already reads at startup —
                 // otherwise a game would only learn it by opening the upload panel, which is the
@@ -204,6 +205,7 @@ class SyncStateController extends Controller
                         'line_count' => $main->line_count,
                         'file_hash' => $main->file_hash,
                         'updated_at' => $main->updated_at->toIso8601String(),
+                        'content_updated_at' => $main->contentChangedAt()->toIso8601String(),
                     ];
                 }
             }
@@ -239,6 +241,7 @@ class SyncStateController extends Controller
                 'line_count' => $mainTranslation->line_count,
                 'file_hash' => $mainTranslation->file_hash,
                 'updated_at' => $mainTranslation->updated_at->toIso8601String(),
+                'content_updated_at' => $mainTranslation->contentChangedAt()->toIso8601String(),
             ];
 
             if ($clientHash) {

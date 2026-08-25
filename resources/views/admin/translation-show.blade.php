@@ -94,9 +94,12 @@
                         <p class="text-gray-400 text-sm">{{ __('admin.created_at') }}</p>
                         <p class="font-medium">{{ $translation->created_at->format('M d, Y H:i') }}</p>
                     </div>
+                    {{-- contentChangedAt, never updated_at — same reason as the list this screen
+                         is opened from: a vote or a download writes updated_at, and moderation
+                         reads this date to judge whether a translation is still being worked on. --}}
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('admin.updated_at') }}</p>
-                        <p class="font-medium">{{ $translation->updated_at->format('M d, Y H:i') }}</p>
+                        <p class="font-medium">{{ $translation->contentChangedAt()->format('M d, Y H:i') }}</p>
                     </div>
                 </div>
 

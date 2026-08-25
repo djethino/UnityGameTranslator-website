@@ -236,10 +236,23 @@ class AdminController extends Controller
         }
 
         // Sorting (whitelisted columns to prevent SQL injection)
-        $sortable = ['created_at', 'updated_at', 'download_count', 'vote_count', 'line_count'];
+        $sortable = ['created_at', 'content_updated_at', 'download_count', 'vote_count', 'line_count'];
         $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sort, $dir);
+
+        // ⚠ content_updated_at, never updated_at: increment('vote_count') and
+        // increment('download_count') write updated_at, so sorting on it ranked a translation
+        // nobody had touched above one rewritten that morning — the column said "Updated" and
+        // answered "last voted on".
+        //
+        // COALESCE because the column is null on rows written before it existed, and those would
+        // otherwise all pile up at one end of the list. $dir is already restricted to two literals
+        // above, so it is safe to interpolate here.
+        if ($sort === 'content_updated_at') {
+            $query->orderByRaw("COALESCE(content_updated_at, updated_at) $dir");
+        } else {
+            $query->orderBy($sort, $dir);
+        }
 
         $translations = $query->paginate(20)->appends($request->query());
         $games = Game::orderBy('name')->get();

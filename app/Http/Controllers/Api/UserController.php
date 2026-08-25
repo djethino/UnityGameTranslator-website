@@ -46,9 +46,12 @@ class UserController extends Controller
     {
         $user = $request->user();
 
+        // ⚠ The content date, not updated_at: somebody else voting on a translation, or
+        // downloading it, writes updated_at — so the list of your own work reordered itself
+        // around what other people did to it rather than what you last changed.
         $translations = $user->translations()
             ->with('game:id,name,slug,steam_id')
-            ->orderBy('updated_at', 'desc')
+            ->orderByRaw('COALESCE(content_updated_at, updated_at) desc')
             ->get();
 
         // Two grouped queries rather than two per translation: a prolific author has hundreds of

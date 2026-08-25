@@ -243,6 +243,7 @@ class TranslationController extends Controller
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),
+            'content_updated_at' => $translation->contentChangedAt()->toIso8601String(),
         ];
 
         // If client sent their current hash, indicate if update is available
@@ -385,6 +386,7 @@ class TranslationController extends Controller
                     'line_count' => $ownTranslation->line_count,
                     'file_hash' => $ownTranslation->file_hash,
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
+                    'content_updated_at' => $ownTranslation->contentChangedAt()->toIso8601String(),
                 ],
                 'branches_count' => $branchesCount,
                 'vote' => $voteBlock,
@@ -406,6 +408,7 @@ class TranslationController extends Controller
                     'target_language' => $mainTranslation->target_language,
                     'line_count' => $mainTranslation->line_count,
                     'updated_at' => $mainTranslation->updated_at->toIso8601String(),
+                    'content_updated_at' => $mainTranslation->contentChangedAt()->toIso8601String(),
                 ],
                 'vote' => $voteBlock,
             ]);
@@ -782,6 +785,7 @@ class TranslationController extends Controller
                 'line_count' => $existingTranslation->line_count,
                 'vote_count' => $existingTranslation->vote_count,
                 'updated_at' => $existingTranslation->updated_at->toIso8601String(),
+                'content_updated_at' => $existingTranslation->contentChangedAt()->toIso8601String(),
             ]);
             SsePublisher::uuidChanged($fileUuid);
 
@@ -859,6 +863,7 @@ class TranslationController extends Controller
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count ?? 0,
             'updated_at' => $translation->updated_at->toIso8601String(),
+            'content_updated_at' => $translation->contentChangedAt()->toIso8601String(),
         ]);
         SsePublisher::uuidChanged($fileUuid);
 
@@ -901,10 +906,13 @@ class TranslationController extends Controller
             ], 403);
         }
 
+        // ⚠ Ordered on the content date, not updated_at: a vote or a download writes updated_at,
+        // so a branch nobody had touched climbed above one sent that morning. A Main reviewing
+        // contributions reads this list top-down, so the order is the whole answer.
         $branches = Translation::where('file_uuid', $uuid)
             ->where('visibility', 'branch')
             ->with('user:id,name')
-            ->orderBy('updated_at', 'desc')
+            ->orderByRaw('COALESCE(content_updated_at, updated_at) desc')
             ->get()
             ->map(fn($b) => [
                 'id' => $b->id,
@@ -914,6 +922,7 @@ class TranslationController extends Controller
                 'validated_count' => $b->validated_count,
                 'ai_count' => $b->ai_count,
                 'updated_at' => $b->updated_at->toIso8601String(),
+                'content_updated_at' => $b->contentChangedAt()->toIso8601String(),
             ]);
 
         return response()->json([

@@ -151,6 +151,7 @@ class GameController extends Controller
                     'download_count' => $t->download_count,
                     'file_hash' => $t->file_hash,
                     'updated_at' => $t->updated_at->toIso8601String(),
+                    'content_updated_at' => $t->contentChangedAt()->toIso8601String(),
                 ];
             }),
         ]);

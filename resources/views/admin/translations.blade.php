@@ -83,7 +83,7 @@
                     <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" />
                     <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" />
                     <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" />
-                    <x-admin.sortable-th column="updated_at" :label="__('admin.updated_at')" />
+                    <x-admin.sortable-th column="content_updated_at" :label="__('admin.updated_at')" />
                     <th class="text-right py-3 px-4">{{ __('admin.actions') }}</th>
                 </tr>
             </thead>
@@ -151,8 +151,12 @@
                         <td class="py-3 px-4 text-gray-400 text-sm">
                             {{ $translation->created_at->format('M d, Y') }}
                         </td>
+                        {{-- contentChangedAt, never updated_at: a vote or a download writes
+                             updated_at, so this column reported activity that was not the
+                             author's. It falls back to updated_at only for rows written before
+                             the content column existed. --}}
                         <td class="py-3 px-4 text-gray-400 text-sm">
-                            {{ $translation->updated_at->format('M d, Y') }}
+                            {{ $translation->contentChangedAt()->format('M d, Y') }}
                         </td>
                         <td class="py-3 px-4 text-right">
                             <div class="flex justify-end gap-2">
