@@ -673,8 +673,23 @@ class TranslationController extends Controller
     }
 
     /**
-     * Convert a branch to a fork (new UUID, becomes independent Main).
-     * User must download the new file and replace their local copy.
+     * Leave a lineage: the branch stays where it is, and an independent translation is CREATED
+     * from what it holds. The author downloads the new file and puts it in their game.
+     *
+     * 🔴 **It used to rewrite the branch in place** — new uuid, visibility public, one row — so the
+     * contribution simply stopped existing, along with everything attached to it. The mod does the
+     * opposite and always has: it changes the local uuid and uploads, which creates a row and
+     * leaves the branch untouched. The same act had two different outcomes depending on where it
+     * was taken, which an ecosystem cannot afford.
+     *
+     * ⚠ **Creating is the safer of the two, and that is why it wins.** Removing the branch is then
+     * a separate, deliberate act — and keeping both is a legitimate choice: carrying on
+     * contributing to the Main while running one's own version is not a contradiction. What the
+     * old behaviour destroyed, nobody had asked to destroy: the branch's contribution counters and
+     * its author's name stay with the row, and stay for as long as the account exists.
+     *
+     * ⚠ **Once.** A branch may be left once; a second promotion would file a second identical
+     * translation under the same name, which is the loop the upload endpoint refuses too.
      */
     public function convertToFork(Translation $translation, TranslationService $service)
     {
@@ -707,13 +722,25 @@ class TranslationController extends Controller
             return back()->withErrors(['error' => __('dashboard.invalid_file')]);
         }
 
-        // Update UUID in content
-        $oldUuid = $content['_uuid'] ?? null;
+        // A copy carrying the new identity. The branch's own file is not touched: it is still the
+        // file its row describes, and its hashes still match it.
         $content['_uuid'] = $newUuid;
 
-        // Save file with new UUID
         $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
-        file_put_contents($path, json_encode($content, $jsonFlags));
+        $forkPath = $service->storeFile(json_encode($content, $jsonFlags), $newUuid);
+
+        // ⚠ Already left once. Told apart by the content, like the upload endpoint: a second
+        // promotion of the same branch would file a second identical translation under one name.
+        $alreadyLeft = Translation::where('user_id', $user->id)
+            ->where('visibility', 'public')
+            ->where('content_hash', $service->computeContentHash($content))
+            ->exists();
+
+        if ($alreadyLeft) {
+            $service->deleteFile($forkPath);
+
+            return back()->withErrors(['error' => __('dashboard.already_forked')]);
+        }
 
         // Who started this, and how much of it was already written when we took it.
         //
@@ -723,25 +750,46 @@ class TranslationController extends Controller
         // row it points at.
         $main = $translation->getMain();
 
-        $translation->update([
-            'file_uuid' => $newUuid,
-            'visibility' => 'public',
-            // Keep parent_id for reference/traceability
+        $fork = Translation::create([
+            'game_id' => $translation->game_id,
+            'user_id' => $user->id,
+            // 🔴 No parent_id: a fork LEFT the lineage. parent_id is what makes a row a
+            // contribution to another, and the credit it used to stand in for is written out in
+            // the origin_* columns below, which survive the row they name.
+            'parent_id' => null,
             'origin_translation_id' => $main?->id ?? $translation->parent_id,
             'origin_user_id' => $main?->user_id ?? $translation->parent?->user_id,
             'origin_resolved_lines' => $main?->resolved_lines,
             'origin_file_hash' => $main?->file_hash,
+            'source_language' => $translation->source_language,
+            'target_language' => $translation->target_language,
+            'line_count' => $translation->line_count,
+            'human_count' => $translation->human_count,
+            'validated_count' => $translation->validated_count,
+            'ai_count' => $translation->ai_count,
+            'capture_count' => $translation->capture_count,
+            'skipped_count' => $translation->skipped_count,
+            'status' => $translation->status,
+            'visibility' => 'public',
+            'notes' => $translation->notes,
+            'resources_url' => $translation->resources_url,
+            // ⚠ Closed, like every new Main. Taking in contributions is work nobody agreed to by
+            // leaving a lineage — and the branch this comes from could not answer the question.
+            'accepts_branches' => false,
+            'file_path' => $forkPath,
+            'file_uuid' => $newUuid,
+            'font_config' => $translation->font_config,
+            'settings_summary' => $translation->settings_summary,
         ]);
 
-        // Recalculate hash. ⚠ content_hash is unchanged by a new uuid — that is what it is for —
-        //    but it is written here too so no path can leave the two out of step.
-        $translation->file_hash = $translation->computeHash();
-        $translation->content_hash = $translation->computeContentHash();
-        $translation->save();
+        // Both hashes, from the file that was just written.
+        $fork->file_hash = $fork->computeHash();
+        $fork->content_hash = $fork->computeContentHash();
+        $fork->save();
 
         // Return the file for download
         return Storage::disk('local')->download(
-            $translation->file_path,
+            $fork->file_path,
             'translations.json',
             ['Content-Type' => 'application/json']
         );
