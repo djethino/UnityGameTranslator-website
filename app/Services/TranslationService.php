@@ -1211,25 +1211,65 @@ class TranslationService
     }
 
     /**
-     * The same content, fingerprinted WITHOUT the lineage identifier.
+     * The whole of what somebody made, fingerprinted so that two accounts holding it can be told
+     * apart from two accounts holding the same thing.
      *
-     * 🔴 **Answers a different question from computeHash, and only this one**: are these the same
-     * LINES, across a change of uuid. That change is exactly what a fork is — it takes a new uuid —
-     * so file_hash cannot see that a fork is, line for line, the file it copied. Holding the uuid
-     * constant is what makes the two comparable either side of one.
+     * 🔴 **Answers a different question from computeHash**: not "did MY translation move" but "is
+     * this file somebody else's". Two differences follow from that, and neither is cosmetic.
      *
-     * ⚠ **Never issue this as a file_hash.** The mod compares file_hash to decide whether the
-     * server moved; handing it a hash computed under another rule would report a change nobody made.
+     * ⚠ **The uuid is out.** A fork takes a new one, so file_hash sees two identical files as
+     * different from the instant of the fork — which is precisely the case worth catching.
      *
-     * ⚠ Same shape as the mod's ComputeLinesFingerprint (TranslatorCore): the uuid entry is kept
-     * and emptied rather than removed, so both sides hash the same document.
+     * ⚠ **The settings sections are IN** — fonts, font rules, image replacements, exclusions,
+     * variables, game settings. Somebody who is not a translator can take a translation that
+     * refuses contributions and rework its fonts and its images: that is work, and a file carrying
+     * replacements the original never had is not the same file. Leaving them out would refuse that
+     * person; it would also have been the thinner rule to argue for, since a check that ignores
+     * half the file calls "identical" two things that are not.
+     *
+     * ⚠ **Sync and provenance metadata stay out** — `_source`, `_forked_from`, `_local_changes`,
+     * `_game`. They differ between two people holding the very same file, so including them would
+     * make the fingerprint unequal always, and the check would never fire on anything.
+     *
+     * ⚠ **Never compared to the mod's own fingerprint, and never issued as a file_hash.** Each side
+     * compares its values only to its own, which is why neither has to serialise floats, key order
+     * or unicode the way the other does — a cross-language byte agreement this would not survive
+     * (a size multiplier of 1.0 alone breaks it).
      */
     public function computeContentHash(array $json): string
     {
-        return $this->hashDocument($json, '');
+        return $this->hashDocument($json, '', withSettings: true);
     }
 
-    private function hashDocument(array $json, string $uuid): string
+    /** Where the settings that travel inside the file live. Same six as SETTING_SECTION_KEYS. */
+    private const HASHED_SETTINGS_KEYS = [
+        '_fonts', '_font_overrides', '_image_replacements',
+        '_exclusions', '_variables', '_settings',
+    ];
+
+    /**
+     * Sort every nested object so that key order cannot change a hash.
+     *
+     * ⚠ Lists keep their order: a font rule list is applied in sequence, so two files holding the
+     * same rules in a different order are genuinely two different files. ksort over a list whose
+     * keys are already 0..n leaves it exactly as it was.
+     */
+    private function canonicalize(mixed $value): mixed
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        $out = [];
+        foreach ($value as $key => $inner) {
+            $out[$key] = $this->canonicalize($inner);
+        }
+        ksort($out);
+
+        return $out;
+    }
+
+    private function hashDocument(array $json, string $uuid, bool $withSettings = false): string
     {
         $hashData = [];
         foreach ($json as $key => $value) {
@@ -1253,6 +1293,20 @@ class TranslationService
         // that a file carrying no _uuid at all hashes like one carrying an empty string, rather
         // than producing a shorter document.
         $hashData['_uuid'] = $uuid;
+
+        if ($withSettings) {
+            foreach (self::HASHED_SETTINGS_KEYS as $key) {
+                // Absent and empty must hash alike: the mod stops writing a section once its last
+                // entry is removed, so a file that had fonts and no longer does would otherwise
+                // read as different from one that never had any.
+                $section = $json[$key] ?? null;
+                if ($section === null || $section === [] || $section === (object) []) {
+                    continue;
+                }
+
+                $hashData[$key] = $this->canonicalize($section);
+            }
+        }
 
         ksort($hashData);
         $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

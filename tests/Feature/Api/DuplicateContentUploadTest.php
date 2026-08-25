@@ -36,7 +36,7 @@ class DuplicateContentUploadTest extends TestCase
      * upload in this file an outbound HTTP call, and the second one then collides on the slug the
      * first invented.
      */
-    private function upload(User $user, array $content): \Illuminate\Testing\TestResponse
+    private function upload(User $user, array $content, array $extra = []): \Illuminate\Testing\TestResponse
     {
         Game::firstOrCreate(
             ['steam_id' => '999001'],
@@ -46,12 +46,12 @@ class DuplicateContentUploadTest extends TestCase
         $token = ApiToken::createForUser($user, 'test')->plain_token;
 
         return $this->withHeaders(['Authorization' => 'Bearer ' . $token])
-            ->postJson('/api/v1/translations', [
+            ->postJson('/api/v1/translations', array_merge([
                 'steam_id' => '999001',
                 'source_language' => 'English',
                 'target_language' => 'French',
                 'content' => json_encode($content),
-            ]);
+            ], $extra));
     }
 
     private function file(string $uuid, array $lines = self::LINES): array
@@ -176,5 +176,95 @@ class DuplicateContentUploadTest extends TestCase
         $response = $this->upload(User::factory()->create(), $this->file('uuid-third'));
         $response->assertStatus(422);
         $this->assertStringNotContainsString('PublicAuthor', $response->json('error') ?? '');
+    }
+
+    public function test_reworked_fonts_are_work_of_their_own(): void
+    {
+        // Somebody who is not a translator takes a translation that refuses contributions and
+        // reworks its fonts. The lines are untouched — and the file is not the same file.
+        $author = User::factory()->create();
+        $this->upload($author, $this->file('uuid-original'))->assertSuccessful();
+
+        $designed = $this->file('uuid-forked');
+        $designed['_fonts'] = ['NotoSans' => ['replacement' => 'DejaVuSans', 'size_multiplier' => 1.2]];
+
+        $this->upload(User::factory()->create(), $designed)->assertSuccessful();
+
+        $this->assertSame(2, Translation::count());
+    }
+
+    public function test_added_image_replacements_are_work_of_their_own(): void
+    {
+        $author = User::factory()->create();
+        $this->upload($author, $this->file('uuid-original'))->assertSuccessful();
+
+        $designed = $this->file('uuid-forked');
+        $designed['_image_replacements'] = [['match' => 'title.png', 'replacement' => 'title_fr.png']];
+
+        $this->upload(User::factory()->create(), $designed)->assertSuccessful();
+
+        $this->assertSame(2, Translation::count());
+    }
+
+    public function test_the_order_of_a_settings_object_changes_nothing(): void
+    {
+        // Two mods writing the same fonts in a different key order hold the same file. A hash that
+        // read the order would call them different and never refuse anything again.
+        $author = User::factory()->create();
+        $first = $this->file('uuid-original');
+        $first['_fonts'] = ['B' => ['replacement' => 'X'], 'A' => ['replacement' => 'Y']];
+        $this->upload($author, $first)->assertSuccessful();
+
+        $second = $this->file('uuid-forked');
+        $second['_fonts'] = ['A' => ['replacement' => 'Y'], 'B' => ['replacement' => 'X']];
+
+        $this->upload(User::factory()->create(), $second)->assertStatus(422);
+    }
+
+    public function test_an_empty_section_reads_like_no_section_at_all(): void
+    {
+        // The mod stops writing a section once its last entry goes. A file that had fonts and no
+        // longer does must not read as different from one that never had any.
+        $author = User::factory()->create();
+        $this->upload($author, $this->file('uuid-original'))->assertSuccessful();
+
+        $emptied = $this->file('uuid-forked');
+        $emptied['_fonts'] = [];
+
+        $this->upload(User::factory()->create(), $emptied)->assertStatus(422);
+    }
+
+    public function test_a_different_link_to_the_assets_is_enough(): void
+    {
+        // Image replacements name files that live on the player's disk; resources_url is where they
+        // are downloaded from, and it is a column rather than part of the file. Publishing the same
+        // replacements pointed at a pack of one's own is making something.
+        $author = User::factory()->create();
+        $this->upload($author, $this->file('uuid-original'), [
+            'resources_url' => 'https://example.com/theirs.zip',
+        ])->assertSuccessful();
+
+        $this->upload(User::factory()->create(), $this->file('uuid-forked'), [
+            'resources_url' => 'https://example.com/mine.zip',
+        ])->assertSuccessful();
+
+        $this->assertSame(2, Translation::count());
+    }
+
+    public function test_sync_metadata_never_enters_the_fingerprint(): void
+    {
+        // _source and _forked_from differ between two people holding the very same file. Hashing
+        // them would make the fingerprint unequal always, and the check would never fire again.
+        $author = User::factory()->create();
+        $mine = $this->file('uuid-original');
+        $mine['_source'] = ['hash' => 'sha256:aaa', 'site_id' => 7];
+        $this->upload($author, $mine)->assertSuccessful();
+
+        $theirs = $this->file('uuid-forked');
+        $theirs['_source'] = ['hash' => 'sha256:bbb', 'site_id' => 99];
+        $theirs['_forked_from'] = ['site_id' => 7, 'hash' => 'sha256:aaa'];
+        $theirs['_local_changes'] = 412;
+
+        $this->upload(User::factory()->create(), $theirs)->assertStatus(422);
     }
 }

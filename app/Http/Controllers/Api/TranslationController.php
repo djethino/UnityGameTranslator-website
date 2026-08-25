@@ -640,6 +640,16 @@ class TranslationController extends Controller
                 ->with('user:id,name')
                 ->first();
 
+            // ⚠ **The link to the assets is not in the file.** Image replacements name PNG files
+            // that live on the player's disk; resources_url is where they are downloaded from, and
+            // it is a column, sent beside the content. Somebody publishing the same replacements
+            // pointed at a pack of their own has made something — the one part of this decision the
+            // fingerprint cannot see, so it is asked separately rather than left to refuse them.
+            if ($twin && $request->filled('resources_url')
+                && $request->resources_url !== $twin->resources_url) {
+                $twin = null;
+            }
+
             if ($twin) {
                 $whose = $twin->visibility === 'public' && $twin->user
                     ? ' by @' . $twin->user->name

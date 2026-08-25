@@ -179,18 +179,21 @@ class Translation extends Model
     }
 
     /**
-     * The stored file's content, fingerprinted WITHOUT the lineage identifier.
+     * The stored file, fingerprinted the way TranslationService::computeContentHash does — read
+     * that one for the whole reasoning. Here so that a row can be repaired from its file.
      *
-     * See TranslationService::computeContentHash for why this exists: file_hash cannot tell that a
-     * fork is, line for line, the file it copied, because a fork takes a new uuid and the uuid is
-     * hashed alongside the lines.
+     * ⚠ **Delegates rather than repeating the rule.** This class carried its own copy of the
+     * file_hash rule and the two had already drifted once (underscore keys). One more copy, of a
+     * rule that decides whether somebody may publish, is not a copy worth having.
      */
     public function computeContentHash(): ?string
     {
-        return $this->hashFile(withUuid: false);
+        $data = $this->readJson();
+
+        return $data === null ? null : app(TranslationService::class)->computeContentHash($data);
     }
 
-    private function hashFile(bool $withUuid): ?string
+    private function readJson(): ?array
     {
         $safePath = $this->getSafeFilePath();
         if (!$safePath || !file_exists($safePath)) {
@@ -202,9 +205,21 @@ class Translation extends Model
             return null;
         }
 
-        // Parse JSON
         $data = json_decode($content, true);
-        if (!is_array($data)) {
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * 🔴 **file_hash keeps its own copy of the rule, deliberately.** Delegating it to the service
+     * would bring normalizeLineEndings with it, and a file_hash that moves is every installed mod
+     * being told the server changed. The value is a contract; the fingerprint above is not, which
+     * is why only that one was unified.
+     */
+    private function hashFile(bool $withUuid): ?string
+    {
+        $data = $this->readJson();
+        if ($data === null) {
             return null;
         }
 
@@ -219,8 +234,6 @@ class Translation extends Model
             }
         }
 
-        // Kept and emptied rather than removed, so both hashes describe the same document — see
-        // TranslationService::hashDocument, which this must keep matching.
         $hashData['_uuid'] = $withUuid ? (string) ($data['_uuid'] ?? '') : '';
 
         // Sort keys for deterministic hash
