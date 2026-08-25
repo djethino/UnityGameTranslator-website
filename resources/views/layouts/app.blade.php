@@ -328,22 +328,31 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-start gap-3 text-sm">
             <i class="fas fa-bullhorn text-purple-300 leading-5"></i>
             <p class="flex-1 text-purple-100 min-w-0">
-                <span class="font-semibold">{{ $siteBanner->title }}</span>
-                {{-- whitespace-pre-line, because the message is written in a TEXTAREA and HTML
-                     collapses the line breaks somebody deliberately typed. Not nl2br + {!! !!}:
-                     that hands raw HTML to a field, and CSS gets the same result with the escaping
-                     left alone. Long lines still wrap normally — pre-line keeps the breaks without
-                     forbidding the others. --}}
-                <span class="text-purple-200 whitespace-pre-line"> — {{ $siteBanner->body }}</span>
+                {{-- Title on its own line, message under it — the shape the notifications page
+                     already gave this same announcement. It used to read "Title — first line",
+                     which only held while the message was one line: once the author's own breaks
+                     are honoured, joining the title to the first of them makes the title look like
+                     the opening of a sentence it does not belong to.
+
+                     whitespace-pre-line rather than nl2br + {!! !!}: the message comes from a
+                     textarea, and CSS gets the breaks back without handing raw HTML to a field.
+                     Long lines still wrap normally — pre-line keeps the breaks it is given without
+                     forbidding the ones the width imposes. --}}
+                <span class="block font-semibold">{{ $siteBanner->title }}</span>
+                <span class="block text-purple-200 whitespace-pre-line">{{ $siteBanner->body }}</span>
                 @if($siteBanner->link)
                     {{-- Its own line, ranged right: inline after the message it landed wherever the
                          body happened to stop, so on a long announcement it sat mid-sentence and
                          read as part of the prose rather than as the way out of it.
 
+                         ⚠ No top margin. The block already puts it on a line of its own; a margin
+                         on top of that spends the height of a fourth line on a banner that sits
+                         above every page of the site.
+
                          ⚠ The block is the SPAN, never the anchor. An <a> made block-level would
                          stretch the full width and turn the empty space left of the words into a
                          click that navigates — a link you hit without aiming at it. --}}
-                    <span class="block text-right mt-1">
+                    <span class="block text-right">
                         <a href="{{ $siteBanner->link }}" class="underline text-white hover:text-purple-200" rel="noopener">{{ __('notif.learn_more') }}</a>
                     </span>
                 @endif
