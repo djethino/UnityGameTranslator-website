@@ -175,6 +175,7 @@ class TranslationController extends Controller
                 'notes' => $request->notes,
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
+                'content_hash' => $parsed['content_hash'],
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
 
@@ -229,6 +230,7 @@ class TranslationController extends Controller
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
+            'content_hash' => $parsed['content_hash'],
             'font_config' => $parsed['font_config'],
             'settings_summary' => $parsed['settings_summary'],
         ]);
@@ -731,8 +733,10 @@ class TranslationController extends Controller
             'origin_file_hash' => $main?->file_hash,
         ]);
 
-        // Recalculate hash
+        // Recalculate hash. ⚠ content_hash is unchanged by a new uuid — that is what it is for —
+        //    but it is written here too so no path can leave the two out of step.
         $translation->file_hash = $translation->computeHash();
+        $translation->content_hash = $translation->computeContentHash();
         $translation->save();
 
         // Return the file for download
@@ -1349,8 +1353,9 @@ class TranslationController extends Controller
         $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         file_put_contents($path, json_encode($content, $jsonFlags));
 
-        // Recalculate counters and hash
+        // Recalculate counters and hash — both, see MergeController.
         $translation->file_hash = $translation->computeHash();
+        $translation->content_hash = $translation->computeContentHash();
         $tagCounts = Translation::extractTagCounts($content);
         $translation->human_count = $tagCounts['human_count'];
         $translation->validated_count = $tagCounts['validated_count'];

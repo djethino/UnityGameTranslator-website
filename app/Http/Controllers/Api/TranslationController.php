@@ -619,6 +619,39 @@ class TranslationController extends Controller
             ], 403);
         }
 
+        // 🔴 **The same file, already on the site under somebody else's account.** Sending it again
+        // publishes one person's work under another's name — as a fork it becomes a second
+        // identical entry competing with the first, as a branch it is a contribution containing
+        // nothing. Neither is sharing, and both are what an automated flood looks like.
+        //
+        // ⚠ **Only when CREATING a row.** Updating one's own translation into something that
+        // happens to match another's is a different situation — a branch whose work has all been
+        // merged, for one — and refusing it would strand somebody on a row they already own.
+        //
+        // ⚠ **Only against another account.** The same content twice in one person's own history
+        // is ordinary: a fork of one's own translation, a second game entry, a re-upload.
+        //
+        // ⚠ **The author is named only if their translation is public.** A branch is visible to its
+        // author and the Main's owner alone; saying "identical to @someone's" would report the
+        // existence of a private contribution to a stranger.
+        if (!$existingTranslation) {
+            $twin = Translation::where('content_hash', $parsed['content_hash'])
+                ->where('user_id', '!=', $userId)
+                ->with('user:id,name')
+                ->first();
+
+            if ($twin) {
+                $whose = $twin->visibility === 'public' && $twin->user
+                    ? ' by @' . $twin->user->name
+                    : '';
+
+                return response()->json([
+                    'error' => 'This file is identical to a translation already published'
+                             . $whose . '. Translate or correct at least one line before sending it.',
+                ], 422);
+            }
+        }
+
         $originalTranslation = $existingTranslation ? null : $ownership['original'];
         $visibility = $existingTranslation ? $existingTranslation->visibility : $ownership['visibility'];
         $parentId = $existingTranslation ? $existingTranslation->parent_id : $ownership['parent_id'];
@@ -700,6 +733,7 @@ class TranslationController extends Controller
                     : $existingTranslation->accepts_branches,
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
+                'content_hash' => $parsed['content_hash'],
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
             ]);
@@ -776,6 +810,7 @@ class TranslationController extends Controller
             'file_path' => $fileName,
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
+            'content_hash' => $parsed['content_hash'],
             'font_config' => $parsed['font_config'],
             'settings_summary' => $parsed['settings_summary'],
         ]);

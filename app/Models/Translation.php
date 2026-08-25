@@ -39,6 +39,8 @@ class Translation extends Model
         'file_path',
         'file_uuid',
         'file_hash',
+        // The same content without the lineage identifier — see computeContentHash().
+        'content_hash',
         'font_config',
         'settings_summary',
     ];
@@ -173,6 +175,23 @@ class Translation extends Model
      */
     public function computeHash(): ?string
     {
+        return $this->hashFile(withUuid: true);
+    }
+
+    /**
+     * The stored file's content, fingerprinted WITHOUT the lineage identifier.
+     *
+     * See TranslationService::computeContentHash for why this exists: file_hash cannot tell that a
+     * fork is, line for line, the file it copied, because a fork takes a new uuid and the uuid is
+     * hashed alongside the lines.
+     */
+    public function computeContentHash(): ?string
+    {
+        return $this->hashFile(withUuid: false);
+    }
+
+    private function hashFile(bool $withUuid): ?string
+    {
         $safePath = $this->getSafeFilePath();
         if (!$safePath || !file_exists($safePath)) {
             return null;
@@ -193,13 +212,16 @@ class Translation extends Model
         // Exclude other metadata like _game, _local_changes, etc.
         $hashData = [];
         foreach ($data as $key => $value) {
-            // Include _uuid and non-metadata keys (translations)
-            if ($key === '_uuid' || !str_starts_with($key, '_')) {
+            if (!str_starts_with($key, '_')) {
                 // Only v/t are content — the ordering index "i" must not
                 // affect the hash (see TranslationService::hashableEntry)
                 $hashData[$key] = TranslationService::hashableEntry($value);
             }
         }
+
+        // Kept and emptied rather than removed, so both hashes describe the same document — see
+        // TranslationService::hashDocument, which this must keep matching.
+        $hashData['_uuid'] = $withUuid ? (string) ($data['_uuid'] ?? '') : '';
 
         // Sort keys for deterministic hash
         ksort($hashData);
@@ -230,10 +252,16 @@ class Translation extends Model
      *
      * @param string|null $hash A hash already computed by the caller, to avoid reading the file
      *                          twice. Recomputed here when absent.
+     * @param string|null $contentHash Same, for the uuid-free fingerprint.
      */
-    public function updateHash(?string $hash = null): void
+    public function updateHash(?string $hash = null, ?string $contentHash = null): void
     {
         $this->file_hash = $hash ?? $this->computeHash();
+
+        // ⚠ Filled by the same repair, because a row whose file_hash is right and whose
+        // content_hash is empty is a row the duplicate check silently skips — and a check with a
+        // hole in it reads exactly like a check that passed.
+        $this->content_hash = $contentHash ?? $this->computeContentHash();
 
         $this->timestamps = false;
         $this->saveQuietly();

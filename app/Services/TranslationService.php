@@ -43,7 +43,7 @@ class TranslationService
      * Parse and validate JSON content.
      * Returns parsed data with metadata or throws exception.
      *
-     * @return array{json: array, uuid: string, line_count: int, tag_counts: array, file_hash: string}
+     * @return array{json: array, uuid: string, line_count: int, tag_counts: array, file_hash: string, content_hash: string}
      * @throws \InvalidArgumentException with error details
      */
     public function parseAndValidate(string $content): array
@@ -108,6 +108,7 @@ class TranslationService
             'line_count' => $lineCount,
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
+            'content_hash' => $this->computeContentHash($json),
             'font_config' => $this->extractFontConfig($json),
             'settings_summary' => $this->extractSettingsSummary($json),
             'normalized_content' => $content,
@@ -1206,10 +1207,34 @@ class TranslationService
      */
     public function computeHash(array $json): string
     {
+        return $this->hashDocument($json, (string) ($json['_uuid'] ?? ''));
+    }
+
+    /**
+     * The same content, fingerprinted WITHOUT the lineage identifier.
+     *
+     * 🔴 **Answers a different question from computeHash, and only this one**: are these the same
+     * LINES, across a change of uuid. That change is exactly what a fork is — it takes a new uuid —
+     * so file_hash cannot see that a fork is, line for line, the file it copied. Holding the uuid
+     * constant is what makes the two comparable either side of one.
+     *
+     * ⚠ **Never issue this as a file_hash.** The mod compares file_hash to decide whether the
+     * server moved; handing it a hash computed under another rule would report a change nobody made.
+     *
+     * ⚠ Same shape as the mod's ComputeLinesFingerprint (TranslatorCore): the uuid entry is kept
+     * and emptied rather than removed, so both sides hash the same document.
+     */
+    public function computeContentHash(array $json): string
+    {
+        return $this->hashDocument($json, '');
+    }
+
+    private function hashDocument(array $json, string $uuid): string
+    {
         $hashData = [];
         foreach ($json as $key => $value) {
-            // Include _uuid and all translation keys, exclude other metadata
-            if ($key === '_uuid' || !str_starts_with($key, '_')) {
+            // Translation keys only — the uuid is written below, at the value this call asks for.
+            if (!str_starts_with($key, '_')) {
                 // Normalize keys for cross-platform consistency
                 $normalizedKey = $this->normalizeLineEndings($key);
 
@@ -1223,6 +1248,12 @@ class TranslationService
                 $hashData[$normalizedKey] = self::hashableEntry($value);
             }
         }
+
+        // Written after the loop, so that the uuid this call was given is the one hashed — and so
+        // that a file carrying no _uuid at all hashes like one carrying an empty string, rather
+        // than producing a shorter document.
+        $hashData['_uuid'] = $uuid;
+
         ksort($hashData);
         $normalized = json_encode($hashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

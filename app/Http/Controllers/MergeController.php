@@ -463,7 +463,10 @@ class MergeController extends Controller
         file_put_contents($path, json_encode($content, $jsonFlags));
 
         // Recalculate counters and hash
+        // ⚠ Both hashes, always together: content_hash is what tells whether this file is
+        //    somebody else's, and one left behind by a write is a check reading old content.
         $main->file_hash = $main->computeHash();
+        $main->content_hash = $main->computeContentHash();
         $tagCounts = Translation::extractTagCounts($content);
         $main->human_count = $tagCounts['human_count'];
         $main->validated_count = $tagCounts['validated_count'];

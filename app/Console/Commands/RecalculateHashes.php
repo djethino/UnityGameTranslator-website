@@ -9,7 +9,7 @@ class RecalculateHashes extends Command
 {
     protected $signature = 'translations:recalculate-hashes';
 
-    protected $description = 'Recalculate file hashes for all translations using normalized JSON (sorted keys)';
+    protected $description = 'Recalculate file and content hashes for all translations using normalized JSON (sorted keys)';
 
     public function handle(): int
     {
@@ -47,6 +47,10 @@ class RecalculateHashes extends Command
 
             $newHash = $translation->computeHash();
 
+            // ⚠ **This is what fills content_hash on everything published before it existed.** The
+            // duplicate check skips a row whose fingerprint is null — unknown is not "no duplicate"
+            // — so until this has run over the table, the check has a hole exactly the size of the
+            // history. Run it once after migrating.
             if ($newHash === null) {
                 $this->newLine();
                 $this->warn("  #{$translation->id}: Failed to parse JSON or compute hash");
@@ -55,9 +59,10 @@ class RecalculateHashes extends Command
                 // ⚠ Through updateHash, which carries the guards: a repair must not move
                 // updated_at nor ping the search engines. Written out here, this command was a
                 // second copy of that write — and the copy without them.
+                $oldContent = $translation->content_hash;
                 $translation->updateHash($newHash);
 
-                if ($oldHash !== $newHash) {
+                if ($oldHash !== $newHash || $oldContent !== $translation->content_hash) {
                     $updated++;
                 }
             }
