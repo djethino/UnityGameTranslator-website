@@ -240,7 +240,18 @@ Arabic, Chinese, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Ital
 
 ## Related
 
-- **Unity Mod:** [github.com/djethino/UnityGameTranslator](https://github.com/djethino/UnityGameTranslator)
+Five repositories, one product — [see it live][live].
+
+- [UnityGameTranslator][mod] — the mod that translates a game while you play
+- [unitygametranslator-manager][manager] — the desktop tool that finds your games and sets the mod up
+- [unitygametranslator-common][common] — the rules the mod and the Manager both answer to, written once
+- [unitygametranslator-catalogs][catalogs] — reference data this site reads too: languages, AI models, mod loaders
+
+[mod]: https://github.com/djethino/UnityGameTranslator
+[manager]: https://github.com/djethino/unitygametranslator-manager
+[common]: https://github.com/djethino/unitygametranslator-common
+[catalogs]: https://github.com/djethino/unitygametranslator-catalogs
+[live]: https://unitygametranslator.asymptomatikgames.com
 
 ## Acknowledgments
 
