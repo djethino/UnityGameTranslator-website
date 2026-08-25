@@ -92,8 +92,12 @@
                                     'lang' => $data['target_language'] ?? '?',
                                 ]) }}
                             @elseif($type === 'announcement')
+                                {{-- Same reading as the site-wide banner in layouts/app.blade.php:
+                                     the message is typed in a textarea, so the line breaks are the
+                                     author's and HTML would collapse them. One announcement, two
+                                     places, one shape. --}}
                                 <span class="font-semibold">{{ $data['title'] ?? '' }}</span><br>
-                                <span class="text-gray-300">{{ $data['body'] ?? '' }}</span>
+                                <span class="text-gray-300 whitespace-pre-line">{{ $data['body'] ?? '' }}</span>
                             @else
                                 {{ $data['message'] ?? '' }}
                             @endif

@@ -322,9 +322,23 @@
             <i class="fas fa-bullhorn text-purple-300"></i>
             <p class="flex-1 text-purple-100 min-w-0">
                 <span class="font-semibold">{{ $siteBanner->title }}</span>
-                <span class="text-purple-200"> — {{ $siteBanner->body }}</span>
+                {{-- whitespace-pre-line, because the message is written in a TEXTAREA and HTML
+                     collapses the line breaks somebody deliberately typed. Not nl2br + {!! !!}:
+                     that hands raw HTML to a field, and CSS gets the same result with the escaping
+                     left alone. Long lines still wrap normally — pre-line keeps the breaks without
+                     forbidding the others. --}}
+                <span class="text-purple-200 whitespace-pre-line"> — {{ $siteBanner->body }}</span>
                 @if($siteBanner->link)
-                    <a href="{{ $siteBanner->link }}" class="underline text-white hover:text-purple-200 ml-1" rel="noopener">{{ __('notif.learn_more') }}</a>
+                    {{-- Its own line, ranged right: inline after the message it landed wherever the
+                         body happened to stop, so on a long announcement it sat mid-sentence and
+                         read as part of the prose rather than as the way out of it.
+
+                         ⚠ The block is the SPAN, never the anchor. An <a> made block-level would
+                         stretch the full width and turn the empty space left of the words into a
+                         click that navigates — a link you hit without aiming at it. --}}
+                    <span class="block text-right mt-1">
+                        <a href="{{ $siteBanner->link }}" class="underline text-white hover:text-purple-200" rel="noopener">{{ __('notif.learn_more') }}</a>
+                    </span>
                 @endif
             </p>
             <button @click="dismiss" class="text-purple-300 hover:text-white transition" aria-label="{{ __('notif.dismiss') }}">
