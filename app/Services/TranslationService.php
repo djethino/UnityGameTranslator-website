@@ -1371,6 +1371,33 @@ class TranslationService
         $original = $this->findMainTranslation($uuid);
 
         if (!$original) {
+            // 🔴 **"No Main" is two different situations, and only one of them is a new
+            // translation.** A uuid nobody has ever published is somebody starting out. A uuid whose
+            // Main has been deleted is a lineage that has lost its head — and until 2026-08-26 the
+            // next upload silently took it over, inheriting a following it never earned and leaving
+            // the other contributors as branches of a stranger.
+            //
+            // The branches ARE the trace: they carry the same uuid and outlive the Main, whose
+            // removal only nulls their parent_id.
+            //
+            // ⚠ A deleted Main with no branches leaves no trace at all, and that is deliberate:
+            // nobody else was in that lineage, the sender holds the file, and refusing would kill a
+            // uuid for no one's benefit.
+            if (Translation::where('file_uuid', $uuid)->exists()) {
+                return [
+                    'visibility' => null,
+                    'parent_id' => null,
+                    'original' => null,
+                    'refused' => self::MAIN_GONE,
+                    // ⚠ A code beside the sentence, because the two have different readers. The
+                    // sentence is for the mod, which is translated into nothing and shows it
+                    // as-is; the site is translated into twenty languages and must pick its own
+                    // wording. Sending the English text to a Blade view would put untranslated
+                    // prose on a translated page.
+                    'refused_code' => 'main_gone',
+                ];
+            }
+
             // New translation - user becomes Main owner
             return [
                 'visibility' => 'public',
@@ -1385,6 +1412,25 @@ class TranslationService
                 'visibility' => 'public',
                 'parent_id' => null,
                 'original' => $original,
+            ];
+        }
+
+        // 🔴 **A Main whose owner is gone takes nothing, however willing it looks.**
+        //
+        // Erasing an account keeps the translations — the work stays published, which is the point
+        // — so the Main is still there, still downloadable, and still says it accepts branches. But
+        // there is nobody left to read one, and a contribution nobody can ever merge is worse than
+        // a refusal: it is a refusal that takes months to notice.
+        //
+        // ⚠ Deleted, NOT banned. A ban is a decision that can be undone and the account is still
+        // somebody's; only an erasure is final.
+        if ($original->user?->isDeletedAccount()) {
+            return [
+                'visibility' => null,
+                'parent_id' => null,
+                'original' => $original,
+                'refused' => self::MAIN_ABANDONED,
+                'refused_code' => 'main_abandoned',
             ];
         }
 
@@ -1404,6 +1450,7 @@ class TranslationService
                 'parent_id' => null,
                 'original' => $original,
                 'refused' => self::BRANCHES_REFUSED,
+                'refused_code' => 'branches_refused',
             ];
         }
 
@@ -1425,6 +1472,30 @@ class TranslationService
     public const BRANCHES_REFUSED =
         'This translation does not accept contributions. You can publish your own version of it '
         . 'instead — open it on the website and choose "Publish my own version".';
+
+    /**
+     * The Main is still here; the account that owned it is not.
+     *
+     * ⚠ Says what became of the work before saying no. Somebody reading this has just been refused
+     * on a translation they can still see and download, and the first question is whether it is
+     * still safe to use — it is, nothing was withdrawn.
+     */
+    public const MAIN_ABANDONED =
+        'The account that owned this translation has been deleted, so contributions can no longer '
+        . 'be reviewed. The translation itself stays available. To keep working on it, publish your '
+        . 'own version — open it on the website and choose "Publish my own version".';
+
+    /**
+     * The Main itself is gone, and its contributors are still holding branches of it.
+     *
+     * ⚠ Same ending as above and a different beginning, because what somebody has to understand is
+     * not the same: here the translation they were contributing to no longer exists at all, so
+     * "still available" would be a lie and their own copy is now the only one they have.
+     */
+    public const MAIN_GONE =
+        'The translation this contributes to has been removed by its author, so there is nothing '
+        . 'left to contribute to. Your own copy is untouched. To go on with it, publish it as your '
+        . 'own version — open it on the website and choose "Publish my own version".';
 
     /**
      * Resolve final languages based on operation type.

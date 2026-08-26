@@ -324,6 +324,18 @@ class TranslationController extends Controller
                 // was anything to be a branch of — and the next upload dutifully stayed one, of a
                 // lineage with no head. Additive field: older mods ignore it and behave as before.
                 'main_missing' => $role === 'branch' ? $publicTranslation === null : null,
+                // 🔴 **The Main is there and nobody is behind it.** Erasing an account keeps its
+                // translations — the work stays published, which is the point — so this lineage
+                // still looks alive: the Main is listed, downloadable, and still says it accepts
+                // contributions. Nobody will ever read one.
+                //
+                // ⚠ Distinct from main_missing, which says the Main itself is gone. The upload is
+                // refused either way; what has to be understood differs, so the two are separate
+                // fields with separate sentences. Additive: older mods ignore it and meet the
+                // refusal on the click, whose text carries the way out on its own.
+                'main_abandoned' => $role === 'branch'
+                    ? (bool) $publicTranslation?->user?->isDeletedAccount()
+                    : null,
                 // Told, came back, took nothing. Distinct from silence, which the mod already
                 // hears about through dormancy. Additive: older mods ignore it.
                 'main_ignoring' => $role === 'branch' ? $ownTranslation->mainIgnoresContributions() : null,
@@ -401,6 +413,10 @@ class TranslationController extends Controller
             return response()->json([
                 'exists' => true,
                 'role' => 'none', // User has no translation yet
+                // ⚠ Said here too, and not only to branches. Somebody holding this file and about
+                // to contribute for the first time needs it before the click, not after — it is
+                // the same "no dead ends" rule the rest of this product follows. Additive.
+                'main_abandoned' => (bool) $mainTranslation->user?->isDeletedAccount(),
                 'main' => [
                     'id' => $mainTranslation->id,
                     'uploader' => $mainTranslation->user->name,

@@ -320,6 +320,30 @@
         </div>
         @endif
 
+        {{-- The Main was deleted outright. Same shape and same place as the block above, because it
+             is the same kind of fact: nothing done as a branch can work any more. What differs is
+             what became of the translation — closed is not gone. --}}
+        @if($translation->isOrphanedBranch())
+        <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-white mb-2">
+                <i class="fas fa-ghost mr-2 text-red-400"></i>{{ __('dashboard.main_gone_title') }}
+            </h2>
+            <p class="text-red-200 text-sm">{{ __('dashboard.main_gone_body') }}</p>
+        </div>
+        @endif
+
+        {{-- The Main is still published and nobody owns it. The hardest of the three to notice
+             from inside: everything looks normal, and the work simply waits for a reader who does
+             not exist. --}}
+        @if($translation->isAbandonedBranch())
+        <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-white mb-2">
+                <i class="fas fa-user-slash mr-2 text-red-400"></i>{{ __('dashboard.main_abandoned_title') }}
+            </h2>
+            <p class="text-red-200 text-sm">{{ __('dashboard.main_abandoned_body') }}</p>
+        </div>
+        @endif
+
         {{-- Convert to Fork Section --}}
         <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
             <h2 class="text-lg font-semibold text-white mb-2">

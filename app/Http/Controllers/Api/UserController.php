@@ -76,9 +76,19 @@ class UserController extends Controller
             ->pluck('accepts_branches', 'file_uuid');
         $withMain = $mains->keys()->flip();
 
+        // Which of those lineages have lost their owner. Same shape and the same reason as the
+        // line above: one query for the whole listing rather than one per row.
+        $abandoned = Translation::whereIn('file_uuid', $uuids)
+            ->public()
+            ->with('user:id,account_deleted_at')
+            ->get()
+            ->filter(fn ($m) => $m->user?->isDeletedAccount())
+            ->pluck('file_uuid')
+            ->flip();
+
         return response()->json([
             'count' => $translations->count(),
-            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain, $mains) {
+            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain, $mains, $abandoned) {
                 $role = $t->lineageRole();
 
                 return [
@@ -110,6 +120,12 @@ class UserController extends Controller
                     ...$this->waitingFields($t, $role, ($branchCounts[$t->file_uuid] ?? 0) > 0),
                     'main_missing' => $role === 'branch'
                         ? !$withMain->has($t->file_uuid)
+                        : null,
+
+                    // The Main is still there and nobody owns it any more. Null off a branch for
+                    // the same reason as main_missing: "not a branch" is not "fine".
+                    'main_abandoned' => $role === 'branch'
+                        ? $abandoned->has($t->file_uuid)
                         : null,
 
                     // Whether this lineage takes contributions: its own answer on a Main, the

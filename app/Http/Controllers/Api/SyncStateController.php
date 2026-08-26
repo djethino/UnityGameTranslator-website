@@ -193,6 +193,11 @@ class SyncStateController extends Controller
                 //
                 // ⚠ Additive: a mod that does not read them behaves exactly as before.
                 $state['main_missing'] = $publicTranslation === null;
+                // The Main is there, its owner is not. Same consequence as main_missing — nobody
+                // will ever merge this — reached by a different road, so it gets its own field and
+                // its own sentence rather than being folded into "gone": the translation itself is
+                // still published and still safe to use.
+                $state['main_abandoned'] = (bool) $publicTranslation?->user?->isDeletedAccount();
                 $state['main_ignoring'] = $ownTranslation->mainIgnoresContributions();
                 $state['merged_lines_total'] = $ownTranslation->merged_lines_total;
 

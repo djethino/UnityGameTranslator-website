@@ -1522,6 +1522,34 @@ class Translation extends Model
                && !$this->lineageAcceptsBranches();
     }
 
+    /**
+     * A branch whose Main was deleted outright: there is nothing left to contribute to.
+     *
+     * ⚠ Sibling of isFrozenBranch, and deliberately separate. Frozen means somebody closed the
+     * door; this means the house is gone — and a reader needs to know which, because in one case
+     * the translation they were building on is still published and in the other it is not.
+     */
+    public function isOrphanedBranch(): bool
+    {
+        return $this->isBranch() && !$this->lineageHasAMain();
+    }
+
+    /**
+     * A branch on a Main whose owner erased their account.
+     *
+     * 🔴 **The hardest of the three to notice, which is why it is said.** Erasing an account keeps
+     * its translations, so the Main is still listed, still downloadable, and still declares that it
+     * accepts contributions. Nobody will ever read one. Nothing about this is visible from a
+     * branch's own screen, and nothing ever failed — the work simply waits for a reader who does
+     * not exist.
+     */
+    public function isAbandonedBranch(): bool
+    {
+        if (!$this->isBranch()) return false;
+
+        return (bool) $this->getMain()?->user?->isDeletedAccount();
+    }
+
     public function mainIgnoresContributions(): bool
     {
         if (!$this->isBranch()) {
