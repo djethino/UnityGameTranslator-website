@@ -199,7 +199,8 @@
                  "Your translations will be deleted" is true and is not the whole truth: branches
                  lose what they were contributing to, and forks lose the credit of where they came
                  from. Somebody choosing this should be choosing that too. --}}
-            <label class="flex items-start gap-3 mb-4 p-3 bg-gray-900/50 border border-gray-700 rounded-lg cursor-pointer">
+            @if($ownTranslations->isNotEmpty())
+            <label class="flex items-start gap-3 mb-2 p-3 bg-gray-900/50 border border-gray-700 rounded-lg cursor-pointer">
                 <input type="checkbox" name="delete_translations" value="1"
                        class="mt-1 rounded bg-gray-700 border-gray-600 text-red-500 focus:ring-red-500">
                 <span class="text-sm">
@@ -207,6 +208,35 @@
                     <span class="block text-gray-400 text-xs mt-1">{{ __('profile.delete_translations_hint') }}</span>
                 </span>
             </label>
+
+            {{-- 🔴 What the box would take, named. It said "my translations" and showed none of
+                 them: somebody with a dozen across as many games had to remember what they had
+                 before agreeing to destroy it.
+
+                 ⚠ The role is on every line because it decides who ELSE is affected — removing a
+                 Main takes with it what its branches were contributing to, removing a branch
+                 withdraws an offer nobody had accepted. Same act, different consequences.
+
+                 ⚠ Scrolls rather than truncates: a list cut at five would hide exactly what
+                 somebody needs to see before agreeing to lose it. --}}
+            <div class="mb-4 max-h-40 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900/30">
+                <ul class="divide-y divide-gray-700/60 text-xs">
+                    @foreach($ownTranslations as $own)
+                        <li class="flex items-center justify-between gap-3 px-3 py-2">
+                            <span class="text-gray-300 truncate">
+                                {{ $own->game->name ?? '—' }}
+                                <span class="text-gray-500">· {{ $own->target_language }}</span>
+                            </span>
+                            {{-- The words this site already uses for the two roles, everywhere
+                                 else. A second pair here would be the same fact under two names. --}}
+                            <span class="shrink-0 {{ $own->lineageRole() === 'main' ? 'text-purple-300' : 'text-gray-400' }}">
+                                {{ $own->lineageRole() === 'main' ? __('translation.role_main') : __('translation.role_branch') }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.delete_confirm_input', ['name' => $user->name]) }}</label>

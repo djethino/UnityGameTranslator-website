@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AccountDeletion;
 use App\Models\ApiToken;
+use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\RecoveryCode;
 use App\Models\Translation;
@@ -229,6 +230,38 @@ class AccountDeletionTest extends TestCase
         // The account itself is still erased rather than deleted, and still recorded.
         $this->assertTrue($user->fresh()->isDeletedAccount());
         $this->assertSame(1, AccountDeletion::where('user_id', $user->id)->count());
+    }
+
+    /**
+     * 🔴 The data export must show everything held about somebody, including the part they cannot
+     * see anywhere else.
+     *
+     * Every sign-in and upload is logged with an IP address, kept twelve months because hosting
+     * law requires it. The export listed translations and votes and never mentioned it existed.
+     */
+    public function test_the_export_includes_the_activity_log_and_the_username(): void
+    {
+        $user = User::factory()->create(['username' => 'exporter']);
+        AuditLog::logLogin($user->id, 'local');
+
+        $response = $this->actingAs($user)->get('/profile/export');
+        $data = json_decode($response->streamedContent(), true);
+
+        $this->assertSame('exporter', $data['account']['username']);
+        $this->assertNotEmpty($data['activity_log']);
+        $this->assertArrayHasKey('ip_address', $data['activity_log'][0]);
+    }
+
+    /** What the box would take is named before it is agreed to, with the role of each. */
+    public function test_the_deletion_screen_lists_what_would_go(): void
+    {
+        $user = User::factory()->create();
+        $this->makeTranslation($user);
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertSee('Deletion Game')
+            ->assertSee(__('translation.role_main'));
     }
 
     public function test_a_wrong_confirmation_changes_nothing(): void

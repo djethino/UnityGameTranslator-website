@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccountDeletion;
+use App\Models\AuditLog;
 use App\Models\DeviceCode;
 use App\Models\MergePreviewToken;
 use App\Models\RecoveryCode;
@@ -31,8 +32,22 @@ class ProfileController extends Controller
 
     public function edit()
     {
+        $user = auth()->user();
+
         return view('profile.edit', [
-            'user' => auth()->user(),
+            'user' => $user,
+
+            // 🔴 **What ticking "delete my translations as well" would actually take.** The box
+            // said "my translations" and showed none of them: somebody with eleven translations
+            // across nine games had to remember what they had before deciding to destroy it.
+            //
+            // ⚠ The role travels with each line, because it decides who else is affected. Removing
+            // a Main takes with it what its branches were contributing to; removing a branch
+            // withdraws an offer nobody had accepted yet. Same act, very different consequences.
+            'ownTranslations' => $user->translations()
+                ->with('game:id,name')
+                ->orderBy('created_at')
+                ->get(),
         ]);
     }
 
@@ -144,11 +159,32 @@ class ProfileController extends Controller
         $data = [
             'account' => [
                 'name' => $user->name,
+                // Was missing: it is the name somebody signs in with, and an export that leaves it
+                // out describes an account nobody can recognise as theirs.
+                'username' => $user->username,
                 'email' => $user->email,
                 'provider' => $user->provider,
                 'created_at' => $user->created_at->toIso8601String(),
                 'locale' => $user->locale,
             ],
+
+            // 🔴 **The most sensitive thing we hold, and it was not in here.** Every sign-in, every
+            // upload and every token issued is logged with an IP address and a User-Agent, kept for
+            // twelve months because hosting law requires being able to identify a contributor.
+            // Somebody asking for their data was given translations and votes and never told this
+            // existed — which is the right of access missed on the one record that matters most.
+            //
+            // ⚠ Yes, this puts IP addresses in a file somebody downloads. They are theirs; the
+            // alternative is holding data about a person that the person may not see.
+            'activity_log' => AuditLog::where('user_id', $user->id)
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn ($entry) => [
+                    'action' => $entry->action,
+                    'ip_address' => $entry->ip_address,
+                    'user_agent' => $entry->user_agent,
+                    'at' => $entry->created_at->toIso8601String(),
+                ]),
             'translations' => $user->translations()->with('game')->get()->map(function ($t) {
                 return [
                     'id' => $t->id,
