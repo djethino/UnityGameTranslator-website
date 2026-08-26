@@ -121,11 +121,24 @@ class OrphanedLineageTest extends TestCase
         $this->assertArrayNotHasKey('refused', $decision);
     }
 
-    /** Both refusals must name the way out, since old mods show the sentence as-is. */
-    public function test_both_refusals_offer_the_way_out(): void
+    /**
+     * Every refusal must name the way out, since older mods show the sentence as-is.
+     *
+     * ⚠ And it must name **Fork, in the mod** — not the website. Forking is what the mod does, and
+     * somebody reading this is in a game having just pressed publish. The site can promote a branch
+     * too; it is not the road they are on.
+     */
+    public function test_every_refusal_sends_people_to_fork_in_the_mod(): void
     {
-        foreach ([TranslationService::MAIN_ABANDONED, TranslationService::MAIN_GONE] as $message) {
-            $this->assertStringContainsString('Publish my own version', $message);
+        $messages = [
+            TranslationService::MAIN_ABANDONED,
+            TranslationService::MAIN_GONE,
+            TranslationService::BRANCHES_REFUSED,
+        ];
+
+        foreach ($messages as $message) {
+            $this->assertStringContainsString('Fork in the mod', $message);
+            $this->assertStringNotContainsString('website', $message);
         }
     }
 }

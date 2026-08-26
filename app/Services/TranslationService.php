@@ -1465,13 +1465,18 @@ class TranslationService
      * Why an upload was refused, in words a mod that predates this feature can show as-is.
      *
      * ⚠ **This sentence is the whole interface for those versions.** The website goes live before
-     * any release of the mod, so a current mod will read is_owner:false, announce a contribution,
-     * and only meet this on the click. It cannot offer the fork, so the text has to carry the way
-     * out on its own.
+     * any release of the mod, so an older mod will read is_owner:false, announce a contribution,
+     * and only meet this on the click.
+     *
+     * 🔴 **It points at Fork, in the mod — not at the website.** Forking is something the mod does:
+     * it is where the file lives and where the button is, and it has had one for a long time, so
+     * even the versions this text exists for can act on it. The site can promote a branch too, but
+     * that is not the road anybody is on when they read this — they are in a game, having just
+     * pressed publish.
      */
     public const BRANCHES_REFUSED =
-        'This translation does not accept contributions. You can publish your own version of it '
-        . 'instead — open it on the website and choose "Publish my own version".';
+        'This translation does not accept contributions. Your lines are safe: use Fork in the mod '
+        . 'to publish your own version of it instead.';
 
     /**
      * The Main is still here; the account that owned it is not.
@@ -1482,8 +1487,8 @@ class TranslationService
      */
     public const MAIN_ABANDONED =
         'The account that owned this translation has been deleted, so contributions can no longer '
-        . 'be reviewed. The translation itself stays available. To keep working on it, publish your '
-        . 'own version — open it on the website and choose "Publish my own version".';
+        . 'be reviewed. The translation itself stays available. Your lines are safe: use Fork in '
+        . 'the mod to publish them as your own version.';
 
     /**
      * The Main itself is gone, and its contributors are still holding branches of it.
@@ -1494,8 +1499,8 @@ class TranslationService
      */
     public const MAIN_GONE =
         'The translation this contributes to has been removed by its author, so there is nothing '
-        . 'left to contribute to. Your own copy is untouched. To go on with it, publish it as your '
-        . 'own version — open it on the website and choose "Publish my own version".';
+        . 'left to contribute to. Your own copy is untouched, and it is now the only one: use Fork '
+        . 'in the mod to publish it as your own version.';
 
     /**
      * Resolve final languages based on operation type.
