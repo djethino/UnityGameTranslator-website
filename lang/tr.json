@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Kurtarma kodları yalnızca yerel hesaplar için vardır. Steam, Discord, Google... ile giriş yaptıysanız, sadece o platformun düğmesini kullanın.",
     "auth.recovered": "Tekrar hoş geldiniz! Parolanız güncellendi – profilinizden kurtarma kodlarınızı yeniden oluşturmayı düşünün.",
     "profile.name_cooldown": "Kullanıcı adınızı yakın zamanda değiştirdiniz – sonraki değişiklik :date tarihinde mümkün.",
+    "profile.name_taken": "Bu ad zaten alınmış. Sona bir sayı eklemeyi deneyin.",
+    "profile.name_taken_try": "Bu ad zaten alınmış. Şunlar boşta: :names",
     "profile.prompt_title": "Kullanıcı adınızı değiştirmek ister misiniz?",
     "profile.prompt_body": "Şu anda «:name» olarak görünüyorsunuz – bu ad doğrudan giriş yaptığınız platformdan geliyor olabilir.",
     "profile.prompt_privacy": "Gerçek adınızı açığa çıkarıyorsa, şimdi bir takma ad seçmek için iyi bir zaman. Bunu daha sonra hesap ayarlarınızdan da değiştirebilirsiniz (30 günde bir).",

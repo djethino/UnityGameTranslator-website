@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Os códigos de recuperação só existem para contas locais. Se você entrou com Steam, Discord, Google... basta usar o botão dessa plataforma.",
     "auth.recovered": "Boas-vindas de volta! Sua senha foi atualizada — considere gerar novos códigos de recuperação a partir do seu perfil.",
     "profile.name_cooldown": "Você alterou seu nome de usuário recentemente — a próxima alteração será possível em :date.",
+    "profile.name_taken": "Esse nome já está em uso. Tente adicionar um número no final.",
+    "profile.name_taken_try": "Esse nome já está em uso. Estes estão livres: :names",
     "profile.prompt_title": "Quer alterar seu nome de usuário?",
     "profile.prompt_body": "Atualmente você aparece como “:name” — um nome que pode vir diretamente da sua plataforma de login.",
     "profile.prompt_privacy": "Se ele expõe seu nome verdadeiro, este é um bom momento para escolher um pseudônimo. Você também pode alterá-lo mais tarde nas configurações da sua conta (uma vez a cada 30 dias).",

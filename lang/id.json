@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Kode pemulihan hanya ada untuk akun lokal. Jika kamu masuk dengan Steam, Discord, Google... cukup gunakan tombol platform tersebut.",
     "auth.recovered": "Selamat datang kembali! Kata sandimu telah diperbarui – pertimbangkan untuk membuat ulang kode pemulihanmu dari profil.",
     "profile.name_cooldown": "Kamu baru saja mengubah nama pengguna – perubahan berikutnya dapat dilakukan pada :date.",
+    "profile.name_taken": "Nama ini sudah digunakan. Coba tambahkan angka di belakangnya.",
+    "profile.name_taken_try": "Nama ini sudah digunakan. Ini masih tersedia: :names",
     "profile.prompt_title": "Ingin mengubah nama penggunamu?",
     "profile.prompt_body": "Saat ini kamu muncul sebagai «:name» – nama yang mungkin berasal langsung dari platform masukmu.",
     "profile.prompt_privacy": "Jika nama itu mengungkapkan nama aslimu, sekarang saat yang tepat untuk memilih nama samaran. Kamu juga dapat mengubahnya nanti di pengaturan akun (sekali setiap 30 hari).",

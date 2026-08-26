@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Kody odzyskiwania istnieją tylko dla kont lokalnych. Jeśli korzystasz z logowania przez Steam, Discord, Google... po prostu użyj przycisku danej platformy.",
     "auth.recovered": "Witamy z powrotem! Twoje hasło zostało zaktualizowane – rozważ ponowne wygenerowanie kodów odzyskiwania w swoim profilu.",
     "profile.name_cooldown": "Nazwa użytkownika była niedawno zmieniana – kolejna zmiana będzie możliwa :date.",
+    "profile.name_taken": "Ta nazwa jest już zajęta. Spróbuj dodać cyfrę na końcu.",
+    "profile.name_taken_try": "Ta nazwa jest już zajęta. Te są wolne: :names",
     "profile.prompt_title": "Czy chcesz zmienić nazwę użytkownika?",
     "profile.prompt_body": "Obecnie wyświetlasz się jako „:name” – nazwa, która może pochodzić bezpośrednio z Twojej platformy logowania.",
     "profile.prompt_privacy": "Jeśli ujawnia ona Twoje prawdziwe imię, to dobry moment, aby wybrać pseudonim. Możesz ją także zmienić później w ustawieniach konta (raz na 30 dni).",

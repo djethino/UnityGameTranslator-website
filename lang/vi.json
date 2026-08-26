@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Mã khôi phục chỉ tồn tại cho tài khoản cục bộ. Nếu bạn đăng nhập bằng Steam, Discord, Google... chỉ cần dùng nút của nền tảng đó.",
     "auth.recovered": "Chào mừng trở lại! Mật khẩu của bạn đã được cập nhật – hãy cân nhắc tạo lại mã khôi phục từ hồ sơ của bạn.",
     "profile.name_cooldown": "Bạn đã đổi tên người dùng gần đây – lần đổi tiếp theo có thể thực hiện vào :date.",
+    "profile.name_taken": "Tên này đã được sử dụng. Hãy thử thêm một chữ số vào cuối.",
+    "profile.name_taken_try": "Tên này đã được sử dụng. Những tên này còn trống: :names",
     "profile.prompt_title": "Bạn muốn đổi tên người dùng không?",
     "profile.prompt_body": "Hiện bạn đang hiển thị là «:name» – một cái tên có thể lấy trực tiếp từ nền tảng đăng nhập của bạn.",
     "profile.prompt_privacy": "Nếu nó để lộ tên thật của bạn, đây là thời điểm tốt để chọn một biệt danh. Bạn cũng có thể đổi sau trong phần cài đặt tài khoản (30 ngày một lần).",

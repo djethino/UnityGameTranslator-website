@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Herstelcodes bestaan alleen voor lokale accounts. Als je je hebt aangemeld met Steam, Discord, Google... gebruik dan gewoon de knop van dat platform.",
     "auth.recovered": "Welkom terug! Je wachtwoord is bijgewerkt – overweeg je herstelcodes opnieuw te genereren vanuit je profiel.",
     "profile.name_cooldown": "Je hebt je gebruikersnaam onlangs gewijzigd – de volgende wijziging is mogelijk op :date.",
+    "profile.name_taken": "Deze naam is al in gebruik. Voeg er een cijfer aan toe.",
+    "profile.name_taken_try": "Deze naam is al in gebruik. Deze zijn vrij: :names",
     "profile.prompt_title": "Wil je je gebruikersnaam wijzigen?",
     "profile.prompt_body": "Je verschijnt momenteel als ‘:name’ – een naam die mogelijk rechtstreeks van je aanmeldplatform komt.",
     "profile.prompt_privacy": "Als deze je echte naam onthult, is dit een goed moment om een pseudoniem te kiezen. Je kunt deze ook later wijzigen in je accountinstellingen (eens per 30 dagen).",

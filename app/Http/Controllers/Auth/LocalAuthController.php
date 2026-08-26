@@ -40,7 +40,12 @@ class LocalAuthController extends Controller
 
         $username = strtolower($validated['username']);
 
-        if (User::where('username', $username)->exists()) {
+        // ⚠ **Both columns, not just the unique one.** `username` carries the unique index, but the
+        // site displays `name` — and accounts created through a provider have a name and no
+        // username at all. Checking only the index let a new local account take the displayed name
+        // of an existing provider account, which is the impersonation this is here to stop.
+        if (User::where('username', $username)->exists()
+            || User::displayNameTaken($validated['username'])) {
             throw ValidationException::withMessages(['username' => __('auth.username_taken')]);
         }
 

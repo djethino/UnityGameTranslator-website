@@ -1206,6 +1206,8 @@
     "auth.recover_note": "Wiederherstellungscodes gibt es nur für lokale Konten. Wenn du dich mit Steam, Discord, Google … angemeldet hast, nutze einfach die Schaltfläche der jeweiligen Plattform.",
     "auth.recovered": "Willkommen zurück! Dein Passwort wurde aktualisiert – erwäge, deine Wiederherstellungscodes in deinem Profil neu zu generieren.",
     "profile.name_cooldown": "Du hast deinen Benutzernamen kürzlich geändert – die nächste Änderung ist am :date möglich.",
+    "profile.name_taken": "Dieser Name ist bereits vergeben. Füge am Ende eine Zahl hinzu.",
+    "profile.name_taken_try": "Dieser Name ist bereits vergeben. Diese sind frei: :names",
     "profile.prompt_title": "Möchtest du deinen Benutzernamen ändern?",
     "profile.prompt_body": "Du erscheinst derzeit als „:name“ – ein Name, der direkt von deiner Anmeldeplattform stammen könnte.",
     "profile.prompt_privacy": "Wenn er deinen echten Namen preisgibt, ist jetzt ein guter Zeitpunkt, ein Pseudonym zu wählen. Du kannst ihn auch später in deinen Kontoeinstellungen ändern (einmal alle 30 Tage).",

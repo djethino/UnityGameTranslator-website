@@ -87,7 +87,8 @@ class SocialController extends Controller
             } else {
                 // 🔴 **The provider's avatar is not taken at all — see the note below.**
                 $user = User::create([
-                    'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
+                    'name' => $this->availableDisplayName(
+                        $socialUser->getName() ?? $socialUser->getNickname() ?? 'User'),
                     'email' => $email,
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
@@ -138,6 +139,40 @@ class SocialController extends Controller
         AuditLog::logLogin($user->id, $provider);
 
         return redirect()->intended('/');
+    }
+
+    /**
+     * A display name nobody else holds, built from whatever the provider handed us.
+     *
+     * 🔴 **This is the front door, and it was the one with no lock.** Renaming has enforced
+     * `^[a-zA-Z0-9_\-]+$` and a 30-day delay for months — against homoglyphs, against impersonation
+     * — while creation through a provider took `getName()` exactly as given: any script, any
+     * spacing, and any name already borne by somebody here.
+     *
+     * ⚠ **Corrected rather than refused.** Nobody chose this name — the provider supplied it — so
+     * turning somebody away at the door over it would be punishing them for their Google account.
+     * They land with a usable name and can change it from their profile, which is what the one-shot
+     * prompt already invites them to do.
+     *
+     * ⚠ Non-Latin names lose everything to the filter, hence the fallback: an account is better
+     * named "player4173" than "". The prompt then asks them to pick something, in a field that
+     * accepts what this one cannot.
+     */
+    protected function availableDisplayName(string $wanted): string
+    {
+        // Same charset as the rename, so both doors lead to the same set of names.
+        $clean = preg_replace('/[^a-zA-Z0-9_\-]/', '', $wanted) ?? '';
+        $clean = mb_substr($clean, 0, 50);
+
+        if (mb_strlen($clean) < 2) $clean = 'player' . random_int(1000, 9999);
+
+        if (!User::displayNameTaken($clean)) return $clean;
+
+        $free = User::suggestDisplayNames($clean, 1);
+
+        // Everything up to <name>200 taken: a random tail rather than a refusal, since this runs
+        // during a sign-in nobody can retry differently.
+        return $free[0] ?? mb_substr($clean, 0, 45) . random_int(1000, 9999);
     }
 
     protected function isDisposableEmail(string $email): bool

@@ -1206,6 +1206,8 @@
     "auth.recover_note": "恢复码仅适用于本地账户。如果你使用 Steam、Discord、Google……登录，只需使用该平台的按钮。",
     "auth.recovered": "欢迎回来！你的密码已更新——建议从个人资料中重新生成你的恢复码。",
     "profile.name_cooldown": "你最近更改过用户名——下次可在 :date 更改。",
+    "profile.name_taken": "此名称已被占用。可以在末尾加上数字。",
+    "profile.name_taken_try": "此名称已被占用。这些还可以使用：:names",
     "profile.prompt_title": "想更改你的用户名吗？",
     "profile.prompt_body": "你目前显示为「:name」——这个名称可能直接来自你的登录平台。",
     "profile.prompt_privacy": "如果它暴露了你的真实姓名，现在正是选个化名的好时机。你也可以稍后在账户设置中更改（每 30 天一次）。",

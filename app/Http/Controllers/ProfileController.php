@@ -67,6 +67,22 @@ class ProfileController extends Controller
         // protect themselves was the name we filed away for ever. Not collecting it is the only
         // version of that promise that holds.
         if ($request->name !== $user->name) {
+            // 🔴 **Free before allowed.** The delay is about this account; availability is about the
+            // name, and only one of the two can be worked around by waiting. Telling somebody to
+            // come back in three weeks for a name that will still be taken is sending them away
+            // twice.
+            if (User::displayNameTaken($request->name, $user->id)) {
+                $free = User::suggestDisplayNames($request->name);
+
+                return back()->withErrors([
+                    // ⚠ The way out comes with the refusal. A name is refused perhaps once in
+                    // somebody's life here, and being told only "no" is where people stop.
+                    'name' => $free === []
+                        ? __('profile.name_taken')
+                        : __('profile.name_taken_try', ['names' => implode(', ', $free)]),
+                ]);
+            }
+
             if ($user->name_changed_at && $user->name_changed_at->addDays(30)->isFuture()) {
                 return back()->withErrors([
                     'name' => __('profile.name_cooldown', [

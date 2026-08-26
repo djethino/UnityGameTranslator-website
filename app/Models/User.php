@@ -178,4 +178,58 @@ class User extends Authenticatable
         $this->ban_reason = null;
         $this->save();
     }
+
+    /**
+     * Is this display name already somebody else's?
+     *
+     * 🔴 **Nothing checked this until 2026-08-26, and `name` is what the site shows.** `username` is
+     * unique but is displayed nowhere and is null on every account created through a provider, so
+     * the field everyone reads had no uniqueness at all: any account could take the exact name of
+     * another in three clicks, and the whole anti-impersonation set — the 30-day delay, the ASCII
+     * charset against homoglyphs — guarded only the subtle version of the attack.
+     *
+     * ⚠ Compared in lower case, like local sign-in already does with `username`. Two names differing
+     * only in capitals are the same name to a reader, which is the only judge that matters here.
+     *
+     * ⚠ `$except` is the account asking. Without it nobody could re-save their own profile, nor fix
+     * the capitalisation of the name they already hold.
+     */
+    public static function displayNameTaken(string $name, ?int $except = null): bool
+    {
+        $query = self::whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+
+        if ($except !== null) $query->where('id', '!=', $except);
+
+        return $query->exists();
+    }
+
+    /**
+     * Free variants of a name that is taken, in the shape everybody already knows.
+     *
+     * A refusal with nothing to do next is where people give up. Every service that enforces a
+     * unique handle offers the way out in the same breath — it is why so many addresses end in a
+     * number nobody chose on purpose.
+     *
+     * ⚠ Numbers appended rather than inserted, and the source name left untouched: it is the form
+     * readers recognise as "the same person, second account", and it keeps the result inside the
+     * charset the rename already enforces.
+     */
+    public static function suggestDisplayNames(string $name, int $count = 3): array
+    {
+        $suggestions = [];
+
+        // Bounded rather than while(true): on a name whose first hundreds are all taken, giving
+        // three suggestions is not worth an unbounded scan of the table.
+        for ($n = 2; $n <= 200 && count($suggestions) < $count; $n++)
+        {
+            $candidate = $name . $n;
+
+            // The rename allows 50 characters; a suggestion nobody could save is not a suggestion.
+            if (mb_strlen($candidate) > 50) break;
+
+            if (!self::displayNameTaken($candidate)) $suggestions[] = $candidate;
+        }
+
+        return $suggestions;
+    }
 }
