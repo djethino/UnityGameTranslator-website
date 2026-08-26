@@ -11,6 +11,14 @@ Artisan::command('inspire', function () {
 // Aggregate analytics daily at 2 AM
 Schedule::command('analytics:aggregate')->dailyAt('02:00');
 
+// Forget who, keep what: the audit log's IP addresses go at twelve months.
+//
+// The event stays — an account uploaded a translation on this date is the memory of moderation, and
+// it does not expire with the obligation to be able to identify a contributor. Its own job rather
+// than a step of analytics:aggregate, so that erasing personal data is visible in this file and
+// cannot be removed along with a statistics change.
+Schedule::command('audit:purge-ips')->dailyAt('02:30');
+
 // Pick up changes to the shared catalogues (languages, mod loaders, AI models).
 //
 // These hold facts we do not decide — a provider adds a language, a loader ships a release — so
