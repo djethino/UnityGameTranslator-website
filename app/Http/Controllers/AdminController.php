@@ -28,7 +28,10 @@ class AdminController extends Controller
         $pendingReports = Report::where('status', 'pending')->count();
         $totalTranslations = Translation::count();
         $totalUsers = User::count();
-        $bannedUsers = User::whereNotNull('banned_at')->count();
+        // ⚠ Bans only. Deleting an account bans it — that is how its API tokens are cut — so this
+        // counted everybody who had ever left as somebody moderation had punished, and the figure
+        // grew with departures rather than with abuse.
+        $bannedUsers = User::whereNotNull('banned_at')->whereNull('account_deleted_at')->count();
         $recentReports = Report::with(['translation.game', 'translation.user', 'reporter'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
@@ -142,11 +145,16 @@ class AdminController extends Controller
             });
         }
 
+        // ⚠ Three states, not two. An erased account carries banned_at, so it used to answer to
+        // "banned" — putting somebody who chose to leave in the same list as somebody who was
+        // thrown out. It is not "active" either.
         if ($request->filled('status')) {
             if ($request->status === 'banned') {
-                $query->whereNotNull('banned_at');
+                $query->whereNotNull('banned_at')->whereNull('account_deleted_at');
             } elseif ($request->status === 'active') {
-                $query->whereNull('banned_at');
+                $query->whereNull('banned_at')->whereNull('account_deleted_at');
+            } elseif ($request->status === 'deleted') {
+                $query->whereNotNull('account_deleted_at');
             }
         }
 

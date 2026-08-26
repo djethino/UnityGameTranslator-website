@@ -25,6 +25,7 @@
             <option value="">All</option>
             <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
             <option value="banned" {{ request('status') == 'banned' ? 'selected' : '' }}>Banned</option>
+            <option value="deleted" {{ request('status') == 'deleted' ? 'selected' : '' }}>Deleted</option>
         </select>
     </div>
     <div>
@@ -105,7 +106,18 @@
                         @endif
                     </td>
                     <td class="px-4 py-3">
-                        @if($user->isBanned())
+                        {{-- 🔴 Erased before banned. Deleting an account bans it — that is how its
+                             API tokens are cut — so every erased account also carries banned_at and
+                             was listed here as somebody moderation had punished. Two very different
+                             facts, and only one of them is about conduct. --}}
+                        @if($user->isDeletedAccount())
+                            <span class="text-gray-400">
+                                <i class="fas fa-user-slash mr-1"></i> Deleted
+                            </span>
+                            <div class="text-xs text-gray-500 mt-1">
+                                {{ $user->account_deleted_at->format('M d, Y') }}
+                            </div>
+                        @elseif($user->isBanned())
                             <span class="text-red-400">
                                 <i class="fas fa-ban mr-1"></i> Banned
                             </span>
@@ -122,7 +134,10 @@
                         {{ $user->created_at->format('M d, Y') }}
                     </td>
                     <td class="px-4 py-3 text-center">
-                        @if(!$user->isAdmin())
+                        {{-- ⚠ Nothing to do to an erased account. "Unban" would offer to restore
+                             access that no longer exists — no provider id, no password, no token —
+                             and would read as undoing somebody's own decision to leave. --}}
+                        @if(!$user->isAdmin() && !$user->isDeletedAccount())
                             @if($user->isBanned())
                                 <form action="{{ route('admin.users.unban', $user) }}" method="POST" class="inline">
                                     @csrf
