@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Удалить ваш аккаунт",
     "profile.delete_confirm_text": "Это действие нельзя отменить. Ваш аккаунт будет анонимизирован.",
     "profile.delete_warning_translations": "Ваши переводы будут сохранены, но отображаться как от «[Deleted]»",
-    "profile.delete_warning_votes": "Ваши голоса и жалобы будут удалены",
+    "profile.delete_warning_votes": "Ваши голоса и жалобы будут сохранены, но больше не связаны с вами",
     "profile.delete_warning_irreversible": "Это действие необратимо",
     "profile.delete_confirm_input": "Введите :name для подтверждения",
     "profile.delete_name_mismatch": "Введённое имя не совпадает с именем вашего аккаунта.",

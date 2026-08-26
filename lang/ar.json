@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "حذف حسابك",
     "profile.delete_confirm_text": "لا يمكن التراجع عن هذا الإجراء. سيتم إخفاء هوية حسابك.",
     "profile.delete_warning_translations": "سيتم الاحتفاظ بترجماتك لكنها ستظهر باسم «[Deleted]»",
-    "profile.delete_warning_votes": "سيتم حذف أصواتك وبلاغاتك",
+    "profile.delete_warning_votes": "سيتم الاحتفاظ بأصواتك وبلاغاتك لكن دون ربطها بك",
     "profile.delete_warning_irreversible": "هذا الإجراء لا رجعة فيه",
     "profile.delete_confirm_input": "اكتب :name للتأكيد",
     "profile.delete_name_mismatch": "الاسم الذي أدخلته لا يتطابق مع اسم حسابك.",

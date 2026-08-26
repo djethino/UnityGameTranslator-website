@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "アカウントを削除",
     "profile.delete_confirm_text": "この操作は取り消せません。アカウントは匿名化されます。",
     "profile.delete_warning_translations": "あなたの翻訳は保持されますが、「[Deleted]」からのものとして表示されます",
-    "profile.delete_warning_votes": "あなたの投票と報告は削除されます",
+    "profile.delete_warning_votes": "あなたの投票と報告は保持されますが、アカウントとは結び付けられなくなります",
     "profile.delete_warning_irreversible": "この操作は元に戻せません",
     "profile.delete_confirm_input": "確認のため :name を入力してください",
     "profile.delete_name_mismatch": "入力された名前がアカウント名と一致しません。",

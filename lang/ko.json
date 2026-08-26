@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "계정 삭제",
     "profile.delete_confirm_text": "이 작업은 취소할 수 없습니다. 계정이 익명화됩니다.",
     "profile.delete_warning_translations": "번역은 유지되지만 「[Deleted]」이 올린 것으로 표시됩니다",
-    "profile.delete_warning_votes": "투표와 신고가 삭제됩니다",
+    "profile.delete_warning_votes": "투표와 신고는 유지되지만 더 이상 계정과 연결되지 않습니다",
     "profile.delete_warning_irreversible": "이 작업은 되돌릴 수 없습니다",
     "profile.delete_confirm_input": "확인을 위해 :name을(를) 입력하세요",
     "profile.delete_name_mismatch": "입력한 이름이 계정 이름과 일치하지 않습니다.",

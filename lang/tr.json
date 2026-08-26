@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Hesabınızı Silin",
     "profile.delete_confirm_text": "Bu işlem geri alınamaz. Hesabınız anonimleştirilecektir.",
     "profile.delete_warning_translations": "Çevirileriniz korunacak ancak «[Deleted]» tarafından yayımlanmış gibi gösterilecek",
-    "profile.delete_warning_votes": "Oylarınız ve bildirimleriniz silinecek",
+    "profile.delete_warning_votes": "Oylarınız ve bildirimleriniz korunacak ancak artık sizinle ilişkilendirilmeyecek",
     "profile.delete_warning_irreversible": "Bu işlem geri alınamaz",
     "profile.delete_confirm_input": "Onaylamak için :name yazın",
     "profile.delete_name_mismatch": "Girdiğiniz ad hesap adınızla eşleşmiyor.",

@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "अपना खाता हटाएं",
     "profile.delete_confirm_text": "यह क्रिया पूर्ववत नहीं की जा सकती। आपका खाता अनामित कर दिया जाएगा।",
     "profile.delete_warning_translations": "आपके अनुवाद रखे जाएंगे, पर वे «[Deleted]» की ओर से दिखाए जाएंगे",
-    "profile.delete_warning_votes": "आपके वोट और रिपोर्ट हटा दिए जाएंगे",
+    "profile.delete_warning_votes": "आपके वोट और रिपोर्ट रखे जाएंगे, पर वे आपसे नहीं जुड़े होंगे",
     "profile.delete_warning_irreversible": "यह क्रिया अपरिवर्तनीय है",
     "profile.delete_confirm_input": "पुष्टि करने के लिए :name टाइप करें",
     "profile.delete_name_mismatch": "आपने जो नाम दर्ज किया वह आपके खाते के नाम से मेल नहीं खाता।",

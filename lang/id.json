@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Hapus Akunmu",
     "profile.delete_confirm_text": "Tindakan ini tidak dapat dibatalkan. Akunmu akan dianonimkan.",
     "profile.delete_warning_translations": "Terjemahanmu akan disimpan tapi ditampilkan seolah dari «[Deleted]»",
-    "profile.delete_warning_votes": "Vote dan laporanmu akan dihapus",
+    "profile.delete_warning_votes": "Vote dan laporanmu akan disimpan, tapi tidak lagi terkait denganmu",
     "profile.delete_warning_irreversible": "Tindakan ini tidak dapat dikembalikan",
     "profile.delete_confirm_input": "Ketik :name untuk konfirmasi",
     "profile.delete_name_mismatch": "Nama yang kamu masukkan tidak cocok dengan nama akunmu.",

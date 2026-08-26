@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Je account verwijderen",
     "profile.delete_confirm_text": "Deze actie kan niet ongedaan worden gemaakt. Je account wordt geanonimiseerd.",
     "profile.delete_warning_translations": "Je vertalingen blijven behouden maar worden getoond als van ‘[Deleted]’",
-    "profile.delete_warning_votes": "Je stemmen en rapporten worden verwijderd",
+    "profile.delete_warning_votes": "Je stemmen en rapporten blijven behouden, maar niet meer aan jou gekoppeld",
     "profile.delete_warning_irreversible": "Deze actie is onomkeerbaar",
     "profile.delete_confirm_input": "Typ :name ter bevestiging",
     "profile.delete_name_mismatch": "De ingevoerde naam komt niet overeen met je accountnaam.",

@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Excluir sua conta",
     "profile.delete_confirm_text": "Esta ação não pode ser desfeita. Sua conta será anonimizada.",
     "profile.delete_warning_translations": "Suas traduções serão mantidas mas mostradas como de “[Deleted]”",
-    "profile.delete_warning_votes": "Seus votos e denúncias serão excluídos",
+    "profile.delete_warning_votes": "Seus votos e denúncias serão mantidos, mas sem ligação com você",
     "profile.delete_warning_irreversible": "Esta ação é irreversível",
     "profile.delete_confirm_input": "Digite :name para confirmar",
     "profile.delete_name_mismatch": "O nome digitado não corresponde ao nome da sua conta.",

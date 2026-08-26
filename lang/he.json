@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "מחיקת החשבון שלכם",
     "profile.delete_confirm_text": "לא ניתן לבטל פעולה זו. החשבון שלכם יהפוך לאנונימי.",
     "profile.delete_warning_translations": "התרגומים שלכם יישמרו אך יוצגו כמשל «[Deleted]»",
-    "profile.delete_warning_votes": "ההצבעות והדיווחים שלכם יימחקו",
+    "profile.delete_warning_votes": "ההצבעות והדיווחים שלכם יישמרו אך לא יקושרו אליכם",
     "profile.delete_warning_irreversible": "פעולה זו בלתי הפיכה",
     "profile.delete_confirm_input": "הקלידו :name לאישור",
     "profile.delete_name_mismatch": "השם שהזנתם אינו תואם לשם החשבון שלכם.",

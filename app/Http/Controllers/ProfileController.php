@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountDeletion;
+use App\Models\DeviceCode;
+use App\Models\MergePreviewToken;
+use App\Models\RecoveryCode;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -166,7 +172,28 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete/anonymize user account (GDPR)
+     * Erase the person, keep the work.
+     *
+     * 🔴 **The right to erasure is not the right to unpublish.** What is personal is the LINK
+     * between an author and a translation, not the translation — which other people have forked,
+     * branched and are using. So the account is anonymised, the contributions stay, and every way
+     * back in is cut.
+     *
+     * ⚠ Anonymising IS erasing, in law as in fact — but only if it is irreversible. That is why
+     * every identifying column goes in the same pass: leaving one behind turns the whole thing into
+     * a pseudonym, and a pseudonym is still personal data.
+     *
+     * ### What is kept, and it is a rule rather than a case
+     *
+     * 🔴 **Anything feeding a counter, a ranking or a record that belongs to somebody ELSE is kept
+     * and anonymised. Never deleted.** Votes used to be deleted here, which quietly lowered the
+     * score of translations belonging to other people; reports too, erasing the trail of a
+     * moderation decision that also involved the admin who made it. Attached to an anonymised
+     * account they identify nobody, so keeping them costs nothing and deleting them cost others.
+     *
+     * ⚠ Nothing is done to the votes at all now: the row already points at this account, and the
+     * account is what has just been emptied. The unique index (translation_id, user_id) also means
+     * a null would be the one thing that could collide.
      */
     public function destroy(Request $request)
     {
@@ -177,19 +204,52 @@ class ProfileController extends Controller
             return back()->withErrors(['confirm_name' => __('profile.delete_name_mismatch')]);
         }
 
-        // Anonymize user data (keep translations)
-        $user->update([
-            'name' => '[Deleted]',
-            'email' => 'deleted-' . $user->id . '@deleted.local',
-            'avatar' => null,
-            'provider_id' => 'deleted-' . $user->id,
-            'banned_at' => now(), // Prevent re-login with same OAuth
-            'ban_reason' => 'Account deleted by user',
-        ]);
+        DB::transaction(function () use ($user) {
+            // 🔴 ban() rather than writing banned_at by hand, and this is the whole bug it fixes.
+            // The flag was set here directly, so the account looked banned and KEPT EVERY API
+            // TOKEN: the mod went on publishing under a deleted account, since AuthenticateApi
+            // never looks at banned_at. ban() cuts them, says why in its own comment, and is where
+            // the next guard will be added — which a copy of its effects would miss again.
+            $user->ban('Account deleted by user');
 
-        // Delete votes and reports (personal actions)
-        $user->votes()->delete();
-        $user->reports()->delete();
+            // The other ways in. Each is an access or a message: nothing here is anybody else's.
+            RecoveryCode::where('user_id', $user->id)->delete();
+            DeviceCode::where('user_id', $user->id)->delete();
+            MergePreviewToken::where('user_id', $user->id)->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            DB::table('notifications')
+                ->where('notifiable_type', User::class)
+                ->where('notifiable_id', $user->id)
+                ->delete();
+
+            // Every identifying column, in one pass.
+            //
+            // ⚠ username to null rather than to "deleted-42": null frees the name for somebody
+            // else, which is right once its holder is gone, and it says nothing — where a
+            // "deleted-" prefix would announce that this account was deleted, on a column that is
+            // unique and therefore probeable from outside.
+            //
+            // ⚠ forceFill: these are not fillable, and they must not be.
+            $user->forceFill([
+                'name' => '[Deleted]',
+                'username' => null,
+                'email' => 'deleted-' . $user->id . '@deleted.local',
+                'password' => null,
+                'provider' => null,
+                'provider_id' => null,
+                'avatar' => null,
+                'avatar_seed' => null,
+                'locale' => null,
+                'name_changed_at' => null,
+                'username_prompt_seen_at' => null,
+                'email_verified_at' => null,
+                'remember_token' => null,
+            ])->save();
+
+            // So that a backup restored from before today can be told this id must stay erased.
+            // Read AccountDeletion's migration: it only works if a restore lands BESIDE production.
+            AccountDeletion::note($user->id);
+        });
 
         // Logout
         Auth::logout();

@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Konto löschen",
     "profile.delete_confirm_text": "Diese Aktion kann nicht rückgängig gemacht werden. Dein Konto wird anonymisiert.",
     "profile.delete_warning_translations": "Deine Übersetzungen bleiben erhalten, werden aber als von „[Deleted]“ angezeigt",
-    "profile.delete_warning_votes": "Deine Stimmen und Meldungen werden gelöscht",
+    "profile.delete_warning_votes": "Deine Stimmen und Meldungen bleiben erhalten, sind aber nicht mehr mit dir verknüpft",
     "profile.delete_warning_irreversible": "Diese Aktion ist unwiderruflich",
     "profile.delete_confirm_input": "Gib :name zur Bestätigung ein",
     "profile.delete_name_mismatch": "Der eingegebene Name stimmt nicht mit deinem Kontonamen überein.",

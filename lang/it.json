@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Elimina il tuo account",
     "profile.delete_confirm_text": "Questa azione non può essere annullata. Il tuo account sarà anonimizzato.",
     "profile.delete_warning_translations": "Le tue traduzioni saranno conservate ma mostrate come da «[Deleted]»",
-    "profile.delete_warning_votes": "I tuoi voti e segnalazioni saranno eliminati",
+    "profile.delete_warning_votes": "I tuoi voti e segnalazioni saranno conservati, ma non più collegati a te",
     "profile.delete_warning_irreversible": "Questa azione è irreversibile",
     "profile.delete_confirm_input": "Digita :name per confermare",
     "profile.delete_name_mismatch": "Il nome inserito non corrisponde al nome del tuo account.",

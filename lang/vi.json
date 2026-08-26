@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Xóa tài khoản của bạn",
     "profile.delete_confirm_text": "Hành động này không thể hoàn tác. Tài khoản của bạn sẽ được ẩn danh hóa.",
     "profile.delete_warning_translations": "Bản dịch của bạn sẽ được giữ lại nhưng hiển thị là từ «[Deleted]»",
-    "profile.delete_warning_votes": "Các bình chọn và báo cáo của bạn sẽ bị xóa",
+    "profile.delete_warning_votes": "Các bình chọn và báo cáo của bạn sẽ được giữ lại nhưng không còn liên kết với bạn",
     "profile.delete_warning_irreversible": "Hành động này không thể hoàn tác",
     "profile.delete_confirm_input": "Nhập :name để xác nhận",
     "profile.delete_name_mismatch": "Tên bạn nhập không khớp với tên tài khoản.",

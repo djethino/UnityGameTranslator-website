@@ -208,7 +208,7 @@
     "profile.delete_confirm_title": "Usuń swoje konto",
     "profile.delete_confirm_text": "Ta akcja nie może być cofnięta. Twoje konto będzie zanonimizowane.",
     "profile.delete_warning_translations": "Twoje tłumaczenia będą zachowane, ale wyświetlone jako od „[Deleted]”",
-    "profile.delete_warning_votes": "Twoje głosy i raporty będą usunięte",
+    "profile.delete_warning_votes": "Twoje głosy i raporty będą zachowane, ale bez powiązania z Tobą",
     "profile.delete_warning_irreversible": "Ta akcja jest nieodwracalna",
     "profile.delete_confirm_input": "Wpisz :name, aby potwierdzić",
     "profile.delete_name_mismatch": "Wpisana nazwa nie pasuje do nazwy Twojego konta.",
