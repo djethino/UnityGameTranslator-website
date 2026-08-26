@@ -247,7 +247,10 @@ class ProfileController extends Controller
             //
             // ⚠ forceFill: these are not fillable, and they must not be.
             $user->forceFill([
-                'name' => '[Deleted]',
+                // Unique and random — see User::deletedAccountName for why it is neither the same
+                // literal for everybody nor the account id.
+                'name' => User::deletedAccountName(),
+                'account_deleted_at' => now(),
                 'username' => null,
                 'email' => 'deleted-' . $user->id . '@deleted.local',
                 'password' => null,

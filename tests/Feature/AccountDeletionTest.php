@@ -70,7 +70,8 @@ class AccountDeletionTest extends TestCase
         $this->deleteAccountOf($user);
 
         $row = $user->fresh();
-        $this->assertSame('[Deleted]', $row->name);
+        $this->assertMatchesRegularExpression('/^\[Deleted-[0-9a-f]{9}\]$/', $row->name);
+        $this->assertTrue($row->isDeletedAccount());
         $this->assertNull($row->username);
         $this->assertNull($row->password);
         $this->assertNull($row->provider);
@@ -164,6 +165,38 @@ class AccountDeletionTest extends TestCase
         $noted = AccountDeletion::where('user_id', $user->id)->first();
         $this->assertNotNull($noted);
         $this->assertNotNull($noted->deleted_at);
+    }
+
+    /**
+     * 🔴 Two erased accounts must not wear the same name.
+     *
+     * They did — three of them collided in production — which is what made a unique index on `name`
+     * impossible and what started this whole pass.
+     */
+    public function test_two_deleted_accounts_get_different_names(): void
+    {
+        $first = User::factory()->create(['name' => 'First']);
+        $second = User::factory()->create(['name' => 'Second']);
+
+        $this->deleteAccountOf($first);
+        $this->deleteAccountOf($second);
+
+        $this->assertNotSame($first->fresh()->name, $second->fresh()->name);
+    }
+
+    /**
+     * ⚠ The brackets are what makes the name unreachable: `[` and `]` are outside the charset every
+     * rename and sign-up enforces, so nobody can pose as an erased account.
+     */
+    public function test_nobody_can_take_a_deleted_accounts_name(): void
+    {
+        $gone = User::factory()->create(['name' => 'Leaving']);
+        $this->deleteAccountOf($gone);
+        $takenName = $gone->fresh()->name;
+
+        $other = User::factory()->create(['name' => 'Present']);
+        $this->actingAs($other)->put('/profile', ['name' => $takenName])
+            ->assertSessionHasErrors('name');
     }
 
     public function test_a_wrong_confirmation_changes_nothing(): void

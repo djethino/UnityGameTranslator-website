@@ -41,6 +41,9 @@ class User extends Authenticatable
             'banned_at' => 'datetime',
             'name_changed_at' => 'datetime',
             'username_prompt_seen_at' => 'datetime',
+            // ⚠ NOT `deleted_at`: that name belongs to Laravel's SoftDeletes trait, and adding the
+            // trait later would silently hide every erased account from every query.
+            'account_deleted_at' => 'datetime',
         ];
     }
 
@@ -177,6 +180,38 @@ class User extends Authenticatable
         $this->banned_at = null;
         $this->ban_reason = null;
         $this->save();
+    }
+
+    /** Has this account been erased at its owner's request? */
+    public function isDeletedAccount(): bool
+    {
+        return $this->account_deleted_at !== null;
+    }
+
+    /**
+     * The name an erased account wears.
+     *
+     * 🔴 **Unique, and random rather than the account id.** Every deletion used to write the same
+     * literal `[Deleted]`, so erased accounts collided with each other — three of them did in
+     * production — and no unique index on `name` could ever be added. A number would fix that and
+     * publish the internal key, or the order accounts were erased in, or how many there have been;
+     * a random tail says nothing at all beyond "these two contributions are the same erased
+     * account", which is the least that keeping the work published requires.
+     *
+     * ⚠ **The brackets are load-bearing.** `[` and `]` are outside the charset every rename and
+     * every sign-up enforces, so this name cannot be chosen by anybody: nobody can pose as an
+     * erased account, and no live account can ever collide with one.
+     */
+    public static function deletedAccountName(): string
+    {
+        // Nine lowercase hex characters: enough that a collision is not worth thinking about, short
+        // enough to read as a label rather than a serial number. Looped rather than trusted, since
+        // the whole point of this name is that it is unique.
+        do {
+            $name = '[Deleted-' . substr(bin2hex(random_bytes(8)), 0, 9) . ']';
+        } while (self::where('name', $name)->exists());
+
+        return $name;
     }
 
     /**
