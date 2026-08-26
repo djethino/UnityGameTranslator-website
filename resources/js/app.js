@@ -129,8 +129,35 @@ if (historyRoot) {
     createSectionHistory({ root: historyRoot });
     // The table of contents finally says where you are. Same page, same position measurement —
     // they share section-position.js so the trail and the menu can never disagree about it.
-    createSectionSpy({ root: historyRoot, linkSelector: '.docs-nav-item' });
+    // ⚠ `.docs-nav-sub` is in the link list AND `[data-nav-anchor]` in the anchor list, or the menu
+    // lists sub-entries that can never light up. The trail above keeps the default selector: it
+    // records sections, and recording sub-headings would make it far noisier for no gain.
+    createSectionSpy({
+        root: historyRoot,
+        linkSelector: '.docs-nav-item, .docs-nav-sub',
+        anchorSelector: 'section[id], [data-nav-anchor]',
+    });
 }
+
+// Sections of the table of contents that carry sub-entries can be folded away.
+//
+// Eleven of them do, holding about fifty subjects that could not be seen from the menu at all.
+// Nothing here knows which page or which section: it acts on whatever carries the attribute, so a
+// section gains a chevron by gaining sub-entries and this file never has to hear about it.
+//
+// ⚠ Open by default, and that is the point of the whole thing: the defect being fixed is
+// "you cannot see what is in there". Starting folded would restore it.
+document.querySelectorAll('[data-nav-collapsible]').forEach(group => {
+    const toggle = group.querySelector('.docs-nav-toggle');
+    const subs = group.querySelector('.docs-nav-subs');
+    if (!toggle || !subs) return;
+
+    toggle.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!open));
+        subs.classList.toggle('is-collapsed', open);
+    });
+});
 
 // Organic animated background — 5 independent blob layers, scroll-reactive.
 //

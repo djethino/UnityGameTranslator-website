@@ -77,10 +77,13 @@
              reader's own machine, in the reader's own language, against the very instructions the
              mod sends. An external API stays available to whoever wants one — it is their call,
              and all we owe them is a word about what it can cost. --}}
+        {{-- ⚠ INTERNAL since the Manager has a section of its own. It used to point straight at the
+             GitHub release, which sent somebody deciding between models out of the page and onto a
+             download button, past everything that explains what the tester does and what its
+             figures are worth. The download lives in that section, one paragraph in. --}}
         <p class="text-sm text-gray-400 mt-3">
             {{ __('docs.models.try_smaller') }}
-            <a href="https://github.com/djethino/unitygametranslator-manager/releases/latest"
-               target="_blank" rel="noopener"
+            <a href="#install-manager"
                class="text-purple-300 hover:text-purple-200 underline">{{ __('docs.models.get_manager') }}</a>
         </p>
 

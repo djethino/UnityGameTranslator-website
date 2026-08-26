@@ -120,10 +120,16 @@
         </div>
 
         {{-- The prerequisite sits where the decision to act is made: it does not slow the
-             reading of the pitch, and it surprises nobody at install time. --}}
+             reading of the pitch, and it surprises nobody at install time.
+
+             ⚠ It lands on Quick start, which is where the two ways in are put side by side — the
+             Manager, which installs the loader for you, and the by-hand procedure. It used to land
+             on the by-hand procedure alone, and that was the only place left on the site still
+             sending a first-time reader straight into 161 lines of unzipping. Quick start is also
+             the only target that stays right whichever way they pick. --}}
         <p class="text-sm text-gray-500 mt-4">
             {{ __('home.requires_loader') }} —
-            <a href="{{ route('docs') }}#installation" class="text-gray-400 hover:text-gray-200 underline underline-offset-2">{{ __('home.link_install_guide') }}</a>
+            <a href="{{ route('docs') }}#quick-start" class="text-gray-400 hover:text-gray-200 underline underline-offset-2">{{ __('home.link_install_guide') }}</a>
         </p>
     </div>
 

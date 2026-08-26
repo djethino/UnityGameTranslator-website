@@ -584,8 +584,11 @@
             <a href="{{ route('docs') }}#quick-start" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
                 <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
             </a>
-            <a href="{{ route('docs') }}#installation" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                <i class="fas fa-book mr-2"></i>{{ __('docs.installation') }}
+            {{-- ⚠ Points at the Manager, not at the by-hand procedure it used to open. Somebody on a
+                 game page who has decided to play it in their language wants the shortest way in,
+                 and the fork itself is one click away in Quick start beside this button. --}}
+            <a href="{{ route('docs') }}#install-manager" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-book mr-2"></i>{{ __('docs.nav.install_manager') }}
             </a>
         </div>
         <p class="text-sm text-gray-500 mt-4">{{ __('games.how_to_play_manual') }}</p>

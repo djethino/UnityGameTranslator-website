@@ -432,22 +432,40 @@
 
                 <!-- CTA & Links -->
                 <div class="text-center">
-                    <a href="{{ route('docs') }}" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition mb-4">
-                        <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
-                    </a>
-                    <div class="flex justify-center items-center space-x-4 mt-4 text-sm">
-                        <a href="https://github.com/djethino/UnityGameTranslator" target="_blank" class="text-gray-400 hover:text-white transition" title="GitHub">
+                    {{-- Two buttons, and the Manager first — the same order as the sidebar of the
+                         documentation and as the fork in Quick start. Both point INTO the docs
+                         rather than straight at a release: whoever lands here has not read
+                         anything yet, and a download with no page around it is how somebody ends
+                         up with a zip and no idea what to unzip it into. --}}
+                    <div class="flex flex-wrap justify-center gap-2 mb-4">
+                        <a href="{{ route('docs') }}#install-manager" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition">
+                            <i class="fas fa-screwdriver-wrench mr-2"></i>{{ __('footer.download_manager') }}
+                        </a>
+                        <a href="{{ route('docs') }}" class="inline-flex items-center bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg font-medium transition">
+                            <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
+                        </a>
+                    </div>
+                    {{-- ⚠ Three products now, and the footer names all three or it names none.
+                         The Manager has its own repository and its own issues: a bug in the desktop
+                         tool filed against the mod goes to the wrong tracker and gets moved by hand.
+                         `flex-wrap` because three "report a bug" links plus the rest no longer fit
+                         one line on a narrow screen. --}}
+                    <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mt-4 text-sm">
+                        <a href="https://github.com/djethino/UnityGameTranslator" target="_blank" rel="noopener" class="text-gray-400 hover:text-white transition" title="GitHub">
                             <i class="fab fa-github text-xl"></i>
                         </a>
                         <span class="text-gray-600">|</span>
-                        <a href="https://github.com/djethino/UnityGameTranslator/issues" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                        <a href="https://github.com/djethino/UnityGameTranslator/issues" target="_blank" rel="noopener" class="text-gray-400 hover:text-purple-400 transition">
                             <i class="fas fa-bug mr-1"></i>{{ __('footer.report_mod_bug') }}
                         </a>
-                        <a href="https://github.com/djethino/UnityGameTranslator-website/issues" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                        <a href="https://github.com/djethino/unitygametranslator-manager/issues" target="_blank" rel="noopener" class="text-gray-400 hover:text-purple-400 transition">
+                            <i class="fas fa-bug mr-1"></i>{{ __('footer.report_manager_bug') }}
+                        </a>
+                        <a href="https://github.com/djethino/UnityGameTranslator-website/issues" target="_blank" rel="noopener" class="text-gray-400 hover:text-purple-400 transition">
                             <i class="fas fa-bug mr-1"></i>{{ __('footer.report_site_bug') }}
                         </a>
                         <span class="text-gray-600">|</span>
-                        <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" class="text-gray-400 hover:text-purple-400 transition">
+                        <a href="https://github.com/djethino/UnityGameTranslator/discussions?discussions_q=" target="_blank" rel="noopener" class="text-gray-400 hover:text-purple-400 transition">
                             <i class="fas fa-comments mr-1"></i>{{ __('footer.community') }}
                         </a>
                     </div>

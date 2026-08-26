@@ -8,25 +8,82 @@ import { watchCurrentSection } from './section-position.js';
  * been written — `.docs-nav-item.active` was sitting in the stylesheet with its purple border —
  * and no code ever set the class. Dead CSS waiting for a feature that never arrived.
  *
- * Generic: it is given a selector for the links and the class to set, and knows nothing else.
+ * 🔴 **Two entries can be current at once, and that is not a bug.** Once the menu lists
+ * sub-entries, being inside "Mod defaults" means being inside "The Manager" as well — and a menu
+ * that lit only the deepest one would drop the section heading the reader is under, while a menu
+ * that lit only the section would never move once you entered it. So the section stays lit and the
+ * sub-entry lights too.
+ *
+ * Generic: it is given a selector for the links, a selector for the places on the page, and the
+ * class to set. It knows nothing about documentation.
  */
-export function createSectionSpy({ root, linkSelector, activeClass = 'active' }) {
+export function createSectionSpy({ root, linkSelector, activeClass = 'active',
+                                   anchorSelector = 'section[id]' }) {
     const links = [...document.querySelectorAll(linkSelector)]
         .filter(link => link.getAttribute('href')?.startsWith('#'));
 
     if (links.length === 0) return () => {};
 
+    /**
+     * Keep the marked entry inside its own scroll box.
+     *
+     * Once a menu lists sub-entries it is taller than the screen and scrolls on its own, so
+     * "the current entry is highlighted" and "the reader can see the highlight" stop being the
+     * same statement. Half the menu can be marked somewhere nobody is looking.
+     *
+     * ⚠ Written as arithmetic on scrollTop rather than scrollIntoView, deliberately: that method
+     * walks up EVERY scrollable ancestor, the document included, so it can drag the page itself
+     * while the reader is scrolling it — the menu fighting the hand that moves it. This touches
+     * one box and only when the entry is actually outside it.
+     */
+    const keepVisible = (link) => {
+        const box = link.closest('[data-nav-scroll]');
+        if (!box || box.scrollHeight <= box.clientHeight) return;
+
+        // Measured from rectangles rather than offsetTop: offsetTop is relative to whichever
+        // ancestor happens to be positioned, and this box is `position: sticky` — so the two
+        // numbers are in different frames of reference and the arithmetic silently drifts.
+        const linkRect = link.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        const top = linkRect.top - boxRect.top + box.scrollTop;
+        const bottom = top + linkRect.height;
+        const margin = 24;
+
+        if (top < box.scrollTop + margin) {
+            box.scrollTop = Math.max(0, top - margin);
+        } else if (bottom > box.scrollTop + box.clientHeight - margin) {
+            box.scrollTop = bottom - box.clientHeight + margin;
+        }
+    };
+
+    /** The id itself, plus the section it hangs under when it is a sub-entry. */
+    const trail = (id) => {
+        const ids = [id];
+        const element = document.getElementById(id);
+        const section = element?.closest('section[id]');
+        if (section && section.id !== id) ids.push(section.id);
+        return ids;
+    };
+
     return watchCurrentSection(root, (id) => {
+        const current = id ? trail(id) : [];
+
         links.forEach(link => {
-            const matches = link.getAttribute('href') === `#${id}`;
+            const target = link.getAttribute('href').slice(1);
+            const matches = current.includes(target);
             link.classList.toggle(activeClass, matches);
             // Spoken as well as shown: the menu is a set of links and one of them is the page
             // the reader is on, which is exactly what aria-current means.
-            if (matches) {
+            //
+            // ⚠ Only the DEEPEST match gets it. `aria-current` answers "which one is it", and a
+            // screen reader announcing two current items answers nothing — whereas the visual
+            // highlight can carry both because a reader sees the nesting.
+            if (matches && target === current[0]) {
                 link.setAttribute('aria-current', 'true');
+                keepVisible(link);
             } else {
                 link.removeAttribute('aria-current');
             }
         });
-    });
+    }, undefined, anchorSelector);
 }

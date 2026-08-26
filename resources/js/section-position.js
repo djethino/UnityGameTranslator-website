@@ -14,8 +14,19 @@
 
 export const POSITION_LINE = 120;
 
-export function currentSectionId(root = document, positionLine = POSITION_LINE) {
-    const sections = [...root.querySelectorAll('section[id]')];
+/**
+ * What counts as "a place on the page" by default.
+ *
+ * ⚠ The two callers deliberately pass different things. The reading trail wants SECTIONS — it
+ * records where a jump came from, and "you came from a sub-heading of Configuration" is noise. The
+ * table of contents wants sections AND the sub-entries it lists, otherwise a menu showing eleven
+ * sub-entries can only ever highlight the section they hang under.
+ */
+export const SECTION_SELECTOR = 'section[id]';
+
+export function currentSectionId(root = document, positionLine = POSITION_LINE,
+                                 selector = SECTION_SELECTOR) {
+    const sections = [...root.querySelectorAll(selector)];
     if (sections.length === 0) return null;
 
     const atBottom = window.innerHeight + window.scrollY
@@ -33,12 +44,13 @@ export function currentSectionId(root = document, positionLine = POSITION_LINE) 
  * Run a callback whenever the reader's section changes, and once immediately.
  * Returns a function that stops watching.
  */
-export function watchCurrentSection(root, onChange, positionLine = POSITION_LINE) {
+export function watchCurrentSection(root, onChange, positionLine = POSITION_LINE,
+                                    selector = SECTION_SELECTOR) {
     let last = null;
     let pending = false;
 
     const check = () => {
-        const id = currentSectionId(root, positionLine);
+        const id = currentSectionId(root, positionLine, selector);
         if (id === last) return;
         last = id;
         onChange(id);
