@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "desconhecido",
     "translation.accepts_contributions": "Aceita contribuições",
     "translation.accepts_contributions_hint": "Pode enviar as suas alterações a quem a mantém, que decide o que fica.",
+    "translation.no_owner": "Sem dono",
+    "translation.no_owner_hint": "A conta por trás desta tradução foi eliminada. Continua disponível, mas já não é possível analisar contribuições. Ainda assim, pode publicar a sua própria versão.",
     "translation.solo_work": "Trabalho a solo",
     "translation.solo_work_hint": "Quem a mantém trabalha sozinho. Ainda assim, pode publicar a sua própria versão desta tradução.",
     "translation.forked_from_with_lines": "Partiu do trabalho de :author, :count linhas dele",

@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "غير معروف",
     "translation.accepts_contributions": "يقبل المساهمات",
     "translation.accepts_contributions_hint": "يمكنك إرسال تعديلاتك إلى صاحب الترجمة، وهو من يقرّر ما يبقى منها.",
+    "translation.no_owner": "بلا مالك",
+    "translation.no_owner_hint": "تم حذف الحساب صاحب هذه الترجمة. تبقى الترجمة متاحة، لكن لم يعد بالإمكان النظر في المساهمات. ما زال بإمكانك نشر نسختك الخاصة.",
     "translation.solo_work": "عمل فردي",
     "translation.solo_work_hint": "صاحب الترجمة يعمل بمفرده. ومع ذلك يمكنك نشر نسختك الخاصة من هذه الترجمة.",
     "translation.forked_from_with_lines": "انطلقت من عمل :author، ومنه :count سطر",

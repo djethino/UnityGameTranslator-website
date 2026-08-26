@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "inconnu",
     "translation.accepts_contributions": "Accepte les contributions",
     "translation.accepts_contributions_hint": "Vous pouvez envoyer vos modifications à son auteur, qui décide de ce qu'il en garde.",
+    "translation.no_owner": "Sans propriétaire",
+    "translation.no_owner_hint": "Le compte derrière cette traduction a été supprimé. Elle reste disponible, mais aucune contribution ne peut plus être examinée. Vous pouvez tout de même publier votre propre version.",
     "translation.solo_work": "Travail en solo",
     "translation.solo_work_hint": "Son auteur travaille seul. Vous pouvez tout de même publier votre propre version de cette traduction.",
     "translation.forked_from_with_lines": "Issue du travail de :author, dont :count lignes",

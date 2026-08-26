@@ -24,10 +24,21 @@
     they were written, so the caller would be gambling on which one wins.
 --}}
 @php
-    $open = (bool) $translation->accepts_branches;
-    $text = $open ? __('translation.accepts_contributions') : __('translation.solo_work');
-    $tip = $open ? __('translation.accepts_contributions_hint') : __('translation.solo_work_hint');
-    $icon = $open ? 'fa-code-branch' : 'fa-user';
+    // 🔴 **A third state, and it used to be a lie.** Erasing an account keeps its translations, so
+    // a Main whose owner is gone stayed on this page saying "Accepts contributions" — inviting work
+    // that nobody would ever read. The flag on the row is still true; there is simply nobody left
+    // to act on it, and that outranks what the flag says.
+    //
+    // ⚠ Same words as the shared badge the mod and the Manager show ("No owner"), because it is
+    // one fact and a reader meets it in three places.
+    $abandoned = (bool) $translation->user?->isDeletedAccount();
+    $open = !$abandoned && (bool) $translation->accepts_branches;
+
+    $text = $abandoned ? __('translation.no_owner')
+          : ($open ? __('translation.accepts_contributions') : __('translation.solo_work'));
+    $tip = $abandoned ? __('translation.no_owner_hint')
+         : ($open ? __('translation.accepts_contributions_hint') : __('translation.solo_work_hint'));
+    $icon = $abandoned ? 'fa-user-slash' : ($open ? 'fa-code-branch' : 'fa-user');
 @endphp
 
 @if($translation->lineageRole() === 'main')

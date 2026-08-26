@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "onbekend",
     "translation.accepts_contributions": "Neemt bijdragen aan",
     "translation.accepts_contributions_hint": "Je kunt je wijzigingen naar de maker sturen; die bepaalt wat wordt overgenomen.",
+    "translation.no_owner": "Geen eigenaar",
+    "translation.no_owner_hint": "Het account achter deze vertaling is verwijderd. Ze blijft beschikbaar, maar bijdragen kunnen niet meer worden bekeken. Je kunt nog steeds je eigen versie publiceren.",
     "translation.solo_work": "Werkt alleen",
     "translation.solo_work_hint": "De maker werkt alleen. Je kunt nog steeds je eigen versie van deze vertaling publiceren.",
     "translation.forked_from_with_lines": "Voortgekomen uit het werk van :author, waarvan :count regels",

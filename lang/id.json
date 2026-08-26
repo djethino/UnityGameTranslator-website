@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "tidak diketahui",
     "translation.accepts_contributions": "Menerima kontribusi",
     "translation.accepts_contributions_hint": "Kamu bisa mengirim perubahanmu ke pembuatnya, dan dia yang memutuskan apa yang dipakai.",
+    "translation.no_owner": "Tanpa pemilik",
+    "translation.no_owner_hint": "Akun di balik terjemahan ini telah dihapus. Terjemahannya tetap tersedia, tetapi kontribusi tidak bisa lagi ditinjau. Kamu tetap bisa menerbitkan versimu sendiri.",
     "translation.solo_work": "Bekerja sendiri",
     "translation.solo_work_hint": "Pembuatnya bekerja sendiri. Kamu tetap bisa menerbitkan versimu sendiri dari terjemahan ini.",
     "translation.forked_from_with_lines": "Berawal dari kerja :author, :count barisnya dari sana",

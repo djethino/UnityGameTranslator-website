@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "अज्ञात",
     "translation.accepts_contributions": "योगदान स्वीकार करता है",
     "translation.accepts_contributions_hint": "आप अपने बदलाव इसके लेखक को भेज सकते हैं; क्या रखना है, यह वही तय करते हैं।",
+    "translation.no_owner": "कोई स्वामी नहीं",
+    "translation.no_owner_hint": "इस अनुवाद के पीछे का खाता हटा दिया गया है। अनुवाद उपलब्ध रहता है, पर योगदानों पर अब विचार नहीं हो सकता। फिर भी आप अपनी अलग प्रति प्रकाशित कर सकते हैं।",
     "translation.solo_work": "अकेले किया जा रहा काम",
     "translation.solo_work_hint": "इसके लेखक अकेले काम करते हैं। फिर भी आप इस अनुवाद की अपनी अलग प्रति प्रकाशित कर सकते हैं।",
     "translation.forked_from_with_lines": ":author के काम से शुरू, उसमें से :count पंक्तियाँ",

@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "unknown",
     "translation.accepts_contributions": "Accepts contributions",
     "translation.accepts_contributions_hint": "You can send your changes to this author, who decides what to keep.",
+    "translation.no_owner": "No owner",
+    "translation.no_owner_hint": "The account behind this translation has been deleted. It stays available, but no contribution can be reviewed any more. You can still publish your own version.",
     "translation.solo_work": "Solo work",
     "translation.solo_work_hint": "This author works alone. You can still publish your own version of this translation.",
     "translation.forked_from_with_lines": "Started from :author's work, :count lines of it",

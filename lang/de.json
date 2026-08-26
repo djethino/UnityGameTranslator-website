@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "unbekannt",
     "translation.accepts_contributions": "Nimmt Beiträge an",
     "translation.accepts_contributions_hint": "Du kannst deine Änderungen einschicken – der Autor entscheidet, was davon übernommen wird.",
+    "translation.no_owner": "Ohne Besitzer",
+    "translation.no_owner_hint": "Das Konto hinter dieser Übersetzung wurde gelöscht. Sie bleibt verfügbar, aber Beiträge können nicht mehr geprüft werden. Du kannst trotzdem deine eigene Version veröffentlichen.",
     "translation.solo_work": "Alleinarbeit",
     "translation.solo_work_hint": "Der Autor arbeitet allein. Du kannst trotzdem deine eigene Version dieser Übersetzung veröffentlichen.",
     "translation.forked_from_with_lines": "Aus der Arbeit von :author hervorgegangen, davon :count Zeilen",

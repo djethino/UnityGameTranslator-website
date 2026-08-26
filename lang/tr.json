@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "bilinmiyor",
     "translation.accepts_contributions": "Katkı kabul ediyor",
     "translation.accepts_contributions_hint": "Değişikliklerinizi yazarına gönderebilirsiniz; neyin kalacağına o karar verir.",
+    "translation.no_owner": "Sahipsiz",
+    "translation.no_owner_hint": "Bu çevirinin arkasındaki hesap silindi. Çeviri erişilebilir kalıyor, ancak katkılar artık incelenemiyor. Yine de kendi sürümünüzü yayımlayabilirsiniz.",
     "translation.solo_work": "Tek başına çalışıyor",
     "translation.solo_work_hint": "Yazarı tek başına çalışıyor. Yine de bu çevirinin kendi sürümünüzü yayımlayabilirsiniz.",
     "translation.forked_from_with_lines": ":author adlı kişinin çalışmasından doğdu, :count satırı oradan",

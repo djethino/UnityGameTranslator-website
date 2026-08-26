@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "不明",
     "translation.accepts_contributions": "貢献を受け付け中",
     "translation.accepts_contributions_hint": "変更を作者に送れます。何を取り入れるかは作者が決めます。",
+    "translation.no_owner": "所有者なし",
+    "translation.no_owner_hint": "この翻訳のアカウントは削除されました。翻訳は引き続き利用できますが、貢献を確認することはできません。それでも、あなた自身の版を公開できます。",
     "translation.solo_work": "単独作業",
     "translation.solo_work_hint": "作者はひとりで進めています。それでも、この翻訳のあなた自身の版を公開できます。",
     "translation.forked_from_with_lines": ":author の作業から始まり、うち :count 行を引き継いでいます",

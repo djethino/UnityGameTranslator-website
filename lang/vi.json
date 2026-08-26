@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "không rõ",
     "translation.accepts_contributions": "Nhận đóng góp",
     "translation.accepts_contributions_hint": "Bạn có thể gửi thay đổi của mình cho tác giả; họ quyết định giữ lại gì.",
+    "translation.no_owner": "Không có chủ",
+    "translation.no_owner_hint": "Tài khoản đứng sau bản dịch này đã bị xóa. Bản dịch vẫn dùng được, nhưng không thể xem xét đóng góp nữa. Bạn vẫn có thể công bố phiên bản riêng của mình.",
     "translation.solo_work": "Làm một mình",
     "translation.solo_work_hint": "Tác giả làm một mình. Bạn vẫn có thể công bố phiên bản riêng của mình cho bản dịch này.",
     "translation.forked_from_with_lines": "Khởi đi từ công sức của :author, trong đó :count dòng",

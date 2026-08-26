@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "알 수 없음",
     "translation.accepts_contributions": "기여 받음",
     "translation.accepts_contributions_hint": "변경한 내용을 작성자에게 보낼 수 있습니다. 무엇을 반영할지는 작성자가 정합니다.",
+    "translation.no_owner": "소유자 없음",
+    "translation.no_owner_hint": "이 번역의 계정이 삭제되었습니다. 번역은 계속 이용할 수 있지만, 기여를 검토할 수 없습니다. 그래도 자신의 버전을 공개할 수 있습니다.",
     "translation.solo_work": "혼자 작업",
     "translation.solo_work_hint": "작성자가 혼자 작업합니다. 그래도 이 번역의 자신의 버전을 공개할 수 있습니다.",
     "translation.forked_from_with_lines": ":author 님의 작업에서 출발했고, 그중 :count 줄을 이어받았습니다",

@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "לא ידוע",
     "translation.accepts_contributions": "מקבל תרומות",
     "translation.accepts_contributions_hint": "אפשר לשלוח את השינויים שלכם למי שכתב אותו, והוא שמחליט מה נשאר.",
+    "translation.no_owner": "ללא בעלים",
+    "translation.no_owner_hint": "החשבון שמאחורי התרגום הזה נמחק. התרגום נשאר זמין, אך אי אפשר עוד לבחון תרומות. עדיין אפשר לפרסם גרסה משלכם.",
     "translation.solo_work": "עבודת יחיד",
     "translation.solo_work_hint": "מי שכתב אותו עובד לבד. עדיין אפשר לפרסם גרסה משלכם לתרגום הזה.",
     "translation.forked_from_with_lines": "צמח מעבודתו של :author, ובה :count שורות",

@@ -1076,6 +1076,8 @@
     "translation.author_unknown": "未知",
     "translation.accepts_contributions": "接受贡献",
     "translation.accepts_contributions_hint": "你可以把自己的改动发给作者，由作者决定采纳哪些。",
+    "translation.no_owner": "无所有者",
+    "translation.no_owner_hint": "该翻译背后的账号已被删除。翻译仍可使用，但贡献无法再被查看。你仍然可以发布自己的版本。",
     "translation.solo_work": "独自完成",
     "translation.solo_work_hint": "作者独自完成这份翻译。你仍然可以发布自己的版本。",
     "translation.forked_from_with_lines": "起自 :author 的工作，其中 :count 行来自那里",
