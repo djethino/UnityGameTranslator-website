@@ -8,6 +8,7 @@ use App\Models\DeviceCode;
 use App\Models\MergePreviewToken;
 use App\Models\RecoveryCode;
 use App\Models\User;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -266,15 +267,13 @@ class ProfileController extends Controller
 
         DB::transaction(function () use ($user, $alsoTranslations) {
             if ($alsoTranslations) {
-                // ⚠ The files as well as the rows. Deleting the record alone would leave the JSON
-                // on disk for ever — the one thing somebody asking for this is trying to avoid —
-                // and TranslationController::destroy has always removed both.
-                foreach ($user->translations as $translation) {
-                    if ($translation->file_path) {
-                        Storage::disk('local')->delete($translation->file_path);
-                    }
+                // ⚠ Through the service, which removes the file with the row. Written out here at
+                // first, like the three other callers had done — and one of those three had got it
+                // wrong for months without anybody being able to see it.
+                $service = app(TranslationService::class);
 
-                    $translation->delete();
+                foreach ($user->translations as $translation) {
+                    $service->deleteTranslation($translation);
                 }
             }
 

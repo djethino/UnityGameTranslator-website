@@ -12,6 +12,7 @@ use App\Models\ClientUsageDaily;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
+use App\Services\TranslationService;
 use App\Models\User;
 use App\Services\CatalogStore;
 use App\Services\KnownReleases;
@@ -117,8 +118,12 @@ class AdminController extends Controller
 
         if ($request->action === 'delete_translation') {
             // Delete the translation (this also deletes the report via cascade)
+            //
+            // ⚠ Through the service, which removes the file too. This deleted the row alone until
+            // 2026-08-27, so every translation taken down on a report left its content on disk —
+            // on the one path where the content is the reason for the removal.
             $translation = $report->translation;
-            $translation->delete();
+            app(TranslationService::class)->deleteTranslation($translation);
 
             return redirect()->route('admin.reports')
                 ->with('success', 'Translation deleted.');
@@ -319,13 +324,7 @@ class AdminController extends Controller
     {
         $gameName = $translation->game->name;
 
-        // Delete file
-        if ($translation->file_path) {
-            Storage::disk('local')->delete($translation->file_path);
-        }
-
-        // Delete translation
-        $translation->delete();
+        app(TranslationService::class)->deleteTranslation($translation);
 
         return redirect()->route('admin.translations.index')
             ->with('success', "Translation for {$gameName} deleted.");

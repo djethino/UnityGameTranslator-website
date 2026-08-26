@@ -1329,6 +1329,28 @@ class TranslationService
     }
 
     /**
+     * Remove a translation: its row and the file behind it.
+     *
+     * 🔴 **One entry point, because four callers had written this out for themselves and one of
+     * them got it wrong.** Handling a report deleted the row and left the JSON on disk — for ever,
+     * on the one path where the content is being removed *because somebody complained about it*.
+     * The others each rebuilt the same two lines, so the mistake was invisible: nothing to compare
+     * against.
+     *
+     * ⚠ File first. A row without its file is a page that shows nothing; a file without its row is
+     * bytes nobody can reach and nobody will ever remove. If one of the two has to fail, it must be
+     * the one that leaves the site consistent.
+     *
+     * ⚠ Branches keep their own rows and their own files. `parent_id` is "on delete set null", so
+     * removing a Main orphans its contributions rather than destroying work that is not ours.
+     */
+    public function deleteTranslation(Translation $translation): void
+    {
+        $this->deleteFile($translation->file_path);
+        $translation->delete();
+    }
+
+    /**
      * Delete translation file from disk.
      */
     public function deleteFile(?string $filePath): bool

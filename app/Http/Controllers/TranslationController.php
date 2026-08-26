@@ -580,7 +580,7 @@ class TranslationController extends Controller
             ->with('success', __('my_translations.updated'));
     }
 
-    public function destroy(Translation $translation)
+    public function destroy(Translation $translation, TranslationService $service)
     {
         $user = auth()->user();
 
@@ -589,11 +589,10 @@ class TranslationController extends Controller
             abort(403);
         }
 
-        // Delete file
-        Storage::disk('local')->delete($translation->file_path);
-
-        // Delete translation (forks will have parent_id set to null via onDelete)
-        $translation->delete();
+        // Row and file together, through the one method that does both. Forks and branches keep
+        // theirs: parent_id is "on delete set null", so this orphans contributions rather than
+        // destroying work that is not ours.
+        $service->deleteTranslation($translation);
 
         return redirect()->route('translations.mine')
             ->with('success', 'Translation deleted successfully!');
