@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -220,7 +221,27 @@ class ProfileController extends Controller
             return back()->withErrors(['confirm_name' => __('profile.delete_name_mismatch')]);
         }
 
-        DB::transaction(function () use ($user) {
+        // 🔴 **Offered, and off by default.** Keeping somebody's files hostage is not a position
+        // this site takes: what they published is theirs to withdraw. But the default keeps them,
+        // because a published Main is what other people's branches contribute to and what their
+        // forks came from — and because the work outlives the account by design, credited to a
+        // name nobody can trace back.
+        $alsoTranslations = $request->boolean('delete_translations');
+
+        DB::transaction(function () use ($user, $alsoTranslations) {
+            if ($alsoTranslations) {
+                // ⚠ The files as well as the rows. Deleting the record alone would leave the JSON
+                // on disk for ever — the one thing somebody asking for this is trying to avoid —
+                // and TranslationController::destroy has always removed both.
+                foreach ($user->translations as $translation) {
+                    if ($translation->file_path) {
+                        Storage::disk('local')->delete($translation->file_path);
+                    }
+
+                    $translation->delete();
+                }
+            }
+
             // 🔴 ban() rather than writing banned_at by hand, and this is the whole bug it fixes.
             // The flag was set here directly, so the account looked banned and KEPT EVERY API
             // TOKEN: the mod went on publishing under a deleted account, since AuthenticateApi

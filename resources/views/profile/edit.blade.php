@@ -189,6 +189,25 @@
         <form action="{{ route('profile.destroy') }}" method="POST">
             @csrf
             @method('DELETE')
+
+            {{-- 🔴 Nobody's files are held hostage here: what somebody published is theirs to
+                 withdraw. Off by default all the same, because the list above has just said the
+                 translations stay under a name nobody can trace — and because withdrawing a Main
+                 takes with it what other people built on it.
+
+                 ⚠ The consequence for OTHERS is spelled out, not just the one for the reader.
+                 "Your translations will be deleted" is true and is not the whole truth: branches
+                 lose what they were contributing to, and forks lose the credit of where they came
+                 from. Somebody choosing this should be choosing that too. --}}
+            <label class="flex items-start gap-3 mb-4 p-3 bg-gray-900/50 border border-gray-700 rounded-lg cursor-pointer">
+                <input type="checkbox" name="delete_translations" value="1"
+                       class="mt-1 rounded bg-gray-700 border-gray-600 text-red-500 focus:ring-red-500">
+                <span class="text-sm">
+                    <span class="text-gray-200">{{ __('profile.delete_translations') }}</span>
+                    <span class="block text-gray-400 text-xs mt-1">{{ __('profile.delete_translations_hint') }}</span>
+                </span>
+            </label>
+
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('profile.delete_confirm_input', ['name' => $user->name]) }}</label>
                 <input type="text" name="confirm_name" required autocomplete="off"

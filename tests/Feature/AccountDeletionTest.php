@@ -199,6 +199,38 @@ class AccountDeletionTest extends TestCase
             ->assertSessionHasErrors('name');
     }
 
+    /**
+     * 🔴 Nobody's files are held hostage — but nothing goes without being asked for.
+     *
+     * The box is off by default, and the default is the one that keeps other people's work
+     * standing: a Main is what branches contribute to and what forks came from.
+     */
+    public function test_translations_are_kept_unless_the_box_is_ticked(): void
+    {
+        $user = User::factory()->create(['name' => 'Staying']);
+        $translation = $this->makeTranslation($user);
+
+        $this->deleteAccountOf($user);
+
+        $this->assertNotNull($translation->fresh());
+    }
+
+    public function test_ticking_the_box_removes_them(): void
+    {
+        $user = User::factory()->create(['name' => 'Leaving']);
+        $translation = $this->makeTranslation($user);
+
+        $this->actingAs($user)
+            ->delete('/profile', ['confirm_name' => 'Leaving', 'delete_translations' => '1'])
+            ->assertRedirect('/');
+
+        $this->assertNull($translation->fresh());
+
+        // The account itself is still erased rather than deleted, and still recorded.
+        $this->assertTrue($user->fresh()->isDeletedAccount());
+        $this->assertSame(1, AccountDeletion::where('user_id', $user->id)->count());
+    }
+
     public function test_a_wrong_confirmation_changes_nothing(): void
     {
         $user = User::factory()->create(['name' => 'Careful']);
