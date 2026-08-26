@@ -39,6 +39,16 @@ class AggregateAnalytics extends Command
         // Aggregate per-game stats
         $this->aggregateGameStats($date);
 
+        // 🔴 **After the counting, never before.** The fingerprint answers COUNT(DISTINCT) for the
+        // day just aggregated; once that number is in analytics_daily it has no further use, and it
+        // used to sit in the table for ninety days regardless. Clearing it here bounds its life to
+        // roughly one day — the rows themselves stay, since route, game, referrer and country are
+        // what the figures are read from and none of them points at anybody.
+        $forgotten = AnalyticsEvent::forgetVisitorsUpTo($date);
+        if ($forgotten > 0) {
+            $this->info("  Forgot {$forgotten} visitor fingerprint(s) — the counting is done");
+        }
+
         // Purge old events (older than 90 days)
         $this->purgeOldEvents();
 

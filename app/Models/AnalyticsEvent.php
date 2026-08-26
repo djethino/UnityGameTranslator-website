@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class AnalyticsEvent extends Model
 {
@@ -76,7 +77,16 @@ class AnalyticsEvent extends Model
             ->toArray();
     }
 
-    /** Distinct visitors on a given day, counted in SQL. */
+    /**
+     * Distinct visitors on a given day, counted in SQL.
+     *
+     * 🔴 **Only answers for TODAY, or for the day being aggregated right now.** Fingerprints are
+     * cleared by forgetVisitorsUpTo the moment the nightly aggregation has counted them, so asking
+     * this about any earlier day returns 0 — not because nobody came, but because the answer has
+     * already been written down and the working-out thrown away.
+     *
+     * ⚠ For any past day, read `analytics_daily.unique_visitors`. It is the same number, kept.
+     */
     public static function uniqueVisitorsOn(string $date): int
     {
         return self::whereDate('created_at', $date)
@@ -255,12 +265,63 @@ class AnalyticsEvent extends Model
     }
 
     /**
-     * Generate a visitor hash (for unique visitor counting, no IP stored)
+     * A fingerprint that answers one question — "have we seen this visitor today?" — and nothing
+     * else, ever again.
+     *
+     * 🔴 **The salt is random, per day, and thrown away.** It used to be `config('app.key')`: a
+     * constant, so anybody holding the database and the `.env` could take an IP address, recompute
+     * its hash and confirm the visit — for the ninety days the rows lived. With a salt that exists
+     * for two days and is never written down, that check becomes impossible the moment it expires,
+     * for us as much as for anybody else. The data stops being pseudonymous and becomes anonymous
+     * in fact rather than by promise.
+     *
+     * ⚠ **Not md5, and not for the usual reason.** SHA-256 is not slow enough to make brute-forcing
+     * four billion IPv4 addresses expensive on modern hardware — the salt is what does the work
+     * here. What HMAC changes is that the key is no longer the application key, so rotating that
+     * can no longer break visitor counting.
+     *
+     * ⚠ Truncated to 32 characters because the column is 32 wide, and this is not a signature: a
+     * collision costs one over-counted visitor on one day.
+     *
+     * ⚠ If the cache is cleared mid-day, the salt changes and the day's visitors are counted twice.
+     * Preferred to the alternative — writing the salt down somewhere permanent would undo the whole
+     * point of it.
      */
     public static function generateVisitorHash(string $ip, string $userAgent, string $date): string
     {
-        // Hash IP + UA + date = same visitor on same day = same hash
-        // IP is never stored, only the hash
-        return md5($ip . '|' . $userAgent . '|' . $date . '|' . config('app.key'));
+        return substr(hash_hmac('sha256', $ip . '|' . $userAgent, self::dailySalt($date)), 0, 32);
+    }
+
+    /**
+     * The salt for one day, made once and forgotten two days later.
+     *
+     * ⚠ Two days, not one: the nightly aggregation runs at 2 a.m. on the day AFTER the one it
+     * counts, so a salt binned at midnight would be gone before the figure it serves is computed.
+     * It outlives its use by a few hours and no more.
+     */
+    private static function dailySalt(string $date): string
+    {
+        return Cache::remember(
+            "analytics:visitor-salt:{$date}",
+            now()->addDays(2),
+            fn () => bin2hex(random_bytes(32))
+        );
+    }
+
+    /**
+     * Forget who, once how many is known.
+     *
+     * 🔴 **The fingerprint has one use and it is over by 2 a.m.** It answers `COUNT(DISTINCT)` for
+     * one day; the moment `analytics_daily` holds that number, the column is dead weight — and it
+     * used to sit there for ninety days. The rows stay: route, game, referrer, country and device
+     * are what the figures are read from, and none of them points at anybody.
+     *
+     * Same shape as the audit log's retention: purge the column, keep the line.
+     */
+    public static function forgetVisitorsUpTo(string $date): int
+    {
+        return static::whereDate('created_at', '<=', $date)
+            ->whereNotNull('visitor_hash')
+            ->update(['visitor_hash' => null]);
     }
 }
