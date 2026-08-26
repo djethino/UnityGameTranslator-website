@@ -124,6 +124,41 @@ mediumZoom('[data-zoomable]', {
 // A trail of the sections the reader has jumped through, on any page that asks for one by
 // carrying [data-section-history]. Loaded here rather than per page: it is one small module and
 // the bundle is already shared. It shows nothing until a cross-link is actually followed.
+// Sections of the table of contents that carry sub-entries fold away.
+//
+// Eleven of them do, holding about fifty subjects. Unfolded all at once that is a menu twice the
+// height of the screen — you would scroll the table of contents to find out where you are, which
+// is the thing it exists to spare you. So they ship folded (the Blade writes `is-collapsed`, no
+// flash of open menu on load) and THE SECTION BEING READ OPENS ITSELF. The reader never has to
+// choose between seeing the whole map and seeing the detail of where they stand.
+//
+// Nothing here knows which page or which section: it acts on whatever carries the attribute, so a
+// section gains a chevron by gaining sub-entries and this file never has to hear about it.
+const collapsibles = [...document.querySelectorAll('[data-nav-collapsible]')];
+
+const setNavOpen = (group, open) => {
+    group.querySelector('.docs-nav-toggle')?.setAttribute('aria-expanded', String(open));
+    group.querySelector('.docs-nav-subs')?.classList.toggle('is-collapsed', !open);
+};
+
+const navSectionOf = (group) =>
+    group.querySelector('.docs-nav-item')?.getAttribute('href')?.slice(1);
+
+collapsibles.forEach(group => {
+    const toggle = group.querySelector('.docs-nav-toggle');
+    if (!toggle || !group.querySelector('.docs-nav-subs')) return;
+
+    toggle.addEventListener('click', () => {
+        setNavOpen(group, toggle.getAttribute('aria-expanded') !== 'true');
+        // Decided by hand: scrolling inside the current section must not undo it. Cleared on the
+        // way out, below — a preference about one section has no business outliving the visit.
+        group.dataset.navUser = '';
+    });
+});
+
+// A trail of the sections the reader has jumped through, on any page that asks for one by
+// carrying [data-section-history]. Loaded here rather than per page: it is one small module and
+// the bundle is already shared. It shows nothing until a cross-link is actually followed.
 const historyRoot = document.querySelector('[data-section-history]');
 if (historyRoot) {
     createSectionHistory({ root: historyRoot });
@@ -132,32 +167,31 @@ if (historyRoot) {
     // ⚠ `.docs-nav-sub` is in the link list AND `[data-nav-anchor]` in the anchor list, or the menu
     // lists sub-entries that can never light up. The trail above keeps the default selector: it
     // records sections, and recording sub-headings would make it far noisier for no gain.
+    let lastNavSection = null;
+
     createSectionSpy({
         root: historyRoot,
         linkSelector: '.docs-nav-item, .docs-nav-sub',
         anchorSelector: 'section[id], [data-nav-anchor]',
+        // The trail is deepest-first, so the section is its last element.
+        onCurrent: (trail) => {
+            const section = trail[trail.length - 1] ?? null;
+
+            // ⚠ Only on LEAVING a section, never on moving between its sub-parts — otherwise a
+            // section folded by hand springs back open on the next scroll inside it, and the
+            // chevron becomes a control that does nothing where you happen to be standing.
+            if (section !== lastNavSection) {
+                lastNavSection = section;
+                collapsibles.forEach(group => { delete group.dataset.navUser; });
+            }
+
+            collapsibles.forEach(group => {
+                if ('navUser' in group.dataset) return;
+                setNavOpen(group, trail.includes(navSectionOf(group)));
+            });
+        },
     });
 }
-
-// Sections of the table of contents that carry sub-entries can be folded away.
-//
-// Eleven of them do, holding about fifty subjects that could not be seen from the menu at all.
-// Nothing here knows which page or which section: it acts on whatever carries the attribute, so a
-// section gains a chevron by gaining sub-entries and this file never has to hear about it.
-//
-// ⚠ Open by default, and that is the point of the whole thing: the defect being fixed is
-// "you cannot see what is in there". Starting folded would restore it.
-document.querySelectorAll('[data-nav-collapsible]').forEach(group => {
-    const toggle = group.querySelector('.docs-nav-toggle');
-    const subs = group.querySelector('.docs-nav-subs');
-    if (!toggle || !subs) return;
-
-    toggle.addEventListener('click', () => {
-        const open = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!open));
-        subs.classList.toggle('is-collapsed', open);
-    });
-});
 
 // Organic animated background — 5 independent blob layers, scroll-reactive.
 //

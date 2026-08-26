@@ -80,8 +80,13 @@
     .docs-nav-toggle:hover { color: #c084fc; }
     .docs-nav-toggle[aria-expanded="false"] .fa-chevron-down { transform: rotate(-90deg); }
     .docs-nav-toggle .fa-chevron-down { transition: transform 0.2s; }
-    /* Collapsed by class rather than by `hidden`, so the transition has something to animate and
-       so a stylesheet-less render still shows the entries rather than losing them. */
+    /* Collapsed by class rather than by `hidden` or an inline style: the class is written by the
+       Blade, so the menu is already folded in the very first paint — no flash of a fifty-entry
+       list collapsing once the script runs.
+
+       ⚠ It also means the fold only exists where this stylesheet does. Without CSS the entries are
+       all visible, which is the right failure: a table of contents that loses half its lines is
+       worse than one that shows too many. */
     .docs-nav-subs.is-collapsed { display: none; }
     /* Quick Start step cards, which are links. They looked like plain boxes for a long time, so
        the hover has to say "this goes somewhere" without turning three cards into three buttons. */
@@ -230,14 +235,22 @@
                ⚠ Order follows the page, top to bottom, always. The menu is a map of the page; a map
                that reorders the territory is worse than no map.
 
+               🔴 **A line here is a DESTINATION, not a heading.** "The mod" and "The website" under
+               `what-is` were listed once and taken out: two cards side by side, three lines each,
+               that you read in one glance on the way past — jumping to the second lands you where
+               the first is already on screen. Anchoring every `<h3>` lists the page's LAYOUT
+               instead of its subjects. The test is mechanical and worth running after a batch:
+               two anchors whose rectangles overlap vertically are on the same line, and at most
+               one of them belongs here.
+
                ⚠ Adding a sub-part to the page means adding `data-nav-anchor` to its heading and one
                line here. The anchor without the line gives an entry nobody can reach from the menu;
                the line without the anchor gives a menu entry that never lights up. */
             $nav = [
                 'docs.nav.group.start' => [
+                    // One sub-part only: "The mod" and "The website" are two cards on one line,
+                    // not two places to go. Reasoning at the grid itself.
                     ['what-is', 'fa-circle-info', 'docs.nav.what_is', [
-                        'whatis-mod'  => 'docs.whatis.mod_title',
-                        'whatis-site' => 'docs.whatis.site_title',
                         'whatis-flow' => 'docs.whatis.flow_title',
                     ]],
                     ['quick-start', 'fa-rocket', 'docs.nav.quick_start', []],
@@ -333,22 +346,26 @@
                              navigates AND collapses, so going to a section would hide its own
                              sub-entries.
 
-                             ⚠ Open by default, and that is the whole point of the change: the
-                             defect being fixed is that these subjects were invisible. Starting
-                             folded would put it straight back. Folding is for the reader who has
-                             found their section and wants the rest out of the way. --}}
+                             🔴 **Folded by default, and the section you are reading opens itself.**
+                             Fifty entries permanently unfolded is 2 100 px of menu: you scroll the
+                             table of contents to find where you are, which is the problem it exists
+                             to solve. Folded, the menu is thirteen lines you take in at once, and
+                             the detail appears exactly where you are — the two things a reader
+                             wants are never in competition. Opening another one by hand is one
+                             click, and it stays open until you leave the section you are in
+                             (resources/js/app.js). --}}
                         <div class="docs-nav-collapsible" data-nav-collapsible>
                             <div class="flex items-stretch">
                                 <a href="#{{ $id }}" class="docs-nav-item flex-1 px-4 py-2 text-sm text-gray-300 rounded-r">
                                     <i class="fas {{ $icon }} mr-2 w-4"></i>{{ __($label) }}
                                 </a>
-                                <button type="button" class="docs-nav-toggle" aria-expanded="true"
+                                <button type="button" class="docs-nav-toggle" aria-expanded="false"
                                         aria-controls="docs-nav-subs-{{ $id }}"
                                         aria-label="{{ __($label) }}">
                                     <i class="fas fa-chevron-down text-xs"></i>
                                 </button>
                             </div>
-                            <div id="docs-nav-subs-{{ $id }}" class="docs-nav-subs">
+                            <div id="docs-nav-subs-{{ $id }}" class="docs-nav-subs is-collapsed">
                                 @foreach ($subs as $subId => $subLabel)
                                     <a href="#{{ $subId }}" class="docs-nav-sub">{{ __($subLabel) }}</a>
                                 @endforeach
@@ -410,15 +427,25 @@
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.shot.browse_caption') }}</figcaption>
                 </figure>
 
+                {{-- ⚠ These two carry NO `data-nav-anchor`, and it is not an oversight.
+
+                     They are two cards side by side in a two-column grid, three lines each. A
+                     sub-entry in the table of contents is somewhere you want to GO — and nobody
+                     goes to "The website": you read the pair in one glance on the way past, and
+                     jumping to the second would land you where the first is already on screen.
+
+                     🔴 The rule: what earns a line in the menu is a DESTINATION, not a heading.
+                     Anchoring every `<h3>` is how you end up listing the page's layout instead of
+                     its subjects. --}}
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-gray-700 rounded-lg p-4">
-                        <h3 id="whatis-mod" data-nav-anchor class="scroll-mt-8 font-semibold text-white mb-2">
+                        <h3 class="font-semibold text-white mb-2">
                             <i class="fas fa-puzzle-piece text-purple-400 mr-2"></i>{{ __('docs.whatis.mod_title') }}
                         </h3>
                         <p class="text-sm text-gray-300">{{ __('docs.whatis.mod_desc') }}</p>
                     </div>
                     <div class="bg-gray-700 rounded-lg p-4">
-                        <h3 id="whatis-site" data-nav-anchor class="scroll-mt-8 font-semibold text-white mb-2">
+                        <h3 class="font-semibold text-white mb-2">
                             <i class="fas fa-globe text-purple-400 mr-2"></i>{{ __('docs.whatis.site_title') }}
                         </h3>
                         <p class="text-sm text-gray-300">{{ __('docs.whatis.site_desc') }}</p>

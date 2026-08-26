@@ -16,9 +16,13 @@ import { watchCurrentSection } from './section-position.js';
  *
  * Generic: it is given a selector for the links, a selector for the places on the page, and the
  * class to set. It knows nothing about documentation.
+ *
+ * `onCurrent` is handed the trail — deepest first — whenever it changes, for callers that need to
+ * do more than set a class. It exists so that this file does NOT have to learn what a collapsible
+ * menu is: the caller opens and closes, this one only ever says where the reader is.
  */
 export function createSectionSpy({ root, linkSelector, activeClass = 'active',
-                                   anchorSelector = 'section[id]' }) {
+                                   anchorSelector = 'section[id]', onCurrent }) {
     const links = [...document.querySelectorAll(linkSelector)]
         .filter(link => link.getAttribute('href')?.startsWith('#'));
 
@@ -67,6 +71,11 @@ export function createSectionSpy({ root, linkSelector, activeClass = 'active',
 
     return watchCurrentSection(root, (id) => {
         const current = id ? trail(id) : [];
+
+        // ⚠ BEFORE the links, not after: the caller may open or close part of the menu, which
+        // moves every entry below it. keepVisible() measures rectangles, so it has to run on the
+        // geometry the reader will actually see.
+        if (onCurrent) onCurrent(current);
 
         links.forEach(link => {
             const target = link.getAttribute('href').slice(1);
