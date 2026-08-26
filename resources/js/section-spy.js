@@ -69,9 +69,8 @@ export function createSectionSpy({ root, linkSelector, activeClass = 'active',
         return ids;
     };
 
-    return watchCurrentSection(root, (id) => {
-        const current = id ? trail(id) : [];
-
+    /** Mark one trail as current: tell the caller first, then light the links. */
+    const apply = (current) => {
         // ⚠ BEFORE the links, not after: the caller may open or close part of the menu, which
         // moves every entry below it. keepVisible() measures rectangles, so it has to run on the
         // geometry the reader will actually see.
@@ -94,5 +93,54 @@ export function createSectionSpy({ root, linkSelector, activeClass = 'active',
                 link.removeAttribute('aria-current');
             }
         });
+    };
+
+    /**
+     * 🔴 **Following the scroll is right for the wheel and wrong for a click.**
+     *
+     * Scrolling by hand is a search: the reader passes through sections and the menu follows,
+     * which is the whole point. Clicking a link is not a search — the destination is already
+     * decided. But the page scrolls there smoothly, so without this the spy walks every section
+     * on the way and the menu opens and shuts in cascade for the length of the journey, its
+     * height jumping under the cursor the reader just used.
+     *
+     * So a click applies the destination AT ONCE and then stops listening until the page has
+     * come to rest: one close, one open, no flicker in between.
+     *
+     * ⚠ Detected by a timer re-armed on every scroll event rather than by `scrollend`, which is
+     * still missing from some browsers. It also covers the case with no scroll at all — a link to
+     * a section already on screen fires no event, and the timer simply expires.
+     */
+    let held = false;
+    let holdTimer = null;
+
+    const releaseSoon = () => {
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => { held = false; }, 120);
+    };
+
+    const onLinkClick = (event) => {
+        const link = event.currentTarget;
+        const target = link.getAttribute('href')?.slice(1);
+        if (!target || !document.getElementById(target)) return;
+
+        held = true;
+        apply(trail(target));
+        releaseSoon();
+    };
+
+    links.forEach(link => link.addEventListener('click', onLinkClick));
+    window.addEventListener('scroll', releaseSoon, { passive: true });
+
+    const stop = watchCurrentSection(root, (id) => {
+        if (held) return;
+        apply(id ? trail(id) : []);
     }, undefined, anchorSelector);
+
+    return () => {
+        stop();
+        clearTimeout(holdTimer);
+        links.forEach(link => link.removeEventListener('click', onLinkClick));
+        window.removeEventListener('scroll', releaseSoon);
+    };
 }
