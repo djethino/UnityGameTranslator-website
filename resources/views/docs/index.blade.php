@@ -213,13 +213,15 @@
              `.docs-nav-item` / `.docs-nav-sub` for the links (resources/js/app.js). Keep those
              classes on every entry or the highlight silently stops following the reader.
 
-             ⚠ The two install paths sit in different groups on purpose, and the order was decided
-             rather than inherited: the Manager takes the slot in Start because it is the way in for
-             anyone arriving today, and `install-manual` — the by-hand procedure, formerly
-             `installation` — sits in Reference because it is a long procedure for a minority. It is
-             NOT deprecated and must never read as such: it is the answer when somebody wants to see
-             exactly what goes where, and when the Manager refuses a game they know is fine. The two
-             link to each other in both directions. See analyse/docs-structure.md. --}}
+             🔴 **The two install paths sit side by side in Start, Manager first, by hand second.**
+             Decided by the user on 2026-08-26, and the reasoning is the point: installing by hand
+             is NOT a fallback and is not being retired. The Manager is the recommended way in for
+             somebody who does not want to deal with the technical side; somebody already running a
+             pile of mods wants no extra program at all, and must find their procedure just as fast.
+             ⚠ A previous pass had moved `install-manual` down into Reference. That was never
+             agreed — it was written into TODO.md as a settled decision when it was only a proposal.
+             Do not move it back without asking. The two link to each other in both directions.
+             See analyse/docs-structure.md. --}}
         @php
             /* 🔴 The menu is written as a table, not as forty hand-copied <a> tags.
 
@@ -268,6 +270,17 @@
                         'manager-byhand'     => 'docs.manager.byhand_title',
                         'manager-settings'   => 'docs.manager.settings_title',
                     ]],
+                    // 🔴 Les deux voies d'installation se suivent, Manager puis à la main, et
+                    // toutes deux dans « Démarrer ». Décision de l'utilisateur, 2026-08-26 :
+                    // installer à la main n'est pas un pis-aller et n'est pas mis au rebut. Le
+                    // Manager est la voie recommandée à qui ne veut pas s'occuper de technique ;
+                    // quelqu'un qui fait déjà tourner beaucoup de mods n'a aucune envie d'un
+                    // programme de plus, et doit trouver sa procédure aussi vite que l'autre.
+                    ['install-manual', 'fa-download', 'docs.nav.install_manual', [
+                        'install-loader' => 'docs.install_modloader',
+                        'install-plugin' => 'docs.download_ugt',
+                        'enable-ai'      => 'docs.enable_ai',
+                    ]],
                     ['first-launch', 'fa-play', 'docs.nav.first_launch', [
                         'wizard-steps'       => 'docs.wizard_steps_title',
                         'first-launch-after' => 'docs.first_launch_after_title',
@@ -306,11 +319,6 @@
                     ['configuration', 'fa-cog', 'docs.nav.configuration', [
                         'config-gui'  => 'docs.config.gui_title',
                         'config-file' => 'docs.config.file_title',
-                    ]],
-                    ['install-manual', 'fa-download', 'docs.nav.install_manual', [
-                        'install-loader' => 'docs.install_modloader',
-                        'install-plugin' => 'docs.download_ugt',
-                        'enable-ai'      => 'docs.enable_ai',
                     ]],
                     ['external-resources', 'fa-folder-open', 'docs.nav.external_resources', [
                         'external-resources-where'  => 'docs.external_resources.where_title',
@@ -1154,6 +1162,190 @@
         </section>
 
 
+        {{-- Installing by hand — formerly `installation`, in the Start group.
+
+             🔴 **`installation` is a PUBLIC address**: it is indexed, and it has been pasted into
+             issues for months. The invisible span below keeps every one of those links landing on
+             the by-hand procedure they were pointing at. It costs one line and it never expires —
+             do not remove it on the grounds that nothing in this repository uses it, because that
+             is precisely the point: what uses it is out there.
+
+             ⚠ Renamed rather than kept: `#installation` beside `#install-manager` would be two
+             addresses for the same subject where only one says which. --}}
+        <span id="installation" class="block scroll-mt-8" aria-hidden="true"></span>
+        <section id="install-manual" class="mb-12 scroll-mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-download mr-3 text-purple-400"></i>{{ __('docs.install_manual.title') }}
+            </h2>
+
+            {{-- Why anyone would take this route, said before the first step rather than left to be
+                 inferred from its position in Reference. A long procedure filed under Reference
+                 reads as deprecated unless it says otherwise — and it is not: it is the answer when
+                 somebody wants to see exactly what goes where, and when the Manager refuses a game
+                 they know is fine. --}}
+            <div class="callout callout-info mb-4">
+                <p class="text-sm text-gray-300">
+                    <i class="fas fa-hand text-purple-400 mr-2"></i>
+                    <strong>{{ __('docs.install_manual.when_title') }}</strong><br>
+                    {{ __('docs.install_manual.when') }}
+                    <a href="#install-manager" class="text-purple-300 hover:text-purple-200 underline underline-offset-2">{{ __('docs.nav.install_manager') }} <i class="fas fa-arrow-right text-xs"></i></a>
+                </p>
+            </div>
+
+            <!-- Step 1: Mod Loader -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                {{-- Addressable on its own: the Quick Start steps link straight here rather than
+                     dropping the reader at the top of a 160-line section to hunt for step one. --}}
+                <h3 data-nav-anchor id="install-loader" class="text-lg font-semibold mb-4 scroll-mt-8">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">1</span>
+                    {{ __('docs.install_modloader') }}
+                </h3>
+
+                <div class="overflow-x-auto mb-4">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-2 text-left">{{ __('docs.modloader') }}</th>
+                                <th class="px-4 py-2 text-left">{{ __('docs.unity_type') }}</th>
+                                <th class="px-4 py-2 text-left">{{ __('docs.download') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            <tr class="border-t border-gray-700">
+                                <td class="px-4 py-2 font-medium">BepInEx 5</td>
+                                <td class="px-4 py-2"><span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs">Mono</span></td>
+                                <td class="px-4 py-2"><a href="https://github.com/BepInEx/BepInEx/releases" target="_blank" class="text-purple-400 hover:underline">GitHub <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
+                            </tr>
+                            <tr class="border-t border-gray-700">
+                                <td class="px-4 py-2 font-medium">BepInEx 6</td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs mr-1">Mono</span>
+                                    <span class="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">IL2CPP</span>
+                                </td>
+                                <td class="px-4 py-2"><a href="https://builds.bepinex.dev/projects/bepinex_be" target="_blank" class="text-purple-400 hover:underline">Bleeding Edge <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
+                            </tr>
+                            <tr class="border-t border-gray-700">
+                                <td class="px-4 py-2 font-medium">MelonLoader</td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs mr-1">Mono</span>
+                                    <span class="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">IL2CPP</span>
+                                </td>
+                                <td class="px-4 py-2"><a href="https://github.com/LavaGang/MelonLoader/releases" target="_blank" class="text-purple-400 hover:underline">GitHub <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-gray-900 rounded p-4">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-white">{{ __('docs.how_to_know') }}</strong><br>
+                        <code class="bg-gray-700 px-2 py-0.5 rounded text-blue-300">GameAssembly.dll</code> {{ __('docs.in_game_folder') }} → <strong class="text-blue-400">IL2CPP</strong><br>
+                        <code class="bg-gray-700 px-2 py-0.5 rounded text-green-300">&lt;Game&gt;_Data/Managed/*.dll</code> → <strong class="text-green-400">Mono</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2: Download UGT -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 data-nav-anchor id="install-plugin" class="text-lg font-semibold mb-4 scroll-mt-8">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">2</span>
+                    {{ __('docs.download_ugt') }}
+                </h3>
+
+                <p class="text-gray-300 mb-4">{{ __('docs.download_ugt_intro') }}</p>
+
+                <div class="text-center mb-4">
+                    <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank"
+                       class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-lg">
+                        <i class="fas fa-download"></i>
+                        {{ __('docs.download_latest') }}
+                    </a>
+                </div>
+
+                <div class="space-y-3 text-gray-300">
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">BepInEx</p>
+                        <p class="text-sm mb-1">{{ __('docs.install_bepinex_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/</code>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-purple-300 mb-1">MelonLoader</p>
+                        <p class="text-sm mb-1">{{ __('docs.install_melon_dll_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/Mods/</code>
+                        <p class="text-sm mt-2 mb-1">{{ __('docs.install_melon_data_desc') }}</p>
+                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/UserData/UnityGameTranslator/</code>
+                    </div>
+                    <div class="bg-yellow-900/30 border border-yellow-700/50 rounded p-3 text-sm">
+                        <p><i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>{{ __('docs.install_melon_warning') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: AI Translation (Optional) -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 id="enable-ai" data-nav-anchor class="scroll-mt-8 text-lg font-semibold mb-4">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">3</span>
+                    {{ __('docs.enable_ai') }}
+                    <span class="ml-2 bg-gray-600 text-gray-300 px-2 py-0.5 rounded text-xs">{{ __('docs.optional') }}</span>
+                </h3>
+
+                <p class="text-gray-300 mb-4">{{ __('docs.enable_ai_desc') }}</p>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-400 mb-2"><i class="fas fa-desktop mr-2"></i>{{ __('docs.ai_local_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_local_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://ollama.ai" target="_blank" class="text-purple-400 hover:underline">ollama.ai</a>
+                            <a href="https://lmstudio.ai" target="_blank" class="text-purple-400 hover:underline">lmstudio.ai</a>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-400 mb-2"><i class="fas fa-cloud mr-2"></i>{{ __('docs.ai_cloud_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_cloud_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://groq.com" target="_blank" class="text-purple-400 hover:underline">groq.com</a>
+                            <a href="https://openrouter.ai" target="_blank" class="text-purple-400 hover:underline">openrouter.ai</a>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-orange-400 mb-2"><i class="fas fa-language mr-2"></i>{{ __('docs.ai_translation_api_title') }}</h4>
+                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_translation_api_desc') }}</p>
+                        <div class="flex gap-3 text-sm">
+                            <a href="https://cloud.google.com/translate" target="_blank" class="text-purple-400 hover:underline">Google Translate</a>
+                            <a href="https://www.deepl.com/pro-api" target="_blank" class="text-purple-400 hover:underline">DeepL</a>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-gray-300 text-sm mb-4">{{ __('docs.ai_setup_steps') }}</p>
+
+                {{-- URL format guide --}}
+                <div class="bg-gray-700/50 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-white mb-2"><i class="fas fa-link mr-2 text-purple-400"></i>{{ __('docs.ai_url_title') }}</h4>
+                    <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_url_desc') }}</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-400 border-b border-gray-600">
+                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_provider') }}</th>
+                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_url') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Ollama</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_ollama') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">LM Studio</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_lmstudio') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Groq</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_groq') }}</code></td></tr>
+                                <tr class="border-b border-gray-700"><td class="py-2 px-3">OpenAI</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_openai') }}</code></td></tr>
+                                <tr><td class="py-2 px-3">Google Gemini</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_gemini') }}</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @include('docs._models')
+            </div>
+        </section>
         <!-- First Launch -->
         <section id="first-launch" class="mb-12 scroll-mt-8">
             <h2 class="text-2xl font-bold mb-6 flex items-center">
@@ -1969,190 +2161,6 @@ c = 0.8 → 1.0</pre>
             </div>
         </section>
 
-        {{-- Installing by hand — formerly `installation`, in the Start group.
-
-             🔴 **`installation` is a PUBLIC address**: it is indexed, and it has been pasted into
-             issues for months. The invisible span below keeps every one of those links landing on
-             the by-hand procedure they were pointing at. It costs one line and it never expires —
-             do not remove it on the grounds that nothing in this repository uses it, because that
-             is precisely the point: what uses it is out there.
-
-             ⚠ Renamed rather than kept: `#installation` beside `#install-manager` would be two
-             addresses for the same subject where only one says which. --}}
-        <span id="installation" class="block scroll-mt-8" aria-hidden="true"></span>
-        <section id="install-manual" class="mb-12 scroll-mt-8">
-            <h2 class="text-2xl font-bold mb-6 flex items-center">
-                <i class="fas fa-download mr-3 text-purple-400"></i>{{ __('docs.install_manual.title') }}
-            </h2>
-
-            {{-- Why anyone would take this route, said before the first step rather than left to be
-                 inferred from its position in Reference. A long procedure filed under Reference
-                 reads as deprecated unless it says otherwise — and it is not: it is the answer when
-                 somebody wants to see exactly what goes where, and when the Manager refuses a game
-                 they know is fine. --}}
-            <div class="callout callout-info mb-4">
-                <p class="text-sm text-gray-300">
-                    <i class="fas fa-hand text-purple-400 mr-2"></i>
-                    <strong>{{ __('docs.install_manual.when_title') }}</strong><br>
-                    {{ __('docs.install_manual.when') }}
-                    <a href="#install-manager" class="text-purple-300 hover:text-purple-200 underline underline-offset-2">{{ __('docs.nav.install_manager') }} <i class="fas fa-arrow-right text-xs"></i></a>
-                </p>
-            </div>
-
-            <!-- Step 1: Mod Loader -->
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
-                {{-- Addressable on its own: the Quick Start steps link straight here rather than
-                     dropping the reader at the top of a 160-line section to hunt for step one. --}}
-                <h3 data-nav-anchor id="install-loader" class="text-lg font-semibold mb-4 scroll-mt-8">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">1</span>
-                    {{ __('docs.install_modloader') }}
-                </h3>
-
-                <div class="overflow-x-auto mb-4">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-700">
-                            <tr>
-                                <th class="px-4 py-2 text-left">{{ __('docs.modloader') }}</th>
-                                <th class="px-4 py-2 text-left">{{ __('docs.unity_type') }}</th>
-                                <th class="px-4 py-2 text-left">{{ __('docs.download') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-300">
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2 font-medium">BepInEx 5</td>
-                                <td class="px-4 py-2"><span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs">Mono</span></td>
-                                <td class="px-4 py-2"><a href="https://github.com/BepInEx/BepInEx/releases" target="_blank" class="text-purple-400 hover:underline">GitHub <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2 font-medium">BepInEx 6</td>
-                                <td class="px-4 py-2">
-                                    <span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs mr-1">Mono</span>
-                                    <span class="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">IL2CPP</span>
-                                </td>
-                                <td class="px-4 py-2"><a href="https://builds.bepinex.dev/projects/bepinex_be" target="_blank" class="text-purple-400 hover:underline">Bleeding Edge <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="px-4 py-2 font-medium">MelonLoader</td>
-                                <td class="px-4 py-2">
-                                    <span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs mr-1">Mono</span>
-                                    <span class="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">IL2CPP</span>
-                                </td>
-                                <td class="px-4 py-2"><a href="https://github.com/LavaGang/MelonLoader/releases" target="_blank" class="text-purple-400 hover:underline">GitHub <i class="fas fa-external-link-alt text-xs ml-1"></i></a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="bg-gray-900 rounded p-4">
-                    <p class="text-sm text-gray-300">
-                        <strong class="text-white">{{ __('docs.how_to_know') }}</strong><br>
-                        <code class="bg-gray-700 px-2 py-0.5 rounded text-blue-300">GameAssembly.dll</code> {{ __('docs.in_game_folder') }} → <strong class="text-blue-400">IL2CPP</strong><br>
-                        <code class="bg-gray-700 px-2 py-0.5 rounded text-green-300">&lt;Game&gt;_Data/Managed/*.dll</code> → <strong class="text-green-400">Mono</strong>
-                    </p>
-                </div>
-            </div>
-
-            <!-- Step 2: Download UGT -->
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
-                <h3 data-nav-anchor id="install-plugin" class="text-lg font-semibold mb-4 scroll-mt-8">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">2</span>
-                    {{ __('docs.download_ugt') }}
-                </h3>
-
-                <p class="text-gray-300 mb-4">{{ __('docs.download_ugt_intro') }}</p>
-
-                <div class="text-center mb-4">
-                    <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank"
-                       class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-lg">
-                        <i class="fas fa-download"></i>
-                        {{ __('docs.download_latest') }}
-                    </a>
-                </div>
-
-                <div class="space-y-3 text-gray-300">
-                    <div>
-                        <p class="font-semibold text-purple-300 mb-1">BepInEx</p>
-                        <p class="text-sm mb-1">{{ __('docs.install_bepinex_desc') }}</p>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/BepInEx/plugins/UnityGameTranslator/</code>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-purple-300 mb-1">MelonLoader</p>
-                        <p class="text-sm mb-1">{{ __('docs.install_melon_dll_desc') }}</p>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/Mods/</code>
-                        <p class="text-sm mt-2 mb-1">{{ __('docs.install_melon_data_desc') }}</p>
-                        <code class="bg-gray-700 px-2 py-1 rounded text-sm block">&lt;Game&gt;/UserData/UnityGameTranslator/</code>
-                    </div>
-                    <div class="bg-yellow-900/30 border border-yellow-700/50 rounded p-3 text-sm">
-                        <p><i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>{{ __('docs.install_melon_warning') }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: AI Translation (Optional) -->
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <h3 id="enable-ai" data-nav-anchor class="scroll-mt-8 text-lg font-semibold mb-4">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm mr-2">3</span>
-                    {{ __('docs.enable_ai') }}
-                    <span class="ml-2 bg-gray-600 text-gray-300 px-2 py-0.5 rounded text-xs">{{ __('docs.optional') }}</span>
-                </h3>
-
-                <p class="text-gray-300 mb-4">{{ __('docs.enable_ai_desc') }}</p>
-
-                <div class="grid md:grid-cols-3 gap-4 mb-4">
-                    <div class="bg-gray-700/50 rounded-lg p-4">
-                        <h4 class="font-semibold text-green-400 mb-2"><i class="fas fa-desktop mr-2"></i>{{ __('docs.ai_local_title') }}</h4>
-                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_local_desc') }}</p>
-                        <div class="flex gap-3 text-sm">
-                            <a href="https://ollama.ai" target="_blank" class="text-purple-400 hover:underline">ollama.ai</a>
-                            <a href="https://lmstudio.ai" target="_blank" class="text-purple-400 hover:underline">lmstudio.ai</a>
-                        </div>
-                    </div>
-                    <div class="bg-gray-700/50 rounded-lg p-4">
-                        <h4 class="font-semibold text-blue-400 mb-2"><i class="fas fa-cloud mr-2"></i>{{ __('docs.ai_cloud_title') }}</h4>
-                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_cloud_desc') }}</p>
-                        <div class="flex gap-3 text-sm">
-                            <a href="https://groq.com" target="_blank" class="text-purple-400 hover:underline">groq.com</a>
-                            <a href="https://openrouter.ai" target="_blank" class="text-purple-400 hover:underline">openrouter.ai</a>
-                        </div>
-                    </div>
-                    <div class="bg-gray-700/50 rounded-lg p-4">
-                        <h4 class="font-semibold text-orange-400 mb-2"><i class="fas fa-language mr-2"></i>{{ __('docs.ai_translation_api_title') }}</h4>
-                        <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_translation_api_desc') }}</p>
-                        <div class="flex gap-3 text-sm">
-                            <a href="https://cloud.google.com/translate" target="_blank" class="text-purple-400 hover:underline">Google Translate</a>
-                            <a href="https://www.deepl.com/pro-api" target="_blank" class="text-purple-400 hover:underline">DeepL</a>
-                        </div>
-                    </div>
-                </div>
-
-                <p class="text-gray-300 text-sm mb-4">{{ __('docs.ai_setup_steps') }}</p>
-
-                {{-- URL format guide --}}
-                <div class="bg-gray-700/50 rounded-lg p-4 mb-4">
-                    <h4 class="font-semibold text-white mb-2"><i class="fas fa-link mr-2 text-purple-400"></i>{{ __('docs.ai_url_title') }}</h4>
-                    <p class="text-gray-300 text-sm mb-3">{{ __('docs.ai_url_desc') }}</p>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="text-gray-400 border-b border-gray-600">
-                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_provider') }}</th>
-                                    <th class="text-left py-2 px-3">{{ __('docs.ai_url_example_url') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-300">
-                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Ollama</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_ollama') }}</code></td></tr>
-                                <tr class="border-b border-gray-700"><td class="py-2 px-3">LM Studio</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_lmstudio') }}</code></td></tr>
-                                <tr class="border-b border-gray-700"><td class="py-2 px-3">Groq</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_groq') }}</code></td></tr>
-                                <tr class="border-b border-gray-700"><td class="py-2 px-3">OpenAI</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_openai') }}</code></td></tr>
-                                <tr><td class="py-2 px-3">Google Gemini</td><td class="py-2 px-3"><code class="text-purple-300">{{ __('docs.ai_url_example_gemini') }}</code></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                @include('docs._models')
-            </div>
-        </section>
 
         <!-- External Resources -->
         <section id="external-resources" class="mb-12 scroll-mt-8">
