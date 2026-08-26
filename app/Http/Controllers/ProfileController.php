@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UsernameHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -48,8 +47,19 @@ class ProfileController extends Controller
 
         $user = auth()->user();
 
-        // Display-name change: 30-day cooldown + admin-only history
-        // (anti-impersonation; the ASCII charset above blocks homoglyphs)
+        // Display-name change: 30-day cooldown (anti-impersonation; the ASCII charset above blocks
+        // homoglyphs).
+        //
+        // ⚠ **A history of past display names used to be written here and is not any more.** Its
+        // stated purpose was answering "who has borne this name before" — a search BY NAME, which
+        // an account id cannot answer, so the table was not redundant. But nothing ever read it:
+        // no admin screen, no query, in four months. A log nobody exploits has no purpose, and a
+        // purpose is what a lawful basis is made of.
+        //
+        // 🔴 And it held exactly what this feature exists to hide: the prompt offering the rename
+        // says OAuth names sometimes expose real ones, so the name somebody removes in order to
+        // protect themselves was the name we filed away for ever. Not collecting it is the only
+        // version of that promise that holds.
         if ($request->name !== $user->name) {
             if ($user->name_changed_at && $user->name_changed_at->addDays(30)->isFuture()) {
                 return back()->withErrors([
@@ -59,11 +69,6 @@ class ProfileController extends Controller
                 ]);
             }
 
-            UsernameHistory::create([
-                'user_id' => $user->id,
-                'old_name' => $user->name,
-                'changed_at' => now(),
-            ]);
             $user->forceFill(['name_changed_at' => now()])->save();
         }
 

@@ -3,15 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Models\UsernameHistory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class UsernameChangeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_name_change_records_history_and_enforces_cooldown(): void
+    public function test_name_change_enforces_cooldown(): void
     {
         $user = User::factory()->create(['name' => 'OldName']);
 
@@ -19,7 +19,6 @@ class UsernameChangeTest extends TestCase
         $user->refresh();
         $this->assertSame('NewName', $user->name);
         $this->assertNotNull($user->name_changed_at);
-        $this->assertSame(1, UsernameHistory::where('user_id', $user->id)->where('old_name', 'OldName')->count());
 
         // Second change within 30 days is refused
         $this->actingAs($user)->put('/profile', ['name' => 'ThirdName'])
@@ -37,11 +36,34 @@ class UsernameChangeTest extends TestCase
         $user = User::factory()->create(['name' => 'Stable']);
         $user->forceFill(['name_changed_at' => now()])->save();
 
-        // Same name + locale change: no cooldown error, no history row
+        // Same name + locale change: no cooldown error
         $this->actingAs($user)->put('/profile', ['name' => 'Stable', 'locale' => 'fr'])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
-        $this->assertSame(0, UsernameHistory::count());
+    }
+
+    /**
+     * 🔴 The name somebody removes must not be kept anywhere.
+     *
+     * A history of past display names was written on every rename until 2026-08-26, and read by
+     * nothing. It held exactly what the rename exists to hide — the prompt offering it says OAuth
+     * names sometimes expose real ones — and it survived account deletion.
+     *
+     * ⚠ Asserted against the SCHEMA, not against a model: the model is gone, so a test calling it
+     * would fail to compile rather than fail meaningfully, and a future migration recreating the
+     * table would go unnoticed. This fails the day the table comes back, whoever brings it.
+     */
+    public function test_past_display_names_are_not_kept(): void
+    {
+        $this->assertFalse(Schema::hasTable('username_history'),
+            'Past display names must not be stored: nothing reads them, and they hold the very name a rename removes.');
+
+        $user = User::factory()->create(['name' => 'ExposedRealName']);
+        $this->actingAs($user)->put('/profile', ['name' => 'Chosen'])->assertRedirect();
+
+        // Nowhere in the account's own row either
+        $this->assertSame('Chosen', $user->fresh()->name);
+        $this->assertStringNotContainsString('ExposedRealName', json_encode($user->fresh()->toArray()));
     }
 
     public function test_one_shot_prompt_flow(): void
