@@ -252,6 +252,34 @@ class AccountDeletionTest extends TestCase
         $this->assertArrayHasKey('ip_address', $data['activity_log'][0]);
     }
 
+    /**
+     * The accesses linked to the account are personal data too — a device name somebody typed,
+     * which game each one belongs to — so they belong in the export.
+     *
+     * 🔴 And the token itself never does. It is a live credential; a file people mail to
+     * themselves is the last place to put one.
+     */
+    public function test_the_export_lists_the_linked_devices_and_never_the_token(): void
+    {
+        $user = User::factory()->create();
+        $token = ApiToken::createForUser($user, null, [
+            'device_label' => 'Living room PC',
+            'client_kind' => 'mod',
+            'game_ref' => 'A Distinctive Game',
+        ]);
+
+        $response = $this->actingAs($user)->get('/profile/export');
+        $raw = $response->streamedContent();
+        $data = json_decode($raw, true);
+
+        $this->assertSame('Living room PC', $data['linked_devices'][0]['device']);
+        $this->assertSame('A Distinctive Game', $data['linked_devices'][0]['game']);
+        $this->assertSame($token->public_code, $data['linked_devices'][0]['code']);
+
+        $this->assertStringNotContainsString($token->plain_token, $raw);
+        $this->assertStringNotContainsString($token->token, $raw);
+    }
+
     /** What the box would take is named before it is agreed to, with the role of each. */
     public function test_the_deletion_screen_lists_what_would_go(): void
     {

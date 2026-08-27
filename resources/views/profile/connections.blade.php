@@ -40,12 +40,9 @@
     <p class="text-gray-400 text-sm mb-2">{{ __('connections.intro') }}</p>
     <p class="text-gray-500 text-xs mb-6">{{ __('connections.scope_note') }}</p>
 
-    @if(session('success'))
-        <div class="bg-green-900/50 border border-green-700 text-green-100 px-4 py-3 rounded-lg mb-6 text-sm">
-            <i class="fas fa-check mr-1"></i>{{ session('success') }}
-        </div>
-    @endif
-
+    {{-- ⚠ No success box here. The layout already renders session('success') for every page, so
+         adding one showed "Name saved." twice — once at the top of the window and once inside the
+         page. Reading the neighbour would have caught it; the screenshot did. --}}
     @if($errors->any())
         <div class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-6">
             <ul class="list-disc list-inside">
@@ -165,6 +162,17 @@
                                             @if($token->public_code)
                                                 · <span class="font-mono text-gray-400">#{{ $token->public_code }}</span>
                                             @endif
+                                            {{-- ⚠ One deadline, the nearer of the two, or the line
+                                                 becomes unreadable. And it is shown at all because
+                                                 an access that vanishes one morning without anybody
+                                                 having been told is a surprise, not a cleanup. --}}
+                                            @php
+                                                $idleCut = \App\Console\Commands\PurgeIdleTokens::deadlineFor($token);
+                                                $cutOn = $token->expires_at && $token->expires_at->lessThan($idleCut)
+                                                    ? $token->expires_at
+                                                    : $idleCut;
+                                            @endphp
+                                            · {{ __('connections.cut_on', ['date' => $cutOn->translatedFormat('j F Y')]) }}
                                         </p>
                                     </div>
 
@@ -238,7 +246,10 @@
 
     <p class="text-center text-gray-500 text-sm mt-8">
         <a href="{{ route('profile.edit') }}" class="text-purple-400 hover:text-purple-300 transition">
-            <i class="fas fa-arrow-left mr-1"></i> {{ __('connections.back_to_profile') }}
+            {{-- ⚠ "Settings", because that is the word on the menu entry people arrive through.
+                 The page it lands on is headed "Profile Settings"; naming the door they used beats
+                 naming the room they end up in. --}}
+            <i class="fas fa-arrow-left mr-1"></i> {{ __('connections.back_to_settings') }}
         </a>
     </p>
 </div>

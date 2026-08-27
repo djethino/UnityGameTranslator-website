@@ -299,9 +299,12 @@
                         'collaboration-merge'  => 'docs.collaboration.merge_title',
                     ]],
                     ['sync', 'fa-sync', 'docs.nav.sync', [
-                        'sync-online-mode'  => 'docs.sync.online_mode_title',
-                        'sync-device-flow'  => 'docs.sync.device_flow_title',
-                        'sync-multi-device' => 'docs.sync.multi_device_title',
+                        'sync-online-mode'    => 'docs.sync.online_mode_title',
+                        'sync-device-flow'    => 'docs.sync.device_flow_title',
+                        // Between the flow that creates an access and the sync that uses it —
+                        // the order somebody meets them in.
+                        'sync-linked-devices' => 'docs.sync.linked_title',
+                        'sync-multi-device'   => 'docs.sync.multi_device_title',
                     ]],
                 ],
                 'docs.nav.group.understand' => [
@@ -1770,6 +1773,53 @@
                         <i class="fas fa-shield-alt text-blue-400 mr-2"></i>
                         <strong>{{ __('docs.sync.security_title') }}</strong><br>
                         {{ __('docs.sync.security_desc') }}
+                    </p>
+                </div>
+            </div>
+
+            {{-- Linked devices — placed between the flow that CREATES an access and the sync that
+                 USES it, because that is the order somebody meets them in. Not a section of its
+                 own: it is the same subject as the card above it, which is why the sidebar shows
+                 it as a sub-part of Sync & Online rather than a fifth heading nobody would connect
+                 to the code they just typed. --}}
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-4">
+                <h3 id="sync-linked-devices" data-nav-anchor class="scroll-mt-8 font-semibold mb-4 text-lg">
+                    <i class="fas fa-link mr-2 text-purple-400"></i>{{ __('docs.sync.linked_title') }}
+                </h3>
+                <p class="text-gray-300 mb-4">{{ __('docs.sync.linked_desc') }}</p>
+
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <figure class="text-center">
+                        <img src="{{ asset('images/screenshots/WebLinkedDevicesCard.webp') }}"
+                             alt="{{ __('docs.sync.linked_card_alt') }}"
+                             class="doc-img doc-img-web mx-auto"
+                             width="590" height="250"
+                             loading="lazy"
+                             data-zoomable>
+                        <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.sync.linked_card_caption') }}</figcaption>
+                    </figure>
+                    <figure class="text-center">
+                        <img src="{{ asset('images/screenshots/WebLinkedDevices.webp') }}"
+                             alt="{{ __('docs.sync.linked_screen_alt') }}"
+                             class="doc-img doc-img-web mx-auto"
+                             width="791" height="380"
+                             loading="lazy"
+                             data-zoomable>
+                        <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.sync.linked_screen_caption') }}</figcaption>
+                    </figure>
+                </div>
+
+                <p class="text-gray-300 mb-3">{{ __('docs.sync.linked_name') }}</p>
+                <p class="text-gray-300 mb-3">{{ __('docs.sync.linked_replace') }}</p>
+                <p class="text-gray-300 mb-4">{{ __('docs.sync.linked_browsers') }}</p>
+
+                {{-- The reassurance goes in a callout because it is what somebody needs before
+                     pressing anything, not after: the whole screen is useless to a person who is
+                     afraid of it. --}}
+                <div class="callout callout-tip">
+                    <p class="text-sm text-gray-300">
+                        <i class="fas fa-shield-alt text-blue-400 mr-2"></i>
+                        {{ __('docs.sync.linked_revoke') }}
                     </p>
                 </div>
             </div>

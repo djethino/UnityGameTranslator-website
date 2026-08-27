@@ -19,6 +19,16 @@ Schedule::command('analytics:aggregate')->dailyAt('02:00');
 // cannot be removed along with a statistics change.
 Schedule::command('audit:purge-ips')->dailyAt('02:30');
 
+// Cut the accesses nobody uses any more, six months after their last exchange.
+//
+// ⚠ Not a security measure: an access being used stays alive, because being used is what keeps it
+// here. It keeps the list SHORT, and a short list is what makes an access somebody does not
+// recognise stand out — the security gain is second-hand, and real for that reason.
+//
+// ⚠ A grace date inside the command stops the first run from revoking, silently and all at once,
+// every access dormant since before this rule existed.
+Schedule::command('tokens:purge-idle')->dailyAt('02:40');
+
 // Pick up changes to the shared catalogues (languages, mod loaders, AI models).
 //
 // These hold facts we do not decide — a provider adds a language, a loader ships a release — so
