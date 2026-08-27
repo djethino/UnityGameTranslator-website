@@ -1222,7 +1222,7 @@
     "auth.lost_password": "忘记密码？",
     "auth.register_title": "创建本地账户",
     "auth.register_intro": "无需平台，无需邮箱——只要一个用户名和一个密码。",
-    "auth.register_privacy": "匿名优先：我们不索取邮箱或任何个人信息。只有分享翻译时才需要账户。",
+    "auth.register_privacy": "账户只记录法律要求记录的内容，也只有分享翻译时才需要。具体包含哪些、保存多久，写在",
     "auth.register_warning": "没有邮箱就没有重置链接：你的恢复码（将在下一屏显示）是你忘记密码后找回账户的唯一途径。请妥善保管。",
     "auth.username_placeholder": "例如 moon-translator",
     "auth.username_format": "3-24 个字符：字母、数字、点、连字符、下划线。",

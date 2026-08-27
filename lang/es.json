@@ -1222,7 +1222,7 @@
     "auth.lost_password": "¿Contraseña olvidada?",
     "auth.register_title": "Crear una cuenta local",
     "auth.register_intro": "Sin plataforma, sin correo electrónico: solo un nombre de usuario y una contraseña.",
-    "auth.register_privacy": "El anonimato primero: no pedimos un correo electrónico ni ninguna información personal. Solo necesitas una cuenta para compartir traducciones.",
+    "auth.register_privacy": "Una cuenta solo registra lo que exige la ley, y solo hace falta para compartir traducciones. Qué abarca eso, y durante cuánto tiempo, se detalla en la",
     "auth.register_warning": "Sin correo electrónico no hay enlace de restablecimiento: tus códigos de recuperación (mostrados en la siguiente pantalla) son la ÚNICA forma de volver a entrar si pierdes tu contraseña. Guárdalos en un lugar seguro.",
     "auth.username_placeholder": "p. ej. moon-translator",
     "auth.username_format": "De 3 a 24 caracteres: letras, dígitos, punto, guion y guion bajo.",

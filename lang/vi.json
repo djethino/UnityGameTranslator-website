@@ -1222,7 +1222,7 @@
     "auth.lost_password": "Quên mật khẩu?",
     "auth.register_title": "Tạo tài khoản cục bộ",
     "auth.register_intro": "Không nền tảng, không email – chỉ cần tên người dùng và mật khẩu.",
-    "auth.register_privacy": "Ẩn danh là trên hết: chúng tôi không yêu cầu email hay bất kỳ thông tin cá nhân nào. Tài khoản chỉ cần thiết để chia sẻ bản dịch.",
+    "auth.register_privacy": "Tài khoản chỉ ghi lại những gì luật yêu cầu, và chỉ cần thiết khi bạn muốn chia sẻ bản dịch. Những gì thuộc phạm vi đó, và giữ trong bao lâu, được nêu trong",
     "auth.register_warning": "Không có email nghĩa là không có liên kết đặt lại: mã khôi phục của bạn (hiển thị ở màn hình tiếp theo) là cách DUY NHẤT để quay lại nếu bạn mất mật khẩu. Hãy lưu giữ chúng an toàn.",
     "auth.username_placeholder": "ví dụ: moon-translator",
     "auth.username_format": "3-24 ký tự: chữ cái, chữ số, dấu chấm, gạch ngang, gạch dưới.",

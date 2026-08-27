@@ -8,9 +8,13 @@
         <h1 class="text-2xl font-bold text-center mb-2">{{ __('auth.register_title') }}</h1>
         <p class="text-gray-400 text-center text-sm mb-6">{{ __('auth.register_intro') }}</p>
 
+        {{-- The claim here used to be absolute ("we don't ask for any personal information") while
+             registration writes the sign-in IP a line later. It now says what is recorded and points
+             at the policy, which carries the detail — the layered notice the ICO asks for. --}}
         <div class="bg-blue-900/50 border border-blue-700 text-blue-100 rounded-lg p-4 mb-6 text-sm">
             <i class="fas fa-shield-halved mr-1"></i>
             {{ __('auth.register_privacy') }}
+            <a href="{{ route('legal.privacy') }}" class="text-purple-400 hover:text-purple-300">{{ __('legal.privacy_title') }}</a>.
         </div>
 
         <div class="bg-yellow-900/40 border border-yellow-700 text-yellow-100 rounded-lg p-4 mb-6 text-sm">

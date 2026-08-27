@@ -1222,7 +1222,7 @@
     "auth.lost_password": "Nie pamiętasz hasła?",
     "auth.register_title": "Utwórz konto lokalne",
     "auth.register_intro": "Bez platformy, bez e-maila – tylko nazwa użytkownika i hasło.",
-    "auth.register_privacy": "Anonimowość przede wszystkim: nie prosimy o adres e-mail ani żadne dane osobowe. Konto jest potrzebne wyłącznie do udostępniania tłumaczeń.",
+    "auth.register_privacy": "Konto zapisuje tylko to, czego wymaga prawo, i jest potrzebne wyłącznie do udostępniania tłumaczeń. Co to obejmuje i jak długo jest przechowywane, opisano w dokumencie",
     "auth.register_warning": "Brak e-maila oznacza brak linku do resetowania: Twoje kody odzyskiwania (pokazane na następnym ekranie) to JEDYNY sposób na powrót, jeśli zapomnisz hasła. Przechowuj je w bezpiecznym miejscu.",
     "auth.username_placeholder": "np. moon-translator",
     "auth.username_format": "Od 3 do 24 znaków: litery, cyfry, kropka, myślnik i podkreślenie.",

@@ -1222,7 +1222,7 @@
     "auth.lost_password": "Mot de passe perdu ?",
     "auth.register_title": "Créer un compte local",
     "auth.register_intro": "Sans plateforme, sans email – juste un pseudo et un mot de passe.",
-    "auth.register_privacy": "Anonymat d'abord : nous ne demandons ni email ni aucune information personnelle. Un compte ne sert qu'à partager des traductions.",
+    "auth.register_privacy": "Un compte n'enregistre que ce que la loi impose, et il ne sert qu'à partager des traductions. Ce que cela couvre, et pour combien de temps, est détaillé dans la",
     "auth.register_warning": "Sans email, pas de lien de réinitialisation : vos codes de récupération (affichés à l'écran suivant) sont le SEUL moyen de récupérer votre compte si vous perdez votre mot de passe. Conservez-les précieusement.",
     "auth.username_placeholder": "ex. traducteur-lune",
     "auth.username_format": "3 à 24 caractères : lettres, chiffres, point, tiret, tiret bas.",

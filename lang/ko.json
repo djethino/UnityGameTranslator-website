@@ -1222,7 +1222,7 @@
     "auth.lost_password": "비밀번호를 잊으셨나요?",
     "auth.register_title": "로컬 계정 만들기",
     "auth.register_intro": "플랫폼도, 이메일도 필요 없습니다 — 사용자 이름과 비밀번호만 있으면 됩니다.",
-    "auth.register_privacy": "익명성 우선: 이메일이나 개인 정보를 요구하지 않습니다. 계정은 번역을 공유할 때만 필요합니다.",
+    "auth.register_privacy": "계정은 법이 요구하는 것만 기록하며, 번역을 공유할 때만 필요합니다. 무엇이 여기에 해당하고 얼마나 보관하는지는 다음 문서에 적혀 있습니다:",
     "auth.register_warning": "이메일이 없으면 재설정 링크도 없습니다. 비밀번호를 분실하면 복구 코드(다음 화면에 표시)만이 유일한 복구 수단입니다. 안전하게 보관하세요.",
     "auth.username_placeholder": "예: moon-translator",
     "auth.username_format": "3~24자: 문자, 숫자, 점, 하이픈, 밑줄.",

@@ -47,6 +47,15 @@ class PublicPagesTest extends TestCase
         $this->get('/privacy')->assertOk();
     }
 
+    public function test_the_registration_page_points_at_the_privacy_policy(): void
+    {
+        // What an account records is stated here and detailed there, so the link is
+        // part of the claim: without it the notice is an assertion with no backing.
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee(route('legal.privacy'));
+    }
+
     public function test_privacy_page_lists_every_cookie_the_site_sets(): void
     {
         // The page names cookies one by one, so setting one without declaring

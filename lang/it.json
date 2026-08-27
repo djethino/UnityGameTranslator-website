@@ -1222,7 +1222,7 @@
     "auth.lost_password": "Password dimenticata?",
     "auth.register_title": "Crea un account locale",
     "auth.register_intro": "Nessuna piattaforma, nessuna email: solo un nome utente e una password.",
-    "auth.register_privacy": "L'anonimato prima di tutto: non chiediamo un'email né alcuna informazione personale. Un account serve solo per condividere le traduzioni.",
+    "auth.register_privacy": "Un account registra solo ciò che la legge impone e serve soltanto a condividere le traduzioni. Che cosa comprende, e per quanto tempo, è scritto qui:",
     "auth.register_warning": "Nessuna email significa nessun link di reimpostazione: i tuoi codici di recupero (mostrati nella schermata successiva) sono l'UNICO modo per rientrare se perdi la password. Conservali al sicuro.",
     "auth.username_placeholder": "es. moon-translator",
     "auth.username_format": "Da 3 a 24 caratteri: lettere, cifre, punto, trattino e trattino basso.",
