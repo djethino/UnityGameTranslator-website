@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ApiToken;
+use App\Support\GameDeclaration;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,15 @@ class OptionalAuthenticateApi
         $token = $request->bearerToken();
 
         if ($token) {
-            $apiToken = ApiToken::findAndMarkUsed($token, $request->userAgent());
+            // ⚠ The declaration is read here too, and that is the point rather than an oversight:
+            // the mod spends most of its calls on public routes — looking a game up, checking for
+            // an update — so waiting for an authenticated one would leave the line nameless for
+            // whoever never publishes.
+            $apiToken = ApiToken::findAndMarkUsed(
+                $token,
+                $request->userAgent(),
+                GameDeclaration::parse($request->header(GameDeclaration::HEADER))
+            );
 
             if ($apiToken) {
                 $request->setUserResolver(fn () => $apiToken->user);

@@ -392,4 +392,149 @@ class LinkedDevicesTest extends TestCase
 
         $this->assertNotNull($token->expires_at);
     }
+
+    /**
+     * An ordinary call names the game an old access never declared.
+     *
+     * Reported from production on 2026-08-27: every line read "Mod" and nothing else. The game was
+     * declared at the link and nowhere afterwards, so an access created before that existed stayed
+     * nameless for ever while calling us several times an hour with the game right there.
+     */
+    public function test_an_ordinary_call_fills_in_a_game_the_link_never_declared(): void
+    {
+        $user = User::factory()->create();
+        $token = ApiToken::createForUser($user);
+
+        $this->assertNull($token->game_slot);
+
+        $declaration = base64_encode(json_encode(['game_id' => '367520', 'game_name' => 'Hollow Knight']));
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token->plain_token,
+            'X-UGT-Game' => $declaration,
+        ])->getJson('/api/v1/me')->assertOk();
+
+        $token->refresh();
+
+        $this->assertSame(ApiToken::gameSlotFor($user, '367520'), $token->game_slot);
+        $this->assertSame('Hollow Knight', $token->gameName());
+    }
+
+    /**
+     * 🔴 And it never corrects one. `game_slot` is what the one-access-per-game cap is applied to,
+     * so overwriting it would move an existing access under a different game — and the next link
+     * would cut the wrong line.
+     */
+    public function test_a_declared_game_is_never_overwritten_by_a_later_call(): void
+    {
+        $user = User::factory()->create();
+
+        $token = ApiToken::createForUser($user, null, [
+            'game_slot' => ApiToken::gameSlotFor($user, '367520'),
+            'game_ref' => 'Hollow Knight',
+        ]);
+
+        $slot = $token->game_slot;
+        $this->assertNotNull($slot);
+
+        // A second game claiming the same access — what a mod would send if it were ever pointed at
+        // the wrong config, and what a tampered client could send on purpose.
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token->plain_token,
+            'X-UGT-Game' => base64_encode(json_encode(['game_id' => '999999', 'game_name' => 'Another Game'])),
+        ])->getJson('/api/v1/me')->assertOk();
+
+        $token->refresh();
+
+        $this->assertSame($slot, $token->game_slot);
+        $this->assertSame('Hollow Knight', $token->gameName());
+    }
+
+    /**
+     * A header nobody can read must never be able to break the access it describes.
+     *
+     * It is parsed inside authentication, on every authenticated call: turning a malformed value
+     * into a 500 would let anybody take their own access down by writing one bad byte.
+     */
+    public function test_a_malformed_declaration_is_ignored_rather_than_fatal(): void
+    {
+        $user = User::factory()->create();
+        $token = ApiToken::createForUser($user);
+
+        foreach (['not-base64!!', base64_encode('{'), base64_encode(json_encode(['game_id' => 'abc'])), ''] as $bad) {
+            $this->withHeaders([
+                'Authorization' => 'Bearer ' . $token->plain_token,
+                'X-UGT-Game' => $bad,
+            ])->getJson('/api/v1/me')->assertOk();
+        }
+
+        $token->refresh();
+        $this->assertNull($token->game_slot);
+    }
+
+    /**
+     * What the line says about a deadline, and when it says nothing.
+     *
+     * 🔴 Both halves were wrong, and both were reported from production on 2026-08-27:
+     *
+     *  - the idle deadline SLIDES — six months from the last exchange — so printing a fixed date
+     *    beside "exchange today" stated something false about tomorrow. Worse, on the day the rule
+     *    shipped the grace floor put every line on one date, which reads as a broken screen;
+     *  - the six-month rule was applied and stated nowhere, so the date arrived out of the blue.
+     */
+    public function test_the_cut_date_is_shown_on_a_quiet_line_and_not_on_a_busy_one(): void
+    {
+        $user = User::factory()->create();
+
+        $busy = ApiToken::createForUser($user, null, ['device_label' => 'Desk']);
+        DB::table('api_tokens')->where('id', $busy->id)->update(['last_used_at' => now()]);
+
+        $page = $this->actingAs($user)->get('/profile/connections');
+
+        $page->assertOk()
+            ->assertSee(__('connections.exchange_today'))
+            ->assertDontSee(__('connections.cut_on', ['date' => '']), false)
+            // The rule itself, said once for the whole page rather than implied by a date.
+            ->assertSee(__('connections.idle_rule'));
+
+        DB::table('api_tokens')->where('id', $busy->id)
+            ->update(['last_used_at' => now()->subMonths(8)]);
+
+        $this->actingAs($user)->get('/profile/connections')
+            ->assertOk()
+            ->assertSee(__('connections.cut_on', [
+                'date' => \App\Console\Commands\PurgeIdleTokens::deadlineFor($busy->fresh())
+                    ->translatedFormat('j F Y'),
+            ]));
+    }
+
+    /**
+     * A mod access with no game says so, instead of repeating the word the icon already carries.
+     */
+    public function test_a_mod_access_with_no_game_says_the_game_was_not_recorded(): void
+    {
+        $user = User::factory()->create();
+        ApiToken::createForUser($user, null, ['device_label' => 'Desk', 'client_kind' => 'mod']);
+
+        $this->actingAs($user)->get('/profile/connections')
+            ->assertOk()
+            ->assertSee(__('connections.game_not_recorded'));
+    }
+
+    /**
+     * The code the screen names each line by, returned to the program holding that line.
+     *
+     * Without it the screen is an impasse: it offers to rename a machine nothing lets somebody
+     * identify. Retroactive by construction — the code is already stored against the token.
+     */
+    public function test_the_holder_of_a_token_is_told_its_access_code(): void
+    {
+        $user = User::factory()->create();
+        $token = ApiToken::createForUser($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token->plain_token)
+            ->getJson('/api/v1/me');
+
+        $response->assertOk()->assertJsonPath('access_code', $token->public_code);
+    }
 }

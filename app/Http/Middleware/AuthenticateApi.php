@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ApiToken;
+use App\Support\GameDeclaration;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +26,14 @@ class AuthenticateApi
             ], 401);
         }
 
-        // The agent fills in which program holds a token issued before that was recorded. Passed
-        // here rather than stored: only the parsed result is kept, never the raw string.
-        $apiToken = ApiToken::findAndMarkUsed($token, $request->userAgent());
+        // The agent fills in which program holds a token issued before that was recorded, and the
+        // header fills in which game it speaks for. Both are passed here rather than stored: only
+        // the parsed result is kept, never the raw string.
+        $apiToken = ApiToken::findAndMarkUsed(
+            $token,
+            $request->userAgent(),
+            GameDeclaration::parse($request->header(GameDeclaration::HEADER))
+        );
 
         if (!$apiToken) {
             return response()->json([

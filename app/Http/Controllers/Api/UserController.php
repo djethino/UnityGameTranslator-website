@@ -18,15 +18,30 @@ class UserController extends Controller
      * Get the authenticated user's profile.
      *
      * GET /api/v1/me
+     *
+     * 🔴 `access_code` is what makes the Linked devices screen usable at all. The screen names each
+     * line "#QKADJN" and offers to rename the machine it belongs to — while the code appeared
+     * NOWHERE else, in either program. So it asked somebody to name a machine nothing let them
+     * identify: an impasse, reported from production on 2026-08-27.
+     *
+     * ⚠ It is returned to the holder of the token, about that token, and nothing else. No new
+     * secret leaves: whoever reads this reply already holds the token itself, which is the strong
+     * one. And it stays display-only — no endpoint accepts it as input, or six characters would
+     * become an enumeration surface.
+     *
+     * 🟢 Retroactive by construction: the code is already in the database, attached to the token the
+     * program has been holding all along. Existing links become identifiable without being redone.
      */
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
+        $token = $request->attributes->get('api_token');
 
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'created_at' => $user->created_at->toIso8601String(),
+            'access_code' => $token?->public_code,
         ]);
     }
 

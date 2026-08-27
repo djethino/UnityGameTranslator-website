@@ -131,9 +131,22 @@ class ApiToken extends Model
      * recorded — the only field that can be recovered without anybody updating anything. It is
      * written once and never corrected afterwards: a token belongs to one install, and a value
      * that kept changing would describe the last caller rather than the holder.
+     *
+     * 🔴 $game does the same for the game, and it exists because the link was the ONLY moment we
+     * listened — which is the one moment we had nothing more to learn. A mod that was linked before
+     * it declared anything stayed nameless for ever while calling us several times an hour with the
+     * game right in front of it. Reported from production on 2026-08-27: every line read "Mod", and
+     * the screen could not tell "no game recorded" from "unknown".
+     *
+     * ⚠ **Filled once, never corrected**, and here that is not tidiness — `game_slot` is what the
+     * one-access-per-game cap is applied to. Overwriting it would move an existing access under a
+     * different game, so the next link would cut the wrong line.
      */
-    public static function findAndMarkUsed(string $plainToken, ?string $userAgent = null): ?self
-    {
+    public static function findAndMarkUsed(
+        string $plainToken,
+        ?string $userAgent = null,
+        ?array $game = null
+    ): ?self {
         $hashedToken = self::hashToken($plainToken);
         $apiToken = self::where('token', $hashedToken)
             ->where(function ($q) {
@@ -155,6 +168,19 @@ class ApiToken extends Model
                 $changes['client_kind'] = $client['kind'];
                 $changes['client_version'] = $client['version'];
                 $changes['client_variant'] = $client['variant'];
+            }
+        }
+
+        // ⚠ The name may arrive without the id, and then it is a label and nothing else: the slot
+        // stays null, so this access is never subject to the cap. Two games can carry the same
+        // product name, and cutting on that would cut somebody's other game.
+        if ($game !== null && $apiToken->game_slot === null && $apiToken->game_ref === null) {
+            if ($game['game_id'] !== null) {
+                $changes['game_slot'] = self::gameSlotFor($apiToken->user, $game['game_id']);
+            }
+
+            if ($game['game_name'] !== null) {
+                $changes['game_ref'] = $game['game_name'];
             }
         }
 

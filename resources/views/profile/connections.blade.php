@@ -38,6 +38,11 @@
     {{-- The contract, before the anxiety. It moves the question from "do I recognise this?" to "do
          I still need it?", which is the one somebody can actually answer. --}}
     <p class="text-gray-400 text-sm mb-2">{{ __('connections.intro') }}</p>
+    {{-- 🔴 The six-month rule was applied and stated NOWHERE, so the date on each line arrived out
+         of the blue — and a date nobody can account for reads as a bug, which is exactly how it was
+         reported. Said once, here, because it is one rule for the whole page and not a property of
+         any line. --}}
+    <p class="text-gray-500 text-xs mb-1">{{ __('connections.idle_rule') }}</p>
     <p class="text-gray-500 text-xs mb-6">{{ __('connections.scope_note') }}</p>
 
     {{-- ⚠ No success box here. The layout already renders session('success') for every page, so
@@ -138,7 +143,22 @@
                                     <div class="min-w-0">
                                         <p class="text-sm text-gray-200">
                                             <i class="fas {{ $token->client_kind === 'manager' ? 'fa-toolbox' : ($token->client_kind === 'mod' ? 'fa-gamepad' : 'fa-circle-question') }} mr-2 text-gray-500"></i>
-                                            {{ $game ?? $client }}
+                                            {{-- 🔴 A mod access with no game used to fall back to
+                                                 the word "Mod" — which the icon beside it already
+                                                 said, and which left "no game recorded" looking
+                                                 exactly like "unknown game". Reported from
+                                                 production: every line read "Mod".
+
+                                                 The Manager holds no game by design (one access per
+                                                 installation, not per game), so it is only the mod
+                                                 that has something missing here. --}}
+                                            @if($game)
+                                                {{ $game }}
+                                            @elseif($token->client_kind === 'mod')
+                                                <span class="text-gray-400">{{ __('connections.game_not_recorded') }}</span>
+                                            @else
+                                                {{ $client }}
+                                            @endif
                                             @if($token->published_at_least_once)
                                                 <span class="ml-2 text-xs text-amber-300">
                                                     <i class="fas fa-upload mr-1"></i>{{ __('connections.published_badge') }}
@@ -165,14 +185,30 @@
                                             {{-- ⚠ One deadline, the nearer of the two, or the line
                                                  becomes unreadable. And it is shown at all because
                                                  an access that vanishes one morning without anybody
-                                                 having been told is a surprise, not a cleanup. --}}
+                                                 having been told is a surprise, not a cleanup.
+
+                                                 🔴 **Only on a line that has gone quiet**, and that
+                                                 was a real defect. The idle deadline SLIDES: it is
+                                                 six months from the last exchange, so on an access
+                                                 that speaks every day it moves every day. Printing
+                                                 a fixed date beside "exchange today" said something
+                                                 false about tomorrow — and on the day the rule
+                                                 shipped, the grace floor put EVERY line on the same
+                                                 date, which read as a broken screen.
+
+                                                 An expiry is the opposite: fixed, decided at issue,
+                                                 and nothing the program does moves it. So it is
+                                                 shown whatever the line is doing. --}}
                                             @php
                                                 $idleCut = \App\Console\Commands\PurgeIdleTokens::deadlineFor($token);
-                                                $cutOn = $token->expires_at && $token->expires_at->lessThan($idleCut)
-                                                    ? $token->expires_at
-                                                    : $idleCut;
+                                                $expiryIsNearer = $token->expires_at && $token->expires_at->lessThan($idleCut);
+                                                $goneQuiet = in_array($token->lastExchangeBucket(), ['idle', 'never'], true);
                                             @endphp
-                                            · {{ __('connections.cut_on', ['date' => $cutOn->translatedFormat('j F Y')]) }}
+                                            @if($expiryIsNearer)
+                                                · {{ __('connections.expires_on', ['date' => $token->expires_at->translatedFormat('j F Y')]) }}
+                                            @elseif($goneQuiet)
+                                                · {{ __('connections.cut_on', ['date' => $idleCut->translatedFormat('j F Y')]) }}
+                                            @endif
                                         </p>
                                     </div>
 
