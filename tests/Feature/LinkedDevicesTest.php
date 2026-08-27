@@ -536,6 +536,38 @@ class LinkedDevicesTest extends TestCase
     }
 
     /**
+     * The pile of accesses from before anything was recorded explains itself.
+     *
+     * 🔴 Somebody opening this page for the first time finds credentials they cannot recognise,
+     * some of them months old, and has exactly one question: am I in trouble? The page answered a
+     * different one — "linked before a name was asked for" — and gave them nothing to do.
+     *
+     * ⚠ Shown on what the line SAYS, never on a date: an access that has spoken since names its own
+     * program, so what is left is exactly what was created and never used again.
+     */
+    public function test_accesses_from_before_anything_was_recorded_explain_themselves(): void
+    {
+        $user = User::factory()->create();
+
+        $legacy = ApiToken::createForUser($user);
+        DB::table('api_tokens')->where('id', $legacy->id)->update(['client_kind' => null]);
+
+        $this->actingAs($user)->get('/profile/connections')
+            ->assertOk()
+            ->assertSee(__('connections.legacy_live'))
+            ->assertSee(__('connections.legacy_revoke'))
+            ->assertDontSee(__('connections.group_unnamed_hint'));
+
+        // An access that has said which program it is gets no such speech: it is not from before.
+        DB::table('api_tokens')->where('id', $legacy->id)->update(['client_kind' => 'mod']);
+
+        $this->actingAs($user)->get('/profile/connections')
+            ->assertOk()
+            ->assertDontSee(__('connections.legacy_live'))
+            ->assertSee(__('connections.group_unnamed_hint'));
+    }
+
+    /**
      * A mod access with no game says so, instead of repeating the word the icon already carries.
      */
     public function test_a_mod_access_with_no_game_says_the_game_was_not_recorded(): void

@@ -136,9 +136,43 @@
                     </div>
 
                     @if($label === null && !$knowsItsMachine)
-                        {{-- Said, not hidden. Grouping these by anything would be a guess, and a
-                             guess presented as a fact is what makes somebody cut the wrong line. --}}
-                        <p class="text-xs text-gray-500 mb-3">{{ __('connections.group_unnamed_hint') }}</p>
+                        {{-- 🔴 **The one thing this page owed and did not give.** Somebody opening it
+                             for the first time finds accesses they cannot recognise, some of them
+                             months old, and the only question they have is "am I in trouble?".
+                             Saying "these were linked before a name was asked for" answered a
+                             different question and told them nothing to do.
+
+                             ⚠ The trigger is what the line SAYS, never a date: an access that has
+                             spoken since names its own program, so what is left is exactly what was
+                             created and never used again. A new account never sees this, and an old
+                             one that linked nothing never sees it either. --}}
+                        @php
+                            $silent = $tokens->filter(fn ($t) => $t->client_kind === null);
+                            $oldest = $silent->sortBy('created_at')->first();
+                        @endphp
+                        @if($silent->isNotEmpty())
+                            <div class="bg-gray-900/40 border border-gray-700 rounded-lg p-3 mb-3 space-y-2">
+                                <p class="text-sm text-gray-300">
+                                    {{ trans_choice('connections.legacy_intro', $silent->count(), [
+                                        'count' => $silent->count(),
+                                        'date' => $oldest->created_at->translatedFormat('F Y'),
+                                    ]) }}
+                                </p>
+                                <p class="text-sm text-amber-200/90">{{ __('connections.legacy_live') }}</p>
+                                <ul class="text-xs text-gray-400 list-disc list-inside space-y-1">
+                                    <li>{{ __('connections.legacy_play') }}</li>
+                                    <li>{{ __('connections.legacy_revoke') }}</li>
+                                    <li>{{ __('connections.legacy_wait', [
+                                        'date' => \App\Console\Commands\PurgeIdleTokens::deadlineFor($oldest)
+                                            ->translatedFormat('j F Y'),
+                                    ]) }}</li>
+                                </ul>
+                            </div>
+                        @else
+                            {{-- Said, not hidden. Grouping these by anything would be a guess, and a
+                                 guess presented as a fact is what makes somebody cut the wrong line. --}}
+                            <p class="text-xs text-gray-500 mb-3">{{ __('connections.group_unnamed_hint') }}</p>
+                        @endif
                     @elseif($label === null)
                         <p class="text-xs text-gray-500 mb-3">{{ __('connections.group_this_machine_hint') }}</p>
                     @endif
