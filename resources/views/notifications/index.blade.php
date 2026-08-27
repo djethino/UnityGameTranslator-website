@@ -129,14 +129,30 @@
                             @endif
                         </div>
                     </div>
-                    @if($isUnread)
-                    <form method="POST" action="{{ route('notifications.read', $notification->id) }}">
-                        @csrf
-                        <button type="submit" class="text-gray-500 hover:text-white transition" title="{{ __('notif.mark_read') }}">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </form>
-                    @endif
+                    {{-- ⚠ The two acts sit together, in the order they are used: read it, then be
+                         done with it. Both are icon-only like everything else on this row, and the
+                         second is the quieter of the two — removing is the rarer intent. --}}
+                    <div class="flex items-center gap-2">
+                        @if($isUnread)
+                        <form method="POST" action="{{ route('notifications.read', $notification->id) }}">
+                            @csrf
+                            <button type="submit" class="text-gray-500 hover:text-white transition" title="{{ __('notif.mark_read') }}">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </form>
+                        @endif
+                        {{-- Confirmed, because it cannot be undone and the message is the only copy.
+                             Through the delegated data-confirm listener, like every other
+                             irreversible act on this site — no script of its own, no nonce. --}}
+                        <form method="POST" action="{{ route('notifications.destroy', $notification->id) }}"
+                              data-confirm="{{ __('notif.delete_confirm') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-gray-600 hover:text-red-400 transition" title="{{ __('notif.delete') }}">
+                                <i class="fas fa-xmark"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             @endforeach
         </div>

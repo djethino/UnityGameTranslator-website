@@ -29,6 +29,18 @@ Schedule::command('audit:purge-ips')->dailyAt('02:30');
 // every access dormant since before this rule existed.
 Schedule::command('tokens:purge-idle')->dailyAt('02:40');
 
+// The in-app messages, at twelve months — the same figure the sign-in record carries, because
+// nothing here argues for a different one and two numbers is two things to explain.
+//
+// ⚠ The row goes, not a column: unlike the audit log, where the event stays and only the identifier
+// leaves, the message IS the personal data — it names a game, a language, and on a contribution the
+// person who sent it. Nothing about it is worth keeping once the message is gone.
+//
+// ⚠ What stops this from losing something that still matters is not the delay. It is that every
+// state still TRUE is said where the state lives, recomputed rather than remembered: a chip on the
+// row in My translations, a banner above it, a count on the merge button.
+Schedule::command('notifications:purge')->dailyAt('02:50');
+
 // Pick up changes to the shared catalogues (languages, mod loaders, AI models).
 //
 // These hold facts we do not decide — a provider adds a language, a loader ships a release — so

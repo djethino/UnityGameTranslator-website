@@ -144,6 +144,46 @@ class NotificationFlowTest extends TestCase
         $this->assertSame(0, $owner->unreadNotifications()->count());
     }
 
+    public function test_a_notification_can_be_deleted_but_only_by_its_owner(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $main = $this->makeTranslation($owner, ['Hello' => ['v' => 'Bonjour', 't' => 'H']]);
+        BranchSubmitted::sendGrouped($owner, $main, 'alice');
+
+        $id = $owner->notifications()->first()->id;
+
+        // Somebody else holding the id changes nothing: the lookup is scoped to the relation.
+        $this->actingAs($stranger)->delete("/notifications/{$id}")->assertRedirect();
+        $this->assertSame(1, $owner->notifications()->count());
+
+        $this->actingAs($owner)->delete("/notifications/{$id}")->assertRedirect();
+        $this->assertSame(0, $owner->notifications()->count());
+    }
+
+    public function test_notifications_purge_forgets_messages_past_the_deadline(): void
+    {
+        $owner = User::factory()->create();
+        $main = $this->makeTranslation($owner, ['Hello' => ['v' => 'Bonjour', 't' => 'H']]);
+
+        BranchSubmitted::sendGrouped($owner, $main, 'alice');
+        $old = $owner->notifications()->first();
+        \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('id', $old->id)
+            ->update(['created_at' => now()->subMonths(13)]);
+
+        $owner->notify(new BranchMerged($main, 3));
+        $this->assertSame(2, $owner->notifications()->count());
+
+        // Read or unread makes no difference — deliberately. Only the date decides.
+        $this->artisan('notifications:purge --dry-run')->assertExitCode(0);
+        $this->assertSame(2, $owner->notifications()->count());
+
+        $this->artisan('notifications:purge')->assertExitCode(0);
+        $this->assertSame(1, $owner->notifications()->count());
+        $this->assertSame('branch_merged', $owner->notifications()->first()->data['type']);
+    }
+
     public function test_guests_cannot_access_notifications(): void
     {
         $this->get('/notifications')->assertRedirect();

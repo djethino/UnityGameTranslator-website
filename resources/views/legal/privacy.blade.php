@@ -95,6 +95,10 @@
                             <td class="py-2 align-top text-gray-400">{{ __('legal.keep_accesses_for') }}</td>
                         </tr>
                         <tr>
+                            <td class="py-2 pr-4 align-top">{{ __('legal.keep_notifications') }}</td>
+                            <td class="py-2 align-top text-gray-400">{{ __('legal.keep_notifications_for') }}</td>
+                        </tr>
+                        <tr>
                             <td class="py-2 pr-4 align-top">{{ __('legal.keep_ip') }}</td>
                             <td class="py-2 align-top text-gray-400">{{ __('legal.keep_ip_for') }}</td>
                         </tr>

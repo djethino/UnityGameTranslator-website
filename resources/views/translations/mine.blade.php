@@ -206,6 +206,22 @@
                         @endif
                         <x-contributions-badge :translation="$translation" plain />
 
+                        {{-- 🔴 The state this row said NOWHERE. The chip beside it is the Main's
+                             own declaration and is shown on a Main only — a branch does not lead a
+                             lineage and does not decide this — so from the branch side the door
+                             closing was invisible here, readable only on that branch's dashboard.
+                             It mattered the day notifications became deletable.
+
+                             ⚠ Same words as the shared library gives the mod and the Manager
+                             ("Main closed"), and the same reading: worth noticing, not an error.
+                             Nothing is broken, the work is still its author's, and the way on is
+                             one screen away. --}}
+                        @if($translation->isFrozenBranch())
+                            <span class="text-amber-300 text-sm" title="{{ __('my_translations.branch_frozen_tip') }}">
+                                <i class="fas fa-lock"></i> {{ __('my_translations.branch_frozen') }}
+                            </span>
+                        @endif
+
                         {{-- Through the component, like the chip beside it. Written out here, this
                              row had its own purple fork and its own grey branch, neither of which
                              matched the admin screens or the dashboard — and the words were in
