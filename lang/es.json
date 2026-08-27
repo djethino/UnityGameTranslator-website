@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "PC del salón",
     "connections.rename_hint": "Una nota solo para ti. No pongas tu nombre real ni tu dirección.",
     "connections.move": "Mover a otro grupo",
-    "connections.move_default": "Devolver a su equipo",
+    "connections.move_out": "Sacar de este grupo",
     "connections.move_new_placeholder": "O un grupo nuevo: RPG, Portátil, Español…",
     "connections.move_hint": "Los grupos son cosa tuya. Nosotros ponemos cada acceso junto a los demás de su equipo, y tú los ordenas como quieras.",
     "connections.moved": "Acceso movido.",

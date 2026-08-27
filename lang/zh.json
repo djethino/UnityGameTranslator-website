@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "客厅电脑",
     "connections.rename_hint": "只给你自己看的备注。不要写上真名或住址。",
     "connections.move": "移到另一个分组",
-    "connections.move_default": "放回它所在的机器",
+    "connections.move_out": "移出这个分组",
     "connections.move_new_placeholder": "或者新建分组：RPG、笔记本、中文…",
     "connections.move_hint": "分组由你说了算。我们只是把同一台机器上的授权放在一起，你想怎么归类都行。",
     "connections.moved": "授权已移动。",

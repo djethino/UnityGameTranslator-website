@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Wohnzimmer-PC",
     "connections.rename_hint": "Eine Notiz nur für dich. Schreib weder deinen echten Namen noch deine Adresse hinein.",
     "connections.move": "In eine andere Gruppe verschieben",
-    "connections.move_default": "Zurück zu seinem Rechner",
+    "connections.move_out": "Aus dieser Gruppe nehmen",
     "connections.move_new_placeholder": "Oder eine neue Gruppe: RPGs, Laptop, Deutsch…",
     "connections.move_hint": "Die Gruppen gehören dir. Wir legen jeden Zugang zu den anderen desselben Rechners, und du sortierst sie, wie du willst.",
     "connections.moved": "Zugang verschoben.",

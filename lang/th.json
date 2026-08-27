@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "พีซีห้องนั่งเล่น",
     "connections.rename_hint": "บันทึกไว้สำหรับคุณคนเดียว อย่าใส่ชื่อจริงหรือที่อยู่ของคุณลงไป",
     "connections.move": "ย้ายไปกลุ่มอื่น",
-    "connections.move_default": "กลับไปอยู่กับเครื่องของมัน",
+    "connections.move_out": "นำออกจากกลุ่มนี้",
     "connections.move_new_placeholder": "หรือกลุ่มใหม่ เช่น RPG, โน้ตบุ๊ก, ไทย…",
     "connections.move_hint": "กลุ่มเป็นของคุณ เราวางแต่ละสิทธิ์ไว้กับสิทธิ์อื่นจากเครื่องเดียวกัน ส่วนคุณจัดเรียงได้ตามใจ",
     "connections.moved": "ย้ายสิทธิ์แล้ว",

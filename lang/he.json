@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "המחשב בסלון",
     "connections.rename_hint": "פתק לעצמכם בלבד. אל תכתבו בו את שמכם האמיתי או את הכתובת שלכם.",
     "connections.move": "העברה לקבוצה אחרת",
-    "connections.move_default": "החזרה למכונה שלה",
+    "connections.move_out": "הוצאה מהקבוצה הזאת",
     "connections.move_new_placeholder": "או קבוצה חדשה: משחקי תפקידים, מחשב נייד, עברית…",
     "connections.move_hint": "הקבוצות שלכם. אנחנו רק מניחים כל הרשאה ליד האחרות מאותה מכונה, ואתם מסדרים כרצונכם.",
     "connections.moved": "ההרשאה הועברה.",

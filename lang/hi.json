@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "बैठक का कंप्यूटर",
     "connections.rename_hint": "सिर्फ़ आपके अपने लिए एक नोट। इसमें अपना असली नाम या पता न लिखें।",
     "connections.move": "दूसरे समूह में ले जाएँ",
-    "connections.move_default": "अपनी मशीन के पास वापस",
+    "connections.move_out": "इस समूह से बाहर करें",
     "connections.move_new_placeholder": "या नया समूह: RPG, लैपटॉप, हिन्दी…",
     "connections.move_hint": "समूह आपके हैं। हम हर पहुँच को उसी मशीन की बाकी पहुँचों के साथ रख देते हैं, और आप जैसे चाहें वैसे जमाते हैं।",
     "connections.moved": "पहुँच ले जाई गई।",

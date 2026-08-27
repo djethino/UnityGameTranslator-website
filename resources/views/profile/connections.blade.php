@@ -288,27 +288,48 @@
                                         @csrf
                                         @method('PATCH')
                                         {{-- Every group on screen, named or not — see the controller.
-                                             Offering only the named ones left this control unable to
-                                             reach the boxes right above it. --}}
-                                        @php
-                                            $elsewhere = $destinations->reject(fn ($d) => $d['id'] === $anyToken->id);
-                                        @endphp
-                                        {{-- ⚠ Also when there is nowhere else to go but this line
-                                             has been filed by hand: the list carries "back to its
-                                             machine", and hiding it would leave the only way out
-                                             of a group unreachable. --}}
-                                        @if($elsewhere->isNotEmpty() || $token->device_label !== null)
-                                            <select name="into"
-                                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                                <option value="">{{ __('connections.move_default') }}</option>
-                                                @foreach($elsewhere as $destination)
-                                                    <option value="{{ $destination['id'] }}">
-                                                        {{ $destination['label'] ?? __('connections.group_this_machine') }}
-                                                        ({{ $destination['count'] }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        @endif
+                                             Offering only the named ones left this control unable
+                                             to reach the boxes right above it.
+
+                                             🔴 **Always rendered, and the line's OWN group is in it,
+                                             selected.** It appeared and vanished depending on
+                                             whether anywhere else existed, which made the layout
+                                             read as arbitrary and left two lines of one group with
+                                             a bare text field while a third had a list. Carrying
+                                             the current group earns the control its place even
+                                             when nothing else is reachable: it says where this line
+                                             is filed. A disabled one was the other option, and this
+                                             program does not grey controls out.
+
+                                             ⚠ Leaving a group is a SEPARATE option, offered only
+                                             when there is a group to leave. On a line nobody has
+                                             filed it would name an act that cannot happen. --}}
+                                        {{-- 🔴 **The empty option carries three different truths, and
+                                             getting that wrong made the control LIE.** A line in the
+                                             unplaced heap had no entry of its own — the heap is not
+                                             a destination — so the browser selected the first option
+                                             and the box announced a machine that line was never on.
+
+                                             ⚠ Choosing it only ever clears the hand-filed name, and
+                                             never what a machine said. Clearing that would be undone
+                                             by the machine's next call, bouncing the line back — a
+                                             destination that undoes itself. Which is also why the
+                                             heap can be a STATE here and never a choice. --}}
+                                        <select name="into"
+                                                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                            @if($token->device_label !== null)
+                                                <option value="">{{ __('connections.move_out') }}</option>
+                                            @elseif($token->device_slot === null)
+                                                <option value="" selected>{{ __('connections.group_unnamed') }}</option>
+                                            @endif
+                                            @foreach($destinations as $destination)
+                                                <option value="{{ $destination['id'] }}"
+                                                        @selected($destination['key'] === $token->groupKey())>
+                                                    {{ $destination['label'] ?? __('connections.group_this_machine') }}
+                                                    ({{ $destination['count'] }})
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         <div class="flex gap-2">
                                             <input type="text" name="new_group" maxlength="60"
                                                    placeholder="{{ __('connections.move_new_placeholder') }}"

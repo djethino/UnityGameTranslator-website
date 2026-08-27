@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Компьютер в гостиной",
     "connections.rename_hint": "Заметка только для вас. Не пишите в ней настоящее имя или адрес.",
     "connections.move": "Перенести в другую группу",
-    "connections.move_default": "Вернуть к своей машине",
+    "connections.move_out": "Убрать из этой группы",
     "connections.move_new_placeholder": "Или новая группа: RPG, Ноутбук, Русский…",
     "connections.move_hint": "Группы — ваши. Мы кладём каждый доступ рядом с остальными с той же машины, а вы раскладываете их как вам удобно.",
     "connections.moved": "Доступ перенесён.",

@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "거실 PC",
     "connections.rename_hint": "나만 보는 메모입니다. 실명이나 주소는 적지 마세요.",
     "connections.move": "다른 그룹으로 옮기기",
-    "connections.move_default": "원래 기기로 되돌리기",
+    "connections.move_out": "이 그룹에서 빼기",
     "connections.move_new_placeholder": "또는 새 그룹: RPG, 노트북, 한국어…",
     "connections.move_hint": "그룹은 사용자의 것입니다. 저희는 같은 기기의 접근 권한을 한데 모아 둘 뿐이고, 정리는 원하시는 대로 하시면 됩니다.",
     "connections.moved": "접근 권한을 옮겼습니다.",

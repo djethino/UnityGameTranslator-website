@@ -74,6 +74,12 @@ class ConnectionsController extends Controller
                     'id' => $group->first()->id,
                     'label' => $group->first()->device_label,
                     'count' => $group->count(),
+                    // ⚠ Carried so the view can mark the line's CURRENT group without comparing
+                    // ids: the representative of a group is one of its lines, which is never the
+                    // line being rendered except by chance. Comparing ids marked the wrong option
+                    // as selected, and a control that misreports where something is is worse than
+                    // one that cannot move it.
+                    'key' => $group->first()->groupKey(),
                 ])
                 ->values(),
         ]);

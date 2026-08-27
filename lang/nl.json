@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Woonkamer-pc",
     "connections.rename_hint": "Een aantekening voor jezelf. Zet er niet je echte naam of je adres in.",
     "connections.move": "Naar een andere groep verplaatsen",
-    "connections.move_default": "Terug naar zijn machine",
+    "connections.move_out": "Uit deze groep halen",
     "connections.move_new_placeholder": "Of een nieuwe groep: RPG's, Laptop, Nederlands…",
     "connections.move_hint": "De groepen zijn van jou. Wij zetten elke toegang bij de andere van dezelfde machine, en jij ordent ze zoals je wilt.",
     "connections.moved": "Toegang verplaatst.",

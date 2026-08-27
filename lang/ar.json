@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "حاسوب غرفة المعيشة",
     "connections.rename_hint": "ملاحظة لك وحدك. لا تكتب فيها اسمك الحقيقي ولا عنوانك.",
     "connections.move": "نقل إلى مجموعة أخرى",
-    "connections.move_default": "إعادته إلى جهازه",
+    "connections.move_out": "إخراجه من هذه المجموعة",
     "connections.move_new_placeholder": "أو مجموعة جديدة: ألعاب تقمّص الأدوار، حاسوب محمول، العربية…",
     "connections.move_hint": "المجموعات لكم. نحن نضع كل إذن مع بقية أذونات جهازه، وأنتم ترتّبونها كما تشاؤون.",
     "connections.moved": "نُقل الإذن.",

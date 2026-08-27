@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "リビングのPC",
     "connections.rename_hint": "自分だけのための覚え書きです。本名や住所は書かないでください。",
     "connections.move": "別のグループへ移す",
-    "connections.move_default": "元の機械のところへ戻す",
+    "connections.move_out": "このグループから外す",
     "connections.move_new_placeholder": "または新しいグループ： RPG、ノート PC、日本語…",
     "connections.move_hint": "グループはあなたのものです。こちらは同じ機械のアクセスをまとめて置くだけで、並べ方は好きにしてかまいません。",
     "connections.moved": "アクセスを移しました。",

@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "PC del salotto",
     "connections.rename_hint": "Un appunto solo per te. Non scriverci il tuo vero nome né il tuo indirizzo.",
     "connections.move": "Sposta in un altro gruppo",
-    "connections.move_default": "Rimetti con la sua macchina",
+    "connections.move_out": "Togli da questo gruppo",
     "connections.move_new_placeholder": "Oppure un nuovo gruppo: GDR, Portatile, Italiano…",
     "connections.move_hint": "I gruppi sono tuoi. Noi mettiamo ogni accesso con gli altri della sua macchina, e tu li ordini come preferisci.",
     "connections.moved": "Accesso spostato.",

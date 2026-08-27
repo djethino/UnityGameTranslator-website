@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Komputer w salonie",
     "connections.rename_hint": "Notatka tylko dla Ciebie. Nie wpisuj w nią prawdziwego imienia ani adresu.",
     "connections.move": "Przenieś do innej grupy",
-    "connections.move_default": "Z powrotem do swojej maszyny",
+    "connections.move_out": "Wyjmij z tej grupy",
     "connections.move_new_placeholder": "Albo nowa grupa: RPG, Laptop, Polski…",
     "connections.move_hint": "Grupy należą do Ciebie. My kładziemy każdy dostęp obok pozostałych z tej samej maszyny, a Ty układasz je po swojemu.",
     "connections.moved": "Dostęp przeniesiony.",

@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Máy tính phòng khách",
     "connections.rename_hint": "Một ghi chú chỉ dành cho bạn. Đừng viết tên thật hay địa chỉ của bạn vào đó.",
     "connections.move": "Chuyển sang nhóm khác",
-    "connections.move_default": "Trả về máy của nó",
+    "connections.move_out": "Đưa ra khỏi nhóm này",
     "connections.move_new_placeholder": "Hoặc nhóm mới: RPG, Máy xách tay, Tiếng Việt…",
     "connections.move_hint": "Các nhóm là của bạn. Chúng tôi xếp mỗi quyền truy cập cạnh những quyền khác cùng máy, còn bạn sắp xếp theo ý mình.",
     "connections.moved": "Đã chuyển quyền truy cập.",

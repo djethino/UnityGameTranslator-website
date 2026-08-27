@@ -257,7 +257,7 @@
     "connections.rename_placeholder": "Living room PC",
     "connections.rename_hint": "A note for you alone. Do not put your real name or your address in it.",
     "connections.move": "Move to another group",
-    "connections.move_default": "Back to its machine",
+    "connections.move_out": "Out of this group",
     "connections.move_new_placeholder": "Or a new group: RPGs, Laptop, French…",
     "connections.move_hint": "Groups are yours to choose. We put each access with the others from its machine, and you can file them however you like.",
     "connections.moved": "Access moved.",
