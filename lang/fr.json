@@ -1328,7 +1328,7 @@
     "link.device_label": "De quel appareil s'agit-il ?",
     "link.device_placeholder": "PC du salon",
     "link.device_hint": "Un repère pour vous seul, pour reconnaître cet accès plus tard. N'y mettez ni votre vrai nom ni votre adresse.",
-    "link.rule_replaces": "Un jeu ne garde qu'un accès par programme : relier un jeu remplace celui qu'il avait déjà.",
+    "link.rule_replaces": "Relier un jeu depuis le même appareil remplace l'accès qu'il y avait. Les autres appareils gardent le leur.",
     "link.success": "Appareil lié. Vous pouvez retourner dans votre jeu.",
     "link.success_replaced": "Appareil lié. Il a remplacé l'accès que ce jeu avait déjà.",
     "docs.quick_start.way_manager": "Avec le Manager",

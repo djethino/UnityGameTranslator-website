@@ -128,23 +128,31 @@ class DeviceFlowController extends Controller
         // Authorize the device code with the current user
         $deviceCode->authorize($user);
 
-        // One game holds one access per program: linking again replaces what was there rather than
-        // leaving a line nobody can identify behind.
+        $label = trim((string) ($validated['device_label'] ?? ''));
+        $label = $label === '' ? null : $label;
+
+        // One game holds one access per program ON ONE DEVICE: linking it again from the same
+        // device replaces what was there, rather than leaving a line nobody can identify behind.
         //
-        // ⚠ Only when the game carries a Steam id. A game recognised through `Application.
-        // productName` cannot be told from another carrying the same one — and two different games
-        // silently cutting each other off is worse than no cap at all.
+        // ⚠ Two conditions, and each one is a refusal to cut on a guess:
+        //
+        //  - no Steam id, no cap. A game recognised through `Application.productName` cannot be
+        //    told from another carrying the same one, and two different games silently cutting
+        //    each other off is worse than no cap at all.
+        //  - no device name, no cap. The cap is for the accesses an install abandons, and those
+        //    are all on one machine. Without the name it also cut across machines — linking a game
+        //    on a Steam Deck signed the same game out on the desktop, and back on the next switch.
         $slot = $deviceCode->game_id !== null && $deviceCode->client_kind !== null
             ? ApiToken::gameSlotFor($user, $deviceCode->game_id)
             : null;
 
         $replaced = 0;
-        if ($slot !== null) {
-            $replaced = $user->apiTokens()->sameSlot($slot, $deviceCode->client_kind)->delete();
+        if ($slot !== null && $label !== null) {
+            $replaced = $user->apiTokens()->sameSlot($slot, $deviceCode->client_kind, $label)->delete();
         }
 
         $apiToken = ApiToken::createForUser($user, null, [
-            'device_label' => $validated['device_label'] ?? null,
+            'device_label' => $label,
             'client_kind' => $deviceCode->client_kind,
             'client_version' => $deviceCode->client_version,
             'client_variant' => $deviceCode->client_variant,

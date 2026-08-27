@@ -1328,7 +1328,7 @@
     "link.device_label": "どのデバイスですか？",
     "link.device_placeholder": "リビングのPC",
     "link.device_hint": "あとでこの連携を見分けるための、自分だけの覚え書きです。本名や住所は書かないでください。",
-    "link.rule_replaces": "一つのゲームがプログラムごとに持てる連携は一つです。同じゲームをもう一度連携すると、前のものが置き換わります。",
+    "link.rule_replaces": "同じデバイスからゲームをもう一度連携すると、そのデバイスにあった連携が置き換わります。他のデバイスの連携はそのままです。",
     "link.success": "デバイスを連携しました。ゲームに戻れます。",
     "link.success_replaced": "デバイスを連携しました。このゲームにあった連携は置き換わりました。",
     "docs.quick_start.way_manager": "Manager を使う",

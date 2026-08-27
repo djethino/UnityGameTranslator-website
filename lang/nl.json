@@ -1328,7 +1328,7 @@
     "link.device_label": "Om welk apparaat gaat het?",
     "link.device_placeholder": "Woonkamer-pc",
     "link.device_hint": "Een aantekening voor jezelf, om deze toegang later te herkennen. Zet er niet je echte naam of je adres in.",
-    "link.rule_replaces": "Een game houdt één toegang per programma: een game opnieuw koppelen vervangt de bestaande.",
+    "link.rule_replaces": "Een game opnieuw koppelen vanaf hetzelfde apparaat vervangt de toegang die daar was. Andere apparaten houden die van hen.",
     "link.success": "Apparaat gekoppeld. Je kunt terug naar je game.",
     "link.success_replaced": "Apparaat gekoppeld. Het heeft de toegang vervangen die deze game al had.",
     "docs.quick_start.way_manager": "Met de Manager",

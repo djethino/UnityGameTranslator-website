@@ -1328,7 +1328,7 @@
     "link.device_label": "Which device is this?",
     "link.device_placeholder": "Living room PC",
     "link.device_hint": "A note for you alone, to recognise this access later. Do not put your real name or your address in it.",
-    "link.rule_replaces": "One game holds one access per program: linking a game again replaces the one it already had.",
+    "link.rule_replaces": "Linking a game again from the same device replaces the access it had there. Other devices keep theirs.",
     "link.success": "Device linked. You can go back to your game.",
     "link.success_replaced": "Device linked. It replaced the access this game already had.",
     "docs.quick_start.way_manager": "With the Manager",

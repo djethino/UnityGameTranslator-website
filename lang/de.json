@@ -1328,7 +1328,7 @@
     "link.device_label": "Um welches Gerät handelt es sich?",
     "link.device_placeholder": "Wohnzimmer-PC",
     "link.device_hint": "Eine Notiz nur für dich, um diesen Zugriff später wiederzuerkennen. Schreib weder deinen echten Namen noch deine Adresse hinein.",
-    "link.rule_replaces": "Ein Spiel behält nur einen Zugriff pro Programm: Ein Spiel erneut zu verknüpfen ersetzt den vorhandenen.",
+    "link.rule_replaces": "Ein Spiel vom selben Gerät erneut zu verknüpfen ersetzt den Zugriff, der dort war. Andere Geräte behalten ihren.",
     "link.success": "Gerät verknüpft. Du kannst zu deinem Spiel zurück.",
     "link.success_replaced": "Gerät verknüpft. Es hat den Zugriff ersetzt, den dieses Spiel schon hatte.",
     "docs.quick_start.way_manager": "Mit dem Manager",

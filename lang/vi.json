@@ -1328,7 +1328,7 @@
     "link.device_label": "Đây là thiết bị nào?",
     "link.device_placeholder": "Máy tính phòng khách",
     "link.device_hint": "Một ghi chú chỉ dành cho bạn, để nhận ra quyền truy cập này về sau. Đừng viết tên thật hay địa chỉ của bạn vào đó.",
-    "link.rule_replaces": "Mỗi trò chơi giữ một quyền truy cập cho mỗi chương trình: liên kết lại một trò chơi sẽ thay thế quyền đã có.",
+    "link.rule_replaces": "Liên kết lại một trò chơi từ cùng một thiết bị sẽ thay thế quyền truy cập đã có ở đó. Các thiết bị khác vẫn giữ quyền của mình.",
     "link.success": "Đã liên kết thiết bị. Bạn có thể quay lại trò chơi.",
     "link.success_replaced": "Đã liên kết thiết bị. Quyền truy cập trước đó của trò chơi này đã được thay thế.",
     "docs.quick_start.way_manager": "Với Manager",

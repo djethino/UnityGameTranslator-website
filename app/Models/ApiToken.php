@@ -164,14 +164,26 @@ class ApiToken extends Model
     }
 
     /**
-     * The tokens this account holds for one game and one program — what the cap is applied to.
+     * The tokens this account holds for one game, one program AND one named device — what the cap
+     * is applied to.
      *
-     * ⚠ Scoped to a $slot that is never null: a game with no Steam id has no slot, and every such
-     * game would otherwise match every other one and revoke it.
+     * 🔴 The device belongs in the key, and leaving it out was a real defect. The cap exists to
+     * kill the accesses an install abandons — a reinstall, a wiped config, a sign-out that never
+     * reached the site — and every one of those happens on the same machine. Keyed on the game
+     * alone it also cut ACROSS machines: linking a game on a Steam Deck signed the same game out
+     * on the desktop, and back again on the next switch. That is a mainstream setup, and losing an
+     * access on it is worse than the untidy line the cap was meant to remove.
+     *
+     * ⚠ Both parts are never null, for the same reason. A game with no Steam id has no slot and
+     * matches nothing; a device with no name is not a device, it is an unanswered question, and
+     * cutting on an absence is the product-name mistake in another shape.
      */
-    public function scopeSameSlot($query, string $slot, ?string $clientKind)
+    public function scopeSameSlot($query, string $slot, ?string $clientKind, string $deviceLabel)
     {
-        return $query->where('game_slot', $slot)->where('client_kind', $clientKind);
+        return $query
+            ->where('game_slot', $slot)
+            ->where('client_kind', $clientKind)
+            ->where('device_label', $deviceLabel);
     }
 
     /**

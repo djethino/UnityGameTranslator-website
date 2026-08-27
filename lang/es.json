@@ -1328,7 +1328,7 @@
     "link.device_label": "¿Qué dispositivo es este?",
     "link.device_placeholder": "PC del salón",
     "link.device_hint": "Una nota solo para ti, para reconocer este acceso más adelante. No pongas tu nombre real ni tu dirección.",
-    "link.rule_replaces": "Un juego solo mantiene un acceso por programa: volver a vincular un juego sustituye el que ya tenía.",
+    "link.rule_replaces": "Volver a vincular un juego desde el mismo dispositivo sustituye el acceso que había allí. Los demás dispositivos conservan el suyo.",
     "link.success": "Dispositivo vinculado. Ya puedes volver a tu juego.",
     "link.success_replaced": "Dispositivo vinculado. Ha sustituido el acceso que este juego ya tenía.",
     "docs.quick_start.way_manager": "Con el Manager",

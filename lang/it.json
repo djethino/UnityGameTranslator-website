@@ -1328,7 +1328,7 @@
     "link.device_label": "Di quale dispositivo si tratta?",
     "link.device_placeholder": "PC del salotto",
     "link.device_hint": "Un appunto solo per te, per riconoscere questo accesso più avanti. Non scriverci il tuo vero nome né il tuo indirizzo.",
-    "link.rule_replaces": "Un gioco mantiene un solo accesso per programma: ricollegare un gioco sostituisce quello che aveva già.",
+    "link.rule_replaces": "Ricollegare un gioco dallo stesso dispositivo sostituisce l'accesso che c'era. Gli altri dispositivi mantengono il loro.",
     "link.success": "Dispositivo collegato. Puoi tornare al tuo gioco.",
     "link.success_replaced": "Dispositivo collegato. Ha sostituito l'accesso che questo gioco aveva già.",
     "docs.quick_start.way_manager": "Con il Manager",

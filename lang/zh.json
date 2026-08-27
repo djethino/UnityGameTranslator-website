@@ -1328,7 +1328,7 @@
     "link.device_label": "这是哪台设备？",
     "link.device_placeholder": "客厅电脑",
     "link.device_hint": "只给你自己看的备注，方便以后认出这项访问。不要写上真名或住址。",
-    "link.rule_replaces": "一个游戏对每个程序只保留一项访问：再次关联同一个游戏会替换掉原来的。",
+    "link.rule_replaces": "从同一台设备再次关联一个游戏，会替换掉这台设备上原有的访问。其他设备保留各自的。",
     "link.success": "设备已关联。你可以回到游戏了。",
     "link.success_replaced": "设备已关联。它替换了这个游戏原有的访问。",
     "docs.quick_start.way_manager": "用 Manager",

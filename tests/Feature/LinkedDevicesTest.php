@@ -216,6 +216,39 @@ class LinkedDevicesTest extends TestCase
     }
 
     /**
+     * 🔴 The same game on two machines is a mainstream setup — a desktop and a Steam Deck — and
+     * both accesses have to live. Keyed on the game alone the cap cut across machines: linking on
+     * one signed the other out, and back again on the next switch.
+     */
+    public function test_the_same_game_on_another_device_keeps_its_own_access(): void
+    {
+        $user = User::factory()->create();
+
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Steam Deck');
+
+        $this->assertSame(2, $user->apiTokens()->count());
+        $this->assertSame(
+            ['Living room PC', 'Steam Deck'],
+            $user->apiTokens()->pluck('device_label')->sort()->values()->all()
+        );
+    }
+
+    /**
+     * ⚠ No device name, no cap — an unnamed line is an unanswered question, not a machine, and
+     * cutting on an absence is how two unrelated installs end up sharing one access.
+     */
+    public function test_an_unnamed_link_never_cuts_another_unnamed_one(): void
+    {
+        $user = User::factory()->create();
+
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user);
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user);
+
+        $this->assertSame(2, $user->apiTokens()->count());
+    }
+
+    /**
      * The Manager is a different program on the same game, so it keeps its own access: the cap is
      * one per game AND per program, not one per game.
      */
@@ -223,8 +256,10 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user);
-        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '367520', 'A Game', $user);
+        // ⚠ Both named, and the same name on purpose: with no device the cap does not run at all,
+        // and this would pass without proving anything about telling two programs apart.
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '367520', 'A Game', $user, 'Living room PC');
 
         $this->assertSame(2, $user->apiTokens()->count());
         $this->assertSame(

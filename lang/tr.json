@@ -1328,7 +1328,7 @@
     "link.device_label": "Bu hangi cihaz?",
     "link.device_placeholder": "Salondaki bilgisayar",
     "link.device_hint": "Bu erişimi sonradan tanımak için yalnızca size ait bir not. İçine gerçek adınızı ya da adresinizi yazmayın.",
-    "link.rule_replaces": "Bir oyun her program için tek bir erişim tutar: bir oyunu yeniden bağlamak öncekinin yerine geçer.",
+    "link.rule_replaces": "Bir oyunu aynı cihazdan yeniden bağlamak oradaki erişimin yerine geçer. Diğer cihazlar kendi erişimlerini korur.",
     "link.success": "Cihaz bağlandı. Oyununuza dönebilirsiniz.",
     "link.success_replaced": "Cihaz bağlandı. Bu oyunun önceki erişiminin yerine geçti.",
     "docs.quick_start.way_manager": "Manager ile",

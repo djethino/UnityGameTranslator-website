@@ -1328,7 +1328,7 @@
     "link.device_label": "O jakie urządzenie chodzi?",
     "link.device_placeholder": "Komputer w salonie",
     "link.device_hint": "Notatka tylko dla Ciebie, żeby później rozpoznać ten dostęp. Nie wpisuj w nią prawdziwego imienia ani adresu.",
-    "link.rule_replaces": "Gra ma jeden dostęp na program: ponowne połączenie gry zastępuje ten, który już miała.",
+    "link.rule_replaces": "Ponowne połączenie gry z tego samego urządzenia zastępuje dostęp, który tam był. Inne urządzenia zachowują swój.",
     "link.success": "Urządzenie połączone. Możesz wrócić do gry.",
     "link.success_replaced": "Urządzenie połączone. Zastąpiło dostęp, który ta gra już miała.",
     "docs.quick_start.way_manager": "Z Managerem",

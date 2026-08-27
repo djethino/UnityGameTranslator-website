@@ -1328,7 +1328,7 @@
     "link.device_label": "Perangkat apa ini?",
     "link.device_placeholder": "PC ruang tamu",
     "link.device_hint": "Catatan hanya untukmu, supaya kamu mengenali akses ini nanti. Jangan tulis nama aslimu atau alamatmu di situ.",
-    "link.rule_replaces": "Satu game menyimpan satu akses per program: menghubungkan sebuah game lagi menggantikan yang sudah ada.",
+    "link.rule_replaces": "Menghubungkan sebuah game lagi dari perangkat yang sama menggantikan akses yang ada di sana. Perangkat lain tetap punya miliknya.",
     "link.success": "Perangkat terhubung. Kamu bisa kembali ke gamemu.",
     "link.success_replaced": "Perangkat terhubung. Akses yang sudah dimiliki game ini telah digantikan.",
     "docs.quick_start.way_manager": "Dengan Manager",
