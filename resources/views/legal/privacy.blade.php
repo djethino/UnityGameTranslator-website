@@ -50,6 +50,14 @@
             <p class="text-gray-300 mb-2">{{ __('legal.hold_connections_why') }}</p>
             <p class="text-gray-300 mb-5">{{ __('legal.hold_connections_end') }}</p>
 
+            {{-- 🔴 Added when the Linked devices screen was built, because that screen created a
+                 category of personal data this page did not mention: a device name somebody types
+                 themselves, and which game each access belongs to. Declaring what is stored is not
+                 optional, and a policy that lags behind the schema is the exact failure this
+                 rewrite existed to end. --}}
+            <h3 class="font-semibold text-gray-100 mb-2">{{ __('legal.hold_accesses') }}</h3>
+            <p class="text-gray-300 mb-5">{{ __('legal.hold_accesses_text') }}</p>
+
             <h3 class="font-semibold text-gray-100 mb-2">{{ __('legal.hold_counting') }}</h3>
             <p class="text-gray-300 mb-2">{{ __('legal.hold_counting_no_cookie') }}</p>
             <p class="text-gray-300 mb-2">{{ __('legal.hold_counting_how') }}</p>
@@ -81,6 +89,10 @@
                         <tr>
                             <td class="py-2 pr-4 align-top">{{ __('legal.keep_content') }}</td>
                             <td class="py-2 align-top text-gray-400">{{ __('legal.keep_content_for') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 pr-4 align-top">{{ __('legal.keep_accesses') }}</td>
+                            <td class="py-2 align-top text-gray-400">{{ __('legal.keep_accesses_for') }}</td>
                         </tr>
                         <tr>
                             <td class="py-2 pr-4 align-top">{{ __('legal.keep_ip') }}</td>
