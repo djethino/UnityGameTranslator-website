@@ -234,6 +234,19 @@ php artisan analytics:aggregate        # Aggregate daily analytics
 php artisan recalculate-hashes         # Recalculate translation file hashes
 ```
 
+### Tests and the database engine
+
+The suite runs against **MySQL/MariaDB by default**, on the engine production runs on, using a
+database of its own (`unitygametranslator_test` on `127.0.0.1:33306`). Create it once, and the
+suite takes care of the rest — it rebuilds the schema on every run.
+
+`phpunit.xml` only sets defaults: PHPUnit never overwrites a variable the environment already
+carries. To run the suite on SQLite instead, with no file to edit:
+
+```bash
+DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test
+```
+
 ## Supported Languages
 
 Arabic, Chinese, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Thai, Turkish, Vietnamese

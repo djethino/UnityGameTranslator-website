@@ -38,8 +38,27 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!--
+            🔴 The suite runs on the engine production runs on. It used to run on SQLite in memory,
+            which was faster (71 s against 86 s) and hid a whole class of defects: a `having()`
+            without `groupBy`, a `firstOrCreate` on a date column, a packet-size limit, and a
+            migration whose `down()` could not run backwards on MySQL — all green here, all broken
+            there. Fifteen seconds is not worth a category of failure no test can see.
+
+            ⚠ A SEPARATE database, never the development one: `RefreshDatabase` starts by wiping
+            whatever it is pointed at.
+
+            ⚠ These are defaults, not a requirement: PHPUnit does not overwrite a variable the
+            environment already carries, so real env vars win. Anyone without this container can
+            still run the suite elsewhere — the code stays portable, including on SQLite:
+              $env:DB_CONNECTION='sqlite'; $env:DB_DATABASE=':memory:'; php artisan test
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="33306"/>
+        <env name="DB_DATABASE" value="unitygametranslator_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value="local-dev-2026"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
