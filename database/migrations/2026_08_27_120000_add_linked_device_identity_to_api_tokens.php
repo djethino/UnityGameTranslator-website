@@ -83,7 +83,24 @@ return new class extends Migration
 
     public function down(): void
     {
-        // ⚠ Both indexes go first, in their own statement. SQLite rebuilds the table to drop a
+        // 🔴 **The composite index above becomes the one holding up the foreign key on `user_id`.**
+        // Measured on MariaDB 10.11: `api_tokens_user_id_foreign` — the index InnoDB created with
+        // the constraint — is present before this migration and gone after it, because an index
+        // whose leftmost column is the key's makes it redundant. Dropping the composite one then
+        // fails with error 1553, "needed in a foreign key constraint", and the rollback stops with
+        // the unique index already gone: a second attempt fails on a different error and the table
+        // has to be repaired by hand. So the key gets an index of its own back first, under the
+        // name it had, which is also what restores the exact shape this migration found.
+        //
+        // ⚠ SQLite has no such requirement and never created that index, so adding one there would
+        // leave behind something the original state never had.
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            Schema::table('api_tokens', function (Blueprint $table) {
+                $table->index('user_id', 'api_tokens_user_id_foreign');
+            });
+        }
+
+        // ⚠ Both indexes go next, in their own statement. SQLite rebuilds the table to drop a
         // column and replays the index definitions while doing it — so an index still naming a
         // column that is on its way out makes the rebuild fail, and the rollback stops halfway.
         Schema::table('api_tokens', function (Blueprint $table) {
