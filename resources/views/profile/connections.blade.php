@@ -287,12 +287,25 @@
                                     <form method="POST" action="{{ route('profile.connections.move', $token->id) }}" class="mt-2 space-y-2">
                                         @csrf
                                         @method('PATCH')
-                                        @if($groupNames->isNotEmpty())
-                                            <select name="device_label"
+                                        {{-- Every group on screen, named or not — see the controller.
+                                             Offering only the named ones left this control unable to
+                                             reach the boxes right above it. --}}
+                                        @php
+                                            $elsewhere = $destinations->reject(fn ($d) => $d['id'] === $anyToken->id);
+                                        @endphp
+                                        {{-- ⚠ Also when there is nowhere else to go but this line
+                                             has been filed by hand: the list carries "back to its
+                                             machine", and hiding it would leave the only way out
+                                             of a group unreachable. --}}
+                                        @if($elsewhere->isNotEmpty() || $token->device_label !== null)
+                                            <select name="into"
                                                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
                                                 <option value="">{{ __('connections.move_default') }}</option>
-                                                @foreach($groupNames as $name)
-                                                    <option value="{{ $name }}" @selected($token->device_label === $name)>{{ $name }}</option>
+                                                @foreach($elsewhere as $destination)
+                                                    <option value="{{ $destination['id'] }}">
+                                                        {{ $destination['label'] ?? __('connections.group_this_machine') }}
+                                                        ({{ $destination['count'] }})
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         @endif

@@ -57,9 +57,25 @@ class ConnectionsController extends Controller
             'total' => $tokens->count(),
             'otherBrowsers' => $this->otherBrowserCount($request),
 
-            // The groups that already exist, offered to move a line into. Sorted, because a list
-            // somebody scans should not change order every time an access speaks.
-            'groupNames' => $tokens->pluck('device_label')->filter()->unique()->sort()->values(),
+            // 🔴 **Every group that is on screen, not just the named ones.** Offering only the named
+            // ones made "move to another group" unable to reach the groups somebody was looking at:
+            // with two boxes, both unnamed, the control could do nothing but create a third. A
+            // destination is therefore identified by ONE OF ITS LINES, exactly as renaming and
+            // revoking already are — a name is not needed to point at a pile.
+            //
+            // ⚠ The unplaced heap is deliberately absent. It means "nothing says where these are",
+            // so moving something INTO it would have to erase what a machine said — and the next
+            // call from that machine would say it again, bouncing the line back. A destination that
+            // undoes itself is worse than one that is missing.
+            'destinations' => $groups
+                ->filter(fn ($group) => $group->first()->device_label !== null
+                    || $group->first()->device_slot !== null)
+                ->map(fn ($group) => [
+                    'id' => $group->first()->id,
+                    'label' => $group->first()->device_label,
+                    'count' => $group->count(),
+                ])
+                ->values(),
         ]);
     }
 
@@ -112,7 +128,10 @@ class ConnectionsController extends Controller
     public function move(Request $request, string $token)
     {
         $validated = $request->validate([
-            'device_label' => ['nullable', 'string', 'max:60'],
+            // One of the destination group's own lines. A group has no identity of its own — it is
+            // whatever its members share — so pointing at a member is how you point at a group,
+            // named or not. Same shape as renaming and revoking a group.
+            'into' => ['nullable', 'integer'],
             'new_group' => ['nullable', 'string', 'max:60'],
         ]);
 
@@ -121,9 +140,27 @@ class ConnectionsController extends Controller
         // ⚠ Typing wins over picking. Somebody who has written a name has said what they want more
         // recently than the list they left alone, and a form that ignored it would look broken.
         $typed = trim((string) ($validated['new_group'] ?? ''));
-        $label = $typed !== '' ? $typed : trim((string) ($validated['device_label'] ?? ''));
 
-        $apiToken->update(['device_label' => $label === '' ? null : $label]);
+        if ($typed !== '') {
+            $apiToken->update(['device_label' => $typed]);
+        } elseif (!empty($validated['into'])) {
+            $destination = $request->user()->apiTokens()->findOrFail($validated['into']);
+
+            // A named group is joined by taking its name. An unnamed one is a machine, and joined
+            // by taking what that machine says — which is the only thing holding it together.
+            //
+            // ⚠ **That overwrites what this line's own machine said, and it is meant to.**
+            // `device_slot` exists to group and does nothing else: it is never shown, never
+            // exported, and the per-game cap runs on `game_slot`. When the owner says two accesses
+            // belong together, that IS the answer — our reading of it was only ever the default.
+            $apiToken->update($destination->device_label !== null
+                ? ['device_label' => $destination->device_label]
+                : ['device_label' => null, 'device_slot' => $destination->device_slot]);
+        } else {
+            // Nothing picked and nothing typed: back under the default arrangement. Its machine is
+            // still recorded underneath, so the line goes home rather than into a group called "".
+            $apiToken->update(['device_label' => null]);
+        }
 
         return redirect()->route('profile.connections')
             ->with('success', __('connections.moved'));

@@ -592,6 +592,20 @@ class LinkedDevicesTest extends TestCase
             'new_group' => 'RPGs',
         ])->assertSessionHasNoErrors()->assertRedirect();
 
+        // And back in, by pointing at a line of the destination rather than retyping its name —
+        // which is the whole point: a group nobody has named is still a group you can aim at.
+        $this->actingAs($user)->patch("/profile/connections/{$moved->id}/group", [
+            'into' => $stays->id,
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertNull($moved->fresh()->device_label);
+        $this->assertSame($stays->fresh()->device_slot, $moved->fresh()->device_slot);
+
+        // Out again, so the rest of the test reads as before.
+        $this->actingAs($user)->patch("/profile/connections/{$moved->id}/group", [
+            'new_group' => 'RPGs',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
         // Naming the machine's group touches what is still in it, and nothing else.
         $this->actingAs($user)->patch("/profile/connections/{$stays->id}", [
             'device_label' => 'Living room PC',
@@ -609,6 +623,33 @@ class LinkedDevicesTest extends TestCase
         ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertNull($moved->fresh()->device_label);
+    }
+
+    /**
+     * A line from the old unplaced heap can be dropped onto a machine group nobody has named.
+     *
+     * 🔴 The destinations used to be the NAMED groups only, so with two unnamed boxes on screen the
+     * control could do nothing but invent a third — "move to another group" that cannot reach the
+     * groups you are looking at. A group is pointed at through one of its lines, name or no name.
+     */
+    public function test_an_unplaced_line_can_join_a_machine_group_that_has_no_name(): void
+    {
+        $user = User::factory()->create();
+        $device = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $onTheMachine = ApiToken::createForUser($user, null, [
+            'device_slot' => ApiToken::deviceSlotFor($user, $device),
+        ]);
+        $legacy = ApiToken::createForUser($user);
+
+        $this->assertNull($legacy->device_slot);
+
+        $this->actingAs($user)->patch("/profile/connections/{$legacy->id}/group", [
+            'into' => $onTheMachine->id,
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertSame($onTheMachine->device_slot, $legacy->fresh()->device_slot);
+        $this->assertNull($legacy->fresh()->device_label);
     }
 
     /**
