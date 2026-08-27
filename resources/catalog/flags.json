@@ -626,20 +626,22 @@
     "es-ga": {
       "name": "Galicia",
       "palette": {
-        "w": "#FFFFFF",
         "b": "#0099CC",
-        "y": "#F0C420"
+        "w": "#FFFFFF",
+        "y": "#F0C420",
+        "a": "#005BBF",
+        "c": "#D81126"
       },
       "rows": [
-        "bwwwwwwwwwwwwwww",
-        "bbbwwwwwwwwwwwww",
-        "wbbbwwwwwwwwwwww",
-        "wwwbbbwyyywwwwww",
-        "wwwwbbwbbbwwwwww",
-        "wwwwwwwbybwwwwww",
-        "wwwwwwwbbbwwwwww",
-        "wwwwwwwwbwbbwwww",
-        "wwwwwwwwwwbbbwww",
+        "bbwwwwwwwwwwwwww",
+        "bbbwwwwyywwwwwww",
+        "wbbbbwwccwwwwwww",
+        "wwbbbbaaaawwwwww",
+        "wwwwbbaaaawwwwww",
+        "wwwwwwayyawwwwww",
+        "wwwwwwayyabwwwww",
+        "wwwwwwwaabbbbwww",
+        "wwwwwwwwwwbbbbww",
         "wwwwwwwwwwwwbbbw",
         "wwwwwwwwwwwwwbbb"
       ]
@@ -1715,20 +1717,20 @@
     "mn": {
       "name": "Mongolia",
       "palette": {
-        "r": "#DA2032",
         "b": "#0066B3",
+        "r": "#DA2032",
         "y": "#FFD900"
       },
       "rows": [
         "rrrrrrbbbbbrrrrr",
+        "rryrrrbbbbbrrrrr",
         "rrrrrrbbbbbrrrrr",
         "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
-        "rryrrrbbbbbrrrrr",
+        "ryryrrbbbbbrrrrr",
+        "ryryrrbbbbbrrrrr",
+        "ryyyrrbbbbbrrrrr",
+        "ryyyrrbbbbbrrrrr",
+        "ryryrrbbbbbrrrrr",
         "rrrrrrbbbbbrrrrr",
         "rrrrrrbbbbbrrrrr"
       ]
@@ -1821,19 +1823,19 @@
       "name": "Friesland",
       "palette": {
         "b": "#244994",
-        "w": "#FFFFFF",
-        "r": "#DA121A"
+        "r": "#DA121A",
+        "w": "#FFFFFF"
       },
       "rows": [
-        "bbbbwwrwbbbbwwrw",
-        "wbbbbwwwwbbbbwww",
-        "wwbbbbwwwwbbbbww",
-        "wwrbbbbwwwwbbbbw",
-        "wwwwbbbbwwrwbbbb",
+        "bbbbwwrrbbbbwwrr",
+        "wbbbbwwwwbbbbwwr",
+        "wrbbbbwwwwbbbbww",
+        "wrrbbbbwwwrbbbbw",
+        "wwwwbbbbwwrrbbbb",
         "bwwwwbbbbwwwwbbb",
         "bbwwwwbbbbwwwwbb",
-        "bbbwwwrbbbbwwwwb",
-        "bbbbwwwwbbbbwwrw",
+        "bbbwwwrbbbbwwwrb",
+        "bbbbwwrrbbbbwwrr",
         "wbbbbwwwwbbbbwww",
         "wwbbbbwwwwbbbbww"
       ]
@@ -1906,19 +1908,19 @@
       "name": "New Zealand",
       "palette": {
         "b": "#00247D",
-        "w": "#FFFFFF",
-        "r": "#CC142B"
+        "r": "#CC142B",
+        "w": "#FFFFFF"
       },
       "rows": [
         "bwbrbwbbbbbbbbbb",
         "bbwrwbbbbbbbbbbb",
         "rrrrrrrbbbbrbbbb",
         "bbwrwbbbbbbbbbbb",
-        "bwbrbwbbbbbbrbbb",
+        "bwbrbwbbbbbbwbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbrbbbbb",
         "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbrbbb",
+        "bbbbbbbbbbbbwbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb"
       ]
@@ -1952,17 +1954,17 @@
         "y": "#FCD116"
       },
       "rows": [
-        "wbbbbbbbbbbbbbbb",
+        "ybbbbbbbbbbbbbbb",
         "wwbbbbbbbbbbbbbb",
         "wwwbbbbbbbbbbbbb",
-        "wwywbbbbbbbbbbbb",
-        "wyywwbbbbbbbbbbb",
-        "wwywwwbbbbbbbbbb",
-        "wyywwrrrrrrrrrrr",
+        "wwwwbbbbbbbbbbbb",
+        "wywywbbbbbbbbbbb",
+        "wwywwybbbbbbbbbb",
+        "wywywrrrrrrrrrrr",
         "wwwwrrrrrrrrrrrr",
         "wwwrrrrrrrrrrrrr",
         "wwrrrrrrrrrrrrrr",
-        "wrrrrrrrrrrrrrrr"
+        "yrrrrrrrrrrrrrrr"
       ]
     },
     "pk": {
@@ -2115,8 +2117,8 @@
     "rs": {
       "name": "Serbia",
       "palette": {
-        "r": "#C6363C",
         "b": "#0C4076",
+        "r": "#C6363C",
         "w": "#FFFFFF",
         "y": "#E8B000"
       },
@@ -2124,11 +2126,11 @@
         "rrrrrrrrrrrrrrrr",
         "rrryyyyyrrrrrrrr",
         "rrwwwwwwwrrrrrrr",
-        "rrwrrrrrwrrrrrrr",
-        "bbwrrrrrwbbbbbbb",
-        "bbwrrrrrwbbbbbbb",
-        "bbwrrrrrwbbbbbbb",
-        "wwwwrrrwwwwwwwww",
+        "rrwrrwrrwrrrrrrr",
+        "bbwwwwwwwbbbbbbb",
+        "bbwrwwwrwbbbbbbb",
+        "bbwrrwrrwbbbbbbb",
+        "wwwwrwrwwwwwwwww",
         "wwwwwrwwwwwwwwww",
         "wwwwwwwwwwwwwwww",
         "wwwwwwwwwwwwwwww"
@@ -2159,19 +2161,19 @@
       "name": "Bashkortostan",
       "palette": {
         "b": "#0072CE",
-        "w": "#FFFFFF",
         "g": "#007000",
+        "w": "#FFFFFF",
         "y": "#FFD700"
       },
       "rows": [
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
         "bbbbbbbbbbbbbbbb",
-        "bbbbbbbbbbbbbbbb",
-        "wwwwwwwyyywwwwww",
-        "wwwwwwyyyyywwwww",
-        "wwwwwwwyyywwwwww",
-        "gggggggggggggggg",
+        "wwwwwwwwywwwwwww",
+        "wwwwwwwywywwwwww",
+        "wwwwwwywywywwwww",
+        "wwwwwwwywywwwwww",
+        "wwwwwwwwywwwwwww",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg"
@@ -2576,20 +2578,20 @@
     "ve": {
       "name": "Venezuela",
       "palette": {
-        "y": "#FFCC00",
         "b": "#00247D",
         "r": "#CF142B",
-        "w": "#FFFFFF"
+        "w": "#FFFFFF",
+        "y": "#FFCC00"
       },
       "rows": [
         "yyyyyyyyyyyyyyyy",
         "yyyyyyyyyyyyyyyy",
         "yyyyyyyyyyyyyyyy",
-        "yyyyyyyyyyyyyyyy",
-        "bbbbbwbwbwbwbbbb",
-        "bbbwbbbbbbbbbwbb",
+        "bbbbbbbwwbbbbbbb",
+        "bbbbbwbbbbwbbbbb",
+        "bbbwbbbbbbbbwbbb",
         "bbbbbbbbbbbbbbbb",
-        "rrrrrrrrrrrrrrrr",
+        "bbwbbbbbbbbbbwbb",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr",
         "rrrrrrrrrrrrrrrr"
