@@ -253,6 +253,30 @@ class AccountDeletionTest extends TestCase
     }
 
     /**
+     * Notifications are the one category somebody cannot see for themselves once read and scrolled
+     * past, so leaving them out of the export left a person unable to find out what they had been
+     * told about their own account.
+     */
+    public function test_the_export_includes_the_notifications(): void
+    {
+        $user = User::factory()->create();
+
+        DB::table('notifications')->insert([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'type' => 'branch_submitted',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $user->id,
+            'data' => json_encode(['type' => 'branch_submitted', 'game_name' => 'A Game']),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $data = json_decode($this->actingAs($user)->get('/profile/export')->streamedContent(), true);
+
+        $this->assertSame('A Game', $data['notifications'][0]['data']['game_name']);
+    }
+
+    /**
      * The accesses linked to the account are personal data too — a device name somebody typed,
      * which game each one belongs to — so they belong in the export.
      *

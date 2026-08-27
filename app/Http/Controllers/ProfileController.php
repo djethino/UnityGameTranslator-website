@@ -214,6 +214,23 @@ class ProfileController extends Controller
                 'last_exchange' => $token->last_used_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
             ]),
+            // Messages addressed to this account — a contribution arriving, a branch merged, a
+            // translation delisted. They were missing, and they are the one category somebody can
+            // no longer see for themselves once they have been read and scrolled past.
+            //
+            // ⚠ The payload goes out as it stands. It names games and, on a contribution, whoever
+            // sent it — all of which this person already read on screen when it arrived. Rewriting
+            // it here would be inventing a second version of what they were told.
+            'notifications' => DB::table('notifications')
+                ->where('notifiable_type', User::class)
+                ->where('notifiable_id', $user->id)
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn ($row) => [
+                    'data' => json_decode($row->data, true),
+                    'read_at' => $row->read_at,
+                    'created_at' => $row->created_at,
+                ]),
             'translations' => $user->translations()->with('game')->get()->map(function ($t) {
                 return [
                     'id' => $t->id,
