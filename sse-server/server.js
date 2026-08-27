@@ -722,6 +722,16 @@ const server = http.createServer(async (req, res) => {
             refused_at_capacity: refusedAtCapacity,
             refused_per_ip: refusedPerIp,
             per_ip_limit: PER_IP_LIMIT,
+
+            // 🔴 **"Did my restart take?" had no answer.** Deploying this relay means touching
+            // tmp/restart.txt and hoping: nothing it served said which code it was running, so a
+            // process that never came back looked exactly like one that did.
+            //
+            // Two answers, and the second is the sharper one: a short uptime says it restarted,
+            // and `revalidate_interval_s` EXISTING AT ALL says the running code is new enough to
+            // re-check an open stream's access. A relay from before that answers without the field.
+            uptime_s: Math.round(process.uptime()),
+            revalidate_interval_s: Math.round(REVALIDATE_INTERVAL_MS / 1000),
         }));
         return;
     }
