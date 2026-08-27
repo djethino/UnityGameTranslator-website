@@ -265,6 +265,18 @@ class LinkedDevicesTest extends TestCase
     }
 
     /**
+     * 🔴 The mods already installed post NOTHING at all — no body, no content type — and none of
+     * them will ever be updated. An empty JSON object is not the same request, so the guarantee is
+     * tested as it actually arrives.
+     */
+    public function test_a_request_with_no_body_at_all_still_starts_a_link(): void
+    {
+        $this->call('POST', '/api/v1/auth/device')
+            ->assertOk()
+            ->assertJsonStructure(['device_code', 'user_code', 'verification_uri']);
+    }
+
+    /**
      * A program that declares nothing still gets a working token — every mod already installed
      * calls this with an empty body and none of them will ever be updated.
      */
