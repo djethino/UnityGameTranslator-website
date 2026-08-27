@@ -7,6 +7,7 @@ use App\Models\ApiToken;
 use App\Models\AuditLog;
 use App\Models\DeviceCode;
 use App\Services\SsePublisher;
+use App\Support\ClientAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,9 +19,30 @@ class DeviceFlowController extends Controller
      *
      * POST /api/v1/auth/device
      */
-    public function initiate(): JsonResponse
+    public function initiate(Request $request): JsonResponse
     {
+        // Optional, and it has to stay optional: every mod already installed calls this with an
+        // empty body, and none of them will ever be updated. What a program does not declare is
+        // simply not known about its line — never a refusal.
+        $declared = $request->validate([
+            'game_id' => ['nullable', 'string', 'regex:/^[0-9]{1,32}$/'],
+            'game_name' => ['nullable', 'string', 'max:120'],
+        ]);
+
         $deviceCode = DeviceCode::generate();
+
+        // Which program is asking is known here and nowhere else: this is the only call the mod or
+        // the Manager makes before anybody has signed in. Parsed on arrival — the agent string
+        // itself is not kept.
+        $client = ClientAgent::parse($request->userAgent());
+
+        $deviceCode->forceFill([
+            'client_kind' => $client['kind'] ?? null,
+            'client_version' => $client['version'] ?? null,
+            'client_variant' => $client['variant'] ?? null,
+            'game_id' => $declared['game_id'] ?? null,
+            'game_name' => $declared['game_name'] ?? null,
+        ])->save();
 
         return response()->json([
             'device_code' => $deviceCode->device_code,
@@ -68,7 +90,20 @@ class DeviceFlowController extends Controller
      */
     public function showLinkPage()
     {
-        return view('auth.link');
+        // The names this account has already used, offered as chips to click.
+        //
+        // ⚠ Chips, never a pre-filled field: a field already reading "Living room PC" gets accepted
+        // without a thought on the one day it matters — the day a game is linked at a friend's
+        // place. A chip costs the same gesture and stays a choice.
+        $devices = auth()->check()
+            ? auth()->user()->apiTokens()
+                ->whereNotNull('device_label')
+                ->distinct()
+                ->orderBy('device_label')
+                ->pluck('device_label')
+            : collect();
+
+        return view('auth.link', ['devices' => $devices]);
     }
 
     /**
@@ -76,8 +111,10 @@ class DeviceFlowController extends Controller
      */
     public function validateCode(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'code' => 'required|string|min:6|max:9', // ABCD-1234 is 9 chars with dash
+            // An opaque note for its owner. The server never reads anything into it.
+            'device_label' => ['nullable', 'string', 'max:60'],
         ]);
 
         $deviceCode = DeviceCode::findByUserCode($request->code);
@@ -91,9 +128,32 @@ class DeviceFlowController extends Controller
         // Authorize the device code with the current user
         $deviceCode->authorize($user);
 
-        // Create API token for the mod (previously done inside SseController::emitAuthorized)
-        $apiToken = ApiToken::createForUser($user);
-        AuditLog::logTokenCreated($user->id, 'Unity Mod (Device Flow)', $request);
+        // One game holds one access per program: linking again replaces what was there rather than
+        // leaving a line nobody can identify behind.
+        //
+        // ⚠ Only when the game carries a Steam id. A game recognised through `Application.
+        // productName` cannot be told from another carrying the same one — and two different games
+        // silently cutting each other off is worse than no cap at all.
+        $slot = $deviceCode->game_id !== null && $deviceCode->client_kind !== null
+            ? ApiToken::gameSlotFor($user, $deviceCode->game_id)
+            : null;
+
+        $replaced = 0;
+        if ($slot !== null) {
+            $replaced = $user->apiTokens()->sameSlot($slot, $deviceCode->client_kind)->delete();
+        }
+
+        $apiToken = ApiToken::createForUser($user, null, [
+            'device_label' => $validated['device_label'] ?? null,
+            'client_kind' => $deviceCode->client_kind,
+            'client_version' => $deviceCode->client_version,
+            'client_variant' => $deviceCode->client_variant,
+            'game_slot' => $slot,
+            'game_ref' => $deviceCode->game_name,
+        ]);
+        // The label used to read 'Unity Mod (Device Flow)' whatever had asked — a name that
+        // matched nothing stored, and that said "mod" about a Manager link.
+        AuditLog::logTokenCreated($user->id, $deviceCode->client_kind ?? 'unknown', $request);
 
         // Signal SSE via Redis pub/sub — Node.js relays to the mod
         SsePublisher::deviceAuthorized($deviceCode->device_code, [
@@ -111,6 +171,12 @@ class DeviceFlowController extends Controller
         // Log device linking
         AuditLog::logDeviceLinked($user->id, $request->code, $request);
 
-        return redirect()->route('link')->with('success', 'Device linked successfully! You can now return to your game.');
+        // ⚠ Reported after the fact, not asked before: the code and the label arrive in one POST,
+        // so there is no moment in between to ask. The rule itself is stated on the page above the
+        // field, which is where somebody can still decide not to.
+        return redirect()->route('link')->with(
+            'success',
+            $replaced > 0 ? __('link.success_replaced') : __('link.success')
+        );
     }
 }

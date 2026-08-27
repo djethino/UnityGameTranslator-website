@@ -23,7 +23,7 @@ class OptionalAuthenticateApi
         $token = $request->bearerToken();
 
         if ($token) {
-            $apiToken = ApiToken::findAndMarkUsed($token);
+            $apiToken = ApiToken::findAndMarkUsed($token, $request->userAgent());
 
             if ($apiToken) {
                 $request->setUserResolver(fn () => $apiToken->user);

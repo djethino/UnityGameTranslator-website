@@ -139,8 +139,16 @@ Route::prefix('v1')->group(function () {
         // Vote on translation
         Route::post('translations/{translation}/vote', [TranslationController::class, 'vote'])
             ->middleware('throttle:30,1');
-
-        // Revoke token
-        Route::delete('auth/token', [DeviceFlowController::class, 'revoke']);
     });
+
+    // Revoke the token being presented — deliberately OUTSIDE `check.banned.api`.
+    //
+    // ⚠ It used to sit with the endpoints above, which meant a banned account could no longer cut
+    // its own access: the one action nobody has a reason to deny, refused to the people most
+    // likely to want it. Giving up a credential is not a privilege.
+    //
+    // Still `auth.api`: the token has to be valid to be handed back, and it only ever revokes the
+    // one presented. Cutting somebody else's is done from the website, under a session.
+    Route::delete('auth/token', [DeviceFlowController::class, 'revoke'])
+        ->middleware(['auth.api', 'throttle:60,1']);
 });

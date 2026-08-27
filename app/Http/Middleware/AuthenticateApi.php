@@ -25,7 +25,9 @@ class AuthenticateApi
             ], 401);
         }
 
-        $apiToken = ApiToken::findAndMarkUsed($token);
+        // The agent fills in which program holds a token issued before that was recorded. Passed
+        // here rather than stored: only the parsed result is kept, never the raw string.
+        $apiToken = ApiToken::findAndMarkUsed($token, $request->userAgent());
 
         if (!$apiToken) {
             return response()->json([

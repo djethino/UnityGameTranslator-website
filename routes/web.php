@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DeviceFlowController;
 use App\Http\Controllers\Auth\LocalAuthController;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ConnectionsController;
 use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameLanguageController;
@@ -196,6 +197,15 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         Route::post('/profile/avatar', [ProfileController::class, 'avatarReroll'])->middleware('throttle:30,1')->name('profile.avatar');
         Route::get('/profile/export', [ProfileController::class, 'export'])->name('profile.export');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        // Linked devices — what holds an access to this account, and how to cut it.
+        // ⚠ {token} is an id resolved against auth()->user()->apiTokens(), never route-model bound:
+        // the ids are sequential, so binding here would hand out every account's rows.
+        Route::get('/profile/connections', [ConnectionsController::class, 'index'])->name('profile.connections');
+        Route::patch('/profile/connections/{token}', [ConnectionsController::class, 'update'])->name('profile.connections.rename');
+        Route::delete('/profile/connections/{token}', [ConnectionsController::class, 'destroy'])->name('profile.connections.destroy');
+        Route::delete('/profile/connections', [ConnectionsController::class, 'destroyMany'])->name('profile.connections.destroy-many');
+        Route::delete('/profile/browsers', [ConnectionsController::class, 'signOutOtherBrowsers'])->name('profile.browsers.destroy');
 
         // Reports
         Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');

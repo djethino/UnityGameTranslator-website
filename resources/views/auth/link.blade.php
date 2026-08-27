@@ -51,6 +51,35 @@
                         @error('code')
                             <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                         @enderror
+                        {{-- 🔴 At the field, because the field is the attack: a code arrives by
+                             message with a reason to type it, and typing it hands an access to
+                             whoever sent it. Said here, where the hand is, not in a footer. --}}
+                        <p class="mt-2 text-xs text-amber-200/90">{{ __('link.phishing') }}</p>
+                    </div>
+
+                    {{-- The name of the machine, and the only signal that will still mean something
+                         in two years: it needs no client update, it survives a reinstall, and it is
+                         what groups fifty lines into three on the Linked devices screen.
+
+                         ⚠ Suggestions through a native <datalist>, never a pre-filled value. A
+                         field already reading "Living room PC" gets accepted without a thought on
+                         the one day it matters — the day a game is linked at a friend's place. --}}
+                    <div class="text-left">
+                        <label for="device_label" class="block text-sm font-medium text-gray-300 mb-2">
+                            {{ __('link.device_label') }}
+                        </label>
+                        <input type="text" id="device_label" name="device_label" maxlength="60"
+                               list="known-devices" autocomplete="off"
+                               placeholder="{{ __('link.device_placeholder') }}"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        @if($devices->isNotEmpty())
+                        <datalist id="known-devices">
+                            @foreach($devices as $device)
+                                <option value="{{ $device }}"></option>
+                            @endforeach
+                        </datalist>
+                        @endif
+                        <p class="text-xs text-gray-500 mt-1">{{ __('link.device_hint') }}</p>
                     </div>
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
@@ -58,10 +87,21 @@
                     </button>
                 </form>
 
-                <div class="mt-8 pt-6 border-t border-gray-700">
+                <div class="mt-8 pt-6 border-t border-gray-700 space-y-2 text-left">
                     <p class="text-gray-400 text-sm">
                         <i class="fas fa-info-circle mr-1"></i>
                         {{ __('link.expires') }}
+                    </p>
+                    {{-- Stated before, reported after. The code and the name arrive in one POST, so
+                         there is no moment in between to ask — but there is one to decide not to. --}}
+                    <p class="text-gray-400 text-sm">
+                        <i class="fas fa-rotate mr-1"></i>
+                        {{ __('link.rule_replaces') }}
+                    </p>
+                    <p class="text-gray-500 text-sm">
+                        <a href="{{ route('profile.connections') }}" class="text-purple-400 hover:text-purple-300">
+                            {{ __('connections.page_title') }}
+                        </a>
                     </p>
                 </div>
             @else

@@ -186,6 +186,25 @@ class ProfileController extends Controller
                     'user_agent' => $entry->user_agent,
                     'at' => $entry->created_at->toIso8601String(),
                 ]),
+            // What holds an access to the account. It was missing entirely, and it now carries
+            // columns that describe a person's machines and games — so leaving it out would be a
+            // second omission on top of the first.
+            //
+            // ⚠ The token itself is never exported, in any form: it is a live credential, and a
+            // file people mail to themselves is the last place to put one. `public_code` is the
+            // handle that lets somebody match a line here with a line on screen.
+            'linked_devices' => $user->apiTokens()->orderBy('created_at')->get()->map(fn ($token) => [
+                'code' => $token->public_code,
+                'device' => $token->device_label,
+                'program' => $token->client_kind,
+                'program_version' => $token->client_version,
+                'mod_loader' => $token->client_variant,
+                'game' => $token->gameName(),
+                'has_published' => $token->published_at_least_once,
+                'linked_at' => $token->created_at->toIso8601String(),
+                'last_exchange' => $token->last_used_at?->toIso8601String(),
+                'expires_at' => $token->expires_at?->toIso8601String(),
+            ]),
             'translations' => $user->translations()->with('game')->get()->map(function ($t) {
                 return [
                     'id' => $t->id,

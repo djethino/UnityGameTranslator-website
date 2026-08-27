@@ -736,6 +736,19 @@ class TranslationController extends Controller
         // Store file
         $fileName = $service->storeFile($parsed['normalized_content'], $fileUuid);
 
+        // From here the upload is happening, on both the create and the update path — which is why
+        // the mark is here and not next to either return.
+        //
+        // 🔴 This is what separates an unknown access that sleeps from one that has already spoken
+        // for the account, and it is the whole reason the Linked devices screen shows it. A
+        // boolean, written once: no date, or crossing it with the public catalogue would pin each
+        // release on a named machine.
+        $apiToken = $request->attributes->get('api_token');
+        if ($apiToken !== null && !$apiToken->published_at_least_once) {
+            $apiToken->timestamps = false;
+            $apiToken->update(['published_at_least_once' => true]);
+        }
+
         // Determine status: branches inherit from Main, only Main owners can set status
         $isBranch = $visibility === 'branch' || ($existingTranslation && $existingTranslation->visibility === 'branch');
         if ($isBranch) {

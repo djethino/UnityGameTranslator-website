@@ -134,6 +134,19 @@
     </div>
     @endif
 
+    {{-- Linked devices — the way in, and the only one.
+
+         ⚠ A card here rather than an entry in the navigation bar as well: this opens a screen that
+         cuts accesses, and an action has one door. The screen itself is a page of its own because
+         this column is `max-w-xl`, far too narrow for a list grouped by machine. --}}
+    <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h2 class="font-semibold mb-4"><i class="fas fa-link mr-2 text-purple-400"></i>{{ __('connections.page_title') }}</h2>
+        <p class="text-gray-400 text-sm mb-4">{{ __('connections.profile_card_hint') }}</p>
+        <a href="{{ route('profile.connections') }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white text-center py-3 rounded-lg transition">
+            <i class="fas fa-sliders mr-2"></i> {{ __('connections.profile_card_open') }}
+        </a>
+    </div>
+
     <!-- Stats -->
     <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="font-semibold mb-4"><i class="fas fa-chart-bar mr-2 text-purple-400"></i>{{ __('profile.statistics') }}</h2>
