@@ -273,10 +273,13 @@ class EditSessionFlowTest extends TestCase
      * THESE strings must pass, and a test that fetched them would keep passing if they changed.
      *
      * 🔴 **This test passed while production still failed, and could not have done otherwise.** The
-     * suite runs on SQLite, which IGNORES varchar lengths; production is MySQL, which enforces
+     * suite ran on SQLite then, which IGNORES varchar lengths; production is MySQL, which enforces
      * them. Fixing the request validation alone therefore turned a readable 422 into a 500, and
      * everything here stayed green. A column width is one of the things a passing test says
      * nothing about — the schema has to be read.
+     *
+     * ⚠ The suite has run on MySQL/MariaDB since 2026-08-27, so this particular blindness is gone;
+     * the lesson is not. Anything the engine enforces and the test double does not is invisible.
      */
     public function test_init_accepts_the_longest_language_names(): void
     {

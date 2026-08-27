@@ -11,11 +11,11 @@ use Tests\TestCase;
 /**
  * The public games endpoints — the mod's first call, and the one nothing covered.
  *
- * 🔴 **Written after `/api/v1/games` answered 500 on every developer machine** while working
- * perfectly in production. The listing filtered with `having('translations_count', '>', 0)` on a
- * query with no GROUP BY: MySQL accepts that, SQLite refuses it. Production runs MySQL, dev runs a
- * SQLite copy of the production dump — so the divergence was invisible from both sides, and no
- * test called the endpoint at all.
+ * 🔴 **Written after `/api/v1/games` answered 500 in development** while working perfectly in
+ * production. The listing filtered with `having('translations_count', '>', 0)` on a query with no
+ * GROUP BY: MySQL accepts that, SQLite refuses it. Development ran on SQLite at the time and
+ * production on MySQL — so the divergence was invisible from both sides, and no test called the
+ * endpoint at all.
  *
  * ⚠ The lesson is the coverage, not the clause: an endpoint nobody calls in tests is an endpoint
  * whose SQL is only ever exercised by one engine.

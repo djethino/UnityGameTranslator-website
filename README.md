@@ -93,7 +93,7 @@ to how much of the game a file reached.
 
 - **Framework:** Laravel 12 (PHP 8.2+)
 - **Real-time:** Node.js SSE micro-server + Redis pub/sub
-- **Database:** SQLite (dev) / MySQL (prod)
+- **Database:** MySQL / MariaDB (SQLite also works, for a small local install)
 - **Auth:** Laravel Socialite (5 OAuth providers)
 - **Frontend:** Tailwind CSS 4, Alpine.js (CSP build), Chart.js, Font Awesome, Flag-icons
 - **Analytics:** Built-in event tracking with daily aggregation
@@ -128,7 +128,7 @@ Unity Mod ──► Laravel API (PHP)  ◄──► Redis pub/sub ◄──► S
 - Composer
 - Node.js 18+
 - Redis 6+
-- SQLite or MySQL
+- MySQL 8 / MariaDB 10.6+ — or SQLite for a small local install
 
 ## Installation
 
@@ -146,6 +146,7 @@ composer install
 npm install
 cp .env.example .env
 php artisan key:generate
+# Point DB_* at your MySQL/MariaDB server, or keep the SQLite default:
 touch database/database.sqlite
 php artisan migrate
 npm run build

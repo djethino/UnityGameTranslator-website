@@ -31,12 +31,13 @@ class GameController extends Controller
         //
         // 🔴 **whereHas, not having.** `having('translations_count', '>', 0)` on a query with no
         // GROUP BY is accepted by MySQL and REFUSED by SQLite ("HAVING clause on a non-aggregate
-        // query"), so this endpoint answered in production and returned a 500 on every developer
-        // machine — where the database is a SQLite copy of that same production dump. It is the
-        // kind of divergence nothing catches: the test suite passes, the site works, and only a
-        // local API call fails.
+        // query"), so this endpoint answered in production and returned a 500 for anyone running
+        // the site on SQLite. It is the kind of divergence nothing catches: the test suite passes,
+        // the site works, and only a local API call fails.
         //
         // whereHas expresses the same condition as an EXISTS subquery, which both engines run.
+        // The code stays portable on purpose: this endpoint must not depend on one engine's
+        // tolerance.
         $query = Game::withCount('translations')
             ->whereHas('translations');
 

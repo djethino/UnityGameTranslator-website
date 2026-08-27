@@ -17,9 +17,10 @@ use Illuminate\Support\Facades\Schema;
  * that drift is exactly what happened here. The default width is far above anything the catalogue
  * can hold, so the column stops being a constraint anyone has to remember.
  *
- * ⚠ **The test suite could not have caught this.** It runs on SQLite, which ignores VARCHAR
- * lengths entirely; production is MySQL, which enforces them. A length is therefore one of the
- * things a green test says nothing about — see the note in EditSessionFlowTest.
+ * ⚠ **The test suite could not have caught this**, because it ran on SQLite at the time, which
+ * ignores VARCHAR lengths entirely, while production runs MySQL, which enforces them. A length was
+ * therefore one of the things a green test said nothing about — see the note in
+ * EditSessionFlowTest. The suite has run on MySQL/MariaDB since 2026-08-27.
  */
 return new class extends Migration
 {
