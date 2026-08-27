@@ -34,22 +34,45 @@ class ConnectionsController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Grouped by what was typed at link time — the only signal that needs no client update and
-        // survives a reinstall. Unlabelled rows (everything issued before this screen existed) fall
-        // into one group of their own; they are a presumption of nothing, and the view says so.
+        // Grouped by the machine, which two things can say — see ApiToken::machineKey.
+        //
+        // 🔴 It used to be the typed name alone, and in production that meant no grouping at all:
+        // thirty-six accesses on one account, thirty-five of them in a single "device not named"
+        // heap, because nobody types a name when linking. The page listed everything and helped
+        // with nothing. A machine that says who it is groups its own games without anybody typing.
+        //
+        // ⚠ Sorted by what is DISPLAYED, not by the key: the keys are opaque now, and ordering by
+        // them would shuffle the page each time an access is added.
         $groups = $tokens
-            ->groupBy(fn (ApiToken $token) => $token->device_label ?? '')
-            ->sortKeys();
+            ->groupBy(fn (ApiToken $token) => $token->groupKey())
+            ->sortBy(fn ($group) => [
+                // Named machines first, unnamed ones last — the named ones are the ones somebody
+                // can act on with confidence.
+                $group->first()->device_label === null ? 1 : 0,
+                $group->first()->device_label ?? '',
+            ]);
 
         return view('profile.connections', [
             'groups' => $groups,
             'total' => $tokens->count(),
             'otherBrowsers' => $this->otherBrowserCount($request),
+
+            // The groups that already exist, offered to move a line into. Sorted, because a list
+            // somebody scans should not change order every time an access speaks.
+            'groupNames' => $tokens->pluck('device_label')->filter()->unique()->sort()->values(),
         ]);
     }
 
     /**
-     * Rename one line's device.
+     * Rename a whole group.
+     *
+     * 🔴 It used to rename ONE line, which was right while a typed name was the only thing grouping
+     * anything, and became wrong the moment a machine could say so itself: naming a PC would have
+     * meant typing the same words into fifteen games one after the other.
+     *
+     * ⚠ **It acts on the group as displayed, not on the machine behind it** — see `sameGroupAs`. A
+     * line filed somewhere else has left this group, so nothing here can reach it: "a destination
+     * somebody chose is not touched" needs no special case, it is what following the group means.
      */
     public function update(Request $request, string $token)
     {
@@ -62,10 +85,48 @@ class ConnectionsController extends Controller
 
         $label = trim((string) ($validated['device_label'] ?? ''));
 
+        $renamed = $request->user()->apiTokens()
+            ->sameGroupAs($apiToken)
+            ->update(['device_label' => $label === '' ? null : $label]);
+
+        return redirect()->route('profile.connections')
+            ->with('success', trans_choice('connections.renamed_many', $renamed, ['count' => $renamed]));
+    }
+
+    /**
+     * Move ONE line into another group, existing or new.
+     *
+     * 🔴 A group is not a machine. We arrange by machine because that is what we can know without
+     * asking, and it is a starting point: somebody may just as well file their accesses by language,
+     * by kind of game, or by anything else that means something to them. So a line can be picked up
+     * and put elsewhere, and what we knew about the machine stays underneath, untouched.
+     *
+     * ⚠ Deliberately ONE line, where rename takes the group. They are different acts: naming says
+     * "this pile is called that", moving says "this one belongs over there". One control each, and
+     * neither can be mistaken for the other.
+     *
+     * ⚠ Emptying the field puts a line back under the default arrangement — its machine — rather
+     * than into a group called "". `device_label = null` is exactly "not filed by hand", which is
+     * what the grouping already reads.
+     */
+    public function move(Request $request, string $token)
+    {
+        $validated = $request->validate([
+            'device_label' => ['nullable', 'string', 'max:60'],
+            'new_group' => ['nullable', 'string', 'max:60'],
+        ]);
+
+        $apiToken = $request->user()->apiTokens()->findOrFail($token);
+
+        // ⚠ Typing wins over picking. Somebody who has written a name has said what they want more
+        // recently than the list they left alone, and a form that ignored it would look broken.
+        $typed = trim((string) ($validated['new_group'] ?? ''));
+        $label = $typed !== '' ? $typed : trim((string) ($validated['device_label'] ?? ''));
+
         $apiToken->update(['device_label' => $label === '' ? null : $label]);
 
         return redirect()->route('profile.connections')
-            ->with('success', __('connections.renamed'));
+            ->with('success', __('connections.moved'));
     }
 
     /**
@@ -95,17 +156,19 @@ class ConnectionsController extends Controller
     {
         $validated = $request->validate([
             'scope' => ['required', 'in:device,all'],
-            'device_label' => ['nullable', 'string', 'max:60'],
+            // ⚠ One of the group's own lines, not the typed name. Since a machine can group without
+            // anybody typing, two groups can share the same (absent) name — cutting by name would
+            // then cut a machine somebody was not looking at. The id is already scoped to the
+            // account below, so it says exactly one group and cannot say another account's.
+            'token' => ['required_if:scope,device', 'integer'],
         ]);
 
         $query = $request->user()->apiTokens();
 
         if ($validated['scope'] === 'device') {
-            $label = trim((string) ($validated['device_label'] ?? ''));
+            $one = $request->user()->apiTokens()->findOrFail($validated['token'] ?? '');
 
-            $label === ''
-                ? $query->whereNull('device_label')
-                : $query->where('device_label', $label);
+            $query->sameGroupAs($one);
         }
 
         $cut = $query->delete();

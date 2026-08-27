@@ -31,7 +31,8 @@ class OptionalAuthenticateApi
             $apiToken = ApiToken::findAndMarkUsed(
                 $token,
                 $request->userAgent(),
-                GameDeclaration::parse($request->header(GameDeclaration::HEADER))
+                GameDeclaration::parse($request->header(GameDeclaration::HEADER)),
+                GameDeclaration::parseDevice($request->header(GameDeclaration::DEVICE_HEADER))
             );
 
             if ($apiToken) {

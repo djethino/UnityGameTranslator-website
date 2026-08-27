@@ -206,6 +206,9 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         // the ids are sequential, so binding here would hand out every account's rows.
         Route::get('/profile/connections', [ConnectionsController::class, 'index'])->name('profile.connections');
         Route::patch('/profile/connections/{token}', [ConnectionsController::class, 'update'])->name('profile.connections.rename');
+        // Moving ONE line elsewhere, where the route above renames a whole group. Two acts, two
+        // doors, because naming a pile and picking something out of it are not the same gesture.
+        Route::patch('/profile/connections/{token}/group', [ConnectionsController::class, 'move'])->name('profile.connections.move');
         Route::delete('/profile/connections/{token}', [ConnectionsController::class, 'destroy'])->name('profile.connections.destroy');
         Route::delete('/profile/connections', [ConnectionsController::class, 'destroyMany'])->name('profile.connections.destroy-many');
         Route::delete('/profile/browsers', [ConnectionsController::class, 'signOutOtherBrowsers'])->name('profile.browsers.destroy');

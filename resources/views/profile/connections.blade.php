@@ -97,12 +97,27 @@
         </div>
     @else
         <div class="space-y-4">
-            @foreach($groups as $label => $tokens)
+            @foreach($groups as $tokens)
+                @php
+                    // The group's name, and the line that stands for it in the forms below.
+                    //
+                    // ⚠ The forms post an ID, not the name. A machine can group without anybody
+                    // having typed anything, so two groups can share the same absent name — cutting
+                    // by name would then cut a machine nobody was looking at.
+                    $anyToken = $tokens->first();
+                    $label = $anyToken->device_label;
+                    $knowsItsMachine = $anyToken->device_slot !== null;
+                @endphp
                 <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
                     <div class="flex items-center justify-between gap-3 mb-3">
                         <h2 class="font-semibold text-gray-200">
-                            @if($label === '')
-                                <i class="fas fa-question-circle mr-2 text-gray-500"></i>{{ __('connections.group_unnamed') }}
+                            @if($label === null)
+                                {{-- A machine that says who it is but has no name yet is NOT the
+                                     old "we know nothing" heap: its games are really together, and
+                                     naming it once names all of them. Two different states, two
+                                     different words. --}}
+                                <i class="fas {{ $knowsItsMachine ? 'fa-desktop mr-2 text-gray-400' : 'fa-question-circle mr-2 text-gray-500' }}"></i>
+                                {{ $knowsItsMachine ? __('connections.group_this_machine') : __('connections.group_unnamed') }}
                             @else
                                 <i class="fas fa-desktop mr-2 text-purple-400"></i>{{ $label }}
                             @endif
@@ -113,18 +128,46 @@
                             @csrf
                             @method('DELETE')
                             <input type="hidden" name="scope" value="device">
-                            <input type="hidden" name="device_label" value="{{ $label }}">
+                            <input type="hidden" name="token" value="{{ $anyToken->id }}">
                             <button type="submit" class="text-xs text-gray-400 hover:text-white transition whitespace-nowrap">
                                 {{ __('connections.revoke_device') }}
                             </button>
                         </form>
                     </div>
 
-                    @if($label === '')
+                    @if($label === null && !$knowsItsMachine)
                         {{-- Said, not hidden. Grouping these by anything would be a guess, and a
                              guess presented as a fact is what makes somebody cut the wrong line. --}}
                         <p class="text-xs text-gray-500 mb-3">{{ __('connections.group_unnamed_hint') }}</p>
+                    @elseif($label === null)
+                        <p class="text-xs text-gray-500 mb-3">{{ __('connections.group_this_machine_hint') }}</p>
                     @endif
+
+                    {{-- 🔴 The name belongs to the MACHINE, so it is set once, here, and not on each
+                         line. It used to sit inside every row — right while the typed name was the
+                         only thing grouping anything, and wrong the moment a machine could say so
+                         itself: naming a PC would have meant typing the same words into fifteen
+                         games in a row. One act, one door.
+
+                         ⚠ Native <details>: the Alpine build here is @alpinejs/csp, whose parser
+                         only resolves x-data to a registered component. --}}
+                    <details class="mb-3">
+                        <summary class="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">
+                            {{ __('connections.rename') }}
+                        </summary>
+                        <form method="POST" action="{{ route('profile.connections.rename', $anyToken->id) }}" class="mt-2 flex gap-2">
+                            @csrf
+                            @method('PATCH')
+                            <input type="text" name="device_label" maxlength="60"
+                                   value="{{ $label }}"
+                                   placeholder="{{ __('connections.rename_placeholder') }}"
+                                   class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                            <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition text-sm">
+                                {{ __('common.save') }}
+                            </button>
+                        </form>
+                        <p class="text-xs text-gray-500 mt-1">{{ __('connections.rename_hint') }}</p>
+                    </details>
 
                     <ul class="divide-y divide-gray-700/60 rounded-lg border border-gray-700 bg-gray-900/30">
                         @foreach($tokens as $token)
@@ -222,24 +265,47 @@
                                     </form>
                                 </div>
 
-                                {{-- Native <details>: the Alpine build here is @alpinejs/csp, whose
-                                     parser only resolves x-data to a registered component. --}}
+                                {{-- Where this ONE line is filed, which is not the same act as
+                                     naming the pile it sits in — that lives on the group header.
+
+                                     🔴 A group is not a machine. We arrange by machine because it
+                                     is what can be known without asking, and it is a starting
+                                     point: somebody may just as well file by language, by kind of
+                                     game, or by whatever means something to them.
+
+                                     ⚠ Native <details> and a native <select>: the Alpine build here
+                                     is @alpinejs/csp, whose parser only resolves x-data to a
+                                     registered component.
+
+                                     ⚠ The text field wins over the list when it is filled — one
+                                     control, and the obvious reading of typing into it. Leaving
+                                     both empty puts the line back under its machine. --}}
                                 <details class="mt-2">
                                     <summary class="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">
-                                        {{ __('connections.rename') }}
+                                        {{ __('connections.move') }}
                                     </summary>
-                                    <form method="POST" action="{{ route('profile.connections.rename', $token->id) }}" class="mt-2 flex gap-2">
+                                    <form method="POST" action="{{ route('profile.connections.move', $token->id) }}" class="mt-2 space-y-2">
                                         @csrf
                                         @method('PATCH')
-                                        <input type="text" name="device_label" maxlength="60"
-                                               value="{{ $token->device_label }}"
-                                               placeholder="{{ __('connections.rename_placeholder') }}"
-                                               class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                        <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition text-sm">
-                                            {{ __('common.save') }}
-                                        </button>
+                                        @if($groupNames->isNotEmpty())
+                                            <select name="device_label"
+                                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                                <option value="">{{ __('connections.move_default') }}</option>
+                                                @foreach($groupNames as $name)
+                                                    <option value="{{ $name }}" @selected($token->device_label === $name)>{{ $name }}</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                        <div class="flex gap-2">
+                                            <input type="text" name="new_group" maxlength="60"
+                                                   placeholder="{{ __('connections.move_new_placeholder') }}"
+                                                   class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                            <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition text-sm">
+                                                {{ __('common.save') }}
+                                            </button>
+                                        </div>
                                     </form>
-                                    <p class="text-xs text-gray-500 mt-1">{{ __('connections.rename_hint') }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ __('connections.move_hint') }}</p>
                                 </details>
                             </li>
                         @endforeach

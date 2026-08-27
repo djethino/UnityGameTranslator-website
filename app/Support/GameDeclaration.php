@@ -80,4 +80,27 @@ class GameDeclaration
 
         return ['game_id' => $id, 'game_name' => $name];
     }
+
+    public const DEVICE_HEADER = 'X-UGT-Device';
+
+    /**
+     * The machine identifier a program declares, or null when there is nothing usable.
+     *
+     * 🔴 **A random number the machine drew once — never a measurement of it.** The tempting source
+     * was `Secrets.MachineSecret()`, already stable and ready: machine name, user name, OS. It is
+     * exactly the wrong one, and the reason is worth keeping: those have tiny entropy and are often
+     * a real first name, so a digest of them CONFIRMS a guess instead of hiding one.
+     *
+     * ⚠ Shape-checked and nothing more. A declaration is never a proof — the same rule as the game
+     * and the User-Agent — so this can only ever group the caller's own lines, under its own
+     * account, and the server salts it per user before storing it ({@see ApiToken::deviceSlotFor}).
+     */
+    public static function parseDevice(?string $header): ?string
+    {
+        $header = trim((string) $header);
+
+        // Long enough to be somebody's draw, short enough to refuse a payload. Hex and dashes cover
+        // both a plain random string and a GUID, and exclude anything trying to be structured.
+        return preg_match('/^[A-Za-z0-9-]{16,64}$/', $header) === 1 ? $header : null;
+    }
 }

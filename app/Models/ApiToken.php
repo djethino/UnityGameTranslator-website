@@ -14,6 +14,7 @@ class ApiToken extends Model
         'public_code',
         'name',
         'device_label',
+        'device_slot',
         'client_kind',
         'client_version',
         'client_variant',
@@ -38,6 +39,10 @@ class ApiToken extends Model
         'token',
         'game_slot',
         'game_ref',
+        // Never rendered and never exported: it is a grouping key, and the group it forms is what
+        // somebody reads. Shown, it would be an identifier on a page whose whole point is that it
+        // carries none.
+        'device_slot',
     ];
 
     /**
@@ -90,6 +95,25 @@ class ApiToken extends Model
     }
 
     /**
+     * The value that says "this access is on the same machine as that one", for one account only.
+     *
+     * 🔴 Salted per user for a reason that is not tidiness: the raw identifier is IDENTICAL under
+     * every account on that machine. Stored as it arrives, it would let anybody reading the table
+     * tie two accounts together — a computer carries games belonging to different people, and that
+     * is the rule `ServerIdentity` enforces everywhere else.
+     *
+     * ⚠ What arrives is a random number the machine drew once, never anything measured about it.
+     * A digest of machine name and user name would have been easier and worthless: those have tiny
+     * entropy and are often a real first name, so a digest confirms a guess rather than hiding one.
+     */
+    public static function deviceSlotFor(User $user, string $deviceId): string
+    {
+        $userKey = hash_hmac('sha256', 'device-slot:' . $user->id, config('app.key'));
+
+        return substr(hash_hmac('sha256', 'device:' . $deviceId, $userKey), 0, 32);
+    }
+
+    /**
      * Create a new API token for a user.
      * Returns the model with a 'plain_token' attribute containing the unhashed token.
      * The plain token is shown only once and cannot be retrieved later.
@@ -109,6 +133,10 @@ class ApiToken extends Model
             'public_code' => self::generatePublicCode(),
             'name' => $name,
             'device_label' => $client['device_label'] ?? null,
+            // ⚠ Accepted here as well as filled in on the first ordinary call: a caller that
+            // already knows which machine this is must be able to say so, and a field the creator
+            // silently drops is the kind of gap that only shows up as "the grouping does nothing".
+            'device_slot' => $client['device_slot'] ?? null,
             'client_kind' => $client['client_kind'] ?? null,
             'client_version' => $client['client_version'] ?? null,
             'client_variant' => $client['client_variant'] ?? null,
@@ -145,7 +173,8 @@ class ApiToken extends Model
     public static function findAndMarkUsed(
         string $plainToken,
         ?string $userAgent = null,
-        ?array $game = null
+        ?array $game = null,
+        ?string $deviceId = null
     ): ?self {
         $hashedToken = self::hashToken($plainToken);
         $apiToken = self::where('token', $hashedToken)
@@ -184,6 +213,25 @@ class ApiToken extends Model
             }
         }
 
+        // ⚠ Filled once, like the rest — but here "once" also means the machine does not move under
+        // an install. A value that kept changing would scatter one machine's games across several
+        // groups, which is the opposite of what this is for.
+        if ($deviceId !== null && $apiToken->device_slot === null) {
+            $slot = self::deviceSlotFor($apiToken->user, $deviceId);
+            $changes['device_slot'] = $slot;
+
+            // ⚠ A new game on a machine already filed somewhere joins it, instead of appearing on
+            // its own and having to be moved by hand every time. Without this, naming a machine
+            // would hold for exactly as long as nobody installed anything.
+            if ($apiToken->device_label === null) {
+                $inherited = self::inheritedLabelFor($apiToken->user, $slot);
+
+                if ($inherited !== null) {
+                    $changes['device_label'] = $inherited;
+                }
+            }
+        }
+
         $apiToken->update($changes);
 
         return $apiToken;
@@ -210,6 +258,74 @@ class ApiToken extends Model
             ->where('game_slot', $slot)
             ->where('client_kind', $clientKind)
             ->where('device_label', $deviceLabel);
+    }
+
+    /**
+     * What puts two lines on the same machine, in order of how much it is worth.
+     *
+     * 🔴 **A group is the owner's decision; the machine only supplies the default.** So the chosen
+     * name wins whenever there is one: somebody who files two machines' accesses under "RPG" means
+     * it, and an arrangement that undid that at the next link would be worse than none.
+     *
+     * Failing a name, the machine groups its own — that is the default arrangement, and it is why
+     * anybody has something to move in the first place. Failing both, the line joins the heap of
+     * those nobody can place.
+     *
+     * ⚠ **That heap is not a claim, and it earns its place.** Splitting it into one group per line
+     * was tried and is worse: an account holding thirty-five legacy accesses would show thirty-five
+     * boxes and lose the one action that clears them in a gesture. The view says outright that
+     * nothing groups these but the absence of a name.
+     */
+    public function groupKey(): string
+    {
+        if ($this->device_label !== null) {
+            return 'named:' . $this->device_label;
+        }
+
+        return $this->device_slot !== null
+            ? 'machine:' . $this->device_slot
+            : 'unplaced';
+    }
+
+    /**
+     * Every line this account holds in the same group as this one — the group as it is DISPLAYED.
+     *
+     * 🔴 Renaming and revoking act on the group somebody is looking at, never on the machine behind
+     * it. That is what leaves a line filed elsewhere alone: it is no longer in this group, so
+     * nothing here can reach it. "If the destination was customised, do not touch it" is not a
+     * special case in this code — it is what following the displayed group already means.
+     *
+     * ⚠ Always narrowed to the account by the caller — this scope says "same group", never "belongs
+     * to me", and the two must not be confused in one query.
+     */
+    public function scopeSameGroupAs($query, self $token)
+    {
+        if ($token->device_label !== null) {
+            return $query->where('device_label', $token->device_label);
+        }
+
+        return $token->device_slot !== null
+            ? $query->whereNull('device_label')->where('device_slot', $token->device_slot)
+            : $query->whereNull('device_label')->whereNull('device_slot');
+    }
+
+    /**
+     * The group a new access should land in, from what the rest of its machine already says.
+     *
+     * ⚠ **Only when the machine agrees with itself.** Once its accesses have been filed under
+     * several names, there is no such thing as "the group of this machine" any more, and picking
+     * one of them would be a guess printed as a fact. The line then arrives unfiled, where it is
+     * visible and one move away from wherever it belongs.
+     */
+    public static function inheritedLabelFor(User $user, string $deviceSlot): ?string
+    {
+        $labels = self::where('user_id', $user->id)
+            ->where('device_slot', $deviceSlot)
+            ->whereNotNull('device_label')
+            ->distinct()
+            ->pluck('device_label');
+
+        return $labels->count() === 1 ? $labels->first() : null;
     }
 
     /**

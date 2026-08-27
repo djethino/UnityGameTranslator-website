@@ -101,10 +101,16 @@ class LinkedDevicesTest extends TestCase
         $this->assertDatabaseMissing('api_tokens', ['id' => $salon->id]);
         $this->assertDatabaseHas('api_tokens', ['id' => $salonToo->id]);
 
+        // ⚠ One of the group's own lines, not the typed name: a machine can now group without
+        // anybody typing, so two groups may share the same absent name.
+        //
+        // 🔴 assertSessionHasNoErrors, not assertRedirect alone. A validation failure IS a redirect,
+        // so the weaker assertion passes while nothing happens — which is exactly how a rule
+        // demanding a string swallowed an integer id here, in silence.
         $this->actingAs($user)->delete('/profile/connections', [
             'scope' => 'device',
-            'device_label' => 'Living room PC',
-        ])->assertRedirect();
+            'token' => $salonToo->id,
+        ])->assertSessionHasNoErrors()->assertRedirect();
         $this->assertDatabaseMissing('api_tokens', ['id' => $salonToo->id]);
         $this->assertDatabaseHas('api_tokens', ['id' => $laptop->id]);
 
@@ -120,14 +126,14 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        ApiToken::createForUser($user);
+        $unnamed = ApiToken::createForUser($user);
         ApiToken::createForUser($user);
         $named = ApiToken::createForUser($user, null, ['device_label' => 'Laptop']);
 
         $this->actingAs($user)->delete('/profile/connections', [
             'scope' => 'device',
-            'device_label' => '',
-        ])->assertRedirect();
+            'token' => $unnamed->id,
+        ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertSame(1, $user->apiTokens()->count());
         $this->assertDatabaseHas('api_tokens', ['id' => $named->id]);
@@ -519,6 +525,157 @@ class LinkedDevicesTest extends TestCase
         $this->actingAs($user)->get('/profile/connections')
             ->assertOk()
             ->assertSee(__('connections.game_not_recorded'));
+    }
+
+    /**
+     * A machine that says who it is groups its own games, and one name covers them all.
+     *
+     * 🔴 Measured in production on 2026-08-27: thirty-six accesses on one account, thirty-five in a
+     * single "not named" heap, because the only grouping key was a name nobody types when linking.
+     */
+    public function test_a_machine_groups_its_accesses_and_one_name_covers_them(): void
+    {
+        $user = User::factory()->create();
+        $device = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $first = ApiToken::createForUser($user);
+        $second = ApiToken::createForUser($user);
+        $elsewhere = ApiToken::createForUser($user);
+
+        foreach ([$first, $second] as $token) {
+            $this->withHeaders([
+                'Authorization' => 'Bearer ' . $token->plain_token,
+                'X-UGT-Device' => $device,
+            ])->getJson('/api/v1/me')->assertOk();
+        }
+
+        $first->refresh();
+        $second->refresh();
+
+        $this->assertSame(ApiToken::deviceSlotFor($user, $device), $first->device_slot);
+        $this->assertSame($first->device_slot, $second->device_slot);
+        $this->assertNull($elsewhere->fresh()->device_slot);
+
+        // Naming the machine from one of its lines names every line on it — and nothing else.
+        $this->actingAs($user)->patch("/profile/connections/{$first->id}", [
+            'device_label' => 'Living room PC',
+        ])->assertRedirect();
+
+        $this->assertSame('Living room PC', $second->fresh()->device_label);
+        $this->assertNull($elsewhere->fresh()->device_label);
+    }
+
+    /**
+     * A group is the owner's decision; the machine only supplies the default arrangement.
+     *
+     * 🔴 And the point of the whole thing: a line filed by hand stays where it was put. Renaming
+     * the pile it came from must not drag it back, and a new access on that machine must not land
+     * on top of it.
+     */
+    public function test_a_line_filed_by_hand_is_not_dragged_back_by_its_machine(): void
+    {
+        $user = User::factory()->create();
+        $device = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $stays = ApiToken::createForUser($user);
+        $moved = ApiToken::createForUser($user);
+
+        foreach ([$stays, $moved] as $token) {
+            $this->withHeaders([
+                'Authorization' => 'Bearer ' . $token->plain_token,
+                'X-UGT-Device' => $device,
+            ])->getJson('/api/v1/me')->assertOk();
+        }
+
+        // Filed somewhere of its own — by kind of game, not by machine.
+        $this->actingAs($user)->patch("/profile/connections/{$moved->id}/group", [
+            'new_group' => 'RPGs',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        // Naming the machine's group touches what is still in it, and nothing else.
+        $this->actingAs($user)->patch("/profile/connections/{$stays->id}", [
+            'device_label' => 'Living room PC',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertSame('Living room PC', $stays->fresh()->device_label);
+        $this->assertSame('RPGs', $moved->fresh()->device_label);
+
+        // And what it says about the machine is untouched underneath, so putting the line back
+        // takes it home rather than into a group called "".
+        $this->assertNotNull($moved->fresh()->device_slot);
+
+        $this->actingAs($user)->patch("/profile/connections/{$moved->id}/group", [
+            'device_label' => '',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertNull($moved->fresh()->device_label);
+    }
+
+    /**
+     * A new access on a machine joins where that machine is already filed, instead of appearing on
+     * its own — otherwise naming a machine would hold until the next install and no longer.
+     *
+     * ⚠ Only when the machine agrees with itself: once its accesses sit under several names there
+     * is no "the group of this machine" left, and choosing one would be a guess shown as a fact.
+     */
+    public function test_a_new_access_joins_the_group_its_machine_is_already_in(): void
+    {
+        $user = User::factory()->create();
+        $device = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $known = ApiToken::createForUser($user, null, [
+            'device_label' => 'Living room PC',
+            'device_slot' => ApiToken::deviceSlotFor($user, $device),
+        ]);
+
+        $fresh = ApiToken::createForUser($user);
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $fresh->plain_token,
+            'X-UGT-Device' => $device,
+        ])->getJson('/api/v1/me')->assertOk();
+
+        $this->assertSame('Living room PC', $fresh->fresh()->device_label);
+
+        // Split the machine across two groups, and the next arrival stays unfiled rather than
+        // being dropped into whichever name happened to come first.
+        //
+        // ⚠ Through the query builder: createForUser hangs the plain token on the model as a
+        // dynamic attribute, so save() would try to persist a column that does not exist.
+        DB::table('api_tokens')->where('id', $known->id)->update(['device_label' => 'RPGs']);
+
+        $later = ApiToken::createForUser($user);
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $later->plain_token,
+            'X-UGT-Device' => $device,
+        ])->getJson('/api/v1/me')->assertOk();
+
+        $this->assertNull($later->fresh()->device_label);
+    }
+
+    /**
+     * 🔴 The raw identifier is the same under every account on that machine, so what is STORED must
+     * not be. Otherwise anybody reading the table could tie two accounts together — the rule a
+     * computer carrying several people's games exists to protect.
+     */
+    public function test_one_machine_seen_by_two_accounts_leaves_no_common_trace(): void
+    {
+        $mine = User::factory()->create();
+        $theirs = User::factory()->create();
+        $device = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $ours = ApiToken::createForUser($mine);
+        $others = ApiToken::createForUser($theirs);
+
+        foreach ([$ours, $others] as $token) {
+            $this->withHeaders([
+                'Authorization' => 'Bearer ' . $token->plain_token,
+                'X-UGT-Device' => $device,
+            ])->getJson('/api/v1/me')->assertOk();
+        }
+
+        $this->assertNotNull($ours->fresh()->device_slot);
+        $this->assertNotSame($ours->fresh()->device_slot, $others->fresh()->device_slot);
     }
 
     /**
