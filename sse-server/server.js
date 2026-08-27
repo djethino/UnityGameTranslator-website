@@ -19,6 +19,11 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const LARAVEL_API_URL = (process.env.LARAVEL_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 15000;
 
+// How often an open sync stream asks whether its access still exists. See the note where it is
+// used: the token was checked at the door and never again, so revoking one left it live for up to
+// the stream's whole hour.
+const REVALIDATE_INTERVAL_MS = parseInt(process.env.REVALIDATE_INTERVAL_MS, 10) || 5 * 60 * 1000;
+
 // Security: connection limits.
 //
 // The previous defaults (60 / 10) came from a wrong premise: that each open
@@ -398,9 +403,24 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
         closed = true;
         clearTimeout(timeoutId);
         clearInterval(heartbeatId);
+        clearInterval(revalidateId);
         sub.unsubscribe().catch(() => {});
         sub.quit().catch(() => {});
         releaseConnection();
+    };
+
+    /**
+     * Close a stream whose access has been revoked, saying so.
+     *
+     * ⚠ An 'error' event rather than a silent close: a stream that simply ends looks like a network
+     * blip, and the client reconnects. Named, the mod can tell the two apart — its own handler is
+     * what signs the account out and stops trying.
+     */
+    const cutOff = () => {
+        if (closed || res.writableEnded) return;
+        emitEvent(res, ++eventId, 'error', { error: 'Access revoked', code: 'revoked' });
+        res.end();
+        cleanup();
     };
 
     setupSSE(res);
@@ -439,6 +459,15 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
                     `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}`,
                     bearerToken
                 );
+                if (stateResult.status === 401 || stateResult.status === 403) {
+                    // The access was cut while this stream was open. The answer was already in
+                    // our hands and used to be dropped on the floor: anything other than 200 was
+                    // silently ignored, so a revoked token went on being served its own lineage
+                    // until the hour ran out.
+                    cutOff();
+                    return;
+                }
+
                 if (stateResult.status === 200) {
                     emitEvent(res, ++eventId, 'state', stateResult.body);
                 }
@@ -454,6 +483,31 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
     const heartbeatId = setInterval(() => {
         if (!res.writableEnded) res.write(': heartbeat\n\n');
     }, HEARTBEAT_INTERVAL_MS);
+
+    // Ask again whether this access still exists.
+    //
+    // 🔴 **The token was checked once, at the door, and never again.** A stream lives an hour, so
+    // revoking an access from "Linked devices" left it receiving its own lineage for up to that
+    // long — while the page it was revoked from says it was cut. The check above catches it as
+    // soon as anything moves in the lineage; this catches the quiet ones.
+    //
+    // ⚠ Not on the heartbeat, which fires every fifteen seconds: that would be two hundred and
+    // forty calls an hour per open stream, to answer a question whose answer almost never changes.
+    // Five minutes bounds the drift without turning a revocation into a load problem.
+    const revalidateId = setInterval(async () => {
+        if (closed) return;
+
+        try {
+            const check = await fetchFromLaravel('/me', bearerToken);
+
+            // ⚠ Only an explicit refusal closes anything. A site that is down or slow answers 502
+            // here, and cutting people off because our own service hiccupped would be the failure
+            // this is supposed to protect against, inverted.
+            if (check.status === 401 || check.status === 403) cutOff();
+        } catch (e) {
+            console.error('[Sync] Revalidation error:', e.message);
+        }
+    }, REVALIDATE_INTERVAL_MS);
 
     const timeoutId = setTimeout(() => {
         if (!res.writableEnded) res.end();
@@ -746,6 +800,10 @@ async function start() {
         console.log(`[SSE Server] Laravel API: ${LARAVEL_API_URL}`);
         console.log(`[SSE Server] CORS origin: ${ALLOWED_ORIGIN}`);
         console.log(`[SSE Server] Max connections: ${MAX_CONNECTIONS} (${PER_IP_LIMIT}/IP)`);
+        // Said for the same reason as the two lines above: a relay that looks healthy while it
+        // reached the wrong thing is this file's oldest failure mode. An open stream's access is
+        // re-checked on this rhythm, and there is no other way to know which one it took.
+        console.log(`[SSE Server] Access re-checked every ${Math.round(REVALIDATE_INTERVAL_MS / 1000)}s on an open sync stream`);
     });
 }
 
