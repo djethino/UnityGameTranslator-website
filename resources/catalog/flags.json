@@ -1124,20 +1124,20 @@
     "in": {
       "name": "India",
       "palette": {
-        "o": "#FF9933",
-        "w": "#FFFFFF",
+        "b": "#000088",
         "g": "#046A38",
-        "b": "#000088"
+        "o": "#FF9933",
+        "w": "#FFFFFF"
       },
       "rows": [
         "oooooooooooooooo",
         "oooooooooooooooo",
         "oooooooooooooooo",
-        "oooooooooooooooo",
-        "wwwwwwbbbbwwwwww",
+        "wwwwwwwbbwwwwwww",
         "wwwwwwbwwbwwwwww",
-        "wwwwwwbbbbwwwwww",
-        "gggggggggggggggg",
+        "wwwwwbwbbwbwwwww",
+        "wwwwwwbwwbwwwwww",
+        "wwwwwwwbbwwwwwww",
         "gggggggggggggggg",
         "gggggggggggggggg",
         "gggggggggggggggg"
