@@ -23,7 +23,7 @@ class GameController extends Controller
      *
      * GET /api/v1/games
      * GET /api/v1/games?q=hollow
-     * GET /api/v1/games?steam_id=367520
+     * GET /api/v1/games?steam_id=111111
      */
     public function index(Request $request): JsonResponse
     {
@@ -86,7 +86,7 @@ class GameController extends Controller
      * This optimizes API quota by checking our database first.
      *
      * GET /api/v1/games/search?q=hollow+knight
-     * GET /api/v1/games/search?steam_id=367520
+     * GET /api/v1/games/search?steam_id=111111
      */
     public function search(Request $request, GameSearchService $gameSearchService): JsonResponse
     {

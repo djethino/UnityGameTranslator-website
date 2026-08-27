@@ -232,11 +232,11 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
         $this->assertSame(1, $user->apiTokens()->count());
         $first = $user->apiTokens()->first();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
 
         $this->assertSame(1, $user->apiTokens()->count());
         $this->assertDatabaseMissing('api_tokens', ['id' => $first->id]);
@@ -251,8 +251,8 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Steam Deck');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Steam Deck');
 
         $this->assertSame(2, $user->apiTokens()->count());
         $this->assertSame(
@@ -269,8 +269,8 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user);
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user);
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user);
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user);
 
         $this->assertSame(2, $user->apiTokens()->count());
     }
@@ -285,8 +285,8 @@ class LinkedDevicesTest extends TestCase
 
         // ⚠ Both named, and the same name on purpose: with no device the cap does not run at all,
         // and this would pass without proving anything about telling two programs apart.
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '367520', 'A Game', $user, 'Living room PC');
-        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '367520', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '111111', 'A Game', $user, 'Living room PC');
 
         $this->assertSame(2, $user->apiTokens()->count());
         $this->assertSame(
@@ -321,8 +321,8 @@ class LinkedDevicesTest extends TestCase
         $two = User::factory()->create();
 
         $this->assertNotSame(
-            ApiToken::gameSlotFor($one, '367520'),
-            ApiToken::gameSlotFor($two, '367520')
+            ApiToken::gameSlotFor($one, '111111'),
+            ApiToken::gameSlotFor($two, '111111')
         );
     }
 
@@ -362,7 +362,7 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (MelonLoader-IL2CPP)', '367520', 'A Game', $user, 'Laptop');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (MelonLoader-IL2CPP)', '111111', 'A Game', $user, 'Laptop');
 
         $token = $user->apiTokens()->first();
         $this->assertSame('mod', $token->client_kind);
@@ -379,7 +379,7 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx5)', '367520', 'A Very Distinctive Name', $user);
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx5)', '111111', 'A Very Distinctive Name', $user);
 
         $stored = DB::table('api_tokens')->where('user_id', $user->id)->value('game_ref');
 
@@ -434,7 +434,7 @@ class LinkedDevicesTest extends TestCase
 
         $this->assertNull($token->game_slot);
 
-        $declaration = base64_encode(json_encode(['game_id' => '367520', 'game_name' => 'Hollow Knight']));
+        $declaration = base64_encode(json_encode(['game_id' => '111111', 'game_name' => 'Declared Game']));
 
         $this->withHeaders([
             'Authorization' => 'Bearer ' . $token->plain_token,
@@ -443,8 +443,8 @@ class LinkedDevicesTest extends TestCase
 
         $token->refresh();
 
-        $this->assertSame(ApiToken::gameSlotFor($user, '367520'), $token->game_slot);
-        $this->assertSame('Hollow Knight', $token->gameName());
+        $this->assertSame(ApiToken::gameSlotFor($user, '111111'), $token->game_slot);
+        $this->assertSame('Declared Game', $token->gameName());
     }
 
     /**
@@ -457,8 +457,8 @@ class LinkedDevicesTest extends TestCase
         $user = User::factory()->create();
 
         $token = ApiToken::createForUser($user, null, [
-            'game_slot' => ApiToken::gameSlotFor($user, '367520'),
-            'game_ref' => 'Hollow Knight',
+            'game_slot' => ApiToken::gameSlotFor($user, '111111'),
+            'game_ref' => 'Declared Game',
         ]);
 
         $slot = $token->game_slot;
@@ -474,7 +474,7 @@ class LinkedDevicesTest extends TestCase
         $token->refresh();
 
         $this->assertSame($slot, $token->game_slot);
-        $this->assertSame('Hollow Knight', $token->gameName());
+        $this->assertSame('Declared Game', $token->gameName());
     }
 
     /**
@@ -593,23 +593,23 @@ class LinkedDevicesTest extends TestCase
         $user = User::factory()->create();
         $machine = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
 
-        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null, $machine);
-        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null, $machine);
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '111111', 'A Game', $user, null, $machine);
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '111111', 'A Game', $user, null, $machine);
 
         $this->assertSame(1, $user->apiTokens()->count());
 
         // Another machine keeps its own: the cap must never reach across them.
-        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null,
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '111111', 'A Game', $user, null,
             'ffffffffffffffffffffffffffffffff');
 
         $this->assertSame(2, $user->apiTokens()->count());
 
         // And a client that says nothing about its machine still accumulates — deliberately: the
         // cap cannot cut on an absence without risking somebody else's game.
-        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '367520', 'A Game', $user);
+        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '111111', 'A Game', $user);
         $this->assertSame(3, $user->apiTokens()->count(), 'un client sans machine doit ajouter');
 
-        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '367520', 'A Game', $user);
+        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '111111', 'A Game', $user);
         $this->assertSame(4, $user->apiTokens()->count(), 'et ne jamais remplacer');
     }
 
@@ -621,7 +621,7 @@ class LinkedDevicesTest extends TestCase
         $user = User::factory()->create();
         $machine = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
 
-        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, 'Living room PC', $machine);
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '111111', 'A Game', $user, 'Living room PC', $machine);
         $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '999999', 'Another', $user, null, $machine);
 
         $fresh = $user->apiTokens()->orderByDesc('id')->first();

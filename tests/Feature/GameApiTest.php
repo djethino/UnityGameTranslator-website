@@ -67,17 +67,17 @@ class GameApiTest extends TestCase
 
     public function test_the_listing_can_be_searched_by_name_and_by_steam_id(): void
     {
-        $hollow = $this->makeGame('Hollow Knight', 'hollow-knight', '367520');
-        $this->makeTranslation($hollow);
+        $wanted = $this->makeGame('Wanted Game', 'wanted-game', '111111');
+        $this->makeTranslation($wanted);
 
         $other = $this->makeGame('Something Else', 'something-else', '999999');
         $this->makeTranslation($other);
 
-        $byName = $this->getJson('/api/v1/games?q=Hollow')->assertOk()->json();
-        $this->assertSame(['hollow-knight'], array_column($byName['games'] ?? [], 'slug'));
+        $byName = $this->getJson('/api/v1/games?q=Wanted')->assertOk()->json();
+        $this->assertSame(['wanted-game'], array_column($byName['games'] ?? [], 'slug'));
 
-        $bySteam = $this->getJson('/api/v1/games?steam_id=367520')->assertOk()->json();
-        $this->assertSame(['hollow-knight'], array_column($bySteam['games'] ?? [], 'slug'));
+        $bySteam = $this->getJson('/api/v1/games?steam_id=111111')->assertOk()->json();
+        $this->assertSame(['wanted-game'], array_column($bySteam['games'] ?? [], 'slug'));
     }
 
     public function test_the_listing_can_be_narrowed_to_a_language(): void

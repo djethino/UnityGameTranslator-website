@@ -23,7 +23,7 @@ class TranslationController extends Controller
     /**
      * Search translations by game (steam_id, game name, or game slug) and language.
      *
-     * GET /api/v1/translations?steam_id=367520&lang=French
+     * GET /api/v1/translations?steam_id=111111&lang=French
      * GET /api/v1/translations?game=hollow-knight&lang=French
      * GET /api/v1/translations?q=Hollow&lang=French
      */
