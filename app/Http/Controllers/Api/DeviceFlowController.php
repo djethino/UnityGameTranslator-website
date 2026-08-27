@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\DeviceCode;
 use App\Services\SsePublisher;
 use App\Support\ClientAgent;
+use App\Support\GameDeclaration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -42,6 +43,15 @@ class DeviceFlowController extends Controller
             'client_variant' => $client['variant'] ?? null,
             'game_id' => $declared['game_id'] ?? null,
             'game_name' => $declared['game_name'] ?? null,
+
+            // 🔴 Which machine is asking, so the cap can act without anybody typing a name.
+            //
+            // ⚠ Read from the header rather than the body, and that is not a shortcut: this route
+            // is unauthenticated, so the middleware that reads it everywhere else does not run —
+            // but the header is on the request all the same, and both programs already put it
+            // there on every call they make.
+            'device_id' => GameDeclaration::parseDevice(
+                $request->header(GameDeclaration::DEVICE_HEADER)),
         ])->save();
 
         return response()->json([
@@ -139,16 +149,51 @@ class DeviceFlowController extends Controller
         //  - no Steam id, no cap. A game recognised through `Application.productName` cannot be
         //    told from another carrying the same one, and two different games silently cutting
         //    each other off is worse than no cap at all.
-        //  - no device name, no cap. The cap is for the accesses an install abandons, and those
-        //    are all on one machine. Without the name it also cut across machines — linking a game
-        //    on a Steam Deck signed the same game out on the desktop, and back on the next switch.
+        //  - no way to tell the machine, no cap. The cap is for the accesses an install abandons,
+        //    and those are all on one machine. Without that, it also cut ACROSS machines — linking
+        //    a game on a Steam Deck signed the same game out on the desktop, and back on the next
+        //    switch.
         $slot = $deviceCode->game_id !== null && $deviceCode->client_kind !== null
             ? ApiToken::gameSlotFor($user, $deviceCode->game_id)
             : null;
 
+        // 🔴 **The machine says which it is, so nobody has to type a name — and that is what
+        // finally makes the cap fire.** It needed a name somebody typed, nobody types one, so
+        // re-linking a game created a line and left the previous one: a reinstall, a wiped config,
+        // "revoke everything" then signing in again. Thirty-six accesses on one account, measured
+        // in production on 2026-08-27, almost all of them from that.
+        $device = $deviceCode->device_id !== null
+            ? ApiToken::deviceSlotFor($user, $deviceCode->device_id)
+            : null;
+
         $replaced = 0;
-        if ($slot !== null && $label !== null) {
+
+        // ⚠ The machine first, the typed name second — never both at once. They are two answers to
+        // "is this the same device", and a query asking for both would cut nothing whenever they
+        // disagree, which is exactly when a name was typed on a machine that also identifies
+        // itself. The falsy branch is what keeps the cap working for somebody with no Manager.
+        if ($slot !== null && $device !== null) {
+            $replaced = $user->apiTokens()
+                ->where('game_slot', $slot)
+                ->where('client_kind', $deviceCode->client_kind)
+                ->where('device_slot', $device)
+                ->delete();
+        }
+        elseif ($slot !== null && $label !== null) {
             $replaced = $user->apiTokens()->sameSlot($slot, $deviceCode->client_kind, $label)->delete();
+        }
+
+        // ⚠ A new game linked on a machine already filed somewhere joins it, instead of arriving
+        // alone and having to be moved by hand. Same rule as an ordinary call fills in: only while
+        // that machine agrees with itself — split across names, there is no "its group" to inherit.
+        $recognised = null;
+        if ($label === null && $device !== null) {
+            $label = ApiToken::inheritedLabelFor($user, $device);
+
+            // Worth saying rather than doing quietly: somebody who left the name blank gets an
+            // access filed under a name they did not type on this screen, and a group appearing
+            // by itself reads as a mistake unless it is announced.
+            $recognised = $label;
         }
 
         $apiToken = ApiToken::createForUser($user, null, [
@@ -158,6 +203,7 @@ class DeviceFlowController extends Controller
             'client_variant' => $deviceCode->client_variant,
             'game_slot' => $slot,
             'game_ref' => $deviceCode->game_name,
+            'device_slot' => $device,
         ]);
         // The label used to read 'Unity Mod (Device Flow)' whatever had asked — a name that
         // matched nothing stored, and that said "mod" about a Manager link.
@@ -182,9 +228,14 @@ class DeviceFlowController extends Controller
         // ⚠ Reported after the fact, not asked before: the code and the label arrive in one POST,
         // so there is no moment in between to ask. The rule itself is stated on the page above the
         // field, which is where somebody can still decide not to.
-        return redirect()->route('link')->with(
-            'success',
-            $replaced > 0 ? __('link.success_replaced') : __('link.success')
-        );
+        // ⚠ Three outcomes, three sentences. "Recognised" comes first because it is the one that
+        // would otherwise look like a mistake: an access filed under a name nobody typed here.
+        $message = match (true) {
+            $recognised !== null => __('link.success_recognised', ['device' => $recognised]),
+            $replaced > 0 => __('link.success_replaced'),
+            default => __('link.success'),
+        };
+
+        return redirect()->route('link')->with('success', $message);
     }
 }

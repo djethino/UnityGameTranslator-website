@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Een game opnieuw koppelen vanaf hetzelfde apparaat vervangt de toegang die daar was. Andere apparaten houden die van hen.",
     "link.success": "Apparaat gekoppeld. Je kunt terug naar je game.",
     "link.success_replaced": "Apparaat gekoppeld. Het heeft de toegang vervangen die deze game al had.",
+    "link.success_recognised": "Apparaat gekoppeld. Deze machine staat al bekend als ':device', dus de toegang is bij die groep gevoegd.",
     "docs.quick_start.way_manager": "Met de Manager",
     "docs.quick_start.way_manager_desc": "Een programma dat je games vindt, uitzoekt wat elke game nodig heeft, en het installeert. Eén klik per game.",
     "docs.quick_start.way_manual": "Met de hand",

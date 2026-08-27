@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Linking a game again from the same device replaces the access it had there. Other devices keep theirs.",
     "link.success": "Device linked. You can go back to your game.",
     "link.success_replaced": "Device linked. It replaced the access this game already had.",
+    "link.success_recognised": "Device linked. This machine is already known as \":device\", so the access joined that group.",
     "docs.quick_start.way_manager": "With the Manager",
     "docs.quick_start.way_manager_desc": "A program that finds your games, works out what each one needs, and sets it up. One click per game.",
     "docs.quick_start.way_manual": "By hand",

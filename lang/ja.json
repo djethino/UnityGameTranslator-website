@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "同じデバイスからゲームをもう一度連携すると、そのデバイスにあった連携が置き換わります。他のデバイスの連携はそのままです。",
     "link.success": "デバイスを連携しました。ゲームに戻れます。",
     "link.success_replaced": "デバイスを連携しました。このゲームにあった連携は置き換わりました。",
+    "link.success_recognised": "デバイスを連携しました。この機械はすでに「:device」として知られているため、連携はそのグループに入りました。",
     "docs.quick_start.way_manager": "Manager を使う",
     "docs.quick_start.way_manager_desc": "あなたのゲームを見つけ、それぞれに何が必要かを判断し、セットアップするプログラムです。ゲーム 1 本につき 1 クリック。",
     "docs.quick_start.way_manual": "手動で",

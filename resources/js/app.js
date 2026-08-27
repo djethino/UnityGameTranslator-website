@@ -522,6 +522,30 @@ document.addEventListener('submit', (event) => {
 }, true);
 
 /**
+ * A chip that writes its own text into a field.
+ *
+ * Used by the linking page for the machine names this account already uses. They were offered
+ * through a native <datalist>, which shows nothing until you type — so somebody with three named
+ * machines saw an empty box and invented a fourth spelling of one of them.
+ *
+ * ⚠ Clicking is a decision; a pre-filled field is not. The value is never written on load, for the
+ * one day it matters — a game linked at somebody else's place.
+ *
+ * Delegated on the document, like the confirmation above: the CSP carries a nonce, which makes the
+ * browser ignore every inline handler.
+ */
+document.addEventListener('click', (event) => {
+    const chip = event.target.closest('[data-fill]');
+    if (!chip) return;
+
+    const field = document.getElementById(chip.getAttribute('data-fill'));
+    if (!field) return;
+
+    field.value = chip.getAttribute('data-fill-value') || '';
+    field.focus();
+});
+
+/**
  * Forms that apply on change.
  *
  * A dropdown or a checkbox should give its result in one gesture — that is how the editors'

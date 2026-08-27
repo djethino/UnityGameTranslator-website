@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Ein Spiel vom selben Gerät erneut zu verknüpfen ersetzt den Zugriff, der dort war. Andere Geräte behalten ihren.",
     "link.success": "Gerät verknüpft. Du kannst zu deinem Spiel zurück.",
     "link.success_replaced": "Gerät verknüpft. Es hat den Zugriff ersetzt, den dieses Spiel schon hatte.",
+    "link.success_recognised": "Gerät verknüpft. Dieser Rechner ist bereits als „:device“ bekannt, also kam der Zugang in diese Gruppe.",
     "docs.quick_start.way_manager": "Mit dem Manager",
     "docs.quick_start.way_manager_desc": "Ein Programm, das deine Spiele findet, herausfindet was jedes braucht, und es einrichtet. Ein Klick pro Spiel.",
     "docs.quick_start.way_manual": "Von Hand",

@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Ponowne połączenie gry z tego samego urządzenia zastępuje dostęp, który tam był. Inne urządzenia zachowują swój.",
     "link.success": "Urządzenie połączone. Możesz wrócić do gry.",
     "link.success_replaced": "Urządzenie połączone. Zastąpiło dostęp, który ta gra już miała.",
+    "link.success_recognised": "Urządzenie połączone. Ta maszyna jest już znana jako „:device”, więc dostęp trafił do tej grupy.",
     "docs.quick_start.way_manager": "Z Managerem",
     "docs.quick_start.way_manager_desc": "Program, który znajduje twoje gry, ustala czego każda potrzebuje i ją przygotowuje. Jedno kliknięcie na grę.",
     "docs.quick_start.way_manual": "Ręcznie",

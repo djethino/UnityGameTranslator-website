@@ -61,23 +61,35 @@
                          in two years: it needs no client update, it survives a reinstall, and it is
                          what groups fifty lines into three on the Linked devices screen.
 
-                         ⚠ Suggestions through a native <datalist>, never a pre-filled value. A
-                         field already reading "Living room PC" gets accepted without a thought on
-                         the one day it matters — the day a game is linked at a friend's place. --}}
+                         ⚠ Never a PRE-FILLED value. A field already reading "Living room PC" gets
+                         accepted without a thought on the one day it matters — the day a game is
+                         linked at a friend's place. Clicking a name is a decision; finding one
+                         already typed is not.
+
+                         🔴 The names were offered through a native <datalist>, which is invisible
+                         until you type — so somebody with three machines already named saw an empty
+                         box and typed a fourth spelling of one of them. Shown as chips: one click
+                         fills the field, and the list is there whether or not you think to look. --}}
                     <div class="text-left">
                         <label for="device_label" class="block text-sm font-medium text-gray-300 mb-2">
                             {{ __('link.device_label') }}
                         </label>
                         <input type="text" id="device_label" name="device_label" maxlength="60"
-                               list="known-devices" autocomplete="off"
+                               autocomplete="off"
                                placeholder="{{ __('link.device_placeholder') }}"
                                class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                         @if($devices->isNotEmpty())
-                        <datalist id="known-devices">
+                        <div class="flex flex-wrap gap-2 mt-2">
                             @foreach($devices as $device)
-                                <option value="{{ $device }}"></option>
+                                {{-- data-fill: a delegated listener in app.js writes it into the
+                                     field named here. The site's CSP forbids inline handlers, and
+                                     that is the pattern every other control on this site uses. --}}
+                                <button type="button" data-fill="device_label" data-fill-value="{{ $device }}"
+                                        class="px-3 py-1 text-xs rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 transition">
+                                    {{ $device }}
+                                </button>
                             @endforeach
-                        </datalist>
+                        </div>
                         @endif
                         <p class="text-xs text-gray-500 mt-1">{{ __('link.device_hint') }}</p>
                     </div>

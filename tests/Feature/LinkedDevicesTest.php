@@ -20,9 +20,27 @@ class LinkedDevicesTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function linkFrom(string $userAgent, ?string $gameId, ?string $gameName, User $user, ?string $device = null): void
-    {
-        $init = $this->withHeader('User-Agent', $userAgent)
+    private function linkFrom(
+        string $userAgent,
+        ?string $gameId,
+        ?string $gameName,
+        User $user,
+        ?string $device = null,
+        ?string $machine = null
+    ): void {
+        // 🔴 **withHeaders persists for the whole test**, it does not apply to one request. Without
+        // this, a link made with no machine still carried the previous one's header, the cap fired
+        // against a machine that was not there, and the count came out right for the wrong reason.
+        $this->flushHeaders();
+
+        $headers = array_filter([
+            'User-Agent' => $userAgent,
+            // The machine rides the header, not the body: /auth/device is unauthenticated, so the
+            // middleware that reads it elsewhere never runs — the header is on the request anyway.
+            'X-UGT-Device' => $machine,
+        ]);
+
+        $init = $this->withHeaders($headers)
             ->postJson('/api/v1/auth/device', array_filter([
                 'game_id' => $gameId,
                 'game_name' => $gameName,
@@ -30,10 +48,13 @@ class LinkedDevicesTest extends TestCase
 
         $init->assertOk();
 
+        // 🔴 assertSessionHasNoErrors, not assertRedirect alone: a link that fails validation or a
+        // code that is not found redirects too, so the weaker assertion passes while nothing is
+        // created — and every count downstream is then wrong for a reason nothing names.
         $this->actingAs($user)->post('/link', [
             'code' => $init->json('user_code'),
             'device_label' => $device,
-        ])->assertRedirect();
+        ])->assertSessionHasNoErrors()->assertRedirect();
     }
 
     public function test_the_screen_shows_only_this_accounts_accesses(): void
@@ -525,6 +546,55 @@ class LinkedDevicesTest extends TestCase
         $this->actingAs($user)->get('/profile/connections')
             ->assertOk()
             ->assertSee(__('connections.game_not_recorded'));
+    }
+
+    /**
+     * Re-linking a game from the same machine replaces its access, with nobody typing a name.
+     *
+     * 🔴 **This is what built the pile.** The cap needed a Steam id AND a device name somebody had
+     * typed — and nobody types one. So a reinstall, a wiped config, or "revoke everything" followed
+     * by signing in again left the previous access behind, every time: thirty-six of them on one
+     * account, measured in production on 2026-08-27.
+     */
+    public function test_relinking_from_the_same_machine_replaces_the_access_with_no_name_typed(): void
+    {
+        $user = User::factory()->create();
+        $machine = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null, $machine);
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null, $machine);
+
+        $this->assertSame(1, $user->apiTokens()->count());
+
+        // Another machine keeps its own: the cap must never reach across them.
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, null,
+            'ffffffffffffffffffffffffffffffff');
+
+        $this->assertSame(2, $user->apiTokens()->count());
+
+        // And a client that says nothing about its machine still accumulates — deliberately: the
+        // cap cannot cut on an absence without risking somebody else's game.
+        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '367520', 'A Game', $user);
+        $this->assertSame(3, $user->apiTokens()->count(), 'un client sans machine doit ajouter');
+
+        $this->linkFrom('UnityGameTranslator/0.11.0 (BepInEx5)', '367520', 'A Game', $user);
+        $this->assertSame(4, $user->apiTokens()->count(), 'et ne jamais remplacer');
+    }
+
+    /**
+     * A game linked on a machine already filed somewhere joins that group straight away.
+     */
+    public function test_a_newly_linked_game_joins_the_group_its_machine_is_in(): void
+    {
+        $user = User::factory()->create();
+        $machine = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '367520', 'A Game', $user, 'Living room PC', $machine);
+        $this->linkFrom('UnityGameTranslator/0.12.1 (BepInEx5)', '999999', 'Another', $user, null, $machine);
+
+        $fresh = $user->apiTokens()->orderByDesc('id')->first();
+
+        $this->assertSame('Living room PC', $fresh->device_label);
     }
 
     /**

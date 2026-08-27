@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Menghubungkan sebuah game lagi dari perangkat yang sama menggantikan akses yang ada di sana. Perangkat lain tetap punya miliknya.",
     "link.success": "Perangkat terhubung. Kamu bisa kembali ke gamemu.",
     "link.success_replaced": "Perangkat terhubung. Akses yang sudah dimiliki game ini telah digantikan.",
+    "link.success_recognised": "Perangkat terhubung. Mesin ini sudah dikenal sebagai \":device\", jadi aksesnya bergabung ke grup itu.",
     "docs.quick_start.way_manager": "Dengan Manager",
     "docs.quick_start.way_manager_desc": "Program yang menemukan game-mu, mencari tahu apa yang dibutuhkan masing-masing, lalu memasangnya. Satu klik per game.",
     "docs.quick_start.way_manual": "Manual",

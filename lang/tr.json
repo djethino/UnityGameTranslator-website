@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Bir oyunu aynı cihazdan yeniden bağlamak oradaki erişimin yerine geçer. Diğer cihazlar kendi erişimlerini korur.",
     "link.success": "Cihaz bağlandı. Oyununuza dönebilirsiniz.",
     "link.success_replaced": "Cihaz bağlandı. Bu oyunun önceki erişiminin yerine geçti.",
+    "link.success_recognised": "Cihaz bağlandı. Bu makine zaten \":device\" olarak biliniyor, erişim de o gruba katıldı.",
     "docs.quick_start.way_manager": "Manager ile",
     "docs.quick_start.way_manager_desc": "Oyunlarınızı bulan, her birinin neye ihtiyacı olduğunu çıkaran ve kuran bir program. Oyun başına tek tık.",
     "docs.quick_start.way_manual": "Elle",

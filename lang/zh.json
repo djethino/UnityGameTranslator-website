@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "从同一台设备再次关联一个游戏，会替换掉这台设备上原有的访问。其他设备保留各自的。",
     "link.success": "设备已关联。你可以回到游戏了。",
     "link.success_replaced": "设备已关联。它替换了这个游戏原有的访问。",
+    "link.success_recognised": "设备已关联。这台机器已经叫做「:device」，所以这个授权归入了那个分组。",
     "docs.quick_start.way_manager": "用 Manager",
     "docs.quick_start.way_manager_desc": "一个能找出你的游戏、判断每个游戏需要什么并完成安装的程序。每个游戏一次点击。",
     "docs.quick_start.way_manual": "手动",

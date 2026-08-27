@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Relier un jeu depuis le même appareil remplace l'accès qu'il y avait. Les autres appareils gardent le leur.",
     "link.success": "Appareil lié. Vous pouvez retourner dans votre jeu.",
     "link.success_replaced": "Appareil lié. Il a remplacé l'accès que ce jeu avait déjà.",
+    "link.success_recognised": "Appareil lié. Cette machine est déjà connue sous le nom « :device » : l'accès a rejoint ce groupe.",
     "docs.quick_start.way_manager": "Avec le Manager",
     "docs.quick_start.way_manager_desc": "Un programme qui trouve vos jeux, détermine ce dont chacun a besoin et l'installe. Un clic par jeu.",
     "docs.quick_start.way_manual": "À la main",

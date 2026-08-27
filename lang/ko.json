@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "같은 기기에서 게임을 다시 연결하면 그 기기에 있던 연결이 대체됩니다. 다른 기기의 연결은 그대로 유지됩니다.",
     "link.success": "기기를 연결했습니다. 게임으로 돌아가도 됩니다.",
     "link.success_replaced": "기기를 연결했습니다. 이 게임에 있던 기존 연결은 대체되었습니다.",
+    "link.success_recognised": "기기를 연결했습니다. 이 기기는 이미 ':device'(으)로 알려져 있어, 연결이 그 그룹에 들어갔습니다.",
     "docs.quick_start.way_manager": "Manager로",
     "docs.quick_start.way_manager_desc": "게임을 찾아내고, 각 게임에 무엇이 필요한지 알아내어 설치해 주는 프로그램입니다. 게임 하나에 클릭 한 번.",
     "docs.quick_start.way_manual": "직접",

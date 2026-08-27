@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Liên kết lại một trò chơi từ cùng một thiết bị sẽ thay thế quyền truy cập đã có ở đó. Các thiết bị khác vẫn giữ quyền của mình.",
     "link.success": "Đã liên kết thiết bị. Bạn có thể quay lại trò chơi.",
     "link.success_replaced": "Đã liên kết thiết bị. Quyền truy cập trước đó của trò chơi này đã được thay thế.",
+    "link.success_recognised": "Đã liên kết thiết bị. Máy này vốn đã được gọi là \":device\", nên quyền truy cập đã vào nhóm đó.",
     "docs.quick_start.way_manager": "Với Manager",
     "docs.quick_start.way_manager_desc": "Một chương trình tìm ra các game của bạn, xác định mỗi game cần gì, rồi cài đặt. Một cú nhấp cho mỗi game.",
     "docs.quick_start.way_manual": "Thủ công",

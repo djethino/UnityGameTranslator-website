@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Volver a vincular un juego desde el mismo dispositivo sustituye el acceso que había allí. Los demás dispositivos conservan el suyo.",
     "link.success": "Dispositivo vinculado. Ya puedes volver a tu juego.",
     "link.success_replaced": "Dispositivo vinculado. Ha sustituido el acceso que este juego ya tenía.",
+    "link.success_recognised": "Dispositivo vinculado. Este equipo ya se conoce como «:device», así que el acceso se ha unido a ese grupo.",
     "docs.quick_start.way_manager": "Con el Manager",
     "docs.quick_start.way_manager_desc": "Un programa que encuentra tus juegos, averigua qué necesita cada uno y lo instala. Un clic por juego.",
     "docs.quick_start.way_manual": "A mano",

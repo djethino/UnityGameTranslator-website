@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "קישור מחדש של משחק מאותו מכשיר מחליף את ההרשאה שהייתה שם. מכשירים אחרים שומרים על שלהם.",
     "link.success": "המכשיר קושר. אפשר לחזור למשחק.",
     "link.success_replaced": "המכשיר קושר, והחליף את ההרשאה שכבר הייתה למשחק הזה.",
+    "link.success_recognised": "המכשיר קושר. המכונה הזאת כבר מוכרת בשם \":device\", ולכן ההרשאה הצטרפה לקבוצה ההיא.",
     "docs.quick_start.way_manager": "עם Manager",
     "docs.quick_start.way_manager_desc": "תוכנה שמאתרת את המשחקים שלכם, מבררת מה כל משחק צריך, ומתקינה. קליק אחד לכל משחק.",
     "docs.quick_start.way_manual": "ידנית",

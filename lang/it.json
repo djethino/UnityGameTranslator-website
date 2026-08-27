@@ -1364,6 +1364,7 @@
     "link.rule_replaces": "Ricollegare un gioco dallo stesso dispositivo sostituisce l'accesso che c'era. Gli altri dispositivi mantengono il loro.",
     "link.success": "Dispositivo collegato. Puoi tornare al tuo gioco.",
     "link.success_replaced": "Dispositivo collegato. Ha sostituito l'accesso che questo gioco aveva già.",
+    "link.success_recognised": "Dispositivo collegato. Questa macchina è già nota come «:device», quindi l'accesso è entrato in quel gruppo.",
     "docs.quick_start.way_manager": "Con il Manager",
     "docs.quick_start.way_manager_desc": "Un programma che trova i tuoi giochi, capisce di cosa ha bisogno ciascuno e lo installa. Un clic per gioco.",
     "docs.quick_start.way_manual": "A mano",
