@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ApiToken;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * What holds an access to this account, and how to cut it.
@@ -129,10 +131,31 @@ class ConnectionsController extends Controller
      */
     public function signOutOtherBrowsers(Request $request)
     {
+        $user = $request->user();
+
         $deleted = DB::table('sessions')
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->where('id', '!=', $request->session()->getId())
             ->delete();
+
+        // 🔴 Deleting the session rows is NOT signing a browser out. Both sign-in paths call
+        // `Auth::login($user, remember: true)` unconditionally, so every browser also holds a
+        // recaller cookie — and Laravel rebuilds the session from it on the very next request,
+        // silently and with no sign-in screen. Reported from a real machine: the other browser was
+        // back before anything had been typed, and this page counted it again.
+        //
+        // Rotating the token invalidates every recaller ever issued for this account, which is the
+        // point: there is no way to invalidate one cookie and not the others.
+        $hadRecaller = $request->cookies->has(Auth::guard()->getRecallerName());
+
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        // ⚠ Including this browser's own, so it has to be handed a new one — otherwise closing the
+        // window here signs this browser out too, which is not what the button says it does.
+        if ($hadRecaller) {
+            Auth::login($user, true);
+        }
 
         return redirect()->route('profile.connections')
             ->with('success', trans_choice('connections.browsers_signed_out', $deleted, ['count' => $deleted]));

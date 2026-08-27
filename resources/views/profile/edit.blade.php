@@ -142,6 +142,21 @@
     <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 class="font-semibold mb-4"><i class="fas fa-link mr-2 text-purple-400"></i>{{ __('connections.page_title') }}</h2>
         <p class="text-gray-400 text-sm mb-4">{{ __('connections.profile_card_hint') }}</p>
+
+        {{-- ⚠ The figures, not just the door. "Open linked devices" is a label, not a reason: what
+             makes somebody look is seeing a count they do not recognise. Same two-box grid as the
+             Statistics card just below, because that is how this page already shows numbers. --}}
+        <div class="grid grid-cols-2 gap-4 text-center mb-4">
+            <div class="bg-gray-700 rounded-lg p-4">
+                <p class="text-2xl font-bold text-purple-400">{{ $linkedDevices }}</p>
+                <p class="text-sm text-gray-400">{{ __('connections.card_devices') }}</p>
+            </div>
+            <div class="bg-gray-700 rounded-lg p-4">
+                <p class="text-2xl font-bold text-gray-200">{{ $otherBrowsers }}</p>
+                <p class="text-sm text-gray-400">{{ __('connections.card_browsers') }}</p>
+            </div>
+        </div>
+
         <a href="{{ route('profile.connections') }}" class="block w-full bg-gray-700 hover:bg-gray-600 text-white text-center py-3 rounded-lg transition">
             <i class="fas fa-sliders mr-2"></i> {{ __('connections.profile_card_open') }}
         </a>

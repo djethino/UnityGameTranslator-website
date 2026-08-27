@@ -49,6 +49,15 @@ class ProfileController extends Controller
                 ->with('game:id,name')
                 ->orderBy('created_at')
                 ->get(),
+
+            // Figures on the card rather than behind it: a button saying "open linked devices"
+            // gives nobody a reason to press it, while "4 · 2" is a state somebody either
+            // recognises or does not — and not recognising it is exactly when they should look.
+            'linkedDevices' => $user->apiTokens()->count(),
+            'otherBrowsers' => DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('id', '!=', session()->getId())
+                ->count(),
         ]);
     }
 

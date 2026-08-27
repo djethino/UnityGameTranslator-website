@@ -831,10 +831,19 @@ class EditSessionFlowTest extends TestCase
         $this->assertNotNull($cookie, 'The session cookie must be set when the link is opened.');
         // Unreadable from JS: the token is the only credential the page holds
         $this->assertTrue($cookie->isHttpOnly());
-        // Outlives the web session cookie — that is the whole point
-        $this->assertGreaterThan(
-            now()->addMinutes((int) config('session.lifetime'))->getTimestamp(),
-            $cookie->getExpiresTime()
+        // ⚠ This used to assert the cookie outlived the WEB session, which was never the rule —
+        // it only happened to hold while the web session was two hours and this one twenty-four.
+        // Raising the web session to seven days broke the assertion without breaking anything
+        // real, which is how a coincidence gets found.
+        //
+        // The rule the model actually states: this cookie lasts exactly the server-side inactivity
+        // window, so the page can never claim a session the server has already collected, nor lose
+        // one the server still holds. An anonymous editing session has nothing to do with whether
+        // somebody is signed in.
+        $this->assertEqualsWithDelta(
+            EditSessionToken::inactivityDeadline()->getTimestamp(),
+            $cookie->getExpiresTime(),
+            60
         );
 
         $this->withCookie(self::SESSION_COOKIE, $session->token);

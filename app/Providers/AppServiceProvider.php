@@ -34,6 +34,15 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production')) {
             URL::forceScheme('https');
         }
+        // 🔴 How long "keep me signed in" lasts, set in ONE place because it is a policy and not a
+        // detail of whichever controller happens to sign somebody in.
+        //
+        // Laravel's own default is five years, which is not a decision anybody took — it is simply
+        // what the framework ships. OWASP puts a persistent sign-in at fourteen to thirty days for
+        // an application of this kind, on the condition that it can be revoked server-side; that
+        // condition is now met by the Linked devices screen, so the number can be met too.
+        Auth::guard('web')->setRememberDuration(43200); // 30 days
+
         // Register Socialite providers
         Event::listen(SocialiteWasCalled::class, DiscordExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, TwitchExtendSocialite::class.'@handle');

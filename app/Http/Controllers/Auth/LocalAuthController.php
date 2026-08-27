@@ -133,7 +133,11 @@ class LocalAuthController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
-        Auth::login($user, remember: true);
+
+        // ⚠ Asked, not assumed. This used to be `remember: true` outright, so every sign-in left a
+        // long-lived cookie on whatever machine it happened on — including one somebody had
+        // borrowed. Unticked, the session ends when the browser closes.
+        Auth::login($user, remember: $request->boolean('remember'));
 
         // 🔴 **Read AFTER regenerate(), written back by hand.** Regenerating the session is what
         // stops a fixation attack, and it wipes url.intended along with everything else — so the

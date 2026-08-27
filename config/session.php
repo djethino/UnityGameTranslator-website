@@ -32,9 +32,24 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // 🔴 These two go together, and neither makes sense alone.
+    //
+    // Two hours of idle time was short enough to sign somebody out mid-visit, while the cookie
+    // outlived the browser — so it was strict where it annoyed and loose where it mattered. With a
+    // "keep me signed in" box, the plain session gets the meaning it should always have had: it
+    // lasts as long as the browser is open, and closing the browser ends it. Ticking the box is
+    // what survives a restart, and that is a deliberate act.
+    //
+    // ⚠ Browsers that restore tabs on start-up ("continue where you left off") also restore session
+    // cookies, so closing the window is not a guarantee — it is the ordinary case, not a boundary.
+    // Whoever needs certainty signs out, or uses the Linked devices screen.
+    // ⚠ Seven days is the idle cap WITHIN an open browser, not a licence to stay signed in for a
+    // week on a shared machine: closing the browser ends it either way. OWASP's 15-30 minutes is
+    // written for applications holding money or identity documents; the worst a session does here
+    // is publish a translation under somebody's name.
+    'lifetime' => (int) env('SESSION_LIFETIME', 10080), // 7 days of inactivity, at most
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
 
     /*
     |--------------------------------------------------------------------------

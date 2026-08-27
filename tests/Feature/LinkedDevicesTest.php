@@ -156,6 +156,48 @@ class LinkedDevicesTest extends TestCase
     }
 
     /**
+     * 🔴 Deleting the session rows is not signing a browser out.
+     *
+     * Both sign-in paths call `Auth::login($user, remember: true)` with no condition, so every
+     * browser also holds a recaller cookie and Laravel rebuilds the session from it on the next
+     * request — no sign-in screen, nothing typed. Observed on a real machine: the other browser
+     * came back on its own and this page counted it again.
+     */
+    public function test_a_signed_out_browser_cannot_come_back_on_its_remember_cookie(): void
+    {
+        $user = User::factory()->create();
+        $before = $user->getRememberToken();
+
+        $this->actingAs($user)->get('/profile/connections')->assertOk();
+
+        DB::table('sessions')->insert([
+            ['id' => 'the-other-browser', 'user_id' => $user->id, 'payload' => '', 'last_activity' => time()],
+        ]);
+
+        $this->actingAs($user)->delete('/profile/browsers')->assertRedirect();
+
+        // The recaller the other browser is holding no longer matches anything.
+        $this->assertNotSame($before, $user->fresh()->getRememberToken());
+        $this->assertSame(0, DB::table('sessions')->where('id', 'the-other-browser')->count());
+    }
+
+    /**
+     * ⚠ The rotation invalidates this browser's own recaller too, so it has to be handed a fresh
+     * one — otherwise the button quietly signs out the person pressing it as soon as they close
+     * the window, which is the opposite of what it says.
+     */
+    public function test_the_browser_doing_the_signing_out_keeps_its_own_place(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile/connections')->assertOk();
+        $this->actingAs($user)->delete('/profile/browsers')->assertRedirect();
+
+        $this->actingAs($user)->get('/profile/connections')->assertOk();
+        $this->assertAuthenticatedAs($user);
+    }
+
+    /**
      * One game holds one access per program. Linking again replaces rather than leaving a line
      * nobody can identify behind — which is the whole reason orphans accumulate today.
      */

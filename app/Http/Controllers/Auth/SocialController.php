@@ -25,6 +25,11 @@ class SocialController extends Controller
         // Where to land afterwards, refused unless it is one of our own addresses.
         $this->rememberIntendedUrl($request->query('redirect'));
 
+        // The answer to "keep me signed in" is given before leaving for the provider and read when
+        // coming back, so it has to wait somewhere in between. The session is that somewhere —
+        // there is no form to carry it, only a redirect out and a redirect in.
+        $request->session()->put('auth.remember', $request->boolean('remember'));
+
         return Socialite::driver($provider)->redirect();
     }
 
@@ -133,7 +138,10 @@ class SocialController extends Controller
             return redirect()->route('login')->with('error', 'Your account has been banned. Reason: ' . ($user->ban_reason ?? 'No reason provided.'));
         }
 
-        Auth::login($user, true);
+        // ⚠ Pulled rather than read, so a stale answer cannot outlive the sign-in it belonged to.
+        // Absent means no: somebody arriving here without having passed the box gets a session that
+        // ends with their browser.
+        Auth::login($user, (bool) session()->pull('auth.remember', false));
 
         // Log successful login
         AuditLog::logLogin($user->id, $provider);
