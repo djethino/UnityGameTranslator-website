@@ -601,56 +601,91 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Top Games -->
+    {{-- ⚠ "views" here excludes downloads. The stored column counts both (see AnalyticsGame), and
+         printing the two raw side by side counted a download twice — measured at 29% of what was
+         labelled "views". The ranking is on the two together, and the card says so, because a
+         ranking whose criterion is unstated invites the reader to invent one. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-gamepad mr-2 text-purple-400"></i> Top Games</h2>
+        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <h2 class="text-lg font-semibold"><i class="fas fa-gamepad mr-2 text-purple-400"></i> Top Games</h2>
+            {{-- ⚠ The criterion is named, and the figure it ranks on is the one printed large.
+                 Ranking on the two together is right — a game nobody browses but everybody
+                 downloads is doing well — but with only the two parts shown, neither column
+                 decreased down the list and the order read as broken. --}}
+            <p class="text-xs text-gray-500">Last {{ $spanLabel }} — ranked on views + downloads</p>
+        </div>
         @if($topGames->isNotEmpty())
             <div class="space-y-3">
                 @foreach($topGames as $gameStats)
-                    @if($gameStats->game)
-                        <div class="flex justify-between items-center bg-gray-750 rounded p-3">
-                            <div class="flex items-center gap-3">
-                                @if($gameStats->game->cover_url)
-                                    <img src="{{ $gameStats->game->cover_url }}" alt="" class="w-10 h-10 rounded object-cover">
-                                @else
-                                    <div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                                        <i class="fas fa-gamepad text-gray-500"></i>
-                                    </div>
-                                @endif
-                                <span class="font-medium">{{ $gameStats->game->name }}</span>
-                            </div>
-                            <div class="text-right text-sm">
-                                <p>{{ number_format($gameStats->views) }} <span class="text-gray-400">views</span></p>
-                                <p>{{ number_format($gameStats->downloads) }} <span class="text-gray-400">downloads</span></p>
-                            </div>
+                    <div class="flex justify-between items-center bg-gray-750 rounded p-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            @if($gameStats->game->cover_url)
+                                <img src="{{ $gameStats->game->cover_url }}" alt="" class="w-10 h-10 rounded object-cover shrink-0">
+                            @else
+                                <div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center shrink-0">
+                                    <i class="fas fa-gamepad text-gray-500"></i>
+                                </div>
+                            @endif
+                            <span class="font-medium truncate">{{ $gameStats->game->name }}</span>
                         </div>
-                    @endif
+                        <div class="text-right shrink-0 ml-3">
+                            <p class="font-semibold">{{ number_format($gameStats->attention) }}</p>
+                            <p class="text-xs text-gray-400 whitespace-nowrap">
+                                {{ number_format($gameStats->views) }} views ·
+                                {{ number_format($gameStats->downloads) }} downloads
+                            </p>
+                        </div>
+                    </div>
                 @endforeach
             </div>
+            <p class="text-xs text-gray-500 mt-3">
+                ⚠ Views and downloads do not overlap: a download is not also counted as a view.
+            </p>
         @else
-            <p class="text-gray-500 text-sm">No game data yet</p>
+            <p class="text-gray-500 text-sm">Nothing looked at in this period.</p>
         @endif
     </div>
 
-    <!-- Recent Uploads -->
+    <!-- Uploads -->
+    {{-- 🔴 This card used to ignore the span entirely while sitting in the section the span drives:
+         the same five rows whether you asked for 24 h or a year. On a page where everything else
+         follows the filter, that reads as "nothing happened".
+
+         ⚠ And it showed Mains and Branches identically. A branch is a proposal attached to somebody
+         else's Main, not something published — in the one product where that distinction is
+         structural, a list of "uploads" cannot flatten it. Colours and icon are the ones already
+         used for these roles (profile/edit.blade.php), not a new set. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-upload mr-2 text-green-400"></i> Recent Uploads</h2>
+        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <h2 class="text-lg font-semibold"><i class="fas fa-upload mr-2 text-green-400"></i> Uploads</h2>
+            <p class="text-xs text-gray-500">
+                Last {{ $spanLabel }} —
+                {{ number_format($recentUploadsTotal) }} in all{{ $recentUploadsTotal > $recentUploads->count() ? ', newest ' . $recentUploads->count() . ' shown' : '' }}
+            </p>
+        </div>
         @if($recentUploads->isNotEmpty())
             <div class="space-y-3">
                 @foreach($recentUploads as $translation)
+                    @php $isMain = $translation->lineageRole() === 'main'; @endphp
                     <div class="flex justify-between items-center bg-gray-750 rounded p-3">
-                        <div>
-                            <p class="font-medium">{{ $translation->game->name ?? 'Unknown' }}</p>
-                            <p class="text-sm text-gray-400">
+                        <div class="min-w-0">
+                            <p class="font-medium truncate">
+                                <span class="{{ $isMain ? 'text-purple-300' : 'text-gray-400' }}" title="{{ $isMain ? 'Published' : 'A contribution to somebody else\'s Main' }}">
+                                    <i class="fas {{ $isMain ? 'fa-star' : 'fa-code-branch' }} text-xs mr-1"></i>{{ $isMain ? 'Main' : 'Branch' }}
+                                </span>
+                                <span class="text-gray-500 mx-1">·</span>{{ $translation->game->name ?? 'Unknown' }}
+                            </p>
+                            <p class="text-sm text-gray-400 truncate">
                                 by {{ $translation->user->name ?? '[Deleted]' }}
                                 • {{ $translation->source_language }} → {{ $translation->target_language }}
                             </p>
                         </div>
-                        <span class="text-sm text-gray-500">{{ $translation->created_at->diffForHumans() }}</span>
+                        <span class="text-sm text-gray-500 shrink-0 ml-3">{{ $translation->created_at->diffForHumans() }}</span>
                     </div>
                 @endforeach
             </div>
         @else
-            <p class="text-gray-500 text-sm">No recent uploads</p>
+            <p class="text-gray-500 text-sm">Nothing uploaded in this period.</p>
         @endif
     </div>
 </div>

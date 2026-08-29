@@ -109,6 +109,14 @@ class AggregateAnalytics extends Command
     /**
      * Aggregate per-game stats
      */
+    /**
+     * ⚠ **`page_views` here means "every event carrying a game id", downloads included.** The name
+     * is wrong and the column is kept as it is on purpose: it goes back further than the 90 days of
+     * raw events we keep, so narrowing it now would leave a break nobody could ever recompute
+     * across. `AnalyticsGame::topOverPeriod` subtracts the downloads on the way out, which is exact
+     * for every day already stored. Do not "fix" it here without recomputing the whole series —
+     * which cannot be done.
+     */
     protected function aggregateGameStats(string $date): void
     {
         $gameEvents = AnalyticsEvent::whereDate('created_at', $date)

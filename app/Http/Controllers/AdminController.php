@@ -333,6 +333,14 @@ class AdminController extends Controller
     }
 
     /**
+     * How many rows the two side-by-side cards of the analytics page show.
+     *
+     * ⚠ One constant because they sit next to each other: they held 10 and 5 for no reason anybody
+     * could name, which reads as one of them being cut short.
+     */
+    private const TOP_ROWS = 10;
+
+    /**
      * Fetch the shared catalogues now rather than waiting for the nightly run.
      *
      * 🔴 **This failure has no symptom, which is the whole reason the button exists.** When the
@@ -496,14 +504,9 @@ class AdminController extends Controller
         }
         arsort($allBrowsers);
 
-        // Top games
-        $topGames = AnalyticsGame::where('date', '>=', now()->subDays($period))
-            ->select('game_id', DB::raw('SUM(page_views) as views'), DB::raw('SUM(downloads) as downloads'))
-            ->groupBy('game_id')
-            ->orderByDesc('views')
-            ->limit(10)
-            ->with('game')
-            ->get();
+        // Top games. The two figures are pulled apart in the model — `page_views` counts downloads
+        // too, so showing them raw side by side double-counts. See AnalyticsGame.
+        $topGames = AnalyticsGame::topOverPeriod($period, self::TOP_ROWS);
 
         // Global stats
         $globalStats = [
@@ -513,10 +516,23 @@ class AdminController extends Controller
             'total_downloads' => Translation::sum('download_count'),
         ];
 
-        // Recent activity
-        $recentUploads = Translation::with(['user', 'game'])
+        // What was uploaded during the period.
+        //
+        // 🔴 **It used to ignore the span entirely** — `limit(5)` and nothing else — while sitting
+        // in the section the span drives. On a page where everything else follows the filter, a card
+        // that does not is a trap: you compare two spans, this one does not move, and you conclude
+        // nothing happened.
+        //
+        // ⚠ No visibility filter, on purpose: an admin screen showing only the public half would
+        // hide contributions, which are precisely what wants looking at. What the list owes the
+        // reader instead is to SAY which is which — a branch is a proposal attached to somebody
+        // else's Main, not something published.
+        $uploadsQuery = Translation::where('created_at', '>=', now()->subDays($period));
+
+        $recentUploadsTotal = (clone $uploadsQuery)->count();
+        $recentUploads = $uploadsQuery->with(['user', 'game'])
             ->orderByDesc('created_at')
-            ->limit(5)
+            ->limit(self::TOP_ROWS)
             ->get();
 
         $liveCapacity = LiveEditCapacity::current();
@@ -569,6 +585,7 @@ class AdminController extends Controller
         return view('admin.analytics', compact(
             'clients',
             'spanLabel',
+            'recentUploadsTotal',
             'releasesKnown',
             'daysStored',
             'maxPeriod',
