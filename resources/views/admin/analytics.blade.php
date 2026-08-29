@@ -224,7 +224,10 @@
             {{-- ⚠ An ordinary link. Where the reader was is remembered by a delegated listener on
                  the bar — see the script at the foot of this file for why the page is reloaded
                  whole rather than patched in place. --}}
-            <a href="{{ route('admin.analytics', ['period' => $days]) }}"
+            {{-- ⚠ Carries the uploads sub-filter along, for the same reason it carries the period
+                 back: touching one control must not silently reset the other. --}}
+            <a href="{{ route('admin.analytics', ['period' => $days, 'uploads' => $uploadRole === 'all' ? null : $uploadRole]) }}"
+               data-keeps-scroll
                class="px-3 py-1.5 rounded text-sm {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
                 {{ $label }}
             </a>
@@ -599,7 +602,15 @@
     @endunless
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+{{-- 🔴 **The pair expands together, from one state held here.** Two cards side by side that fold
+     independently leave one twice the height of the other, and the reader then reads the gap as
+     something being wrong rather than as a choice they just made. Nobody has to think about it:
+     asking for the rest of one asks for the rest of both.
+
+     ⚠ An object literal, not a function: Alpine evaluates `x-data` before the inline script at the
+     foot of this file has run, so anything named there would be "Undefined variable" — which is
+     exactly how the period bar failed silently twice. --}}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6" x-data="{ expanded: false }">
     <!-- Top Games -->
     {{-- ⚠ "views" here excludes downloads. The stored column counts both (see AnalyticsGame), and
          printing the two raw side by side counted a download twice — measured at 29% of what was
@@ -617,7 +628,10 @@
         @if($topGames->isNotEmpty())
             <div class="space-y-3">
                 @foreach($topGames as $gameStats)
-                    <div class="flex justify-between items-center bg-gray-750 rounded p-3">
+                    {{-- Beyond the fold, the row is hidden rather than absent: the ranking position
+                         has to stay the same before and after expanding. --}}
+                    <div class="flex justify-between items-center bg-gray-750 rounded p-3"
+                         @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
                         <div class="flex items-center gap-3 min-w-0">
                             @if($gameStats->game->cover_url)
                                 <img src="{{ $gameStats->game->cover_url }}" alt="" class="w-10 h-10 rounded object-cover shrink-0">
@@ -638,6 +652,7 @@
                     </div>
                 @endforeach
             </div>
+            <x-admin.show-more :count="$topGames->count()" :visible="$topRows['visible']" />
             <p class="text-xs text-gray-500 mt-3">
                 ⚠ Views and downloads do not overlap: a download is not also counted as a view.
             </p>
@@ -656,18 +671,37 @@
          structural, a list of "uploads" cannot flatten it. Colours and icon are the ones already
          used for these roles (profile/edit.blade.php), not a new set. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <h2 class="text-lg font-semibold"><i class="fas fa-upload mr-2 text-green-400"></i> Uploads</h2>
             <p class="text-xs text-gray-500">
                 Last {{ $spanLabel }} —
                 {{ number_format($recentUploadsTotal) }} in all{{ $recentUploadsTotal > $recentUploads->count() ? ', newest ' . $recentUploads->count() . ' shown' : '' }}
             </p>
         </div>
+
+        {{-- ⚠ Server-side, so the count beside it is the count of what is being asked for. Filtering
+             the ten already fetched would let "Branch" show three while the period holds twelve.
+
+             ⚠ Each link carries the period along. A sub-filter that silently reset the span above it
+             would move two things when the reader touched one. --}}
+        <div class="flex gap-1.5 mb-4 text-xs">
+            @foreach (['all' => 'All', 'main' => 'Main', 'branch' => 'Branch'] as $role => $label)
+                <a href="{{ route('admin.analytics', ['period' => $period, 'uploads' => $role]) }}"
+                   data-keeps-scroll
+                   class="px-2.5 py-1 rounded transition
+                          {{ $uploadRole === $role ? 'bg-gray-600 text-gray-100' : 'bg-gray-750 text-gray-400 hover:bg-gray-700' }}">
+                    @if($role !== 'all')
+                        <i class="fas {{ $role === 'main' ? 'fa-star' : 'fa-code-branch' }} mr-1 {{ $role === 'main' ? 'text-purple-300' : '' }}"></i>
+                    @endif{{ $label }}
+                </a>
+            @endforeach
+        </div>
         @if($recentUploads->isNotEmpty())
             <div class="space-y-3">
                 @foreach($recentUploads as $translation)
                     @php $isMain = $translation->lineageRole() === 'main'; @endphp
-                    <div class="flex justify-between items-center bg-gray-750 rounded p-3">
+                    <div class="flex justify-between items-center bg-gray-750 rounded p-3"
+                         @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
                         <div class="min-w-0">
                             <p class="font-medium truncate">
                                 <span class="{{ $isMain ? 'text-purple-300' : 'text-gray-400' }}" title="{{ $isMain ? 'Published' : 'A contribution to somebody else\'s Main' }}">
@@ -684,8 +718,17 @@
                     </div>
                 @endforeach
             </div>
+            <x-admin.show-more :count="$recentUploads->count()" :visible="$topRows['visible']" />
         @else
-            <p class="text-gray-500 text-sm">Nothing uploaded in this period.</p>
+            <p class="text-gray-500 text-sm">
+                @if($uploadRole === 'all')
+                    Nothing uploaded in this period.
+                @else
+                    {{-- ⚠ Names what was filtered out rather than saying "nothing": the reader has
+                         just narrowed the list and needs to know that is why it is empty. --}}
+                    No {{ $uploadRole === 'main' ? 'Main' : 'Branch' }} uploaded in this period.
+                @endif
+            </p>
         @endif
     </div>
 </div>
@@ -734,22 +777,22 @@
      */
     (function periodScroll() {
         const KEY = 'ugt.analytics.scroll';
-        const bar = document.getElementById('period-bar');
 
-        if (bar) {
-            // Delegated: the links are ordinary anchors, and the click is caught on the way up.
-            bar.addEventListener('click', (event) => {
-                if (!event.target.closest('a')) {
-                    return;
-                }
-                try {
-                    sessionStorage.setItem(KEY, String(window.scrollY));
-                } catch (e) {
-                    // Private windows and blocked site data throw here. Losing the position is a
-                    // small annoyance; a broken filter would not be.
-                }
-            });
-        }
+        // ⚠ Delegated on the document and keyed on an attribute, not on one bar: the uploads
+        // sub-filter reloads the page for exactly the same reason the span does, and it sits half a
+        // page lower — where losing the position costs more, not less. Any filter link added later
+        // joins in by carrying `data-keeps-scroll`, with nothing to wire up.
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('a[data-keeps-scroll]')) {
+                return;
+            }
+            try {
+                sessionStorage.setItem(KEY, String(window.scrollY));
+            } catch (e) {
+                // Private windows and blocked site data throw here. Losing the position is a small
+                // annoyance; a broken filter would not be.
+            }
+        });
 
         let saved = null;
         try {

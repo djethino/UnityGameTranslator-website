@@ -333,12 +333,18 @@ class AdminController extends Controller
     }
 
     /**
-     * How many rows the two side-by-side cards of the analytics page show.
+     * How many rows the two side-by-side cards of the analytics page hold, and how many show before
+     * the reader asks for the rest.
      *
-     * ⚠ One constant because they sit next to each other: they held 10 and 5 for no reason anybody
-     * could name, which reads as one of them being cut short.
+     * ⚠ One pair of constants because the cards sit next to each other: they held 10 and 5 for no
+     * reason anybody could name, which reads as one of them being cut short.
+     *
+     * ⚠ Everything is fetched and sent; "Show more" only reveals. Ten rows either way is nothing to
+     * carry, and fetching the rest on demand would mean a second round trip for a card whose whole
+     * point is to be glanced at.
      */
     private const TOP_ROWS = 10;
+    private const TOP_ROWS_VISIBLE = 5;
 
     /**
      * Fetch the shared catalogues now rather than waiting for the nightly run.
@@ -527,7 +533,22 @@ class AdminController extends Controller
         // hide contributions, which are precisely what wants looking at. What the list owes the
         // reader instead is to SAY which is which — a branch is a proposal attached to somebody
         // else's Main, not something published.
+        // ⚠ **Filtered by the server, not in the browser.** Hiding rows client-side would only ever
+        // filter the ten already fetched, so "Branch" could show three while the period holds
+        // twelve — a count that lies, which is the defect this card was just repaired for.
+        $uploadRole = in_array($request->get('uploads'), ['main', 'branch'], true)
+            ? $request->get('uploads')
+            : 'all';
+
         $uploadsQuery = Translation::where('created_at', '>=', now()->subDays($period));
+
+        // 'public' is a Main; anything else in a lineage is a branch — the same reading as
+        // Translation::lineageRole(), asked of the database rather than of each row.
+        if ($uploadRole === 'main') {
+            $uploadsQuery->where('visibility', 'public');
+        } elseif ($uploadRole === 'branch') {
+            $uploadsQuery->where('visibility', '!=', 'public');
+        }
 
         $recentUploadsTotal = (clone $uploadsQuery)->count();
         $recentUploads = $uploadsQuery->with(['user', 'game'])
@@ -578,6 +599,9 @@ class AdminController extends Controller
         $clients = VersionInventory::forSpan($period);
         $spanLabel = AnalyticsPeriods::label($period);
 
+        // How many rows the side-by-side cards show before "Show more", and how many in all.
+        $topRows = ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS];
+
         // ⚠ Without the published list, every caller is filed as unrecognised — the screen says so
         // rather than showing a table that looks like a measurement.
         $releasesKnown = KnownReleases::known();
@@ -586,6 +610,8 @@ class AdminController extends Controller
             'clients',
             'spanLabel',
             'recentUploadsTotal',
+            'uploadRole',
+            'topRows',
             'releasesKnown',
             'daysStored',
             'maxPeriod',
