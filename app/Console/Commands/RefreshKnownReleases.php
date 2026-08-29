@@ -44,9 +44,10 @@ class RefreshKnownReleases extends Command
 
             if ($versions === null) {
                 $failed[] = $repository;
-                // ⚠ Keep whatever is already known for this product rather than dropping it: one
-                // unreachable repository must not erase the other, nor yesterday's answer.
-                $found[$product] = KnownReleases::all()[$product] ?? [];
+                // ⚠ Nothing to preserve by hand any more: releases are never deleted, so an
+                // unreachable repository simply adds nothing this hour. Before the move to a table
+                // this branch had to copy the previous list forward, or the refresh would have
+                // erased it.
                 continue;
             }
 
@@ -62,8 +63,16 @@ class RefreshKnownReleases extends Command
     }
 
     /**
-     * Tags of published releases, newest first. Null means "could not ask" — which is not the same
-     * as "nothing is published", and the caller keeps what it had.
+     * Published releases, newest first, as ['version', 'published_at', 'prerelease'].
+     *
+     * Null means "could not ask" — which is not the same as "nothing is published", and the caller
+     * keeps what it had.
+     *
+     * 🔴 **`published_at` and `prerelease` come free in this same response and used to be thrown
+     * away.** Without the date, "last seen 40 days ago" cannot be judged — it means nothing alike on
+     * a version that is a week old and on one that is a year old — and a release nobody has ever run
+     * is invisible, since it has no usage row to appear in. Without the flag, a beta and a stable
+     * carry the same weight in a decision about what to keep supporting.
      */
     private function versionsOf(string $repository): ?array
     {
@@ -85,11 +94,14 @@ class RefreshKnownReleases extends Command
                 // Drafts are not out there; pre-releases are, and somebody running one must not be
                 // counted as unrecognised.
                 ->reject(fn ($release) => ($release['draft'] ?? false) === true)
-                ->pluck('tag_name')
-                ->filter(fn ($tag) => is_string($tag) && $tag !== '')
-                // Tags are written "v0.11.0"; the User-Agent carries "0.11.0".
-                ->map(fn (string $tag) => ltrim($tag, 'vV'))
-                ->unique()
+                ->filter(fn ($release) => is_string($release['tag_name'] ?? null) && $release['tag_name'] !== '')
+                ->map(fn ($release) => [
+                    // Tags are written "v0.11.0"; the User-Agent carries "0.11.0".
+                    'version' => ltrim($release['tag_name'], 'vV'),
+                    'published_at' => $release['published_at'] ?? null,
+                    'prerelease' => (bool) ($release['prerelease'] ?? false),
+                ])
+                ->unique('version')
                 ->values()
                 ->all();
         } catch (\Throwable $e) {

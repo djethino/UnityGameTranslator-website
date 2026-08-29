@@ -483,14 +483,14 @@ class TranslationController extends Controller
             // and this writes 'mod', so the insert failed on each download and the catch below hid
             // it — months of mod downloads recorded nowhere while the site's own button was
             // counted. Fixed 2026-08-20 by taking the list out of the database.
-            $client = AnalyticsEvent::detectClient($userAgent);
+            $client = \App\Support\ClientAgent::ours($userAgent);
 
             AnalyticsEvent::create([
                 'route' => 'api.translations.download',
                 'game_id' => $translation->game_id,
                 'country' => null,
                 'referrer_domain' => 'mod', // Mark as mod download
-                'device' => $client['product'] ?? AnalyticsEvent::detectDevice($userAgent),
+                'device' => $client['kind'] ?? AnalyticsEvent::detectDevice($userAgent),
                 // ⚠ Null rather than "Other" for our own programs: the browser breakdown skips
                 // nulls, and a mod filed under a browser name makes that chart answer a question
                 // nobody asked. Which build called is counted properly in client_usage_daily.

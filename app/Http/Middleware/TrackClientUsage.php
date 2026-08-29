@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\AnalyticsEvent;
 use App\Models\ClientUsageDaily;
+use App\Support\ClientAgent;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,7 +37,7 @@ class TrackClientUsage
     {
         $response = $next($request);
 
-        $client = AnalyticsEvent::detectClient($request->userAgent());
+        $client = ClientAgent::ours($request->userAgent());
 
         if ($client !== null) {
             try {

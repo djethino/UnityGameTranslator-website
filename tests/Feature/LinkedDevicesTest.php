@@ -366,7 +366,10 @@ class LinkedDevicesTest extends TestCase
 
         $token = $user->apiTokens()->first();
         $this->assertSame('mod', $token->client_kind);
-        $this->assertSame('0.12', $token->client_version);
+        // ⚠ The full version, not `0.12`. It used to be truncated to major.minor by a second
+        // User-Agent parser that no longer exists — nothing justified it, and it hid exactly the
+        // distinction this page is for: 0.12.0 and 0.12.1 are not the same build.
+        $this->assertSame('0.12.0', $token->client_version);
         $this->assertSame('MelonLoader-IL2CPP', $token->client_variant);
         $this->assertSame('A Game', $token->gameName());
     }

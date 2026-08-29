@@ -145,9 +145,15 @@
     $catalogueNever = collect($catalogue)->every(fn ($d) => $d['at'] === null);
 @endphp
 <div class="mt-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
-    <h3 class="text-sm font-semibold text-gray-400 mb-2">
-        <i class="fas fa-book mr-1 text-purple-500"></i> Shared catalogues
-    </h3>
+    <div class="flex items-center justify-between gap-3 mb-2">
+        <h3 class="text-sm font-semibold text-gray-400">
+            <i class="fas fa-book mr-1 text-purple-500"></i> Shared catalogues
+        </h3>
+        {{-- ⚠ The button belongs HERE, beside the staleness it acts on — not in a settings screen.
+             This is the only place that says a source has gone quiet, so it is the only place where
+             somebody decides to go and fetch it. --}}
+        <x-admin.refresh-catalogues />
+    </div>
 
     @if ($catalogueNever)
         <p class="text-sm text-amber-400">
@@ -186,8 +192,18 @@
 
 <!-- ─── Over a period ────────────────────────────────────────────────────── -->
 {{-- The selector sits HERE, not next to the page title: it drives this section
-     and everything below it, and nothing above. --}}
-<div class="mt-8 mb-3 flex flex-wrap gap-3 justify-between items-center">
+     and everything below it, and nothing above.
+
+     🔴 **Sticky, because everything it drives is BELOW it and most of it is off screen.** Comparing
+     two spans on the version inventory meant scrolling a page and a half up, clicking, and scrolling
+     a page and a half back down — so in practice nobody compared. It rides along instead, the same
+     way the editors' action bar does (`merge/show.blade.php`).
+
+     ⚠ `top-0` with a background and a full-bleed shadow: a sticky bar with a transparent background
+     lets the page scroll through its own text. --}}
+<div class="sticky top-0 z-30 -mx-4 px-4 mt-8 mb-3 py-2 bg-gray-900/95 backdrop-blur
+            border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center"
+     id="period-bar">
     <h2 class="text-lg font-semibold text-gray-300">
         <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
         {{-- "Last 1 days" is not a sentence, and the shortest window is exactly the one somebody
@@ -199,17 +215,17 @@
     {{-- ⚠ 1 day and the full span are both real answers that used to be unreachable: the smallest
          offer was a week, and anything past a year was silently served as a year while the daily
          aggregates are kept forever. "All" is only offered once there is more than a year to
-         show — a duplicate button would just be a second way to ask for the same thing. --}}
+         show — a duplicate button would just be a second way to ask for the same thing.
+
+         🔴 The list itself lives in AnalyticsPeriods, not here: it stopped being a display filter
+         the day the version inventory started using it to decide what reads as extinct. --}}
     <div class="flex gap-2">
-        @php
-            $choices = [1 => '24 h', 7 => '7 days', 30 => '30 days', 90 => '90 days', 365 => '1 year'];
-            if ($maxPeriod > 365) {
-                $choices[$maxPeriod] = 'All (' . number_format($daysStored) . ' d)';
-            }
-        @endphp
-        @foreach ($choices as $days => $label)
+        @foreach (\App\Support\AnalyticsPeriods::choices($daysStored) as $days => $label)
+            {{-- ⚠ An ordinary link. Where the reader was is remembered by a delegated listener on
+                 the bar — see the script at the foot of this file for why the page is reloaded
+                 whole rather than patched in place. --}}
             <a href="{{ route('admin.analytics', ['period' => $days]) }}"
-               class="px-4 py-2 rounded {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
+               class="px-3 py-1.5 rounded text-sm {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
                 {{ $label }}
             </a>
         @endforeach
@@ -445,19 +461,37 @@
      kind of question they do — WHO is on the other end — while being about our software rather
      than about browsers. Full width: it is a list of unknown length, not a fixed set of slices.
 
-     🔴 It exists because two decisions had no data behind them: whether an old release is still
-     out there in numbers (which is what allows JSON compression to be switched on — see
-     CompressJsonResponse), and whether a loader adapter is still worth maintaining. --}}
+     🔴 It answers ONE question: can this be broken yet? Deprecate before reworking a part, drop an
+     obsolete API call, stop maintaining a loader adapter. That is a question of RECENCY — which is
+     why the figure is no longer the headline and the dates are.
+
+     🔴 Every version keeps its row and the span decides how it READS. The previous version of this
+     card filtered the LIST by the span, so a version with no recent call vanished — and nobody
+     decides to break something on an absence. Reasoning: analyse/version-inventory-admin.md --}}
 <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
     <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1">
         <h2 class="text-lg font-semibold">
             <i class="fas fa-cubes mr-2 text-cyan-400"></i> Mod and Manager versions
         </h2>
+        {{-- ⚠ **No Refresh button here, and that is a decision** (2026-08-29). One was added by
+             symmetry with the catalogue card and removed on the user's call: the release list is
+             fetched hourly on its own, and a button that only shaves off that hour does not earn a
+             control on a screen this dense. If the first hours of a release's adoption ever turn
+             out to matter enough, `releases:refresh` is a command away. --}}
         <p class="text-xs text-gray-500">
             Counted per version, never per user — no address is stored and no copy can be followed
             from one day to the next.
         </p>
     </div>
+
+    {{-- ⚠ The span is named here, in the card, because it is what draws the line between what is
+         still running and what is not. Leaving the reader to remember which button they pressed is
+         how the old card became unreadable. --}}
+    <p class="text-xs text-gray-500 mb-3">
+        Activity and copies over the <span class="text-gray-400">last {{ $spanLabel }}</span>;
+        first and last seen are the whole history. Counting started 2026-08-20 — before that every
+        build called itself the same thing.
+    </p>
 
     @unless ($releasesKnown)
         {{-- ⚠ Without the published list, nothing can be told apart from an invented number, so
@@ -472,76 +506,97 @@
         </p>
     @endunless
 
-    @if (count($clients) === 0)
+    @php
+        $anything = collect($clients)->contains(fn ($p) => $p['anything']);
+    @endphp
+
+    @unless ($anything)
         <p class="text-gray-500 text-sm mt-3">
-            Nothing recorded in this period. Counting started on 2026-08-20 — before that, every
-            build called itself the same thing and nothing was written down.
+            Nothing has ever called. Counting started on 2026-08-20 — before that, every build called
+            itself the same thing and nothing was written down.
         </p>
     @else
-        @php
-            $mostInstalls = max(array_map(fn ($c) => $c['installs'], $clients));
-        @endphp
-        <div class="mt-3 overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="text-gray-400 text-left border-b border-gray-700">
-                        <th class="py-2 pr-4 font-medium">Product</th>
-                        <th class="py-2 pr-4 font-medium">Version</th>
-                        <th class="py-2 pr-4 font-medium">Loader</th>
-                        <th class="py-2 font-medium text-right">Copies<span class="text-gray-600"> (busiest day)</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($clients as $client)
-                        <tr class="border-b border-gray-750 last:border-0">
-                            <td class="py-2 pr-4">
-                                <span class="px-2 py-0.5 rounded text-xs font-semibold
-                                    {{ $client['product'] === 'mod' ? 'bg-purple-900 text-purple-200' : 'bg-blue-900 text-blue-200' }}">
-                                    {{ $client['product'] === 'mod' ? 'Mod' : 'Manager' }}
-                                </span>
-                            </td>
-                            <td class="py-2 pr-4">
-                                @if ($client['version'] === \App\Models\ClientUsageDaily::LEGACY || $client['version'] === '')
-                                    {{-- 🔴 The one row that decides whether compression can be turned
-                                         on: these builds ask for gzip and cannot read it.
+        @foreach ($clients as $product => $data)
+            @continue (!$data['anything'])
 
-                                         ⚠ The empty string is the SAME thing, written by the first
-                                         version of this collector before the marker had a name. A
-                                         cell that renders blank says nothing at all, which is worse
-                                         than saying the wrong thing — it reads as a bug in the page
-                                         rather than as a build nobody can identify. --}}
-                                    <span class="text-amber-400">before versioning</span>
-                                    <span class="block text-xs text-gray-500">cannot read compressed answers</span>
-                                @elseif ($client['version'] === \App\Models\ClientUsageDaily::UNRECOGNISED)
-                                    {{-- ⚠ Not a version: everything that matches no published release
-                                         lands here together — local builds, and anyone inventing a
-                                         number. Kept apart from the row above on purpose. --}}
-                                    <span class="text-gray-400">unrecognised</span>
-                                    <span class="block text-xs text-gray-500">no matching release</span>
-                                @else
-                                    <span class="text-gray-200">{{ $client['version'] }}</span>
-                                @endif
-                            </td>
-                            <td class="py-2 pr-4 text-gray-400">{{ $client['variant'] ?? '—' }}</td>
-                            <td class="py-2 text-right">
-                                <span class="text-gray-200">{{ number_format($client['installs']) }}</span>
-                                <span class="inline-block align-middle ml-2 h-1.5 w-16 bg-gray-700 rounded overflow-hidden">
-                                    <span class="block h-full bg-cyan-500"
-                                        style="width: {{ $mostInstalls > 0 ? round($client['installs'] / $mostInstalls * 100) : 0 }}%"></span>
-                                </span>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+            {{-- ⚠ One section per product, and the Product column is gone with them: a chronological
+                 order that interleaves mod 0.12.0 and manager 0.1.1 makes no sense, their numbers do
+                 not talk about the same thing. --}}
+            <h3 class="text-sm font-semibold mt-5 mb-2">
+                <span class="px-2 py-0.5 rounded text-xs
+                    {{ $product === 'mod' ? 'bg-purple-900 text-purple-200' : 'bg-blue-900 text-blue-200' }}">
+                    {{ $product === 'mod' ? 'Mod' : 'Manager' }}
+                </span>
+                <span class="text-gray-400 ml-2">versions</span>
+            </h3>
 
-        <p class="text-xs text-gray-500 mt-3">
-            ⚠ The busiest single day of the period, not the days added up — the same copy calling on
-            ten days is one copy. Treat it as an order of magnitude. Counted once a day per copy, so
-            a build that polls often weighs no more than a quiet one.
+            @if ($data['versions'])
+                @include('admin.partials.version-table', [
+                    'lines' => $data['versions'],
+                    'data' => $data,
+                    'heading' => 'Version',
+                    'scale' => 'versions',
+                    'divide' => true,
+                ])
+            @endif
+
+            @if ($data['out_of_reach'])
+                {{-- 🔴 Summarised, never listed. These were published before anything was counted
+                     and have not called since, so nothing can be known about them — and writing
+                     "never" against thirty of them states a measurement that was never taken, while
+                     burying the few rows that mean something. --}}
+                @php $reach = $data['out_of_reach']; @endphp
+                <p class="text-xs text-gray-600 mt-2 pl-1">
+                    + {{ count($reach) }} earlier
+                    release{{ count($reach) === 1 ? '' : 's' }}
+                    ({{ $reach[count($reach) - 1]['name'] }} – {{ $reach[0]['name'] }}),
+                    published before counting started on {{ \App\Models\ClientUsageDaily::COUNTING_STARTED }}
+                    and silent since. Nothing can be said about whether they are still running.
+                </p>
+            @endif
+
+            @if ($data['buckets'])
+                {{-- ⚠ These have no publication date, so they cannot sit in a chronology. Apart, and
+                     named: "before versioning" is the row that decides whether JSON compression can
+                     be switched on, and it used to be buried in the middle of the list. --}}
+                <h3 class="text-sm font-semibold mt-5 mb-2 text-gray-400">Not tied to a release</h3>
+                @include('admin.partials.version-table', [
+                    'lines' => $data['buckets'],
+                    'data' => $data,
+                    'heading' => 'Build',
+                    'scale' => 'buckets',
+                    'divide' => false,
+                ])
+            @endif
+
+            @if ($data['adapters'])
+                {{-- ⚠ The other maintenance decision, and it is never taken version by version: one
+                     does not drop an adapter for 0.12.0 only. Hence a second block rather than five
+                     figures on every version row, which is what made the old card unreadable. --}}
+                <h3 class="text-sm font-semibold mt-5 mb-2 text-gray-400">
+                    Adapters <span class="text-gray-600 font-normal">— all versions together</span>
+                </h3>
+                @include('admin.partials.version-table', [
+                    'lines' => $data['adapters'],
+                    'data' => $data,
+                    'heading' => 'Adapter',
+                    'scale' => 'adapters',
+                    'divide' => false,
+                ])
+            @endif
+        @endforeach
+
+        <p class="text-xs text-gray-500 mt-4">
+            ⚠ Copies are the busiest single day of the span, not the days added up — the same copy
+            calling on ten days is one copy. Treat it as an order of magnitude. Counted once a day per
+            copy, so a build that polls often weighs no more than a quiet one.
+            <span class="block mt-1">
+                ⚠ "Seen" means called this site. A mod running offline never appears — which is the
+                right measure for deciding whether an API call can be dropped, since the ones that
+                break are the ones that call.
+            </span>
         </p>
-    @endif
+    @endunless
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -618,6 +673,86 @@
 </div>
 
 <script nonce="{{ $cspNonce }}">
+    /**
+     * Keeps the reader where they were when they change span.
+     *
+     * 🔴 **A full reload, deliberately, rather than patching the page in place.** Nearly everything
+     * below the bar depends on the span — five tiles, three charts, the concurrency peaks, the
+     * breakdowns, the top games and the whole version inventory. Refreshing "the parts that depend
+     * on the filter" means listing them by hand, and the day somebody adds a sixth tile and forgets
+     * it, the screen shows two different spans at once with nothing to say so. Letting the server
+     * re-render the page makes that impossible BY CONSTRUCTION.
+     *
+     * ⚠ So the only thing worth keeping across the reload is the scroll position — which is what
+     * made switching span expensive in the first place, since the inventory sits a page and a half
+     * below the buttons.
+     *
+     * ⚠ sessionStorage, not the URL: a scroll offset in the address bar would be shared, bookmarked
+     * and mailed around, and it means nothing on anybody else's screen.
+     *
+     * 🔴 **No Alpine here, and no `load` event either — this script runs after BOTH.** It first used
+     * `x-data="periodBar()"` and a listener on `load`: Alpine had already evaluated the attribute by
+     * the time this file defined the function ("Undefined variable: periodBar"), and `load` had
+     * already fired by the time the listener was added, so nothing was ever saved and nothing was
+     * ever restored. One cause, two silent failures. A delegated listener and a readyState check
+     * depend on neither.
+     */
+    (function periodScroll() {
+        const KEY = 'ugt.analytics.scroll';
+        const bar = document.getElementById('period-bar');
+
+        if (bar) {
+            // Delegated: the links are ordinary anchors, and the click is caught on the way up.
+            bar.addEventListener('click', (event) => {
+                if (!event.target.closest('a')) {
+                    return;
+                }
+                try {
+                    sessionStorage.setItem(KEY, String(window.scrollY));
+                } catch (e) {
+                    // Private windows and blocked site data throw here. Losing the position is a
+                    // small annoyance; a broken filter would not be.
+                }
+            });
+        }
+
+        let saved = null;
+        try {
+            saved = sessionStorage.getItem(KEY);
+            sessionStorage.removeItem(KEY);
+        } catch (e) {
+            return;
+        }
+
+        if (saved === null) {
+            return;
+        }
+
+        const y = parseInt(saved, 10) || 0;
+
+        // ⚠ The charts size themselves late, so the page is shorter than its final height for a
+        // moment and an early scroll is clamped short. Reasserting it a few times over half a
+        // second costs nothing and survives whenever the growth actually happens — where waiting on
+        // a single event only works if that event has not already gone by.
+        const settle = () => {
+            window.scrollTo(0, y);
+            let tries = 0;
+            const timer = setInterval(() => {
+                if (Math.abs(window.scrollY - y) > 2 && ++tries < 10) {
+                    window.scrollTo(0, y);
+                } else {
+                    clearInterval(timer);
+                }
+            }, 50);
+        };
+
+        if (document.readyState === 'complete') {
+            settle();
+        } else {
+            window.addEventListener('load', settle);
+        }
+    })();
+
     window.__analyticsData = {
         chartLabels: @json($chartLabels),
         chartPageViews: @json($chartPageViews),

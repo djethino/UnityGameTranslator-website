@@ -43,6 +43,17 @@ class ClientUsageDaily extends Model
     public const UNRECOGNISED = 'unrecognised';
 
     /**
+     * The day this table started being written.
+     *
+     * 🔴 **Anything published before it and never seen is OUT OF REACH, not unused**, and the two
+     * must not be shown the same way. A release from June cannot have been seen by a counter that
+     * started in August, so writing "never" against it states as a measurement something that was
+     * never measured — which is exactly the failure this whole screen was rebuilt to stop. Thirty of
+     * them in a row is also the noise that buries the handful of rows that mean something.
+     */
+    public const COUNTING_STARTED = '2026-08-20';
+
+    /**
      * ⚠ Stored as '' and read as null, and the translation belongs HERE rather than in every
      * caller. The empty string exists only because SQLite and MySQL both treat NULLs as distinct
      * inside a unique index, which would give a variantless build a fresh row on every call.
@@ -69,12 +80,16 @@ class ClientUsageDaily extends Model
             return;
         }
 
+        $product = $client['kind'];
+        $version = self::versionSlot($client);
+        $variant = self::variantSlot($client);
+
         DB::table('client_usage_daily')->upsert(
             [[
                 'date' => $date,
-                'product' => $client['product'],
-                'version' => self::versionSlot($client),
-                'variant' => self::variantSlot($client),
+                'product' => $product,
+                'version' => $version,
+                'variant' => $variant,
                 'installs' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -85,6 +100,16 @@ class ClientUsageDaily extends Model
                 'updated_at' => now(),
             ]
         );
+
+        // 🔴 The twin write, and the reason it is here rather than in a nightly job: this table
+        // answers "how many, that day", and it structurally cannot answer "is this still running" —
+        // a version outside the chosen span vanishes from it entirely, and an absent version is
+        // indistinguable from one that never existed. `version_activity` keeps the row and lets the
+        // span decide how it READS.
+        //
+        // ⚠ Its cost is one more statement per copy per day — acceptable only because `..._180000`
+        // stopped writing on every call. Reintroducing a per-request write reopens this.
+        VersionActivity::noteCall($product, $version, $variant, $date);
     }
 
     /**
@@ -102,7 +127,7 @@ class ClientUsageDaily extends Model
             return self::LEGACY;
         }
 
-        return KnownReleases::recognises($client['product'], $client['version'] ?? null)
+        return KnownReleases::recognises($client['kind'], $client['version'] ?? null)
             ? $client['version']
             : self::UNRECOGNISED;
     }
@@ -153,24 +178,47 @@ class ClientUsageDaily extends Model
     }
 
     /**
-     * What was running over a period, biggest first.
+     * Day by day, how many copies of each version called — `[version => [date => copies]]`.
      *
-     * ⚠ Installs are the busiest single DAY, never the days added up: the same copy calling on ten
-     * days is one copy, and summing would claim ten.
+     * 🔴 **This is the only thing `client_usage_daily` is still read for**, and it is the one thing
+     * `version_activity` cannot hold: the shape of the last N days. Where it stands overall — since
+     * when, until when — is read from the register in one row, so nothing here has to scan history.
+     *
+     * ⚠ Copies for one day are SUMMED across loaders, then the period keeps the busiest single day.
+     * Two loaders on the same day are two different copies (summing is right); the same copy calling
+     * on ten days is one copy (adding the days would claim ten).
+     *
+     * @param string $by 'version' or 'variant' — the two questions the screen asks of the same rows.
      */
-    public static function overPeriod(int $days): array
+    public static function dailySeries(int $days, string $product, string $by = 'version'): array
     {
-        return self::where('date', '>=', now()->subDays($days)->toDateString())
-            ->selectRaw('product, version, variant, MAX(installs) as installs')
-            ->groupBy('product', 'version', 'variant')
-            ->orderByDesc(DB::raw('MAX(installs)'))
-            ->get()
-            ->map(fn ($row) => [
-                'product' => $row->product,
-                'version' => $row->version,
-                'variant' => $row->variant ?: null,
-                'installs' => (int) $row->installs,
-            ])
-            ->all();
+        if (!in_array($by, ['version', 'variant'], true)) {
+            throw new \InvalidArgumentException("Cannot group client usage by [{$by}].");
+        }
+
+        $series = [];
+
+        $rows = self::where('date', '>=', now()->subDays($days)->toDateString())
+            ->where('product', $product)
+            ->selectRaw("{$by} as bucket, date, SUM(installs) as copies")
+            ->groupBy($by, 'date')
+            ->get();
+
+        foreach ($rows as $row) {
+            // ⚠ Kept as the empty string rather than folded into `unrecognised`: a call with no
+            // loader named is not a call from an unrecognised loader. It is a build from before the
+            // User-Agent carried one, or one whose version we could not place (the loader is then
+            // dropped on purpose). The screen names it; conflating the two here would make a real
+            // adapter and an absence share a row.
+            $bucket = (string) ($row->bucket ?? '');
+
+            $date = $row->date instanceof \DateTimeInterface
+                ? $row->date->format('Y-m-d')
+                : substr((string) $row->date, 0, 10);
+
+            $series[$bucket][$date] = ($series[$bucket][$date] ?? 0) + (int) $row->copies;
+        }
+
+        return $series;
     }
 }

@@ -236,6 +236,20 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
     Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+
+        // Fetch the shared catalogues now instead of waiting for the nightly run.
+        //
+        // ⚠ Throttled, and it is not about abuse from outside — this is behind auth+admin. It is
+        // about not hammering GitHub because a page got refreshed: the call goes out to a public
+        // API we do not own.
+        //
+        // ⚠ **No parameter, on purpose.** This took `{source}` for a moment, accepting `catalogues`
+        // or `releases`; the release button was dropped, and a parameter with one possible value is
+        // not a parameter — it is a spare door nobody closes. Adding a second source later means
+        // adding a second route, which is also where anyone will look for it.
+        Route::post('/refresh-catalogues', [AdminController::class, 'refreshCatalogues'])
+            ->middleware('throttle:6,1')
+            ->name('refresh-catalogues');
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
         Route::get('/reports/{report}', [AdminController::class, 'showReport'])->name('reports.show');
         Route::post('/reports/{report}', [AdminController::class, 'handleReport'])->name('reports.handle');

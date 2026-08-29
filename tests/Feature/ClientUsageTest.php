@@ -7,10 +7,11 @@ use App\Models\ClientUsageDaily;
 use App\Models\Game;
 use App\Models\Translation;
 use App\Models\User;
+use App\Models\VersionActivity;
 use App\Services\KnownReleases;
+use App\Services\VersionInventory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -34,21 +35,40 @@ class ClientUsageTest extends TestCase
     {
         parent::setUp();
 
-        // ⚠ **Faked, or these tests overwrite the real cache.** KnownReleases writes to the local
-        // disk, so without this the suite would replace whatever `releases:refresh` had fetched
-        // with a two-line fixture — and the next admin page would report almost every install as
-        // unrecognised, because of a test.
-        Storage::fake('local');
-
+        // ⚠ **No more `Storage::fake('local')`.** It used to be here because KnownReleases wrote to
+        // the local disk, so a run of this suite replaced whatever `releases:refresh` had fetched
+        // with a two-line fixture — and the next admin page reported almost every install as
+        // unrecognised, because of a test. Releases live in a table now, which RefreshDatabase
+        // isolates on its own.
         KnownReleases::forget();
         // What the hourly command would have fetched. Tests that need "we know nothing" clear it.
-        KnownReleases::store(['mod' => ['0.11.1', '0.11.0'], 'manager' => ['0.1.0']]);
+        $this->publish(['0.11.1', '0.11.0'], ['0.1.0']);
     }
 
     protected function tearDown(): void
     {
         KnownReleases::forget();
         parent::tearDown();
+    }
+
+    /**
+     * What `releases:refresh` would have recorded.
+     *
+     * ⚠ A helper rather than a second accepted shape in `KnownReleases::store()`: one format in the
+     * code, and the verbosity paid here where it costs nothing.
+     */
+    private function publish(array $mod, array $manager = [], ?string $publishedAt = null): void
+    {
+        $entry = fn (string $version) => [
+            'version' => $version,
+            'published_at' => $publishedAt,
+            'prerelease' => false,
+        ];
+
+        KnownReleases::store([
+            'mod' => array_map($entry, $mod),
+            'manager' => array_map($entry, $manager),
+        ]);
     }
 
     private function callAs(string $agent): void
@@ -105,7 +125,7 @@ class ClientUsageTest extends TestCase
 
     public function test_a_real_version_one_is_not_mistaken_for_a_legacy_build(): void
     {
-        KnownReleases::store(['mod' => ['1.0.0'], 'manager' => []]);
+        $this->publish(['1.0.0']);
 
         $this->callAs('UnityGameTranslator/1.0.0 (BepInEx5)');
 
@@ -178,7 +198,7 @@ class ClientUsageTest extends TestCase
     /** ⚠ Knowing nothing must produce a missing measurement, never a wrong one. */
     public function test_without_a_published_list_nothing_is_taken_for_a_release(): void
     {
-        Storage::disk('local')->delete('releases/published.json');
+        DB::table('releases')->delete();
         KnownReleases::forget();
 
         $this->callAs('UnityGameTranslator/0.11.1 (BepInEx5)');
@@ -283,7 +303,7 @@ class ClientUsageTest extends TestCase
             'a row with no version rendered as an empty cell');
     }
 
-    public function test_installs_over_a_period_are_the_busiest_day_not_the_total(): void
+    public function test_copies_over_a_span_are_the_busiest_day_not_the_total(): void
     {
         ClientUsageDaily::insert([
             ['date' => now()->subDays(2)->toDateString(), 'product' => 'mod', 'version' => '0.11.1',
@@ -292,10 +312,139 @@ class ClientUsageTest extends TestCase
              'variant' => 'BepInEx5', 'installs' => 7],
         ]);
 
-        $rows = ClientUsageDaily::overPeriod(30);
+        $line = collect(VersionInventory::forSpan(30)['mod']['versions'])
+            ->firstWhere('name', '0.11.1');
 
-        $this->assertCount(1, $rows);
-        $this->assertSame(7, $rows[0]['installs']);
+        $this->assertSame(7, $line['copies'], 'the days were added up instead of taking the busiest');
+        $this->assertSame(2, $line['days_in_span']);
+    }
+
+    /**
+     * 🔴 **The register is written beside the count, not by a job.** Without this, "since when / until
+     * when" would only be as fresh as the last nightly run — and the screen would invite breaking an
+     * API that something called an hour ago.
+     */
+    public function test_a_call_records_when_it_was_seen(): void
+    {
+        $this->callAs('UnityGameTranslator/0.11.1 (BepInEx5)');
+
+        $row = VersionActivity::first();
+
+        $this->assertNotNull($row, 'the call was counted but never dated');
+        $this->assertSame(now()->toDateString(), $row->first_seen->toDateString());
+        $this->assertSame(now()->toDateString(), $row->last_seen->toDateString());
+        $this->assertSame(1, $row->days_active);
+    }
+
+    /**
+     * 🔴 **Fresh traffic reactivates a version, and that is the whole point of the register.**
+     * "Extinct for 94 days, seen again today" is the sentence that must stop a hand before it breaks
+     * an API call. A screen that recomputes over a span never produces it.
+     */
+    public function test_an_extinct_version_is_reactivated_by_a_single_call(): void
+    {
+        VersionActivity::create([
+            'product' => 'mod', 'version' => '0.11.0', 'variant' => 'BepInEx5',
+            'first_seen' => now()->subDays(120)->toDateString(),
+            'last_seen' => now()->subDays(94)->toDateString(),
+            'days_active' => 3,
+        ]);
+
+        $this->callAs('UnityGameTranslator/0.11.0 (BepInEx5)');
+
+        $row = VersionActivity::first();
+
+        $this->assertSame(now()->toDateString(), $row->last_seen->toDateString());
+        $this->assertSame(4, $row->days_active);
+        $this->assertSame(
+            now()->subDays(120)->toDateString(),
+            $row->first_seen->toDateString(),
+            'reappearing rewrote the beginning of its history'
+        );
+    }
+
+    /** ⚠ Several copies of one build on one day are one day, not several. */
+    public function test_a_day_is_only_counted_once_however_many_copies_call(): void
+    {
+        $this->callAsDistinct('UnityGameTranslator/0.11.1 (BepInEx5)', 4);
+
+        $row = VersionActivity::first();
+
+        $this->assertSame(4, ClientUsageDaily::first()->installs);
+        $this->assertSame(1, $row->days_active, 'four copies on one day counted as four days');
+    }
+
+    /**
+     * 🔴 **The dates are the whole history, never what the span can see.** Otherwise "last seen"
+     * changes when the reader presses a different button, which takes away the only thing it is
+     * for.
+     */
+    public function test_the_dates_ignore_the_chosen_span(): void
+    {
+        VersionActivity::create([
+            'product' => 'mod', 'version' => '0.11.0', 'variant' => 'BepInEx5',
+            'first_seen' => now()->subDays(200)->toDateString(),
+            'last_seen' => now()->subDays(150)->toDateString(),
+            'days_active' => 9,
+        ]);
+
+        $line = collect(VersionInventory::forSpan(7)['mod']['versions'])->firstWhere('name', '0.11.0');
+
+        $this->assertSame(now()->subDays(200)->toDateString(), $line['first_seen']);
+        $this->assertSame(now()->subDays(150)->toDateString(), $line['last_seen']);
+        $this->assertFalse($line['active'], 'a version silent for 150 days read as alive over 7');
+    }
+
+    /**
+     * 🔴 **A version that has not called inside the span stays LISTED, extinct.** The card used to
+     * filter the list itself, so it vanished — and an absent version is indistinguishable from one
+     * that never existed. Nobody decides to break something on an absence.
+     */
+    public function test_a_version_with_no_recent_call_is_shown_rather_than_dropped(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true])->refresh();
+
+        VersionActivity::create([
+            'product' => 'mod', 'version' => '0.11.0', 'variant' => 'BepInEx5',
+            'first_seen' => now()->subDays(90)->toDateString(),
+            'last_seen' => now()->subDays(60)->toDateString(),
+            'days_active' => 5,
+        ]);
+
+        $html = $this->actingAs($admin)->get('/admin/analytics?period=7')->assertOk()->getContent();
+
+        $this->assertStringContainsString('0.11.0', $html, 'an extinct version was hidden instead of shown');
+        $this->assertStringContainsString('nothing in the last 7 days', $html, 'the extinct line was never drawn');
+    }
+
+    /**
+     * 🔴 **Published and never run.** It has no usage row at all, so the previous card could not show
+     * it — and "nobody took the update" is precisely what one wants to know.
+     */
+    public function test_a_release_nobody_runs_is_still_listed(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true])->refresh();
+
+        $this->publish(['9.9.9'], [], now()->subDays(3)->toIso8601String());
+
+        $html = $this->actingAs($admin)->get('/admin/analytics?period=30')->assertOk()->getContent();
+
+        $this->assertStringContainsString('9.9.9', $html);
+        $this->assertStringContainsString('never', $html, 'a release nobody runs showed no "never"');
+    }
+
+    /**
+     * ⚠ A release that stops being returned by GitHub — withdrawn, or simply pushed past the
+     * hundredth — must stay recognised. Dropping it would file every copy still running it under
+     * `unrecognised`, destroying the one measurement that says to keep supporting it.
+     */
+    public function test_a_refresh_never_forgets_a_release(): void
+    {
+        $this->publish(['0.9.0']);
+        $this->publish(['0.11.1']);
+
+        $this->assertTrue(KnownReleases::recognises('mod', '0.9.0'), 'a refresh erased an older release');
+        $this->assertTrue(KnownReleases::recognises('mod', '0.11.1'));
     }
 
     /**

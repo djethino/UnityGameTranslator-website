@@ -8,7 +8,6 @@ use App\Models\AnalyticsEvent;
 use App\Models\AnalyticsGame;
 use App\Models\Announcement;
 use App\Models\AuditLog;
-use App\Models\ClientUsageDaily;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
@@ -17,7 +16,10 @@ use App\Models\User;
 use App\Services\CatalogStore;
 use App\Services\KnownReleases;
 use App\Services\LiveEditCapacity;
+use App\Services\VersionInventory;
+use App\Support\AnalyticsPeriods;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -331,6 +333,46 @@ class AdminController extends Controller
     }
 
     /**
+     * Fetch the shared catalogues now rather than waiting for the nightly run.
+     *
+     * 🔴 **This failure has no symptom, which is the whole reason the button exists.** When the
+     * catalogue cannot be fetched the site keeps serving the copy committed in the repository and
+     * stays entirely correct — so a source unreachable for months looks exactly like one that is
+     * simply stable. The card says how stale it is; until now the only way to act on that was to
+     * wait for 04:30.
+     *
+     * ⚠ **Run here and now, not queued.** A job would need a worker to be running, and if none is,
+     * the button would silently do nothing — worse than a slow answer. This one is allowed to take
+     * several seconds: it goes out to the network, and the person clicking it asked for that.
+     *
+     * ⚠ **The rule this does NOT break**: no network call is ever made while RENDERING a page or
+     * answering an API call (CatalogStore, KnownReleases). This is a deliberate admin action with
+     * its own route, not a page load.
+     *
+     * ⚠ **The release list deliberately has no equivalent** (2026-08-29): it refreshes hourly on
+     * its own, and a control that only shaves off that hour was not worth a button on a screen this
+     * dense. `php artisan releases:refresh` remains, for the rare case of having just published.
+     */
+    public function refreshCatalogues()
+    {
+        try {
+            $code = Artisan::call('catalog:refresh');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', "Could not refresh the catalogues: {$e->getMessage()}");
+        }
+
+        // ⚠ Reports what the command printed, not "it worked". Which of the four documents moved
+        // is the answer somebody came for; a bare confirmation sends them to the server logs.
+        $said = trim(Artisan::output());
+
+        return $code === 0
+            ? back()->with('success', $said ?: 'Catalogues refreshed.')
+            : back()->with('error', $said ?: 'catalog:refresh failed.');
+    }
+
+    /**
      * Analytics dashboard
      */
     public function analytics(Request $request)
@@ -346,9 +388,12 @@ class AdminController extends Controller
         $daysStored = $oldestDay
             ? max(1, (int) Carbon::parse($oldestDay)->diffInDays(now()) + 1)
             : 1;
-        $maxPeriod = max(365, $daysStored);
 
-        $period = max(1, min((int) $request->get('period', 30), $maxPeriod)); // days, clamped
+        // ⚠ The span is no longer only a display filter: the version inventory uses it to decide
+        // what reads as extinct, and invites breaking the API those builds use. That makes it a
+        // rule, and a rule cannot live in a `@php` block inside the view — see AnalyticsPeriods.
+        $maxPeriod = AnalyticsPeriods::ceiling($daysStored);
+        $period = AnalyticsPeriods::clamp($request->get('period'), $daysStored);
 
         // Get aggregated daily stats for the period
         $dailyStats = AnalyticsDaily::where('date', '>=', now()->subDays($period))
@@ -509,12 +554,13 @@ class AdminController extends Controller
         $chartPeakSessions = $dailyStats->pluck('peak_edit_sessions')->toArray();
         $chartPeakStreams = $dailyStats->pluck('peak_edit_streams')->toArray();
 
-        // What versions of our own software are calling.
+        // What versions of our own software are calling, and since when.
         //
-        // ⚠ Its own table rather than the events, because the question is different: events answer
-        // "what happened", this answers "what is installed". Aggregated at write time, so it holds
-        // no row about anybody and cannot grow with traffic — see ClientUsageDaily.
-        $clients = ClientUsageDaily::overPeriod($period);
+        // ⚠ Its own tables rather than the events, because the question is different: events answer
+        // "what happened", this answers "what is installed, and can I break it yet". Aggregated at
+        // write time, so nothing here holds a row about anybody — see VersionInventory.
+        $clients = VersionInventory::forSpan($period);
+        $spanLabel = AnalyticsPeriods::label($period);
 
         // ⚠ Without the published list, every caller is filed as unrecognised — the screen says so
         // rather than showing a table that looks like a measurement.
@@ -522,6 +568,7 @@ class AdminController extends Controller
 
         return view('admin.analytics', compact(
             'clients',
+            'spanLabel',
             'releasesKnown',
             'daysStored',
             'maxPeriod',
