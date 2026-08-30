@@ -675,7 +675,10 @@
          used for these roles (profile/edit.blade.php), not a new set. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-            <h2 class="text-lg font-semibold"><i class="fas fa-upload mr-2 text-green-400"></i> Uploads</h2>
+            {{-- 🔴 "Activity", not "Uploads": an upload is a birth, and this card only ever showed
+                 births. A Main maintained every week looked exactly like one uploaded once and
+                 abandoned. It now counts anything created OR whose content changed. --}}
+            <h2 class="text-lg font-semibold"><i class="fas fa-pen-to-square mr-2 text-green-400"></i> Activity</h2>
             <p class="text-xs text-gray-500">
                 Last {{ $spanLabel }} —
                 {{ number_format($recentUploadsTotal) }} in all{{ $recentUploadsTotal > $recentUploads->count() ? ', newest ' . $recentUploads->count() . ' shown' : '' }}
@@ -717,7 +720,20 @@
                                 • {{ $translation->source_language }} → {{ $translation->target_language }}
                             </p>
                         </div>
-                        <span class="text-sm text-gray-500 shrink-0 ml-3">{{ $translation->created_at->diffForHumans() }}</span>
+                        @php
+                            // ⚠ Says which of the two events this row is about. Without it the card
+                            // reads as a list of uploads again, and a Main that was updated looks
+                            // like one that was just created.
+                            $changed = $translation->content_updated_at;
+                            $isNew = !$changed || $changed->lte($translation->created_at->addMinute());
+                            $when = $isNew ? $translation->created_at : $changed;
+                        @endphp
+                        <span class="text-sm shrink-0 ml-3 text-right">
+                            <span class="block text-gray-500">{{ $when->diffForHumans() }}</span>
+                            <span class="block text-xs {{ $isNew ? 'text-green-400/70' : 'text-gray-600' }}">
+                                {{ $isNew ? 'new' : 'updated' }}
+                            </span>
+                        </span>
                     </div>
                 @endforeach
             </div>
@@ -731,6 +747,88 @@
                          just narrowed the list and needs to know that is why it is empty. --}}
                     No {{ $uploadRole === 'main' ? 'Main' : 'Branch' }} uploaded in this period.
                 @endif
+            </p>
+        @endif
+    </div>
+</div>
+
+<!-- ─── Where the lineages stand ─────────────────────────────────────────────
+     🔴 Its OWN section, outside the one the period drives, and the placement is the argument: this
+     is a STANDING, not a flow. A branch left waiting for six months is the one that matters most,
+     and a 30-day window is exactly what would hide it. Sitting it among the period cards while
+     ignoring the period is the trap this page was just repaired for.
+
+     🔴 It exists because nothing ever read `merged_at`. Its own migration says why the column was
+     added: without it, "the Main publishes and never merges you" — the most discouraging thing that
+     can happen to a contributor — could not be told from "it merged you and moved on". -->
+<div class="mt-8">
+    <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h2 class="text-lg font-semibold text-gray-300">
+            <i class="fas fa-code-branch mr-2 text-purple-500"></i> Lineages
+            <span class="text-sm font-normal text-gray-500 ml-2">— all time, whatever the span above</span>
+        </h2>
+        <p class="text-xs text-gray-500">Waiting contributions first</p>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700" x-data="{ expanded: false }">
+        @if($lineages->isNotEmpty())
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-gray-400 text-left border-b border-gray-700">
+                            <th class="py-2 pr-4 font-medium">Main</th>
+                            <th class="py-2 pr-4 font-medium text-right">Contributions</th>
+                            <th class="py-2 pr-4 font-medium text-right">Taken</th>
+                            <th class="py-2 pr-4 font-medium text-right">Waiting</th>
+                            <th class="py-2 pr-4 font-medium text-right">Lines taken</th>
+                            <th class="py-2 font-medium text-right">Forks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($lineages as $line)
+                            <tr class="border-b border-gray-750 last:border-0"
+                                @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
+                                <td class="py-2 pr-4">
+                                    <span class="text-gray-200">{{ $line->game->name ?? 'Unknown' }}</span>
+                                    <span class="block text-xs text-gray-500">
+                                        by {{ $line->user->name ?? '[Deleted]' }}
+                                        • {{ $line->source_language }} → {{ $line->target_language }}
+                                        @unless($line->accepts_branches)
+                                            {{-- ⚠ Worth saying, because it changes what "waiting"
+                                                 means: nobody is being ignored if the door is shut. --}}
+                                            <span class="text-gray-600">• closed to contributions</span>
+                                        @endunless
+                                    </span>
+                                </td>
+                                <td class="py-2 pr-4 text-right text-gray-300">{{ number_format($line->branches_received) }}</td>
+                                <td class="py-2 pr-4 text-right {{ $line->branches_taken > 0 ? 'text-green-400' : 'text-gray-600' }}">
+                                    {{ number_format($line->branches_taken) }}
+                                </td>
+                                {{-- ⚠ Amber, never red: somebody has not answered yet, which is a
+                                     thing to do — not a fault to mark. --}}
+                                <td class="py-2 pr-4 text-right {{ $line->branches_waiting > 0 ? 'text-amber-400' : 'text-gray-600' }}">
+                                    {{ $line->branches_waiting > 0 ? number_format($line->branches_waiting) : '—' }}
+                                </td>
+                                <td class="py-2 pr-4 text-right text-gray-400">
+                                    {{ $line->lines_taken > 0 ? number_format($line->lines_taken) : '—' }}
+                                </td>
+                                <td class="py-2 text-right text-gray-400">
+                                    {{ $line->forks > 0 ? number_format($line->forks) : '—' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <x-admin.show-more :count="$lineages->count()" :visible="$topRows['visible']" />
+            <p class="text-xs text-gray-500 mt-3">
+                ⚠ Only lineages that have drawn a contribution or a fork appear — a Main nobody has
+                touched says nothing here. "Taken" is a merge the owner performed; "waiting" is a
+                contribution nobody has answered yet.
+            </p>
+        @else
+            <p class="text-gray-500 text-sm">
+                No lineage has drawn a contribution or a fork yet.
             </p>
         @endif
     </div>

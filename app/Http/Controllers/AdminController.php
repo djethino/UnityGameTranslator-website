@@ -15,6 +15,7 @@ use App\Services\TranslationService;
 use App\Models\User;
 use App\Services\CatalogStore;
 use App\Services\KnownReleases;
+use App\Services\Lineages;
 use App\Services\LiveEditCapacity;
 use App\Services\VersionInventory;
 use App\Support\AnalyticsPeriods;
@@ -540,7 +541,18 @@ class AdminController extends Controller
             ? $request->get('uploads')
             : 'all';
 
-        $uploadsQuery = Translation::where('created_at', '>=', now()->subDays($period));
+        // 🔴 **Created OR changed, not created alone.** An upload is a birth; a translation then
+        // lives — it is maintained, it takes contributions, it is forked. Counting only creations
+        // made a Main updated every week look exactly like one uploaded once and abandoned.
+        //
+        // ⚠ `content_updated_at`, never `updated_at`: a vote or a download counter bumps the latter
+        // (the reason it was added in the first place — see the ordering in translations()), so
+        // "changed" would have meant "somebody voted".
+        $since = now()->subDays($period);
+
+        $uploadsQuery = Translation::where(fn ($q) => $q
+            ->where('created_at', '>=', $since)
+            ->orWhere('content_updated_at', '>=', $since));
 
         // 'public' is a Main; anything else in a lineage is a branch — the same reading as
         // Translation::lineageRole(), asked of the database rather than of each row.
@@ -552,9 +564,16 @@ class AdminController extends Controller
 
         $recentUploadsTotal = (clone $uploadsQuery)->count();
         $recentUploads = $uploadsQuery->with(['user', 'game'])
-            ->orderByDesc('created_at')
+            // ⚠ Ordered on whichever of the two happened last, so a Main updated today sits above a
+            // branch created yesterday. Ordering on creation alone would bury the very rows this
+            // card was widened to show.
+            ->orderByRaw('GREATEST(created_at, COALESCE(content_updated_at, created_at)) DESC')
             ->limit(self::TOP_ROWS)
             ->get();
+
+        // Where each lineage stands. Deliberately outside the period: a branch left waiting for six
+        // months is the one that matters most, and a span is what would hide it. See Lineages.
+        $lineages = Lineages::standing(self::TOP_ROWS);
 
         $liveCapacity = LiveEditCapacity::current();
 
@@ -611,6 +630,7 @@ class AdminController extends Controller
             'spanLabel',
             'recentUploadsTotal',
             'uploadRole',
+            'lineages',
             'topRows',
             'releasesKnown',
             'daysStored',
