@@ -207,8 +207,11 @@
     <h2 class="text-lg font-semibold text-gray-300">
         <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
         {{-- "Last 1 days" is not a sentence, and the shortest window is exactly the one somebody
-             reaches for when something is happening right now. --}}
-        {{ $period === 1 ? 'Yesterday and today' : 'Last ' . $period . ' days' }}
+             reaches for when something is happening right now.
+
+             ⚠ Every other span is named by the button the reader just pressed, never re-worded:
+             "48 h" up there and "Last 2 days" here would read as two different spans. --}}
+        {{ $period === 1 ? 'Yesterday and today' : 'Last ' . $spanLabel }}
         <span class="text-sm font-normal text-gray-500 ml-2">— today included, counted live</span>
     </h2>
 
@@ -220,7 +223,7 @@
          🔴 The list itself lives in AnalyticsPeriods, not here: it stopped being a display filter
          the day the version inventory started using it to decide what reads as extinct. --}}
     <div class="flex gap-2">
-        @foreach (\App\Support\AnalyticsPeriods::choices($daysStored) as $days => $label)
+        @foreach (\App\Support\AnalyticsPeriods::choices($daysStored, $period) as $days => $label)
             {{-- ⚠ An ordinary link. Where the reader was is remembered by a delegated listener on
                  the bar — see the script at the foot of this file for why the page is reloaded
                  whole rather than patched in place. --}}

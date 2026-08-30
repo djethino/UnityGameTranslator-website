@@ -23,9 +23,22 @@ class AnalyticsPeriods
     /** What the screen opens on. */
     public const DEFAULT_DAYS = 30;
 
-    /** The fixed offers, in days. "All" is added on top when there is more than a year stored. */
+    /**
+     * The fixed offers, in days. "All" is added on top when there is more than a year stored.
+     *
+     * ⚠ **48 h and 72 h are here because a launch happens in them.** The list used to jump straight
+     * from a day to a week, so the two spans that say whether a release is being picked up — the
+     * day after, and the day after that — could only be reached by editing the address bar. A gap
+     * in an offer is a question nobody gets to ask.
+     *
+     * ⚠ Hours below a week, days above: it is how every dashboard reads, and "24 h" was already
+     * written that way. Mixing "2 days" in beside "24 h" would make two neighbouring buttons name
+     * the same kind of thing differently.
+     */
     private const OFFERS = [
         1 => '24 h',
+        2 => '48 h',
+        3 => '72 h',
         7 => '7 days',
         30 => '30 days',
         90 => '90 days',
@@ -41,18 +54,28 @@ class AnalyticsPeriods
     }
 
     /**
-     * The buttons, as [days => label].
+     * The buttons, as [days => label], oldest span last.
      *
      * ⚠ "All" is only offered once there is more than a year to show — below that it would be a
      * second button asking for exactly what "1 year" already asks for.
+     *
+     * ⚠ **A span that is not on the list gets a button of its own.** Any number of days can be asked
+     * for in the address, and it is answered — but without this, none of the buttons lit up and the
+     * screen stopped saying which span it was showing. A bookmark, a shared link or a hand-typed
+     * `?period=45` would leave the reader looking at figures with no idea what they cover.
      */
-    public static function choices(int $daysStored): array
+    public static function choices(int $daysStored, ?int $current = null): array
     {
         $choices = self::OFFERS;
         $ceiling = self::ceiling($daysStored);
 
         if ($ceiling > 365) {
             $choices[$ceiling] = 'All (' . number_format($daysStored) . ' d)';
+        }
+
+        if ($current !== null && !isset($choices[$current])) {
+            $choices[$current] = self::label($current);
+            ksort($choices);
         }
 
         return $choices;
@@ -72,6 +95,14 @@ class AnalyticsPeriods
      */
     public static function label(int $days): string
     {
-        return self::OFFERS[$days] ?? number_format($days) . ' days';
+        if (isset(self::OFFERS[$days])) {
+            return self::OFFERS[$days];
+        }
+
+        // ⚠ Under a week, hours — the same way the buttons of that range are written. "4 days"
+        // sitting between "72 h" and "7 days" would name the same kind of span two ways.
+        return $days < 7
+            ? ($days * 24) . ' h'
+            : number_format($days) . ' days';
     }
 }
