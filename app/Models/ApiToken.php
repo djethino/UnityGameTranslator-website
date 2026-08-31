@@ -237,28 +237,16 @@ class ApiToken extends Model
         return $apiToken;
     }
 
-    /**
-     * The tokens this account holds for one game, one program AND one named device — what the cap
-     * is applied to.
+    /*
+     * ⚠ `scopeSameSlot` lived here: the cap applied to one game, one program and one TYPED device
+     * name. It went with the field that produced that name — the link screen no longer asks for
+     * one, so nothing sets a label at creation and the scope had no caller left.
      *
-     * 🔴 The device belongs in the key, and leaving it out was a real defect. The cap exists to
-     * kill the accesses an install abandons — a reinstall, a wiped config, a sign-out that never
-     * reached the site — and every one of those happens on the same machine. Keyed on the game
-     * alone it also cut ACROSS machines: linking a game on a Steam Deck signed the same game out
-     * on the desktop, and back again on the next switch. That is a mainstream setup, and losing an
-     * access on it is worse than the untidy line the cap was meant to remove.
-     *
-     * ⚠ Both parts are never null, for the same reason. A game with no Steam id has no slot and
-     * matches nothing; a device with no name is not a device, it is an unanswered question, and
-     * cutting on an absence is the product-name mistake in another shape.
+     * The reason it was written stands, and is now served by `device_slot` instead: the cap must
+     * key on the machine, or linking a game on a Steam Deck signs the same game out on the desktop.
+     * What changed is only WHERE the machine comes from — it says so itself now, rather than being
+     * described by somebody typing a name.
      */
-    public function scopeSameSlot($query, string $slot, ?string $clientKind, string $deviceLabel)
-    {
-        return $query
-            ->where('game_slot', $slot)
-            ->where('client_kind', $clientKind)
-            ->where('device_label', $deviceLabel);
-    }
 
     /**
      * What puts two lines on the same machine, in order of how much it is worth.

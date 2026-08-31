@@ -100,20 +100,10 @@ class DeviceFlowController extends Controller
      */
     public function showLinkPage()
     {
-        // The names this account has already used, offered as chips to click.
-        //
-        // ⚠ Chips, never a pre-filled field: a field already reading "Living room PC" gets accepted
-        // without a thought on the one day it matters — the day a game is linked at a friend's
-        // place. A chip costs the same gesture and stays a choice.
-        $devices = auth()->check()
-            ? auth()->user()->apiTokens()
-                ->whereNotNull('device_label')
-                ->distinct()
-                ->orderBy('device_label')
-                ->pluck('device_label')
-            : collect();
-
-        return view('auth.link', ['devices' => $devices]);
+        // ⚠ Nothing to prepare any more. This page used to offer the names already in use, for a
+        // field that asked somebody to name their machine before linking it — see the view for why
+        // that went away, and where naming lives now.
+        return view('auth.link');
     }
 
     /**
@@ -121,10 +111,11 @@ class DeviceFlowController extends Controller
      */
     public function validateCode(Request $request)
     {
-        $validated = $request->validate([
+        // ⚠ The code, and nothing else. A `device_label` used to arrive with it; the field that
+        // sent it is gone, and it is NOT accepted quietly here either — a name that no screen asks
+        // for must not be settable by hand-crafting the request.
+        $request->validate([
             'code' => 'required|string|min:6|max:9', // ABCD-1234 is 9 chars with dash
-            // An opaque note for its owner. The server never reads anything into it.
-            'device_label' => ['nullable', 'string', 'max:60'],
         ]);
 
         $deviceCode = DeviceCode::findByUserCode($request->code);
@@ -138,8 +129,9 @@ class DeviceFlowController extends Controller
         // Authorize the device code with the current user
         $deviceCode->authorize($user);
 
-        $label = trim((string) ($validated['device_label'] ?? ''));
-        $label = $label === '' ? null : $label;
+        // Nobody types a name at this point any more; it is inherited below when the machine is
+        // already filed, and given by hand on the Linked devices screen otherwise.
+        $label = null;
 
         // One game holds one access per program ON ONE DEVICE: linking it again from the same
         // device replaces what was there, rather than leaving a line nobody can identify behind.
@@ -168,19 +160,21 @@ class DeviceFlowController extends Controller
 
         $replaced = 0;
 
-        // ⚠ The machine first, the typed name second — never both at once. They are two answers to
-        // "is this the same device", and a query asking for both would cut nothing whenever they
-        // disagree, which is exactly when a name was typed on a machine that also identifies
-        // itself. The falsy branch is what keeps the cap working for somebody with no Manager.
+        // ⚠ The machine, and only the machine. There was a second branch keyed on a name typed on
+        // this screen — the fallback for a client that does not identify itself. It went with the
+        // field: nothing sets a label at creation any more, so it could never fire again, and a
+        // condition that cannot be true is worse than none (it reads as a covered case).
+        //
+        // 🔴 What that costs is exactly what it was already costing: a client too old to send a
+        // machine accumulates an access per link. That was ALREADY true — the branch needed a name
+        // somebody typed, and nobody typed one, which is how thirty-six accesses piled up on one
+        // account. The cure was never the name, it was the machine.
         if ($slot !== null && $device !== null) {
             $replaced = $user->apiTokens()
                 ->where('game_slot', $slot)
                 ->where('client_kind', $deviceCode->client_kind)
                 ->where('device_slot', $device)
                 ->delete();
-        }
-        elseif ($slot !== null && $label !== null) {
-            $replaced = $user->apiTokens()->sameSlot($slot, $deviceCode->client_kind, $label)->delete();
         }
 
         // ⚠ A new game linked on a machine already filed somewhere joins it, instead of arriving

@@ -53,8 +53,17 @@ class LinkedDevicesTest extends TestCase
         // created — and every count downstream is then wrong for a reason nothing names.
         $this->actingAs($user)->post('/link', [
             'code' => $init->json('user_code'),
-            'device_label' => $device,
         ])->assertSessionHasNoErrors()->assertRedirect();
+
+        // ⚠ The link screen no longer asks for a name, so a test that wants one names it where a
+        // user now would: on the Linked devices screen, after the fact. Posting `device_label` to
+        // /link would prove nothing — the field is not read there any more.
+        if ($device !== null) {
+            $latest = $user->apiTokens()->orderByDesc('id')->first();
+            $this->actingAs($user)
+                ->patch("/profile/connections/{$latest->id}", ['device_label' => $device])
+                ->assertSessionHasNoErrors();
+        }
     }
 
     public function test_the_screen_shows_only_this_accounts_accesses(): void
@@ -232,11 +241,11 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, null, 'a1b2c3d4e5f60718293a4b5c6d7e8f90');
         $this->assertSame(1, $user->apiTokens()->count());
         $first = $user->apiTokens()->first();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, null, 'a1b2c3d4e5f60718293a4b5c6d7e8f90');
 
         $this->assertSame(1, $user->apiTokens()->count());
         $this->assertDatabaseMissing('api_tokens', ['id' => $first->id]);
@@ -251,8 +260,8 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Steam Deck');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC', 'a1b2c3d4e5f60718293a4b5c6d7e8f90');
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Steam Deck', 'ffffffffffffffffffffffffffffffff');
 
         $this->assertSame(2, $user->apiTokens()->count());
         $this->assertSame(
@@ -283,10 +292,10 @@ class LinkedDevicesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // ⚠ Both named, and the same name on purpose: with no device the cap does not run at all,
-        // and this would pass without proving anything about telling two programs apart.
-        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, 'Living room PC');
-        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '111111', 'A Game', $user, 'Living room PC');
+        // ⚠ The SAME machine on purpose: without one the cap does not run at all, and this would
+        // pass without proving anything about telling two programs apart.
+        $this->linkFrom('UnityGameTranslator/0.12.0 (BepInEx6-Mono)', '111111', 'A Game', $user, null, 'a1b2c3d4e5f60718293a4b5c6d7e8f90');
+        $this->linkFrom('UnityGameTranslatorManager/0.1.1', '111111', 'A Game', $user, null, 'a1b2c3d4e5f60718293a4b5c6d7e8f90');
 
         $this->assertSame(2, $user->apiTokens()->count());
         $this->assertSame(
@@ -830,6 +839,46 @@ class LinkedDevicesTest extends TestCase
      * Without it the screen is an impasse: it offers to rename a machine nothing lets somebody
      * identify. Retroactive by construction — the code is already stored against the token.
      */
+    /**
+     * 🔴 The link screen asks for the code and nothing else.
+     *
+     * It used to ask "Which device is this?" — jargon, on a field somebody meets while holding a
+     * code from their game, with the list of already-named machines necessarily EMPTY the one time
+     * it would have helped: the first link. It was optional and never said so. And it had stopped
+     * being useful the day the machine began saying which it is on its own.
+     */
+    public function test_the_link_screen_asks_for_the_code_and_nothing_else(): void
+    {
+        $user = User::factory()->create();
+
+        $page = $this->actingAs($user)->get('/link')->assertOk();
+
+        $page->assertDontSee('device_label', false);
+        $page->assertSee('name="code"', false);
+
+        // Naming is offered, not demanded — and only where the thing being named is on screen.
+        $page->assertSee(route('profile.connections'), false);
+    }
+
+    /**
+     * ⚠ And a name is not accepted through the back door either: the field is gone from the page,
+     * so a hand-crafted request must not be able to set one where no screen asks for it.
+     */
+    public function test_a_name_posted_by_hand_to_the_link_screen_is_ignored(): void
+    {
+        $user = User::factory()->create();
+
+        $init = $this->withHeaders(['User-Agent' => 'UnityGameTranslator/0.12.1 (BepInEx5)'])
+            ->postJson('/api/v1/auth/device', ['game_id' => '111111', 'game_name' => 'A Game']);
+
+        $this->actingAs($user)->post('/link', [
+            'code' => $init->json('user_code'),
+            'device_label' => 'Injected',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertNull($user->apiTokens()->first()->device_label);
+    }
+
     public function test_the_holder_of_a_token_is_told_its_access_code(): void
     {
         $user = User::factory()->create();

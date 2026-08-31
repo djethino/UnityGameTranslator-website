@@ -28,6 +28,15 @@
             <a href="{{ route('home') }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
                 <i class="fas fa-home mr-2"></i> {{ __('auth.back_to_home') }}
             </a>
+
+            {{-- The one moment naming is worth offering: it just worked, the access exists, and the
+                 screen behind this link SHOWS what would be named. Offered, never demanded — the
+                 form no longer asks, and this must not ask either. --}}
+            <p class="text-sm mt-6">
+                <a href="{{ route('profile.connections') }}" class="text-purple-400 hover:text-purple-300">
+                    <i class="fas fa-laptop mr-1"></i> {{ __('connections.page_title') }}
+                </a>
+            </p>
         @else
             @auth
                 <form method="POST" action="{{ route('link.validate') }}" class="space-y-6">
@@ -57,43 +66,20 @@
                         <p class="mt-2 text-xs text-amber-200/90">{{ __('link.phishing') }}</p>
                     </div>
 
-                    {{-- The name of the machine, and the only signal that will still mean something
-                         in two years: it needs no client update, it survives a reinstall, and it is
-                         what groups fifty lines into three on the Linked devices screen.
+                    {{-- 🔴 **There was a "Which device is this?" field here, and it is gone.**
+                         It asked somebody arriving with a code in hand to invent a name for a
+                         thing the page never showed them — jargon, on a blank field, with the list
+                         of already-named machines necessarily EMPTY the one time it would have
+                         helped: the first link. And it was optional without ever saying so.
 
-                         ⚠ Never a PRE-FILLED value. A field already reading "Living room PC" gets
-                         accepted without a thought on the one day it matters — the day a game is
-                         linked at a friend's place. Clicking a name is a decision; finding one
-                         already typed is not.
+                         What made it pointless is that the machine now says which it is on its own
+                         (both the mod and the Manager send it), which is what groups the accesses
+                         and what makes the cap fire. See the controller.
 
-                         🔴 The names were offered through a native <datalist>, which is invisible
-                         until you type — so somebody with three machines already named saw an empty
-                         box and typed a fourth spelling of one of them. Shown as chips: one click
-                         fills the field, and the list is there whether or not you think to look. --}}
-                    <div class="text-left">
-                        <label for="device_label" class="block text-sm font-medium text-gray-300 mb-2">
-                            {{ __('link.device_label') }}
-                        </label>
-                        <input type="text" id="device_label" name="device_label" maxlength="60"
-                               autocomplete="off"
-                               placeholder="{{ __('link.device_placeholder') }}"
-                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                        @if($devices->isNotEmpty())
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            @foreach($devices as $device)
-                                {{-- data-fill: a delegated listener in app.js writes it into the
-                                     field named here. The site's CSP forbids inline handlers, and
-                                     that is the pattern every other control on this site uses. --}}
-                                <button type="button" data-fill="device_label" data-fill-value="{{ $device }}"
-                                        class="px-3 py-1 text-xs rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 transition">
-                                    {{ $device }}
-                                </button>
-                            @endforeach
-                        </div>
-                        @endif
-                        <p class="text-xs text-gray-500 mt-1">{{ __('link.device_hint') }}</p>
-                    </div>
-
+                         ⚠ Naming did not disappear, it moved to where it means something: the
+                         Linked devices screen shows the group, says "One machine, not named yet",
+                         and explains that naming it covers every program on it. There you can see
+                         what you are naming. --}}
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                         <i class="fas fa-link mr-2"></i> {{ __('link.submit') }}
                     </button>
