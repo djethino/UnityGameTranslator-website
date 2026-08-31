@@ -17,6 +17,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.api' => \App\Http\Middleware\AuthenticateApi::class,
             'auth.api.optional' => \App\Http\Middleware\OptionalAuthenticateApi::class,
             'check.banned.api' => \App\Http\Middleware\CheckBannedApi::class,
+
+            // 🔴 **`throttle` counted once for the whole site, not once per route.** Laravel keys
+            // the counter on the caller alone, so every `throttle:N,1` in this application shared
+            // one tally while each was judged against its own N — the strictest route fell first,
+            // on traffic it never received. Pressing "End session" in the live editor answered 429
+            // on its first press, because the page had polled its own state twelve times.
+            //
+            // Replaced here rather than route by route: there are some forty of them, the fault is
+            // in how the key is built, and a fix spread over forty lines is a fix somebody forgets
+            // on the forty-first. See ThrottlePerRoute.
+            'throttle' => \App\Http\Middleware\ThrottlePerRoute::class,
         ]);
 
         // GLOBAL, not on the web group, and that distinction is the whole point.
