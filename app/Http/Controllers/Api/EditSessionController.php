@@ -44,6 +44,10 @@ class EditSessionController extends Controller
             // per-line retranslation — no AI credential ever reaches the site
             'ai_available' => 'sometimes|boolean',
             'ai_model' => 'nullable|string|max:100',
+            // Which product is on the other end. ⚠ Nullable because two versions that send
+            // nothing are already published; absent reads as the mod (see the migration). It
+            // decides what a human is shown and nothing else — the key is what authorises.
+            'holder' => 'nullable|string|in:game,manager',
         ]);
 
         try {
@@ -53,7 +57,8 @@ class EditSessionController extends Controller
                 $request->input('source_language'),
                 $request->input('target_language'),
                 $request->boolean('ai_available'),
-                $request->input('ai_model')
+                $request->input('ai_model'),
+                $request->input('holder')
             );
         } catch (\InvalidArgumentException $e) {
             return response()->json(['error' => 'Content exceeds the size limit.'], 413);
@@ -102,7 +107,7 @@ class EditSessionController extends Controller
                 'ai_model' => $request->input('ai_model'),
             ]);
         }
-        $session->touchGameSeen();
+        $session->touchHolderSeen();
 
         return response()->json([
             'content_hash' => $contentHash,
@@ -127,19 +132,37 @@ class EditSessionController extends Controller
      * Same credential and same throttle as every other mod-side route: the 64-character mod key,
      * which is the only thing that authorises it.
      *
+     * ⚠ `?following=1` says "I am the one applying saves". See below — it is a claim, not a
+     * side effect of asking.
+     *
      * GET /api/v1/edit-session/{modKey}/state
      */
-    public function state(string $modKey): JsonResponse
+    public function state(Request $request, string $modKey): JsonResponse
     {
         $session = EditSessionToken::findByModKey($modKey);
         if (!$session) {
             return response()->json(['error' => 'Edit session expired or not found.'], 404);
         }
 
-        // ⚠ Deliberately NOT touchGameSeen: asking what happened is not being present, and a tool
+        // ⚠ Deliberately NOT touchHolderSeen: asking what happened is not being present, and a tool
         // polling in the background would otherwise hold a session alive for ever on behalf of a
         // window nobody has looked at since yesterday. Keepalive is the route that says "still
         // here", and it is a separate decision made by a caller that means it.
+
+        // 🔴 **Presence is CLAIMED, never inferred from the request.** A holder that follows by
+        // polling has no open connection to speak for it, so it says so on the beat it already
+        // runs. But this same route is how each product inspects a session the OTHER one opened,
+        // before offering to take it over — and marking presence on every read would mean the mod,
+        // checking whether an abandoned Manager session is finally dead, revives the presence of
+        // the very session it is asking about. The page would then show a Manager that is gone as
+        // connected, which is the failure this whole change exists to remove, reintroduced through
+        // a different door. Hence the flag: only a follower sends it.
+        //
+        // ⚠ Redis only, and deliberately not the expiry — see markHolderPresent.
+        if ($request->boolean('following')) {
+            SsePublisher::markHolderPresent($modKey, EditSessionToken::HOLDER_PRESENCE_TTL_SECONDS);
+        }
+
         return response()->json([
             'content_hash' => $session->content_hash,
             'expires_at' => $session->expires_at->toIso8601String(),
@@ -193,7 +216,7 @@ class EditSessionController extends Controller
             $request->input('value'),
             $request->input('outcome'),
         );
-        $session->touchGameSeen();
+        $session->touchHolderSeen();
 
         return response()->json(['received' => true]);
     }
@@ -215,7 +238,7 @@ class EditSessionController extends Controller
             return response()->json(['error' => 'Edit session expired or not found.'], 404);
         }
 
-        $session->touchGameSeen();
+        $session->touchHolderSeen();
 
         return response()->json([
             'expires_at' => $session->expires_at->toIso8601String(),
@@ -262,7 +285,7 @@ class EditSessionController extends Controller
         // This is also the ONLY proof that browser edits reached the player's
         // machine, so it is where the pending counter is cleared — and what
         // makes it safe to collect an abandoned session early.
-        $session->touchGameSeen();
+        $session->touchHolderSeen();
         $session->clearPendingChanges();
 
         return response()->stream(function () use ($path) {

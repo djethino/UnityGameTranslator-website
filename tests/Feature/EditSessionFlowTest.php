@@ -650,20 +650,20 @@ class EditSessionFlowTest extends TestCase
         $session = EditSessionToken::first();
         $this->openInBrowser($session);
 
-        $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
+        $this->get('/edit-session-state')->assertOk()->assertJson(['holder_responding' => true]);
 
-        // Past the tolerance (three missed keepalives), the page says so
+        // Past the tolerance (several missed keepalives), the page says so
         $this->travel(EditSessionToken::GAME_SILENT_AFTER_MINUTES + 1)->minutes();
         $response = $this->get('/edit-session-state')->assertOk();
-        $this->assertFalse($response->json('game_responding'));
+        $this->assertFalse($response->json('holder_responding'));
         $this->assertGreaterThanOrEqual(
             EditSessionToken::GAME_SILENT_AFTER_MINUTES * 60,
-            $response->json('game_seen_seconds_ago')
+            $response->json('holder_seen_seconds_ago')
         );
 
         // One keepalive — the player switched back to the game — clears it
         $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/keepalive')->assertOk();
-        $this->get('/edit-session-state')->assertOk()->assertJson(['game_responding' => true]);
+        $this->get('/edit-session-state')->assertOk()->assertJson(['holder_responding' => true]);
     }
 
     public function test_unfetched_edits_survive_the_early_collection(): void
@@ -761,7 +761,7 @@ class EditSessionFlowTest extends TestCase
         $this->assertStringContainsString('Jeu connecté', $html);
     }
 
-    public function test_state_exposes_the_game_connection_state(): void
+    public function test_state_exposes_the_holder_presence(): void
     {
         $this->initSession();
         $session = EditSessionToken::first();
@@ -778,15 +778,131 @@ class EditSessionFlowTest extends TestCase
         // no presence key in it, the answer is a truthful false. This test asserted null and was
         // therefore green only on a machine without Redis — it turned red the day one was started
         // beside it, for a reason that had nothing to do with the code.
-        $this->assertArrayHasKey('game_connected', $state);
+        $this->assertArrayHasKey('holder_present', $state);
         $this->assertNotTrue(
-            $state['game_connected'],
-            'null when unknown, false when Redis says nobody is streaming — never true'
+            $state['holder_present'],
+            'null when unknown, false when Redis says nobody is present — never true'
         );
 
         // ...and the timestamp fallback still answers, which is what the page
         // falls back on in exactly this situation
-        $this->assertTrue($state['game_responding']);
+        $this->assertTrue($state['holder_responding']);
+    }
+
+    public function test_the_holder_is_recorded_and_silence_reads_as_the_game(): void
+    {
+        // Two versions that send nothing are already published. Filing them under "unknown", or
+        // refusing them, would break what shipped over a label.
+        $this->initSession();
+        $this->assertSame(EditSessionToken::HOLDER_GAME,
+            EditSessionToken::normalizeHolder(EditSessionToken::first()->holder));
+
+        EditSessionToken::query()->delete();
+
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'holder' => 'manager',
+        ])->assertOk();
+
+        $session = EditSessionToken::first();
+        $this->assertSame(EditSessionToken::HOLDER_MANAGER, $session->holder);
+        $this->assertTrue($session->heldByManager());
+    }
+
+    public function test_an_unknown_holder_is_refused_rather_than_stored(): void
+    {
+        // It decides what a human is shown, so a value nobody wrote must not reach the column and
+        // become a third case the page has to render.
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'holder' => 'something-else',
+        ])->assertStatus(422);
+    }
+
+    public function test_the_manager_is_named_on_the_page_and_the_game_is_not(): void
+    {
+        // 🔴 The whole point: a session opened from the Manager runs on a CLOSED game, so telling
+        // its user to restart the game sends them to undo the state their session requires.
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'holder' => 'manager',
+        ])->assertOk();
+
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        // The page renders BOTH presence states and shows one with x-show, so the wording is in
+        // the HTML whatever the light currently says — which is exactly what is being checked
+        // here: that it is the Manager's wording that was rendered, and not the game's.
+        $page = $this->get('/edit-session?s=' . $session->id)->assertOk();
+
+        $page->assertSee(__('edit_session.manager_disconnected'), false);
+        $page->assertSee(__('edit_session.manager_disconnected_hint'), false);
+        $page->assertSee(__('edit_session.subtitle_manager'), false);
+        $page->assertDontSee(__('edit_session.game_disconnected_hint'), false);
+        $page->assertDontSee(__('edit_session.subtitle'), false);
+    }
+
+    public function test_a_session_from_the_mod_still_speaks_of_the_game(): void
+    {
+        // The other side of the same coin, and the one that matters most: sessions from the mod
+        // are the overwhelming majority, and a variant chosen by an @if is exactly the kind of
+        // change that fixes one branch while quietly inverting the other.
+        $this->initSession();                       // no holder: what every published mod sends
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $page = $this->get('/edit-session?s=' . $session->id)->assertOk();
+
+        $page->assertSee(__('edit_session.game_disconnected_hint'), false);
+        $page->assertSee(__('edit_session.subtitle'), false);
+        $page->assertDontSee(__('edit_session.manager_disconnected_hint'), false);
+        $page->assertDontSee(__('edit_session.subtitle_manager'), false);
+    }
+
+    public function test_asking_what_happened_is_not_being_present(): void
+    {
+        // 🔴 **The trap this guards.** Both products read this route to inspect a session the
+        // OTHER one opened, before offering to take it over. If merely asking marked presence,
+        // the mod checking whether an abandoned Manager session is finally dead would revive the
+        // presence of the very session it is asking about — and the page would show a Manager
+        // that is gone as connected, which is the bug this whole change removes.
+        $this->initSession();
+        $session = EditSessionToken::first();
+
+        $connection = \Mockery::mock();
+        $connection->shouldReceive('exists')->andReturn(0);
+        $connection->shouldNotReceive('setex');
+        \Illuminate\Support\Facades\Redis::shouldReceive('connection')->andReturn($connection);
+
+        $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')->assertOk();
+    }
+
+    public function test_a_follower_says_it_is_present_on_the_beat_it_already_runs(): void
+    {
+        // A holder that polls has no open connection to speak for it, so it claims presence
+        // explicitly — and only then. ⚠ Never touches the expiry: presence and lifetime are two
+        // questions, and keepalive is the one that answers the second.
+        $this->initSession();
+        $session = EditSessionToken::first();
+        $expiry = $session->expires_at;
+
+        $connection = \Mockery::mock();
+        $connection->shouldReceive('exists')->andReturn(1);
+        $connection->shouldReceive('setex')
+            ->once()
+            ->with(\Mockery::pattern('/^sse:edit:.+:game$/'),
+                   EditSessionToken::HOLDER_PRESENCE_TTL_SECONDS,
+                   \Mockery::any());
+        \Illuminate\Support\Facades\Redis::shouldReceive('connection')->andReturn($connection);
+
+        $this->travel(2)->minutes();
+        $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state?following=1')->assertOk();
+
+        $this->assertEquals($expiry, $session->fresh()->expires_at,
+            'presence must not slide the session TTL — that is what keepalive is for');
     }
 
     public function test_mod_content_download_counts_as_game_presence(): void
@@ -796,12 +912,12 @@ class EditSessionFlowTest extends TestCase
         $this->openInBrowser($session);
 
         $this->travel(EditSessionToken::GAME_SILENT_AFTER_MINUTES + 1)->minutes();
-        $this->assertFalse($session->fresh()->isGameResponding());
+        $this->assertFalse($session->fresh()->isHolderResponding());
 
         // Fetching the file is the game applying a save: it is alive
         $this->get('/api/v1/edit-session/' . $session->mod_key . '/content')->assertOk();
 
-        $this->assertTrue($session->fresh()->isGameResponding());
+        $this->assertTrue($session->fresh()->isHolderResponding());
     }
 
     public function test_session_survives_the_loss_of_the_web_session(): void

@@ -2,6 +2,18 @@
 
 @section('title', __('edit_session.title') . ($editSession->game_name ? ' - ' . $editSession->game_name : ''))
 
+@php
+    // 🔴 Which product is on the other end, decided ONCE here.
+    //
+    // A session opened from the Manager runs on a game that is CLOSED — that is what the Manager
+    // is for — so every sentence written for "the game" is false on it, and one of them used to
+    // advise restarting the very thing whose absence is the point. The holder is fixed when the
+    // session is created and cannot change while it lives, so it belongs in the render rather
+    // than in a poll: no first-frame guess, and no translated string travelling through an
+    // Alpine expression.
+    $heldByManager = $editSession->heldByManager();
+@endphp
+
 @section('content')
 <div class="container mx-auto px-4 py-8" x-data="editSession" @keydown.window="handleEditorKeydown($event)">
     {{-- Header --}}
@@ -29,8 +41,14 @@
                 @endif
             @endif
         </p>
+        {{-- ⚠ The Manager variant drops the gamepad along with "while you play": that icon says
+             "a game is running", which is exactly what is not happening here. --}}
         <p class="text-sm text-purple-300 mt-1">
-            <i class="fas fa-gamepad mr-1"></i> {{ __('edit_session.subtitle') }}
+            @if($heldByManager)
+                <i class="fas fa-desktop mr-1"></i> {{ __('edit_session.subtitle_manager') }}
+            @else
+                <i class="fas fa-gamepad mr-1"></i> {{ __('edit_session.subtitle') }}
+            @endif
         </p>
 
         {{-- Link state, permanently on screen: whether the game is listening
@@ -333,8 +351,8 @@
                 </span>
                 {{-- Amber while the game is away: the save landed on the site,
                      but "applied in-game" would be a lie --}}
-                <span x-show="saveMessage" :class="gameConnected === false ? 'text-amber-300' : 'text-green-400'">
-                    <i class="fas mr-1" :class="gameConnected === false ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
+                <span x-show="saveMessage" :class="holderPresent === false ? 'text-amber-300' : 'text-green-400'">
+                    <i class="fas mr-1" :class="holderPresent === false ? 'fa-clock' : 'fa-check-circle'"></i><span x-text="saveMessage"></span>
                 </span>
 
                 {{-- A retranslation that changed nothing. The success case needs no
@@ -360,7 +378,7 @@
                      but the way out of the whole session, and a form cannot be handed to a slot
                      the way a click expression can. Reachable by leaving the workbench. --}}
                 <form method="POST" action="{{ route('edit-session.end', ['s' => $editSession->id]) }}"
-                    data-confirm="{{ __('edit_session.end_confirm') }}">
+                    data-confirm="{{ $heldByManager ? __('edit_session.end_confirm_manager') : __('edit_session.end_confirm') }}">
                     @csrf
                     <button type="submit"
                         class="text-red-400 hover:text-red-300 text-sm transition">
@@ -398,17 +416,19 @@
              normal case and stays a quiet line; disconnected has to be seen,
              so it keeps the amber panel the top banner used to have. Dressing
              both the same way makes the one that matters invisible. --}}
-        <div x-show="gameConnected === true" x-cloak
+        <div x-show="holderPresent === true" x-cloak
             class="mt-3 pt-3 border-t border-gray-700 flex flex-wrap items-center gap-x-3 text-sm">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
-            <span class="text-green-400">{{ __('edit_session.game_connected') }}</span>
-            {{-- Shown even when connected: the game fetches within seconds, so
-                 this normally flashes by — and if it lingers, that is worth
+            <span class="text-green-400">
+                {{ $heldByManager ? __('edit_session.manager_connected') : __('edit_session.game_connected') }}
+            </span>
+            {{-- Shown even when connected: the other end fetches within seconds,
+                 so this normally flashes by — and if it lingers, that is worth
                  seeing. The number is bound separately from the wording:
                  translated text must never go through an Alpine expression. --}}
             <span x-show="pendingChanges > 0" x-cloak class="text-gray-400">
                 <i class="fas fa-clock mr-1"></i><span x-text="pendingChanges"></span>
-                {{ __('edit_session.pending_for_game') }}
+                {{ $heldByManager ? __('edit_session.pending_for_manager') : __('edit_session.pending_for_game') }}
             </span>
         </div>
 
@@ -419,19 +439,29 @@
              background but vanished inside this grey card. And the dot stays —
              it is the same indicator as the green one above, just red, so the
              eye reads the link state in one place whatever it says. --}}
-        <div x-show="gameConnected === false" x-cloak
+        <div x-show="holderPresent === false" x-cloak
             class="mt-3 flex flex-wrap items-center gap-x-2 bg-amber-900/80 border border-amber-500 rounded-lg px-3 py-1.5">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></span>
-            <span class="text-amber-200 font-semibold text-sm shrink-0">{{ __('edit_session.game_disconnected') }}</span>
-            <span class="text-amber-100/90 text-xs leading-snug">{{ __('edit_session.game_disconnected_hint') }}</span>
+            <span class="text-amber-200 font-semibold text-sm shrink-0">
+                {{ $heldByManager ? __('edit_session.manager_disconnected') : __('edit_session.game_disconnected') }}
+            </span>
+            {{-- ⚠ The two hints do not say the same thing to do, which is the whole reason they are
+                 two: the game's asks you to bring it back, the Manager's asks you to reopen a
+                 window. Telling somebody on a closed game to "restart it" sent them to undo the
+                 very state their session requires. --}}
+            <span class="text-amber-100/90 text-xs leading-snug">
+                {{ $heldByManager ? __('edit_session.manager_disconnected_hint') : __('edit_session.game_disconnected_hint') }}
+            </span>
             {{-- What is actually at stake, in figures --}}
             <span x-show="pendingChanges > 0" x-cloak class="text-amber-100 text-xs font-semibold">
                 <i class="fas fa-clock mr-1"></i><span x-text="pendingChanges"></span>
-                {{ __('edit_session.pending_for_game') }}
+                {{ $heldByManager ? __('edit_session.pending_for_manager') : __('edit_session.pending_for_game') }}
             </span>
-            {{-- Only true once everything has reached the game: while edits are
-                 still waiting, the session is kept for the full day instead. --}}
-            <span x-show="pendingChanges === 0" x-cloak class="text-amber-200/70 text-xs leading-snug italic">{{ __('edit_session.abandoned_warning') }}</span>
+            {{-- Only true once everything has reached the other end: while edits
+                 are still waiting, the session is kept for the full day instead. --}}
+            <span x-show="pendingChanges === 0" x-cloak class="text-amber-200/70 text-xs leading-snug italic">
+                {{ $heldByManager ? __('edit_session.abandoned_warning_manager') : __('edit_session.abandoned_warning') }}
+            </span>
         </div>
         </div>
     </div>
@@ -600,11 +630,16 @@ document.addEventListener('alpine:init', () => {
         retranslateNotice: '',
         // Request ids already turned into pending edits by THIS page
         retranslateApplied: [],
-        // Game presence, from the state poll. null until the first answer, and
-        // whenever the server cannot tell — never rendered as a disconnection.
-        gameConnected: null,
-        _gameDownStreak: 0,
-        // Edits saved here that the game has not fetched yet
+        // ⚠ Which product applies the saves is NOT held here: it is fixed when the session opens,
+        // so every sentence about it is written out by Blade from the row itself. Keeping it in
+        // this state would mean the first render guesses and the first poll corrects it — a page
+        // that says "the game" for a second to somebody using the Manager.
+        //
+        // Holder presence, from the state poll. null until the first answer, and whenever the
+        // server cannot tell — never rendered as a disconnection.
+        holderPresent: null,
+        _holderDownStreak: 0,
+        // Edits saved here that the holder has not fetched yet
         pendingChanges: 0,
         underlyingChanged: {},  // pending keys whose in-game value changed under the edit
         // Per-line AI retranslation, executed by the PLAYER's own backend:
@@ -932,36 +967,37 @@ document.addEventListener('alpine:init', () => {
         // endpoint doubles as the browser presence heartbeat.
 
         /**
-         * Read the game's presence out of a state poll.
+         * Read the holder's presence out of a state poll.
          *
-         * The mod's open stream is authoritative — a game that dies takes its
-         * connection with it, whatever it did or failed to do on the way out.
-         * When the server cannot tell (Redis down), fall back on the last call
-         * the mod made, so an infrastructure hiccup never paints a running game
-         * as gone.
+         * Whoever holds the session says it is there on the beat it already runs: an open stream
+         * for the mod — a game that dies takes its connection with it, whatever it did or failed
+         * to do on the way out — and an explicit claim on each poll for the Manager, which holds
+         * no connection that could speak for it. When the server cannot tell (Redis down), fall
+         * back on the last call the holder made, so an infrastructure hiccup never paints a live
+         * session as gone.
          */
-        applyGamePresence(state) {
-            const connected = typeof state.game_connected === 'boolean'
-                ? state.game_connected
-                : (typeof state.game_responding === 'boolean' ? state.game_responding : null);
+        applyHolderPresence(state) {
+            const present = typeof state.holder_present === 'boolean'
+                ? state.holder_present
+                : (typeof state.holder_responding === 'boolean' ? state.holder_responding : null);
 
-            if (connected === null) {
-                this.gameConnected = null;
+            if (present === null) {
+                this.holderPresent = null;
                 return;
             }
 
-            if (connected) {
-                this._gameDownStreak = 0;
-                this.gameConnected = true;
+            if (present) {
+                this._holderDownStreak = 0;
+                this.holderPresent = true;
                 return;
             }
 
-            // The mod reconnects on its own within seconds, and is briefly
-            // absent while it does. Two readings in a row before calling it
-            // disconnected, so a reconnection does not flash the light red.
-            this._gameDownStreak++;
-            if (this._gameDownStreak >= 2) {
-                this.gameConnected = false;
+            // Both reconnect on their own within seconds, and are briefly absent while they do.
+            // Two readings in a row before calling it gone, so a reconnection does not flash the
+            // light red.
+            this._holderDownStreak++;
+            if (this._holderDownStreak >= 2) {
+                this.holderPresent = false;
             }
         },
 
@@ -1010,7 +1046,7 @@ document.addEventListener('alpine:init', () => {
                     if (typeof state.ai_available === 'boolean') {
                         this.aiAvailable = state.ai_available;
                     }
-                    this.applyGamePresence(state);
+                    this.applyHolderPresence(state);
                     if (typeof state.pending_changes === 'number') {
                         this.pendingChanges = state.pending_changes;
                     }
@@ -1177,9 +1213,11 @@ document.addEventListener('alpine:init', () => {
                     this.savedCount += (result.saved || 0) + (result.deleted || 0);
                     // Our own save changed the session hash — don't refetch on next poll
                     this.currentHash = result.content_hash;
-                    this.saveMessage = this.gameConnected === false
-                        ? @js(__('edit_session.saved_pending_game'))
-                        : @js(__('edit_session.saved_ok'));
+                    // ⚠ Both variants resolved by Blade, never composed here: the holder is known
+                    // at render, and a translated sentence must not be built in JavaScript.
+                    this.saveMessage = this.holderPresent === false
+                        ? @js($heldByManager ? __('edit_session.saved_pending_manager') : __('edit_session.saved_pending_game'))
+                        : @js($heldByManager ? __('edit_session.saved_ok_manager') : __('edit_session.saved_ok'));
                     setTimeout(() => { this.saveMessage = ''; }, 5000);
                 })
                 .catch(e => {

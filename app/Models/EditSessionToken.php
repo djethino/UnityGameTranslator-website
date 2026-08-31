@@ -79,22 +79,64 @@ class EditSessionToken extends Model
     private const INACTIVITY_TTL_MINUTES = 1440; // 24 h
 
     /**
-     * How long the game may stay silent before the page says so.
+     * How long the holder may stay silent before the page says so.
      *
-     * The mod pings keepalive every 10 minutes, so this tolerates three missed
-     * pings: a session in normal use never trips it. Deliberately generous,
-     * because a missed ping does NOT prove the game is gone — Unity freezes
-     * Update() in games that run with runInBackground disabled, which is
-     * precisely what happens while the player edits in the browser. The page
-     * therefore states a fact ("no sign of the game since ...") and never
+     * Both products ping keepalive on the socle's interval (5 minutes), so this tolerates several
+     * missed pings: a session in normal use never trips it. Deliberately generous, because a
+     * missed ping does NOT prove the game is gone — Unity freezes Update() in games that run with
+     * runInBackground disabled, which is precisely what happens while the player edits in the
+     * browser. The page therefore states a fact ("no sign of the game since ...") and never
      * concludes on the player's behalf.
+     *
+     * ⚠ **This is the FALLBACK, not the signal.** It answers only when Redis cannot, and half an
+     * hour is far too coarse to protect somebody mid-edit: what the browser calls "Saved" is not
+     * "applied", so an absence has to show before the next save. That is what the presence key
+     * below is for.
      */
     public const GAME_SILENT_AFTER_MINUTES = 30;
+
+    /**
+     * How long one poll counts as "the holder is still there", in seconds.
+     *
+     * ⚠ **Mirrors the socle's EditSessions.PresenceTtlSeconds**, which derives it from the poll
+     * interval rather than choosing it — exactly as the SSE server derives its own presence TTL
+     * from the heartbeat that renews it. PHP cannot consume the socle, so the number exists twice
+     * by necessity; if it moves there, it moves here.
+     */
+    public const HOLDER_PRESENCE_TTL_SECONDS = 15;
+
+    /** The mod, inside a running game. */
+    public const HOLDER_GAME = 'game';
+
+    /** The Manager, with the game closed. */
+    public const HOLDER_MANAGER = 'manager';
+
+    /**
+     * Read a declared holder the way the socle's ParseHolder does.
+     *
+     * ⚠ Anything unrecognised — absent, empty, misspelt, planted — is the game. Two versions that
+     * send nothing are already published, and the mod was the only writer before this existed, so
+     * that is the honest reading rather than a guess. Never a refusal: the label must not decide
+     * whether somebody gets a session.
+     */
+    public static function normalizeHolder(?string $holder): string
+    {
+        return strcasecmp((string) $holder, self::HOLDER_MANAGER) === 0
+            ? self::HOLDER_MANAGER
+            : self::HOLDER_GAME;
+    }
+
+    /** Is this session held by the Manager rather than by a running game? */
+    public function heldByManager(): bool
+    {
+        return self::normalizeHolder($this->holder) === self::HOLDER_MANAGER;
+    }
 
     protected $fillable = [
         'token',
         'mod_key',
         'game_name',
+        'holder',
         'source_language',
         'target_language',
         'expires_at',
@@ -128,7 +170,8 @@ class EditSessionToken extends Model
         ?string $sourceLanguage,
         ?string $targetLanguage,
         bool $aiAvailable = false,
-        ?string $aiModel = null
+        ?string $aiModel = null,
+        ?string $holder = null
     ): self {
         self::cleanupExpired();
 
@@ -166,7 +209,8 @@ class EditSessionToken extends Model
             'content_hash' => hash('sha256', $json),
             'ai_available' => $aiAvailable,
             'ai_model' => $aiModel,
-            // The mod is the caller: the game is present, by definition
+            'holder' => self::normalizeHolder($holder),
+            // Whoever opened it is the caller: the holder is present, by definition
             'game_last_seen_at' => now(),
         ]);
     }
@@ -234,7 +278,7 @@ class EditSessionToken extends Model
      * a running game is reason enough to keep the session, whether or not
      * anyone has the page open.
      */
-    public function touchGameSeen(): void
+    public function touchHolderSeen(): void
     {
         $this->update([
             'game_last_seen_at' => now(),
@@ -396,7 +440,7 @@ class EditSessionToken extends Model
             'browser_last_seen_at' => now(),
             'browser_left_at' => null,
         ];
-        if ($this->isGameResponding() !== false) {
+        if ($this->isHolderResponding() !== false) {
             $attributes['expires_at'] = self::inactivityDeadline();
         }
 
@@ -430,7 +474,7 @@ class EditSessionToken extends Model
      * Seconds since the game last called, or null for a session created before
      * the column existed (never stamped yet).
      */
-    public function gameSeenSecondsAgo(): ?int
+    public function holderSeenSecondsAgo(): ?int
     {
         return $this->game_last_seen_at
             ? (int) abs(now()->diffInSeconds($this->game_last_seen_at))
@@ -442,9 +486,9 @@ class EditSessionToken extends Model
      * from it — never conclude on missing information: an unknown state must
      * behave exactly like a live one (no warning, session kept).
      */
-    public function isGameResponding(): ?bool
+    public function isHolderResponding(): ?bool
     {
-        $secondsAgo = $this->gameSeenSecondsAgo();
+        $secondsAgo = $this->holderSeenSecondsAgo();
 
         return $secondsAgo === null
             ? null

@@ -221,28 +221,70 @@ class SsePublisher
     }
 
     /**
-     * Is the mod's stream for this session currently connected?
+     * Where a session's holder says it is still there.
      *
-     * The SSE server writes a short-lived key while it holds the mod's stream
-     * open (see GAME_PRESENCE_TTL_S in sse-server/server.js). That connection is
-     * the only trustworthy sign the game is running: the mod cannot promise to
-     * announce its own exit — OnApplicationQuit does not fire in every Unity
-     * game — whereas a TCP connection dies with the process no matter how it
-     * dies. A game merely frozen in the background keeps it, which is precisely
-     * where a keepalive-based guess would cry wolf.
-     *
-     * Returns null when Redis cannot answer: an unknown state must never be
-     * shown as a disconnection.
+     * ⚠ The key is named ":game" and stays named that, though either product may now write it:
+     * the SSE server writes it from Node and this class reads it from PHP, and the two are NOT
+     * deployed together (the Node server is restarted by hand). Renaming it would leave every
+     * live session reading as absent for the length of that gap — a real "nobody is applying your
+     * saves" shown to people mid-edit, for a cosmetic gain.
      */
-    public static function isGameStreamConnected(string $modKey): ?bool
+    private static function presenceKey(string $modKey): string
+    {
+        return "sse:edit:{$modKey}:game";
+    }
+
+    /**
+     * Is whoever holds this session still there?
+     *
+     * 🔴 **This measures PRESENCE, not a transport, and the difference is what it got wrong.** It
+     * used to test only the key the SSE server writes while it holds a stream open — so a session
+     * held by the Manager, which polls instead of streaming and never opens one, read as a plain
+     * `false`. Not "unknown": false. The editor page therefore announced "Game disconnected", and
+     * advised restarting the game, to somebody whose Manager was answering every three seconds on
+     * a game that is closed by design.
+     *
+     * The mod's stream is still the best possible sign for the mod: it cannot promise to announce
+     * its own exit — OnApplicationQuit does not fire in every Unity game — whereas a TCP
+     * connection dies with the process however it dies, and a game merely frozen in the background
+     * keeps it. A poller has no such connection to speak for it, so it says so itself, on the beat
+     * it already runs (see markHolderPresent).
+     *
+     * Returns null when Redis cannot answer: an unknown state must never be shown as a
+     * disconnection.
+     */
+    public static function isHolderPresent(string $modKey): ?bool
     {
         try {
-            return Redis::connection(self::REDIS_CONNECTION)->exists("sse:edit:{$modKey}:game") > 0;
+            return Redis::connection(self::REDIS_CONNECTION)->exists(self::presenceKey($modKey)) > 0;
         } catch (\Exception $e) {
             Log::warning("[SsePublisher] Redis presence check failed: {$e->getMessage()}");
 
             return null;
         }
+    }
+
+    /**
+     * A holder that follows its session by polling says it is still there.
+     *
+     * 🔴 **Only ever called for a caller that DECLARED it is following.** Asking what has happened
+     * in a session is not being present: both products also read this route to inspect a session
+     * the OTHER one opened, before offering to take it over. Marking presence on every read would
+     * mean the mod, checking whether an abandoned Manager session is finally dead, revives the
+     * presence of the very session it is asking about — and the page would show a Manager that is
+     * gone as connected. That is why the claim is explicit and this method is not called from the
+     * probe path.
+     *
+     * ⚠ Deliberately does NOT touch the session's expiry. Presence and lifetime are two questions,
+     * and answering both here is what the state route refused: a window nobody has looked at since
+     * yesterday would hold a session alive for ever. Presence lives in Redis and expires on its
+     * own; the expiry is pushed back by keepalive, a separate call made by a caller that means it.
+     *
+     * @param int $ttl Seconds this counts for — derived from the caller's poll interval.
+     */
+    public static function markHolderPresent(string $modKey, int $ttl): void
+    {
+        self::safeSetex(self::presenceKey($modKey), $ttl, '1');
     }
 
     /**

@@ -125,17 +125,22 @@ class EditSessionController extends Controller
             // The mod can toggle its AI backend mid-session (pushes refresh
             // the flag) — the page shows/hides the retranslate buttons live
             'ai_available' => $session->ai_available,
-            // Game presence, so the page can show a live connection indicator
-            // instead of letting the user edit into the void — saves are
-            // accepted, but nothing applies them in-game.
+            // ⚠ The holder is NOT here, on purpose: it is fixed when the session is created and
+            // cannot change while it lives, so the page renders its wording from the row once and
+            // never flickers into the wrong variant on the first poll. Carrying an immutable value
+            // on a beat that runs every few seconds would be paying for it for nothing.
             //
-            // The mod's open stream is the authoritative signal (seconds, and
-            // it cannot be faked away by a game that exits without warning);
-            // the timestamp is the fallback for when Redis cannot answer. Both
-            // are null-safe: an unknown state must never read as "gone".
-            'game_connected' => SsePublisher::isGameStreamConnected($session->mod_key),
-            'game_responding' => $session->isGameResponding(),
-            'game_seen_seconds_ago' => $session->gameSeenSecondsAgo(),
+            // Holder presence, so the page can show a live connection indicator instead of letting
+            // the user edit into the void — saves are accepted, but nothing applies them.
+            //
+            // Whoever holds the session says so on the beat it already runs: an open stream for
+            // the mod (it cannot promise to announce its own exit — a TCP connection dies with the
+            // process however it dies), an explicit claim on each poll for the Manager, which has
+            // no connection to speak for it. The timestamp below is the fallback for when Redis
+            // cannot answer. All null-safe: an unknown state must never read as "gone".
+            'holder_present' => SsePublisher::isHolderPresent($session->mod_key),
+            'holder_responding' => $session->isHolderResponding(),
+            'holder_seen_seconds_ago' => $session->holderSeenSecondsAgo(),
             // Edits saved here that the game has not fetched yet. "Saved" is not
             // "applied in-game", and the difference is exactly what the user
             // stands to lose if they walk away from a game that never comes back.
