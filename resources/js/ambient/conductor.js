@@ -208,6 +208,9 @@ export function createConductor({ engine, pickAnchor, strings }) {
             // can never point at a screen the glitches are forbidden from touching.
             anchor: pickAnchor,
             setWarp: (v) => { inst._warp = v; },
+            // How hard the ride is running, 0 to 1 — the light pass smears with it. Same road as
+            // `setWarp`: declared by the figure, blended across the handover, handed to the engine.
+            setRush: (v) => { inst._rush = v; },
             aspect: engine.aspect,
         };
     }
@@ -216,6 +219,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
     function evaluate(inst, dt) {
         bobs.forEach((b) => b.resetFrameProps());
         inst._warp = 0;
+        inst._rush = 0;
         inst.t += dt;
 
         const ctx = context(inst);
@@ -232,6 +236,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
         return {
             targets,
             warp: inst._warp,
+            rush: inst._rush,
             props: bobs.map((b) => PROPS.map((k) => b[k])),
         };
     }
@@ -266,6 +271,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
         let targets = now.targets;
         let props = now.props;
         let warp = now.warp;
+        let rush = now.rush;
 
         if (previous) {
             blend = Math.min(1, blend + dt / hand.seconds);
@@ -304,6 +310,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
                 });
             });
             warp = lerp(before.warp, now.warp, hand.curve(blend));
+            rush = lerp(before.rush, now.rush, hand.curve(blend));
 
             if (blend >= 1) previous = null;
         }
@@ -351,6 +358,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
         }, !engine.reduced && !current.rigid);
 
         engine.setWarp(warp);
+        engine.setRush(rush);
 
         if (current.t >= current.duration && blend >= 1) advance();
 

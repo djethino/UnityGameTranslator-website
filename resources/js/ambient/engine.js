@@ -234,6 +234,7 @@ export function createEngine() {
     // Reported by `stats()`; it should be zero, and if it is not that is a defect to chase.
     let repairs = 0;
     let warp = 0;   // set by the conductor, blended across pattern changes
+    let rush = 0;   // likewise: how hard a figure is travelling, for the light pass's smear
 
     // Live tuning, exposed the same way `window.testGlitch` is. These are the numbers that can only
     // be judged by looking, and rebuilding the bundle to move one of them is a waste of everybody's
@@ -433,6 +434,7 @@ export function createEngine() {
             washIntensity: tune.wash,
             washKeep: tune.washKeep,
             warp,
+            rush,
             keep: KEEPS[keepIndex],
             zNear: Math.max(0.12, zMin), zFar: Math.max(zMin + 0.01, zMax),
             hiss: hiss.split > 0 ? hiss : null,
@@ -464,6 +466,8 @@ export function createEngine() {
         /** The conductor asks this to keep the abrupt patterns out of a calm rotation. */
         get reduced() { return calm; },
         setWarp(v) { warp = v; },
+        /** How hard the ride is running, 0 to 1. The light pass smears outward with it. */
+        setRush(v) { rush = v; },
         /** The background's voice in the glitch orchestra. */
         hiss: startHiss,
         start(fn) {

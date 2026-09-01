@@ -61,6 +61,31 @@ export function screenRect(rect) {
     };
 }
 
+/**
+ * Hand out a figure's parts to the clouds, differently every run.
+ *
+ * 🔴 A figure with named roles — the one on the axis, the two above the water, the leader of the
+ * formation — used to give them out by index, so the same CLOUD played the same part for ever. And
+ * a cloud is a colour: the glacial blue one was the waterline in `reflet` and the still point in
+ * `miroir`, every single time, which is how a visitor ends up saying "the pale blue blob is often a
+ * line". They were right, and it was not chance.
+ *
+ * ⚠ Returns `part[cloud] = role`, not the other way round, because that is the question the update
+ * loops ask: they walk the clouds and need to know what each one is doing.
+ *
+ * ⚠ Drawn from the pattern's own seeded generator, so a run stays coherent with itself from start
+ * to finish — the cloud that was the horizon at the beginning is still the horizon at the end.
+ */
+export function cast(count, rng) {
+    const roles = [];
+    for (let i = 0; i < count; i++) roles.push(i);
+    for (let i = count - 1; i > 0; i--) {
+        const j = (rng() * (i + 1)) | 0;
+        [roles[i], roles[j]] = [roles[j], roles[i]];
+    }
+    return roles;
+}
+
 /** A value in [-1, 1] that never repeats, from three sines at irrational ratios. */
 export function wander(t, phase = 0) {
     return (Math.sin(t * 0.618 + phase) * 0.5

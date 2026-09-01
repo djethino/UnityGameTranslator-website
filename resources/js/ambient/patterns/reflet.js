@@ -18,7 +18,7 @@
  * reads as water.
  */
 
-import { wander, lerp } from './util.js';
+import { wander, lerp, cast } from './util.js';
 const DIM = 0.6;         // a reflection is never as bright as what it reflects
 const SPAN = 1.5;        // half-width of the waterline — wider than the field, so it has no ends
 
@@ -52,18 +52,25 @@ export default {
         this.pace = lerp(0.34, 0.56, r());
         this.seed = [r() * 6.28, r() * 6.28, r() * 6.28, r() * 6.28];
 
-        // Two above, pointing down; two below, the same shape pointing up.
-        ctx.clouds[0].setShape(teardrop(1));
-        ctx.clouds[1].setShape(teardrop(1));
-        ctx.clouds[2].setShape(teardrop(-1));
-        ctx.clouds[3].setShape(teardrop(-1));
+        // 🔴 Which cloud plays which part, drawn fresh. Roles 0 and 1 are the shapes above the
+        // water, 2 and 3 their reflections, 4 the waterline. Handed out by index before, so the
+        // same colour was the horizon in every single run of this figure.
+        this.part = cast(ctx.clouds.length, r);
 
-        // The waterline. Long, flat, and denser in the middle so it fades out sideways rather than
-        // stopping dead at the edge of the screen.
-        ctx.clouds[4].setShape((_, __, out) => {
-            out[0] = (Math.random() + Math.random() - 1) * SPAN;
-            out[1] = (Math.random() - 0.5) * 0.035;
-            out[2] = (Math.random() - 0.5) * 0.06;
+        ctx.clouds.forEach((cloud, i) => {
+            const role = this.part[i];
+            if (role === 4) {
+                // The waterline. Long, flat, and denser in the middle so it fades out sideways
+                // rather than stopping dead at the edge of the screen.
+                cloud.setShape((_, __, out) => {
+                    out[0] = (Math.random() + Math.random() - 1) * SPAN;
+                    out[1] = (Math.random() - 0.5) * 0.035;
+                    out[2] = (Math.random() - 0.5) * 0.06;
+                });
+            } else {
+                // Two above, pointing down; two below, the same shape pointing up.
+                cloud.setShape(teardrop(role < 2 ? 1 : -1));
+            }
         });
         return true;
     },
@@ -87,12 +94,15 @@ export default {
 
         for (let i = 0; i < ctx.bobs.length; i++) {
             const bob = ctx.bobs[i];
+            // ⚠ The ROLE, never the index — and the same roles the shapes were cut for in `enter`,
+            // or a cloud shaped like a teardrop would be asked to lie flat on the water.
+            const role = this.part[i];
 
-            if (i < 2) {
+            if (role < 2) {
                 bob.scale = 0.85;
-                out.push({ x: above[i].x, y: above[i].y, z: 1.3 + i * 0.12 });
-            } else if (i < 4) {
-                const src = above[i - 2];
+                out.push({ x: above[role].x, y: above[role].y, z: 1.3 + role * 0.12 });
+            } else if (role < 4) {
+                const src = above[role - 2];
                 const depth = Math.abs(src.y - this.line);
                 // Mirrored about the line, then let go of by the water: the further down, the less
                 // it holds together.
@@ -102,7 +112,7 @@ export default {
                 out.push({
                     x: src.x + shake,
                     y: this.line + depth + Math.abs(wander(t * 1.2 + i, i + 3)) * 0.045 * this.chop,
-                    z: 1.3 + (i - 2) * 0.12,
+                    z: 1.3 + (role - 2) * 0.12,
                 });
             } else {
                 // The surface. It is what makes the other four mean anything, so it is the brightest

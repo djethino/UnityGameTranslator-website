@@ -130,6 +130,8 @@ uniform float uIntensity;
 uniform vec2 uSplit;
 /** Advances with time; only used to move the bands, so it need not be a real clock. */
 uniform float uHissTime;
+/** How hard a figure is travelling, 0 to 1. Smears the light outward from the vanishing point. */
+uniform float uRush;
 varying vec2 vUv;
 
 float band(float y) {
@@ -138,28 +140,56 @@ float band(float y) {
     return sin(y * 148.0 + uHissTime * 31.0) * 0.6 + sin(y * 57.3 - uHissTime * 17.0) * 0.4;
 }
 
+/**
+ * One sample of the light, with the channels pulled apart if the background is breaking up.
+ *
+ * ⚠ Split out so the smear below can call it: a radial blur that sampled the plain texture would
+ * lose the RGB break-up whenever the two happened at once, and they will, because one is driven by
+ * speed and the other by its own clock.
+ */
+vec4 grab(vec2 uv, float tear, vec2 off) {
+    vec2 p = vec2(uv.x + tear, uv.y);
+    if (uSplit.x <= 0.0) return texture2D(uTex, p);
+    float r = texture2D(uTex, p + off).r;
+    vec4 g = texture2D(uTex, p);
+    float b = texture2D(uTex, p - off).b;
+    return vec4(r, g.g, b, g.a);
+}
+
 void main() {
     vec2 uv = vUv;
     vec4 t;
 
-    if (uSplit.x > 0.0) {
-        // 🔴 The background's own RGB break-up, and it lives HERE rather than on the whole canvas.
-        // This pass is the light the clouds cast — a fifth of the resolution, already blurred by
-        // the upscale — so pulling its channels apart costs two extra taps at one twenty-fifth of
-        // the pixels, and it cannot touch the bodies drawn afterwards. Those must stay sharp: a
-        // glitch that smears everything reads as a broken screen, one that smears only the glow
-        // reads as a signal.
-        float tear = band(uv.y) * uSplit.y;
-        uv.x += tear;
-        vec2 off = vec2(uSplit.x, 0.0);
-        // Sampled per channel, alpha taken from the middle one: alpha is how much light landed
-        // here, and splitting THAT would make the wash flicker in brightness rather than in colour.
-        float r = texture2D(uTex, uv + off).r;
-        vec4 g = texture2D(uTex, uv);
-        float b = texture2D(uTex, uv - off).b;
-        t = vec4(r, g.g, b, g.a);
+    // 🔴 The background's own RGB break-up lives HERE rather than on the whole canvas. This pass is
+    // the light the clouds cast — a fifth of the resolution, already blurred by the upscale — so
+    // pulling its channels apart costs two extra taps at one twenty-fifth of the pixels, and it
+    // cannot touch the bodies drawn afterwards. Those must stay sharp: a glitch that smears
+    // everything reads as a broken screen, one that smears only the glow reads as a signal.
+    // Alpha is always taken from the middle channel: it is how much light landed here, and
+    // splitting THAT would make the wash flicker in brightness rather than in colour.
+    float tear = uSplit.x > 0.0 ? band(uv.y) * uSplit.y : 0.0;
+    vec2 off = vec2(uSplit.x, 0.0);
+
+    if (uRush > 0.0) {
+        /**
+         * 🔴 The speed smear, and it is a zoom blur rather than a directional one — because the
+         * motion IS toward the eye. Everything on screen is travelling away from the vanishing
+         * point, faster the further out it already is, so sampling back along that ray is what a
+         * long exposure of this scene would actually contain.
+         *
+         * ⚠ Four taps, in the pass that runs at a fifth of the resolution and is then blurred by its
+         * own upscale. The same effect on the bodies would cost twenty-five times as much and would
+         * be wrong besides: what smears at speed is the light, not the matter.
+         */
+        vec2 ray = uv - 0.5;
+        vec4 acc = vec4(0.0);
+        for (int i = 0; i < 4; i++) {
+            float f = float(i) * 0.3333;
+            acc += grab(uv - ray * f * uRush * 0.22, tear, off);
+        }
+        t = acc * 0.25;
     } else {
-        t = texture2D(uTex, uv);
+        t = grab(uv, tear, off);
     }
 
     // The wash buffer accumulated each colour scaled by its own contribution, and the contributions
@@ -248,6 +278,7 @@ export function createRenderer(canvas, capacity) {
         intensity: gl.getUniformLocation(washProg, 'uIntensity'),
         split: gl.getUniformLocation(washProg, 'uSplit'),
         hissTime: gl.getUniformLocation(washProg, 'uHissTime'),
+        rush: gl.getUniformLocation(washProg, 'uRush'),
     };
 
     // ⚠ Implementations cap gl_PointSize, and the cap can be as low as 64. Points here stay well
@@ -333,7 +364,7 @@ export function createRenderer(canvas, capacity) {
         },
 
         draw({ points, count, aspect, pointScale, alpha, glow, warp,
-               washSpread, washAlpha, washIntensity, washKeep = 1, keep, zNear, zFar, hiss }) {
+               washSpread, washAlpha, washIntensity, washKeep = 1, keep, zNear, zFar, hiss, rush }) {
             if (!count) return 0;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, dataBuf);
@@ -412,6 +443,7 @@ export function createRenderer(canvas, capacity) {
             gl.uniform1f(wLoc.intensity, washIntensity);
             gl.uniform2f(wLoc.split, hiss ? hiss.split : 0, hiss ? hiss.tear : 0);
             gl.uniform1f(wLoc.hissTime, hiss ? hiss.time : 0);
+            gl.uniform1f(wLoc.rush, rush || 0);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
             gl.disableVertexAttribArray(wLoc.quad);
 

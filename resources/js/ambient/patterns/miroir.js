@@ -11,7 +11,7 @@
  * has been established is an event.
  */
 
-import { lerp, smoothstep, wander } from './util.js';
+import { lerp, smoothstep, wander, cast } from './util.js';
 
 export default {
     id: 'miroir',
@@ -21,6 +21,9 @@ export default {
 
     enter(ctx) {
         this.escape = ctx.bobs.map(() => ({ x: (ctx.rng() - 0.5) * 1.5, y: (ctx.rng() - 0.5) * 1.0 }));
+        // Role 4 stands on the axis and is its own reflection; the other four pair off. Drawn per
+        // run, or the same colour is the still point every time — see `cast`.
+        this.part = cast(ctx.bobs.length, ctx.rng);
         return true;
     },
 
@@ -45,14 +48,16 @@ export default {
         for (let i = 0; i < ctx.bobs.length; i++) {
             let u, v, z;
 
-            if (i === 4) {
+            const role = this.part[i];
+
+            if (role === 4) {
                 // On the axis, and therefore its own reflection. The still point of the figure.
                 u = 0;
                 v = wander(t * 0.29, 3.3) * 0.55;
                 z = 1.15 + wander(t * 0.23, 1.9) * 0.35;
             } else {
-                const pair = leaders[i >> 1];
-                const side = i % 2 === 0 ? 1 : -1;
+                const pair = leaders[role >> 1];
+                const side = role % 2 === 0 ? 1 : -1;
                 u = pair.u * side;
                 v = pair.v;
                 z = 1.2 + pair.v * 0.5 * side;

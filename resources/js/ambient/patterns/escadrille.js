@@ -10,7 +10,7 @@
  * It costs a ring buffer of the leader's positions and nothing else.
  */
 
-import { wander, clamp, lerp } from './util.js';
+import { wander, clamp, lerp, cast } from './util.js';
 
 const HISTORY = 240;      // ~4 s at 60 Hz, comfortably more than the deepest lag
 
@@ -33,6 +33,9 @@ export default {
         this.roam = lerp(0.65, 1.0, r());          // how far the leader ranges
         this.pace = lerp(0.42, 0.72, r());
         this.seed = [r() * 6.28, r() * 6.28, r() * 6.28];
+        // Who leads and who flies which wing. By index before, so the same colour was always out in
+        // front — see `cast`.
+        this.part = cast(ctx.bobs.length, r);
         return true;
     },
 
@@ -70,8 +73,9 @@ export default {
         const out = [];
         for (let i = 0; i < ctx.bobs.length; i++) {
             const bob = ctx.bobs[i];
-            const wing = i === 0 ? 0 : Math.ceil(i / 2);      // 0, 1, 1, 2, 2
-            const side = i === 0 ? 0 : (i % 2 === 1 ? -1 : 1);
+            const role = this.part[i];
+            const wing = role === 0 ? 0 : Math.ceil(role / 2);      // 0, 1, 1, 2, 2
+            const side = role === 0 ? 0 : (role % 2 === 1 ? -1 : 1);
             const past = wing === 0 ? lead : at(wing * this.lag);
 
             // Roll into the turn, the outer wingmen a little more than the leader.

@@ -65,11 +65,22 @@ const THICK = 0.09;      // the ring has a little body, or it reads as wire
  * to 0.88 doubles the room, which buys **twice the speed for the same eighty milliseconds of
  * return**. Nothing is lost on screen: the extra share is spent where the ring is out of frame.
  */
-const FORWARD = 0.88;
+const FORWARD = 0.82;
 
 /** Seconds for one ring to travel the whole corridor, at pace 1. A ring passes about every fifth
  *  of that, so this is a bit over a third of a second between rings at rest. */
-const LAP_SECONDS = 1.6;
+/**
+ * 🔴 This number sets how often a ring sweeps past, and that is a safety question before it is an
+ * aesthetic one. Ten rings cross per lap, so the rate is `10 · pace / LAP_SECONDS` — at 1.6 that was
+ * six a second at rest and a dozen flat out, squarely inside the 3–30 Hz band that matters for
+ * photosensitivity. At 2.8 it is three a second at rest, and the top is only reached by holding the
+ * pointer down on purpose.
+ *
+ * ⚠ It is not the main guard and must not be mistaken for one: `calm: false` keeps this figure out
+ * of the rotation entirely for anyone whose system asks for reduced motion. This is what protects
+ * everybody else.
+ */
+const LAP_SECONDS = 2.8;
 
 /** Nearest a point may sit. Below 0.12 the engine floors it and the ring stops being a ring. */
 const Z_FLOOR = 0.14;
@@ -136,13 +147,24 @@ const LOOK = 0.45;
  * a ride that lost as fast as it gained would spend its time at a standstill, which is the one thing
  * this figure must never be.
  */
-// ⚠ These two are not readable as a ratio: the descent is throttled as the ceiling nears and the
-// climb is not, so a pair that LOOKS asymmetric measured out exactly even — gain 0.75, loss 0.75.
-// The figures below are set from what came out, not from what they say.
-const GRAVITY_DOWN = 5.2;   // pace gained per second on the steepest descent
-const GRAVITY_UP = 0.85;    // and shed per second on the steepest climb
-const RELAX = 0.7;          // how eagerly it returns to its resting speed on the flat
-const MIN_PACE = 0.55;      // never a standstill
+/**
+ * 🔴 A coaster, written as one: gravity along the track, and drag that grows with the SQUARE of the
+ * speed. Everything asked for falls out of those two terms rather than being arranged.
+ *
+ * | asked for | what produces it |
+ * |---|---|
+ * | the resting speed IS the minimum | on the flat the only force left is drag, so it coasts down to the floor and stays |
+ * | the top is not reached in a moment | `dv/dt = g·s − k·v²` approaches its limit asymptotically; the last quarter of the range takes as long as the first three |
+ * | a real top speed | the limit is `√(g·s/k)`, so raising it is a matter of the ratio rather than of a clamp |
+ * | gaining beats losing | falling has gravity behind it, climbing has gravity minus whatever you brought into the hill — the asymmetry is in the physics, not in two constants |
+ *
+ * ⚠ The previous version had a pair of constants meant to be asymmetric and measured out exactly
+ * even, because a taper near the ceiling cancelled the advantage it gave the descent. There is no
+ * taper here and no ceiling to taper against: drag does that work, and it does it honestly.
+ */
+const GRAVITY = 2.9;        // pull along the track, per unit of slope
+const DRAG = 0.1;           // resistance, per unit of speed squared
+const MIN_PACE = 0.8;       // the resting speed, and the floor: a coaster on the flat is still rolling
 
 /**
  * The braking that hands the figure over.
@@ -164,14 +186,20 @@ const BRAKE_TO = 0.42;      // the pace it coasts down to
  * either, and 12 passes in 181 turned back with most of the cloud still on screen.
  *
  * What has to stay bounded is the PRODUCT `rate × pace` — the units of corridor covered per second —
- * and 1.9 is the figure that measured clean. The base speed having gone up, the ceiling comes down
- * to keep that product where it was.
+ * against the time the return needs.
  *
- * ⚠ And it is approached, not hit. A hard clamp reads as the acceleration stopping for no reason —
- * which is exactly how it was reported — so the pull tapers away as the ceiling nears. That is what
- * a terminal velocity feels like, and it is a thing bodies do.
+ * ⚠ This is now a backstop rather than the thing you feel. Drag settles the ride well below it, so
+ * nothing reaches this in normal use; it is here to keep the return safe if a slope, a scroll warp
+ * and a burst of steering ever conspire.
  */
-const MAX_PACE = 2.0;
+const MAX_PACE = 3.9;
+
+/** Where the ride starts to rattle, as a fraction of the drag-limited top speed, and how hard. */
+const SHAKE_FROM = 0.62;
+const SHAKE = 0.022;
+
+/** Where the light starts to smear, same scale. */
+const RUSH_FROM = 0.5;
 
 export default {
     id: 'tunnel',
@@ -332,11 +360,11 @@ export default {
         // running fast and easing back rather than snapping to a value — which is the whole
         // difference between a rollercoaster and a slider.
         //
-        // ⚠ And it never stops. `MIN_PACE` is a floor with a good deal of travel left under the
-        // resting speed, because a corridor that comes to rest is not a slow corridor, it is a
-        // still image of one.
+        // ⚠ And it never stops. The floor is where it coasts to, not a speed it is held at: on the
+        // flat, drag is the only force left and it settles here.
         const { mid, amp, p1, h1, p2, h2 } = this.tempo;
-        const resting = mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2)));
+        // A small wobble on the floor itself, so two runs do not idle at exactly the same speed.
+        const floor = MIN_PACE * (mid + amp * 0.18 * Math.sin(TAU * (t / p1 + h1)));
         // ⚠ The rails are laid FIRST: the gradient about to be read is read off them.
         this.lay(ctx);
 
@@ -345,22 +373,21 @@ export default {
         // speed therefore say the same thing at the same moment: you tip the nose down, the corridor
         // ahead tips down, and you gather speed. That is what was broken.
         const slope = (this.axis(LOOK)[1] - this.axis(0)[1]) / LOOK;   // positive is downhill
-        // The pull fades as the ceiling nears, so the ride runs out of acceleration rather than
-        // running into a wall. `headroom` is 1 at rest and 0 at the top.
-        const headroom = clamp((MAX_PACE - this.pace) / (MAX_PACE - 1), 0, 1);
-        const pull = slope > 0 ? slope * GRAVITY_DOWN * headroom : slope * GRAVITY_UP;
-
-        // Coasting into the handover. The target it settles towards drops away over the last couple
-        // of seconds, so the corridor is already slowing when the next figure takes it — and it
-        // slows by the same relaxation as everything else here, which is why it reads as coasting
-        // rather than as the pattern being switched off.
+        // Coasting into the handover: extra drag over the last couple of seconds, so the corridor is
+        // already slowing when the next figure takes it — and it slows by the same physics as
+        // everything else here, which is why it reads as coasting rather than as being switched off.
         const braking = smoothstep(BRAKE_FROM, 1, ctx.progress);
-        const settle = lerp(resting, BRAKE_TO, braking);
 
-        this.pace = clamp(
-            this.pace + ((settle - this.pace) * (RELAX + braking * 1.4) + pull * (1 - braking)) * ctx.dt,
-            MIN_PACE, MAX_PACE,
-        );
+        // 🔴 Gravity along the track, minus drag proportional to the square of the speed. Two terms,
+        // and every quality asked of the ride falls out of them — see GRAVITY above.
+        const pull = slope * GRAVITY * (1 - braking);
+        const drag = (DRAG + braking * 0.9) * this.pace * this.pace;
+        this.pace = clamp(this.pace + (pull - drag) * ctx.dt, floor, MAX_PACE);
+
+        // How far up the range we are, for the things that only happen at speed. Measured against
+        // the limit drag actually allows on the steepest descent, not against the backstop.
+        const top = Math.sqrt((GRAVITY * 0.45) / DRAG);
+        const fast = clamp((this.pace - floor) / Math.max(0.1, top - floor));
 
         const speed = this.rate * this.pace;      // field units per second, right now
         this.travel += speed * ctx.dt;
@@ -372,8 +399,14 @@ export default {
         // LAP_SECONDS; the next person to make this faster would have found the rings turning back
         // in plain sight again, with nothing on screen to say why.
         const budget = SLOP * 0.5;
-        const haste = clamp((2 * speed) / (budget * SOFTEST_BOB), 3, 60);
-        const grip = clamp((2 * speed) / (budget * SOFTEST_POINT), 4, 45);
+        // ⚠ The ceilings were 60 and 45, and the faster ride reaches straight through them: at
+        // 3.4 units a second the formula asks for 60 and 73, so the grip clamp would have bitten
+        // and the ring would have stopped clearing the frame — the fault this whole figure has been
+        // chased around three times. Raised to what the new top speed needs, which both springs can
+        // now carry because they are substepped: at six substeps the point spring tolerates 250 and
+        // this asks 73.
+        const haste = clamp((2 * speed) / (budget * SOFTEST_BOB), 3, 95);
+        const grip = clamp((2 * speed) / (budget * SOFTEST_POINT), 4, 85);
 
         // The corridor starts folded and opens over two seconds, half of it ahead and half behind
         // the middle depth, so no ring has to cross the whole field to take its place.
@@ -389,7 +422,27 @@ export default {
         // the bend the worse. Aiming ahead puts the near ring back on the axis, where it exits
         // cleanly, and costs nothing elsewhere: the far rings keep their full offset, which is the
         // bend you actually see.
-        const [cx, cy] = this.axis(this.zTurn);
+        const aim = this.axis(this.zTurn);
+
+        /**
+         * The rattle, once the ride is running hard.
+         *
+         * ⚠ Applied to the aim rather than to the rings, so the whole corridor shakes together and
+         * nothing is displaced RELATIVE to anything else — the geometry that lets a ring leave the
+         * frame is untouched. It is the car rattling, not the tunnel coming apart.
+         *
+         * ⚠ Deliberately small and not a flash: a positional jitter of a diffuse field, ramping in
+         * over the last third of the range. A background that starts strobing at speed would undo
+         * the care taken over the ring rate a few constants above.
+         */
+        const rattle = smoothstep(SHAKE_FROM, 1, fast) * SHAKE;
+        const cx = aim[0] + (rattle ? wander(t * 47, 1.3) * rattle : 0);
+        const cy = aim[1] + (rattle ? wander(t * 53, 4.1) * rattle : 0);
+
+        // Told to the engine, which hands it to the light pass: at speed the glow smears outward
+        // from the vanishing point. See the wash shader.
+        ctx.setRush(smoothstep(RUSH_FROM, 1, fast));
+
         const out = [];
 
         for (let i = 0; i < n; i++) {
