@@ -79,6 +79,25 @@ const WASH_ALPHA = 0.05;
 const WASH_INTENSITY = 0.5;
 
 /**
+ * The two dials that cost nothing to look at.
+ *
+ * 🔴 The light pass is where this background spends most of its GPU: every point is drawn four
+ * times its own width, and there are eleven thousand of them. These two reduce that **without
+ * touching the picture**, which is why they exist separately from the ones above — those are
+ * choices about how it looks, these are not.
+ *
+ * `WASH_DIV` is the buffer's coarseness, and a point's size relative to that buffer does not depend
+ * on it (see the renderer): raising it draws the same image at a lower sampling rate, and the fill
+ * falls as its square. `WASH_KEEP` is how many points contribute; the pass is a sum of hundreds of
+ * overlapping discs, so half of them at twice the light is the same sum with more grain — grain
+ * that is then blurred away by the upscale.
+ *
+ * ⚠ Both were set from a pixel-by-pixel comparison against the full-cost render, not by eye.
+ */
+const WASH_DIV = 7;
+const WASH_KEEP = 0.5;
+
+/**
  * The five allegiances. The hues carry over from the background this replaces — three blues
  * anchoring the composition, mauve and glacial cyan for colour breath — but they are now the
  * colour of a body rather than of a veil, and they are never averaged with one another.
@@ -223,6 +242,9 @@ export function createEngine() {
         alpha: POINT_ALPHA, glow: POINT_GLOW, pointSize: POINT_SIZE,
         radius: CLOUD_RADIUS, perCloud: PER_CLOUD,
         washSpread: WASH_SPREAD, washAlpha: WASH_ALPHA, wash: WASH_INTENSITY,
+        // How coarse the light buffer is, and how many points contribute to it. Both are pure cost
+        // levers: see the notes in the renderer for why neither changes the picture.
+        washDiv: WASH_DIV, washKeep: WASH_KEEP,
     };
     rebuildStatic(tune.perCloud);
 
@@ -237,7 +259,7 @@ export function createEngine() {
         w = canvas.width = Math.max(2, Math.round(cw * s));
         h = canvas.height = Math.max(2, Math.round(ch * s));
         aspect = w / h;
-        renderer.resize(w, h);
+        renderer.resize(w, h, tune.washDiv);
     }
 
     function budget(dtMs) {
@@ -409,6 +431,7 @@ export function createEngine() {
             washSpread: tune.washSpread,
             washAlpha: tune.washAlpha * (calm ? 0.8 : 1),
             washIntensity: tune.wash,
+            washKeep: tune.washKeep,
             warp,
             keep: KEEPS[keepIndex],
             zNear: Math.max(0.12, zMin), zFar: Math.max(zMin + 0.01, zMax),
@@ -463,7 +486,13 @@ export function createEngine() {
                 get tune() { return { ...tune }; },
                 set(key, v) {
                     if (!(key in tune)) return { ...tune };
-                    if (key === 'perCloud') {
+                    if (key === 'washDiv') {
+                        // The light buffer has to be reallocated for a new coarseness — changing
+                        // the number alone would draw into a texture of the old size.
+                        tune.washDiv = Math.max(1, Math.min(16, Math.round(v)));
+                        lastW = 0;
+                        resize();
+                    } else if (key === 'perCloud') {
                         // Bounded by what the buffers were allocated for, and the colour/size layout
                         // has to follow it — see rebuildStatic.
                         tune.perCloud = Math.max(50, Math.min(CLOUD_CAPACITY, Math.round(v)));

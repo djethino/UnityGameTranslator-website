@@ -180,7 +180,17 @@ void main() {
 const BUCKETS = 512;
 
 /** The wash is a blur by construction: drawn small, stretched back. A fifth is plenty. */
-const WASH_DIV = 5;
+/**
+ * How much smaller the light buffer is than the frame.
+ *
+ * 🔴 Raising this is very nearly free, visually, and that is not obvious. A point is drawn at
+ * `pointScale/WASH_DIV × spread` pixels into a buffer `h/WASH_DIV` tall — so its size **relative to
+ * the buffer** is `pointScale × spread / h`, which does not contain WASH_DIV at all. Doubling the
+ * divisor therefore draws the same picture at half the resolution rather than a different picture,
+ * and the fill cost falls as its square. On a glow that is already blurred by its own upscale, the
+ * coarser sampling is what nobody can see.
+ */
+const WASH_DIV_DEFAULT = 5;
 
 function compile(gl, type, source) {
     const shader = gl.createShader(type);
@@ -276,7 +286,10 @@ export function createRenderer(canvas, capacity) {
     gl.enable(gl.BLEND);
     gl.disable(gl.DEPTH_TEST);
 
-    let W = 0, H = 0, washW = 0, washH = 0;
+    let W = 0, H = 0, washW = 0, washH = 0, washDiv = WASH_DIV_DEFAULT;
+    // Every Nth point, for the light pass. Rebuilt only when the count or the stride changes.
+    let washOrder = null, washStride = 0, washFor = 0;
+    const washIndexBuf = gl.createBuffer();
 
     function bindPointAttribs() {
         gl.bindBuffer(gl.ARRAY_BUFFER, dataBuf);
@@ -307,10 +320,11 @@ export function createRenderer(canvas, capacity) {
             gl.clear(gl.COLOR_BUFFER_BIT);
         },
 
-        resize(w, h) {
+        resize(w, h, div = washDiv) {
             W = w; H = h;
-            washW = Math.max(16, Math.round(w / WASH_DIV));
-            washH = Math.max(16, Math.round(h / WASH_DIV));
+            washDiv = div;
+            washW = Math.max(16, Math.round(w / washDiv));
+            washH = Math.max(16, Math.round(h / washDiv));
             gl.bindTexture(gl.TEXTURE_2D, washTex);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, washW, washH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.bindFramebuffer(gl.FRAMEBUFFER, washFbo);
@@ -319,7 +333,7 @@ export function createRenderer(canvas, capacity) {
         },
 
         draw({ points, count, aspect, pointScale, alpha, glow, warp,
-               washSpread, washAlpha, washIntensity, keep, zNear, zFar, hiss }) {
+               washSpread, washAlpha, washIntensity, washKeep = 1, keep, zNear, zFar, hiss }) {
             if (!count) return 0;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, dataBuf);
@@ -346,10 +360,40 @@ export function createRenderer(canvas, capacity) {
             bindPointAttribs();
             gl.uniform1f(pLoc.aspect, aspect);
             gl.uniform1f(pLoc.warp, warp || 0);
-            gl.uniform1f(pLoc.alpha, washAlpha);
+            /**
+             * 🔴 Half the points, twice the light each — and the sum is the same sum.
+             *
+             * This pass is hundreds of overlapping soft discs added together; what lands on a pixel
+             * is a mean, and a mean does not care whether it was made of N contributions of a or
+             * N/2 of 2a. Only the graininess of that mean changes, by the square root of the ratio,
+             * on a quantity that is then blurred by being drawn small and stretched back up.
+             *
+             * ⚠ Strided rather than truncated. The points are laid out cloud by cloud, so taking a
+             * prefix would light the first clouds and leave the last ones dark; every second point
+             * takes the same share from each.
+             */
+            const stride = Math.max(1, Math.round(1 / Math.min(1, Math.max(0.05, washKeep))));
+            if (stride > 1) {
+                if (washStride !== stride || washFor !== count) {
+                    const n = Math.ceil(count / stride);
+                    washOrder = new Uint16Array(n);
+                    for (let i = 0, k = 0; i < count; i += stride, k++) washOrder[k] = i;
+                    washStride = stride; washFor = count;
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, washIndexBuf);
+                    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, washOrder, gl.STATIC_DRAW);
+                }
+                gl.uniform1f(pLoc.alpha, washAlpha * stride);
+            } else {
+                gl.uniform1f(pLoc.alpha, washAlpha);
+            }
             gl.uniform1f(pLoc.glow, 1.0);   // all halo, no core: this is a glow, not a grain
-            gl.uniform1f(pLoc.pointScale, Math.min(maxPoint, (pointScale / WASH_DIV) * washSpread));
-            gl.drawArrays(gl.POINTS, 0, count);
+            gl.uniform1f(pLoc.pointScale, Math.min(maxPoint, (pointScale / washDiv) * washSpread));
+            if (stride > 1) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, washIndexBuf);
+                gl.drawElements(gl.POINTS, washOrder.length, gl.UNSIGNED_SHORT, 0);
+            } else {
+                gl.drawArrays(gl.POINTS, 0, count);
+            }
 
             // ---- composite the light onto the frame ----
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
