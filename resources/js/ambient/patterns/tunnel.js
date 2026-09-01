@@ -56,12 +56,20 @@ const TAU = Math.PI * 2;
 const RING = 1.6;
 const THICK = 0.09;      // the ring has a little body, or it reads as wire
 
-/** Fraction of a cycle spent coming towards you. The rest is the flick back. */
-const FORWARD = 0.94;
+/**
+ * Fraction of a cycle spent coming towards you. The rest is the flick back.
+ *
+ * 🔴 This constant is what caps the speed, and that is not obvious. The return has to carry a ring
+ * across the whole corridor, and the time it gets is `span·(1/FORWARD − 1) / speed` — so at 0.94 it
+ * had a twentieth of a lap, and going fast squeezed that below what any spring can do. Widening it
+ * to 0.88 doubles the room, which buys **twice the speed for the same eighty milliseconds of
+ * return**. Nothing is lost on screen: the extra share is spent where the ring is out of frame.
+ */
+const FORWARD = 0.88;
 
 /** Seconds for one ring to travel the whole corridor, at pace 1. A ring passes about every fifth
  *  of that, so this is a bit over a third of a second between rings at rest. */
-const LAP_SECONDS = 2.1;
+const LAP_SECONDS = 1.6;
 
 /** Nearest a point may sit. Below 0.12 the engine floors it and the ring stops being a ring. */
 const Z_FLOOR = 0.14;
@@ -114,11 +122,16 @@ const SAMPLE = 0.28;
  */
 const STEER = 0.8;
 const BANK = 0.3;
+/** How fast the commanded tilt itself may change, per second. Guards against a pointer that jumps. */
+const TILT_RATE = 6;
 
-/** The ride: how hard pointing down pulls, how fast it settles back, and the two ends. */
-const GRAVITY = 1.7;      // pace gained per second at the very bottom of the screen
-const RELAX = 0.85;       // how eagerly it returns to its resting speed once you let go
-const MIN_PACE = 0.45;    // never a standstill
+/** How far ahead of the car the gradient is read. Short enough to be the hill it is ON. */
+const LOOK = 0.45;
+
+/** The ride: how hard a gradient pulls, how fast it settles back, and the two ends. */
+const GRAVITY = 2.6;      // pace gained per second on the steepest descent
+const RELAX = 0.7;        // how eagerly it returns to its resting speed on the flat
+const MIN_PACE = 0.55;    // never a standstill
 
 /**
  * 🔴 The ceiling is not a matter of taste, it is where this figure's own return stops working.
@@ -136,7 +149,7 @@ const MIN_PACE = 0.45;    // never a standstill
  * which is exactly how it was reported — so the pull tapers away as the ceiling nears. That is what
  * a terminal velocity feels like, and it is a thing bodies do.
  */
-const MAX_PACE = 1.65;
+const MAX_PACE = 2.0;
 
 export default {
     id: 'tunnel',
@@ -185,13 +198,11 @@ export default {
 
         // ── the corridor itself, laid down one length at a time ──
         //
-        // 🔴 It is not a function of the station any more, it is a HISTORY. Each length is worked
-        // out from the one before it plus wherever the visitor is pointing, so the tunnel is
-        // genuinely steered rather than merely animated — and because a length once laid is never
-        // revised, what you are flying through stays a rigid piece of geometry. That is the whole
-        // reason it can respond to a hand without coming apart.
-        this.spine = [{ s: this.travel - SAMPLE, x: 0, y: 0 }];
-        this.bend = { vx: 0, vy: 0 };
+        // Rebuilt every frame by `lay`, outward from the camera. Nothing is remembered from one
+        // frame to the next, which is exactly what makes the corridor answer the hand at once.
+        this.rail = null;
+        this.wantX = 0;
+        this.wantY = 0;
         this.drift = [rnd() * 6.28, rnd() * 6.28];   // where it wanders when nobody is steering
 
         // ── the pace: when it presses on and when it eases off ──
@@ -221,52 +232,71 @@ export default {
     },
 
     /**
-     * Lay the corridor down as far ahead as anybody will look, and forget what is behind.
+     * Lay the corridor out ahead of the camera, this frame, from where the hand is pointing.
      *
-     * ⚠ The steering has momentum: the hand sets where the corridor WANTS to go, and the bend eases
-     * towards it over a few lengths. Point hard right and the tunnel does not kink, it banks — and
-     * it is still banking a moment after the hand has stopped, which is what makes it feel like a
-     * thing with mass rather than a cursor read-out.
+     * 🔴 Built OUTWARD FROM THE CAMERA every frame — each length from the one before it plus the
+     * steering — and not laid down in advance. That distinction was the whole of what made the ride
+     * incomprehensible.
+     *
+     * The first version wrote the track into a history that ran three and a half units ahead of the
+     * car, which is where new track has to go if it is never to be revised. It is rigid, and it is
+     * unplayable: your hand only reached the car two and a half seconds later, so the speed changed
+     * for a reason that had left the screen. Measured — the pace was still climbing long after the
+     * hand had been let go.
+     *
+     * ⚠ What is given up is that the far end of the corridor reshapes as you steer, instead of
+     * standing still while you fly into it. What is bought is that the corridor bends where you
+     * point, NOW, and the speed changes for a reason you can see. For a background that answers a
+     * hand, that trade is not close.
+     *
+     * ⚠ The bend accumulates with distance, so the ring about to swallow you barely moves while the
+     * far end swings: that gradient IS the read of a turn. A corridor displaced bodily would just be
+     * a corridor somewhere else.
      */
-    grow(ctx, upTo) {
+    lay(ctx) {
         const p = ctx.pointer;
         const steering = p && p.active;
-        while (this.spine[this.spine.length - 1].s < upTo) {
-            const last = this.spine[this.spine.length - 1];
-            const s = last.s + SAMPLE;
+        // Where the hand asks the track to tilt, as a slope. With nobody pointing it wanders on its
+        // own, so the figure is never a straight pipe on a machine that has no mouse.
+        const cmdX = steering ? p.x * STEER : wander(this.travel * 0.55 + this.drift[0], this.drift[0]) * STEER * 0.8;
+        const cmdY = steering ? p.y * STEER * 0.8 : wander(this.travel * 0.41 + this.drift[1], this.drift[1]) * STEER * 0.6;
 
-            // Where the corridor is asked to head. With nobody pointing it wanders on its own, so
-            // the figure is never a straight pipe on a machine that has no mouse.
-            const wantX = steering ? p.x * STEER : wander(s * 0.55 + this.drift[0], this.drift[0]) * STEER * 0.8;
-            const wantY = steering ? p.y * STEER * 0.8 : wander(s * 0.41 + this.drift[1], this.drift[1]) * STEER * 0.6;
+        // ⚠ Eased in TIME as well as along the corridor, and the two are not the same guard. `BANK`
+        // smooths the bend with distance, which does nothing about a pointer that moves instantly —
+        // and on a touch screen it does: a tap somewhere else teleports it. Measured, an
+        // instantaneous jump swung the far rings a quarter of a screen in one frame. A sixth of a
+        // second of lag costs nothing anybody can feel and makes that impossible.
+        const k = Math.min(1, ctx.dt * TILT_RATE);
+        this.wantX += (cmdX - this.wantX) * k;
+        this.wantY += (cmdY - this.wantY) * k;
 
-            this.bend.vx += (wantX - this.bend.vx) * BANK;
-            this.bend.vy += (wantY - this.bend.vy) * BANK;
+        // Eased along the corridor rather than applied flat, so a turn arrives as a curve and the
+        // near rings stay put while the far ones swing.
+        const reach = Z_FAR + this.lap + 1;
+        const n = Math.ceil(reach / SAMPLE) + 2;
+        if (!this.rail || this.rail.length !== n * 2) this.rail = new Float32Array(n * 2);
 
-            // ⚠ Deliberately unbounded. See STEER: the axis may drift as far as it likes because
-            // every reading of it is a difference against the camera's own place on it, and a
-            // common drift cancels. Clamping the position instead of the slope is what flattened
-            // the corridor to a dead straight pipe.
-            this.spine.push({
-                s,
-                x: last.x + this.bend.vx * SAMPLE,
-                y: last.y + this.bend.vy * SAMPLE,
-            });
+        let vx = 0, vy = 0, x = 0, y = 0;
+        for (let i = 0; i < n; i++) {
+            this.rail[i * 2] = x;
+            this.rail[i * 2 + 1] = y;
+            vx += (this.wantX - vx) * BANK;
+            vy += (this.wantY - vy) * BANK;
+            x += vx * SAMPLE;
+            y += vy * SAMPLE;
         }
-        // Behind us and out of reach of every lookup — dropped, or a long visit grows an array for
-        // the whole of it.
-        let keep = 0;
-        while (keep + 2 < this.spine.length && this.spine[keep + 1].s < this.travel - SAMPLE) keep++;
-        if (keep) this.spine.splice(0, keep);
     },
 
-    /** Where the corridor's axis sits at a station, read off the spine. */
-    axis(s) {
-        const sp = this.spine;
-        const i = clamp(Math.floor((s - sp[0].s) / SAMPLE), 0, sp.length - 2);
-        const a = sp[i], b = sp[i + 1];
-        const k = clamp((s - a.s) / SAMPLE);
-        return [lerp(a.x, b.x, k), lerp(a.y, b.y, k)];
+    /** Where the corridor's axis sits a given distance AHEAD OF THE CAMERA. */
+    axis(d) {
+        const rail = this.rail;
+        const last = rail.length / 2 - 2;
+        const i = clamp(Math.floor(d / SAMPLE), 0, last);
+        const k = clamp(d / SAMPLE - i);
+        return [
+            lerp(rail[i * 2], rail[i * 2 + 2], k),
+            lerp(rail[i * 2 + 1], rail[i * 2 + 3], k),
+        ];
     },
 
     update(ctx) {
@@ -285,8 +315,14 @@ export default {
         // still image of one.
         const { mid, amp, p1, h1, p2, h2 } = this.tempo;
         const resting = mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2)));
-        const p = ctx.pointer;
-        const slope = p && p.active ? p.y : 0;     // +1 is the bottom of the screen: nose down
+        // ⚠ The rails are laid FIRST: the gradient about to be read is read off them.
+        this.lay(ctx);
+
+        // 🔴 The speed comes from the gradient of the track AT THE CAR — which, because the track is
+        // now built outward from the car, is the tilt the hand is asking for right now. Track and
+        // speed therefore say the same thing at the same moment: you tip the nose down, the corridor
+        // ahead tips down, and you gather speed. That is what was broken.
+        const slope = (this.axis(LOOK)[1] - this.axis(0)[1]) / LOOK;   // positive is downhill
         // The pull fades as the ceiling nears, so the ride runs out of acceleration rather than
         // running into a wall. `headroom` is 1 at rest and 0 at the top.
         const headroom = clamp((MAX_PACE - this.pace) / (MAX_PACE - 1), 0, 1);
@@ -298,7 +334,6 @@ export default {
 
         const speed = this.rate * this.pace;      // field units per second, right now
         this.travel += speed * ctx.dt;
-        this.grow(ctx, this.travel + Z_FAR + this.lap + 1);
 
         // 🔴 The stiffness is derived from the speed, not chosen. A critically damped spring
         // following a ramp settles `2v/omega` behind it, so the eagerness needed to stay within a
@@ -324,7 +359,7 @@ export default {
         // the bend the worse. Aiming ahead puts the near ring back on the axis, where it exits
         // cleanly, and costs nothing elsewhere: the far rings keep their full offset, which is the
         // bend you actually see.
-        const [cx, cy] = this.axis(this.travel + this.zTurn);
+        const [cx, cy] = this.axis(this.zTurn);
         const out = [];
 
         for (let i = 0; i < n; i++) {
@@ -333,25 +368,16 @@ export default {
             let w = (this.travel + (i / n - 0.4) * this.lap * open) % this.lap;
             if (w < 0) w += this.lap;
 
-            let z, station, slide;
+            let z;
             if (w <= this.span) {
-                // Coming at you. Depth falls exactly as fast as `travel` rises, which is what keeps
-                // the station — and therefore the bend — fixed while the ring is in flight.
-                z = Z_FAR - w;
-                station = this.travel + z;
-                slide = 0;
+                z = Z_FAR - w;                    // coming at you
                 bob.haste = haste;
                 bob.grip = grip;
             } else {
                 // Gone past, and out of sight since `zTurn`. The flick back, eased at both ends and
-                // hurried by a stiffened spring so it is over in about four tenths of a second.
+                // hurried by a stiffened spring so it is over in about a tenth of a second.
                 const k = easeInOut((w - this.span) / (this.lap - this.span));
                 z = lerp(this.zTurn, Z_FAR, k);
-                // ⚠ The station it held when it turned, not the one it would have now. `travel` has
-                // moved on since — reading it live would slide the ring sideways for the whole of
-                // the return, which is the one thing this branch exists to avoid.
-                station = this.travel - (w - this.span) + this.zTurn;
-                slide = k;
                 // The flick back covers the corridor in a fraction of the time the trip took, so it
                 // needs more of both than the approach — proportionally, from the same figures.
                 bob.haste = Math.min(60, haste * 1.6);
@@ -366,20 +392,20 @@ export default {
             // would simply have stopped being a ring.
             bob.charm = 0;
 
-            // Its own place along the corridor, minus ours: what is left is where it sits on screen.
-            // During the flick it slides to the station one lap further on — which is the station it
-            // will hold for the whole of its next trip, so nothing has to move again when it lands.
-            const here = this.axis(station);
-            const next = this.axis(station + this.lap);
-            const ax = lerp(here[0], next[0], slide) - cx;
-            const ay = lerp(here[1], next[1], slide) - cy;
+            // 🟢 Where the corridor is at that depth, minus where it is at ours. With the rail built
+            // outward from the camera, a ring's depth IS its distance along it — so this is the
+            // whole of the lateral placement, and the flick back needs no special case: as `z`
+            // climbs, the ring simply follows the corridor back out to the far end.
+            const [rx, ry] = this.axis(z);
+            const ax = rx - cx;
+            const ay = ry - cy;
 
             // 🔴 The rings turn by DIFFERENT amounts, and that is the whole trick. A circle rotated
             // is the same circle, so a rigid turn would be invisible; only the offset between one
             // ring and the next can be seen. Tied to the station, the twist is a fixed helix cut
             // into the corridor — travel faster and the rings arrive turning faster, for nothing.
             bob.scale = 1;
-            bob.twist = station * 1.35 + this.travel * 0.30;
+            bob.twist = (this.travel + z) * 1.35 + this.travel * 0.30;
 
             out.push({ x: ax, y: ay, z });
         }
