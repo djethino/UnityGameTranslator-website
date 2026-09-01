@@ -45,6 +45,20 @@ export function createConductor({ engine, pickAnchor, strings }) {
     let rogueClock = 0;
     let scroll = 0;   // signed scroll velocity for this frame, for the patterns that ride it
 
+    /**
+     * Moves in progress: one entry per cloud that has been asked to be somewhere else.
+     *
+     * 🔴 A cloud is put out before it is moved and brought back after — so nothing is ever seen to
+     * jump, whoever asked and whenever. Owned here rather than by the figures because a rule every
+     * figure has to remember is a rule the next one written will not.
+     *
+     * ⚠ Out is quicker than in. Going dark fast is what makes the move invisible; coming back slowly
+     * is what makes the arrival read as an arrival rather than as a second jump.
+     */
+    const moving = new Array(bobs.length).fill(null);
+    const FADE_OUT = 0.11;   // seconds
+    const FADE_IN = 0.26;
+
     function instantiate(module, seed) {
         // A fresh object over the module, so `this.buf`, `this.glyph` and friends belong to THIS
         // run. Using the module directly would let two overlapping runs of the same pattern write
@@ -134,9 +148,18 @@ export function createConductor({ engine, pickAnchor, strings }) {
              * The ambush looked like the clouds were boomeranging back; the tunnel looked like the
              * first ring backed away every time instead of letting you in.
              */
+            /**
+             * ⚠ ASKS for a move. It does not perform one — see `carry()` below.
+             *
+             * 🔴 A cross-fade blends TARGETS, so it smooths everything a pattern can ask for except
+             * a position that has already been assigned. Two attempts at guarding this by hand both
+             * failed, and the second was worse than the first: refusing the move to an outgoing
+             * figure left it springing across the frame instead. The lesson is that "when is a
+             * teleport safe" is the wrong question — it is never safe while anything can be seen,
+             * so the conductor makes sure nothing can.
+             */
             teleport: (i, x, y, z) => {
-                bobs[i].place(x, y, z);
-                clouds[i].place(bobs[i], engine.radius * bobs[i].scale);
+                if (!moving[i]) moving[i] = { t: 0, to: { x, y, z }, done: false };
             },
         };
     }
@@ -163,6 +186,41 @@ export function createConductor({ engine, pickAnchor, strings }) {
             warp: inst._warp,
             props: bobs.map((b) => PROPS.map((k) => b[k])),
         };
+    }
+
+    /**
+     * Carry out the moves that were asked for, in the dark.
+     *
+     * Out over FADE_OUT, the actual displacement at the bottom, back over FADE_IN. The target is
+     * held at the destination during the whole thing, so the spring has nothing to fight and the
+     * cloud does not start drifting away from where it was just put.
+     */
+    function carry(dt, targets) {
+        for (let i = 0; i < moving.length; i++) {
+            const m = moving[i];
+            if (!m) continue;
+
+            m.t += dt;
+
+            if (!m.done && m.t >= FADE_OUT) {
+                m.done = true;
+                bobs[i].place(m.to.x, m.to.y, m.to.z);
+                // ⚠ The population goes too. Moving the centre alone leaves several hundred points
+                // where they were, each on its own spring, and they cross the whole field to catch
+                // up — which is the journey the move existed to avoid.
+                clouds[i].place(bobs[i], engine.radius * bobs[i].scale);
+            }
+
+            if (m.t >= FADE_OUT + FADE_IN) { moving[i] = null; continue; }
+
+            bobs[i].gain *= m.done
+                ? smoothstep(0, FADE_IN, m.t - FADE_OUT)
+                : 1 - smoothstep(0, FADE_OUT, m.t);
+
+            // Held at the destination for the length of the move: a target still pointing at the
+            // old place would drag the cloud straight back out of it.
+            if (m.done && targets[i]) { targets[i].x = m.to.x; targets[i].y = m.to.y; targets[i].z = m.to.z; }
+        }
     }
 
     function orbit(dt, time) {
@@ -229,13 +287,16 @@ export function createConductor({ engine, pickAnchor, strings }) {
     const play = (id) => {
         const found = PATTERNS.find((p) => p.id === id);
         if (!found) return PATTERNS.map((p) => p.id);
+        // ⚠ `current` is NOT cleared. It becomes the outgoing half of the cross-fade, exactly as
+        // in the ordinary sequence — clearing it made the new figure appear with no transition at
+        // all, which is a different thing from what the rotation does and would have hidden every
+        // fault the transition is supposed to smooth.
         queue.unshift(found);
-        current = null;
         advance();
         return current ? current.id : 'refused';
     };
 
-    return Object.assign(function frame({ dt, patternTime, scroll: velocity }) {
+    function frame({ dt, patternTime, scroll: velocity }) {
         scroll = velocity || 0;
         if (!current) advance();
 
@@ -265,6 +326,10 @@ export function createConductor({ engine, pickAnchor, strings }) {
             PROPS.forEach((key, j) => { bobs[i][key] = props[i][j]; });
         }
 
+        // 🔴 And the moves, LAST — after the blend, so no figure's brightness can bring back a cloud
+        // the conductor has just put out in order to move it.
+        carry(dt, targets);
+
         orbit(dt, patternTime);
         if (rogue) {
             const r = rogueTarget(patternTime);
@@ -283,5 +348,33 @@ export function createConductor({ engine, pickAnchor, strings }) {
         if (current.t >= current.duration && blend >= 1) advance();
 
         return targets;
-    }, { play, get playing() { return current && current.id; } });
+    }
+
+    // 🔴 defineProperties, not Object.assign.
+    //
+    // Assign INVOKES a getter on the source and stores the value it returned, so these would have
+    // been frozen on the state of the very first hand-over — and they were. Every reading of what
+    // was on screen came back as the same figure at progress zero, for six simulated minutes of
+    // rotation, while the field was plainly moving.
+    //
+    // ⚠ It cost three rounds of chasing the wrong cause. A diagnostic that lies is worse than none:
+    // without it you know you do not know, with it you attribute every fault you find to whatever
+    // it happens to be saying.
+    return Object.defineProperties(frame, {
+        play: { value: play },
+        playing: { get() { return current && current.id; } },
+        /** Who is on screen, who is leaving, and how far each is through its own timeline.
+         *  A fault during a hand-over cannot be attributed without all four. */
+        phase: {
+            get() {
+                return {
+                    current: current && current.id,
+                    currentAt: current ? +(current.t / current.duration).toFixed(3) : null,
+                    previous: previous && previous.id,
+                    previousAt: previous ? +(previous.t / previous.duration).toFixed(3) : null,
+                    blend: +blend.toFixed(3),
+                };
+            },
+        },
+    });
 }

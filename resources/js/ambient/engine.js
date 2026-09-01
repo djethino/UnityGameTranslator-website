@@ -371,6 +371,7 @@ export function createEngine() {
                 /** Put a named figure on screen now; with no argument, lists them all. */
                 play: (id) => onFrame.play(id),
                 get playing() { return onFrame.playing; },
+                get phase() { return onFrame.phase; },
                 /** Advance `n` frames by hand — see stepOnce. */
                 step: (n = 1) => { for (let i = 0; i < n; i++) stepOnce(); return onFrame.playing; },
                 /**
@@ -384,6 +385,23 @@ export function createEngine() {
                     for (let i = 0; i < used; i++) if (!Number.isFinite(points[i])) return false;
                     return true;
                 },
+                /**
+                 * Each cloud as the eye would meet it: where it lands on the screen in clip units
+                 * (±1 is the edge of the frame) and how brightly it is drawn.
+                 *
+                 * 🔴 This is what makes "a cloud never jumps" a testable claim rather than an
+                 * intention. A jump is a large change of screen position in one frame WHILE the
+                 * cloud is visible — two quantities, and neither could be read from outside before.
+                 */
+                seen: () => bobs.map((b) => {
+                    const p = 1 / b.z;
+                    return {
+                        x: Math.round((b.x * p / aspect) * 1000) / 1000,
+                        y: Math.round((-b.y * p) * 1000) / 1000,
+                        z: Math.round(b.z * 1000) / 1000,
+                        gain: Math.round(b.gain * 1000) / 1000,
+                    };
+                }),
                 stats: () => ({
                     // Where each cloud currently is in depth. Small, and the only way to see from
                     // outside whether a figure that is supposed to come towards you is doing so —

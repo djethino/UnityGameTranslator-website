@@ -103,6 +103,14 @@ export default {
                 // Far away and small again, drifting back to something a pattern could pick up.
                 const back = easeOut(clamp((p - PASS) / (1 - PASS)));
                 const a = (i / ctx.bobs.length) * Math.PI * 2;
+
+                // ⚠ Picked up where the charge left it, not reset. The charge ends at 1.5 and this
+                // branch used to say nothing, so brightness fell to 1 in a single frame — a step of
+                // more than half, on the exact frame the phases change. A quantity that two phases
+                // both write has to agree at the boundary; neither phase is wrong on its own, which
+                // is why nothing but a measurement across the seam would have found it.
+                bob.gain = lerp(1.5, 1, back);
+
                 out.push({
                     x: Math.cos(a) * lerp(0.25, 0.5, back),
                     y: Math.sin(a) * lerp(0.18, 0.34, back),
