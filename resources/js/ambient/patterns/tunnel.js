@@ -60,8 +60,8 @@ const THICK = 0.09;      // the ring has a little body, or it reads as wire
 const FORWARD = 0.94;
 
 /** Seconds for one ring to travel the whole corridor, at pace 1. A ring passes about every fifth
- *  of that, so this is roughly half a second between rings at rest and a quarter when it presses. */
-const LAP_SECONDS = 2.8;
+ *  of that, so this is a bit over a third of a second between rings at rest. */
+const LAP_SECONDS = 2.1;
 
 /** Nearest a point may sit. Below 0.12 the engine floors it and the ring stops being a ring. */
 const Z_FLOOR = 0.14;
@@ -92,11 +92,28 @@ const SOFTEST_POINT = 2.2;
 /** How far apart the corridor is worked out, in field units. Finer than a ring's spacing, so no
  *  ring ever sits on a length nobody computed. */
 const SAMPLE = 0.28;
-/** How hard a hand can turn the corridor, and how quickly the bend answers. */
-const STEER = 0.55;
-const BANK = 0.09;
-/** How far off the axis the corridor may wander before it stops being one. */
-const WANDER_MAX = 0.62;
+/**
+ * How hard a hand can turn the corridor, and how quickly the bend answers.
+ *
+ * 🔴 `STEER` is a SLOPE, not a position, and that distinction is the whole of what went wrong the
+ * first time. There used to be a `WANDER_MAX` clamping how far the axis could stray, on the
+ * reasoning that a corridor which walks off the screen stops being one. It does not limit the
+ * bend — it **abolishes** it: everything here is measured as `axis(ring) − axis(camera)`, so once
+ * the axis is pressed against its limit both terms are the limit and the difference is exactly
+ * zero. Simulated: with the hand held to one side the rings sat dead centre at every depth, which
+ * is precisely what was reported.
+ *
+ * ⚠ Nothing needs that clamp. The offset is relative, so a common drift cancels on its own, and
+ * what actually has to be bounded is the slope — which is this constant. Over a corridor 2.2 units
+ * long a slope of 0.8 puts the far end about half a screen off centre, and it cannot grow beyond
+ * that however long the hand is held.
+ *
+ * `BANK` only sets how quickly the bend arrives, not how far it goes. At 0.09 its time constant was
+ * 3.1 units — longer than the whole visible corridor, so the turn had not begun by the time you had
+ * flown through it.
+ */
+const STEER = 0.8;
+const BANK = 0.3;
 
 /** The ride: how hard pointing down pulls, how fast it settles back, and the two ends. */
 const GRAVITY = 1.7;      // pace gained per second at the very bottom of the screen
@@ -111,10 +128,15 @@ const MIN_PACE = 0.45;    // never a standstill
  * stiff. The cycle then degenerated: the ring never reached the far end, so it never left the frame
  * either, and 12 passes in 181 turned back with most of the cloud still on screen.
  *
- * At 2.2 the return gets about eighty milliseconds, which is what it had when it was measured
- * clean. The ride keeps a range of nearly five to one, which is plenty to feel.
+ * What has to stay bounded is the PRODUCT `rate × pace` — the units of corridor covered per second —
+ * and 1.9 is the figure that measured clean. The base speed having gone up, the ceiling comes down
+ * to keep that product where it was.
+ *
+ * ⚠ And it is approached, not hit. A hard clamp reads as the acceleration stopping for no reason —
+ * which is exactly how it was reported — so the pull tapers away as the ceiling nears. That is what
+ * a terminal velocity feels like, and it is a thing bodies do.
  */
-const MAX_PACE = 2.2;
+const MAX_PACE = 1.65;
 
 export default {
     id: 'tunnel',
@@ -221,13 +243,14 @@ export default {
             this.bend.vx += (wantX - this.bend.vx) * BANK;
             this.bend.vy += (wantY - this.bend.vy) * BANK;
 
-            // ⚠ Clamped, and the clamp is what keeps it a corridor. Left free the axis would walk
-            // off and the rings would leave the frame sideways, which reads as the tunnel breaking
-            // rather than as a bend.
+            // ⚠ Deliberately unbounded. See STEER: the axis may drift as far as it likes because
+            // every reading of it is a difference against the camera's own place on it, and a
+            // common drift cancels. Clamping the position instead of the slope is what flattened
+            // the corridor to a dead straight pipe.
             this.spine.push({
                 s,
-                x: clamp(last.x + this.bend.vx * SAMPLE, -WANDER_MAX, WANDER_MAX),
-                y: clamp(last.y + this.bend.vy * SAMPLE, -WANDER_MAX * 0.7, WANDER_MAX * 0.7),
+                x: last.x + this.bend.vx * SAMPLE,
+                y: last.y + this.bend.vy * SAMPLE,
             });
         }
         // Behind us and out of reach of every lookup — dropped, or a long visit grows an array for
@@ -264,8 +287,12 @@ export default {
         const resting = mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2)));
         const p = ctx.pointer;
         const slope = p && p.active ? p.y : 0;     // +1 is the bottom of the screen: nose down
+        // The pull fades as the ceiling nears, so the ride runs out of acceleration rather than
+        // running into a wall. `headroom` is 1 at rest and 0 at the top.
+        const headroom = clamp((MAX_PACE - this.pace) / (MAX_PACE - 1), 0, 1);
+        const pull = slope > 0 ? slope * GRAVITY * headroom : slope * GRAVITY;
         this.pace = clamp(
-            this.pace + ((resting - this.pace) * RELAX + slope * GRAVITY) * ctx.dt,
+            this.pace + ((resting - this.pace) * RELAX + pull) * ctx.dt,
             MIN_PACE, MAX_PACE,
         );
 
