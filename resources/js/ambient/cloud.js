@@ -60,6 +60,28 @@ export class Cloud {
         this.phase = new Float32Array(count);
         this.jitter = new Float32Array(count);
 
+        /**
+         * How much of the pointer's pull a point feels — its weight, seen from the other end.
+         *
+         * 🔴 A fifth of them feel nothing at all, and that is the whole reason this is per point
+         * rather than per cloud. Give every point the same susceptibility and the cursor moves the
+         * shape; give them a spread with some at zero and the cursor TEARS it — the light ones fly
+         * off, the heavy ones sag, the deaf ones hold the outline, and what is left behind is
+         * recognisably the same shape with a bite out of it.
+         */
+        this.heft = new Float32Array(count);
+
+        /**
+         * How recently this point was disturbed, 1 down to 0, decaying over about half a second.
+         *
+         * 🔴 It exists because the bounce happens AFTER the hand has gone. Softening the damping
+         * only while a point is being pushed achieves nothing: the push holds it out of place, and
+         * the moment it is released the spring is critically damped again — which is precisely the
+         * damping that never overshoots. The disturbance has to outlive its cause by about as long
+         * as the return takes, or there is no return worth watching.
+         */
+        this.stir = new Float32Array(count);
+
         const rnd = mulberry(index * 7919 + 13);
         for (let i = 0; i < count; i++) {
             // 2.2 to 9.0 — better than a factor of four between the most and least eager point.
@@ -67,6 +89,8 @@ export class Cloud {
             this.omega[i] = 2.2 + rnd() * 6.8;
             this.phase[i] = rnd() * TAU;
             this.jitter[i] = 0.004 + rnd() * 0.012;
+            const r = rnd();
+            this.heft[i] = r < 0.2 ? 0 : 0.3 + (r - 0.2) * 0.875;
         }
 
         this.ball(rnd);
@@ -113,14 +137,17 @@ export class Cloud {
      * instead of presenting the same face for twelve seconds. `shearX`/`shearY` lean it into a turn,
      * and `yaw` turns it in depth.
      */
-    update(centre, radius, dt, time, spin = 0, shearX = 0, shearY = 0, active = this.count, yaw = 0, grip = 1) {
+    update(centre, radius, dt, time, spin = 0, shearX = 0, shearY = 0, active = this.count, yaw = 0, grip = 1, magnet = null) {
         const cs = Math.cos(spin), sn = Math.sin(spin);
         // ⚠ A second rotation, about the VERTICAL axis, and it is not the same as `spin`. Spin
         // turns the arrangement in the plane of the screen — a ring keeps facing you. Yaw turns it
         // in depth, so what was at the front goes behind: that is what makes a globe a globe rather
         // than a spinning disc, and it is the only rotation that changes a point's z.
         const cy = Math.cos(yaw), sy = Math.sin(yaw);
-        const { shape, pos, vel, omega, phase, jitter } = this;
+        const { shape, pos, vel, omega, phase, jitter, heft, stir } = this;
+        // How much of a disturbance survives this frame. Half a second is about what a loose point
+        // takes to come home, so the spring is still soft while it is on its way back.
+        const fade = Math.exp(-dt / 0.45);
         // `active` thins the population without paying to integrate points nobody will draw.
         const count = Math.min(active, this.count);
 
@@ -167,12 +194,52 @@ export class Cloud {
             // the spring smooths it — added to the position it reads as noise, not as life.
             // ⚠ Computed ONCE, outside the substep loop below: it does not change within a frame,
             // and it carries the three sines, which are the expensive part of this loop.
-            const tx = centre.x + rx * radius + Math.sin(time * 0.7 + ph) * jt;
-            const ty = centre.y + ry * radius + Math.cos(time * 0.61 + ph * 1.3) * jt;
+            let tx = centre.x + rx * radius + Math.sin(time * 0.7 + ph) * jt;
+            let ty = centre.y + ry * radius + Math.cos(time * 0.61 + ph * 1.3) * jt;
             const tz = centre.z + oz * radius * 0.85 + Math.sin(time * 0.53 + ph * 0.7) * jt;
 
-            // Critically damped, semi-implicit, over `steps` substeps.
-            const k = w * w, c = 2 * w;
+            // ── the pointer, if this cloud has an opinion about it ──
+            // Measured where the cursor actually is: on the glass. `p = 1/z` is the same projection
+            // the vertex shader does, so "next to the cursor" here means next to it on screen.
+            let stirred = stir[i] * fade;
+            if (magnet && heft[i] > 0) {
+                const p = 1 / tz;
+                // ⚠ The pointer arrives with y pointing DOWN (it is a viewport coordinate) and the
+                // projection has y pointing UP, so the cursor's clip position is `-py`. Subtracting
+                // it gives `+ magnet.py`, and getting that wrong mirrors the whole interaction
+                // vertically — invisible to any test that keeps the cursor on the horizon, which is
+                // exactly what every one of mine did.
+                const dx = (tx * p) / magnet.aspect - magnet.px;
+                const dy = -ty * p + magnet.py;
+                const d2 = dx * dx + dy * dy;
+                const r2 = magnet.reach * magnet.reach;
+                if (d2 < r2) {
+                    // Zero at the edge and flat there, not merely small: outside the reach a point
+                    // is exactly where its figure put it.
+                    const f = 1 - d2 / r2;
+                    const fall = f * f;
+                    const d = Math.sqrt(d2) || 1e-5;
+                    // Positive drives away from the cursor, so an attracted cloud (mood > 0) pulls in.
+                    let move = -magnet.mood * magnet.amp * fall * heft[i];
+                    // ⚠ An attracted point may not be dragged PAST the cursor, or it oscillates
+                    // through it and the attraction reads as a jitter.
+                    if (move < -d * 0.85) move = -d * 0.85;
+                    tx += ((dx / d) * move) * tz * magnet.aspect;
+                    ty += (-(dy / d) * move) * tz;
+                    const now = Math.abs(move) / magnet.amp;
+                    if (now > stirred) stirred = now;
+                }
+            }
+            stir[i] = stirred;
+
+            // Semi-implicit, and critically damped only while nothing is stirring it.
+            //
+            // 🔴 The bounce lives in this line. A critically damped spring is the fastest return
+            // with NO overshoot — which is right for following a figure and wrong for letting go of
+            // something you have just displaced, where the eye expects the small elastic overrun
+            // every phone has taught it to expect. Damping is eased down with the disturbance, so
+            // the springiness appears exactly where a hand went through and nowhere else.
+            const k = w * w, c = 2 * w * (1 - 0.42 * stirred);
             let vx = vel[j], vy = vel[j + 1], vz = vel[j + 2];
             let px = pos[j], py = pos[j + 1], pz = pos[j + 2];
             for (let s = 0; s < steps; s++) {

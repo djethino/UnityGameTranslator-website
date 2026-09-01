@@ -22,6 +22,8 @@ import { Bob, Z_NEAR, Z_FAR } from './bob.js';
 import { Cloud } from './cloud.js';
 import { createRenderer } from './gl/renderer.js';
 import { backgroundSpeed, level, onMotionChange } from './motion.js';
+import { createMagnetism } from './magnetism.js';
+import { pointer } from './pointer.js';
 
 export const CLOUD_COUNT = 5;
 
@@ -114,6 +116,7 @@ export function createEngine() {
 
     const bobs = Array.from({ length: CLOUD_COUNT }, (_, i) => new Bob(i));
     const clouds = bobs.map((_, i) => new Cloud(i, CLOUD_CAPACITY, PALETTE[i]));
+    const magnetism = createMagnetism(CLOUD_COUNT);
 
     const colors = new Float32Array(capacity * 3);
     const sizes = new Float32Array(capacity);
@@ -282,6 +285,13 @@ export function createEngine() {
         let zMin = Infinity, zMax = -Infinity;
         const perCloud = tune.perCloud;
 
+        // 🔴 The pointer layer sits ON TOP of whatever the figures decided, and it is the last word
+        // before the points are integrated — a cloud fleeing the cursor does so out of the shape it
+        // was asked to hold, not instead of it. Read once per frame rather than per cloud, so the
+        // five agree about where the cursor is.
+        const hand = pointer();
+        magnetism.update(wall, hand.active, calm);
+
         for (let c = 0; c < CLOUD_COUNT; c++) {
             const bob = bobs[c];
             bob.follow(targets[c] || { x: bob.x, y: bob.y, z: bob.z }, time, wall);
@@ -292,7 +302,8 @@ export function createEngine() {
             // replacing it, so a pattern that wants a rotation gets one without having to
             // reproduce the idle behaviour it is built on.
             cloud.update(bob, tune.radius * bob.scale, wall, time, time * 0.12 + c + bob.twist,
-                         bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip);
+                         bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip,
+                         magnetism.at(c, hand, aspect, bob, tune.radius * bob.scale));
 
             const pos = cloud.pos;
             const gain = bob.gain;
@@ -424,15 +435,26 @@ export function createEngine() {
                 onscreen: () => bobs.map((b, c) => {
                     const per = tune.perCloud;
                     const base = c * per;
-                    let inside = 0;
+                    let inside = 0, sx = 0, sy = 0, sxx = 0, syy = 0;
                     for (let i = 0; i < per; i++) {
                         const j = (base + i) * 4;
                         const p = 1 / points[j + 2];
                         const x = points[j] * p / aspect;
                         const y = -points[j + 1] * p;
                         if (x >= -1 && x <= 1 && y >= -1 && y <= 1) inside++;
+                        sx += x; sy += y; sxx += x * x; syy += y * y;
                     }
-                    return { inside, of: per, z: Math.round(b.z * 1000) / 1000 };
+                    const cx = sx / per, cy = sy / per;
+                    const r = (v) => Math.round(v * 1000) / 1000;
+                    return {
+                        inside, of: per, z: r(b.z),
+                        // Where the cloud's mass sits on screen and how far it is thrown about it.
+                        // ⚠ The only way to see the pointer layer from outside: it displaces points
+                        // WITHIN a cloud, so every reading based on the cloud's centre — which it
+                        // never touches — reports that nothing happened.
+                        cx: r(cx), cy: r(cy),
+                        spread: r(Math.sqrt(Math.max(0, sxx / per - cx * cx) + Math.max(0, syy / per - cy * cy))),
+                    };
                 }),
                 stats: () => ({
                     // Where each cloud currently is in depth. Small, and the only way to see from
@@ -440,6 +462,10 @@ export function createEngine() {
                     // the tunnel's rings looked like they were retreating and nothing else showed
                     // it.
                     depths: bobs.map((b) => Math.round(b.z * 1000) / 1000),
+                    // How each cloud currently feels about the cursor: -1 flees, 0 indifferent,
+                    // +1 drawn in. The only way to see from outside that the five are not all
+                    // doing the same thing — which is the entire point of the layer.
+                    moods: magnetism.moods,
                     points: CLOUD_COUNT * tune.perCloud,
                     drawn: Math.round(CLOUD_COUNT * tune.perCloud * KEEPS[keepIndex]),
                     buffer: `${w}x${h}`, scale: SCALES[scaleIndex], keep: KEEPS[keepIndex],
