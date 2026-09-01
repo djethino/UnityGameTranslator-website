@@ -20,7 +20,13 @@
  * forbidden by a rule; there is simply nothing in this file that could carry it out.
  */
 
+import { SINE } from './trig.js';
+
 const TAU = Math.PI * 2;
+
+// Hoisted out of the object once, at module load: the point loop reads these millions of times a
+// second and a property lookup per read is not free.
+const SINE_T = SINE.table, SINE_M = SINE.mask, SINE_K = SINE.scale, SINE_Q = SINE.quarter;
 
 /**
  * The stiffest a point may be for a given step, as `omega · dt`.
@@ -194,9 +200,14 @@ export class Cloud {
             // the spring smooths it — added to the position it reads as noise, not as life.
             // ⚠ Computed ONCE, outside the substep loop below: it does not change within a frame,
             // and it carries the three sines, which are the expensive part of this loop.
-            let tx = centre.x + rx * radius + Math.sin(time * 0.7 + ph) * jt;
-            let ty = centre.y + ry * radius + Math.cos(time * 0.61 + ph * 1.3) * jt;
-            const tz = centre.z + oz * radius * 0.85 + Math.sin(time * 0.53 + ph * 0.7) * jt;
+            // ⚠ Read straight out of the sine table, indexed inline rather than through `sin()`:
+            // this is the innermost line of the whole background — thirty-three thousand of these a
+            // frame — and it is the one place where saving a function call is worth the ugliness.
+            // See trig.js for why a 4096-entry table is three orders of magnitude finer than it
+            // needs to be here.
+            let tx = centre.x + rx * radius + SINE_T[((time * 0.7 + ph) * SINE_K) & SINE_M] * jt;
+            let ty = centre.y + ry * radius + SINE_T[((time * 0.61 + ph * 1.3) * SINE_K + SINE_Q) & SINE_M] * jt;
+            const tz = centre.z + oz * radius * 0.85 + SINE_T[((time * 0.53 + ph * 0.7) * SINE_K) & SINE_M] * jt;
 
             // ── the pointer, if this cloud has an opinion about it ──
             // Measured where the cursor actually is: on the glass. `p = 1/z` is the same projection

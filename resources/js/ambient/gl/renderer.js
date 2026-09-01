@@ -126,10 +126,41 @@ const WASH_FRAG = `
 precision mediump float;
 uniform sampler2D uTex;
 uniform float uIntensity;
+/** x = how far the channels pull apart, y = how much the horizontal bands tear. 0 = off. */
+uniform vec2 uSplit;
+/** Advances with time; only used to move the bands, so it need not be a real clock. */
+uniform float uHissTime;
 varying vec2 vUv;
 
+float band(float y) {
+    // Two rates that share no multiple, so the tearing never settles into a rhythm you can
+    // anticipate — the same trick the bobs' private drift uses.
+    return sin(y * 148.0 + uHissTime * 31.0) * 0.6 + sin(y * 57.3 - uHissTime * 17.0) * 0.4;
+}
+
 void main() {
-    vec4 t = texture2D(uTex, vUv);
+    vec2 uv = vUv;
+    vec4 t;
+
+    if (uSplit.x > 0.0) {
+        // 🔴 The background's own RGB break-up, and it lives HERE rather than on the whole canvas.
+        // This pass is the light the clouds cast — a fifth of the resolution, already blurred by
+        // the upscale — so pulling its channels apart costs two extra taps at one twenty-fifth of
+        // the pixels, and it cannot touch the bodies drawn afterwards. Those must stay sharp: a
+        // glitch that smears everything reads as a broken screen, one that smears only the glow
+        // reads as a signal.
+        float tear = band(uv.y) * uSplit.y;
+        uv.x += tear;
+        vec2 off = vec2(uSplit.x, 0.0);
+        // Sampled per channel, alpha taken from the middle one: alpha is how much light landed
+        // here, and splitting THAT would make the wash flicker in brightness rather than in colour.
+        float r = texture2D(uTex, uv + off).r;
+        vec4 g = texture2D(uTex, uv);
+        float b = texture2D(uTex, uv - off).b;
+        t = vec4(r, g.g, b, g.a);
+    } else {
+        t = texture2D(uTex, uv);
+    }
 
     // The wash buffer accumulated each colour scaled by its own contribution, and the contributions
     // themselves in alpha. Dividing recovers the blended hue — the average of every cloud that lit
@@ -205,6 +236,8 @@ export function createRenderer(canvas, capacity) {
         quad: gl.getAttribLocation(washProg, 'aQuad'),
         tex: gl.getUniformLocation(washProg, 'uTex'),
         intensity: gl.getUniformLocation(washProg, 'uIntensity'),
+        split: gl.getUniformLocation(washProg, 'uSplit'),
+        hissTime: gl.getUniformLocation(washProg, 'uHissTime'),
     };
 
     // ⚠ Implementations cap gl_PointSize, and the cap can be as low as 64. Points here stay well
@@ -232,6 +265,10 @@ export function createRenderer(canvas, capacity) {
 
     const order = new Uint16Array(capacity);
     const counts = new Int32Array(BUCKETS + 1);
+    // Each point's bucket, kept between the sort's two passes. Allocated once for the life of the
+    // page — a counting sort that recomputes its key on the second pass does the arithmetic twice
+    // for eleven thousand points, every frame, to arrive at the number it had a moment ago.
+    const bucket = new Int16Array(capacity);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, dataBuf);
     gl.bufferData(gl.ARRAY_BUFFER, capacity * 4 * 4, gl.DYNAMIC_DRAW);
@@ -282,7 +319,7 @@ export function createRenderer(canvas, capacity) {
         },
 
         draw({ points, count, aspect, pointScale, alpha, glow, warp,
-               washSpread, washAlpha, washIntensity, keep, zNear, zFar }) {
+               washSpread, washAlpha, washIntensity, keep, zNear, zFar, hiss }) {
             if (!count) return 0;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, dataBuf);
@@ -329,6 +366,8 @@ export function createRenderer(canvas, capacity) {
             gl.bindTexture(gl.TEXTURE_2D, washTex);
             gl.uniform1i(wLoc.tex, 0);
             gl.uniform1f(wLoc.intensity, washIntensity);
+            gl.uniform2f(wLoc.split, hiss ? hiss.split : 0, hiss ? hiss.tear : 0);
+            gl.uniform1f(wLoc.hissTime, hiss ? hiss.time : 0);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
             gl.disableVertexAttribArray(wLoc.quad);
 
@@ -339,25 +378,40 @@ export function createRenderer(canvas, capacity) {
             // placing only some leaves holes in `order`, and the draw reads whatever is in them.
             const span = zFar - zNear || 1;
             const thin = keep < 1;
-            const kept = (i) => !thin || ((Math.imul(i, 2654435761) >>> 8) % 1024) / 1024 < keep;
+            // ⚠ The threshold as an INTEGER, compared against an integer: the old form divided by
+            // 1024 and compared floats, twice per point per frame, to answer a yes/no question.
+            const keepUpTo = (keep * 1024) | 0;
+            const kept = (i) => !thin || ((Math.imul(i, 2654435761) >>> 8) % 1024) < keepUpTo;
+            // ⚠ Reciprocal once, multiply per point. This runs twice for each of eleven thousand
+            // points every frame, and a divide is the most expensive arithmetic here by a wide
+            // margin.
+            const perUnit = (BUCKETS - 1) / span;
             const bucketOf = (z) => {
                 // Reversed on purpose: bucket 0 is the FAR end, so the natural order is
                 // back-to-front, which is what alpha blending needs.
-                const b = Math.floor(BUCKETS - 1 - ((z - zNear) / span) * (BUCKETS - 1));
+                // ⚠ `| 0` rather than Math.floor: the argument is known non-negative after the
+                // clamp below, and the two agree there.
+                const b = (BUCKETS - 1 - (z - zNear) * perUnit) | 0;
                 return b < 0 ? 0 : b >= BUCKETS ? BUCKETS - 1 : b;
             };
 
             counts.fill(0);
             for (let i = 0; i < count; i++) {
-                if (!kept(i)) continue;
-                counts[bucketOf(points[i * 4 + 2]) + 1]++;
+                // -1 marks a point this frame is not drawing, so the second pass needs no second
+                // opinion about it — the two passes MUST agree, and the cheapest way to guarantee
+                // that is for only one of them to decide.
+                if (!kept(i)) { bucket[i] = -1; continue; }
+                const b = bucketOf(points[i * 4 + 2]);
+                bucket[i] = b;
+                counts[b + 1]++;
             }
             for (let b = 0; b < BUCKETS; b++) counts[b + 1] += counts[b];
 
             let drawn = 0;
             for (let i = 0; i < count; i++) {
-                if (!kept(i)) continue;
-                order[counts[bucketOf(points[i * 4 + 2])]++] = i;
+                const b = bucket[i];
+                if (b < 0) continue;
+                order[counts[b]++] = i;
                 drawn++;
             }
 

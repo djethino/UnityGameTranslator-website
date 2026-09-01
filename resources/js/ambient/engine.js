@@ -21,7 +21,7 @@
 import { Bob, Z_NEAR, Z_FAR } from './bob.js';
 import { Cloud } from './cloud.js';
 import { createRenderer } from './gl/renderer.js';
-import { backgroundSpeed, level, onMotionChange } from './motion.js';
+import { backgroundSpeed, level, onMotionChange, glitchInterval } from './motion.js';
 import { createMagnetism } from './magnetism.js';
 import { pointer } from './pointer.js';
 
@@ -112,6 +112,53 @@ export function createEngine() {
         canvas.remove();
         document.body.classList.add('ambient-unavailable');
         return null;
+    }
+
+    /**
+     * The background's own break-up: every so often the wash's colour channels pull apart and its
+     * bands tear sideways, for a fraction of a second.
+     *
+     * ⚠ It keeps its OWN rhythm — it is not synchronised with the glitches that hit the page's text
+     * and images, and it must not be. Two things that always happen together read as one thing
+     * happening; two that merely happen in the same room read as a place that is unstable.
+     *
+     * ⚠ But it obeys the same setting, because it is the same kind of event as far as anyone
+     * reading the page is concerned: turn glitches off in the profile and the background stops
+     * doing this too.
+     */
+    const hiss = { split: 0, tear: 0, time: 0, wait: 3 + Math.random() * 6, left: 0, span: 0, force: 0 };
+
+    function crackle(dt) {
+        hiss.time += dt;
+        const every = glitchInterval();
+        if (!every) { hiss.split = 0; hiss.tear = 0; return; }
+
+        if (hiss.left > 0) {
+            hiss.left -= dt;
+            // A burst is not a fade: it stutters, so the eye reads interference rather than an
+            // effect being applied. Full strength at the start, ragged after.
+            const k = Math.max(0, hiss.left / hiss.span);
+            const stutter = 0.45 + 0.55 * Math.abs(Math.sin(hiss.time * 47));
+            const amp = k * k * stutter * hiss.force;
+            // ⚠ Both are in UV, so both are fractions of the WHOLE screen — which is why the tear
+            // is two hundredths and not a half. The first version read `amp * 0.5`, and since `amp`
+            // reaches about 1.2 that displaced the background by sixty per cent of its width: not a
+            // crackle, a torn screen. A number that looks modest is not modest until you know what
+            // it is a fraction of.
+            hiss.split = amp * 0.004;      // ≈ 10 px of channel separation on a 1920-wide display
+            hiss.tear = amp * 0.02;        // ≈ 38 px of sideways tearing, at the very worst
+            return;
+        }
+
+        hiss.split = 0;
+        hiss.tear = 0;
+        hiss.wait -= dt;
+        if (hiss.wait > 0) return;
+        // Scaled by the visitor's chosen frequency, like every other glitch in the site.
+        hiss.wait = (2.5 + Math.random() * 7) * every;
+        hiss.span = 0.12 + Math.random() * 0.34;
+        hiss.left = hiss.span;
+        hiss.force = 0.55 + Math.random() * 0.8;
     }
 
     const bobs = Array.from({ length: CLOUD_COUNT }, (_, i) => new Bob(i));
@@ -291,6 +338,10 @@ export function createEngine() {
         // five agree about where the cursor is.
         const hand = pointer();
         magnetism.update(wall, hand.active, calm);
+        // ⚠ On `wall`, not on the pattern clock: the background's break-up is an electrical fault,
+        // not part of the universe the figures live in, so slowing that universe down must not slow
+        // the interference with it.
+        crackle(wall);
 
         for (let c = 0; c < CLOUD_COUNT; c++) {
             const bob = bobs[c];
@@ -330,6 +381,7 @@ export function createEngine() {
             warp,
             keep: KEEPS[keepIndex],
             zNear: Math.max(0.12, zMin), zFar: Math.max(zMin + 0.01, zMax),
+            hiss: hiss.split > 0 ? hiss : null,
         });
 
         requestAnimationFrame(frame);
@@ -466,6 +518,10 @@ export function createEngine() {
                     // +1 drawn in. The only way to see from outside that the five are not all
                     // doing the same thing — which is the entire point of the layer.
                     moods: magnetism.moods,
+                    // The background's break-up, right now: how far the channels are pulled apart
+                    // and how long this burst has left. Zero for most of the time, by design.
+                    hiss: { split: +hiss.split.toFixed(5), tear: +hiss.tear.toFixed(3),
+                            left: +Math.max(0, hiss.left).toFixed(2) },
                     points: CLOUD_COUNT * tune.perCloud,
                     drawn: Math.round(CLOUD_COUNT * tune.perCloud * KEEPS[keepIndex]),
                     buffer: `${w}x${h}`, scale: SCALES[scaleIndex], keep: KEEPS[keepIndex],
