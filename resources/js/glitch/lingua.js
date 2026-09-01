@@ -29,10 +29,14 @@ import { pickTextualMany } from './targets.js';
  * a re-render, fired in sequence they look like a sweep.
  */
 const tune = {
-    wave: [3, 5],           // how many words a wave carries
-    stagger: 420,           // ms; the first is immediate, the others land within this
+    wave: [4, 7],           // how many words a wave carries
+    stagger: 620,           // ms; the first is immediate, the others land within this
     cue: 220,               // ms of cathode-ray stutter before the change, and again before the return
-    shown: [900, 1500],     // how long one word stays in the other language
+    // 🔴 Long enough to READ. This is the glitch that says what the site is for, and at nine tenths
+    // of a second most readers only registered that something moved. Two to three and a half
+    // seconds is a word you have time to look at and recognise as another language — and it is
+    // still one word in a paragraph, so nothing anybody is actually reading is held hostage.
+    shown: [2000, 3500],
     // ⚠ No interval here any more — see glitch/orchestra.js. This file decides what a wave is.
     spread: 0.22,           // minimum distance between two words, as a fraction of the viewport
     chrome: 0.3,            // how much less often the nav, header and footer are picked (1 = as often)
@@ -151,13 +155,35 @@ function swap(node, text, ms) {
 
     const cue = tune.cue;
 
-    setTimeout(() => {
-        if (done) return;
-        if (!box.isConnected) return finish();
-        ghost.classList.remove('lingua-cue');
-        ghost.textContent = text;
-        ghost.classList.add('lingua-swap');
-    }, cue);
+    /**
+     * 🔴 It settles by catching, not by switching.
+     *
+     * This is the glitch that carries the site's meaning — it is a translation tool, and a word
+     * quietly becoming another language says that better than any sentence on the page. So it has to
+     * be SEEN: long enough to read, and arriving in a way that draws the eye to it. A word that
+     * simply changes is a word most readers never notice changed.
+     *
+     * ⚠ It must not fight the reader for the line they are on, which is why the flicker is at the
+     * start — while the eye is being caught — and the word then holds still for the whole of its
+     * stay. A word blinking for two seconds is unreadable, and unreadable is worse than unseen.
+     */
+    const blinks = 1 + ((Math.random() * 3) | 0);
+    for (let k = 0; k < blinks; k++) {
+        const on = cue + k * (90 + Math.random() * 120);
+        setTimeout(() => {
+            if (done || !box.isConnected) return;
+            ghost.classList.remove('lingua-cue');
+            ghost.textContent = text;
+            ghost.classList.add('lingua-swap');
+        }, on);
+        // The last one stays; the others drop back to the stutter for a few frames.
+        if (k < blinks - 1) setTimeout(() => {
+            if (done || !box.isConnected) return;
+            ghost.classList.remove('lingua-swap');
+            void ghost.offsetWidth;
+            ghost.classList.add('lingua-cue');
+        }, on + 45 + Math.random() * 60);
+    }
 
     setTimeout(() => {
         if (done) return;

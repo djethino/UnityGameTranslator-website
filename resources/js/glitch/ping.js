@@ -56,6 +56,30 @@ function play(el) {
 }
 
 /** One burst: a few elements at once, spread across the view, offset from each other in time. */
+/**
+ * A failing lamp, not a switch.
+ *
+ * 🔴 One burst reads as an effect being applied. A lamp at the end of its life does not do that: it
+ * catches once, dies, catches again a moment later, sometimes a third time, and the gaps are never
+ * the same twice. That is what this does — the orchestra says WHEN something should flinch, and how
+ * it flinches is decided here, freshly, every time.
+ *
+ * ⚠ The gaps are drawn from two ranges rather than one. A single range with a wide spread still
+ * produces one characteristic rhythm; a short gap and a long one, picked between, produce the
+ * stutter-then-pause a dying tube actually makes.
+ */
+function flicker() {
+    const times = 1 + ((Math.random() * 3) | 0);      // one, two or three
+    let hit = fire();
+    let at = 0;
+    for (let k = 1; k < times; k++) {
+        at += Math.random() < 0.55 ? 70 + Math.random() * 160 : 320 + Math.random() * 520;
+        setTimeout(fire, at);
+        hit += 1;
+    }
+    return hit;
+}
+
 function fire() {
     const wanted = Math.max(1, Math.round(rand(tune.wave)));
     const picks = pickVisualMany(wanted, {
@@ -88,7 +112,7 @@ export function fireNow() {
     // Installed on first use rather than at startup: a visitor who never lets a glitch run never
     // receives the markup.
     installRgbSplit();
-    return fire();
+    return flicker();
 }
 
 export function startPing() {

@@ -41,7 +41,7 @@
  * corridor of its own kind rather than a compromise.
  */
 
-import { lerp, clamp, smoothstep, easeInOut } from './util.js';
+import { lerp, clamp, smoothstep, easeInOut, wander } from './util.js';
 import { Z_FAR } from '../bob.js';
 
 const TAU = Math.PI * 2;
@@ -89,6 +89,33 @@ const SLOP = 0.085;
 const SOFTEST_BOB = 2.7;
 const SOFTEST_POINT = 2.2;
 
+/** How far apart the corridor is worked out, in field units. Finer than a ring's spacing, so no
+ *  ring ever sits on a length nobody computed. */
+const SAMPLE = 0.28;
+/** How hard a hand can turn the corridor, and how quickly the bend answers. */
+const STEER = 0.55;
+const BANK = 0.09;
+/** How far off the axis the corridor may wander before it stops being one. */
+const WANDER_MAX = 0.62;
+
+/** The ride: how hard pointing down pulls, how fast it settles back, and the two ends. */
+const GRAVITY = 1.7;      // pace gained per second at the very bottom of the screen
+const RELAX = 0.85;       // how eagerly it returns to its resting speed once you let go
+const MIN_PACE = 0.45;    // never a standstill
+
+/**
+ * 🔴 The ceiling is not a matter of taste, it is where this figure's own return stops working.
+ *
+ * The flick back is 6 % of a cycle. At pace 3.4 a whole lap took 0.76 s, so the return had **three
+ * frames** to carry a ring across two and a bit units of corridor — which no spring does, however
+ * stiff. The cycle then degenerated: the ring never reached the far end, so it never left the frame
+ * either, and 12 passes in 181 turned back with most of the cloud still on screen.
+ *
+ * At 2.2 the return gets about eighty milliseconds, which is what it had when it was measured
+ * clean. The ride keeps a range of nearly five to one, which is plenty to feel.
+ */
+const MAX_PACE = 2.2;
+
 export default {
     id: 'tunnel',
     kind: 'predefined',
@@ -132,17 +159,18 @@ export default {
         // Start with the corridor folded around a middle depth and let it open both ways, so
         // nothing has to rush forward or retreat to take its place when the figure begins.
         this.travel = Z_FAR - 1.5;
+        this.pace = 1;
 
-        // ── the route: where the corridor bends, and where it climbs ──
-        // Two waves per axis so a bend is never a plain sine, at wavelengths of roughly one to four
-        // laps: long enough that you feel yourself being steered rather than shaken.
-        const wave = (lo, hi, flo, fhi) => ({
-            a: lerp(lo, hi, rnd()), f: lerp(flo, fhi, rnd()), h: rnd(),
-        });
-        this.route = {
-            x: [wave(0.20, 0.44, 0.15, 0.30), wave(0.08, 0.20, 0.36, 0.62)],
-            y: [wave(0.14, 0.31, 0.13, 0.27), wave(0.06, 0.14, 0.33, 0.58)],
-        };
+        // ── the corridor itself, laid down one length at a time ──
+        //
+        // 🔴 It is not a function of the station any more, it is a HISTORY. Each length is worked
+        // out from the one before it plus wherever the visitor is pointing, so the tunnel is
+        // genuinely steered rather than merely animated — and because a length once laid is never
+        // revised, what you are flying through stays a rigid piece of geometry. That is the whole
+        // reason it can respond to a hand without coming apart.
+        this.spine = [{ s: this.travel - SAMPLE, x: 0, y: 0 }];
+        this.bend = { vx: 0, vy: 0 };
+        this.drift = [rnd() * 6.28, rnd() * 6.28];   // where it wanders when nobody is steering
 
         // ── the pace: when it presses on and when it eases off ──
         // Also two waves, on periods that do not divide into each other, so the run never settles
@@ -170,28 +198,80 @@ export default {
         return true;
     },
 
-    /** Where the corridor's axis sits at a given station. Both bends and slopes come from here. */
+    /**
+     * Lay the corridor down as far ahead as anybody will look, and forget what is behind.
+     *
+     * ⚠ The steering has momentum: the hand sets where the corridor WANTS to go, and the bend eases
+     * towards it over a few lengths. Point hard right and the tunnel does not kink, it banks — and
+     * it is still banking a moment after the hand has stopped, which is what makes it feel like a
+     * thing with mass rather than a cursor read-out.
+     */
+    grow(ctx, upTo) {
+        const p = ctx.pointer;
+        const steering = p && p.active;
+        while (this.spine[this.spine.length - 1].s < upTo) {
+            const last = this.spine[this.spine.length - 1];
+            const s = last.s + SAMPLE;
+
+            // Where the corridor is asked to head. With nobody pointing it wanders on its own, so
+            // the figure is never a straight pipe on a machine that has no mouse.
+            const wantX = steering ? p.x * STEER : wander(s * 0.55 + this.drift[0], this.drift[0]) * STEER * 0.8;
+            const wantY = steering ? p.y * STEER * 0.8 : wander(s * 0.41 + this.drift[1], this.drift[1]) * STEER * 0.6;
+
+            this.bend.vx += (wantX - this.bend.vx) * BANK;
+            this.bend.vy += (wantY - this.bend.vy) * BANK;
+
+            // ⚠ Clamped, and the clamp is what keeps it a corridor. Left free the axis would walk
+            // off and the rings would leave the frame sideways, which reads as the tunnel breaking
+            // rather than as a bend.
+            this.spine.push({
+                s,
+                x: clamp(last.x + this.bend.vx * SAMPLE, -WANDER_MAX, WANDER_MAX),
+                y: clamp(last.y + this.bend.vy * SAMPLE, -WANDER_MAX * 0.7, WANDER_MAX * 0.7),
+            });
+        }
+        // Behind us and out of reach of every lookup — dropped, or a long visit grows an array for
+        // the whole of it.
+        let keep = 0;
+        while (keep + 2 < this.spine.length && this.spine[keep + 1].s < this.travel - SAMPLE) keep++;
+        if (keep) this.spine.splice(0, keep);
+    },
+
+    /** Where the corridor's axis sits at a station, read off the spine. */
     axis(s) {
-        const { x, y } = this.route;
-        return [
-            x[0].a * Math.sin(TAU * (s * x[0].f + x[0].h)) + x[1].a * Math.sin(TAU * (s * x[1].f + x[1].h)),
-            y[0].a * Math.sin(TAU * (s * y[0].f + y[0].h)) + y[1].a * Math.sin(TAU * (s * y[1].f + y[1].h)),
-        ];
+        const sp = this.spine;
+        const i = clamp(Math.floor((s - sp[0].s) / SAMPLE), 0, sp.length - 2);
+        const a = sp[i], b = sp[i + 1];
+        const k = clamp((s - a.s) / SAMPLE);
+        return [lerp(a.x, b.x, k), lerp(a.y, b.y, k)];
     },
 
     update(ctx) {
         const n = ctx.bobs.length;
         const t = ctx.t;
 
-        // How hard we are pressing on, right now. Clamped low rather than allowed to reach zero: a
-        // corridor that stops is a corridor you are no longer travelling.
+        // ── the ride ──
+        //
+        // 🔴 Point low on the screen and it picks up speed; point high and it bleeds off. Not a
+        // dial: an acceleration. The pace carries its own momentum, so letting go leaves it still
+        // running fast and easing back rather than snapping to a value — which is the whole
+        // difference between a rollercoaster and a slider.
+        //
+        // ⚠ And it never stops. `MIN_PACE` is a floor with a good deal of travel left under the
+        // resting speed, because a corridor that comes to rest is not a slow corridor, it is a
+        // still image of one.
         const { mid, amp, p1, h1, p2, h2 } = this.tempo;
-        const pace = clamp(
-            mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2))),
-            0.34, 2.05,
+        const resting = mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2)));
+        const p = ctx.pointer;
+        const slope = p && p.active ? p.y : 0;     // +1 is the bottom of the screen: nose down
+        this.pace = clamp(
+            this.pace + ((resting - this.pace) * RELAX + slope * GRAVITY) * ctx.dt,
+            MIN_PACE, MAX_PACE,
         );
-        const speed = this.rate * pace;           // field units per second, right now
+
+        const speed = this.rate * this.pace;      // field units per second, right now
         this.travel += speed * ctx.dt;
+        this.grow(ctx, this.travel + Z_FAR + this.lap + 1);
 
         // 🔴 The stiffness is derived from the speed, not chosen. A critically damped spring
         // following a ramp settles `2v/omega` behind it, so the eagerness needed to stay within a
@@ -253,6 +333,11 @@ export default {
 
             // A corridor does not breathe. Not quite zero, so the rings are not machined.
             bob.sway = 0.10;
+            // 🔴 And it does not answer the cursor either. Everywhere else the pointer pushes and
+            // pulls at the points themselves; here it steers the whole corridor instead, which is a
+            // far stronger thing to do with a hand — and a ring that also bulged around the cursor
+            // would simply have stopped being a ring.
+            bob.charm = 0;
 
             // Its own place along the corridor, minus ours: what is left is where it sits on screen.
             // During the flick it slides to the station one lap further on — which is the station it

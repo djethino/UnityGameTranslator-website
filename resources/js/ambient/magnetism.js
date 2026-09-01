@@ -103,7 +103,11 @@ export function createMagnetism(count) {
          */
         at(i, pointer, aspect, bob, radius) {
             const c = clouds[i];
-            const force = c.mood * presence;
+            // ⚠ `charm` lets a figure decline the pointer entirely — the corridor does, because a
+            // ring that bulges around the cursor is a ring that has stopped being a ring. It is a
+            // blended frame property rather than a flag, so a figure that refuses the pointer eases
+            // out of its grip over the handover instead of dropping it in one frame.
+            const force = c.mood * presence * bob.charm;
             if (Math.abs(force) < 0.02) return null;
 
             const speed = Math.min(2.2, Math.hypot(pointer.vx, pointer.vy));

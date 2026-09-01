@@ -34,9 +34,9 @@ const rnd = (a, b) => a + Math.random() * (b - a);
  * `odds` must sum to 1. Seconds, before the visitor's own frequency setting scales them.
  */
 const LULLS = [
-    { id: 'enchaine', span: [1.2, 4.0], odds: 0.18 },   // the flurry: the same draw twice makes three
-    { id: 'ordinaire', span: [12, 34], odds: 0.58 },
-    { id: 'long', span: [55, 105], odds: 0.24 },        // long enough to forget it happens
+    { id: 'enchaine', span: [1.0, 3.5], odds: 0.22 },   // the flurry: the same draw twice makes three
+    { id: 'ordinaire', span: [7, 20], odds: 0.60 },
+    { id: 'long', span: [38, 75], odds: 0.18 },         // long enough to forget it happens
 ];
 
 /**
@@ -50,8 +50,15 @@ const REPERTOIRE = [
     { id: 'fond2', hits: [['fond']] },
     { id: 'visuel', hits: [['visuel']] },
     { id: 'visuel2', hits: [['visuel']] },
+    // 🔴 Language appears three times against two for the others, and that is a statement about
+    // what this site is. It translates games; a word quietly becoming Polish or Korean in the middle
+    // of a sentence says so better than any paragraph, and it is the one effect here that carries
+    // meaning rather than atmosphere.
     { id: 'langue', hits: [['langue']] },
     { id: 'langue2', hits: [['langue']] },
+    { id: 'langue3', hits: [['langue']] },
+    // The lamp gives out, and what comes back is in another language.
+    { id: 'lampe', hits: [['visuel'], ['langue', 260, 620]] },
 
     // The background tears and something on the page flinches with it — near enough to read as one
     // event, far enough apart that you can tell there were two.

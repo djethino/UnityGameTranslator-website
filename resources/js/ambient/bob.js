@@ -68,6 +68,7 @@ export class Bob {
         this.grip = 1;          // how tightly the points hold their places — 1 is loose and organic
         this.haste = 1;         // how eagerly the CENTRE reaches its target — for a fast return
         this.sway = 1;          // how much of its private drift it keeps — 0 for rigid structures
+        this.charm = 1;         // how much of the pointer's pull its points feel — 0 for a structure
 
         this.resetFrameProps();
 
@@ -148,6 +149,7 @@ export class Bob {
         this.grip = 1;
         this.haste = 1;
         this.sway = 1;
+        this.charm = 1;         // how much of the pointer's pull its points feel — 0 for a structure
     }
 
     /** Drop it somewhere with no travel — used when the engine (re)starts, never mid-flight. */

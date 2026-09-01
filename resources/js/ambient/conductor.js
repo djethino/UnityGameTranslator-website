@@ -24,7 +24,7 @@ import { pointer, pointerEverSeen } from './pointer.js';
 import { createRogues } from './rogues.js';
 import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js';
 
-const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway'];
+const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway', 'charm'];
 
 /**
  * How one figure becomes the next.
