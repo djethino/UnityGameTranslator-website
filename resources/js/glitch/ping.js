@@ -125,6 +125,8 @@ export function startPing() {
     // ⚠ defineProperties, not Object.assign: assign would call the getter once and store the
     // result, so `.tune` would report the values this file started with and never the ones `set`
     // has since written — a live tuning knob that silently stops reporting what it tuned.
+    // ⚠ Development only — stripped from the production bundle. See the note in engine.js.
+    if (!import.meta.env.DEV) return;
     window.testGlitch = Object.defineProperties(fireNow, {
         tune: { get() { return { ...tune }; } },
         set: { value: (key, v) => { if (key in tune) tune[key] = v; return { ...tune }; } },

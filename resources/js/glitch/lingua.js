@@ -330,6 +330,8 @@ export function startLingua() {
     // wrong can be traced to a language rather than to the mechanism; `set` tunes the wave live,
     // since its size and stagger are things that can only be judged by watching them.
     // ⚠ defineProperties, not Object.assign — see the same note in ping.js.
+    // ⚠ Development only — stripped from the production bundle. See the note in engine.js.
+    if (!import.meta.env.DEV) return;
     window.testLingua = Object.defineProperties(fireNow, {
         loaded: { value: () => [...banks.keys()] },
         tune: { get() { return { ...tune }; } },

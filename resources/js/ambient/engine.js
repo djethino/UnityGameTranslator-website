@@ -482,7 +482,13 @@ export function createEngine() {
             // Dev/QA helper, in the spirit of `window.testGlitch`. The three numbers below are the
             // ones that can only be settled by looking at them, so they are adjustable live rather
             // than through a rebuild.
-            window.ambient = {
+            //
+            // 🔴 Development only. `import.meta.env.DEV` is replaced by a literal at build time, so
+            // the whole block — every getter, every measurement, the sine table's neighbours — is
+            // removed from the production bundle rather than merely being left unused. A visitor's
+            // page has no business carrying a console for tuning a background, and a global that
+            // can move the field is a surface that has to be justified rather than inherited.
+            if (import.meta.env.DEV) window.ambient = {
                 get tune() { return { ...tune }; },
                 set(key, v) {
                     if (!(key in tune)) return { ...tune };

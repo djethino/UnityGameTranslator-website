@@ -154,6 +154,8 @@ export function startOrchestra(voices) {
     next(rnd(4000, 11000));
 
     // Console helper, in the same shape as `window.ambient`: what has fired, and how recently.
+    // ⚠ Development only — stripped from the production bundle. See the note in engine.js.
+    if (!import.meta.env.DEV) return;
     //
     // 🔴 defineProperties, not Object.assign — the third time this project has been caught by it.
     // Assign INVOKES a getter and stores what it returned, so `recent` would be frozen on the empty
