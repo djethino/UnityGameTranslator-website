@@ -86,8 +86,39 @@
 
        ⚠ It also means the fold only exists where this stylesheet does. Without CSS the entries are
        all visible, which is the right failure: a table of contents that loses half its lines is
-       worse than one that shows too many. */
-    .docs-nav-subs.is-collapsed { display: none; }
+       worse than one that shows too many.
+
+       🔴 A HEIGHT, not `display: none`, and the reason is what the reader is doing at the time.
+       Sections fold and unfold on their own as you scroll past them, and `display` cannot be
+       transitioned — so every entry underneath jumped. A fold is a reflow: everything below it
+       moves whether we like it or not, and the only choice is between moving and jumping.
+
+       ⚠ The height ALONE, and nothing else in this menu moves. It sits in the corner of the eye
+       while the text is being read, and peripheral vision is built to catch movement — which is why
+       the highlight only ever cross-fades its colour. Something that slid or bounced there would
+       pull the reader out of the sentence at every section boundary.
+
+       ⚠ 160ms, not 300. Scrolling through a page opens and closes sections in sequence; a
+       transition retargets from wherever it has got to, so it interrupts cleanly, but a long one
+       would leave the menu permanently in motion. `0fr → 1fr` is the only way to animate to a
+       content height without measuring it in JS. */
+    .docs-nav-subs {
+        display: grid;
+        grid-template-rows: 1fr;
+        transition: grid-template-rows 160ms ease;
+    }
+    .docs-nav-subs-inner { overflow: hidden; }
+    /* ⚠ `visibility` as well as the height. A box squeezed to zero still holds focusable links, so
+       without this a keyboard tabs into entries nobody can see — which `display: none` used to
+       prevent for free. Delayed by exactly the fold on the way out, immediate on the way in. */
+    .docs-nav-subs.is-collapsed {
+        grid-template-rows: 0fr;
+        visibility: hidden;
+        transition: grid-template-rows 160ms ease, visibility 0s 160ms;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .docs-nav-subs, .docs-nav-subs.is-collapsed { transition: none; }
+    }
     /* Quick Start step cards, which are links. They looked like plain boxes for a long time, so
        the hover has to say "this goes somewhere" without turning three cards into three buttons. */
     .docs-step {
@@ -376,10 +407,17 @@
                                     <i class="fas fa-chevron-down text-xs"></i>
                                 </button>
                             </div>
+                            {{-- The inner box is what makes the fold animatable: the outer one is a
+                                 grid whose single row goes from 0fr to 1fr, and only a child with
+                                 `overflow: hidden` can be squeezed by it. Nothing else hangs on it —
+                                 `aria-controls` still names the outer box, and every script finds
+                                 the links by their own class. --}}
                             <div id="docs-nav-subs-{{ $id }}" class="docs-nav-subs is-collapsed">
-                                @foreach ($subs as $subId => $subLabel)
-                                    <a href="#{{ $subId }}" class="docs-nav-sub">{{ __($subLabel) }}</a>
-                                @endforeach
+                                <div class="docs-nav-subs-inner">
+                                    @foreach ($subs as $subId => $subLabel)
+                                        <a href="#{{ $subId }}" class="docs-nav-sub">{{ __($subLabel) }}</a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     @endif
