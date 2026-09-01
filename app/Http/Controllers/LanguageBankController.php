@@ -30,16 +30,26 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class LanguageBankController extends Controller
 {
-    /** Longest line we are prepared to swap in. Past this it stops being a wink and starts being a
-     *  paragraph rearranging itself under the reader. */
-    private const MAX_LENGTH = 40;
+    /** Longest line we are prepared to swap in, in display COLUMNS. Past this it stops being a wink
+     *  and starts being a paragraph rearranging itself under the reader.
+     *
+     *  ⚠ Columns, not characters, and the difference is not a detail: a CJK glyph occupies two, so
+     *  counting characters made this cap mean forty columns in French and EIGHTY in Japanese. The
+     *  measured maxima were 40 for French and German against 80 for Japanese and Chinese — twice the
+     *  paragraph this constant exists to refuse, in the scripts where it is hardest to skim. */
+    private const MAX_COLUMNS = 40;
+
+    /** Bumped when the shape of a bank changes, so a code change invalidates the cache too — the
+     *  stamp below only watches the language FILES, and would have served yesterday's lines for a
+     *  day after this rule changed. */
+    private const SHAPE = 2;
 
     public function show(Request $request, string $locale): Response
     {
         abort_unless(array_key_exists($locale, config('locales.supported')), 404);
 
         $body = Cache::remember(
-            "lang-bank:{$locale}:" . $this->stamp(),
+            "lang-bank:{$locale}:" . self::SHAPE . ':' . $this->stamp(),
             now()->addDay(),
             fn () => $this->build($locale),
         );
@@ -124,7 +134,7 @@ class LanguageBankController extends Controller
     {
         $value = trim($value);
 
-        if ($value === '' || mb_strlen($value) > self::MAX_LENGTH) {
+        if ($value === '' || $this->columns($value) > self::MAX_COLUMNS) {
             return false;
         }
 
@@ -137,5 +147,24 @@ class LanguageBankController extends Controller
         // At least one letter, in any script — this drops bare numbers, dashes and lone symbols,
         // which carry no language and would make the swap look like nothing happened.
         return (bool) preg_match('/\p{L}/u', $value);
+    }
+
+    /**
+     * How many columns a line occupies on screen. East Asian Wide and Fullwidth characters take two.
+     *
+     * ⚠ The browser applies the same measure when it chooses which language may replace a given
+     * word, and the two have to agree: a line this side lets through and the client then always
+     * refuses is a line that costs bandwidth and can never be shown.
+     */
+    private function columns(string $value): int
+    {
+        $wide = preg_match_all(
+            '/[\x{1100}-\x{115F}\x{2E80}-\x{303E}\x{3041}-\x{33FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FFF}'
+            . '\x{A000}-\x{A4CF}\x{AC00}-\x{D7A3}\x{F900}-\x{FAFF}\x{FE30}-\x{FE6F}\x{FF00}-\x{FF60}'
+            . '\x{FFE0}-\x{FFE6}]/u',
+            $value,
+        );
+
+        return mb_strlen($value) + $wide;
     }
 }

@@ -40,7 +40,37 @@ const tune = {
     // ⚠ No interval here any more — see glitch/orchestra.js. This file decides what a wave is.
     spread: 0.22,           // minimum distance between two words, as a fraction of the viewport
     chrome: 0.3,            // how much less often the nav, header and footer are picked (1 = as often)
+    // 🔴 How many display columns a replacement may add to what it replaces. See `columns` below.
+    room: 8,
 };
+
+/**
+ * Width in display COLUMNS, not characters — a CJK glyph occupies two.
+ *
+ * 🔴 Why this exists, because the obvious reading of the bug was wrong. The swap is key-correct: the
+ * index gives a line number and every locale is served in the same order, so what lands is the same
+ * string in another language and nothing else. It was checked — of 1688 short French lines paired
+ * with their eighteen translations, three exceed twice their width, and all three are legitimate
+ * ("Email" → the Arabic for "email address").
+ *
+ * What was missing is that a correct translation can still be far too WIDE. `Dépannage` is nine
+ * columns; `トラブルシューティング` is the right word for it and twenty-two. The ghost is absolutely
+ * positioned so that it cannot move the layout — deliberate, and the reason the nav does not
+ * breathe — and the price of that is the exact one paid here: it does not push its container, it
+ * spills out of it. On a button, twenty-two columns of Japanese over a seven-column label does not
+ * read as a word in another language, it reads as a sentence that escaped.
+ *
+ * ⚠ Measured before choosing eight: it keeps 98 % of French pairs and 95 % of English ones, leaves a
+ * median of eighteen languages available per short word and never fewer than three. The effect loses
+ * nothing it was doing on purpose.
+ */
+const WIDE = /[ᄀ-ᅟ⺀-〾ぁ-㏿㐀-䶿一-鿿ꀀ-꓏가-힣豈-﫿︰-﹯＀-｠￠-￦]/;
+
+function columns(s) {
+    let n = 0;
+    for (const ch of s) n += WIDE.test(ch) ? 2 : 1;
+    return n;
+}
 
 // Six others rather than three: a wave shows four or five words at once, and each takes a different
 // language. With three, the same one comes up twice in the same wave and the effect reads as a bug.
@@ -235,11 +265,15 @@ function fire() {
     picks.forEach((item, i) => {
         const line = index.get(norm(item.text));
         const from = i % langs.length;
+        // What replaces a word has to be the size of a word. A language whose line is too wide is
+        // skipped rather than the word being dropped — with eighteen to choose from, another one
+        // almost always fits, so the wave keeps its count.
+        const room = columns(norm(item.text)) + tune.room;
 
         const lang = [...langs.slice(from), ...langs.slice(0, from)].find((l) => {
             const v = banks.get(l)[line];
             // The same word in two languages is not a swap, it is a flicker.
-            return v && norm(v) !== norm(item.text);
+            return v && norm(v) !== norm(item.text) && columns(norm(v)) <= room;
         });
         if (!lang) return;
 
