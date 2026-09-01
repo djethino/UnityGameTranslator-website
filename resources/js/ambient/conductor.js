@@ -29,7 +29,7 @@ const ROGUE_CHECK = 26;         // how often we consider sending one off
 const ROGUE_CHANCE = 0.42;
 const ROGUE_TIME = [7, 12];     // how long it stays away
 
-const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste'];
+const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway'];
 
 export function createConductor({ engine, pickAnchor, strings }) {
     const bobs = engine.bobs;

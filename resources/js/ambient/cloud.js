@@ -22,6 +22,20 @@
 
 const TAU = Math.PI * 2;
 
+/**
+ * The stiffest a point may be for a given step, as `omega · dt`.
+ *
+ * 🔴 Derived, not chosen. Writing this spring's step as a matrix on (velocity, error) gives
+ * `det = 1 - 2·omega·dt`, and a product of eigenvalues above 1 in modulus is divergence — so the
+ * ceiling is `omega · dt ≤ 1`, and it is marginal there. 0.7 leaves room.
+ *
+ * ⚠ The first version of this line said 1.4, on the half-remembered rule of thumb that explicit
+ * springs are fine up to 2. They are not, for this one: at 1.4 an eigenvalue is -3.3 and the cloud
+ * reaches NaN in about two seconds. It did, and `finite()` caught it. A guard set above the
+ * threshold it is guarding is worse than no guard, because it reads as protection.
+ */
+const MAX_OMEGA_DT = 0.7;
+
 export class Cloud {
     /**
      * @param {number} index      which of the five
@@ -131,7 +145,12 @@ export class Cloud {
             // of the screen, which is exactly what "the near ring disappears" was. `grip` tightens
             // every point at once, so a pattern that needs an object rather than a mist can have
             // one without giving up the default.
-            const w = omega[i] * grip;
+            // ⚠ Capped against the step, not against a number somebody liked. This integrator is
+            // explicit in the stiffness term and diverges past `w · dt ≈ 2`, so a figure asking for
+            // a rigid body (a corridor ring: grip in the tens) would be fine at 60 fps and turn the
+            // cloud into NaN on the first hitched frame. Clamping makes a point maximally eager for
+            // the step it is being given, which is the truthful answer; letting it through is not.
+            const w = Math.min(omega[i] * grip, MAX_OMEGA_DT / dt);
             const jt = jitter[i];
             const ph = phase[i];
 

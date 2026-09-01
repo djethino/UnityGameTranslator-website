@@ -20,9 +20,19 @@
  */
 
 import { clamp, lerp, easeInOut, easeOut, smoothstep, wander } from './util.js';
-import { Z_NEAR, Z_FAR } from '../bob.js';
+import { Z_FAR } from '../bob.js';
 
 const SETTLE = 0.20, OBSERVE = 0.44, PASS = 0.80;
+
+/**
+ * How close they get before they veer off.
+ *
+ * ⚠ Its own constant, and deliberately not `Z_NEAR`. It used to be that, which read as "as close as
+ * the system allows" — so when the floor came down to 0.10 to let the tunnel through, this figure
+ * would have started charging three times nearer without anybody deciding it should. A figure's
+ * distances belong to the figure.
+ */
+const Z_PASS = 0.35;
 
 export default {
     id: 'guet-apens',
@@ -77,7 +87,7 @@ export default {
                 const rush = easeInOut(k);
                 const veer = k * k * k;
 
-                const z = lerp(hold.z, Z_NEAR, rush);
+                const z = lerp(hold.z, Z_PASS, rush);
                 const x = lerp(hold.x, slot.x, veer);
                 const y = lerp(hold.y, slot.y, veer);
 
@@ -109,7 +119,7 @@ export default {
                     // the slot rather than from nowhere is what makes it a return.
                     x: lerp(slot.x, Math.cos(a) * 0.5, k),
                     y: lerp(slot.y, Math.sin(a) * 0.34, k),
-                    z: lerp(Z_NEAR, Z_FAR * 0.85, k),
+                    z: lerp(Z_PASS, Z_FAR * 0.85, k),
                 });
             }
         }

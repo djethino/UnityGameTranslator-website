@@ -411,6 +411,29 @@ export function createEngine() {
                         gain: Math.round(b.gain * 1000) / 1000,
                     };
                 }),
+                /**
+                 * How much of each cloud actually lands inside the frame, counted on the POINTS of
+                 * the last drawn frame rather than on its centre.
+                 *
+                 * 🔴 A ring is the case that makes the distinction matter: its centre sits on the
+                 * axis, dead in the middle of the screen, for the whole of its trip — so every
+                 * centre-based reading says "visible" while the ring itself has long left through
+                 * the edges. Judging the tunnel from `seen()` is how a ring that turned back in
+                 * plain sight got measured as correct.
+                 */
+                onscreen: () => bobs.map((b, c) => {
+                    const per = tune.perCloud;
+                    const base = c * per;
+                    let inside = 0;
+                    for (let i = 0; i < per; i++) {
+                        const j = (base + i) * 4;
+                        const p = 1 / points[j + 2];
+                        const x = points[j] * p / aspect;
+                        const y = -points[j + 1] * p;
+                        if (x >= -1 && x <= 1 && y >= -1 && y <= 1) inside++;
+                    }
+                    return { inside, of: per, z: Math.round(b.z * 1000) / 1000 };
+                }),
                 stats: () => ({
                     // Where each cloud currently is in depth. Small, and the only way to see from
                     // outside whether a figure that is supposed to come towards you is doing so —

@@ -23,8 +23,15 @@ const SQRT3 = 1.7320508076;
  * ⚠ Perspective is real here: at z = 0.35 a bob only one third of the way off-axis is already off
  * the screen. That is not a bug to clamp away — it is what makes the camera charge read as a charge
  * — but a pattern that wants its bobs visible up close has to keep x and y small.
+ *
+ * 🔴 `Z_NEAR` is a NUMERICAL FLOOR, not an artistic near plane, and it was the second for a long
+ * time. At 0.35 it silently capped every figure that wanted to come closer: `tunnel` asked for 0.36
+ * and got one hundredth of clearance, so its rings turned back at the exact instant they finished
+ * clearing the corners — the ring "changing direction before you had passed it" was this line, not
+ * the figure. A pattern that wants to stop further out says so itself; the floor only exists so
+ * that 1/z stays a number.
  */
-export const Z_NEAR = 0.35;
+export const Z_NEAR = 0.10;
 export const Z_FAR = 2.5;
 
 /** Critically damped spring, semi-implicit. Stable for the dt the engine allows (capped at 100 ms). */
@@ -60,6 +67,7 @@ export class Bob {
         this.twist = 0;         // extra rotation in the plane of the screen, on top of the engine's
         this.grip = 1;          // how tightly the points hold their places — 1 is loose and organic
         this.haste = 1;         // how eagerly the CENTRE reaches its target — for a fast return
+        this.sway = 1;          // how much of its private drift it keeps — 0 for rigid structures
 
         this.resetFrameProps();
 
@@ -88,10 +96,15 @@ export class Bob {
      * everything else in this universe.
      */
     follow(target, t, dt) {
-        const w = this.wobbleAmp;
+        // ⚠ `sway` scales the private drift rather than the position, because the drift is what
+        // makes a bob a character instead of a coordinate — and exactly what a rigid structure must
+        // not have. In a corridor it is not charm, it is each ring stopping at a different depth:
+        // `wobbleZ` reaches 0.15, which is half the clearance the near end has to play with, so the
+        // ring that drew the short straw turns back while still on screen.
+        const w = this.wobbleAmp * this.sway;
         const dx = Math.sin(t * this.freq[0] + this.phase[0]) * w;
         const dy = Math.cos(t * this.freq[1] + this.phase[1]) * w;
-        const dz = Math.sin(t * this.freq[2] + this.phase[2]) * this.wobbleZ;
+        const dz = Math.sin(t * this.freq[2] + this.phase[2]) * this.wobbleZ * this.sway;
 
         // The drift is added to the TARGET, not to the position: the spring smooths it, so the bob
         // wanders rather than vibrates. Added to the position it would read as noise.
@@ -100,9 +113,26 @@ export class Bob {
         // return is something you watch happen, a teleport is something that has happened. The
         // second one is a jump however carefully it is hidden.
         const omega = this.omega * this.zeal * this.haste;
-        [this.x, this.vx] = spring(this.x, this.vx, target.x + dx, omega, dt);
-        [this.y, this.vy] = spring(this.y, this.vy, target.y + dy, omega, dt);
-        [this.z, this.vz] = spring(this.z, this.vz, clampZ(target.z + dz), omega, dt);
+
+        // 🔴 Substepped, and this is what makes a stiff spring usable at all. The integrator is
+        // explicit in the stiffness term, so it diverges once `omega · dt` passes about 2 — and the
+        // engine hands out a dt of up to 100 ms after a stall. A figure asking for a rigid centre
+        // (a corridor: haste in the teens) would therefore be stable at 60 fps and blow up to NaN
+        // on the first hitch, taking the whole field with it. One divide and up to eight iterations
+        // over five bobs is not a cost worth trading a class of crash for.
+        const steps = Math.min(8, Math.ceil((omega * dt) / 0.35) || 1);
+        const h = dt / steps;
+        // ⚠ And a ceiling even so: eight substeps of a 100 ms frame are 12.5 ms each, which is still
+        // not enough for a spring in the teens. Past that the point is as eager as the step can
+        // represent, which is the honest answer — `omega · dt` above 1 is not a stiffer spring, it
+        // is a different and divergent one.
+        const stiff = Math.min(omega, 0.7 / h);
+        const tx = target.x + dx, ty = target.y + dy, tz = clampZ(target.z + dz);
+        for (let s = 0; s < steps; s++) {
+            [this.x, this.vx] = spring(this.x, this.vx, tx, stiff, h);
+            [this.y, this.vy] = spring(this.y, this.vy, ty, stiff, h);
+            [this.z, this.vz] = spring(this.z, this.vz, tz, stiff, h);
+        }
 
         this.z = clampZ(this.z);
     }
@@ -117,6 +147,7 @@ export class Bob {
         this.twist = 0;
         this.grip = 1;
         this.haste = 1;
+        this.sway = 1;
     }
 
     /** Drop it somewhere with no travel — used when the engine (re)starts, never mid-flight. */

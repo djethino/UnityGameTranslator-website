@@ -50,6 +50,8 @@ varying float vSoft;   // 0 = far, a tight spark · 1 = near, a broad glow
 
 void main() {
     // The whole of the fake perspective: one divide. Near is big, far is small.
+    // ⚠ No guard on the divisor here on purpose: the engine floors every point's depth at 0.12 as
+    // it fills the buffer, which is the one place that can do it once for both passes.
     float p = 1.0 / aData.z;
 
     vec2 clip = vec2(aData.x * p / uAspect, -aData.y * p);

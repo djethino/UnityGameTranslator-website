@@ -15,7 +15,11 @@
  */
 
 import { lerp, wander } from './util.js';
-import { Z_NEAR, Z_FAR } from '../bob.js';
+import { Z_FAR } from '../bob.js';
+
+/** How close they get before they leave the frame. Its own constant rather than an offset from the
+ *  system's floor, which is a numerical guard and moves for reasons that have nothing to do here. */
+const Z_PASS = 0.43;
 
 export default {
     id: 'traversee',
@@ -42,7 +46,7 @@ export default {
 
             // Evenly spaced along the trip, so one is always arriving while another is leaving.
             const u = (ctx.t * SPEED + i / ctx.bobs.length) % 1;
-            const z = lerp(Z_FAR, Z_NEAR + 0.08, u);
+            const z = lerp(Z_FAR, Z_PASS, u);
 
             // Almost on the axis when far, well off it by the time it passes. Squared so the drift
             // is imperceptible for most of the trip and then decisive.
