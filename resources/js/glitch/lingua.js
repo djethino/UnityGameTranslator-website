@@ -18,7 +18,7 @@
  */
 
 import { pickTextualMany } from './targets.js';
-import { reducedMotion } from '../ambient/motion.js';
+import { glitchInterval } from '../ambient/motion.js';
 
 /**
  * A wave, not a word.
@@ -238,42 +238,73 @@ function topUp() {
     load(waiting.shift());
 }
 
-function schedule() {
-    setTimeout(() => { fire(); topUp(); schedule(); }, rand(tune.every));
+/**
+ * Fetch the language banks, once, the first time one is actually needed.
+ *
+ * ⚠ Deferred rather than done at startup, and the reason is a defect I nearly shipped: the setting
+ * can be off, and downloading fifty kilobytes of translations for a visitor who has turned the
+ * effect off is exactly the kind of cost nobody sees. The promise is kept so a second caller waits
+ * for the first fetch instead of starting another.
+ */
+let ready = null;
+
+function ensureBanks() {
+    if (ready) return ready;
+
+    ready = (async () => {
+        const all = (document.body.dataset.locales || '').split(',').filter(Boolean);
+        if (!here || all.length < 2) return false;
+
+        const mine = await load(here);
+        if (!mine) return false;
+        index = buildIndex(mine);
+
+        // 🔴 Fisher-Yates, not sort(() => Math.random() - 0.5). That comparator is inconsistent, so
+        // the result is not a uniform sample: V8's sort leaves early elements near the front, and
+        // the six languages would have been drawn mostly from the top of config/locales.php —
+        // Arabic, German, Spanish over and over, Vietnamese and Chinese almost never. Measured on
+        // the real list: 44 % for the first entries against 26 % for the last. It looks random and
+        // is not.
+        waiting = all.filter((l) => l !== here);
+        for (let i = waiting.length - 1; i > 0; i--) {
+            const j = (Math.random() * (i + 1)) | 0;
+            [waiting[i], waiting[j]] = [waiting[j], waiting[i]];
+        }
+        await Promise.all(waiting.splice(0, OTHERS).map(load));
+
+        return banks.size >= 2;
+    })();
+
+    return ready;
 }
 
-export async function startLingua() {
-    // Someone who asked their system for less motion did not ask for the page to rewrite itself.
-    if (reducedMotion()) return;
+function schedule(delay) {
+    setTimeout(async () => {
+        // ⚠ Read at every tick, never captured at startup — see the same note in ping.js. Off means
+        // come back and ask again, so turning it on from the profile screen takes effect without a
+        // reload.
+        if (glitchInterval() === 0) { schedule(4000); return; }
 
+        if (await ensureBanks()) { fire(); topUp(); }
+        schedule(rand(tune.every) * glitchInterval());
+    }, delay);
+}
+
+/** Fire one wave now, fetching what it needs if this is the first time. Used by the settings card. */
+export async function fireNow() {
+    return (await ensureBanks()) ? fire() : 0;
+}
+
+export function startLingua() {
     here = document.documentElement.lang;
-    const all = (document.body.dataset.locales || '').split(',').filter(Boolean);
-    if (!here || all.length < 2) return;
-
-    const mine = await load(here);
-    if (!mine) return;
-    index = buildIndex(mine);
-
-    // 🔴 Fisher-Yates, not sort(() => Math.random() - 0.5). That comparator is inconsistent, so the
-    // result is not a uniform sample: V8's sort leaves early elements near the front, and the six
-    // languages would have been drawn mostly from the top of config/locales.php — Arabic, German,
-    // Spanish over and over, Vietnamese and Chinese almost never. It looks random and is not.
-    waiting = all.filter((l) => l !== here);
-    for (let i = waiting.length - 1; i > 0; i--) {
-        const j = (Math.random() * (i + 1)) | 0;
-        [waiting[i], waiting[j]] = [waiting[j], waiting[i]];
-    }
-    await Promise.all(waiting.splice(0, OTHERS).map(load));
-
-    if (banks.size < 2) return;
-    schedule();
+    schedule(rand(tune.every) * Math.max(glitchInterval(), 1));
 
     // Console helper, the counterpart of `window.testGlitch` and `window.ambient`: fires a wave now
     // instead of somewhere in the next forty seconds, and returns how many words it managed to
     // swap. `loaded` says which languages this page happens to be holding, so a swap that looks
     // wrong can be traced to a language rather than to the mechanism; `set` tunes the wave live,
     // since its size and stagger are things that can only be judged by watching them.
-    window.testLingua = Object.assign(fire, {
+    window.testLingua = Object.assign(fireNow, {
         loaded: () => [...banks.keys()],
         get tune() { return { ...tune }; },
         set(key, v) { if (key in tune) tune[key] = v; return { ...tune }; },

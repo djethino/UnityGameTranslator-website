@@ -65,38 +65,56 @@
         {{-- The current entry's flag. Rendered server-side for the value the page loaded with;
              Alpine swaps the label live, and a flag that lagged one choice behind would be worse
              than none — so the picker reloads its own state on save rather than pretending. --}}
-        @if ($selected !== null && $selected !== '')
-            @if (!empty($flags[$selected]))
-                <x-flag :flag="$flags[$selected]" />
-            @elseif ($marks && isset($choices[$selected]))
-                <x-language-mark :language="$choices[$selected]" named />
+        {{-- ⚠ Wrapped and marked so app.js can swap it for the chosen entry's own flag. Left to
+             lag, it would say one language while the name beside it says another — which the
+             comment above rightly called worse than no flag at all. `contents` keeps the wrapper
+             out of the flex layout. --}}
+        <span class="contents" data-language-flag>
+            @if ($selected !== null && $selected !== '')
+                @if (!empty($flags[$selected]))
+                    <x-flag :flag="$flags[$selected]" />
+                @elseif ($marks && isset($choices[$selected]))
+                    <x-language-mark :language="$choices[$selected]" named />
+                @endif
             @endif
-        @endif
-        <span class="flex-1 truncate" x-ref="label">{{ $currentLabel }}</span>
+        </span>
+        <span class="flex-1 truncate" data-language-label>{{ $currentLabel }}</span>
         <i class="fas fa-chevron-down text-xs text-gray-400"></i>
     </button>
 
     <div x-show="open" x-cloak x-transition
          class="absolute left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-72 overflow-y-auto">
+        {{-- 🔴 `open = false` and NOTHING else, because nothing else worked.
+             These handlers used to read `value = $el.dataset.value; $refs.label.textContent = …`,
+             and the CSP build evaluated the first two statements to nothing: an assignment whose
+             right-hand side is a chain of accesses on a magic is outside its grammar, and it does
+             not report that, it simply does not happen. The dropdown closed and the choice was
+             lost — the two pickers in the profile had never once worked.
+
+             So the closing stays here, where it is a literal assignment the parser accepts, and
+             everything that carries the choice is done in app.js, in plain JS. --}}
         @if ($empty !== null)
             <button type="button" data-label="{{ $empty }}" data-language-choice
-                    @click="value = ''; $refs.label.textContent = $el.dataset.label; open = false"
+                    @click="open = false"
                     class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition">
+                <span class="contents" data-language-choice-flag></span>
                 {{ $empty }}
             </button>
         @endif
 
         @foreach ($sorted as $value => $label)
             <button type="button" data-value="{{ $value }}" data-label="{{ $label }}" data-language-choice
-                    @click="value = $el.dataset.value; $refs.label.textContent = $el.dataset.label; open = false"
+                    @click="open = false"
                     class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-700 transition {{ (string) $selected === (string) $value ? 'bg-purple-900 text-purple-200' : 'text-gray-300' }}">
-                @if (!empty($flags[$value]))
-                    <x-flag :flag="$flags[$value]" />
-                @elseif ($marks)
-                    {{-- ⚠ named: the name is written right beside it, so the tag chip would say
-                         the same thing twice. --}}
-                    <x-language-mark :language="$label" named />
-                @endif
+                <span class="contents" data-language-choice-flag>
+                    @if (!empty($flags[$value]))
+                        <x-flag :flag="$flags[$value]" />
+                    @elseif ($marks)
+                        {{-- ⚠ named: the name is written right beside it, so the tag chip would say
+                             the same thing twice. --}}
+                        <x-language-mark :language="$label" named />
+                    @endif
+                </span>
                 <span class="truncate">{{ $label }}</span>
             </button>
         @endforeach

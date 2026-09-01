@@ -117,6 +117,77 @@
         </form>
     </div>
 
+    {{-- Motion.
+         Placed here, immediately after the card that already holds the site language and the game
+         language: those are all answers to "how does this site behave for me", and they belong
+         together at the top rather than scattered among the account and data cards below.
+
+         🔴 A separate card, not another row inside the one above, and that is not a layout whim: the
+         card above ends in a Save button and these apply the instant they are pressed. Inside it,
+         they would look like something Save was responsible for.
+
+         ⚠ Which is also why the card says out loud that it applies at once and to this browser — a
+         card with no Save button, on a page whose others have one, has to account for itself. --}}
+    <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700" data-motion-settings>
+        <h2 class="font-semibold mb-1"><i class="fas fa-wand-magic-sparkles mr-2 text-purple-400"></i>{{ __('profile.motion_title') }}</h2>
+        <p class="text-sm text-gray-400 mb-5">{{ __('profile.motion_intro') }}</p>
+
+        @php
+            // One shape for both rows, so the eye learns it once. Kept here rather than in a
+            // component: it is two rows on one screen, and a partial would put the markup a file
+            // away from the only place that explains it.
+            $rows = [
+                ['kind' => 'background', 'label' => 'profile.motion_blobs', 'hint' => 'profile.motion_blobs_hint',
+                 'levels' => ['off' => 'profile.motion_off', 'slow' => 'profile.motion_calm',
+                              'normal' => 'profile.motion_normal', 'fast' => 'profile.motion_fast']],
+                ['kind' => 'glitch', 'label' => 'profile.motion_glitches', 'hint' => 'profile.motion_glitches_hint',
+                 'levels' => ['off' => 'profile.motion_off', 'rare' => 'profile.motion_rare',
+                              'normal' => 'profile.motion_normal', 'often' => 'profile.motion_often']],
+            ];
+        @endphp
+
+        @foreach($rows as $row)
+            <div class="flex flex-wrap items-start justify-between gap-3 {{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-700' : '' }}">
+                <div class="min-w-[12rem] flex-1">
+                    <p class="text-sm font-medium text-gray-300">{{ __($row['label']) }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ __($row['hint']) }}</p>
+                </div>
+
+                {{-- Four states rather than a checkbox: "off or on" cannot express the thing most
+                     people actually want, which is "yes, but less". --}}
+                <div class="inline-flex shrink-0 rounded-lg border border-gray-600 bg-gray-900/40 p-1"
+                     role="group" aria-label="{{ __($row['label']) }}" data-motion-control="{{ $row['kind'] }}">
+                    @foreach($row['levels'] as $value => $key)
+                        <button type="button" data-motion-level="{{ $value }}" aria-pressed="false"
+                                class="px-3 py-1.5 text-sm rounded-md transition">{{ __($key) }}</button>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+
+        {{-- A glitch is rare on purpose, so somebody setting its frequency could sit here a full
+             minute without seeing one. The blobs need no such thing: they are already moving behind
+             this card, so the control is its own preview. --}}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 pt-5 border-t border-gray-700">
+            <button type="button" data-motion-preview
+                    class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                <i class="fas fa-play mr-2"></i>{{ __('profile.motion_preview') }}
+            </button>
+
+            {{-- Hidden until true, and shown by JS: it depends on a media query, which the server
+                 cannot see. Somebody finding "Calm" already selected without having chosen it
+                 deserves to know who did — otherwise the screen looks like it has a mind of its own. --}}
+            <p class="text-xs text-gray-500" data-motion-system hidden>
+                <i class="fas fa-circle-info mr-1"></i>{{ __('profile.motion_system') }}
+            </p>
+
+            <button type="button" data-motion-reset hidden
+                    class="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                {{ __('profile.motion_follow_system') }}
+            </button>
+        </div>
+    </div>
+
     @if($user->isLocalAccount())
     <!-- Recovery codes (local accounts only) -->
     <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">

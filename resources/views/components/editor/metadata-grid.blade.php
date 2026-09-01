@@ -232,7 +232,7 @@
                                 x-show="answerRight({{ $pick }}[row.id])" x-cloak
                                 @click.stop="goToAnswer({{ $pick }}[row.id])"
                                 class="absolute right-1 top-1/2 -translate-y-1/2 z-20"
-                                :title="offScreenHint"
+                                title="{{ __('merge.answer_off_screen') }}"
                                 ><i class="fas answer-mark" :class="answerIconClass({{ $pick }}[row.id])"></i></button>
                         </td>
                     </tr>

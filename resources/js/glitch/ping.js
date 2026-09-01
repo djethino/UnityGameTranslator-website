@@ -15,7 +15,7 @@
 
 import { pickVisualMany } from './targets.js';
 import { installRgbSplit } from './rgb-split.js';
-import { reducedMotion } from '../ambient/motion.js';
+import { glitchInterval } from '../ambient/motion.js';
 
 const tune = {
     wave: [1, 3],           // how many elements a burst hits — sometimes one, which is the point
@@ -78,28 +78,41 @@ function fire() {
     return picks.length;
 }
 
+/** The wait before the next burst, stretched or cancelled by the visitor's setting. */
+const spacing = (range) => rand(range) * glitchInterval();
+
 function schedule(delay) {
     setTimeout(() => {
+        // ⚠ The setting is read at every tick, never captured at startup: somebody turning glitches
+        // back on from the profile screen expects the next one to arrive, not to have to reload.
+        // Off means come back and ask again, not stop for ever.
+        if (glitchInterval() === 0) { schedule(4000); return; }
+
         // Not just cheaper — correct. Firing here would consume this turn against a page nobody can
         // see, and the reader would come back to a background that has just gone quiet.
-        if (document.hidden) { schedule(rand(tune.retry)); return; }
-        schedule(fire() ? rand(tune.every) : rand(tune.retry));
+        if (document.hidden) { schedule(spacing(tune.retry)); return; }
+
+        // Installed on first use rather than at startup: a visitor who never lets a glitch run
+        // never receives the markup.
+        installRgbSplit();
+        schedule(fire() ? spacing(tune.every) : spacing(tune.retry));
     }, delay);
 }
 
-export function startPing() {
-    if (reducedMotion()) return;
-
-    // The channel-splitting filters the animation refers to. Put in the page only now: a reader who
-    // asked for less motion never receives the markup at all.
+/** Fire one burst now, installing the filters if this is the first time. Used by the settings card. */
+export function fireNow() {
     installRgbSplit();
+    return fire();
+}
+
+export function startPing() {
     schedule(rand(tune.first));
 
     // Console helper, in the same shape as window.ambient and window.testLingua: fires a burst now
     // and returns how many elements it hit, and lets the whole thing be tuned live — how often an
     // ambient effect should fire, and how many things at once, can only be judged by living with it
     // for a few minutes, not by reading a number.
-    window.testGlitch = Object.assign(fire, {
+    window.testGlitch = Object.assign(fireNow, {
         get tune() { return { ...tune }; },
         set(key, v) { if (key in tune) tune[key] = v; return { ...tune }; },
     });

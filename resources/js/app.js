@@ -322,13 +322,31 @@ document.addEventListener('click', (event) => {
     const choice = event.target.closest('[data-language-choice]');
     if (!choice) return;
 
-    const form = choice.closest('form[data-auto-submit]');
-    if (!form) return;
+    const picker = choice.closest('[data-language-picker]');
+    if (!picker) return;
 
-    const field = choice.closest('[data-language-picker]')?.querySelector('[data-language-field]');
+    // 🔴 Writing the choice down and ACTING on it are two different things, and conflating them
+    // broke both language pickers in the profile for as long as they existed. The submit was
+    // guarded by `form[data-auto-submit]`, and the write sat behind that guard — so on a form with
+    // a Save button the value was simply never recorded. The dropdown closed, the page kept the
+    // old language, and nothing anywhere said why.
+    const field = picker.querySelector('[data-language-field]');
     if (field) field.value = choice.dataset.value ?? '';
 
-    form.submit();
+    // ⚠ The label and the flag are moved here too. Alpine cannot: its CSP build silently declines
+    // an assignment whose right-hand side is a chain of accesses, which is exactly what reading
+    // `$el.dataset.label` is. And a flag left behind would name one language beside the name of
+    // another — worse than showing none.
+    const label = picker.querySelector('[data-language-label]');
+    if (label) label.textContent = choice.dataset.label ?? '';
+
+    const flag = picker.querySelector('[data-language-flag]');
+    const chosenFlag = choice.querySelector('[data-language-choice-flag]');
+    if (flag && chosenFlag) flag.innerHTML = chosenFlag.innerHTML;
+
+    // Only now, and only where the form asks for it: a filter bar applies at once, a settings form
+    // waits for its Save button.
+    choice.closest('form[data-auto-submit]')?.submit();
 });
 
 // A submit button that only existed to apply those fields has nothing left to do. It is hidden

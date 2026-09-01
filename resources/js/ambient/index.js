@@ -18,8 +18,13 @@ import { createConductor } from './conductor.js';
 import { pickAnchor, visibleStrings } from '../glitch/targets.js';
 import { startPing } from '../glitch/ping.js';
 import { startLingua, bankStrings } from '../glitch/lingua.js';
+import { startMotionSettings } from './settings.js';
 
 export function startAmbient() {
+    // ⚠ Wired before the gate below: the profile screen must be able to turn the background back ON,
+    // and a control that only works when the thing it controls is already running is not a control.
+    startMotionSettings();
+
     // Same gate as before: the layout puts `animated-bg` on <body>, and a page that does not want
     // the treatment simply does not carry it.
     if (!document.body.classList.contains('animated-bg')) return;

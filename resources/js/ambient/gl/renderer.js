@@ -260,6 +260,14 @@ export function createRenderer(canvas, capacity) {
             gl.bufferData(gl.ARRAY_BUFFER, sizes, gl.STATIC_DRAW);
         },
 
+        /** Wipe the frame and leave it wiped — for when the visitor has turned the background off. */
+        clear() {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, W, H);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        },
+
         resize(w, h) {
             W = w; H = h;
             washW = Math.max(16, Math.round(w / WASH_DIV));

@@ -21,7 +21,7 @@
 import { Bob, Z_NEAR, Z_FAR } from './bob.js';
 import { Cloud } from './cloud.js';
 import { createRenderer } from './gl/renderer.js';
-import { reducedMotion, onMotionChange } from './motion.js';
+import { backgroundSpeed, level, onMotionChange } from './motion.js';
 
 export const CLOUD_COUNT = 5;
 
@@ -149,7 +149,12 @@ export function createEngine() {
     let lastFrameTime = performance.now();
     let isScrolling = false, scrollTimeout = null, paused = document.hidden;
     let slowCount = 0, fastCount = 0;
-    let reduced = reducedMotion();
+
+    // How fast this universe runs, and whether it runs at all. 0 means the visitor asked for no
+    // background; `calm` keeps it drifting but takes the abrupt patterns out of the rotation.
+    let speed = backgroundSpeed();
+    let calm = level('background') === 'slow';
+    let cleared = false;
     let warp = 0;   // set by the conductor, blended across pattern changes
 
     // Live tuning, exposed the same way `window.testGlitch` is. These are the numbers that can only
@@ -215,9 +220,18 @@ export function createEngine() {
         lastFrameTime = now;
 
         if (paused || renderer.lost) { requestAnimationFrame(frame); return; }
+
+        // Switched off. The loop stays alive so turning it back on is instant, and it costs a
+        // comparison per frame — cheaper than tearing the context down and building it again.
+        if (speed === 0) {
+            if (!cleared) { renderer.clear(); cleared = true; }
+            requestAnimationFrame(frame);
+            return;
+        }
+        cleared = false;
         budget(dtMs);
 
-        if (reduced) {
+        if (calm) {
             velocity = 0; targetVelocity = 0;
         } else {
             const lerp = 1 - Math.exp(-VELOCITY_SMOOTHNESS * wall);
@@ -228,12 +242,14 @@ export function createEngine() {
         // Two time bases. The scroll warp is kept in full for the private drift, where amplitudes
         // are small and a burst reads as a shimmer; damped and capped for choreography, where the
         // undamped factor of forty would finish an eight-second figure in two hundred milliseconds.
-        const driftDt = wall * (1 + velocity / BASE_SPEED);
-        const patternDt = wall * Math.min(PATTERN_WARP_MAX, 1 + velocity / (BASE_SPEED * PATTERN_WARP_DAMPING));
+        // The chosen speed scales BOTH clocks, so a slower background is slower in every respect —
+        // its drift, its choreography and how hard the reader's scrolling pushes it.
+        const driftDt = wall * speed * (1 + velocity / BASE_SPEED);
+        const patternDt = wall * speed * Math.min(PATTERN_WARP_MAX, 1 + velocity / (BASE_SPEED * PATTERN_WARP_DAMPING));
         time += driftDt;
         patternTime += patternDt;
 
-        const targets = onFrame({ bobs, clouds, time, patternTime, dt: patternDt, wall, aspect, reduced });
+        const targets = onFrame({ bobs, clouds, time, patternTime, dt: patternDt, wall, aspect, calm });
 
         let k = 0;
         let zMin = Infinity, zMax = -Infinity;
@@ -264,10 +280,10 @@ export function createEngine() {
         renderer.draw({
             points, count: k, aspect,
             pointScale: tune.pointSize * h,
-            alpha: tune.alpha * (reduced ? 0.75 : 1),
+            alpha: tune.alpha * (calm ? 0.75 : 1),
             glow: tune.glow,
             washSpread: tune.washSpread,
-            washAlpha: tune.washAlpha * (reduced ? 0.8 : 1),
+            washAlpha: tune.washAlpha * (calm ? 0.8 : 1),
             washIntensity: tune.wash,
             warp,
             keep: KEEPS[keepIndex],
@@ -283,18 +299,23 @@ export function createEngine() {
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', resize, { passive: true });
-    onMotionChange((v) => { reduced = v; });
+    onMotionChange(() => {
+        speed = backgroundSpeed();
+        calm = level('background') === 'slow';
+    });
 
     return {
         bobs,
         clouds,
         get aspect() { return aspect; },
+        /** The conductor asks this to keep the abrupt patterns out of a calm rotation. */
+        get reduced() { return calm; },
         setWarp(v) { warp = v; },
         start(fn) {
             onFrame = fn;
-            entryScale = reduced ? 2 : 0;
+            entryScale = calm ? 2 : 0;
             scaleIndex = entryScale;
-            keepIndex = reduced ? 1 : 0;
+            keepIndex = calm ? 1 : 0;
             resize();
             bobs.forEach((b, i) => {
                 const a = (i / CLOUD_COUNT) * Math.PI * 2;
@@ -327,6 +348,5 @@ export function createEngine() {
                 }),
             };
         },
-        get reduced() { return reduced; },
     };
 }
