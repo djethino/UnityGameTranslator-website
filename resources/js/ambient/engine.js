@@ -211,6 +211,9 @@ export function createEngine() {
     let speed = backgroundSpeed();
     let calm = level('background') === 'slow';
     let cleared = false;
+    // How many times a cloud has had to be put back together after reaching a non-finite position.
+    // Reported by `stats()`; it should be zero, and if it is not that is a defect to chase.
+    let repairs = 0;
     let warp = 0;   // set by the conductor, blended across pattern changes
 
     // Live tuning, exposed the same way `window.testGlitch` is. These are the numbers that can only
@@ -363,6 +366,28 @@ export function createEngine() {
                          magnetism.at(c, hand, aspect, bob, tune.radius * bob.scale));
 
             const pos = cloud.pos;
+
+            /**
+             * 🔴 One sentinel point per cloud per frame, and a repair rather than a rescue.
+             *
+             * A cloud's positions are an accumulator: once a NaN reaches one, every step multiplies
+             * it and that cloud is gone for the rest of the visit — silently, looking exactly like a
+             * figure that forgot one of its five. It was seen twice under a teleporting pointer and
+             * could not be reproduced afterwards, so the source is still unknown.
+             *
+             * ⚠ This does NOT hide it. `stats().repairs` counts every time it fires, so a defect
+             * that starts happening is visible from the console instead of being absorbed. Leaving a
+             * cloud dead for a whole visit in exchange for not papering over a bug would be the
+             * wrong trade — but only because the counter makes it not papering over.
+             *
+             * ⚠ Checking one point is enough: a cloud's points share their stiffness and their
+             * centre, so whatever poisons one reaches the rest within a frame or two.
+             */
+            if (!Number.isFinite(pos[0]) || !Number.isFinite(pos[1]) || !Number.isFinite(pos[2])) {
+                cloud.place(bob, tune.radius * bob.scale);
+                repairs++;
+            }
+
             const gain = bob.gain;
             for (let i = 0; i < perCloud; i++, k++) {
                 const j = i * 3;
@@ -526,6 +551,9 @@ export function createEngine() {
                     // +1 drawn in. The only way to see from outside that the five are not all
                     // doing the same thing — which is the entire point of the layer.
                     moods: magnetism.moods,
+                    // 🔴 Should be 0. Anything else means a cloud reached a non-finite position and
+                    // was rebuilt — see the sentinel in the frame loop.
+                    repairs,
                     // The background's break-up, right now: how far the channels are pulled apart
                     // and how long this burst has left. Zero for most of the time, by design.
                     hiss: { split: +hiss.split.toFixed(5), tear: +hiss.tear.toFixed(3),

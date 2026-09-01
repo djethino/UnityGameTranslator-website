@@ -27,6 +27,31 @@ import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js'
 const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway', 'charm'];
 
 /**
+ * 🔴 Which of those are ANGLES, and why they cannot be cross-faded like the rest.
+ *
+ * A figure that keeps turning writes an angle that keeps growing: the corridor's twist is tied to
+ * the distance travelled, so twenty seconds in it is about **54 radians — eight and a half full
+ * turns**. Every other property is a magnitude, and fading 54 to 0 over a second is a magnitude
+ * moving; for an angle it is eight and a half revolutions in 1.3 seconds, which is what was seen —
+ * the clouds spinning on themselves and then snapping.
+ *
+ * ⚠ And nothing about it looked wrong in the code. `twist` reads like any other number in `PROPS`,
+ * and it is only wrong because 54 and 0 name the SAME orientation to within a fraction of a turn.
+ * Interpolated along the shortest arc, the handover turns by at most half a revolution, which is
+ * the true difference between the two figures rather than an artefact of how one of them counts.
+ */
+const ANGLES = new Set(['yaw', 'twist']);
+const TAU = Math.PI * 2;
+
+/** Interpolate two angles the short way round, whatever multiples of a turn they carry. */
+function arc(a, b, k) {
+    let d = (b - a) % TAU;
+    if (d > Math.PI) d -= TAU;
+    else if (d < -Math.PI) d += TAU;
+    return a + d * k;
+}
+
+/**
  * How one figure becomes the next.
  *
  * ⚠ There used to be one answer — a 1.3 s cross-fade — and it was invisible in the good sense and
@@ -269,7 +294,9 @@ export function createConductor({ engine, pickAnchor, strings }) {
             props = now.props.map((p, i) => {
                 const k = kOf(i);
                 return p.map((v, j) => {
-                    const blended = lerp(before.props[i][j], v, k);
+                    const blended = ANGLES.has(PROPS[j])
+                        ? arc(before.props[i][j], v, k)
+                        : lerp(before.props[i][j], v, k);
                     if (!swell) return blended;
                     if (PROPS[j] === 'gain') return blended * (1 + swell * 0.55);
                     if (PROPS[j] === 'scale') return blended * (1 + swell * 0.3);
@@ -283,8 +310,32 @@ export function createConductor({ engine, pickAnchor, strings }) {
 
         // Hand the blended decisions back to the bobs. Done here rather than inside `evaluate` so
         // that a pattern running mid-cross-fade never sees the other one's values.
+        //
+        // 🔴 Except the stiffness, which is capped while a handover runs.
+        //
+        // Everything about a change of figure is smoothed except one thing: the ARRANGEMENT is
+        // replaced outright, at the instant `advance` runs. That is deliberate and it works,
+        // because the springs then carry each point from the old shape to the new one over about a
+        // second. It stops working when the outgoing figure was holding its points rigid: the
+        // corridor runs a grip of 45, so on the first frame after the switch each point is offered
+        // a target a whole unit away and a spring stiff enough to cross it in one step. Measured at
+        // 0.47 clip units of travel in a single frame — a jump, and reported as one.
+        //
+        // ⚠ The cap lifts as the blend completes, so a figure that needs rigidity has it a moment
+        // later, and the only thing given up is a fraction of a second of firmness on rings that
+        // are leaving the frame anyway.
+        // ⚠ The floor is 1.2, not 5, and the difference is arithmetic rather than taste: a point's
+        // stiffness is `omega · grip` with omega up to 9, so a cap of 5 still allows 45 — and a
+        // spring that stiff crosses half a unit in a single 16 ms step, which is exactly the jump
+        // being fixed. At 1.2 the eagerest point moves about three hundredths of a screen in that
+        // frame. Squared, so the cap stays low through the beginning of the handover, which is the
+        // part where the two arrangements are furthest apart.
+        const cap = previous ? lerp(1.2, 60, blend * blend) : 60;
         for (let i = 0; i < bobs.length; i++) {
-            PROPS.forEach((key, j) => { bobs[i][key] = props[i][j]; });
+            PROPS.forEach((key, j) => {
+                const v = props[i][j];
+                bobs[i][key] = (key === 'grip' || key === 'haste') ? Math.min(v, cap) : v;
+            });
         }
 
         // 🔴 After the cross-fade, and after the pattern's own spread. What a cloud that has left

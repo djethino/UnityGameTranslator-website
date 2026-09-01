@@ -120,18 +120,40 @@ const SAMPLE = 0.28;
  * 3.1 units — longer than the whole visible corridor, so the turn had not begun by the time you had
  * flown through it.
  */
-const STEER = 0.8;
-const BANK = 0.3;
+const STEER = 1.35;
+const BANK = 0.34;
 /** How fast the commanded tilt itself may change, per second. Guards against a pointer that jumps. */
 const TILT_RATE = 6;
 
 /** How far ahead of the car the gradient is read. Short enough to be the hill it is ON. */
 const LOOK = 0.45;
 
-/** The ride: how hard a gradient pulls, how fast it settles back, and the two ends. */
-const GRAVITY = 2.6;      // pace gained per second on the steepest descent
-const RELAX = 0.7;        // how eagerly it returns to its resting speed on the flat
-const MIN_PACE = 0.55;    // never a standstill
+/**
+ * The ride.
+ *
+ * ⚠ A descent pulls harder than a climb holds back, and deliberately so — the two are not the same
+ * force. Falling is gravity; climbing is gravity minus whatever speed you brought into the hill, and
+ * a ride that lost as fast as it gained would spend its time at a standstill, which is the one thing
+ * this figure must never be.
+ */
+// ⚠ These two are not readable as a ratio: the descent is throttled as the ceiling nears and the
+// climb is not, so a pair that LOOKS asymmetric measured out exactly even — gain 0.75, loss 0.75.
+// The figures below are set from what came out, not from what they say.
+const GRAVITY_DOWN = 5.2;   // pace gained per second on the steepest descent
+const GRAVITY_UP = 0.85;    // and shed per second on the steepest climb
+const RELAX = 0.7;          // how eagerly it returns to its resting speed on the flat
+const MIN_PACE = 0.55;      // never a standstill
+
+/**
+ * The braking that hands the figure over.
+ *
+ * ⚠ Asked for, and it is not decoration: a corridor running flat out and then simply being replaced
+ * makes the cut visible. Coasting to a near-stop over the last couple of seconds gives the handover
+ * something to begin from — and it is a brake, not a cut, so it must take long enough to be felt as
+ * one.
+ */
+const BRAKE_FROM = 0.9;     // fraction of the figure's life after which it starts slowing
+const BRAKE_TO = 0.42;      // the pace it coasts down to
 
 /**
  * 🔴 The ceiling is not a matter of taste, it is where this figure's own return stops working.
@@ -326,9 +348,17 @@ export default {
         // The pull fades as the ceiling nears, so the ride runs out of acceleration rather than
         // running into a wall. `headroom` is 1 at rest and 0 at the top.
         const headroom = clamp((MAX_PACE - this.pace) / (MAX_PACE - 1), 0, 1);
-        const pull = slope > 0 ? slope * GRAVITY * headroom : slope * GRAVITY;
+        const pull = slope > 0 ? slope * GRAVITY_DOWN * headroom : slope * GRAVITY_UP;
+
+        // Coasting into the handover. The target it settles towards drops away over the last couple
+        // of seconds, so the corridor is already slowing when the next figure takes it — and it
+        // slows by the same relaxation as everything else here, which is why it reads as coasting
+        // rather than as the pattern being switched off.
+        const braking = smoothstep(BRAKE_FROM, 1, ctx.progress);
+        const settle = lerp(resting, BRAKE_TO, braking);
+
         this.pace = clamp(
-            this.pace + ((resting - this.pace) * RELAX + pull) * ctx.dt,
+            this.pace + ((settle - this.pace) * (RELAX + braking * 1.4) + pull * (1 - braking)) * ctx.dt,
             MIN_PACE, MAX_PACE,
         );
 
