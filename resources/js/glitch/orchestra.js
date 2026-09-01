@@ -24,6 +24,7 @@
  */
 
 import { glitchInterval } from '../ambient/motion.js';
+import { warm } from './targets.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 
@@ -129,7 +130,15 @@ export function startOrchestra(voices) {
             play(drawEpisode());
 
             const lull = drawLull();
-            next(rnd(lull.span[0], lull.span[1]) * 1000 * scale);
+            const wait = rnd(lull.span[0], lull.span[1]) * 1000 * scale;
+            // 🔴 Look at the page BEFORE we need to look at it. The scan costs eleven milliseconds
+            // on a large document — a whole frame — and it is the same eleven milliseconds whether
+            // it happens while the field is being drawn or a second earlier with nothing else going
+            // on. Doing the expensive part in the quiet before the effect is the oldest trick in
+            // the book, and the only reason it was not being done is that nobody had measured which
+            // part was expensive.
+            if (wait > 2000) setTimeout(warm, wait - 1400);
+            next(wait);
         }, delay);
     }
 

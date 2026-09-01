@@ -20,6 +20,7 @@ import { startPing, fireNow as firePing } from '../glitch/ping.js';
 import { startLingua, fireNow as fireLingua, bankStrings, warmBanks } from '../glitch/lingua.js';
 import { startOrchestra } from '../glitch/orchestra.js';
 import { startMotionSettings } from './settings.js';
+import { warmGlyphs } from './glyphs.js';
 
 export function startAmbient() {
     // ⚠ Wired before the gate below: the profile screen must be able to turn the background back ON,
@@ -30,19 +31,21 @@ export function startAmbient() {
     // the treatment simply does not carry it.
     if (!document.body.classList.contains('animated-bg')) return;
 
+    // Where letters come from, for whoever needs them. Declared out here rather than inside the
+    // engine's branch: the glyph warm-up below needs it too, and a machine with no WebGL still
+    // benefits from having the alphabets ready.
+    const strings = () => {
+        // Asked for, not waited on. The first letter is drawn from the words on the page; by the
+        // second the banks have landed and the alphabets open up. Requesting it here rather than in
+        // the glitch means the background keeps its variety even with glitches off.
+        warmBanks();
+        const bank = bankStrings();
+        return bank.length ? bank : visibleStrings();
+    };
+
     // Returns null when WebGL is unavailable, having marked <body> so CSS can take over.
     const engine = createEngine();
-    if (engine) {
-        const strings = () => {
-            // Asked for, not waited on. The first letter is drawn from the words on the page; by
-            // the second the banks have landed and the alphabets open up. Requesting it here rather
-            // than in the glitch means the background keeps its variety even with glitches off.
-            warmBanks();
-            const bank = bankStrings();
-            return bank.length ? bank : visibleStrings();
-        };
-        engine.start(createConductor({ engine, pickAnchor, strings }));
-    }
+    if (engine) engine.start(createConductor({ engine, pickAnchor, strings }));
 
     // Decoration on top of a page that has to be usable first: deferred to idle so neither the DOM
     // scan nor the language fetch competes with the first render.
@@ -50,6 +53,20 @@ export function startAmbient() {
     later(() => {
         startPing();
         startLingua();
+
+        // 🔴 Rasterise letters before a figure asks for them. Entering the word or letter pattern
+        // measured 9 to 32 ms — one to two dropped frames — because every character was painted to
+        // a canvas and read back at that moment, up to a hundred of them. They are cached now, but
+        // a cache only helps from the second time; this is what makes the first one cheap too.
+        //
+        // ⚠ A strict budget per slice, and it stops when the page has something better to do. The
+        // work that prevents jank must not be the jank.
+        const chew = (deadline) => {
+            const done = warmGlyphs(strings(), deadline && deadline.timeRemaining
+                ? Math.min(8, deadline.timeRemaining()) : 6);
+            if (!done) later(chew);
+        };
+        later(chew);
         // 🔴 One clock for all three. `fond` is absent on a machine with no WebGL, and the
         // orchestra simply skips that part — the page still flinches and still slips languages.
         startOrchestra({

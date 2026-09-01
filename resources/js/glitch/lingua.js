@@ -67,7 +67,9 @@ async function load(locale) {
         if (!res.ok) return null;
         const data = await res.json();
         const lines = Array.isArray(data.lines) ? data.lines : null;
-        if (lines) banks.set(locale, lines);
+        // ⚠ The flattened view is invalidated here and only here: a bank arriving is the one event
+        // that changes what letters exist.
+        if (lines) { banks.set(locale, lines); flattened = null; }
         return lines;
     } catch {
         // Offline, or the request was cut short. The page is not waiting on this.
@@ -322,12 +324,22 @@ export function warmBanks() {
 }
 
 /** Everything we hold, in every language loaded — what the trace pattern draws its letters from. */
+/**
+ * ⚠ Cached, and the identity of the array matters as much as its contents. Whoever consumes it
+ * memoises the expensive work — tokenising, harvesting characters — against THIS array by
+ * reference, so handing out a fresh copy each time would defeat every cache downstream while
+ * looking like an innocent getter.
+ */
+let flattened = null;
+
 export function bankStrings() {
+    if (flattened) return flattened;
     const out = [];
     // Every third line rather than every seventh: this only builds an array of strings, and the
     // wider the sample the more of each alphabet the letter pattern can reach.
     for (const lines of banks.values()) {
         for (let i = 0; i < lines.length; i += 3) if (lines[i]) out.push(lines[i]);
     }
+    flattened = out;
     return out;
 }

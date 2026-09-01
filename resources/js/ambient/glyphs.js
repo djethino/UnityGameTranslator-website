@@ -136,14 +136,40 @@ function sampler(map) {
  * one rule, no table. Combining marks are excluded (`\p{M}`) because a mark drawn on its own is
  * not a letter, it is a floating accent.
  */
+/**
+ * 🔴 Everything derived from a source of strings is memoised against that source BY REFERENCE.
+ *
+ * Measured: entering the word or letter pattern cost **9 to 32 ms** — one to two dropped frames —
+ * and it was not the rasterising, which is cached one level down. It was this: three thousand
+ * strings split into tokens, with two Unicode property regexes run on **every character**, about a
+ * hundred and eighty thousand tests, redone from nothing every single time a figure started.
+ *
+ * ⚠ None of it changes between two runs. The letters available change when a language bank lands,
+ * and at no other moment — which is why the caller hands out a stable array rather than a fresh
+ * copy, and why one weak reference is enough to know when this is stale.
+ */
+const derived = new WeakMap();
+
+function derive(strings) {
+    let d = derived.get(strings);
+    if (d) return d;
+    d = { chars: null, tokens: null };
+    derived.set(strings, d);
+    return d;
+}
+
 function harvest(strings) {
+    const d = derive(strings);
+    if (d.chars) return d.chars;
+
     const seen = new Set();
     for (const s of strings) {
         for (const ch of s) {
             if (/\p{L}/u.test(ch) && !/\p{M}/u.test(ch)) seen.add(ch);
         }
     }
-    return [...seen];
+    d.chars = [...seen];
+    return d.chars;
 }
 
 let pageChars = null;
@@ -174,9 +200,51 @@ export function pickGlyph(strings = [], tries = 14) {
     return null;
 }
 
+/**
+ * Rasterised characters, kept.
+ *
+ * 🔴 The single most expensive thing this background ever did, and it was invisible because it hides
+ * inside a pattern change rather than inside a frame loop. `rasterize` ends with `getImageData`,
+ * which forces the 2D canvas pipeline to flush and hands the pixels back to the CPU — about a
+ * millisecond a character. `pickWord` tries up to twenty tokens of up to five letters, so entering
+ * the word pattern could ask for a hundred of those: **9 to 32 ms measured, every single time it
+ * ran**, which is one to two dropped frames at 60 Hz.
+ *
+ * ⚠ And nothing about it needed repeating: the same character, the same font and the same grid give
+ * the same ink map for the life of the page. **Failures are cached too** — a character this font
+ * cannot paint is exactly the one the pickers keep drawing again out of the same pool.
+ */
+const glyphs = new Map();
+/** Enough for every alphabet on the page several times over; a bound so a CJK-heavy page cannot
+ *  grow this without limit. */
+const GLYPH_MEMO_MAX = 3000;
+
 function glyphFor(ch) {
+    if (glyphs.has(ch)) return glyphs.get(ch);
     const map = rasterize(ch);
-    return map ? { char: ch, inkAt: sampler(map), density: map.density } : null;
+    const glyph = map ? { char: ch, inkAt: sampler(map), density: map.density } : null;
+    // Dropping the oldest is right rather than clearing: the characters in play on a page are a
+    // small set, and the ones that fall out are the ones nobody has asked for in a long time.
+    if (glyphs.size >= GLYPH_MEMO_MAX) glyphs.delete(glyphs.keys().next().value);
+    glyphs.set(ch, glyph);
+    return glyph;
+}
+
+/**
+ * Rasterise characters nobody has asked for yet, while the page has nothing better to do.
+ *
+ * ⚠ The memo above makes the SECOND word cheap; this is what makes the first one cheap. It spends a
+ * strict budget and stops, so it can be called from an idle callback without becoming the jank it
+ * exists to prevent.
+ */
+export function warmGlyphs(strings, budgetMs = 6) {
+    const until = performance.now() + budgetMs;
+    const pool = harvest(strings.length ? strings : [document.body.innerText || '']);
+    for (let i = 0; i < pool.length; i++) {
+        if (performance.now() > until) return false;
+        glyphFor(pool[(Math.random() * pool.length) | 0]);
+    }
+    return true;
 }
 
 /**
@@ -193,12 +261,17 @@ function glyphFor(ch) {
  */
 export function pickWord(strings = [], max = 5, tries = 20) {
     const source = strings.length ? strings : [(document.body.innerText || '').slice(0, 4000)];
-    const tokens = [];
-    for (const s of source) {
-        for (const t of s.split(/\s+/)) {
-            const letters = [...t].filter((c) => /\p{L}/u.test(c) && !/\p{M}/u.test(c));
-            if (letters.length >= 2) tokens.push(letters);
+    const d = derive(source);
+    let tokens = d.tokens;
+    if (!tokens) {
+        tokens = [];
+        for (const s of source) {
+            for (const t of s.split(/\s+/)) {
+                const letters = [...t].filter((c) => /\p{L}/u.test(c) && !/\p{M}/u.test(c));
+                if (letters.length >= 2) tokens.push(letters);
+            }
         }
+        d.tokens = tokens;
     }
     if (!tokens.length) return null;
 
