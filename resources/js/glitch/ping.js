@@ -70,14 +70,16 @@ function play(el) {
  */
 function flicker() {
     const times = 1 + ((Math.random() * 3) | 0);      // one, two or three
-    let hit = fire();
     let at = 0;
     for (let k = 1; k < times; k++) {
         at += Math.random() < 0.55 ? 70 + Math.random() * 160 : 320 + Math.random() * 520;
         setTimeout(fire, at);
-        hit += 1;
     }
-    return hit;
+    // ⚠ What the FIRST strike touched, not how many strikes were scheduled. The earlier version
+    // counted the scheduled ones too, so on a screen where nothing may be touched it reported
+    // hitting things it had not — which is worse than no number at all, because it is the number a
+    // check would trust.
+    return fire();
 }
 
 function fire() {

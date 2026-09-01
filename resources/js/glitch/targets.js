@@ -207,13 +207,24 @@ function chooseSpread(pool, count, { minGap = 0, accept, rectOf, elOf }) {
         if (chosen.length >= count) break;
         if (accept && !accept(item)) continue;
 
+        // 🔴 Asked again, at the moment of choosing. The scan decided this element was allowed up
+        // to three seconds ago, and three seconds is long enough for a page to have opened a
+        // dialog over it, started an `aria-live` region, or turned itself into a quiet screen. The
+        // scan's job is to find candidates cheaply; deciding that a candidate may still be touched
+        // is a different question and it has to be asked now.
+        //
+        // ⚠ It costs one `closest()` per candidate considered — a handful per glitch, against a
+        // full re-scan of the document. That is why the cache may be long-lived at all.
+        const el = elOf(item);
+        if (!el || !el.isConnected || !allowed(el)) continue;
+
         const r = rectOf(item);
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
         if (spots.some((s) => Math.hypot(s.x - cx, s.y - cy) < minGap)) continue;
 
         // Left last: it is the only expensive test, so it runs on what survived everything else.
-        if (!onTop(elOf(item), r)) continue;
+        if (!onTop(el, r)) continue;
 
         chosen.push(item);
         spots.push({ x: cx, y: cy });
