@@ -21,7 +21,11 @@
  * work for a visitor with no account, and localStorage does.
  */
 
-const KEYS = { background: 'ugt_motion_background', glitch: 'ugt_motion_glitch' };
+const KEYS = {
+    background: 'ugt_motion_background',
+    glitch: 'ugt_motion_glitch',
+    tunnel: 'ugt_motion_tunnel',
+};
 
 /**
  * What each level means, in one place so the screen and the engines cannot disagree.
@@ -44,24 +48,58 @@ export const GLITCH_LEVELS = {
 };
 
 /**
+ * The corridor, which is the one figure somebody has to ask for.
+ *
+ * 🔴 Two states rather than four, and that is not laziness — it is the whole difference between
+ * this setting and the two above it. Those answer "how much", which most people want some of; this
+ * answers "at all", because a tunnel rushing at you is not a stronger version of a drifting field,
+ * it is a different proposition. Nobody wants a milder one; they want it or they do not.
+ *
+ * ⚠ Off by default, including for somebody who has never opened this screen. Everything else here
+ * starts on and can be turned down; this starts off and has to be turned on, because it is the only
+ * figure that moves toward the reader rather than about the page.
+ */
+export const TUNNEL_LEVELS = {
+    off: { allowed: false },
+    on: { allowed: true },
+};
+
+/**
  * Where each setting starts when nobody has chosen.
  *
  * ⚠ Reduced motion does NOT mean a still page. A frozen background is not restful, it just looks
  * broken — so the field keeps drifting slowly and it is the glitches, the only part that rewrites
  * what somebody is reading, that stop.
  */
-const DEFAULTS = { background: 'normal', glitch: 'normal' };
-const REDUCED_DEFAULTS = { background: 'slow', glitch: 'off' };
+const DEFAULTS = { background: 'normal', glitch: 'normal', tunnel: 'off' };
+const REDUCED_DEFAULTS = { background: 'slow', glitch: 'off', tunnel: 'off' };
+
+/**
+ * Which words each setting accepts, looked up rather than branched on.
+ *
+ * 🔴 This was `kind === 'background' ? BACKGROUND_LEVELS : GLITCH_LEVELS` — a two-branch ternary,
+ * written when there were two settings. The third one landed in the `else` and got validated against
+ * the glitch scale, so `setLevel('tunnel', 'on')` found no `on` there and returned without storing
+ * anything: the On button did nothing, and said nothing. What hid it is that `off` happens to exist
+ * in both tables, so half the control worked.
+ *
+ * A map cannot have that failure: a kind with no entry is missing loudly, not silently misrouted.
+ */
+const TABLES = {
+    background: BACKGROUND_LEVELS,
+    glitch: GLITCH_LEVELS,
+    tunnel: TUNNEL_LEVELS,
+};
 
 const query = window.matchMedia('(prefers-reduced-motion: reduce)');
 const listeners = new Set();
 
-const stored = { background: read('background'), glitch: read('glitch') };
+const stored = { background: read('background'), glitch: read('glitch'), tunnel: read('tunnel') };
 
 function read(kind) {
     try {
         const v = localStorage.getItem(KEYS[kind]);
-        const table = kind === 'background' ? BACKGROUND_LEVELS : GLITCH_LEVELS;
+        const table = TABLES[kind];
         // Absent means "I have not chosen", which is a third state and the only one in which the
         // operating system gets to speak. A boolean could not have expressed it.
         return v && Object.prototype.hasOwnProperty.call(table, v) ? v : null;
@@ -103,13 +141,18 @@ export function glitchInterval() {
     return GLITCH_LEVELS[level('glitch')].interval;
 }
 
+/** Whether a figure that has to be asked for may be dealt. See TUNNEL_LEVELS. */
+export function optedIn(kind) {
+    return (TUNNEL_LEVELS[level(kind)] || TUNNEL_LEVELS.off).allowed;
+}
+
 /**
  * Record a choice, or clear it with `null` and hand the decision back to the operating system —
  * which is a real answer, not a way of saying "no": somebody who turns their OS setting on later
  * expects the site to follow.
  */
 export function setLevel(kind, value) {
-    const table = kind === 'background' ? BACKGROUND_LEVELS : GLITCH_LEVELS;
+    const table = TABLES[kind];
     if (value !== null && !Object.prototype.hasOwnProperty.call(table, value)) return;
 
     stored[kind] = value;

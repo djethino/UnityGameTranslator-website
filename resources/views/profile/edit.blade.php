@@ -147,7 +147,7 @@
         @endphp
 
         @foreach($rows as $row)
-            <div class="flex flex-wrap items-start justify-between gap-3 {{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-700' : '' }}">
+            <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-[12rem] flex-1">
                     <p class="text-sm font-medium text-gray-300">{{ __($row['label']) }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ __($row['hint']) }}</p>
@@ -163,6 +163,47 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- The corridor hangs off the blobs rather than standing beside them, because it is one
+                 of their figures and not a third kind of motion. Indented and quieter for the same
+                 reason: a sub-question of the row above, which is also why turning the blobs off
+                 takes it with them. --}}
+            @if($row['kind'] === 'background')
+                <div class="flex flex-wrap items-start justify-between gap-3 mt-4 pl-4 border-l-2 border-gray-700"
+                     data-motion-sub="tunnel">
+                    <div class="min-w-[12rem] flex-1">
+                        <p class="text-sm font-medium text-gray-300">{{ __('profile.motion_tunnel') }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ __('profile.motion_tunnel_hint') }}</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        {{-- Two states, and the reason is in TUNNEL_LEVELS: nobody wants a milder
+                             corridor, they want it or they do not. --}}
+                        <div class="inline-flex rounded-lg border border-gray-600 bg-gray-900/40 p-1"
+                             role="group" aria-label="{{ __('profile.motion_tunnel') }}" data-motion-control="tunnel">
+                            {{-- ⚠ Its own pair of words rather than `motion_off` above. That one answers
+                                 "how much motion" and five languages translated it as "none"
+                                 (Aucun, Ninguno, Nessuno, Nenhum) — right for a scale, wrong for a
+                                 switch. A binary asks a different question, so it gets its own. --}}
+                            <button type="button" data-motion-level="off" aria-pressed="false"
+                                    class="px-3 py-1.5 text-sm rounded-md transition">{{ __('profile.motion_tunnel_off') }}</button>
+                            <button type="button" data-motion-level="on" aria-pressed="false"
+                                    class="px-3 py-1.5 text-sm rounded-md transition">{{ __('profile.motion_tunnel_on') }}</button>
+                        </div>
+
+                        {{-- Its own button because this figure is rare by nature: waiting for it to
+                             come round on its own could take minutes, and somebody deciding whether
+                             they want it needs to see it now. It plays through the ordinary
+                             handover, so it arrives the way it always would. --}}
+                        <button type="button" data-motion-tunnel
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition text-sm">
+                            <i class="fas fa-play mr-2"></i>{{ __('profile.motion_tunnel_try') }}
+                        </button>
+                    </div>
+                </div>
+            @endif
+
+            @if(!$loop->last)<div class="mb-5 pb-5 border-b border-gray-700"></div>@endif
         @endforeach
 
         {{-- A glitch is rare on purpose, so somebody setting its frequency could sit here a full

@@ -205,6 +205,16 @@ export default {
     id: 'tunnel',
     kind: 'predefined',
     calm: false,
+    /**
+     * 🔴 The one figure nobody gets without asking. `optIn` names the setting it needs, and the
+     * conductor reads that name rather than knowing this figure's — so the next opt-in figure costs
+     * a line here and nothing there.
+     *
+     * ⚠ Off by default. Every other figure moves ABOUT the page; this one moves toward the reader,
+     * fills the frame and, at speed, sweeps past several times a second. That is a proposition, not
+     * a degree, and a proposition is offered rather than applied.
+     */
+    optIn: 'tunnel',
     // 🔴 The one figure that refuses free electrons. Everywhere else a cloud leaving the formation
     // reads as a cloud with a mind of its own; here the formation IS the figure, and a ring that
     // wanders off does not read as mischief, it reads as the corridor coming apart.

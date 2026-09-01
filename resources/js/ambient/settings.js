@@ -20,6 +20,17 @@ import { level, isChosen, setLevel, systemAsksReduced, onMotionChange } from './
 import { fireNow as fireGlitch } from '../glitch/ping.js';
 import { fireNow as fireLingua } from '../glitch/lingua.js';
 
+/**
+ * How this screen asks for a figure to be shown now.
+ *
+ * ⚠ Registered rather than imported, because the thing that can do it does not exist yet when this
+ * file runs: the card is wired before the engine is built, deliberately, so that turning the
+ * background back ON from here works at all. Null until an engine exists — and on a machine with no
+ * WebGL it stays null, which is exactly when the button must refuse.
+ */
+let showFigure = null;
+export function offerFigure(fn) { showFigure = fn; }
+
 const ON = ['bg-purple-600', 'text-white', 'shadow'];
 const OFF = ['text-gray-400', 'hover:text-white', 'hover:bg-gray-700/60'];
 
@@ -42,17 +53,30 @@ function paint(root) {
     const following = systemAsksReduced() && !(isChosen('background') && isChosen('glitch'));
     root.querySelectorAll('[data-motion-system]').forEach((el) => { el.hidden = !following; });
 
-    const chosen = isChosen('background') || isChosen('glitch');
+    // ⚠ The corridor counts here too: the reset below clears it, so leaving it out would hide the
+    // only way back for somebody whose sole choice was to turn it on.
+    const chosen = isChosen('background') || isChosen('glitch') || isChosen('tunnel');
     root.querySelectorAll('[data-motion-reset]').forEach((el) => { el.hidden = !chosen; });
 
     // No dead ends: previewing a glitch that has been turned off would do nothing, so the control
     // says so before it is pressed rather than after.
-    root.querySelectorAll('[data-motion-preview]').forEach((el) => {
-        const off = level('glitch') === 'off';
+    const dim = (el, off) => {
         el.disabled = off;
         el.classList.toggle('opacity-40', off);
         el.classList.toggle('cursor-not-allowed', off);
+    };
+    root.querySelectorAll('[data-motion-preview]').forEach((el) => dim(el, level('glitch') === 'off'));
+
+    // ⚠ The corridor's controls follow the blobs, because it IS one of them: with the field switched
+    // off there is nothing for a corridor to happen in, and a toggle that could be set in that state
+    // would be a preference nobody can see the effect of. The same rule as above, one row down.
+    const noField = level('background') === 'off';
+    root.querySelectorAll('[data-motion-sub="tunnel"]').forEach((el) => {
+        el.classList.toggle('opacity-40', noField);
+        el.querySelectorAll('button').forEach((b) => dim(b, noField));
     });
+    // And the button additionally needs something able to show it.
+    root.querySelectorAll('[data-motion-tunnel]').forEach((el) => dim(el, noField || !showFigure));
 }
 
 export function startMotionSettings() {
@@ -74,6 +98,16 @@ export function startMotionSettings() {
         if (event.target.closest('[data-motion-reset]')) {
             setLevel('background', null);
             setLevel('glitch', null);
+            setLevel('tunnel', null);
+            return;
+        }
+
+        if (event.target.closest('[data-motion-tunnel]')) {
+            // 🔴 Through the ordinary handover, not a special path. `play` goes by the same
+            // `advance()` the rotation uses, so the rings are reset to blobs, a transition is dealt
+            // from the same deck, and the field arrives the way it always would — which is the whole
+            // point of a preview. A second route would be showing something the rotation never does.
+            if (showFigure) showFigure('tunnel');
             return;
         }
 

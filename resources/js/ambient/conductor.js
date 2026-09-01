@@ -21,6 +21,7 @@
 
 import { PATTERNS, PREDEFINED, INTELLIGENT } from './patterns/index.js';
 import { pointer, pointerEverSeen } from './pointer.js';
+import { optedIn } from './motion.js';
 import { createRogues } from './rogues.js';
 import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js';
 
@@ -109,7 +110,11 @@ export function createConductor({ engine, pickAnchor, strings }) {
     // ⚠ A pattern that reads the pointer is only drawn once a pointer has existed. On a phone
     // that has not been touched there is none, and such a pattern would run its fallback for
     // its whole length — a figure whose entire content is "nothing is happening".
-    const feasible = (p) => (!p.needsPointer || pointerEverSeen()) && (!engine.reduced || p.calm);
+    // ⚠ `optIn` names the setting a figure needs, rather than the conductor naming the figure. A
+    // list of ids here would be a second place to remember, and the one that gets forgotten.
+    const feasible = (p) => (!p.needsPointer || pointerEverSeen())
+        && (!engine.reduced || p.calm)
+        && (!p.optIn || optedIn(p.optIn));
 
     /**
      * Draw without replacement: a shuffled deck, dealt out, reshuffled when empty.
@@ -131,7 +136,13 @@ export function createConductor({ engine, pickAnchor, strings }) {
         return function draw(avoid) {
             if (!deck.length) {
                 deck = pool.filter(feasible);
-                if (!deck.length) deck = pool.slice();     // never stall for want of a candidate
+                // ⚠ Never stall for want of a candidate — but the escape hatch keeps the opt-in.
+                // The other two conditions are preferences this deliberately overrides (a still
+                // background is not restful, it looks broken); an opt-in is a REFUSAL, and handing
+                // somebody the one figure they turned off, as a fallback, is the worst moment to do
+                // it. Unreachable while nineteen figures survive the filter; written because the
+                // day it is reachable, nothing would say so.
+                if (!deck.length) deck = pool.filter((p) => !p.optIn || optedIn(p.optIn));
                 for (let i = deck.length - 1; i > 0; i--) {
                     const j = (Math.random() * (i + 1)) | 0;
                     [deck[i], deck[j]] = [deck[j], deck[i]];

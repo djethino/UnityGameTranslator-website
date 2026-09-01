@@ -19,7 +19,7 @@ import { pickAnchor, visibleStrings } from '../glitch/targets.js';
 import { startPing, fireNow as firePing } from '../glitch/ping.js';
 import { startLingua, fireNow as fireLingua, bankStrings, warmBanks } from '../glitch/lingua.js';
 import { startOrchestra } from '../glitch/orchestra.js';
-import { startMotionSettings } from './settings.js';
+import { startMotionSettings, offerFigure } from './settings.js';
 import { warmGlyphs } from './glyphs.js';
 
 export function startAmbient() {
@@ -63,7 +63,14 @@ export function startAmbient() {
 
     // Returns null when WebGL is unavailable, having marked <body> so CSS can take over.
     const engine = createEngine();
-    if (engine) engine.start(createConductor({ engine, pickAnchor, strings }));
+    if (engine) {
+        const conductor = createConductor({ engine, pickAnchor, strings });
+        engine.start(conductor);
+        // ⚠ Handed over rather than imported the other way: the settings card is wired before this
+        // exists, so it asks for a figure through a slot it can find empty. On a machine with no
+        // WebGL the slot stays empty and the card's Test button refuses instead of pretending.
+        offerFigure((id) => conductor.play(id));
+    }
 
     // Decoration on top of a page that has to be usable first: deferred to idle so neither the DOM
     // scan nor the language fetch competes with the first render.
