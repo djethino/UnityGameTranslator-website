@@ -349,8 +349,20 @@ export function createEngine() {
         // undamped factor of forty would finish an eight-second figure in two hundred milliseconds.
         // The chosen speed scales BOTH clocks, so a slower background is slower in every respect —
         // its drift, its choreography and how hard the reader's scrolling pushes it.
-        const driftDt = wall * speed * (1 + velocity / BASE_SPEED);
-        const patternDt = wall * speed * Math.min(PATTERN_WARP_MAX, 1 + velocity / (BASE_SPEED * PATTERN_WARP_DAMPING));
+        // 🔴 The MAGNITUDE, and this line is why scrolling up went wrong while scrolling down was
+        // fine. `velocity` is signed — deliberately, because `scroll` below hands the direction to
+        // the figures that want it — and it was being used here as a multiplier on time. Scrolling
+        // down gave a factor of 4 and a pleasant surge; scrolling up gave **minus 29**, and minus
+        // 124 on a flick. A negative dt runs every clock in this system backwards: the corridor
+        // travels in reverse, a figure's progress unwinds, and the ride's own integration goes
+        // unstable because it is being asked to solve forwards with a step that points the other
+        // way.
+        //
+        // ⚠ The comment on `scroll` a few lines down has said the warp is "a magnitude with no
+        // direction" since the day it was written. That was the intent; the code never did it.
+        const surge = Math.abs(velocity);
+        const driftDt = wall * speed * (1 + surge / BASE_SPEED);
+        const patternDt = wall * speed * Math.min(PATTERN_WARP_MAX, 1 + surge / (BASE_SPEED * PATTERN_WARP_DAMPING));
         time += driftDt;
         patternTime += patternDt;
 
