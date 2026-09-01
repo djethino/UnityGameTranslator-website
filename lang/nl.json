@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Elk veld zegt waar zijn waarde vandaan komt.",
     "docs.manager.defaults_key_title": "De toets in de game is de enige instelling die een game niet overerft",
     "docs.manager.defaults_key": "Dezelfde toets wordt niet door elke game hetzelfde herkend, en een game gebruikt hem misschien al voor iets anders. Een game die er al een heeft, houdt die, en zijn kaart biedt aan hem te vervangen.",
-    "docs.manager.oneclick_title": "Eén klik per game",
+    "docs.manager.oneclick_title": "OneClick, per game",
     "docs.manager.oneclick_intro": "Kies een game en onderin het venster verschijnt een balk. Die somt op wat één klik hier zou doen, vóór je klikt, en de knop draagt de naam van wat hij gaat doen. Afhankelijk van de game gaat hij:",
     "docs.manager.oneclick_step_loader": "de Mod Loader installeren, of de aanwezige bijwerken",
     "docs.manager.oneclick_step_mod": "de mod installeren, of bijwerken",

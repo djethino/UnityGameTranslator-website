@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Ogni campo dice da dove viene il suo valore.",
     "docs.manager.defaults_key_title": "Il tasto dentro il gioco è l'unica impostazione che un gioco non eredita",
     "docs.manager.defaults_key": "Lo stesso tasto non viene rilevato allo stesso modo da tutti i giochi, e un gioco potrebbe già usarlo per altro. Un gioco che ne ha già uno se lo tiene, e la sua scheda propone di sostituirlo.",
-    "docs.manager.oneclick_title": "Un clic per gioco",
+    "docs.manager.oneclick_title": "OneClick, per gioco",
     "docs.manager.oneclick_intro": "Scegli un gioco e in fondo alla finestra compare una barra. Elenca cosa farebbe un clic qui, prima che tu clicchi, e il pulsante porta il nome di ciò che sta per fare. A seconda del gioco:",
     "docs.manager.oneclick_step_loader": "installa il Mod Loader, o aggiorna quello già presente",
     "docs.manager.oneclick_step_mod": "installa la mod, o la aggiorna",

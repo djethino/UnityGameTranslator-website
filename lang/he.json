@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "כל שדה אומר מאין הגיע ערכו.",
     "docs.manager.defaults_key_title": "המקש בתוך המשחק הוא ההגדרה היחידה שמשחק אינו יורש",
     "docs.manager.defaults_key": "אותו מקש אינו מזוהה באותה צורה בכל משחק, וייתכן שהמשחק כבר משתמש בו למשהו אחר. משחק שכבר יש לו מקש שומר עליו, והכרטיס שלו מציע להחליף.",
-    "docs.manager.oneclick_title": "קליק אחד לכל משחק",
+    "docs.manager.oneclick_title": "OneClick, לכל משחק",
     "docs.manager.oneclick_intro": "בחרו משחק ובתחתית החלון תופיע שורה. היא מונה מה קליק אחד יעשה כאן, עוד לפני שלוחצים, והכפתור נושא את שם הפעולה שהוא עומד לבצע. בהתאם למשחק, הוא:",
     "docs.manager.oneclick_step_loader": "יתקין את טוען המודים, או יעדכן את זה שכבר נמצא",
     "docs.manager.oneclick_step_mod": "יתקין את המוד, או יעדכן אותו",

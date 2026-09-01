@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "每一项都会说明它的值从哪来。",
     "docs.manager.defaults_key_title": "游戏里的那个键是游戏唯一不会继承的设置",
     "docs.manager.defaults_key": "同一个键，各个游戏识别的方式并不一样，而且游戏可能已经拿它做别的用途了。已经定好键的游戏会保留它，卡片上会问你要不要换。",
-    "docs.manager.oneclick_title": "每个游戏一次点击",
+    "docs.manager.oneclick_title": "OneClick，每个游戏",
     "docs.manager.oneclick_intro": "选中一个游戏，窗口底部会出现一条栏。它在你点击之前就列出这一下会做什么，按钮上写的也正是它要做的事。视游戏而定，它会：",
     "docs.manager.oneclick_step_loader": "安装模组加载器，或者更新已经在那儿的那个",
     "docs.manager.oneclick_step_mod": "安装模组，或者更新它",

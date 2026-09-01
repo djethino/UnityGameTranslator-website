@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "모든 항목이 그 값의 출처를 밝혀 줍니다.",
     "docs.manager.defaults_key_title": "게임 안의 키만은 게임이 물려받지 않습니다",
     "docs.manager.defaults_key": "같은 키라도 게임마다 감지 방식이 다르고, 그 게임이 이미 다른 용도로 쓰고 있을 수도 있습니다. 이미 키가 정해진 게임은 그대로 두고, 그 카드에서 바꿀지 물어봅니다.",
-    "docs.manager.oneclick_title": "게임 하나에 클릭 한 번",
+    "docs.manager.oneclick_title": "OneClick, 게임마다",
     "docs.manager.oneclick_intro": "게임을 고르면 창 아래쪽에 막대가 나타납니다. 클릭하기 전에 여기서 한 번의 클릭이 무엇을 할지 나열하고, 버튼에는 그 일의 이름이 붙습니다. 게임에 따라 다음을 합니다.",
     "docs.manager.oneclick_step_loader": "모드 로더를 설치하거나, 이미 있는 것을 업데이트합니다",
     "docs.manager.oneclick_step_mod": "모드를 설치하거나 업데이트합니다",

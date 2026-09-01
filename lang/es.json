@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Cada campo dice de dónde viene su valor.",
     "docs.manager.defaults_key_title": "La tecla dentro del juego es el único ajuste que un juego no hereda",
     "docs.manager.defaults_key": "La misma tecla no la detectan igual todos los juegos, y un juego puede estar usándola ya para otra cosa. Un juego que ya tiene una se la queda, y su ficha ofrece cambiarla.",
-    "docs.manager.oneclick_title": "Un clic por juego",
+    "docs.manager.oneclick_title": "OneClick, por juego",
     "docs.manager.oneclick_intro": "Elige un juego y aparece una barra en la parte inferior de la ventana. Enumera lo que haría un clic aquí, antes de que hagas clic, y el botón lleva el nombre de lo que va a hacer. Según el juego, va a:",
     "docs.manager.oneclick_step_loader": "instalar el Mod Loader, o actualizar el que ya está",
     "docs.manager.oneclick_step_mod": "instalar el mod, o actualizarlo",

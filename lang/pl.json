@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Każde pole mówi, skąd bierze się jego wartość.",
     "docs.manager.defaults_key_title": "Klawisz w grze to jedyne ustawienie, którego gra nie dziedziczy",
     "docs.manager.defaults_key": "Tego samego klawisza nie każda gra wykrywa tak samo, a gra może już go do czegoś używać. Gra, która ma już swój, zatrzymuje go, a jej karta proponuje jego zmianę.",
-    "docs.manager.oneclick_title": "Jedno kliknięcie na grę",
+    "docs.manager.oneclick_title": "OneClick, na grę",
     "docs.manager.oneclick_intro": "Wybierz grę, a na dole okna pojawi się pasek. Wylicza, co zrobiłoby tu jedno kliknięcie — zanim klikniesz — a przycisk nosi nazwę tego, co zamierza zrobić. Zależnie od gry:",
     "docs.manager.oneclick_step_loader": "zainstaluje loader modów albo zaktualizuje ten, który już tam jest",
     "docs.manager.oneclick_step_mod": "zainstaluje moda albo go zaktualizuje",

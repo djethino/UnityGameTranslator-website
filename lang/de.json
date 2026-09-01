@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Jedes Feld sagt, woher sein Wert kommt.",
     "docs.manager.defaults_key_title": "Die Taste im Spiel ist die einzige Einstellung, die ein Spiel nicht erbt",
     "docs.manager.defaults_key": "Dieselbe Taste wird nicht von jedem Spiel gleich erkannt, und ein Spiel benutzt sie vielleicht schon für etwas anderes. Ein Spiel, das bereits eine hat, behält sie, und seine Karte bietet an, sie zu ersetzen.",
-    "docs.manager.oneclick_title": "Ein Klick pro Spiel",
+    "docs.manager.oneclick_title": "OneClick, pro Spiel",
     "docs.manager.oneclick_intro": "Wähle ein Spiel, und unten im Fenster erscheint eine Leiste. Sie zählt auf, was ein Klick hier tun würde — bevor du klickst — und die Schaltfläche trägt den Namen dessen, was sie tut. Je nach Spiel wird sie:",
     "docs.manager.oneclick_step_loader": "den Mod-Loader installieren oder den vorhandenen aktualisieren",
     "docs.manager.oneclick_step_mod": "die Mod installieren oder aktualisieren",

@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Chaque champ dit d'où vient sa valeur.",
     "docs.manager.defaults_key_title": "La touche dans le jeu est le seul réglage qu'un jeu n'hérite pas",
     "docs.manager.defaults_key": "La même touche n'est pas détectée de la même façon par tous les jeux, et un jeu peut déjà s'en servir pour autre chose. Un jeu qui en a déjà une la garde, et sa fiche propose de la remplacer.",
-    "docs.manager.oneclick_title": "Un clic par jeu",
+    "docs.manager.oneclick_title": "OneClick, par jeu",
     "docs.manager.oneclick_intro": "Choisissez un jeu et une barre apparaît en bas de la fenêtre. Elle énumère ce qu'un clic ferait ici, avant que vous cliquiez, et le bouton porte le nom de ce qu'il va faire. Selon le jeu, il va :",
     "docs.manager.oneclick_step_loader": "installer le Mod Loader, ou mettre à jour celui qui est déjà là",
     "docs.manager.oneclick_step_mod": "installer le mod, ou le mettre à jour",

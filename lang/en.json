@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Every field says where its value comes from.",
     "docs.manager.defaults_key_title": "The in-game key is the one setting a game does not inherit",
     "docs.manager.defaults_key": "The same key is not detected the same way in every game, and a game may already use it for something else. A game that already has one keeps it, and its card offers to replace it.",
-    "docs.manager.oneclick_title": "One click per game",
+    "docs.manager.oneclick_title": "OneClick, per game",
     "docs.manager.oneclick_intro": "Pick a game and a bar appears at the bottom of the window. It lists what one click would do here, before you click, and the button is named after it. Depending on the game, it will:",
     "docs.manager.oneclick_step_loader": "install the mod loader, or update the one already there",
     "docs.manager.oneclick_step_mod": "install the mod, or update it",

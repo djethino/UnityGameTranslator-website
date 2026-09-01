@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Mỗi ô đều cho biết giá trị của nó đến từ đâu.",
     "docs.manager.defaults_key_title": "Phím trong game là thiết lập duy nhất mà một game không kế thừa",
     "docs.manager.defaults_key": "Cùng một phím không được mọi game nhận diện giống nhau, và một game có thể đã dùng nó cho việc khác. Game nào đã có phím riêng thì giữ nguyên, và thẻ của nó đề nghị thay đổi.",
-    "docs.manager.oneclick_title": "Một cú nhấp cho mỗi game",
+    "docs.manager.oneclick_title": "OneClick, cho mỗi game",
     "docs.manager.oneclick_intro": "Chọn một game, và một thanh hiện ra ở đáy cửa sổ. Thanh đó liệt kê một cú nhấp sẽ làm gì ở đây, trước khi bạn nhấp, và nút mang đúng tên việc nó sắp làm. Tùy game, nó sẽ:",
     "docs.manager.oneclick_step_loader": "cài Mod Loader, hoặc cập nhật cái đã có sẵn",
     "docs.manager.oneclick_step_mod": "cài mod, hoặc cập nhật nó",

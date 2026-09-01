@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "كل حقل يقول من أين جاءت قيمته.",
     "docs.manager.defaults_key_title": "المفتاح داخل اللعبة هو الإعداد الوحيد الذي لا ترثه اللعبة",
     "docs.manager.defaults_key": "المفتاح نفسه لا تلتقطه كل لعبة بالطريقة نفسها، وقد تكون اللعبة تستعمله أصلًا لشيء آخر. اللعبة التي لها مفتاح من قبل تحتفظ به، وبطاقتها تعرض استبداله.",
-    "docs.manager.oneclick_title": "نقرة واحدة لكل لعبة",
+    "docs.manager.oneclick_title": "OneClick، لكل لعبة",
     "docs.manager.oneclick_intro": "اختر لعبة فيظهر شريط في أسفل النافذة. يعدّد لك ما ستفعله نقرة واحدة هنا قبل أن تنقر، ويحمل الزر اسم العمل الذي سيقوم به. وبحسب اللعبة، سيقوم بـ:",
     "docs.manager.oneclick_step_loader": "تثبيت محمّل الإضافات، أو تحديث الموجود أصلًا",
     "docs.manager.oneclick_step_mod": "تثبيت الإضافة، أو تحديثها",

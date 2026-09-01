@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Her alan değerinin nereden geldiğini söyler.",
     "docs.manager.defaults_key_title": "Oyun içindeki tuş, bir oyunun devralmadığı tek ayardır",
     "docs.manager.defaults_key": "Aynı tuş her oyun tarafından aynı biçimde algılanmaz ve bir oyun onu zaten başka bir iş için kullanıyor olabilir. Zaten bir tuşu olan oyun onu korur, kartı da değiştirmeyi önerir.",
-    "docs.manager.oneclick_title": "Oyun başına tek tık",
+    "docs.manager.oneclick_title": "OneClick, oyun başına",
     "docs.manager.oneclick_intro": "Bir oyun seçin, pencerenin altında bir çubuk belirsin. Burada tek tıkın ne yapacağını, siz tıklamadan önce sıralar; düğme de yapacağı işin adını taşır. Oyuna göre şunları yapar:",
     "docs.manager.oneclick_step_loader": "mod yükleyiciyi kurar ya da halihazırdakini günceller",
     "docs.manager.oneclick_step_mod": "modu kurar ya da günceller",

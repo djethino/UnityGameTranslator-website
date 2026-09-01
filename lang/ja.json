@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "どの項目も、その値の出どころを示します。",
     "docs.manager.defaults_key_title": "ゲーム内のキーだけは、ゲームが引き継ぎません",
     "docs.manager.defaults_key": "同じキーでも、ゲームによって検出のされ方が違います。そのゲームがすでに別の用途で使っていることもあります。すでにキーが決まっているゲームはそれを保ち、そのカードから差し替えを提案します。",
-    "docs.manager.oneclick_title": "ゲーム 1 本につき 1 クリック",
+    "docs.manager.oneclick_title": "OneClick、ゲームごとに",
     "docs.manager.oneclick_intro": "ゲームを選ぶと、ウィンドウの下部にバーが現れます。バーはクリックする前に、ここで 1 クリックが何をするかを並べ、ボタンにはこれから行うことの名前が付きます。ゲームによって、次のことを行います。",
     "docs.manager.oneclick_step_loader": "Modローダーをインストールする、またはすでにあるものを更新する",
     "docs.manager.oneclick_step_mod": "Mod をインストールする、または更新する",

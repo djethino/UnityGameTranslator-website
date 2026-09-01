@@ -15,14 +15,20 @@
 export const POSITION_LINE = 120;
 
 /**
- * What counts as "a place on the page" by default.
+ * What counts as "a place on the page".
  *
- * ⚠ The two callers deliberately pass different things. The reading trail wants SECTIONS — it
- * records where a jump came from, and "you came from a sub-heading of Configuration" is noise. The
- * table of contents wants sections AND the sub-entries it lists, otherwise a menu showing eleven
- * sub-entries can only ever highlight the section they hang under.
+ * 🔴 One answer for both callers, which is the entire reason this file exists — and it was not.
+ * The trail was left on the default, `section[id]`, on the reasoning that "you came from a
+ * sub-heading of Configuration" is noise; the table of contents was passed sections AND the
+ * anchors it lists. So the two disagreed on the very page they share: the menu highlighted the
+ * sub-entry you were reading while the trail offered to take you back to the section above it.
+ *
+ * ⚠ The reasoning was wrong, not merely inconsistent. `[data-nav-anchor]` is not a sub-heading, it
+ * is a place the page itself decided to name and put in the menu — on the documentation, 43 of
+ * them against 13 sections. Told "go back to Manager" after leaving "OneClick", a reader has been
+ * handed the name of somewhere they were not.
  */
-export const SECTION_SELECTOR = 'section[id]';
+export const SECTION_SELECTOR = 'section[id], [data-nav-anchor][id]';
 
 export function currentSectionId(root = document, positionLine = POSITION_LINE,
                                  selector = SECTION_SELECTOR) {

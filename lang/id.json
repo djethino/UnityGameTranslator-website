@@ -1474,7 +1474,7 @@
     "docs.manager.shot_inherited_caption": "Tiap kolom menyebut dari mana nilainya berasal.",
     "docs.manager.defaults_key_title": "Tombol di dalam game adalah satu-satunya pengaturan yang tidak diwarisi sebuah game",
     "docs.manager.defaults_key": "Tombol yang sama tidak dikenali sama oleh setiap game, dan sebuah game mungkin sudah memakainya untuk hal lain. Game yang sudah punya tetap memakainya, dan kartunya menawarkan menggantinya.",
-    "docs.manager.oneclick_title": "Satu klik per game",
+    "docs.manager.oneclick_title": "OneClick, per game",
     "docs.manager.oneclick_intro": "Pilih sebuah game, lalu muncul bilah di bagian bawah jendela. Bilah itu merinci apa yang akan dilakukan satu klik di sini, sebelum kamu mengklik, dan tombolnya memakai nama pekerjaan yang akan dilakukannya. Tergantung game-nya, ia akan:",
     "docs.manager.oneclick_step_loader": "memasang Mod Loader, atau memperbarui yang sudah ada",
     "docs.manager.oneclick_step_mod": "memasang mod, atau memperbaruinya",

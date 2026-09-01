@@ -162,17 +162,18 @@ collapsibles.forEach(group => {
 const historyRoot = document.querySelector('[data-section-history]');
 if (historyRoot) {
     createSectionHistory({ root: historyRoot });
-    // The table of contents finally says where you are. Same page, same position measurement —
-    // they share section-position.js so the trail and the menu can never disagree about it.
-    // ⚠ `.docs-nav-sub` is in the link list AND `[data-nav-anchor]` in the anchor list, or the menu
-    // lists sub-entries that can never light up. The trail above keeps the default selector: it
-    // records sections, and recording sub-headings would make it far noisier for no gain.
+    // The table of contents says where you are. Same page, same measurement — they share
+    // section-position.js so the trail and the menu cannot disagree about it.
+    //
+    // ⚠ That sentence was written here while the code did the opposite: the spy was handed the
+    // anchors and the trail was left on a narrower default, so the menu highlighted the sub-entry
+    // being read while the trail offered to go back to the section above it. Neither passes a
+    // selector now — one default, and no second place for them to drift apart in.
     let lastNavSection = null;
 
     createSectionSpy({
         root: historyRoot,
         linkSelector: '.docs-nav-item, .docs-nav-sub',
-        anchorSelector: 'section[id], [data-nav-anchor]',
         // The trail is deepest-first, so the section is its last element.
         onCurrent: (trail) => {
             const section = trail[trail.length - 1] ?? null;
