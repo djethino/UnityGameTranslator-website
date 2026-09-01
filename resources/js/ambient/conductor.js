@@ -19,8 +19,8 @@
  * forgotten by the next one written.
  */
 
-import { PREDEFINED, INTELLIGENT } from './patterns/index.js';
-import { pointer } from './pointer.js';
+import { PATTERNS, PREDEFINED, INTELLIGENT } from './patterns/index.js';
+import { pointer, pointerEverSeen } from './pointer.js';
 import { rngFrom, lerp, clamp, smoothstep } from './patterns/util.js';
 
 const BLEND = 1.3;              // seconds of overlap between two patterns
@@ -29,7 +29,7 @@ const ROGUE_CHECK = 26;         // how often we consider sending one off
 const ROGUE_CHANCE = 0.42;
 const ROGUE_TIME = [7, 12];     // how long it stays away
 
-const PROPS = ['gain', 'scale', 'shearX', 'shearY'];
+const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip'];
 
 export function createConductor({ engine, pickAnchor, strings }) {
     const bobs = engine.bobs;
@@ -43,6 +43,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
 
     let rogue = null;
     let rogueClock = 0;
+    let scroll = 0;   // signed scroll velocity for this frame, for the patterns that ride it
 
     function instantiate(module, seed) {
         // A fresh object over the module, so `this.buf`, `this.glyph` and friends belong to THIS
@@ -56,9 +57,13 @@ export function createConductor({ engine, pickAnchor, strings }) {
     }
 
     function pick(pool) {
-        const usable = pool.filter((p) => (!engine.reduced || p.calm) && p.id !== lastId);
-        const from = usable.length ? usable : pool.filter((p) => !engine.reduced || p.calm);
-        return from[(Math.random() * from.length) | 0];
+        // ⚠ A pattern that reads the pointer is only drawn once a pointer has existed. On a phone
+        // that has not been touched there is none, and such a pattern would run its fallback for
+        // its whole length — a figure whose entire content is "nothing is happening".
+        const feasible = (p) => (!p.needsPointer || pointerEverSeen()) && (!engine.reduced || p.calm);
+        const usable = pool.filter((p) => feasible(p) && p.id !== lastId);
+        const from = usable.length ? usable : pool.filter(feasible);
+        return from.length ? from[(Math.random() * from.length) | 0] : pool[0];
     }
 
     function refill() {
@@ -112,9 +117,27 @@ export function createConductor({ engine, pickAnchor, strings }) {
             reduced: engine.reduced,
             rng: inst.rng,
             strings,
+            scroll,
+            radius: engine.radius,
+            // Something visible worth reacting to — the SAME scan the glitches use, so a pattern
+            // can never point at a screen the glitches are forbidden from touching.
+            anchor: pickAnchor,
             setWarp: (v) => { inst._warp = v; },
             aspect: engine.aspect,
-            teleport: (i, x, y, z) => bobs[i].place(x, y, z),
+            /**
+             * Move a cloud without it travelling — the only place in this system where a position
+             * is assigned rather than approached.
+             *
+             * 🔴 The POPULATION is moved too, not just its centre. Moving the centre alone leaves
+             * several hundred points where they were, each on its own spring, and they cross the
+             * whole field to catch up — which is exactly the journey the teleport existed to avoid.
+             * The ambush looked like the clouds were boomeranging back; the tunnel looked like the
+             * first ring backed away every time instead of letting you in.
+             */
+            teleport: (i, x, y, z) => {
+                bobs[i].place(x, y, z);
+                clouds[i].place(bobs[i], engine.radius * bobs[i].scale);
+            },
         };
     }
 
@@ -195,7 +218,25 @@ export function createConductor({ engine, pickAnchor, strings }) {
 
     advance();
 
-    return function frame({ dt, patternTime }) {
+    /**
+     * Put a named pattern on screen now, jumping the queue.
+     *
+     * Exposed as `window.ambient.play(id)`. It is a real control, not scaffolding: with nineteen
+     * figures in rotation, waiting for the one you want to look at is minutes of sitting still, and
+     * nobody tunes anything that way. It goes through `advance()` so the cross-fade, the ball reset
+     * and a refusal from `enter()` all behave exactly as they do in the ordinary sequence.
+     */
+    const play = (id) => {
+        const found = PATTERNS.find((p) => p.id === id);
+        if (!found) return PATTERNS.map((p) => p.id);
+        queue.unshift(found);
+        current = null;
+        advance();
+        return current ? current.id : 'refused';
+    };
+
+    return Object.assign(function frame({ dt, patternTime, scroll: velocity }) {
+        scroll = velocity || 0;
         if (!current) advance();
 
         const now = evaluate(current, dt);
@@ -242,5 +283,5 @@ export function createConductor({ engine, pickAnchor, strings }) {
         if (current.t >= current.duration && blend >= 1) advance();
 
         return targets;
-    };
+    }, { play, get playing() { return current && current.id; } });
 }

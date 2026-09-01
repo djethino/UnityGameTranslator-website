@@ -17,7 +17,7 @@ import { createEngine } from './engine.js';
 import { createConductor } from './conductor.js';
 import { pickAnchor, visibleStrings } from '../glitch/targets.js';
 import { startPing } from '../glitch/ping.js';
-import { startLingua, bankStrings } from '../glitch/lingua.js';
+import { startLingua, bankStrings, warmBanks } from '../glitch/lingua.js';
 import { startMotionSettings } from './settings.js';
 
 export function startAmbient() {
@@ -33,6 +33,10 @@ export function startAmbient() {
     const engine = createEngine();
     if (engine) {
         const strings = () => {
+            // Asked for, not waited on. The first letter is drawn from the words on the page; by
+            // the second the banks have landed and the alphabets open up. Requesting it here rather
+            // than in the glitch means the background keeps its variety even with glitches off.
+            warmBanks();
             const bank = bankStrings();
             return bank.length ? bank : visibleStrings();
         };

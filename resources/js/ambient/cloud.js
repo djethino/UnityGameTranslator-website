@@ -96,10 +96,16 @@ export class Cloud {
      * Move every point one step toward where it should be.
      *
      * `spin` slowly turns the arrangement about the view axis so a resting cloud keeps turning over
-     * instead of presenting the same face for twelve seconds. `shearX`/`shearY` lean it into a turn.
+     * instead of presenting the same face for twelve seconds. `shearX`/`shearY` lean it into a turn,
+     * and `yaw` turns it in depth.
      */
-    update(centre, radius, dt, time, spin = 0, shearX = 0, shearY = 0, active = this.count) {
+    update(centre, radius, dt, time, spin = 0, shearX = 0, shearY = 0, active = this.count, yaw = 0, grip = 1) {
         const cs = Math.cos(spin), sn = Math.sin(spin);
+        // ⚠ A second rotation, about the VERTICAL axis, and it is not the same as `spin`. Spin
+        // turns the arrangement in the plane of the screen — a ring keeps facing you. Yaw turns it
+        // in depth, so what was at the front goes behind: that is what makes a globe a globe rather
+        // than a spinning disc, and it is the only rotation that changes a point's z.
+        const cy = Math.cos(yaw), sy = Math.sin(yaw);
         const { shape, pos, vel, omega, phase, jitter } = this;
         // `active` thins the population without paying to integrate points nobody will draw.
         const count = Math.min(active, this.count);
@@ -107,7 +113,10 @@ export class Cloud {
         for (let i = 0; i < count; i++) {
             const j = i * 3;
 
-            const ox = shape[j], oy = shape[j + 1], oz = shape[j + 2];
+            const ox0 = shape[j], oy = shape[j + 1], oz0 = shape[j + 2];
+            // Yaw first, in depth, then spin in the plane of the screen.
+            const ox = yaw ? ox0 * cy + oz0 * sy : ox0;
+            const oz = yaw ? oz0 * cy - ox0 * sy : oz0;
             const sx0 = ox * cs - oy * sn;
             const sy0 = ox * sn + oy * cs;
             // Shear leans the whole population into a turn. Applied to the arrangement, not to the
@@ -116,7 +125,13 @@ export class Cloud {
             const rx = sx0 + sy0 * shearX;
             const ry = sy0 + sx0 * shearY;
 
-            const w = omega[i];
+            // 🔴 The spread of eagerness is what makes a cloud organic — and what makes a RIGID
+            // arrangement impossible. A tunnel ring whose slowest points are half a corridor behind
+            // its centre does not leave the frame when the centre does: it dissolves in the middle
+            // of the screen, which is exactly what "the near ring disappears" was. `grip` tightens
+            // every point at once, so a pattern that needs an object rather than a mist can have
+            // one without giving up the default.
+            const w = omega[i] * grip;
             const jt = jitter[i];
             const ph = phase[i];
 

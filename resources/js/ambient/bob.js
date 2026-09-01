@@ -56,6 +56,9 @@ export class Bob {
         this.scale = 1;         // the cloud contracts or swells, independent of depth
         this.shearX = 0;        // the camera charge's fake fisheye
         this.shearY = 0;
+        this.yaw = 0;           // rotation about the vertical axis — a globe, a tunnel
+        this.twist = 0;         // extra rotation in the plane of the screen, on top of the engine's
+        this.grip = 1;          // how tightly the points hold their places — 1 is loose and organic
 
         this.resetFrameProps();
 
@@ -105,6 +108,9 @@ export class Bob {
         this.scale = 1;
         this.shearX = 0;
         this.shearY = 0;
+        this.yaw = 0;
+        this.twist = 0;
+        this.grip = 1;
     }
 
     /** Drop it somewhere with no travel — used when the engine (re)starts, never mid-flight. */

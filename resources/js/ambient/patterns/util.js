@@ -29,6 +29,38 @@ export function rngFrom(seed) {
     };
 }
 
+/**
+ * Undo the projection: where must a cloud BE, in the field, to appear at a given point of the
+ * screen at a given depth?
+ *
+ * 🔴 Both factors are needed and forgetting either is silent. The vertex shader draws a point at
+ * `x / z / aspect`, so a pattern aiming at a screen position has to multiply by BOTH — miss the
+ * depth and everything lands near the middle, miss the aspect and it lands too far left or right on
+ * a wide display. Neither produces an error, only a figure pointing at nothing.
+ *
+ * `fx` and `fy` are the screen position as -1…1 from the centre, y downwards.
+ */
+export function fromScreen(fx, fy, z, aspect) {
+    return { x: fx * z * aspect, y: fy * z, z };
+}
+
+/** A DOM rectangle as that same -1…1 pair, plus its size in the same units. */
+export function screenRect(rect) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    return {
+        x: ((rect.left + rect.width / 2) / w) * 2 - 1,
+        y: ((rect.top + rect.height / 2) / h) * 2 - 1,
+        top: (rect.top / h) * 2 - 1,
+        bottom: (rect.bottom / h) * 2 - 1,
+        left: (rect.left / w) * 2 - 1,
+        right: (rect.right / w) * 2 - 1,
+        halfWidth: rect.width / w,
+        halfHeight: rect.height / h,
+        onScreen: rect.width > 0 && rect.bottom > 0 && rect.top < h,
+    };
+}
+
 /** A value in [-1, 1] that never repeats, from three sines at irrational ratios. */
 export function wander(t, phase = 0) {
     return (Math.sin(t * 0.618 + phase) * 0.5

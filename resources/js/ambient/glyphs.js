@@ -168,8 +168,54 @@ export function pickGlyph(strings = [], tries = 14) {
 
     for (let i = 0; i < tries; i++) {
         const ch = pool[(Math.random() * pool.length) | 0];
-        const map = rasterize(ch);
-        if (map) return { char: ch, inkAt: sampler(map), density: map.density };
+        const glyph = glyphFor(ch);
+        if (glyph) return glyph;
+    }
+    return null;
+}
+
+function glyphFor(ch) {
+    const map = rasterize(ch);
+    return map ? { char: ch, inkAt: sampler(map), density: map.density } : null;
+}
+
+/**
+ * A short run of letters that were written NEXT TO EACH OTHER in a real sentence.
+ *
+ * ⚠ Not the same thing as calling `pickGlyph` several times, and the difference is the whole point:
+ * five unrelated characters read as debris, five consecutive ones read as a word. It will often be
+ * a fragment rather than a whole word — a token gets trimmed to what five brushes can hold, and a
+ * script without spaces has no tokens to speak of — but it is always a real sequence from a real
+ * language, which is what the eye responds to.
+ *
+ * Characters that fail the paintability test are dropped rather than replaced, so the run stays
+ * contiguous: skipping one and taking the next would silently rewrite the word.
+ */
+export function pickWord(strings = [], max = 5, tries = 20) {
+    const source = strings.length ? strings : [(document.body.innerText || '').slice(0, 4000)];
+    const tokens = [];
+    for (const s of source) {
+        for (const t of s.split(/\s+/)) {
+            const letters = [...t].filter((c) => /\p{L}/u.test(c) && !/\p{M}/u.test(c));
+            if (letters.length >= 2) tokens.push(letters);
+        }
+    }
+    if (!tokens.length) return null;
+
+    for (let i = 0; i < tries; i++) {
+        const token = tokens[(Math.random() * tokens.length) | 0];
+        // A long token is cut at a random point rather than always at the start, so a language
+        // without spaces does not always show the same opening syllables.
+        const room = Math.min(max, token.length);
+        const from = token.length > room ? (Math.random() * (token.length - room + 1)) | 0 : 0;
+
+        const run = [];
+        for (const ch of token.slice(from, from + room)) {
+            const glyph = glyphFor(ch);
+            if (!glyph) break;
+            run.push(glyph);
+        }
+        if (run.length >= 2) return run;
     }
     return null;
 }

@@ -103,10 +103,22 @@
             @endforeach
         </div>
 
-        {{-- One primary action, one secondary, one link. Three buttons of equal weight are no
-             hierarchy at all, and the download lost its force among them. --}}
+        {{-- One primary action, two secondary, one link.
+             ⚠ The rule this block was built on — that three buttons of equal weight are no
+             hierarchy at all — still holds, and is why only ONE of these is purple. What changed is
+             which one: the Manager comes first because it is the way in we actually recommend (it
+             finds the games, works out what each needs, and installs it), and the mod archive is
+             for whoever would rather do it by hand.
+
+             ⚠ It goes where the footer's "Get the Manager" already goes. One act, one destination:
+             two buttons with the same label leading to different pages is the trap this project
+             keeps a rule about. --}}
         <div class="flex flex-wrap justify-center items-center gap-4">
-            <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank" rel="noopener" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
+            <a href="{{ route('docs') }}#install-manager" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
+                <i class="fas fa-screwdriver-wrench mr-2"></i>
+                {{ __('footer.download_manager') }}
+            </a>
+            <a href="https://github.com/djethino/UnityGameTranslator/releases/latest" target="_blank" rel="noopener" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 flex items-center">
                 <i class="fas fa-download mr-2"></i>
                 {{ __('home.download_mod') }}
             </a>

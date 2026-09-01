@@ -214,6 +214,20 @@ export function createEngine() {
 
     let onFrame = () => [];
 
+    /**
+     * ⚠ One frame, run by hand.
+     *
+     * requestAnimationFrame does not fire in a tab that is not being displayed, which makes every
+     * pattern in this system unobservable from an automated browser session — and a single bad
+     * identifier in one of them kills the loop the first time it comes up in rotation, possibly
+     * minutes later. This is how a figure gets exercised before anybody has to sit and wait for it.
+     */
+    function stepOnce(ms = 16) {
+        const now = performance.now();
+        lastFrameTime = now - ms;
+        frame(now);
+    }
+
     function frame(now) {
         const wall = Math.min((now - lastFrameTime) / 1000, 0.1);
         const dtMs = now - lastFrameTime;
@@ -249,7 +263,11 @@ export function createEngine() {
         time += driftDt;
         patternTime += patternDt;
 
-        const targets = onFrame({ bobs, clouds, time, patternTime, dt: patternDt, wall, aspect, calm });
+        // ⚠ The signed scroll velocity goes through as well, and it is NOT the same information
+        // as the time warp it already feeds. The warp is a magnitude with no direction, so a
+        // pattern cannot tell scrolling up from scrolling down with it. One that wants to be thrown
+        // by the reader needs the sign.
+        const targets = onFrame({ bobs, clouds, time, patternTime, dt: patternDt, wall, aspect, calm, scroll: velocity });
 
         let k = 0;
         let zMin = Infinity, zMax = -Infinity;
@@ -260,8 +278,12 @@ export function createEngine() {
             bob.follow(targets[c] || { x: bob.x, y: bob.y, z: bob.z }, time, wall);
 
             const cloud = clouds[c];
-            cloud.update(bob, tune.radius * bob.scale, wall, time, time * 0.12 + c,
-                         bob.shearX, bob.shearY, perCloud);
+            // ⚠ The base spin is the engine's own — a slow turn-over so a resting cloud never
+            // presents the same face for a whole pattern. `bob.twist` ADDS to it rather than
+            // replacing it, so a pattern that wants a rotation gets one without having to
+            // reproduce the idle behaviour it is built on.
+            cloud.update(bob, tune.radius * bob.scale, wall, time, time * 0.12 + c + bob.twist,
+                         bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip);
 
             const pos = cloud.pos;
             const gain = bob.gain;
@@ -308,6 +330,11 @@ export function createEngine() {
         bobs,
         clouds,
         get aspect() { return aspect; },
+        /** A cloud's resting radius in field units. A pattern that has to match something of a
+         *  known size — the width of a heading, say — needs it, because `bob.scale` is a multiplier
+         *  on this and not a size in itself. It is also live-tunable, so it cannot be a constant a
+         *  pattern imports. */
+        get radius() { return tune.radius; },
         /** The conductor asks this to keep the abrupt patterns out of a calm rotation. */
         get reduced() { return calm; },
         setWarp(v) { warp = v; },
@@ -341,10 +368,34 @@ export function createEngine() {
                     }
                     return { ...tune };
                 },
+                /** Put a named figure on screen now; with no argument, lists them all. */
+                play: (id) => onFrame.play(id),
+                get playing() { return onFrame.playing; },
+                /** Advance `n` frames by hand — see stepOnce. */
+                step: (n = 1) => { for (let i = 0; i < n; i++) stepOnce(); return onFrame.playing; },
+                /**
+                 * ⚠ The one failure this system cannot report on its own. A NaN reaching a
+                 * position — a normalised zero-length vector, a division by a depth of zero —
+                 * throws nothing, draws nothing, and takes that cloud out of the field for the rest
+                 * of the session. It looks like a pattern that simply forgot one of the five.
+                 */
+                finite: () => {
+                    const used = CLOUD_COUNT * tune.perCloud * 4;
+                    for (let i = 0; i < used; i++) if (!Number.isFinite(points[i])) return false;
+                    return true;
+                },
                 stats: () => ({
+                    // Where each cloud currently is in depth. Small, and the only way to see from
+                    // outside whether a figure that is supposed to come towards you is doing so —
+                    // the tunnel's rings looked like they were retreating and nothing else showed
+                    // it.
+                    depths: bobs.map((b) => Math.round(b.z * 1000) / 1000),
                     points: CLOUD_COUNT * tune.perCloud,
                     drawn: Math.round(CLOUD_COUNT * tune.perCloud * KEEPS[keepIndex]),
                     buffer: `${w}x${h}`, scale: SCALES[scaleIndex], keep: KEEPS[keepIndex],
+                    // What the engine actually took from the profile setting — the only way to see
+                    // from outside that the control reached it, rather than merely being pressed.
+                    speed, calm, drawing: speed > 0,
                 }),
             };
         },

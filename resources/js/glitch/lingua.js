@@ -311,11 +311,25 @@ export function startLingua() {
     });
 }
 
+/**
+ * Start fetching the banks without waiting for them.
+ *
+ * 🔴 The background asks for this, and it must not have to care whether the glitches are on. When
+ * the fetch was deferred to the first glitch, turning the glitches off also starved the letter
+ * pattern: it fell back to the words on the page, which are all in ONE script, and the alphabets
+ * quietly stopped varying. Two independent settings had become one.
+ */
+export function warmBanks() {
+    ensureBanks();
+}
+
 /** Everything we hold, in every language loaded — what the trace pattern draws its letters from. */
 export function bankStrings() {
     const out = [];
+    // Every third line rather than every seventh: this only builds an array of strings, and the
+    // wider the sample the more of each alphabet the letter pattern can reach.
     for (const lines of banks.values()) {
-        for (let i = 0; i < lines.length; i += 7) if (lines[i]) out.push(lines[i]);
+        for (let i = 0; i < lines.length; i += 3) if (lines[i]) out.push(lines[i]);
     }
     return out;
 }
