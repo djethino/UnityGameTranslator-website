@@ -10,6 +10,7 @@ use App\Http\Controllers\EditSessionController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameLanguageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LanguageBankController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MergeController;
 use App\Http\Controllers\NotificationController;
@@ -40,6 +41,14 @@ Route::get('/indexnow.txt', function () {
 Route::get('/catalog/{name}.json', [CatalogController::class, 'show'])
     ->where('name', '[a-z]+')
     ->name('catalog.show');
+
+// Short interface strings per language, fetched by the background so a word on screen can slip
+// into another of the twenty languages for a second. No locale prefix: the page asks for a locale
+// OTHER than its own, which is the whole point, so prefixing it would be nonsense.
+Route::get('/lang-bank/{locale}.json', [LanguageBankController::class, 'show'])
+    ->where('locale', '[A-Za-z-]+')
+    ->middleware('throttle:60,1')
+    ->name('lang-bank.show');
 
 // Language switchers — the one the site is READ in, and the one games are PLAYED in.
 //

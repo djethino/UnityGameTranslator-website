@@ -441,46 +441,47 @@
 .edit-affordance button:hover { color: white; background-color: rgb(88 28 135); }
 .edit-affordance button.delete-btn:hover { background-color: rgb(127 29 29); }
 
-/* Organic animated background — independent blob layers.
+/* Organic animated background — one canvas, five "bobs".
  *
- * Each blob is a real <div> (injected by JS) instead of a pseudo-element
- * with multiple stacked gradients. One radial gradient per blob, animated
- * independently (different speed, phase, amplitude). Two reasons:
- *   1. Avoids a Firefox 150 bug where animating transform on a single
- *      element with multiple radial gradients caused visible flicker
- *      (multi-gradient rasterizing inconsistency under transform animation).
- *   2. Lets each "color blob" move at its own rhythm — visually more
- *      organic, matching the plasma-lamp / lava-lamp design intent.
+ * The five stacked <div>s that used to live here are gone, and so is the Firefox 150 workaround
+ * they existed for (a CSS gradient under a transform animation gets re-rasterized every ~25 s and
+ * flickers). A canvas never takes that path. See resources/js/ambient/engine.js.
  *
- * Each blob gets its own GPU layer (will-change) and paint isolation
- * (contain: paint) so Firefox composes them independently. */
+ * 🔴 The element has NO fixed pixel size on purpose. Its drawing buffer is a fraction of the window
+ * — a half, a quarter under load — and these two lines are what stretch it back. On soft radial
+ * falloffs the upscale is invisible, and it is the entire reason a full-screen animated background
+ * costs about a millisecond a frame. */
 .animated-bg {
     background: #0f0f1a;
     position: relative;
 }
 
-.bg-blob {
+.ambient-canvas {
     position: fixed;
-    inset: -10%;
-    pointer-events: none;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: -1;
-    /* No will-change / contain: on Firefox 150, those hints made the browser
-       periodically recycle the GPU layer (every ~25s) and the gradient
-       re-rasterized, producing recurring flicker. Letting the browser pick
-       its default compositing path with translate3d alone is more stable. */
-    /* JS animates --x, --y (in %) and --o (0-1) per blob. */
-    transform: translate3d(var(--x, 0%), var(--y, 0%), 0);
-    opacity: var(--o, 1);
+    pointer-events: none;
 }
 
-/* Blob backgrounds are set in JS as rasterized PNG dataURLs (see app.js).
-   We can't keep radial-gradient() here: Firefox 150 has a bug where any
-   gradient under transform animation gets re-rasterized periodically
-   (~25s cycle), producing recurring flicker. Bitmap images never trigger
-   that path. The .bg-blob-N classes are kept for selector targeting. */
-.bg-blob-1, .bg-blob-2, .bg-blob-3, .bg-blob-4, .bg-blob-5 {
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
+/* No WebGL on this machine — Firefox blocklists some drivers, and hardened profiles switch it off.
+   The JS adds this class and removes its canvas; what is left is a still version of the same
+   composition, in the same five hues.
+
+   🔴 Deliberately CSS and not a second renderer. A fallback engine is code nobody exercises, so it
+   is code that has quietly stopped working by the time anyone needs it; a gradient cannot rot. */
+.ambient-unavailable::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(40% 30% at 20% 40%, rgba(40, 90, 170, 0.42), transparent 60%),
+        radial-gradient(30% 22% at 80% 20%, rgba(150, 100, 200, 0.26), transparent 55%),
+        radial-gradient(28% 26% at 62% 78%, rgba(50, 70, 140, 0.38), transparent 58%),
+        radial-gradient(30% 24% at 30% 72%, rgba(70, 170, 210, 0.24), transparent 55%);
 }
 
 /* ------------- Game-flavoured visual identity ------------- */
@@ -501,34 +502,124 @@
 }
 
 /* C: RGB-shift hover — apply via .glitch-text class on titles/CTAs.
-   Uses text-shadow for pure GPU compositing (no repaint). */
+   Uses text-shadow for pure GPU compositing (no repaint).
+
+   The separation was 1.5 px with no glow, which on a dark background read as a rendering artefact
+   rather than as an effect: you could not tell the title was doing something on purpose. It now
+   carries the split AND the halo the split is supposed to be leaking — the same cyan and magenta
+   the canvas behind it composites additively, so the two speak one language. */
 .glitch-text {
     transition: text-shadow 180ms ease-out, transform 180ms ease-out;
 }
 .glitch-text:hover {
     text-shadow:
-        1.5px 0 0 rgba(0, 240, 255, 0.55),
-        -1.5px 0 0 rgba(255, 0, 200, 0.55);
+        3px 0 0 rgba(0, 240, 255, 0.62),
+        -3px 0 0 rgba(255, 0, 200, 0.62),
+        0 0 12px rgba(0, 240, 255, 0.45),
+        0 0 28px rgba(150, 90, 255, 0.35);
 }
 
 /* G: Random ambient glitch ping — applied briefly to a random element by JS.
-   Reuses the same RGB language as the hover effect for visual coherence. */
+ *
+ * 🔴 A real loss of channel sync, not a coloured shadow. The `#ugt-rgb-*` filters are built by
+ * resources/js/glitch/rgb-split.js: each one takes the element apart into its red, green and blue
+ * images, displaces the three by different amounts, and screens them back together. What you see
+ * between them is the element itself, three times, misregistered.
+ *
+ * The previous version stacked `drop-shadow()`s, which are tinted copies of the SILHOUETTE moving
+ * as one — on a photograph that is a coloured bar beside the picture, not an aberration inside it.
+ *
+ * `filter: url()` is not interpolatable, so the animation SNAPS from one variant to the next
+ * instead of easing between them. That is the point: a desynchronised signal does not ease.
+ *
+ * ⚠ These ids must match the ones the JS creates. A `url(#…)` pointing at nothing is not an error —
+ * it renders as no filter at all — so if this ever goes flat, that is the first thing to check. */
 @keyframes glitch-ping {
-    0%   { transform: translate(0, 0); filter: none; }
-    18%  { transform: translate(-2px, 1px); filter: drop-shadow(2px 0 0 rgba(0, 240, 255, 0.6)) drop-shadow(-2px 0 0 rgba(255, 0, 200, 0.6)); }
-    36%  { transform: translate(2px, -1px); filter: drop-shadow(-1.5px 0 0 rgba(0, 240, 255, 0.5)) drop-shadow(1.5px 0 0 rgba(255, 0, 200, 0.5)); }
-    54%  { transform: translate(-1px, 0); filter: drop-shadow(1px 0 0 rgba(0, 240, 255, 0.4)) drop-shadow(-1px 0 0 rgba(255, 0, 200, 0.4)); }
-    72%  { transform: translate(1px, 0); filter: none; }
-    100% { transform: translate(0, 0); filter: none; }
+    0%   { transform: translate(0, 0); filter: none; opacity: 1; }
+    14%  { transform: translate(-2px, 1px);  filter: url(#ugt-rgb-0); }
+    28%  { transform: translate(3px, 0);     filter: url(#ugt-rgb-1); }
+    42%  { transform: translate(-1px, -2px); filter: url(#ugt-rgb-2); opacity: 0.72; }
+    56%  { transform: translate(2px, 1px);   filter: url(#ugt-rgb-3); opacity: 1; }
+    70%  { transform: translate(-3px, 0);    filter: url(#ugt-rgb-4); opacity: 0.88; }
+    84%  { transform: translate(1px, -1px);  filter: url(#ugt-rgb-5); opacity: 1; }
+    100% { transform: translate(0, 0); filter: none; opacity: 1; }
 }
 .glitching {
-    animation: glitch-ping 280ms steps(5, end);
+    animation: glitch-ping 380ms steps(7, end);
 }
 
-/* a11y: respect users who asked to reduce motion. */
+/* The language glitch: a word slips into another of the site's twenty languages and back.
+ *
+ * 🔴 The foreign word is drawn on an ABSOLUTELY POSITIONED layer over the original, which stays in
+ * the flow, invisible, holding the box. Nothing else keeps the layout still: pinning the width was
+ * not enough, because a Korean or Arabic word is rendered by a different fallback font whose taller
+ * metrics grow the line box — the menu visibly breathed. Out of flow, it cannot.
+ *
+ * It is also what makes the tremor possible at all: `transform` does not apply to a non-replaced
+ * inline element, so a word in a nav bar could not have been shaken in place. An absolute layer can.
+ */
+/* The wrapper the original text node is moved into for the duration. Inline, so it changes nothing
+   about how the run sits in its line; relative, so the overlay has something to be absolute to. */
+.lingua-box {
+    position: relative;
+}
+
+/* The original text, still there and still holding the line — transparent rather than hidden, so a
+   screen reader keeps announcing the truth while the layer above it lies. */
+.lingua-under {
+    color: transparent;
+}
+
+.lingua-ghost {
+    position: absolute;
+    inset: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    font: inherit;
+    text-align: inherit;
+}
+
+/* The tremor, before the word changes and again before it returns — a cathode-ray stutter that
+   catches the eye a fifth of a second early, so the change is seen rather than merely happening.
+   steps() rather than a smooth curve: a CRT does not ease. */
+@keyframes lingua-cue {
+    0%   { transform: translate(0, 0); text-shadow: none; opacity: 1; filter: none; }
+    12%  { transform: translate(-2px, 1px); opacity: 0.85;
+           text-shadow: 3px 0 rgba(0, 240, 255, 0.85), -3px 0 rgba(255, 0, 200, 0.85); }
+    25%  { transform: translate(3px, -1px);
+           text-shadow: -4px 0 rgba(0, 240, 255, 0.75), 4px 0 rgba(255, 0, 200, 0.75); }
+    38%  { transform: translate(-1px, 2px); opacity: 0.55; filter: blur(0.7px); }
+    50%  { transform: translate(2px, 0); opacity: 1; filter: none;
+           text-shadow: 2px 0 rgba(0, 240, 255, 0.9), -2px 0 rgba(255, 0, 200, 0.9); }
+    63%  { transform: translate(-3px, -1px); opacity: 0.8; }
+    75%  { transform: translate(1px, 1px); text-shadow: none; }
+    100% { transform: translate(0, 0); text-shadow: none; opacity: 1; filter: none; }
+}
+.lingua-cue {
+    animation: lingua-cue 220ms steps(8, end);
+}
+
+@keyframes lingua-in {
+    from { opacity: 0.3; filter: blur(2px); }
+    to   { opacity: 1; filter: none; }
+}
+.lingua-swap {
+    animation: lingua-in 200ms ease-out;
+    text-shadow:
+        2px 0 0 rgba(0, 240, 255, 0.5),
+        -2px 0 0 rgba(255, 0, 200, 0.5),
+        0 0 14px rgba(0, 240, 255, 0.35);
+}
+
+/* a11y: respect users who asked to reduce motion.
+   ⚠ The canvas is NOT hidden here. A still background is not restful, it just looks broken — the
+   engine keeps a gentle drift and drops the fast patterns, the camera charge, the fisheye, the ink
+   trail and the scroll coupling. That decision lives in JS because it is a matter of degree, which
+   is not something a media query can express. */
 @media (prefers-reduced-motion: reduce) {
     .glitch-text:hover { text-shadow: none; }
     .glitching { animation: none; }
+    .lingua-swap, .lingua-cue { animation: none; }
     .animated-bg::after { display: none; }
 }
 

@@ -1,0 +1,175 @@
+/**
+ * A letter, turned into something five bobs can paint.
+ *
+ * 🔴 No alphabet is written down here, on purpose. Hard-coding "these are the Thai characters"
+ * would be exactly the kind of per-script logic this project refuses everywhere else, and it would
+ * rot the day a locale is added. Instead the candidates come from TEXT WE ALREADY HAVE — the
+ * language bank when it has loaded (which is how a Korean glyph can appear on a French page), and
+ * failing that the words on the page itself. Both are real sentences in real languages, so whatever
+ * comes out is a genuine letter of a genuine script, and nobody had to enumerate one.
+ *
+ * The bobs cannot follow strokes: reconstructing stroke order from an outline is a research
+ * problem, and we have five brushes and no font parsing. So they do what a pen plotter does — each
+ * owns a horizontal band and sweeps it left, right, left, with its ink turned up where the glyph is
+ * solid. The letter appears line by line. It is also, conveniently, the most demoscene answer
+ * available: a raster effect.
+ */
+
+// Sampling grid for the ink lookup. Finer than the number of sweeps, because the sweeps read a
+// continuous position along each row and want a smooth answer rather than a staircase.
+const GRID = 64;
+
+// How many scan lines the five brushes actually lay down (5 bobs × 5 rows). The filter below has
+// to be measured against THIS number, not against the sampling grid: it is the real resolution.
+const SCANS = 25;
+
+// A glyph has to hold enough ink to be worth painting. Under this it is a full stop.
+const INK_MIN = 0.07;
+
+// 🔴 And it has to be simple enough for five brushes to express.
+//
+// ⚠ Ink density was the obvious measure and it is the WRONG one — measured on the real language
+// bank, it rejected 9 Japanese characters out of 523 and 5 Chinese out of 646, i.e. it let 98 % of
+// the kanji through. A complex character is not a dark one; its strokes are thin, so its coverage
+// is ordinary. What defeats a plotter is how many times a single sweep has to cross from ink to
+// paper and back.
+//
+// Measured over every character of all twenty languages, that number separates the scripts cleanly:
+// a median of 0.76–0.88 segments per sweep for Latin, Cyrillic, Arabic, Hebrew, Devanagari and
+// Thai, against 1.52 for Japanese and 1.76 for Chinese. These two thresholds keep 75–84 % of the
+// alphabetic scripts (every common letter), 40 % of Japanese and 24 % of Chinese — the kana and the
+// open characters like 全, 人, 文, 目 stay, 憎, 編 and 翻 go. Every writing system is still
+// represented; none of them arrives as a smudge.
+const SEGMENTS_MEAN_MAX = 1.35;
+const SEGMENTS_PEAK_MAX = 5;
+
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = GRID;
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+/**
+ * Rasterize one character and return its ink map, or null if it is not paintable.
+ *
+ * ⚠ The font stack is left to the browser on purpose (`sans-serif` after the two families that
+ * carry the widest coverage): asking for a specific face is how you end up with tofu on the one
+ * machine that lacks it.
+ */
+function rasterize(ch) {
+    ctx.clearRect(0, 0, GRID, GRID);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${Math.round(GRID * 0.78)}px "Noto Sans", "Segoe UI", sans-serif`;
+    ctx.fillText(ch, GRID / 2, GRID / 2);
+
+    const data = ctx.getImageData(0, 0, GRID, GRID).data;
+    const ink = new Uint8Array(GRID * GRID);
+    let total = 0;
+    let interior = 0;
+    let border = 0;
+
+    for (let i = 0, p = 0; i < ink.length; i++, p += 4) {
+        const a = data[p + 3];
+        ink[i] = a;
+        if (a > 40) {
+            total++;
+            const x = i % GRID;
+            const y = (i / GRID) | 0;
+            const edge = x < GRID * 0.12 || x > GRID * 0.88 || y < GRID * 0.12 || y > GRID * 0.88;
+            if (edge) border++; else interior++;
+        }
+    }
+
+    const density = total / ink.length;
+    if (density < INK_MIN) return null;
+
+    // ⚠ Tofu rejection. A missing glyph renders as .notdef — a hollow rectangle — so nearly all of
+    // its ink sits on the border and the middle is empty. Without this, a page whose fonts do not
+    // cover Devanagari would proudly paint a box. Real letters always put ink in the middle.
+    if (interior < border * 0.55) return null;
+
+    // What one brush actually has to draw: how many separate runs of ink it crosses on its row.
+    // Counted on the sweeps the pattern will really perform, so the measure and the rendering
+    // cannot disagree.
+    let segmentTotal = 0;
+    let segmentPeak = 0;
+    for (let r = 0; r < SCANS; r++) {
+        const y = Math.round(((r + 0.5) / SCANS) * (GRID - 1));
+        let crossings = 0;
+        let prev = false;
+        for (let x = 0; x < GRID; x++) {
+            const on = ink[y * GRID + x] > 60;
+            if (on !== prev) crossings++;
+            prev = on;
+        }
+        const runs = Math.ceil(crossings / 2);
+        segmentTotal += runs;
+        if (runs > segmentPeak) segmentPeak = runs;
+    }
+
+    if (segmentTotal / SCANS > SEGMENTS_MEAN_MAX || segmentPeak > SEGMENTS_PEAK_MAX) return null;
+
+    return { ink, size: GRID, density };
+}
+
+/** Ink at a continuous position, u and v in 0…1, bilinear so a sweep reads smoothly. */
+function sampler(map) {
+    const n = map.size;
+    return (u, v) => {
+        if (u < 0 || u > 1 || v < 0 || v > 1) return 0;
+        const fx = u * (n - 1);
+        const fy = v * (n - 1);
+        const x0 = fx | 0, y0 = fy | 0;
+        const x1 = x0 + 1 < n ? x0 + 1 : x0;
+        const y1 = y0 + 1 < n ? y0 + 1 : y0;
+        const tx = fx - x0, ty = fy - y0;
+        const a = map.ink[y0 * n + x0], b = map.ink[y0 * n + x1];
+        const c = map.ink[y1 * n + x0], d = map.ink[y1 * n + x1];
+        return ((a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty) / 255;
+    };
+}
+
+/**
+ * Candidate characters, harvested from whatever text we can reach.
+ *
+ * `\p{L}` keeps letters and drops digits, punctuation and spaces across every script at once —
+ * one rule, no table. Combining marks are excluded (`\p{M}`) because a mark drawn on its own is
+ * not a letter, it is a floating accent.
+ */
+function harvest(strings) {
+    const seen = new Set();
+    for (const s of strings) {
+        for (const ch of s) {
+            if (/\p{L}/u.test(ch) && !/\p{M}/u.test(ch)) seen.add(ch);
+        }
+    }
+    return [...seen];
+}
+
+let pageChars = null;
+
+function fromPage() {
+    if (pageChars) return pageChars;
+    const text = (document.body.innerText || '').slice(0, 4000);
+    pageChars = harvest([text]);
+    return pageChars;
+}
+
+/**
+ * Pick a glyph worth painting, trying at most `tries` candidates.
+ *
+ * `strings` is whatever the caller can offer — the language bank hands us sentences in several
+ * languages, which is what makes a glyph from another alphabet turn up. When it has nothing yet we
+ * fall back to the page, so the very first trace still works.
+ */
+export function pickGlyph(strings = [], tries = 14) {
+    const pool = strings.length ? harvest(strings) : fromPage();
+    if (!pool.length) return null;
+
+    for (let i = 0; i < tries; i++) {
+        const ch = pool[(Math.random() * pool.length) | 0];
+        const map = rasterize(ch);
+        if (map) return { char: ch, inkAt: sampler(map), density: map.density };
+    }
+    return null;
+}
