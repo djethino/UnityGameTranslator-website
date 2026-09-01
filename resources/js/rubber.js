@@ -28,28 +28,33 @@
 
 import { systemAsksReduced, onMotionChange } from './ambient/motion.js';
 
-/** How far the page can be pulled past its end, in pixels, however hard you push. */
-const MAX_PULL = 48;
+/**
+ * How far the page can be pulled past its end, however hard you push.
+ *
+ * ⚠ Small on purpose. What makes this gesture good on the platforms that have it is that it is
+ * barely there — an edge that gives, not a page that opens. In practice the ceiling is rarely
+ * approached at all: the spring never stops pulling, so wheeling steadily settles at an equilibrium
+ * between push and return, around nine pixels rather than at the limit.
+ */
+const MAX_PULL = 26;
 
-/** What one pixel of wheel is worth at rest. A notch is about 100, so the first one opens some
- *  fifteen pixels — enough to see, nowhere near the end of the travel. Simulated before it was
- *  chosen: at 1.0 a single notch went two thirds of the way, which reads as a page coming loose. */
-const GAIN = 0.15;
+/** What one pixel of would-be scroll is worth. One notch is 48px in Firefox and 100 in Chrome —
+ *  their own idea of a notch, so a gentler scroll setting gets a gentler edge, which is right. */
+const GAIN = 0.18;
 
 /**
  * Spring stiffness, critically damped so it arrives without wobbling — a wobble reads as a bug, a
- * single soft return reads as a material.
+ * single soft return reads as a material. ω = 30 closes in about 190 ms.
  *
- * ⚠ 22, not 16, and the difference was measured rather than felt: 16 took 450 to 550 ms to close,
- * where the thing being imitated takes about 300. Well inside the stability limit — the integrator
- * is semi-implicit and needs ω·dt < 1, and dt is clamped at a thirtieth of a second, so 22 gives
- * 0.73 at the very worst frame this can be handed.
+ * ⚠ Past what a single step can integrate: this is semi-implicit and needs ω·dt < 1, which 30 would
+ * sit exactly on at 30 Hz. It is substepped instead, the same answer `bob.js` reached for the same
+ * reason — the alternative is a softer spring, and softer is the thing being fixed.
  */
-const OMEGA = 22;
+const OMEGA = 30;
 
-/** A wheel is a stream of discrete ticks, not a held finger. This is how long after the last tick
- *  we decide the gesture is over and let go. Shorter and a slow scroll snaps back mid-push. */
-const RELEASE_MS = 90;
+/** Largest ω·h a substep may carry. Well under the stability limit, so a stalled tab coming back
+ *  cannot hand the spring a step it cannot solve. */
+const MAX_STEP = 0.35;
 
 /** Below this the spring has arrived; anything smaller is a sub-pixel the eye cannot see. */
 const SETTLED = 0.2;
@@ -70,7 +75,6 @@ const SETTLED = 0.2;
 let y = 0;              // pixels past the edge
 let velocity = 0;
 let movers = [];
-let releaseAt = 0;
 let frame = 0;
 let last = 0;
 let enabled = false;
@@ -143,18 +147,24 @@ function stop() {
 function tick(now) {
     frame = requestAnimationFrame(tick);
 
-    // The gesture is over once the ticks stop arriving. Until then the page holds where it was
-    // pushed, which is what makes it feel held rather than flicked.
-    // ⚠ The clock is reset while holding, not merely paused: releasing after a second of stillness
-    // would otherwise hand the spring a second-long step and fire the page off the screen.
-    if (now < releaseAt) { last = now; return; }
-
-    // Critically damped, semi-implicit: velocity first, then position. Clamped at a 30 Hz step, so a
-    // dropped frame or a tab coming back cannot push ω·dt anywhere near the stability limit.
+    // 🔴 No waiting for the wheel to stop. An earlier version held the page open for ninety
+    // milliseconds after the last notch, on the idea that a gesture has an end to wait for. A finger
+    // does; a wheel does not — the end is the end, and the delay only made the page look stuck at
+    // the very moment it should have been coming back.
+    //
+    // So the spring runs from the first frame and never stops. Steady wheeling is then a series of
+    // taps against something that is already pulling back, which settles at an equilibrium instead
+    // of stacking up — the behaviour of an elastic edge, and it needs no rule of its own.
     const dt = Math.min((now - last) / 1000, 1 / 30);
     last = now;
-    velocity += (-OMEGA * OMEGA * y - 2 * OMEGA * velocity) * dt;
-    y += velocity * dt;
+
+    // Critically damped, semi-implicit, substepped: velocity first, then position.
+    const steps = Math.min(8, Math.ceil((OMEGA * dt) / MAX_STEP) || 1);
+    const h = dt / steps;
+    for (let i = 0; i < steps; i++) {
+        velocity += (-OMEGA * OMEGA * y - 2 * OMEGA * velocity) * h;
+        y += velocity * h;
+    }
 
     if (Math.abs(y) < SETTLED && Math.abs(velocity) < SETTLED * OMEGA) {
         cancelAnimationFrame(frame);
@@ -193,24 +203,17 @@ function onWheel(event) {
     const atTop = el.scrollTop <= 0 && dy < 0;
     const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && dy > 0;
 
-    if (!atTop && !atEnd) {
-        // Back inside the page: let go at once rather than waiting out the release delay, so a
-        // scroll that turns round does not drag a stretched edge with it.
-        if (frame) releaseAt = 0;
-        return;
-    }
+    // Back inside the page. Nothing to do: the spring is already pulling the edge home.
+    if (!atTop && !atEnd) return;
 
     if (consumedInside(event.target, dy)) return;
     if (!begin()) return;
 
-    // ⚠ Deltas arrive in three units depending on the device. A line or a page would push the edge
-    // to its limit in one tick, so they are given the pixel worth of one notch instead.
-    const step = event.deltaMode === 0 ? dy : Math.sign(dy) * (event.deltaMode === 1 ? 16 : 100);
-    y -= step * GAIN * give();
-    // Pushing again while it is springing back adds to where it has got to rather than fighting the
-    // spring, so the page is never caught mid-flight.
-    velocity = 0;
-    releaseAt = performance.now() + RELEASE_MS;
+    // ⚠ Deltas arrive in three units, and the magnitude matters in all three. An earlier version
+    // read `Math.sign(dy) * 16` for lines, which threw the amount away — Firefox reports three lines
+    // per notch, so its edge gave a third of what it should have while Chrome's gave all of it.
+    const px = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? el.clientHeight : 1;
+    y -= dy * px * GAIN * give();
     apply();
 }
 
