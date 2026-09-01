@@ -80,6 +80,11 @@
      the DOM, which has no business happening inside an Alpine-managed editor. --}}
 <body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden"
       data-locales="{{ implode(',', array_keys(config('locales.supported'))) }}"
+      {{-- 🔴 Which vintage of the language banks this page is asking for. It goes in the query
+           string of every fetch, so a bank built from an older key list is a different URL and can
+           never be paired with a fresh one — the failure that put the Hindi for "Do you want to
+           change your username?" on a button labelled "Rapide". See App\Support\LanguageBank. --}}
+      data-lang-bank="{{ \App\Support\LanguageBank::version() }}"
       @if(request()->routeIs('admin.*') || View::hasSection('quiet-screen')) data-no-glitch @endif>
     <nav class="bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

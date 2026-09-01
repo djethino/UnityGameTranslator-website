@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\LanguageBank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,9 +21,10 @@ use Symfony\Component\HttpFoundation\Response;
  * names. So every locale is served as a plain array in one canonical order, derived from the
  * English file — index 412 is the same line in every language, and no key travels at all.
  *
- * ⚠ A locale that is missing a line gets an empty string at that index rather than a shorter array.
- * Dropping it would shift everything after it, and the shift would be silent: the page would still
- * work, showing confidently mismatched translations.
+ * 🔴 ...for one vintage of `en.json`, and that qualifier is the whole point of `v`. Any key added to
+ * the English file shifts every line after it, so two banks built from different key lists cannot be
+ * read against each other. The response says which vintage it is; the client refuses a pair that
+ * disagrees. See App\Support\LanguageBank for what this cost before it was there.
  *
  * ── What is deliberately excluded ──────────────────────────────────────────────────────────────
  * Anything with a `:placeholder`, a `|` plural or HTML in it. Those are templates, not sentences,
@@ -30,34 +32,27 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class LanguageBankController extends Controller
 {
-    /** Longest line we are prepared to swap in, in display COLUMNS. Past this it stops being a wink
-     *  and starts being a paragraph rearranging itself under the reader.
-     *
-     *  ⚠ Columns, not characters, and the difference is not a detail: a CJK glyph occupies two, so
-     *  counting characters made this cap mean forty columns in French and EIGHTY in Japanese. The
-     *  measured maxima were 40 for French and German against 80 for Japanese and Chinese — twice the
-     *  paragraph this constant exists to refuse, in the scripts where it is hardest to skim. */
-    private const MAX_COLUMNS = 40;
-
-    /** Bumped when the shape of a bank changes, so a code change invalidates the cache too — the
-     *  stamp below only watches the language FILES, and would have served yesterday's lines for a
-     *  day after this rule changed. */
-    private const SHAPE = 2;
-
     public function show(Request $request, string $locale): Response
     {
         abort_unless(array_key_exists($locale, config('locales.supported')), 404);
 
+        $version = LanguageBank::version();
+
         $body = Cache::remember(
-            "lang-bank:{$locale}:" . self::SHAPE . ':' . $this->stamp(),
+            "lang-bank:{$locale}:{$version}",
             now()->addDay(),
-            fn () => $this->build($locale),
+            fn () => json_encode(
+                ['v' => $version, 'lines' => LanguageBank::lines($locale)],
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+            ),
         );
 
         $response = response($body, 200)
             ->header('Content-Type', 'application/json; charset=utf-8')
-            // These change when we ship a translation, which is a few times a month at most, and
-            // the client re-validates with the ETag anyway.
+            // ⚠ Safe to cache hard ONLY because the caller puts the version in the query string: a
+            // new key list is a new URL, so a held copy can never be paired with a fresh one. Before
+            // that it was the same URL for every vintage, and a day-long cache was long enough to
+            // mix two of them.
             ->header('Cache-Control', 'public, max-age=86400');
 
         $response->setEtag(hash('sha256', $body));
@@ -67,104 +62,5 @@ class LanguageBankController extends Controller
         $response->isNotModified($request);
 
         return $response;
-    }
-
-    /** Changes whenever a language file is touched, so a deploy cannot serve a stale bank. */
-    private function stamp(): string
-    {
-        $latest = 0;
-        foreach (glob(lang_path('*.json')) ?: [] as $file) {
-            $latest = max($latest, (int) filemtime($file));
-        }
-
-        return (string) $latest;
-    }
-
-    private function build(string $locale): string
-    {
-        $keys = $this->canonicalKeys();
-        $source = $this->read($locale);
-
-        $lines = [];
-        foreach ($keys as $key) {
-            $value = $source[$key] ?? null;
-            $lines[] = is_string($value) && $this->usable($value) ? $value : '';
-        }
-
-        return json_encode(
-            ['v' => 1, 'lines' => $lines],
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
-        );
-    }
-
-    /**
-     * The order every locale is served in, fixed by the English file.
-     *
-     * ⚠ Sorted, not left in file order. `en.json` is reordered by `sync-translations.py` whenever
-     * keys move, and an index that shifted under a client holding a cached copy of another language
-     * would pair French sentences with Korean ones — plausibly, and therefore invisibly.
-     */
-    private function canonicalKeys(): array
-    {
-        $en = $this->read(config('locales.fallback', 'en'));
-
-        $keys = [];
-        foreach ($en as $key => $value) {
-            if (is_string($value) && $this->usable($value)) {
-                $keys[] = $key;
-            }
-        }
-
-        sort($keys);
-
-        return $keys;
-    }
-
-    private function read(string $locale): array
-    {
-        $path = lang_path("{$locale}.json");
-        if (! is_file($path)) {
-            return [];
-        }
-
-        return json_decode(file_get_contents($path), true) ?: [];
-    }
-
-    private function usable(string $value): bool
-    {
-        $value = trim($value);
-
-        if ($value === '' || $this->columns($value) > self::MAX_COLUMNS) {
-            return false;
-        }
-
-        // `:name` placeholders, `one|many` plurals, and markup. All three are templates the server
-        // fills in, so the raw form is not a sentence anybody should see.
-        if (str_contains($value, '|') || str_contains($value, '<') || preg_match('/:\p{L}/u', $value)) {
-            return false;
-        }
-
-        // At least one letter, in any script — this drops bare numbers, dashes and lone symbols,
-        // which carry no language and would make the swap look like nothing happened.
-        return (bool) preg_match('/\p{L}/u', $value);
-    }
-
-    /**
-     * How many columns a line occupies on screen. East Asian Wide and Fullwidth characters take two.
-     *
-     * ⚠ The browser applies the same measure when it chooses which language may replace a given
-     * word, and the two have to agree: a line this side lets through and the client then always
-     * refuses is a line that costs bandwidth and can never be shown.
-     */
-    private function columns(string $value): int
-    {
-        $wide = preg_match_all(
-            '/[\x{1100}-\x{115F}\x{2E80}-\x{303E}\x{3041}-\x{33FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FFF}'
-            . '\x{A000}-\x{A4CF}\x{AC00}-\x{D7A3}\x{F900}-\x{FAFF}\x{FE30}-\x{FE6F}\x{FF00}-\x{FF60}'
-            . '\x{FFE0}-\x{FFE6}]/u',
-            $value,
-        );
-
-        return mb_strlen($value) + $wide;
     }
 }
