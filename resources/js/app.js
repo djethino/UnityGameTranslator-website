@@ -200,6 +200,12 @@ if (historyRoot) {
 import { startAmbient } from './ambient/index.js';
 startAmbient();
 
+// The page gives a little at its ends. Wired outside the ambient block on purpose: this is page
+// chrome and not decoration, so it runs on every screen — the editors and the admin included, which
+// carry `data-no-glitch` and get no moving field at all.
+import { startRubberBand } from './rubber.js';
+startRubberBand();
+
 // F: Stats counter ramping — any element with [data-counter] gets its number
 // animated from 0 to its final value on first viewport entry. Source value
 // is parsed from data-counter (preferred) or from the existing textContent.
