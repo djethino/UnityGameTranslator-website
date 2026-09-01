@@ -64,7 +64,10 @@
     @stack('styles')
     @stack('head')
 </head>
-<body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden">
+{{-- data-locales: the background borrows other languages to glitch a word with. Read from the
+     config rather than written out, so adding a locale needs nothing here. --}}
+<body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden"
+      data-locales="{{ implode(',', array_keys(config('locales.supported'))) }}">
     <nav class="bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
