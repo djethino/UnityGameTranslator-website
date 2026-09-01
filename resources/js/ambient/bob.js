@@ -59,6 +59,7 @@ export class Bob {
         this.yaw = 0;           // rotation about the vertical axis — a globe, a tunnel
         this.twist = 0;         // extra rotation in the plane of the screen, on top of the engine's
         this.grip = 1;          // how tightly the points hold their places — 1 is loose and organic
+        this.haste = 1;         // how eagerly the CENTRE reaches its target — for a fast return
 
         this.resetFrameProps();
 
@@ -94,7 +95,11 @@ export class Bob {
 
         // The drift is added to the TARGET, not to the position: the spring smooths it, so the bob
         // wanders rather than vibrates. Added to the position it would read as noise.
-        const omega = this.omega * this.zeal;
+        // 🔴 `haste` is what lets a figure bring a cloud back QUICKLY instead of moving it
+        // instantly. Those are not the same thing and the difference is the whole point: a fast
+        // return is something you watch happen, a teleport is something that has happened. The
+        // second one is a jump however carefully it is hidden.
+        const omega = this.omega * this.zeal * this.haste;
         [this.x, this.vx] = spring(this.x, this.vx, target.x + dx, omega, dt);
         [this.y, this.vy] = spring(this.y, this.vy, target.y + dy, omega, dt);
         [this.z, this.vz] = spring(this.z, this.vz, clampZ(target.z + dz), omega, dt);
@@ -111,6 +116,7 @@ export class Bob {
         this.yaw = 0;
         this.twist = 0;
         this.grip = 1;
+        this.haste = 1;
     }
 
     /** Drop it somewhere with no travel — used when the engine (re)starts, never mid-flight. */

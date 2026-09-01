@@ -154,7 +154,14 @@ export class Cloud {
         }
     }
 
-    /** Drop the whole population at once — only when the engine starts, or after a teleport. */
+    /**
+     * Drop the whole population at once.
+     *
+     * ⚠ Used ONLY when the engine starts. Nothing else in this system assigns a position — a figure
+     * that needs a cloud somewhere else asks for it and lets the springs take it there, hurried by
+     * `haste` if it must be quick. A cloud that is put somewhere has jumped, however briefly, and
+     * three attempts at hiding that jump all ended up worse than the fault they were hiding.
+     */
     place(centre, radius) {
         for (let i = 0; i < this.count; i++) {
             const j = i * 3;

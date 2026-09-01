@@ -223,9 +223,18 @@ export function createEngine() {
      * minutes later. This is how a figure gets exercised before anybody has to sit and wait for it.
      */
     function stepOnce(ms = 16) {
+        // 🔴 The pause is lifted for the duration of the step, and this is the entire point of the
+        // helper. `paused` follows document.hidden, which is TRUE in exactly the situation this
+        // exists for — a tab driven from outside — so without this the call did nothing at all,
+        // silently: the field stayed frozen, every reading came back identical, and a check for
+        // "does anything jump" answered no because nothing moved. A verification that cannot fail
+        // is worse than none.
+        const wasPaused = paused;
+        paused = false;
         const now = performance.now();
         lastFrameTime = now - ms;
         frame(now);
+        paused = wasPaused;
     }
 
     function frame(now) {

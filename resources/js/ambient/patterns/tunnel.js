@@ -1,30 +1,44 @@
 /**
- * Le tunnel — rings receding to a vanishing point, turning as they come.
+ * Le tunnel — rings coming at you, engulfing you, and racing back to the far end.
  *
- * ⚠ Not a repeat of `traversee`, and the difference is the reason it earns its place. That one is a
- * straight flow: five bodies come at you and pass. This is a STRUCTURE you fall into — the rings
- * are all the same size and all on the same axis, so the perspective alone tells you they are a
- * corridor rather than five separate things. And it turns, which no other pattern here does.
+ * ⚠ Not a repeat of `traversee`. That one is a straight flow: five bodies come at you and pass.
+ * This is a STRUCTURE you fall into — the rings are all the same size on the same axis, so the
+ * perspective alone tells you they are a corridor rather than five separate things.
  *
- * 🟢 The ring keeps one radius and lets the projection do the work: `p = 1/z` already scales a
- * shape by its depth, so a far ring draws small and a near one fills the frame without a single
- * line computing it. That is the whole of the fake perspective being used for what it is good at.
+ * 🟢 The ring keeps one radius and lets the projection do the work: `p = 1/z` scales a shape by its
+ * depth, so a far ring draws small and a near one is four times the screen without a single line
+ * computing it.
  *
- * ⚠ `spin`, not `yaw`. The rings lie in the plane of the screen and must keep facing you as they
- * come; yaw would turn them in depth and they would arrive edge-on, as lines.
+ * ── 🔴 The return is part of the trip, not an exception to it ──────────────────────────────────
+ * A ring has to get from the camera back to the far end, and there is no path between them that
+ * avoids the frame. Three versions tried to make that journey INVISIBLE — a teleport, then a
+ * teleport with a fade, then a fade-out-move-fade-in — and each one made the real complaint worse:
+ * the ring vanished before it had even engulfed you, and reappeared for no reason anybody watching
+ * could see.
+ *
+ * The journey does not need hiding. It needs to be FAST, and to start only once the ring is
+ * genuinely past. So `z` is a continuous function of one cycle: it descends over the first 88 %
+ * until the ring is nearly four screens wide and you are inside it, then climbs back over the last
+ * 12 % with the centre's spring stiffened so it snaps rather than drifts. `z(0)` and `z(1)` are the
+ * same value, so the cycle wraps with nothing to smooth over — there is no seam left to hide.
  */
 
-import { lerp, smoothstep } from './util.js';
-import { Z_NEAR, Z_FAR } from '../bob.js';
+import { lerp, smoothstep, easeInOut } from './util.js';
+import { Z_FAR } from '../bob.js';
 
 // ⚠ Wide on purpose. From roughly halfway down the corridor the projected ring is already larger
-// than the screen — which is the moment you stop watching a ring and start being inside one. A
-// narrower tunnel is a tunnel seen from outside, and that was the other half of "we never get in".
+// than the screen — the moment you stop watching a ring and start being inside one.
 const RING = 1.4;        // radius, in field units
 const THICK = 0.09;      // the ring has a little body, or it reads as wire
 
+/** Nearest the ring gets. At 0.36 it projects nearly four screens across: you are well inside it. */
+const Z_MIN = 0.36;
+
+/** How much of a cycle is spent coming towards you. The rest is the way back. */
+const FORWARD = 0.88;
+
 /** Where every ring sits on the first frame — the depth a cloud is usually at, so nothing has to
- *  travel backwards to take its place. */
+ *  travel backwards to take its place when the figure begins. */
 const START = 0.55;
 
 export default {
@@ -34,10 +48,6 @@ export default {
     duration: [13, 18],
 
     enter(ctx) {
-        // Where each ring was along the corridor last frame. The only reason it is kept is to catch
-        // the moment it wraps — see the note in update().
-        this.lastU = ctx.bobs.map(() => -1);
-
         ctx.clouds.forEach((cloud) => {
             cloud.setShape((_, __, out) => {
                 const a = Math.random() * Math.PI * 2;
@@ -57,56 +67,36 @@ export default {
 
         for (let i = 0; i < n; i++) {
             const bob = ctx.bobs[i];
-            // Evenly spaced along the corridor, so one is always arriving as another leaves. The
-            // modulo is what makes it endless: a ring that passes the camera is the next far ring.
-            // ⚠ The corridor starts FOLDED and unfolds, instead of being laid out at once.
-            //
-            // Spaced from the first frame, the rings that belong at the far end have to get there
-            // from wherever the previous pattern left them — mid-field — so the first thing the
-            // pattern does is send half of itself backwards. Measured: 27 frames of visible retreat
-            // before anything came forward, which reads as the tunnel pushing you out.
-            //
-            // Starting them all at the depth clouds normally sit at, and easing the spacing in over
-            // two seconds, means every ring's first movement is toward the camera.
+
+            // ⚠ The corridor starts FOLDED and unfolds over two seconds. Spaced from the first
+            // frame, the rings that belong at the far end would have to get there from wherever the
+            // previous figure left them — mid-field — so the pattern's first act would be to send
+            // half of itself backwards. Measured: 27 frames of retreat before anything came forward.
             const spread = smoothstep(0, 2.2, ctx.t);
             const u = (ctx.t * SPEED + START + (i / n) * spread) % 1;
-            const z = lerp(Z_FAR, Z_NEAR + 0.05, u);
 
-            // 🔴 The wrap has to be a teleport, not a target change. When `u` rolls over, the ring
-            // has just passed the camera and its next place is the far end of the corridor — and
-            // there is no path between the two that does not cross the frame. Left to the spring it
-            // RECEDES back down the whole tunnel, in full view, which reads as the corridor pushing
-            // you out instead of letting you in.
-            //
-            // ⚠ Safe to do here because at u ≈ 1 the ring is at z 0.45 and 1.4 units wide: the
-            // projection puts it three screen-heights across, so its centre is well out of frame.
-            // Its trailing points are not, which is what the fade just below is for.
-            if (u < this.lastU[i]) ctx.teleport(i, 0, 0, Z_FAR);
-            this.lastU[i] = u;
-
-            // 🔴 And the teleport has to happen while the ring is INVISIBLE, not merely while its
-            // centre is off-screen. Those are not the same moment: the points chase their places at
-            // their own rates, so several hundred of them are still trailing across the frame when
-            // the centre has already left it. Moved without this, the tail vanishes mid-screen —
-            // which is what "the near ring disappears and jumps to the end" was.
-            //
-            // ⚠ Fading is the fix rather than teleporting later, because there is no later: `z` is
-            // clamped at Z_NEAR, so a ring cannot travel far enough past the camera to take its
-            // stragglers out of sight with it.
-            const arriving = smoothstep(0, 0.06, u);
-            const leaving = 1 - smoothstep(0.90, 0.99, u);
-            bob.gain = arriving * leaving;
+            let z;
+            if (u <= FORWARD) {
+                z = lerp(Z_FAR, Z_MIN, u / FORWARD);
+                bob.haste = 1;
+                bob.grip = 3.2;
+            } else {
+                // The way back. Eased so it leaves and arrives without a kick, and hurried so it
+                // reads as a return rather than as a retreat — about a second for the whole
+                // corridor, of which the first half happens while the ring is still wider than the
+                // screen and there is nothing to see.
+                const k = easeInOut((u - FORWARD) / (1 - FORWARD));
+                z = lerp(Z_MIN, Z_FAR, k);
+                bob.haste = 4.5;
+                bob.grip = 6;
+            }
 
             // 🔴 The rings turn by DIFFERENT amounts, and that is the whole trick. A circle rotated
-            // is the same circle, so a rigid turn would be completely invisible; only the offset
-            // between one ring and the next can be seen. Hence `u * 2.2` — the twist grows along
-            // the corridor, and what you read is the corridor screwing itself into the distance.
+            // is the same circle, so a rigid turn would be invisible; only the offset between one
+            // ring and the next can be seen. The twist grows along the corridor, and what you read
+            // is the corridor screwing itself into the distance.
             bob.scale = 1;
             bob.twist = ctx.t * 0.55 + u * 2.2;
-            // ⚠ Held tight, unlike everything else here. A ring has to arrive and leave as one
-            // object; at the default looseness its slowest points trail half a corridor behind and
-            // are still crossing the frame when it has gone.
-            bob.grip = 3.2;
 
             out.push({
                 // Barely off the axis, and drifting: a perfectly centred tunnel reads as a target.

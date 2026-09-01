@@ -1,27 +1,28 @@
 /**
- * Intelligent — the ambush. The one you are meant to flinch at.
+ * Le guet-apens — the one you are meant to flinch at.
  *
  * They stop. Not dead — they hang there oscillating, the way something that has noticed you hangs
  * there. Then, together and without warning, they come straight at the camera — and miss, passing
- * above, below and to the sides, smeared by the lens as they go — and re-form far away, small
- * again, as if nothing had happened.
+ * above, below and to the sides, bent by the lens as they go — and race back to the far distance,
+ * small again, as if nothing had happened.
  *
  * ── The fisheye ────────────────────────────────────────────────────────────────────────────────
- * A real one. When the picture was five sprites there was nothing to distort and the effect had to
- * be faked with a shear; now that every point is placed individually, displacing each one radially
- * in the vertex shader IS barrel distortion, and it costs a dot product. `ctx.setWarp` drives it.
+ * A real one. Every point is placed individually, so displacing each radially in the vertex shader
+ * IS barrel distortion, and it costs a dot product. `ctx.setWarp` drives it.
  *
- * ── Why it teleports ───────────────────────────────────────────────────────────────────────────
- * ⚠ Once past the camera a bob is behind you, and there is no path back to the far distance that
- * does not cross the screen again. Springing it back would read as a boomerang. So it is MOVED,
- * once, while it is provably off-frame — the one place in this system where a position is assigned
- * rather than approached.
+ * ── 🔴 They come back. They are not put back. ──────────────────────────────────────────────────
+ * An earlier version teleported them once they were past the camera, on the reasoning that there is
+ * no path from behind you to the far end that avoids the frame. True — and the wrong conclusion.
+ * The journey does not need hiding; it needs to be quick. `haste` stiffens the centre's spring for
+ * the length of the retreat, so five clouds sweep back to the distance in about a second, which is
+ * something you watch happen. A teleport is something that has happened, and reads as a fault
+ * however carefully it is dressed.
  */
 
 import { clamp, lerp, easeInOut, easeOut, smoothstep, wander } from './util.js';
 import { Z_NEAR, Z_FAR } from '../bob.js';
 
-const SETTLE = 0.20, OBSERVE = 0.44, CHARGE = 0.70, PASS = 0.80;
+const SETTLE = 0.20, OBSERVE = 0.44, PASS = 0.80;
 
 export default {
     id: 'guet-apens',
@@ -43,7 +44,6 @@ export default {
             y: (ctx.rng() - 0.5) * 0.85,
             z: 1.1 + ctx.rng() * 0.5,
         }));
-        this.sent = false;
         return true;
     },
 
@@ -51,19 +51,9 @@ export default {
         const p = ctx.progress;
         const out = [];
 
-        // The lens. It bends the whole field, hardest as they come past — and it is a real radial
-        // displacement in the vertex shader, not a sheared sprite, because every point is now
-        // placed on its own. Zero while they wait, so the distortion arrives WITH the charge.
+        // The lens bends the whole field, hardest as they come past. Zero while they wait, so the
+        // distortion arrives WITH the charge.
         ctx.setWarp(p < OBSERVE ? 0 : smoothstep(OBSERVE, PASS, p) * 0.55 * (1 - smoothstep(PASS, 1, p)));
-
-        // Re-arm once they are provably out of frame. Doing it on the way IN would be visible.
-        if (p >= PASS && !this.sent) {
-            this.sent = true;
-            for (let i = 0; i < ctx.bobs.length; i++) {
-                const a = (i / ctx.bobs.length) * Math.PI * 2;
-                ctx.teleport(i, Math.cos(a) * 0.25, Math.sin(a) * 0.18, Z_FAR);
-            }
-        }
 
         for (let i = 0; i < ctx.bobs.length; i++) {
             const bob = ctx.bobs[i];
@@ -71,8 +61,8 @@ export default {
             const slot = this.slots[i];
 
             if (p < OBSERVE) {
-                // Come to a stop, then hang. The oscillation is tiny and slow — enough that they
-                // are plainly not frozen, not enough to be going anywhere.
+                // Come to a stop, then hang. The oscillation is tiny and slow — enough that they are
+                // plainly not frozen, not enough to be going anywhere.
                 const breathe = p < SETTLE ? 0 : (p - SETTLE) / (OBSERVE - SETTLE);
                 const w = 0.035 * breathe;
                 out.push({
@@ -81,8 +71,8 @@ export default {
                     z: hold.z + Math.sin(ctx.t * 1.1 + i) * 0.04 * breathe,
                 });
             } else if (p < PASS) {
-                // The charge. Depth collapses fast, and the sideways push arrives late — so they
-                // read as coming AT you, and only miss at the last moment.
+                // The charge. Depth collapses fast and the sideways push arrives late — so they read
+                // as coming AT you, and only miss at the last moment.
                 const k = clamp((p - OBSERVE) / (PASS - OBSERVE));
                 const rush = easeInOut(k);
                 const veer = k * k * k;
@@ -91,8 +81,8 @@ export default {
                 const x = lerp(hold.x, slot.x, veer);
                 const y = lerp(hold.y, slot.y, veer);
 
-                // The cloud leans into its own escape as well — the lens bends the field, this
-                // bends the body inside it.
+                // The cloud leans into its own escape as well — the lens bends the field, this bends
+                // the body inside it.
                 const lean = smoothstep(0.35, 1, k) * 0.9;
                 bob.shearX = x * lean * 0.4;
                 bob.shearY = y * lean * 0.4;
@@ -100,21 +90,26 @@ export default {
 
                 out.push({ x, y, z });
             } else {
-                // Far away and small again, drifting back to something a pattern could pick up.
-                const back = easeOut(clamp((p - PASS) / (1 - PASS)));
+                // The way back, watched rather than hidden. Eased at both ends, and hurried by the
+                // stiffened spring, so it takes about a second from behind the camera to the far
+                // distance.
+                const k = easeOut(clamp((p - PASS) / (1 - PASS)));
                 const a = (i / ctx.bobs.length) * Math.PI * 2;
 
+                bob.haste = lerp(4.5, 1, k);
+                bob.grip = lerp(4, 1, k);
                 // ⚠ Picked up where the charge left it, not reset. The charge ends at 1.5 and this
                 // branch used to say nothing, so brightness fell to 1 in a single frame — a step of
-                // more than half, on the exact frame the phases change. A quantity that two phases
-                // both write has to agree at the boundary; neither phase is wrong on its own, which
-                // is why nothing but a measurement across the seam would have found it.
-                bob.gain = lerp(1.5, 1, back);
+                // more than half, on the exact frame the phases change. A quantity two phases both
+                // write has to agree at the seam.
+                bob.gain = lerp(1.5, 1, k);
 
                 out.push({
-                    x: Math.cos(a) * lerp(0.25, 0.5, back),
-                    y: Math.sin(a) * lerp(0.18, 0.34, back),
-                    z: lerp(Z_FAR, 1.6, back),
+                    // From where it left the frame, back to a ring in the distance. Starting from
+                    // the slot rather than from nowhere is what makes it a return.
+                    x: lerp(slot.x, Math.cos(a) * 0.5, k),
+                    y: lerp(slot.y, Math.sin(a) * 0.34, k),
+                    z: lerp(Z_NEAR, Z_FAR * 0.85, k),
                 });
             }
         }
