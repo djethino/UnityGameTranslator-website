@@ -124,6 +124,20 @@ export class Cloud {
         // `active` thins the population without paying to integrate points nobody will draw.
         const count = Math.min(active, this.count);
 
+        // 🔴 Substepped, so that `grip` has no ceiling worth speaking of.
+        //
+        // The integrator is explicit in the stiffness term: written as a matrix on (velocity,
+        // error) its determinant is `1 - 2·w·dt`, so it diverges past `w · dt = 1` — a hard wall,
+        // not a soft one. Simply clamping there put a ceiling on how rigid a body could be, and
+        // therefore on how FAST the corridor could travel, since a spring following a ramp trails
+        // it by `2v/w` and only stiffness buys that back. Splitting the step moves the wall instead
+        // of living against it, and it is nearly free: the targets above are computed once per
+        // frame, so a substep is three multiply-adds per axis and no trigonometry.
+        // The eagerest a point can be: `omega` is drawn from 2.2 to 9.0 in the constructor, so 9 is
+        // the ceiling of the spread and the only figure the substep count has to respect.
+        const steps = Math.min(6, Math.ceil((9 * grip * dt) / 0.35) || 1);
+        const h = dt / steps;
+
         for (let i = 0; i < count; i++) {
             const j = i * 3;
 
@@ -145,31 +159,30 @@ export class Cloud {
             // of the screen, which is exactly what "the near ring disappears" was. `grip` tightens
             // every point at once, so a pattern that needs an object rather than a mist can have
             // one without giving up the default.
-            // ⚠ Capped against the step, not against a number somebody liked. This integrator is
-            // explicit in the stiffness term and diverges past `w · dt ≈ 2`, so a figure asking for
-            // a rigid body (a corridor ring: grip in the tens) would be fine at 60 fps and turn the
-            // cloud into NaN on the first hitched frame. Clamping makes a point maximally eager for
-            // the step it is being given, which is the truthful answer; letting it through is not.
-            const w = Math.min(omega[i] * grip, MAX_OMEGA_DT / dt);
+            const w = Math.min(omega[i] * grip, MAX_OMEGA_DT / h);
             const jt = jitter[i];
             const ph = phase[i];
 
             // Target, plus a private shimmer. Added to the target rather than to the position so
             // the spring smooths it — added to the position it reads as noise, not as life.
+            // ⚠ Computed ONCE, outside the substep loop below: it does not change within a frame,
+            // and it carries the three sines, which are the expensive part of this loop.
             const tx = centre.x + rx * radius + Math.sin(time * 0.7 + ph) * jt;
             const ty = centre.y + ry * radius + Math.cos(time * 0.61 + ph * 1.3) * jt;
             const tz = centre.z + oz * radius * 0.85 + Math.sin(time * 0.53 + ph * 0.7) * jt;
 
-            // Critically damped, semi-implicit. Stable for the dt the engine allows.
+            // Critically damped, semi-implicit, over `steps` substeps.
             const k = w * w, c = 2 * w;
             let vx = vel[j], vy = vel[j + 1], vz = vel[j + 2];
-            vx += (-c * vx - k * (pos[j] - tx)) * dt;
-            vy += (-c * vy - k * (pos[j + 1] - ty)) * dt;
-            vz += (-c * vz - k * (pos[j + 2] - tz)) * dt;
+            let px = pos[j], py = pos[j + 1], pz = pos[j + 2];
+            for (let s = 0; s < steps; s++) {
+                vx += (-c * vx - k * (px - tx)) * h;
+                vy += (-c * vy - k * (py - ty)) * h;
+                vz += (-c * vz - k * (pz - tz)) * h;
+                px += vx * h; py += vy * h; pz += vz * h;
+            }
             vel[j] = vx; vel[j + 1] = vy; vel[j + 2] = vz;
-            pos[j] += vx * dt;
-            pos[j + 1] += vy * dt;
-            pos[j + 2] += vz * dt;
+            pos[j] = px; pos[j + 1] = py; pos[j + 2] = pz;
         }
     }
 

@@ -46,14 +46,22 @@ import { Z_FAR } from '../bob.js';
 
 const TAU = Math.PI * 2;
 
-const RING = 1.4;        // radius, in the cloud's own unit space
+/**
+ * Radius, in the cloud's own unit space.
+ *
+ * ⚠ It is also the clearance budget, which is why it grew with the speed. A ring leaves the frame
+ * at `z ≤ R/√(aspect²+1)`, so a wider ring clears FURTHER OUT and leaves more room between there
+ * and the depth floor — and that room is what pays for the lag a fast corridor brings.
+ */
+const RING = 1.6;
 const THICK = 0.09;      // the ring has a little body, or it reads as wire
 
 /** Fraction of a cycle spent coming towards you. The rest is the flick back. */
 const FORWARD = 0.94;
 
-/** Seconds for one ring to travel the whole corridor, at pace 1. */
-const LAP_SECONDS = 7.2;
+/** Seconds for one ring to travel the whole corridor, at pace 1. A ring passes about every fifth
+ *  of that, so this is roughly half a second between rings at rest and a quarter when it presses. */
+const LAP_SECONDS = 2.8;
 
 /** Nearest a point may sit. Below 0.12 the engine floors it and the ring stops being a ring. */
 const Z_FLOOR = 0.14;
@@ -74,7 +82,12 @@ const CLEAR = 0.90;
  * So the centre is driven stiff (`haste`) and its private drift is turned down (`sway`), which
  * leaves a small residue — and the residue is budgeted here rather than hoped away.
  */
-const SLOP = 0.055;
+const SLOP = 0.085;
+
+/** The softest member of each spread, which is the one the lag has to be solved against: a bob's
+ *  `omega · zeal` bottoms out near 2.7, a point's `omega` at 2.2. */
+const SOFTEST_BOB = 2.7;
+const SOFTEST_POINT = 2.2;
 
 export default {
     id: 'tunnel',
@@ -171,7 +184,18 @@ export default {
             mid + amp * (0.62 * Math.sin(TAU * (t / p1 + h1)) + 0.38 * Math.sin(TAU * (t / p2 + h2))),
             0.34, 2.05,
         );
-        this.travel += this.rate * pace * ctx.dt;
+        const speed = this.rate * pace;           // field units per second, right now
+        this.travel += speed * ctx.dt;
+
+        // 🔴 The stiffness is derived from the speed, not chosen. A critically damped spring
+        // following a ramp settles `2v/omega` behind it, so the eagerness needed to stay within a
+        // given lag is `2v/(lag · omega)` — and half the budget goes to the centre, half to the
+        // points, since the two lags add up. Fixed values were right for one pace and one
+        // LAP_SECONDS; the next person to make this faster would have found the rings turning back
+        // in plain sight again, with nothing on screen to say why.
+        const budget = SLOP * 0.5;
+        const haste = clamp((2 * speed) / (budget * SOFTEST_BOB), 3, 60);
+        const grip = clamp((2 * speed) / (budget * SOFTEST_POINT), 4, 45);
 
         // The corridor starts folded and opens over two seconds, half of it ahead and half behind
         // the middle depth, so no ring has to cross the whole field to take its place.
@@ -203,17 +227,8 @@ export default {
                 z = Z_FAR - w;
                 station = this.travel + z;
                 slide = 0;
-                // Stiff, because a corridor is rigid and because anything softer arrives late — see
-                // SLOP above. The organic quality is not lost with it: it lives in the points'
-                // own springs, which `grip` only tightens part of the way.
-                bob.haste = 14;
-                // 🔴 Ten, not three. The points have their own springs and a deliberately wide
-                // spread of eagerness — which is what makes a cloud organic, and what makes a ring
-                // travelling this fast trail its slowest points a fifth of a corridor behind. Those
-                // stragglers are still on screen when the ring's centre has cleared it, so the
-                // figure reads as "it turned back in front of me" for the sake of a value that was
-                // right at half this speed.
-                bob.grip = 10;
+                bob.haste = haste;
+                bob.grip = grip;
             } else {
                 // Gone past, and out of sight since `zTurn`. The flick back, eased at both ends and
                 // hurried by a stiffened spring so it is over in about four tenths of a second.
@@ -224,8 +239,10 @@ export default {
                 // the return, which is the one thing this branch exists to avoid.
                 station = this.travel - (w - this.span) + this.zTurn;
                 slide = k;
-                bob.haste = 18;
-                bob.grip = 12;
+                // The flick back covers the corridor in a fraction of the time the trip took, so it
+                // needs more of both than the approach — proportionally, from the same figures.
+                bob.haste = Math.min(60, haste * 1.6);
+                bob.grip = Math.min(45, grip * 1.4);
             }
 
             // A corridor does not breathe. Not quite zero, so the rings are not machined.
