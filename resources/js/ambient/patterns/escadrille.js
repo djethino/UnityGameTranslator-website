@@ -10,21 +10,29 @@
  * It costs a ring buffer of the leader's positions and nothing else.
  */
 
-import { wander, clamp } from './util.js';
+import { wander, clamp, lerp } from './util.js';
 
 const HISTORY = 240;      // ~4 s at 60 Hz, comfortably more than the deepest lag
-const LAG = 0.34;         // seconds between one wingman and the next
-const SPREAD = 0.30;      // how wide the V opens
 
 export default {
     id: 'escadrille',
     kind: 'predefined',
     calm: false,
-    duration: [12, 16],
+    duration: [10, 15],
 
-    enter() {
+    enter(ctx) {
+        const r = ctx.rng;
         this.buf = [];
         this.head = 0;
+        // ⚠ A squadron flying the same patrol every time is a squadron on rails. The formation's
+        // shape, its spacing and the leader's course are all drawn per sortie — including whether
+        // it is a wide lazy V or a tight one strung out behind.
+        this.lag = lerp(0.22, 0.46, r());          // seconds between one wingman and the next
+        this.spread = lerp(0.20, 0.40, r());       // how wide the V opens
+        this.climb = lerp(0.02, 0.17, r());        // whether the wings sit above or level
+        this.roam = lerp(0.65, 1.0, r());          // how far the leader ranges
+        this.pace = lerp(0.42, 0.72, r());
+        this.seed = [r() * 6.28, r() * 6.28, r() * 6.28];
         return true;
     },
 
@@ -34,9 +42,9 @@ export default {
         // The leader wanders in three dimensions; nobody is steering it anywhere in particular,
         // which is the point — a squadron on patrol, not a squadron going somewhere.
         const lead = {
-            x: wander(t * 0.55, 0.4) * 0.85,
-            y: wander(t * 0.42, 2.1) * 0.5,
-            z: 1.25 + wander(t * 0.31, 4.2) * 0.55,
+            x: wander(t * this.pace, this.seed[0]) * 0.85 * this.roam,
+            y: wander(t * this.pace * 0.76, this.seed[1]) * 0.5 * this.roam,
+            z: 1.25 + wander(t * this.pace * 0.56, this.seed[2]) * 0.55,
             t,
         };
 
@@ -64,14 +72,14 @@ export default {
             const bob = ctx.bobs[i];
             const wing = i === 0 ? 0 : Math.ceil(i / 2);      // 0, 1, 1, 2, 2
             const side = i === 0 ? 0 : (i % 2 === 1 ? -1 : 1);
-            const past = wing === 0 ? lead : at(wing * LAG);
+            const past = wing === 0 ? lead : at(wing * this.lag);
 
             // Roll into the turn, the outer wingmen a little more than the leader.
             bob.shearX = bank * (0.35 + wing * 0.22);
 
             out.push({
-                x: past.x + side * SPREAD * wing,
-                y: past.y + wing * 0.10,
+                x: past.x + side * this.spread * wing,
+                y: past.y + wing * this.climb,
                 z: past.z + wing * 0.13,
             });
         }

@@ -16,7 +16,7 @@ export default {
     id: 'orage',
     kind: 'predefined',
     calm: false,
-    duration: [11, 15],
+    duration: [12, 18],
 
     enter(ctx) {
         // Two or three build-ups per run, decided once so the run has a shape rather than a rhythm.

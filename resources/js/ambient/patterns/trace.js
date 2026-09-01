@@ -29,7 +29,9 @@ export default {
     kind: 'predefined',
     calm: true,
     square: true,
-    duration: [10, 14],
+    // Short: a letter is read in two seconds and has nowhere to go afterwards. Holding it longer
+    // does not make it richer, it makes it a wait.
+    duration: [7, 11],
 
     enter(ctx) {
         const glyph = pickGlyph(ctx.strings());

@@ -30,7 +30,8 @@ export default {
     kind: 'predefined',
     calm: true,
     square: true,
-    duration: [11, 15],
+    // Barely longer than a single letter: a word takes a moment more to read, and then it is read.
+    duration: [8, 12],
 
     enter(ctx) {
         const run = pickWord(ctx.strings(), ctx.clouds.length);

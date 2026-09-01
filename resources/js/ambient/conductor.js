@@ -21,15 +21,40 @@
 
 import { PATTERNS, PREDEFINED, INTELLIGENT } from './patterns/index.js';
 import { pointer, pointerEverSeen } from './pointer.js';
-import { rngFrom, lerp, clamp, smoothstep } from './patterns/util.js';
-
-const BLEND = 1.3;              // seconds of overlap between two patterns
-
-const ROGUE_CHECK = 26;         // how often we consider sending one off
-const ROGUE_CHANCE = 0.42;
-const ROGUE_TIME = [7, 12];     // how long it stays away
+import { createRogues } from './rogues.js';
+import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js';
 
 const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway'];
+
+/**
+ * How one figure becomes the next.
+ *
+ * ⚠ There used to be one answer — a 1.3 s cross-fade — and it was invisible in the good sense and
+ * deadening in the bad one: every change felt the same, which told you there was a list being
+ * played. These are the same mechanism with three dials, so none of them can break the invariant
+ * the plain fade satisfies.
+ *
+ * | dial | what it does |
+ * |---|---|
+ * | `stagger` | the share of the window spent offsetting the clouds, so they change over one after another rather than at once |
+ * | `swell` | brightness and size rise and fall across the handover — a breath between two figures |
+ * | `spill` | the clouds are pushed outward mid-way and converge on the new figure from outside it |
+ *
+ * 🔴 `swell` and `spill` ride a `sin(π·raw)` bump: exactly zero at both ends, so a handover can
+ * never leave anything behind it, however it is tuned.
+ */
+const HANDOVERS = [
+    // ⚠ `calm` carries the same meaning as it does on a figure, because the deck below applies the
+    // same test to both: under reduced motion only the calm ones are dealt. A handover left without
+    // it would be silently excluded there, which is the sort of omission that shows up as "the
+    // transitions all look the same on my machine" and never as an error.
+    { id: 'fondu', seconds: 1.3, stagger: 0, calm: true, curve: (k) => smoothstep(0, 1, k) },
+    { id: 'souple', seconds: 2.7, stagger: 0.15, calm: true, curve: (k) => smoothstep(0, 1, k) },
+    { id: 'cascade', seconds: 2.3, stagger: 0.6, calm: true, curve: (k) => smoothstep(0, 1, k) },
+    { id: 'bascule', seconds: 0.7, stagger: 0, calm: false, curve: easeInOut },
+    { id: 'souffle', seconds: 1.9, stagger: 0.2, calm: false, curve: (k) => smoothstep(0, 1, k), swell: 0.55 },
+    { id: 'essaim', seconds: 2.1, stagger: 0.4, calm: false, curve: (k) => smoothstep(0, 1, k), spill: 0.55 },
+];
 
 export function createConductor({ engine, pickAnchor, strings }) {
     const bobs = engine.bobs;
@@ -38,12 +63,12 @@ export function createConductor({ engine, pickAnchor, strings }) {
     let current = null;
     let previous = null;
     let blend = 1;              // 1 = the current pattern owns everything
+    let hand = HANDOVERS[0];    // how THIS handover is being played
     let queue = [];
     let lastId = null;
-
-    let rogue = null;
-    let rogueClock = 0;
     let scroll = 0;   // signed scroll velocity for this frame, for the patterns that ride it
+
+    const rogues = createRogues({ bobs, pickAnchor });
 
     function instantiate(module, seed) {
         // A fresh object over the module, so `this.buf`, `this.glyph` and friends belong to THIS
@@ -56,32 +81,63 @@ export function createConductor({ engine, pickAnchor, strings }) {
         return inst;
     }
 
-    function pick(pool) {
-        // ⚠ A pattern that reads the pointer is only drawn once a pointer has existed. On a phone
-        // that has not been touched there is none, and such a pattern would run its fallback for
-        // its whole length — a figure whose entire content is "nothing is happening".
-        const feasible = (p) => (!p.needsPointer || pointerEverSeen()) && (!engine.reduced || p.calm);
-        const usable = pool.filter((p) => feasible(p) && p.id !== lastId);
-        const from = usable.length ? usable : pool.filter(feasible);
-        return from.length ? from[(Math.random() * from.length) | 0] : pool[0];
+    // ⚠ A pattern that reads the pointer is only drawn once a pointer has existed. On a phone
+    // that has not been touched there is none, and such a pattern would run its fallback for
+    // its whole length — a figure whose entire content is "nothing is happening".
+    const feasible = (p) => (!p.needsPointer || pointerEverSeen()) && (!engine.reduced || p.calm);
+
+    /**
+     * Draw without replacement: a shuffled deck, dealt out, reshuffled when empty.
+     *
+     * 🔴 Fair BY CONSTRUCTION, which is the only kind of fair worth having here. Picking an index at
+     * random is uniform in the long run and says nothing at all about the short one — and the short
+     * run is the whole of a visit. Somebody who reads a page for four minutes sees perhaps a dozen
+     * figures out of nineteen, and independent draws will hand them the same one three times while
+     * five others never appear. A deck cannot: every figure is dealt exactly once before any is
+     * dealt twice.
+     *
+     * ⚠ Feasibility is settled when the deck is refilled, not per draw. So a pointer appearing
+     * mid-deck brings its figures in at the next reshuffle rather than immediately — a few figures'
+     * delay, in exchange for the deal staying uniform over the whole set instead of over whichever
+     * subset happened to be usable at the instant of each draw.
+     */
+    function dealer(pool) {
+        let deck = [];
+        return function draw(avoid) {
+            if (!deck.length) {
+                deck = pool.filter(feasible);
+                if (!deck.length) deck = pool.slice();     // never stall for want of a candidate
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = (Math.random() * (i + 1)) | 0;
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+            }
+            // Take the one below the top when the top would repeat what just ran. A swap inside the
+            // deck, not a reject: the figure keeps its place in this deal, so the guarantee holds.
+            let i = deck.length - 1;
+            if (deck.length > 1 && deck[i].id === avoid) i -= 1;
+            return deck.splice(i, 1)[0];
+        };
     }
+
+    const drawPredefined = dealer(PREDEFINED);
+    const drawIntelligent = dealer(INTELLIGENT);
+    const drawHandover = dealer(HANDOVERS);
 
     function refill() {
         // ⚠ Under reduced motion the intelligent patterns are the camera charge and the chase, and
         // neither is calm by any reading. The sequence becomes predefined-only rather than
         // stopping — a still background is not restful, it just looks broken.
-        const a = pick(PREDEFINED);
-        lastId = a.id;
-        const b = pick(PREDEFINED);
-        lastId = b.id;
-        queue = engine.reduced ? [a, b] : [a, b, pick(INTELLIGENT)];
+        const a = drawPredefined(lastId);
+        const b = drawPredefined(a.id);
+        queue = engine.reduced ? [a, b] : [a, b, drawIntelligent(b.id)];
     }
 
     function advance() {
         if (!queue.length) refill();
 
         for (let attempt = 0; attempt < 4; attempt++) {
-            const module = queue.shift() || pick(PREDEFINED);
+            const module = queue.shift() || drawPredefined(lastId);
             const inst = instantiate(module, (Math.random() * 0xffffffff) | 0);
 
             // 🔴 Back to a ball before anyone speaks. A cloud's arrangement is shared state that
@@ -98,6 +154,10 @@ export function createConductor({ engine, pickAnchor, strings }) {
                 current = inst;
                 lastId = module.id;
                 blend = previous ? 0 : 1;
+                // ⚠ Chosen against the INCOMING figure. A corridor born out of a scatter is a
+                // corridor whose first second denies what it is; the rigid ones are handed over
+                // plainly, and every other pairing draws from the deck like the figures do.
+                hand = module.rigid ? HANDOVERS[0] : drawHandover(hand.id);
                 return;
             }
             if (!queue.length) refill();
@@ -151,57 +211,6 @@ export function createConductor({ engine, pickAnchor, strings }) {
         };
     }
 
-    function orbit(dt, time) {
-        rogueClock += dt;
-
-        if (rogue) {
-            rogue.left += dt;
-            if (rogue.left > rogue.span) { rogue = null; return; }
-            return;
-        }
-
-        if (rogueClock < ROGUE_CHECK) return;
-        rogueClock = 0;
-        if (engine.reduced || Math.random() > ROGUE_CHANCE) return;
-
-        const anchor = pickAnchor && pickAnchor();
-        if (!anchor) return;
-
-        rogue = {
-            bob: (Math.random() * bobs.length) | 0,
-            anchor,
-            left: 0,
-            span: lerp(ROGUE_TIME[0], ROGUE_TIME[1], Math.random()),
-            phase: Math.random() * Math.PI * 2,
-        };
-    }
-
-    /** Where the rogue should be: circling its anchor, in normalized space at its own depth. */
-    function rogueTarget(time) {
-        const el = rogue.anchor;
-        const rect = el.getBoundingClientRect();
-        // It left the view while the reader scrolled. Nothing to circle any more — go home.
-        if (rect.bottom < 0 || rect.top > window.innerHeight || rect.width === 0) { rogue = null; return null; }
-
-        const fx = ((rect.left + rect.width / 2) / window.innerWidth) * 2 - 1;
-        const fy = ((rect.top + rect.height / 2) / window.innerHeight) * 2 - 1;
-
-        // Eased in and out, so it neither snaps away from the formation nor snaps back into it.
-        const k = Math.min(smoothstep(0, 1.2, rogue.left), smoothstep(rogue.span, rogue.span - 1.4, rogue.left));
-        const a = time * 1.15 + rogue.phase;
-        const z = 1.55;
-
-        // ⚠ Landing on a point of the SCREEN means undoing the projection: it divides x by the
-        // depth and by the aspect ratio, so both have to be put back. Forget either and the orbit
-        // circles empty space somewhere nearer the middle.
-        return {
-            k,
-            x: (fx + Math.cos(a) * 0.16) * z * engine.aspect,
-            y: (fy + Math.sin(a) * 0.20) * z,
-            z,
-        };
-    }
-
     advance();
 
     /**
@@ -234,16 +243,40 @@ export function createConductor({ engine, pickAnchor, strings }) {
         let warp = now.warp;
 
         if (previous) {
-            blend = Math.min(1, blend + dt / BLEND);
+            blend = Math.min(1, blend + dt / hand.seconds);
             const before = evaluate(previous, dt);
-            const k = smoothstep(0, 1, blend);
+            const n = bobs.length;
+
+            // Each cloud on its own clock. With `stagger` at 0 they all change together, which is
+            // the plain fade; at 0.6 the last one starts when the first is already there.
+            const share = hand.stagger / Math.max(1, n - 1);
+            const kOf = (i) => hand.curve(clamp((blend - i * share) / (1 - hand.stagger)));
+
+            // Zero at both ends by construction, so whatever these do cannot outlive the handover.
+            const bump = Math.sin(Math.PI * blend);
+            const spill = 1 + (hand.spill || 0) * bump;
+            const swell = (hand.swell || 0) * bump;
 
             targets = now.targets.map((t, i) => {
                 const o = before.targets[i] || t;
-                return { x: lerp(o.x, t.x, k), y: lerp(o.y, t.y, k), z: lerp(o.z, t.z, k) };
+                const k = kOf(i);
+                return {
+                    x: lerp(o.x, t.x, k) * spill,
+                    y: lerp(o.y, t.y, k) * spill,
+                    z: lerp(o.z, t.z, k),
+                };
             });
-            props = now.props.map((p, i) => p.map((v, j) => lerp(before.props[i][j], v, k)));
-            warp = lerp(before.warp, now.warp, k);
+            props = now.props.map((p, i) => {
+                const k = kOf(i);
+                return p.map((v, j) => {
+                    const blended = lerp(before.props[i][j], v, k);
+                    if (!swell) return blended;
+                    if (PROPS[j] === 'gain') return blended * (1 + swell * 0.55);
+                    if (PROPS[j] === 'scale') return blended * (1 + swell * 0.3);
+                    return blended;
+                });
+            });
+            warp = lerp(before.warp, now.warp, hand.curve(blend));
 
             if (blend >= 1) previous = null;
         }
@@ -254,18 +287,17 @@ export function createConductor({ engine, pickAnchor, strings }) {
             PROPS.forEach((key, j) => { bobs[i][key] = props[i][j]; });
         }
 
-        orbit(dt, patternTime);
-        if (rogue) {
-            const r = rogueTarget(patternTime);
-            if (r) {
-                const t = targets[rogue.bob];
-                targets[rogue.bob] = {
-                    x: lerp(t.x, r.x, r.k),
-                    y: lerp(t.y, r.y, r.k),
-                    z: lerp(t.z, r.z, r.k),
-                };
-            }
-        }
+        // 🔴 After the cross-fade, and after the pattern's own spread. What a cloud that has left
+        // the figure is doing has nothing to do with what the figure would have asked of it, so it
+        // must not be blended with the outgoing figure's idea of the same cloud.
+        //
+        // ⚠ `rigid` figures are handed `false`: their whole content is a formation, and a member
+        // wandering off does not read as a cloud with a mind of its own, it reads as the corridor
+        // being broken. Whoever is already out comes home over the ordinary ease rather than being
+        // dropped.
+        targets = rogues.steer(targets, {
+            dt, time: patternTime, bobs, aspect: engine.aspect, pointer: pointer(),
+        }, !engine.reduced && !current.rigid);
 
         engine.setWarp(warp);
 
@@ -297,6 +329,8 @@ export function createConductor({ engine, pickAnchor, strings }) {
                     previous: previous && previous.id,
                     previousAt: previous ? +(previous.t / previous.duration).toFixed(3) : null,
                     blend: +blend.toFixed(3),
+                    handover: hand.id,
+                    rogues: rogues.current,
                 };
             },
         },

@@ -24,7 +24,7 @@ export default {
     id: 'encadrement',
     kind: 'intelligent',
     calm: true,
-    duration: [10, 14],
+    duration: [9, 13],
 
     enter(ctx) {
         const el = ctx.anchor();

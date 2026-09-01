@@ -21,7 +21,7 @@ export default {
     kind: 'intelligent',
     calm: false,
     needsPointer: true,
-    duration: [14, 19],
+    duration: [13, 20],
 
     enter() {
         this.idle = 0;

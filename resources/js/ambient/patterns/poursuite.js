@@ -26,7 +26,9 @@ export default {
     id: 'poursuite',
     kind: 'intelligent',
     calm: false,
-    duration: [15, 21],
+    // Wide, because its interest is not ours to decide: it lives off the visitor moving. A long one
+    // that nobody feeds is dull, a short one cut off mid-chase is worse.
+    duration: [14, 22],
 
     enter() {
         this.buf = [];

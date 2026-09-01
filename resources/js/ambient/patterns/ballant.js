@@ -23,7 +23,7 @@ export default {
     id: 'ballant',
     kind: 'intelligent',
     calm: false,
-    duration: [13, 18],
+    duration: [12, 17],
 
     enter(ctx) {
         // Displacement and its velocity, one per cloud. Kept between frames: a slosh is a memory of

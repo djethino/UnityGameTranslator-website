@@ -25,7 +25,7 @@ export default {
     id: 'traversee',
     kind: 'predefined',
     calm: true,
-    duration: [14, 19],
+    duration: [13, 19],
 
     enter(ctx) {
         // A fixed bearing each, so the five do not all exit through the same corner.

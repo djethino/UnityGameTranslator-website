@@ -17,7 +17,7 @@ export default {
     id: 'miroir',
     kind: 'predefined',
     calm: true,
-    duration: [12, 16],
+    duration: [10, 15],
 
     enter(ctx) {
         this.escape = ctx.bobs.map(() => ({ x: (ctx.rng() - 0.5) * 1.5, y: (ctx.rng() - 0.5) * 1.0 }));

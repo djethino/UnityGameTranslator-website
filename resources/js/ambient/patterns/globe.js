@@ -16,7 +16,7 @@
  * near half large and bright and the far half small and dim.
  */
 
-import { wander } from './util.js';
+import { wander, lerp } from './util.js';
 
 const TAU = Math.PI * 2;
 
@@ -24,10 +24,20 @@ export default {
     id: 'globe',
     kind: 'predefined',
     calm: true,
-    duration: [14, 19],
+    // Long: it turns, and what was behind comes round. A figure that keeps showing you something
+    // new earns the time; one that has shown you everything in three seconds does not.
+    duration: [16, 23],
 
     enter(ctx) {
         const n = ctx.clouds.length;
+        const r = ctx.rng;
+        // ⚠ Which way it turns, how fast, how big and how far away — all drawn per run. A globe
+        // that always spins the same way at the same speed is a logo.
+        this.spin = lerp(0.24, 0.52, r()) * (r() < 0.5 ? -1 : 1);
+        this.size = lerp(1.0, 1.32, r());
+        this.depth = lerp(1.2, 1.55, r());
+        this.tiltRate = lerp(0.09, 0.19, r());
+        this.seed = [r() * 6.28, r() * 6.28, r() * 6.28];
         ctx.clouds.forEach((cloud, c) => {
             // The band this cloud owns, in sin(latitude) rather than latitude itself — equal steps
             // of sin give equal AREA, so the bands carry the same number of points per square inch.
@@ -54,20 +64,20 @@ export default {
         const t = ctx.t;
         // One rotation about every seventeen seconds, and the axis itself leans slowly, so the
         // globe never presents the same face twice at the same tilt.
-        const yaw = t * 0.37;
-        const lean = wander(t * 0.13, 1.9) * 0.28;
+        const yaw = t * this.spin;
+        const lean = wander(t * this.tiltRate, this.seed[0]) * 0.28;
 
         const out = [];
         for (const bob of ctx.bobs) {
             bob.yaw = yaw;
             // All five share one centre and one radius: they are bands of the SAME sphere, and any
             // difference between them would take it apart.
-            bob.scale = 1.15;
+            bob.scale = this.size;
             bob.shearX = lean * 0.25;
             out.push({
-                x: wander(t * 0.11, 0.7) * 0.20,
-                y: wander(t * 0.09, 3.1) * 0.12,
-                z: 1.35,
+                x: wander(t * 0.11, this.seed[1]) * 0.20,
+                y: wander(t * 0.09, this.seed[2]) * 0.12,
+                z: this.depth,
             });
         }
         return out;

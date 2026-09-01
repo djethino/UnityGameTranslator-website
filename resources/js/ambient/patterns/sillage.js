@@ -24,7 +24,7 @@ export default {
     kind: 'intelligent',
     calm: false,
     needsPointer: true,
-    duration: [14, 20],
+    duration: [13, 20],
 
     enter(ctx) {
         // The displacement each cloud is currently carrying. Kept between frames: this is the only

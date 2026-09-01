@@ -38,7 +38,8 @@ export default {
     id: 'guet-apens',
     kind: 'intelligent',
     calm: false,
-    duration: [11, 14],
+    // The shortest. It is a fright, and a fright you can see coming for fifteen seconds is not one.
+    duration: [9, 13],
 
     enter(ctx) {
         // Each is assigned a way past the camera — above, below, left, right, and one corner. They

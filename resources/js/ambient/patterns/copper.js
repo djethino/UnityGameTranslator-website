@@ -13,19 +13,30 @@
  * The out-of-phase part is what makes it read. Five bars moving together would be one thick bar.
  */
 
-import { wander } from './util.js';
+import { wander, lerp } from './util.js';
 
 const WIDTH = 1.45;      // half-width of a ribbon, in field units — wider than the field on purpose
 const THICK = 0.055;     // and very nearly flat
-const SWING = 0.62;      // how far a bar travels up and down
 
 export default {
     id: 'copper',
     kind: 'predefined',
     calm: true,
-    duration: [12, 17],
+    duration: [12, 18],
 
     enter(ctx) {
+        const r = ctx.rng;
+        // ⚠ Copper bars were a fixed effect on a fixed machine; here there is no reason for the
+        // swing, the tempo or the stacking order to be the same twice. `slant` is the one worth
+        // naming: at 0 the bars are level, and a few degrees of tilt turns the same routine into a
+        // different-looking screen.
+        this.swing = lerp(0.45, 0.78, r());
+        this.tempo = lerp(0.38, 0.72, r());
+        this.slant = (r() - 0.5) * 0.5;
+        this.depth = lerp(1.1, 1.4, r());
+        this.stack = lerp(0.26, 0.55, r());
+        this.step = lerp(0.02, 0.06, r()) * (r() < 0.5 ? -1 : 1);
+        this.seed = r() * 6.28;
         ctx.clouds.forEach((cloud) => {
             cloud.setShape((_, __, out) => {
                 // Denser in the middle of the bar than at its ends, so a ribbon fades out sideways
@@ -47,16 +58,18 @@ export default {
             const bob = ctx.bobs[i];
             // Evenly spread phases, plus a slow drift on each so the five never lock into a pattern
             // the eye can predict. The rate differs slightly per bar for the same reason.
-            const phase = (i / ctx.bobs.length) * Math.PI * 2;
-            const rate = 0.52 + i * 0.035;
+            const phase = (i / ctx.bobs.length) * Math.PI * 2 + this.seed;
+            const rate = this.tempo + i * this.step;
 
             bob.scale = 1;
+            // A few degrees of tilt on the whole rack, drawn once per run.
+            bob.shearY = this.slant;
             out.push({
                 x: wander(t * 0.09 + i, i) * 0.10,
-                y: Math.sin(t * rate + phase) * SWING,
+                y: Math.sin(t * rate + phase) * this.swing,
                 // A little depth between the bars: the near ones pass in front of the far ones, and
                 // since the points never merge you see one ribbon crossing another.
-                z: 1.25 + Math.cos(t * 0.21 + phase) * 0.42,
+                z: this.depth + Math.cos(t * 0.21 + phase) * this.stack,
             });
         }
         return out;

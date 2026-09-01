@@ -93,7 +93,13 @@ export default {
     id: 'tunnel',
     kind: 'predefined',
     calm: false,
-    duration: [15, 21],
+    // 🔴 The one figure that refuses free electrons. Everywhere else a cloud leaving the formation
+    // reads as a cloud with a mind of its own; here the formation IS the figure, and a ring that
+    // wanders off does not read as mischief, it reads as the corridor coming apart.
+    rigid: true,
+    // The longest of the nineteen. A corridor is not a shape you recognise and move on from, it is
+    // somewhere you settle into — and it now has bends, slopes and a changing pace to get through.
+    duration: [20, 30],
 
     enter(ctx) {
         const n = ctx.bobs.length;

@@ -21,7 +21,7 @@ export default {
     kind: 'intelligent',
     calm: false,
     needsPointer: true,
-    duration: [12, 16],
+    duration: [11, 16],
 
     enter(ctx) {
         this.held = (ctx.rng() * ctx.bobs.length) | 0;

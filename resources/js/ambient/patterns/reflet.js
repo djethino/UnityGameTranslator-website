@@ -18,9 +18,7 @@
  * reads as water.
  */
 
-import { wander } from './util.js';
-
-const HORIZON = 0.10;    // slightly below centre: more sky than water, which is how a view sits
+import { wander, lerp } from './util.js';
 const DIM = 0.6;         // a reflection is never as bright as what it reflects
 const SPAN = 1.5;        // half-width of the waterline — wider than the field, so it has no ends
 
@@ -41,9 +39,19 @@ export default {
     id: 'reflet',
     kind: 'predefined',
     calm: true,
-    duration: [13, 18],
+    duration: [15, 21],
 
     enter(ctx) {
+        const r = ctx.rng;
+        // ⚠ Where the waterline sits, how choppy it is and how far the pair ranges are drawn per
+        // run. The horizon itself stays PUT once drawn — a horizon that drifts is not a horizon —
+        // but it need not be at the same height every time.
+        this.line = lerp(-0.06, 0.24, r());
+        this.chop = lerp(0.6, 1.5, r());
+        this.roam = lerp(0.8, 1.15, r());
+        this.pace = lerp(0.34, 0.56, r());
+        this.seed = [r() * 6.28, r() * 6.28, r() * 6.28, r() * 6.28];
+
         // Two above, pointing down; two below, the same shape pointing up.
         ctx.clouds[0].setShape(teardrop(1));
         ctx.clouds[1].setShape(teardrop(1));
@@ -68,12 +76,12 @@ export default {
         // the thing above moves and the thing below moves with it — a still pair proves nothing.
         const above = [
             {
-                x: wander(t * 0.46, 0.4) * 0.95,
-                y: HORIZON - 0.36 - Math.abs(wander(t * 0.33, 1.6)) * 0.26,
+                x: wander(t * this.pace, this.seed[0]) * 0.95 * this.roam,
+                y: this.line - 0.36 - Math.abs(wander(t * 0.33, this.seed[1])) * 0.26,
             },
             {
-                x: wander(t * 0.39, 2.7) * 1.0,
-                y: HORIZON - 0.32 - Math.abs(wander(t * 0.29, 4.2)) * 0.30,
+                x: wander(t * this.pace * 0.85, this.seed[2]) * 1.0 * this.roam,
+                y: this.line - 0.32 - Math.abs(wander(t * 0.29, this.seed[3])) * 0.30,
             },
         ];
 
@@ -85,15 +93,15 @@ export default {
                 out.push({ x: above[i].x, y: above[i].y, z: 1.3 + i * 0.12 });
             } else if (i < 4) {
                 const src = above[i - 2];
-                const depth = Math.abs(src.y - HORIZON);
+                const depth = Math.abs(src.y - this.line);
                 // Mirrored about the line, then let go of by the water: the further down, the less
                 // it holds together.
-                const shake = wander(t * 1.9 + i * 2.3, i) * 0.05 * (0.35 + depth * 2.4);
+                const shake = wander(t * 1.9 + i * 2.3, i) * 0.05 * this.chop * (0.35 + depth * 2.4);
                 bob.scale = 0.9;
                 bob.gain = DIM;
                 out.push({
                     x: src.x + shake,
-                    y: HORIZON + depth + Math.abs(wander(t * 1.2 + i, i + 3)) * 0.045,
+                    y: this.line + depth + Math.abs(wander(t * 1.2 + i, i + 3)) * 0.045 * this.chop,
                     z: 1.3 + (i - 2) * 0.12,
                 });
             } else {
@@ -101,7 +109,7 @@ export default {
                 // thing on screen and it never moves — a horizon that drifts is not a horizon.
                 bob.scale = 1;
                 bob.gain = 1.25;
-                out.push({ x: 0, y: HORIZON, z: 1.2 });
+                out.push({ x: 0, y: this.line, z: 1.2 });
             }
         }
         return out;
