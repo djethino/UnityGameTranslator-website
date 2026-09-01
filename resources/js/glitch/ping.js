@@ -15,7 +15,6 @@
 
 import { pickVisualMany } from './targets.js';
 import { installRgbSplit } from './rgb-split.js';
-import { glitchInterval } from '../ambient/motion.js';
 
 const tune = {
     wave: [1, 3],           // how many elements a burst hits — sometimes one, which is the point
@@ -23,9 +22,8 @@ const tune = {
     spread: 0.28,           // minimum distance between two of them, as a fraction of the viewport
     speed: [300, 560],      // ms of animation, drawn per element
     chrome: 0.4,            // how much less often the nav, header and footer are hit (1 = as often)
-    every: [5000, 10000],   // between two bursts
-    retry: [4000, 9000],    // nothing eligible on screen — come back soon, not in a minute
-    first: [3000, 8000],   // let the page settle before the first one
+    // ⚠ No interval here any more. When and how often is the orchestra's business (see
+    // glitch/orchestra.js); this file decides only what one burst looks like.
     // ⚠ Floor on how long the class stays. The real duration is max(hold, speed + 60), because a
     // class removed mid-animation snaps the element back instead of letting it settle.
     hold: 1000,
@@ -78,42 +76,31 @@ function fire() {
     return picks.length;
 }
 
-/** The wait before the next burst, stretched or cancelled by the visitor's setting. */
-const spacing = (range) => rand(range) * glitchInterval();
-
-function schedule(delay) {
-    setTimeout(() => {
-        // ⚠ The setting is read at every tick, never captured at startup: somebody turning glitches
-        // back on from the profile screen expects the next one to arrive, not to have to reload.
-        // Off means come back and ask again, not stop for ever.
-        if (glitchInterval() === 0) { schedule(4000); return; }
-
-        // Not just cheaper — correct. Firing here would consume this turn against a page nobody can
-        // see, and the reader would come back to a background that has just gone quiet.
-        if (document.hidden) { schedule(spacing(tune.retry)); return; }
-
-        // Installed on first use rather than at startup: a visitor who never lets a glitch run
-        // never receives the markup.
-        installRgbSplit();
-        schedule(fire() ? spacing(tune.every) : spacing(tune.retry));
-    }, delay);
-}
-
-/** Fire one burst now, installing the filters if this is the first time. Used by the settings card. */
+/**
+ * Fire one burst now, installing the filters if this is the first time.
+ *
+ * 🔴 The only way this effect ever fires. The settings card uses it, and so does the glitch
+ * orchestra, which owns the timing for all three effects — this file no longer has a clock. Three
+ * effects each waiting on their own interval produced three regularities crossing each other, and
+ * a second entry point would let one of them quietly acquire a fourth.
+ */
 export function fireNow() {
+    // Installed on first use rather than at startup: a visitor who never lets a glitch run never
+    // receives the markup.
     installRgbSplit();
     return fire();
 }
 
 export function startPing() {
-    schedule(rand(tune.first));
-
     // Console helper, in the same shape as window.ambient and window.testLingua: fires a burst now
     // and returns how many elements it hit, and lets the whole thing be tuned live — how often an
     // ambient effect should fire, and how many things at once, can only be judged by living with it
     // for a few minutes, not by reading a number.
-    window.testGlitch = Object.assign(fireNow, {
-        get tune() { return { ...tune }; },
-        set(key, v) { if (key in tune) tune[key] = v; return { ...tune }; },
+    // ⚠ defineProperties, not Object.assign: assign would call the getter once and store the
+    // result, so `.tune` would report the values this file started with and never the ones `set`
+    // has since written — a live tuning knob that silently stops reporting what it tuned.
+    window.testGlitch = Object.defineProperties(fireNow, {
+        tune: { get() { return { ...tune }; } },
+        set: { value: (key, v) => { if (key in tune) tune[key] = v; return { ...tune }; } },
     });
 }

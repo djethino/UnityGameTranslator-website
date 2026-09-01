@@ -16,8 +16,9 @@
 import { createEngine } from './engine.js';
 import { createConductor } from './conductor.js';
 import { pickAnchor, visibleStrings } from '../glitch/targets.js';
-import { startPing } from '../glitch/ping.js';
-import { startLingua, bankStrings, warmBanks } from '../glitch/lingua.js';
+import { startPing, fireNow as firePing } from '../glitch/ping.js';
+import { startLingua, fireNow as fireLingua, bankStrings, warmBanks } from '../glitch/lingua.js';
+import { startOrchestra } from '../glitch/orchestra.js';
 import { startMotionSettings } from './settings.js';
 
 export function startAmbient() {
@@ -46,5 +47,15 @@ export function startAmbient() {
     // Decoration on top of a page that has to be usable first: deferred to idle so neither the DOM
     // scan nor the language fetch competes with the first render.
     const later = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
-    later(() => { startPing(); startLingua(); });
+    later(() => {
+        startPing();
+        startLingua();
+        // 🔴 One clock for all three. `fond` is absent on a machine with no WebGL, and the
+        // orchestra simply skips that part — the page still flinches and still slips languages.
+        startOrchestra({
+            fond: engine ? () => engine.hiss() : null,
+            visuel: firePing,
+            langue: fireLingua,
+        });
+    });
 }

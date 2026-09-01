@@ -126,12 +126,25 @@ export function createEngine() {
      * reading the page is concerned: turn glitches off in the profile and the background stops
      * doing this too.
      */
-    const hiss = { split: 0, tear: 0, time: 0, wait: 3 + Math.random() * 6, left: 0, span: 0, force: 0 };
+    const hiss = { split: 0, tear: 0, time: 0, left: 0, span: 0, force: 0 };
+
+    /**
+     * Start a burst now. Called by the glitch orchestra, never by a clock of its own.
+     *
+     * ⚠ It used to keep its own timer, and that was the fault the orchestra exists to fix: three
+     * effects each waiting on their own interval do not add up to unpredictability, they add up to
+     * three regularities crossing each other.
+     */
+    function startHiss(force = 1) {
+        hiss.span = 0.12 + Math.random() * 0.34;
+        hiss.left = hiss.span;
+        hiss.force = (0.55 + Math.random() * 0.8) * force;
+        return true;
+    }
 
     function crackle(dt) {
         hiss.time += dt;
-        const every = glitchInterval();
-        if (!every) { hiss.split = 0; hiss.tear = 0; return; }
+        if (!glitchInterval()) { hiss.split = 0; hiss.tear = 0; hiss.left = 0; return; }
 
         if (hiss.left > 0) {
             hiss.left -= dt;
@@ -152,13 +165,6 @@ export function createEngine() {
 
         hiss.split = 0;
         hiss.tear = 0;
-        hiss.wait -= dt;
-        if (hiss.wait > 0) return;
-        // Scaled by the visitor's chosen frequency, like every other glitch in the site.
-        hiss.wait = (2.5 + Math.random() * 7) * every;
-        hiss.span = 0.12 + Math.random() * 0.34;
-        hiss.left = hiss.span;
-        hiss.force = 0.55 + Math.random() * 0.8;
     }
 
     const bobs = Array.from({ length: CLOUD_COUNT }, (_, i) => new Bob(i));
@@ -410,6 +416,8 @@ export function createEngine() {
         /** The conductor asks this to keep the abrupt patterns out of a calm rotation. */
         get reduced() { return calm; },
         setWarp(v) { warp = v; },
+        /** The background's voice in the glitch orchestra. */
+        hiss: startHiss,
         start(fn) {
             onFrame = fn;
             entryScale = calm ? 2 : 0;

@@ -18,7 +18,6 @@
  */
 
 import { pickTextualMany } from './targets.js';
-import { glitchInterval } from '../ambient/motion.js';
 
 /**
  * A wave, not a word.
@@ -34,7 +33,7 @@ const tune = {
     stagger: 420,           // ms; the first is immediate, the others land within this
     cue: 220,               // ms of cathode-ray stutter before the change, and again before the return
     shown: [900, 1500],     // how long one word stays in the other language
-    every: [10000, 20000],  // between two waves
+    // ⚠ No interval here any more — see glitch/orchestra.js. This file decides what a wave is.
     spread: 0.22,           // minimum distance between two words, as a fraction of the viewport
     chrome: 0.3,            // how much less often the nav, header and footer are picked (1 = as often)
 };
@@ -278,36 +277,35 @@ function ensureBanks() {
     return ready;
 }
 
-function schedule(delay) {
-    setTimeout(async () => {
-        // ⚠ Read at every tick, never captured at startup — see the same note in ping.js. Off means
-        // come back and ask again, so turning it on from the profile screen takes effect without a
-        // reload.
-        if (glitchInterval() === 0) { schedule(4000); return; }
-
-        if (await ensureBanks()) { fire(); topUp(); }
-        schedule(rand(tune.every) * glitchInterval());
-    }, delay);
-}
-
-/** Fire one wave now, fetching what it needs if this is the first time. Used by the settings card. */
+/**
+ * Fire one wave now, fetching what it needs if this is the first time.
+ *
+ * 🔴 The only way this effect ever fires — the settings card and the glitch orchestra both come
+ * through here. See the same note in ping.js: the timing for all three effects lives in one place
+ * now, and this file has no clock of its own.
+ */
 export async function fireNow() {
-    return (await ensureBanks()) ? fire() : 0;
+    if (!(await ensureBanks())) return 0;
+    const n = fire();
+    // Kept here rather than in the caller: whoever fires a wave is the one who has just spent part
+    // of the stock, so replacing it is part of firing and cannot be forgotten at a call site.
+    topUp();
+    return n;
 }
 
 export function startLingua() {
     here = document.documentElement.lang;
-    schedule(rand(tune.every) * Math.max(glitchInterval(), 1));
 
     // Console helper, the counterpart of `window.testGlitch` and `window.ambient`: fires a wave now
     // instead of somewhere in the next forty seconds, and returns how many words it managed to
     // swap. `loaded` says which languages this page happens to be holding, so a swap that looks
     // wrong can be traced to a language rather than to the mechanism; `set` tunes the wave live,
     // since its size and stagger are things that can only be judged by watching them.
-    window.testLingua = Object.assign(fireNow, {
-        loaded: () => [...banks.keys()],
-        get tune() { return { ...tune }; },
-        set(key, v) { if (key in tune) tune[key] = v; return { ...tune }; },
+    // ⚠ defineProperties, not Object.assign — see the same note in ping.js.
+    window.testLingua = Object.defineProperties(fireNow, {
+        loaded: { value: () => [...banks.keys()] },
+        tune: { get() { return { ...tune }; } },
+        set: { value: (key, v) => { if (key in tune) tune[key] = v; return { ...tune }; } },
     });
 }
 
