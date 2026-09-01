@@ -1378,7 +1378,7 @@
     "profile.motion_rare": "Rzadko",
     "profile.motion_often": "Często",
     "profile.motion_preview": "Podgląd",
-    "profile.motion_system": "Twój system prosi o mniej ruchu, więc bloby zaczynają spokojnie, a glitche są wyłączone.",
+    "profile.motion_system": "Twój system jest ustawiony na ograniczenie ruchu, więc bloby zaczynają spokojnie, a glitche są wyłączone.",
     "profile.motion_follow_system": "Wróć do ustawień systemu",
     "profile.game_language": "Język, w którym grasz",
     "profile.game_language_follows": "Wykryj automatycznie",
