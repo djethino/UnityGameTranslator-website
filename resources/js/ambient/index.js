@@ -31,6 +31,24 @@ export function startAmbient() {
     // the treatment simply does not carry it.
     if (!document.body.classList.contains('animated-bg')) return;
 
+    /**
+     * 🔴 A quiet screen gets nothing that moves — the field included, not just the glitches.
+     *
+     * The layout already marks the editors and the whole admin area with `data-no-glitch`, and its
+     * comment already says "a screen where NOTHING may move or rewrite itself". Until now that was
+     * an intention: the glitches obeyed it, the moving field did not, and somebody arbitrating a
+     * translation had a corridor flying past behind the text they were weighing.
+     *
+     * ⚠ One marker, not a second one, and no setting. The reason those screens are still is not a
+     * preference — it is the task — so a control that could turn it back on would defeat exactly
+     * what the rule is for. And the class stays on the body: it carries the site's background
+     * colour and its grain, which are not motion.
+     *
+     * 🟢 Nothing is started rather than started and suppressed: no WebGL context, no document scan,
+     * no language fetch, no timers.
+     */
+    if (document.body.hasAttribute('data-no-glitch')) return;
+
     // Where letters come from, for whoever needs them. Declared out here rather than inside the
     // engine's branch: the glyph warm-up below needs it too, and a machine with no WebGL still
     // benefits from having the alphabets ready.
