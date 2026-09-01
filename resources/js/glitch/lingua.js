@@ -44,7 +44,13 @@ const tune = {
 // Six files, fetched at idle, is about fifty kilobytes.
 const OTHERS = 6;
 
+// ...and then it keeps widening. A visit that lasts picks up another language now and then, so the
+// palette a reader sees is not decided once and for ever by the six drawn at load.
+const MAX_LANGS = 12;
+const TOP_UP_CHANCE = 0.34;
+
 const banks = new Map();        // locale → string[]
+let waiting = [];               // locales drawn but not fetched yet, in the order they will arrive
 const busy = new Set();         // elements mid-swap, so two waves cannot overlap on one word
 let index = null;               // normalized sentence → line number, for the page's own language
 let here = null;
@@ -225,8 +231,15 @@ function fire() {
     return fired;
 }
 
+/** Now and then, quietly widen the palette. One more file, at idle, between two waves. */
+function topUp() {
+    if (banks.size >= MAX_LANGS || !waiting.length) return;
+    if (Math.random() > TOP_UP_CHANCE) return;
+    load(waiting.shift());
+}
+
 function schedule() {
-    setTimeout(() => { fire(); schedule(); }, rand(tune.every));
+    setTimeout(() => { fire(); topUp(); schedule(); }, rand(tune.every));
 }
 
 export async function startLingua() {
@@ -241,8 +254,16 @@ export async function startLingua() {
     if (!mine) return;
     index = buildIndex(mine);
 
-    const others = all.filter((l) => l !== here).sort(() => Math.random() - 0.5).slice(0, OTHERS);
-    await Promise.all(others.map(load));
+    // 🔴 Fisher-Yates, not sort(() => Math.random() - 0.5). That comparator is inconsistent, so the
+    // result is not a uniform sample: V8's sort leaves early elements near the front, and the six
+    // languages would have been drawn mostly from the top of config/locales.php — Arabic, German,
+    // Spanish over and over, Vietnamese and Chinese almost never. It looks random and is not.
+    waiting = all.filter((l) => l !== here);
+    for (let i = waiting.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        [waiting[i], waiting[j]] = [waiting[j], waiting[i]];
+    }
+    await Promise.all(waiting.splice(0, OTHERS).map(load));
 
     if (banks.size < 2) return;
     schedule();

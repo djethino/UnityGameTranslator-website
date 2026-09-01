@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+{{-- No ambient glitch here: the live edit session shows real data, or takes it in.
+     See the note on data-no-glitch in layouts/app.blade.php. --}}
+@section('quiet-screen', true)
+
 @section('title', __('edit_session.title') . ($editSession->game_name ? ' - ' . $editSession->game_name : ''))
 
 @php

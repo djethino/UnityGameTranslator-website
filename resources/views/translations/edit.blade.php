@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+{{-- No ambient glitch here: the translation settings form shows real data, or takes it in.
+     See the note on data-no-glitch in layouts/app.blade.php. --}}
+@section('quiet-screen', true)
+
 @section('title', __('my_translations.edit_title') . ' - UnityGameTranslator')
 
 @section('content')

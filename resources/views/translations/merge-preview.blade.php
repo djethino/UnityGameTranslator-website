@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+{{-- No ambient glitch here: the merge preview editor shows real data, or takes it in.
+     See the note on data-no-glitch in layouts/app.blade.php. --}}
+@section('quiet-screen', true)
+
 {{-- Same reason as the merge screen it shares its editor with: local beside online, side by
      side, and the window decides how much room that takes. --}}
 @section('container', 'w-full px-4 sm:px-6 lg:px-8')

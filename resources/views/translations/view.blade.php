@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+{{-- No ambient glitch here: the translation viewer shows real data, or takes it in.
+     See the note on data-no-glitch in layouts/app.blade.php. --}}
+@section('quiet-screen', true)
+
 @section('title', __('translation.view_title', ['game' => $translation->game->name]))
 
 @push('head')

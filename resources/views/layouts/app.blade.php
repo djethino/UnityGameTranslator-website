@@ -65,9 +65,22 @@
     @stack('head')
 </head>
 {{-- data-locales: the background borrows other languages to glitch a word with. Read from the
-     config rather than written out, so adding a locale needs nothing here. --}}
+     config rather than written out, so adding a locale needs nothing here.
+
+     🔴 data-no-glitch marks a screen where NOTHING may move or rewrite itself. Two ways in, and
+     both are deliberate:
+
+       - the whole admin area, matched by route name, so a screen added there next year is covered
+         the day it is written and nobody has to remember;
+       - any view that declares @section('quiet-screen', true) — the editors and anything showing
+         real translation data.
+
+     Why a whole page rather than the grid inside it: somebody arbitrating a translation must be
+     able to trust every character on screen, and the language glitch works by inserting spans into
+     the DOM, which has no business happening inside an Alpine-managed editor. --}}
 <body class="animated-bg text-gray-100 min-h-screen flex flex-col overflow-x-hidden"
-      data-locales="{{ implode(',', array_keys(config('locales.supported'))) }}">
+      data-locales="{{ implode(',', array_keys(config('locales.supported'))) }}"
+      @if(request()->routeIs('admin.*') || View::hasSection('quiet-screen')) data-no-glitch @endif>
     <nav class="bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
