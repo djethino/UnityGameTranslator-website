@@ -23,7 +23,7 @@
  * different lulls has no centre to hear.
  */
 
-import { glitchInterval } from '../ambient/motion.js';
+import { glitchInterval, onMotionChange } from '../ambient/motion.js';
 import { warm } from './targets.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -122,17 +122,53 @@ export function startOrchestra(voices) {
         if (log.length > 40) log.shift();
     }
 
+    /**
+     * Stop entirely and wait to be woken, rather than asking again in a few seconds.
+     *
+     * 🔴 Both reasons to stop — a hidden tab, and glitches switched off — used to be handled by
+     * scheduling another look three or four seconds later. That is a timer that never stops: a page
+     * left open in a background tab overnight goes on waking the JavaScript thread every few
+     * seconds to check two booleans. It costs almost no CPU and that is not the point — a thread
+     * that keeps waking is a laptop that never reaches its deeper idle states.
+     *
+     * Both conditions already announce themselves: the browser fires `visibilitychange`, and the
+     * settings publish `onMotionChange`. Waiting for the event costs nothing at all, and the delay
+     * on the way back is deliberate — arriving the same instant the tab is focused reads as the
+     * page having waited for you.
+     */
+    let sleeping = false;
+    function sleepUntilWorthWaking() {
+        if (sleeping) return;
+        sleeping = true;
+
+        // ⚠ Declared before `wake` refers to it. Nothing can dispatch an event inside this
+        // synchronous block, so the order happens to be safe today — which is exactly the kind of
+        // dependence on ordering that breaks the first time somebody moves a line.
+        let stopListening = null;
+
+        const wake = () => {
+            // Woken for one reason while the other still holds: stay asleep, keep both listeners.
+            if (!sleeping || document.hidden || !glitchInterval()) return;
+            sleeping = false;
+            document.removeEventListener('visibilitychange', wake);
+            if (stopListening) stopListening();
+            next(rnd(2500, 7000));
+        };
+
+        document.addEventListener('visibilitychange', wake);
+        stopListening = onMotionChange(wake);
+    }
+
     function next(delay) {
         setTimeout(() => {
             // ⚠ Read at every tick, never captured at startup: somebody turning glitches back on
-            // from the profile screen expects the next one to arrive, not to have to reload. Off
-            // means come back and ask again, not stop for ever.
+            // from the profile screen expects the next one to arrive, not to have to reload.
             const scale = glitchInterval();
-            if (!scale) { next(4000); return; }
+            if (!scale) { sleepUntilWorthWaking(); return; }
 
             // Firing at a page nobody can see spends the turn and leaves the reader coming back to
             // a background that has just gone quiet.
-            if (document.hidden) { next(3000); return; }
+            if (document.hidden) { sleepUntilWorthWaking(); return; }
 
             play(drawEpisode());
 
