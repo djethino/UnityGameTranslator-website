@@ -211,14 +211,20 @@ startAmbient();
 import { reducedMotion } from './ambient/motion.js';
 
 (function() {
-    if (reducedMotion()) return;
-
     const elements = document.querySelectorAll('[data-counter]');
     if (!elements.length) return;
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
     function animateCounter(el) {
+        // ⚠ Asked HERE, not once when this file runs. Read at boot, the answer was frozen for the
+        // whole visit: somebody who turned the setting off went on getting counters that ramp, and
+        // somebody who turned it on never got one. The setting is live everywhere else, so it has to
+        // be live here — and the cost is a boolean per counter, once, as it scrolls into view.
+        //
+        // Returning leaves the number the server rendered, which is already the final value.
+        if (reducedMotion()) return;
+
         const raw = el.getAttribute('data-counter') || el.textContent.replace(/[^\d.-]/g, '');
         const target = parseFloat(raw);
         if (!isFinite(target)) return;

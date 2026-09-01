@@ -464,6 +464,22 @@ export function createEngine() {
     onMotionChange(() => {
         speed = backgroundSpeed();
         calm = level('background') === 'slow';
+
+        // ⚠ The quality FLOOR has to follow, and it did not: `entryScale` was set once in `start()`.
+        // Leaving Calm therefore kept the field capped at the coarse resolution Calm asks for — for
+        // the rest of the visit, since the budget below may never go finer than this floor — and
+        // entering Calm never applied it at all.
+        //
+        // Raising the floor needs the buffer rebuilt now; lowering it needs nothing, because the
+        // budget walks the resolution back up on its own once it sees the frames are cheap.
+        const floor = calm ? 2 : 0;
+        if (floor !== entryScale) {
+            entryScale = floor;
+            if (scaleIndex < entryScale) { scaleIndex = entryScale; lastW = 0; resize(); }
+        }
+        // Same starting hint `start()` gives, not a floor: the budget is free to walk `keepIndex`
+        // back down to 0 afterwards, exactly as it may from a cold start.
+        if (calm && keepIndex < 1) keepIndex = 1;
     });
 
     return {

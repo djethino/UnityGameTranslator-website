@@ -21,7 +21,7 @@
 
 import { PATTERNS, PREDEFINED, INTELLIGENT } from './patterns/index.js';
 import { pointer, pointerEverSeen } from './pointer.js';
-import { optedIn } from './motion.js';
+import { optedIn, onMotionChange } from './motion.js';
 import { createRogues } from './rogues.js';
 import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js';
 
@@ -112,9 +112,13 @@ export function createConductor({ engine, pickAnchor, strings }) {
     // its whole length — a figure whose entire content is "nothing is happening".
     // ⚠ `optIn` names the setting a figure needs, rather than the conductor naming the figure. A
     // list of ids here would be a second place to remember, and the one that gets forgotten.
+    // ⚠ Named apart from the other two conditions because it behaves differently in time: those are
+    // settled once per deal, this one has to bite the moment it changes. See the subscription below.
+    const allowed = (p) => !p.optIn || optedIn(p.optIn);
+
     const feasible = (p) => (!p.needsPointer || pointerEverSeen())
         && (!engine.reduced || p.calm)
-        && (!p.optIn || optedIn(p.optIn));
+        && allowed(p);
 
     /**
      * Draw without replacement: a shuffled deck, dealt out, reshuffled when empty.
@@ -133,7 +137,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
      */
     function dealer(pool) {
         let deck = [];
-        return function draw(avoid) {
+        const draw = function (avoid) {
             if (!deck.length) {
                 deck = pool.filter(feasible);
                 // ⚠ Never stall for want of a candidate — but the escape hatch keeps the opt-in.
@@ -142,7 +146,7 @@ export function createConductor({ engine, pickAnchor, strings }) {
                 // somebody the one figure they turned off, as a fallback, is the worst moment to do
                 // it. Unreachable while nineteen figures survive the filter; written because the
                 // day it is reachable, nothing would say so.
-                if (!deck.length) deck = pool.filter((p) => !p.optIn || optedIn(p.optIn));
+                if (!deck.length) deck = pool.filter(allowed);
                 for (let i = deck.length - 1; i > 0; i--) {
                     const j = (Math.random() * (i + 1)) | 0;
                     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -154,11 +158,43 @@ export function createConductor({ engine, pickAnchor, strings }) {
             if (deck.length > 1 && deck[i].id === avoid) i -= 1;
             return deck.splice(i, 1)[0];
         };
+        // Drop cards the visitor has just refused, WITHOUT reshuffling. The guarantee this deck
+        // exists for is about the order of what remains — removing a card nobody may be shown does
+        // not disturb it, where a reshuffle would deal some figures twice before others once.
+        draw.refuse = () => { deck = deck.filter(allowed); };
+        return draw;
     }
 
     const drawPredefined = dealer(PREDEFINED);
     const drawIntelligent = dealer(INTELLIGENT);
     const drawHandover = dealer(HANDOVERS);
+
+    /**
+     * 🔴 A refusal takes effect NOW. The other two conditions in `feasible` are settled at refill on
+     * purpose; this one cannot be, and the asymmetry is the point:
+     *
+     *   turning a figure ON is a **permission** — it may arrive in its own time, and the settings
+     *   card carries a Test button for whoever will not wait;
+     *   turning it OFF is a **refusal**, and a refusal that lands a minute later is indistinguishable
+     *   from a control that does not work.
+     *
+     * ⚠ Reported exactly that way — "enabling is taken into account, disabling isn't" — because the
+     * deck in hand had been filled while the figure was still allowed, so it went on being dealt.
+     *
+     * Three places can hold a figure that has just been refused, and missing any one of them lets it
+     * turn up after somebody said no: the decks already dealt from, the queue built out of them, and
+     * the one on screen.
+     */
+    onMotionChange(() => {
+        drawPredefined.refuse();
+        drawIntelligent.refuse();
+        queue = queue.filter(allowed);
+        // ⚠ Through `advance()` rather than a cut: the refused figure is crossfaded out the way any
+        // figure is, the balls are reset and a handover is dealt. `play()` already changes figure
+        // mid-run by this exact route, so there is no second path here.
+        // `current` is `Object.create(module)`, so it inherits `optIn` — no need to track the module.
+        if (current && !allowed(current)) advance();
+    });
 
     function refill() {
         // ⚠ Under reduced motion the intelligent patterns are the camera charge and the chase, and
