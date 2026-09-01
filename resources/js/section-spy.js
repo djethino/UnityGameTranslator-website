@@ -1,4 +1,4 @@
-import { watchCurrentSection } from './section-position.js';
+import { watchCurrentSection, SECTION_SELECTOR } from './section-position.js';
 
 /**
  * Marks the table-of-contents entry for the section being read.
@@ -21,8 +21,14 @@ import { watchCurrentSection } from './section-position.js';
  * do more than set a class. It exists so that this file does NOT have to learn what a collapsible
  * menu is: the caller opens and closes, this one only ever says where the reader is.
  */
+/**
+ * ⚠ The default is the SHARED one, and it had quietly grown a second copy: this parameter read
+ * `'section[id]'` while the caller passed the wider list, so the two agreed only for as long as
+ * nobody removed the override. Somebody did — and the menu stopped following sub-entries, because
+ * a default that repeats a value instead of naming it is a copy waiting to be relied on.
+ */
 export function createSectionSpy({ root, linkSelector, activeClass = 'active',
-                                   anchorSelector = 'section[id]', onCurrent }) {
+                                   anchorSelector = SECTION_SELECTOR, onCurrent }) {
     const links = [...document.querySelectorAll(linkSelector)]
         .filter(link => link.getAttribute('href')?.startsWith('#'));
 

@@ -98,14 +98,20 @@ function give() {
 }
 
 /**
- * Is anything pinned to the viewport right now?
+ * Is anything pinned to the viewport INSIDE what is about to move?
  *
  * ⚠ Not a list of components to keep up to date — `fixed` is the class Tailwind requires for any
  * element positioned that way, so this finds them by the mechanism rather than by name. Visibility
  * is checked too: the admin's ban modal carries `fixed` at all times and `hidden` until it opens.
+ *
+ * 🔴 Scoped to the mover, and it was not. It scanned the whole of `body` — correct when every child
+ * of body moved, and far too wide once only `<main>` did. On the documentation the reading-trail
+ * panel is `fixed` and sits at the bottom right of the page, OUTSIDE main and never touched by any
+ * of this; the bounce found it, decided something was pinned, and refused for the rest of the visit.
+ * Found by opening the page, not by reading the file.
  */
-function hasPinned() {
-    for (const el of document.body.querySelectorAll('.fixed')) {
+function hasPinned(within) {
+    for (const el of within.querySelectorAll('.fixed')) {
         if (el.getClientRects().length) return true;
     }
     return false;
@@ -197,13 +203,13 @@ function tick(now) {
 
 function begin() {
     if (frame) return true;
-    if (hasPinned()) return false;
 
     // The content, named by the tag the layout already uses. Not a list of components to keep up to
     // date, and not a class: a page with no `<main>` simply does not bounce, which is the right way
     // round for something purely ornamental.
     const content = document.body.querySelector(':scope > main');
     if (!content || getComputedStyle(content).position === 'fixed') return false;
+    if (hasPinned(content)) return false;
     movers = [content];
 
     for (const el of movers) el.style.willChange = 'transform';
