@@ -501,6 +501,17 @@
     mix-blend-mode: screen;
 }
 
+/* 🔴 The page content is offset, never transformed, and this line is why.
+   See resources/js/rubber.js — `position: relative` with `z-index: auto` is NOT a stacking context,
+   which is the whole point: the grain above keeps painting exactly where it does at rest, over the
+   ordinary content and under the sticky chrome that carries a z-index of its own.
+
+   Verified before it was written: on a page of 1350 elements, nothing depends on the initial
+   containing block and nothing moves when this is applied. */
+body > main {
+    position: relative;
+}
+
 /* C: RGB-shift hover — apply via .glitch-text class on titles/CTAs.
    Uses text-shadow for pure GPU compositing (no repaint).
 

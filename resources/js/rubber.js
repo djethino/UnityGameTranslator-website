@@ -22,11 +22,23 @@
  * made it the containing block for its own fixed pseudo-element, stretching a viewport-sized tile
  * over the whole document. Nothing in the markup changes either way.
  *
- * ⚠ A transformed element becomes the containing block for any `position: fixed` DESCENDANT, which
- * would tear a modal or the editor's full-screen grid off the viewport. Two answers, both here:
- * `hasPinned()` refuses to bounce while such an element is on screen, and the transform is removed
- * entirely at rest, so outside of the three hundred milliseconds of a bounce there is nothing to
- * interfere with at all.
+ * ── 🔴 Offset, not transformed, and that is the load-bearing decision ──────────────────────────
+ * `top` on a relatively positioned box, never `transform`. A transform looks like the obvious tool
+ * and is the wrong one here, for one reason: it creates a STACKING CONTEXT.
+ *
+ * The grain over the page (`.animated-bg::after`) sits at z-index 0 — above ordinary content, below
+ * anything carrying a z-index of its own. Transform `<main>` and the z-indexes inside it become
+ * local to it, so an editor's sticky key column and its floating save bar can no longer rise above
+ * the grain: they went visibly lighter for the length of the bounce, since the grain blends with
+ * `screen`. Dropping the grain behind everything instead only spread the change over the whole page
+ * — reported both times, and neither is fixable while the transform exists, because inside one
+ * stacking context the grain cannot be over the content and under the bar at the same time.
+ *
+ * `position: relative` with `z-index: auto` creates no stacking context, so every layer keeps the
+ * order it has at rest. It costs a paint rather than a compositor shove, which for two hundred
+ * milliseconds at the end of a page is a trade worth making — and it removes a whole class of
+ * trouble with it: `relative` is not a containing block for `position: fixed` either, so a modal or
+ * the editor's full-screen grid stays pinned to the viewport and needs no guard at all.
  */
 
 import { systemAsksReduced, onMotionChange } from './ambient/motion.js';
@@ -98,26 +110,6 @@ function give() {
 }
 
 /**
- * Is anything pinned to the viewport INSIDE what is about to move?
- *
- * ⚠ Not a list of components to keep up to date — `fixed` is the class Tailwind requires for any
- * element positioned that way, so this finds them by the mechanism rather than by name. Visibility
- * is checked too: the admin's ban modal carries `fixed` at all times and `hidden` until it opens.
- *
- * 🔴 Scoped to the mover, and it was not. It scanned the whole of `body` — correct when every child
- * of body moved, and far too wide once only `<main>` did. On the documentation the reading-trail
- * panel is `fixed` and sits at the bottom right of the page, OUTSIDE main and never touched by any
- * of this; the bounce found it, decided something was pinned, and refused for the rest of the visit.
- * Found by opening the page, not by reading the file.
- */
-function hasPinned(within) {
-    for (const el of within.querySelectorAll('.fixed')) {
-        if (el.getClientRects().length) return true;
-    }
-    return false;
-}
-
-/**
  * Is something under the cursor still going to eat this scroll?
  *
  * ⚠ The listener is on `window`, so it hears every wheel on the page including those over an open
@@ -139,18 +131,17 @@ function consumedInside(target, dy) {
 }
 
 function apply() {
-    const t = y ? `translate3d(0, ${y.toFixed(2)}px, 0)` : '';
-    for (const el of movers) el.style.transform = t;
+    const offset = y ? `${y.toFixed(2)}px` : '';
+    for (const el of movers) el.style.top = offset;
 }
 
 function stop() {
     velocity = 0;
     y = 0;
     pushed = false;
+    // Handed back completely: the offset is cleared rather than set to zero, so the stylesheet is
+    // the only thing describing this element again.
     apply();
-    // Handed back completely: no transform means no containing block, so a modal opened a moment
-    // later is positioned against the viewport exactly as it would have been.
-    for (const el of movers) el.style.willChange = '';
     movers = [];
     frame = 0;
 }
@@ -207,12 +198,14 @@ function begin() {
     // The content, named by the tag the layout already uses. Not a list of components to keep up to
     // date, and not a class: a page with no `<main>` simply does not bounce, which is the right way
     // round for something purely ornamental.
+    // ⚠ `relative` comes from the stylesheet, not from here — `top` does nothing on a static box,
+    // and setting the position at the moment of a bounce would move any absolutely positioned
+    // descendant that had been resolving against the viewport. Written once in CSS, it is a layout
+    // anyone can see and check; written here, it would be a shrug that only shows up in motion.
     const content = document.body.querySelector(':scope > main');
-    if (!content || getComputedStyle(content).position === 'fixed') return false;
-    if (hasPinned(content)) return false;
+    if (!content || getComputedStyle(content).position === 'static') return false;
     movers = [content];
 
-    for (const el of movers) el.style.willChange = 'transform';
     last = performance.now();
     frame = requestAnimationFrame(tick);
     return true;
