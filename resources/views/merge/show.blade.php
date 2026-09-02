@@ -1294,12 +1294,26 @@ document.addEventListener('alpine:init', () => {
          * every row stays on screen whether it was pre-taken or not.
          */
         applyMetadataDefaults() {
-            for (const row of this.settingsRows) {
-                if (this.settingsPick[row.id] !== undefined) continue;
-                if (row.mineRaw) continue;
+            // ⚠ Same guard as the descriptions below: with nothing to take, lighting the Main's
+            // cell would say "chosen" about a row where there was never a choice.
+            if (this.canTakeContributions()) {
+                for (const row of this.settingsRows) {
+                    if (this.settingsPick[row.id] !== undefined) continue;
 
-                const branch = this.branches.find((b) => row.byBranch[b.id] !== undefined);
-                if (branch) this.settingsPick[row.id] = branch.id;
+                    // 🔴 Every row is ANSWERED, and the answer may be "keep mine".
+                    //
+                    // Only pre-taken rows used to carry one, so a row the owner had deliberately
+                    // kept and a row nobody had looked at were the same state — nothing on screen
+                    // told them apart, and clicking the Main's cell deleted an entry and lit
+                    // nothing. The descriptions in this same file, and the settings block on the
+                    // comparison screen, have both answered `main` for a long time; this was the
+                    // one place left where the absence of an answer had to stand for one.
+                    const branch = row.mineRaw
+                        ? null
+                        : this.branches.find((b) => row.byBranch[b.id] !== undefined);
+
+                    this.settingsPick[row.id] = branch ? branch.id : 'main';
+                }
             }
 
             // 🔴 **A description is never adopted on its own, even when the Main has none.**
@@ -1357,25 +1371,38 @@ document.addEventListener('alpine:init', () => {
 
         settingsTake(row, branchId) {
             if (row.byBranch[branchId] === undefined) return;
-            this.settingsPick = { ...this.settingsPick, [row.id]: branchId };
+
+            // Re-clicking the one already taken goes back to keeping one's own, the way a line
+            // returns to its default. It never goes back to NO answer: that state is what made
+            // "I decided" and "I have not looked" indistinguishable.
+            const picked = this.settingsPick[row.id];
+            this.settingsPick = {
+                ...this.settingsPick,
+                [row.id]: picked === branchId ? 'main' : branchId,
+            };
         },
 
         settingsKeepMine(row) {
-            const pick = { ...this.settingsPick };
-            delete pick[row.id];
-            this.settingsPick = pick;
+            this.settingsPick = { ...this.settingsPick, [row.id]: 'main' };
         },
 
         /**
-         * ⚠ Nothing picked means NO highlight anywhere, as on a line nobody has touched. The Main
-         * column was lit by default here, which said "chosen" about a row where nothing had been
-         * decided — and left no way to tell it apart from one where the owner had deliberately
-         * kept their own.
+         * ⚠ The Main's cell lights for its own answer, exactly as it does on the descriptions and
+         * on the comparison screen. It used to light for nothing at all: `keep mine` was stored as
+         * the ABSENCE of an entry, so the one row somebody had deliberately settled looked like
+         * every row they had not reached yet.
          */
         settingsCellClass(row, branchId) {
             const picked = this.settingsPick[row.id];
-            if (branchId === null) return '';
+            if (branchId === null) return picked === 'main' ? 'selected-main' : '';
             return picked === branchId ? 'selected-branch' : '';
+        },
+
+        /** What this row would write, whichever of the two answers it carries. */
+        settingsResolved(row) {
+            const pick = this.settingsPick[row.id];
+            if (pick === undefined || pick === 'main') return row.mineRaw ?? '';
+            return row.byBranch[pick] ?? '';
         },
 
         /**
@@ -1887,8 +1914,18 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.tagChanges).length;
         },
 
+        /**
+         * ⚠ Answered is not CHANGED — the same rule the descriptions below already follow, and the
+         * comparison screen states in `settingsWillWrite`. Counting the entries counted `keep
+         * mine`, which writes nothing; harmless while only pre-taken rows had one, wrong the moment
+         * every row is answered.
+         */
         settingsTakenCount() {
-            return Object.keys(this.settingsPick).length;
+            let count = 0;
+            for (const row of this.settingsRows) {
+                if (this.settingsResolved(row) !== (row.mineRaw ?? '')) count++;
+            }
+            return count;
         },
 
         /**
@@ -1980,12 +2017,11 @@ document.addEventListener('alpine:init', () => {
                 if (this.bestContributionFor(key)) count++;
             }
 
-            for (const row of this.settingsRows) {
-                if (this.settingsPick[row.id] === undefined && !row.mineRaw) count++;
-            }
-            for (const row of this.publicationRows) {
-                if (this.publicationPick[row.id] === undefined && !row.mineRaw) count++;
-            }
+            // ⚠ The two metadata blocks are not counted: their defaults answer every row when the
+            // page opens, so there is never one left for this button to settle. They used to be
+            // read here through `=== undefined`, which stopped being reachable for the
+            // descriptions the day they started answering `main` — and for the settings the day
+            // they did too. A test that can never be true is not a safety net, it is a leftover.
 
             return count;
         },
@@ -2041,7 +2077,9 @@ document.addEventListener('alpine:init', () => {
             const settingsByBranch = {};
             for (const row of this.settingsRows) {
                 const branchId = this.settingsPick[row.id];
-                if (branchId === undefined) continue;
+                // ⚠ `main` is an answer, not a branch: it says keep what is stored, so there is
+                // nothing to send. Without this it would travel as a branch id and match none.
+                if (branchId === undefined || branchId === 'main') continue;
                 if (!settingsByBranch[branchId]) settingsByBranch[branchId] = {};
                 settingsByBranch[branchId][row.key] = true;
             }

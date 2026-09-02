@@ -352,7 +352,17 @@ class MergeViewStateTest extends TestCase
         // What a contribution ADDS where the Main holds nothing is pre-taken, as a line is.
         // A disagreement is a tie with no tag to settle it, and a tie goes to the Main.
         $this->assertStringContainsString('applyMetadataDefaults()', $html);
-        $this->assertStringContainsString('if (row.mineRaw) continue;', $html);
+
+        // 🔴 And "a tie goes to the Main" is now SAID rather than implied by silence.
+        //
+        // The tie used to be left with no entry at all, which wrote the same file and cost the
+        // screen the only thing it had to show: a row the owner had settled on their own value and
+        // a row nobody had opened were the same state, and clicking the Main's cell deleted an
+        // entry and lit nothing. Every row carries its answer now, `main` included — the shape the
+        // descriptions in this same view and the settings block on the comparison screen already
+        // had.
+        $this->assertStringContainsString("this.settingsPick[row.id] = branch ? branch.id : 'main';", $html);
+        $this->assertStringContainsString("if (branchId === undefined || branchId === 'main') continue;", $html);
     }
 
     public function test_every_contested_line_arrives_answered_and_only_some_are_claimed(): void
