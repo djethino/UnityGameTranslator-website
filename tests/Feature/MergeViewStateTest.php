@@ -1004,9 +1004,30 @@ class MergeViewStateTest extends TestCase
         // human-checked by a page load.
         $this->assertStringContainsString("auto: auto === null ? tag === 'A' : auto", $core);
 
-        // ⚠ Holding one's own line is only recorded where it VALIDATES. Anything else would be a
-        // no-op wearing the colours of a decision — and a dead click when somebody undoes it.
-        $this->assertStringContainsString("if (tag !== 'A') return null;", $core);
+        // 🔴 A CONTESTED row is held whatever its tag, and this replaced "only an `A` is held".
+        //
+        // The old rule was right about the file and wrong about the screen. Where a contribution
+        // proposes something else and the tags tie — H against H — nothing was marked, so the answer
+        // that would be written was invisible, and clicking the Main did nothing: there was no held
+        // pick for `advancePick` to claim, and the guard refused to record one. Reported as "clicking
+        // it does nothing; I have to select another column and come back".
+        //
+        // ⚠ It forges nothing, and that is why it is allowed: the server promotes only a CLAIMED
+        // `A` (`claimed: !auto`), so a held Main on an H row writes H over H.
+        $this->assertStringContainsString(
+            "if (tag !== 'A' && !this.rowIsContested(key)) return null;", $core);
+
+        // ⚠ And `auto` is stated rather than left to `pick`'s shorthand, which reads `tag === 'A'`:
+        // inferred, a held Main on an H row would come back CLAIMED, saying somebody decided it and
+        // turning the click into an erase instead of a claim.
+        $this->assertStringContainsString(
+            'return this.pick(this.targetSource(), this.getValue(own), tag, true);', $core);
+
+        // Each screen decides what "contested" means; a screen with no other side says nothing is.
+        $this->assertStringContainsString('rowIsContested(key) { return false; }', $core);
+        $this->assertStringContainsString(
+            'return this.bestContributionFor(key) !== null;',
+            file_get_contents(resource_path('views/merge/show.blade.php')));
 
         // The page opens on the same definition the undo returns to.
         $this->assertStringContainsString('const held = this.defaultSelection(key);', $html);

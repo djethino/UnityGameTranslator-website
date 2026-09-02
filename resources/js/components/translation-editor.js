@@ -473,10 +473,36 @@ export function editorCore(config) {
             if (own === undefined) return null;
 
             const tag = this.getTag(own);
-            if (tag !== 'A') return null;
+            // 🔴 A contested row always shows where it stands, whatever its tag.
+            //
+            // This used to hold the Main only on an `A`, on the reasoning that keeping one's own
+            // line is worth recording only when it validates. True about the FILE, and wrong about
+            // the screen: on a row where a contribution proposes something else and the tags tie —
+            // H against H — nothing was marked at all, so the answer that would be written was
+            // invisible, and clicking the Main did nothing because there was no held pick for
+            // `advancePick` to claim. Reported as "clicking it does nothing; I have to select
+            // another column and come back".
+            //
+            // ⚠ Holding it forges nothing: the server promotes only a CLAIMED `A`
+            // (TranslationService::resolveMergedTag, `claimed: !auto`), so a held Main on an H row
+            // writes H over H. What made pre-selection dangerous was the promotion, not the mark.
+            if (tag !== 'A' && !this.rowIsContested(key)) return null;
 
-            return this.pick(this.targetSource(), this.getValue(own), tag);
+            // ⚠ `auto` stated, never inferred. `pick` defaults it to `tag === 'A'` — a shorthand for
+            // the old rule, "held exactly where claiming would change the tag" — and on an H row it
+            // would come back CLAIMED: the screen would say somebody decided this, and clicking it
+            // would erase the answer instead of claiming it. Nothing here was decided by anybody.
+            return this.pick(this.targetSource(), this.getValue(own), tag, true);
         },
+
+        /**
+         * Core hook: has anybody proposed something else on this row?
+         *
+         * ⚠ False here, so a screen with no notion of contributions is unchanged — the comparison
+         * view reaches `defaultSelection` only as the landing point of an undo, and its landing must
+         * stay the row it opens on.
+         */
+        rowIsContested(key) { return false; },
 
         // ── What kind of row this is ─────────────────────────────────────
         //

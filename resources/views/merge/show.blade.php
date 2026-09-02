@@ -1715,10 +1715,19 @@ document.addEventListener('alpine:init', () => {
          *
          * Picking the Main acts when it validates an `A` line, or when it replaces an existing
          * answer (a contribution's version, a rewording). On a V/H/M/S line with nothing selected it
-         * would rewrite the line identically and count a modification nobody made.
+         * would rewrite the line identically.
+         *
+         * ⚠ A CONTESTED row no longer reaches this: it opens with the Main held, so the click is a
+         * claim and `advancePick` answers it. What is left here is the row nobody proposed anything
+         * about, where there is genuinely nothing to arbitrate.
          */
         pickIsWorthRecording(key, source, picked) {
             return !(source === 'main' && picked.tag !== 'A' && !this.selections[key]);
+        },
+
+        /** Core hook: a row is contested when a contribution holds something the Main does not. */
+        rowIsContested(key) {
+            return this.bestContributionFor(key) !== null;
         },
 
         clearAllPrompt: @js(__('merge.cancel_all')),
@@ -1823,11 +1832,51 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
 
+        /**
+         * 🔴 Answered is not CHANGED — the same distinction the description block already makes.
+         *
+         * Every contested row arrives answered, and since a tie is answered by holding the Main,
+         * counting the mere presence of an answer put a modification on rows that write the line
+         * back unchanged. So the question is what the row WOULD write, against what the Main
+         * already holds.
+         */
         isRowModified(key) {
-            return key in this.selections
-                || this.editedValues[key] !== undefined
-                || key in this.tagChanges
-                || this.isDeleted(key);
+            if (this.editedValues[key] !== undefined) return true;
+            if (key in this.tagChanges) return true;
+            if (this.isDeleted(key)) return true;
+
+            const writes = this.answerWrites(key);
+            if (!writes) return false;
+
+            const own = this.mainData[key];
+            // A line the Main does not hold at all: taking it adds one.
+            if (own === undefined) return true;
+
+            return writes.value !== this.getValue(own) || writes.tag !== this.getTag(own);
+        },
+
+        /**
+         * What this row would be written as — the client's side of
+         * TranslationService::resolveMergedTag, and it has to stay its mirror.
+         *
+         * ⚠ `auto` is what tells a held answer from a claimed one, and the server reads it the same
+         * way (`claimed: !auto` in MergeController): only a CLAIMED `A` becomes a `V`.
+         */
+        answerWrites(key) {
+            const sel = this.selections[key];
+            if (!sel) return null;
+
+            const tagged = this.tagChanges[key];
+            const source = tagged ? 'tagchange' : sel.source;
+            const tag = tagged ? tagged.newTag : sel.tag;
+            const value = sel.source === 'manual'
+                ? (this.editedValues[key] ?? sel.value)
+                : sel.value;
+
+            if (source === 'tagchange' || tag === 'M' || tag === 'S') return { value, tag };
+            if (source === 'manual') return { value, tag: 'H' };
+
+            return { value, tag: tag === 'A' && sel.auto !== true ? 'V' : tag };
         },
 
         get deleteCount() {
