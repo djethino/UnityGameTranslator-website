@@ -18,12 +18,27 @@
  */
 
 import { pickWord } from '../glyphs.js';
+import { idleSpin } from '../engine.js';
 import { smoothstep, lerp } from './util.js';
 
-const PLANE_Z = 1.9;     // held flat and face-on: a word has to be read
-const SPACING = 0.58;    // between two letter centres, in field units
-const LETTER = 0.22;     // ⚠ under half the spacing, or the letters touch and we are back to trace
+const PLANE_Z = 1.6;     // held flat and face-on: a word has to be read
+
+/**
+ * 🔴 The two numbers that decide whether this reads as a word, and they are read together.
+ *
+ * `LETTER` is a multiplier on the cloud's resting radius (0.60), so a letter's half-extent is
+ * `LETTER × 0.60` and its full width twice that. At 0.22 that was 0.264 against a spacing of 0.58 —
+ * **the gap between two letters was larger than a letter** — and five small glyphs strung far apart
+ * read as five objects, not as a word. They now fill about four fifths of their own step.
+ */
+const SPACING = 0.50;    // between two letter centres, in field units
+const LETTER = 0.34;     // × the resting radius: half-extent 0.204, so 0.41 wide against a 0.50 step
 const THICKNESS = 0.10;
+
+/** How far a letter may lean, and how far it may sit off the line — the whole of the humanizer. */
+const TILT = 0.10;       // radians, ±: about 6°
+const OFFSET = 0.045;    // field units, ±: a twentieth of a step
+const BREATH = 0.035;    // how much of that offset keeps moving, and how much of the tilt
 
 export default {
     id: 'mot',
@@ -42,24 +57,35 @@ export default {
 
         run.forEach((glyph, i) => {
             ctx.clouds[i].setShape((_, __, out) => {
-                // Rejection sampling over the whole glyph, not a band of it: one cloud, one letter.
-                for (let attempt = 0; attempt < 24; attempt++) {
-                    const u = Math.random();
-                    const v = Math.random();
-                    if (Math.random() < glyph.inkAt(u, v)) {
-                        out[0] = (u - 0.5) * 2;
-                        out[1] = (v - 0.5) * 2;
-                        out[2] = (Math.random() - 0.5) * THICKNESS;
-                        return;
-                    }
-                }
-                // A very open glyph can starve the sampler. Park the point near the middle, where
-                // it joins the haze around the letter instead of being lost.
-                out[0] = (Math.random() - 0.5) * 0.4;
-                out[1] = (Math.random() - 0.5) * 0.4;
+                // Drawn ON the ink — see `picker` in glyphs.js. Guessing until a random spot landed
+                // on the letter missed a third of the time on a thin one, and every miss went to a
+                // little box at the centre.
+                glyph.pointOn(out);
                 out[2] = (Math.random() - 0.5) * THICKNESS;
             });
         });
+
+        /**
+         * 🔴 The hand that wrote it. One draw per letter, kept for the run.
+         *
+         * Perfectly even letters on a perfectly straight line read as a font specimen, not as
+         * writing — the thing was mechanical in exactly the way a word never is. Each letter gets
+         * its own lean, its own place a little off the line, its own size, and its own slow breath,
+         * all small: this is meant to be felt rather than seen, and a word that visibly wobbles is
+         * a different effect and a worse one.
+         *
+         * ⚠ Drawn from the pattern's own `rng`, so a run is stable while it plays — a letter that
+         * re-drew its lean every frame would shake — and different the next time it comes round.
+         */
+        const spread = (k) => (this.rng() - 0.5) * 2 * k;
+        this.hand = run.map(() => ({
+            tilt: spread(TILT),
+            dx: spread(OFFSET),
+            dy: spread(OFFSET),
+            size: 1 + spread(0.09),
+            rate: 0.5 + this.rng() * 0.5,   // each breathes at its own pace, or they pulse as one
+            phase: this.rng() * Math.PI * 2,
+        }));
 
         return true;
     },
@@ -73,9 +99,24 @@ export default {
             const bob = ctx.bobs[i];
 
             if (i < n) {
-                bob.scale = LETTER;
+                const h = this.hand[i];
+                const breath = Math.sin(ctx.time * h.rate + h.phase);
+
+                bob.scale = LETTER * h.size;
                 bob.gain = lerp(0.7, 1.05, settle);
-                out.push({ x: (i - (n - 1) / 2) * SPACING, y: 0, z: PLANE_Z });
+
+                // 🔴 The engine turns every cloud on its own, a slow roll from a different starting
+                // angle per cloud — up to 229° apart across five. Every other pattern is a shape
+                // that reads the same whichever way up it is; a letter is not, and this one had
+                // been trying to spell words with its characters lying on their sides and turning.
+                // Cancelled, then leaned by its own few degrees.
+                bob.twist = h.tilt + breath * BREATH - idleSpin(ctx.time, i);
+
+                out.push({
+                    x: (i - (n - 1) / 2) * SPACING + h.dx,
+                    y: h.dy + breath * BREATH,
+                    z: PLANE_Z,
+                });
             } else {
                 // ⚠ No letter to hold. It goes and waits behind, dimmed — sitting in the word with
                 // no shape of its own, it would read as a smudge between two letters and undo the

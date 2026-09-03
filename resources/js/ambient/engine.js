@@ -45,6 +45,17 @@ const PER_CLOUD = 2200;
 /** A cloud's resting radius, in field units — one unit is half the viewport height. */
 const CLOUD_RADIUS = 0.60;
 
+/**
+ * How fast a cloud turns over on its own, in radians a second, plus one radian of offset per cloud
+ * so the five never present the same face at the same moment.
+ *
+ * 🔴 Exported because a pattern may need to CANCEL it, and a second copy of the number would be a
+ * second thing to keep in step. A word cannot be read while its letters turn — and they were each
+ * turning from a different starting angle, up to 229° apart.
+ */
+export const IDLE_SPIN = 0.12;
+export const idleSpin = (time, cloud) => time * IDLE_SPIN + cloud;
+
 /** A point's diameter at the reference plane, as a fraction of the buffer height. */
 const POINT_SIZE = 0.012;
 
@@ -396,7 +407,7 @@ export function createEngine() {
             // presents the same face for a whole pattern. `bob.twist` ADDS to it rather than
             // replacing it, so a pattern that wants a rotation gets one without having to
             // reproduce the idle behaviour it is built on.
-            cloud.update(bob, tune.radius * bob.scale, wall, time, time * 0.12 + c + bob.twist,
+            cloud.update(bob, tune.radius * bob.scale, wall, time, idleSpin(time, c) + bob.twist,
                          bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip,
                          magnetism.at(c, hand, aspect, bob, tune.radius * bob.scale));
 
