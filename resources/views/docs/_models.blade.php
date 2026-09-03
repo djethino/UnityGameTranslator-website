@@ -15,7 +15,11 @@
     $reference = \App\Services\ModelCatalog::reference();
     $models = \App\Services\ModelCatalog::installable();
     $context = \App\Services\ModelCatalog::measurementContext();
-    $smallest = collect($models)->min('min_vram_gb');
+    // 🔴 The lightest model as MEASURED, not the card size we round it up to. Taken from
+    // min_vram_gb this line announced "from 4 GB upwards" while the smallest was holding 1.7 —
+    // making the offering look heavier than it is, to exactly the people with the least card.
+    $smallest = collect($models)->pluck('measured.vram_gb')->filter()->min()
+             ?? collect($models)->min('min_vram_gb');
 @endphp
 
 @if ($reference)
@@ -165,12 +169,25 @@
                                               title="{{ __('docs.config.strict_source') }}">strict source</span>
                                     @endif
                                 </td>
+                                {{-- 🔴 **What it HELD, then the card we ask for.** This column showed
+                                     the second alone, and that figure is rounded up to real card
+                                     sizes — so four models reading "at least 4 GB" were holding
+                                     1.7, 2.8, 3.1 and 3.1 GB. The rounding hid the one number that
+                                     decides how much card is left for the game while it runs.
+
+                                     Same shape as the block above it, and the same two strings. --}}
                                 <td class="py-2 px-3 text-gray-300">
-                                    @isset($model['min_vram_gb'])
-                                        {{ __('docs.models.minimum', ['gb' => $model['min_vram_gb']]) }}
-                                    @else
-                                        <span class="text-gray-600">—</span>
+                                    @isset($model['measured']['vram_gb'])
+                                        {{ __('docs.models.gigabytes', ['gb' => $model['measured']['vram_gb']]) }}
                                     @endisset
+                                    @isset($model['min_vram_gb'])
+                                        <span class="text-gray-500">
+                                            ({{ __('docs.models.minimum', ['gb' => $model['min_vram_gb']]) }})
+                                        </span>
+                                    @endisset
+                                    @if (!isset($model['measured']['vram_gb'], $model['min_vram_gb']))
+                                        <span class="text-gray-600">—</span>
+                                    @endif
                                 </td>
                                 <td class="py-2 px-3 text-gray-300">
                                     @isset($model['download_gb'])
