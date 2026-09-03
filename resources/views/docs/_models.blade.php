@@ -81,8 +81,17 @@
              GitHub release, which sent somebody deciding between models out of the page and onto a
              download button, past everything that explains what the tester does and what its
              figures are worth. The download lives in that section, one paragraph in. --}}
+        {{-- ⚠ TWO links, because the sentence names two things. It described the tester and then
+             offered only the download, so the one thing the reader had just been told about was
+             the one thing they could not reach — they had to go and look for it.
+
+             The tester's label is the heading of its own section, already translated: a second
+             link here costs no new string, and it reads as the same words in both places. --}}
         <p class="text-sm text-gray-400 mt-3">
             {{ __('docs.models.try_smaller') }}
+            <a href="#manager-model-test"
+               class="text-purple-300 hover:text-purple-200 underline">{{ __('docs.manager.ai_test_title') }}</a>
+            ·
             <a href="#install-manager"
                class="text-purple-300 hover:text-purple-200 underline">{{ __('docs.models.get_manager') }}</a>
         </p>
