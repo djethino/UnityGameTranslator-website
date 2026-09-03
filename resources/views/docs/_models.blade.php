@@ -117,7 +117,19 @@
                             <th class="py-2 pr-3 font-medium">{{ __('docs.models.model') }}</th>
                             <th class="py-2 px-3 font-medium">{{ __('docs.models.video_memory') }}</th>
                             <th class="py-2 px-3 font-medium">{{ __('docs.models.download') }}</th>
+
+                            {{-- The wait before the FIRST line, paid while a game is starting. It
+                                 is the widest spread of anything measured — six seconds to sixteen
+                                 — and it does not follow the download size, so no other column
+                                 hints at it. --}}
+                            <th class="py-2 px-3 font-medium">{{ __('docs.models.load_time') }}</th>
+
                             <th class="py-2 px-3 font-medium">{{ __('docs.models.instructions') }}</th>
+
+                            {{-- A model can follow every instruction and still get there by asking
+                                 again: same result, twice the wait and twice the card, on a line
+                                 somebody is waiting for. --}}
+                            <th class="py-2 px-3 font-medium">{{ __('docs.models.retries') }}</th>
                             <th class="py-2 pl-3 font-medium">{{ __('docs.models.languages_claimed') }}</th>
                         </tr>
                     </thead>
@@ -142,8 +154,22 @@
                                     @endisset
                                 </td>
                                 <td class="py-2 px-3 text-gray-300">
+                                    @isset($model['measured']['load_s'])
+                                        {{ $model['measured']['load_s'] }}s
+                                    @else
+                                        <span class="text-gray-600">—</span>
+                                    @endisset
+                                </td>
+                                <td class="py-2 px-3 text-gray-300">
                                     @if (isset($model['measured']['suite'], $model['measured']['suite_of']))
                                         {{ $model['measured']['suite'] }}/{{ $model['measured']['suite_of'] }}
+                                    @else
+                                        <span class="text-gray-600">—</span>
+                                    @endif
+                                </td>
+                                <td class="py-2 px-3 text-gray-300">
+                                    @if (isset($model['measured']['retried'], $model['measured']['lines']))
+                                        {{ $model['measured']['retried'] }}/{{ $model['measured']['lines'] }}
                                     @else
                                         <span class="text-gray-600">—</span>
                                     @endif
