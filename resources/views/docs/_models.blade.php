@@ -160,6 +160,28 @@
 
                                          The explanation is that same option's own description,
                                          already written in every language. --}}
+                                    {{-- The two marks, and only two. Each answers a question a
+                                         reader arrives with — "what do you run yourselves" and
+                                         "I have a small card" — and the second is the whole reason
+                                         they exist: the model it lands on is SIXTH in the order,
+                                         because four retries out of twenty is a real cost, and the
+                                         order alone would bury the lightest thing on the page.
+
+                                         ⚠ The mark points, the columns qualify. It says LIGHTEST,
+                                         not best, and the retry cell two columns along says 4/20 in
+                                         amber. Neither is allowed to say the other's part.
+
+                                         ⚠ Informative blue, never green: green reads as approval
+                                         and neither claim is one. Amber and red are kept for the
+                                         columns, where a cost is stated. --}}
+                                    @if ($mark = \App\Services\ModelCatalog::standout($model, $models))
+                                        <span class="block w-fit mt-1 text-[10px] text-blue-300
+                                                     bg-blue-500/10 border border-blue-500/30
+                                                     rounded px-1.5 py-0.5">
+                                            {{ __('docs.models.mark_' . $mark) }}
+                                        </span>
+                                    @endif
+
                                     {{-- ⚠ On its own line, not beside the name: the model column is
                                          the narrowest of the seven, and a mark next to a tag ran
                                          past its edge. Under it, both are read whole. --}}
@@ -210,16 +232,41 @@
                                         <span class="text-gray-600">—</span>
                                     @endisset
                                 </td>
-                                <td class="py-2 px-3 text-gray-300">
-                                    @if (isset($model['measured']['suite'], $model['measured']['suite_of']))
-                                        {{ $model['measured']['suite'] }}/{{ $model['measured']['suite_of'] }}
+                                {{-- Amber as soon as one instruction went unfollowed. It is not a
+                                     matter of taste: the suite is the set of things the mod asks of
+                                     a model, so a miss is a shape of text it will get wrong. --}}
+                                @php
+                                    $measured = $model['measured'] ?? [];
+                                    $short = isset($measured['suite'], $measured['suite_of'])
+                                          && $measured['suite'] < $measured['suite_of'];
+                                    $lost = $measured['refused'] ?? 0;
+                                @endphp
+                                <td class="py-2 px-3 {{ $short ? 'text-yellow-400' : 'text-gray-300' }}">
+                                    @if (isset($measured['suite'], $measured['suite_of']))
+                                        {{ $measured['suite'] }}/{{ $measured['suite_of'] }}
                                     @else
                                         <span class="text-gray-600">—</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3 text-gray-300">
-                                    @if (isset($model['measured']['retried'], $model['measured']['lines']))
-                                        {{ $model['measured']['retried'] }}/{{ $model['measured']['lines'] }}
+
+                                {{-- 🔴 A line the model never got right is shown HERE, in red, and
+                                     not left to be inferred from the column before it. It is the
+                                     first thing the order sorts on, and text left in its original
+                                     language while somebody plays is not the same kind of cost as a
+                                     wait. Both figures are out of the same twenty lines, which is
+                                     why they share a cell rather than needing an eighth column.
+
+                                     Amber for a retry: not a failure — the line came out right —
+                                     but the same line paid for twice, on the card, while playing. --}}
+                                <td class="py-2 px-3 {{ $lost > 0 ? 'text-red-400' : (($measured['retried'] ?? 0) > 0 ? 'text-yellow-400' : 'text-gray-300') }}">
+                                    @if (isset($measured['retried'], $measured['lines']))
+                                        {{ $measured['retried'] }}/{{ $measured['lines'] }}
+                                        @if ($lost > 0)
+                                            {{-- trans_choice, not __: several of the twenty
+                                                 languages decline the noun, and Polish, Russian and
+                                                 Arabic need three, three and six forms of it. --}}
+                                            <span class="whitespace-nowrap">· {{ trans_choice('docs.models.failed', $lost, ['count' => $lost]) }}</span>
+                                        @endif
                                     @else
                                         <span class="text-gray-600">—</span>
                                     @endif
