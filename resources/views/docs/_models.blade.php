@@ -138,6 +138,23 @@
                             <tr class="border-b border-gray-700/50 last:border-0">
                                 <td class="py-2 pr-3">
                                     <code class="text-purple-300">{{ $model['pull'] }}</code>
+
+                                    {{-- A mark rather than a column: one model in ten refuses both
+                                         a real foreign language and an invented one, and a column
+                                         would spend its width saying "no" nine times.
+
+                                         ⚠ The label is not translated, and that is deliberate: it
+                                         is the name of the option itself — strict_source_language,
+                                         cited as-is in the configuration table below. Somebody
+                                         reads it here and goes looking for it there.
+
+                                         The explanation is that same option's own description,
+                                         already written in every language. --}}
+                                    @if (($model['measured']['strict_source'] ?? false) === true)
+                                        <span class="ml-2 align-middle text-[10px] text-gray-400
+                                                     border border-gray-600 rounded px-1.5 py-0.5"
+                                              title="{{ __('docs.config.strict_source') }}">strict source</span>
+                                    @endif
                                 </td>
                                 <td class="py-2 px-3 text-gray-300">
                                     @isset($model['min_vram_gb'])
