@@ -51,7 +51,7 @@ Community platform for sharing Unity game translation files with API for mod syn
 | **V** | Validated | Machine wording a human read and accepted |
 | **A** | AI | Machine wording nobody has read yet |
 | **S** | Skip | A human ruled that this line stays as it is — a fictional language, a proper name, text that must not change. Counts as settled, never as work left to do |
-| **M** | Mod | Mod UI translations (internal, never counted) |
+| **M** | Mod | The mod's own interface. Counted nowhere, arbitrated by no merge. Current mods keep it in a file of their own and never send it; the tag stays valid for files published before that |
 
 ### The four measures
 
