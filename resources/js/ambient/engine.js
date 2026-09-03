@@ -46,15 +46,23 @@ const PER_CLOUD = 2200;
 const CLOUD_RADIUS = 0.60;
 
 /**
- * How fast a cloud turns over on its own, in radians a second, plus one radian of offset per cloud
- * so the five never present the same face at the same moment.
+ * How fast a cloud turns over on its own, in radians a second — a slow roll so a resting cloud never
+ * presents the same face for a whole figure. Each starts one radian further round than the last.
  *
- * 🔴 Exported because a pattern may need to CANCEL it, and a second copy of the number would be a
- * second thing to keep in step. A word cannot be read while its letters turn — and they were each
- * turning from a different starting angle, up to 229° apart.
+ * 🔴 ACCUMULATED, not read off the clock, and that is what lets a pattern stop it.
+ *
+ * It used to be `time * 0.12 + c`, computed fresh every frame. A figure that needs its clouds still
+ * — a word, whose letters cannot be read while they turn, and which were sitting up to 229° from
+ * each other — then had only one way out: reproduce that expression and subtract it. Which asks a
+ * pattern to know the engine's clock, and cost exactly what that costs: `ctx.time` does not exist in
+ * the pattern context, so the subtraction was NaN, and a NaN angle turns every point of a cloud into
+ * NaN for the rest of the session. The clouds went out one by one, permanently.
+ *
+ * ⚠ A rate cannot be blended wrongly either. Fading an absolute angle of 72 radians to zero over a
+ * handover is eleven revolutions — the same defect the corridor's `twist` already taught us. Fading
+ * a RATE from 1 to 0 just slows the turn to a stop.
  */
-export const IDLE_SPIN = 0.12;
-export const idleSpin = (time, cloud) => time * IDLE_SPIN + cloud;
+const IDLE_SPIN = 0.12;
 
 /** A point's diameter at the reference plane, as a fraction of the buffer height. */
 const POINT_SIZE = 0.012;
@@ -199,6 +207,9 @@ export function createEngine() {
 
     const bobs = Array.from({ length: CLOUD_COUNT }, (_, i) => new Bob(i));
     const clouds = bobs.map((_, i) => new Cloud(i, CLOUD_CAPACITY, PALETTE[i]));
+    // Where each cloud has got to in its own slow roll. One radian apart to begin with, then each
+    // advances at its own pace — see IDLE_SPIN.
+    const roll = Float32Array.from({ length: CLOUD_COUNT }, (_, i) => i);
     const magnetism = createMagnetism(CLOUD_COUNT);
 
     const colors = new Float32Array(capacity * 3);
@@ -400,14 +411,33 @@ export function createEngine() {
 
         for (let c = 0; c < CLOUD_COUNT; c++) {
             const bob = bobs[c];
-            bob.follow(targets[c] || { x: bob.x, y: bob.y, z: bob.z }, time, wall);
+
+            /**
+             * 🔴 A target has to be a place. The sentinel further down rebuilds a cloud whose points
+             * have gone non-finite — and it could not save one, because it rebuilds it FROM the bob,
+             * and the bob was the thing that was poisoned. A NaN reaches `follow`, lands in the
+             * centre and its velocity, and every repair puts the cloud back at a NaN centre: the
+             * blob goes out and stays out for the whole visit.
+             *
+             * ⚠ Counted, not swallowed. `stats().repairs` is the same counter, so a figure that
+             * starts producing nonsense is a number somebody can see rather than a blob that
+             * quietly never comes back. Holding position for a frame is what a missing target
+             * already means three lines above; this only says that NaN is a missing target too.
+             */
+            const want = targets[c];
+            const usable = want && Number.isFinite(want.x) && Number.isFinite(want.y)
+                && Number.isFinite(want.z);
+            if (want && !usable) repairs++;
+
+            bob.follow(usable ? want : { x: bob.x, y: bob.y, z: bob.z }, time, wall);
 
             const cloud = clouds[c];
             // ⚠ The base spin is the engine's own — a slow turn-over so a resting cloud never
             // presents the same face for a whole pattern. `bob.twist` ADDS to it rather than
             // replacing it, so a pattern that wants a rotation gets one without having to
             // reproduce the idle behaviour it is built on.
-            cloud.update(bob, tune.radius * bob.scale, wall, time, idleSpin(time, c) + bob.twist,
+            roll[c] += IDLE_SPIN * wall * bob.roll;
+            cloud.update(bob, tune.radius * bob.scale, wall, time, roll[c] + bob.twist,
                          bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip,
                          magnetism.at(c, hand, aspect, bob, tune.radius * bob.scale));
 

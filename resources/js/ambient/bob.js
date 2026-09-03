@@ -69,6 +69,9 @@ export class Bob {
         this.haste = 1;         // how eagerly the CENTRE reaches its target — for a fast return
         this.sway = 1;          // how much of its private drift it keeps — 0 for rigid structures
         this.charm = 1;         // how much of the pointer's pull its points feel — 0 for a structure
+        // How much of the engine's own slow turn-over this cloud takes. 0 holds it still, which is
+        // what a letter needs — see the note on `roll` in engine.js.
+        this.roll = 1;
 
         this.resetFrameProps();
 
@@ -150,6 +153,7 @@ export class Bob {
         this.haste = 1;
         this.sway = 1;
         this.charm = 1;         // how much of the pointer's pull its points feel — 0 for a structure
+        this.roll = 1;
     }
 
     /** Drop it somewhere with no travel — used when the engine (re)starts, never mid-flight. */

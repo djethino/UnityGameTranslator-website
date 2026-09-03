@@ -18,7 +18,6 @@
  */
 
 import { pickWord } from '../glyphs.js';
-import { idleSpin } from '../engine.js';
 import { smoothstep, lerp } from './util.js';
 
 const PLANE_Z = 1.6;     // held flat and face-on: a word has to be read
@@ -100,17 +99,21 @@ export default {
 
             if (i < n) {
                 const h = this.hand[i];
-                const breath = Math.sin(ctx.time * h.rate + h.phase);
+                // ⚠ `ctx.t` — the pattern's own elapsed time. There is no `ctx.time`: the engine's
+                // clock is not handed to patterns, and reaching for one that does not exist is how
+                // this went NaN and put five clouds out for the rest of the session.
+                const breath = Math.sin(ctx.t * h.rate + h.phase);
 
                 bob.scale = LETTER * h.size;
                 bob.gain = lerp(0.7, 1.05, settle);
 
-                // 🔴 The engine turns every cloud on its own, a slow roll from a different starting
-                // angle per cloud — up to 229° apart across five. Every other pattern is a shape
-                // that reads the same whichever way up it is; a letter is not, and this one had
-                // been trying to spell words with its characters lying on their sides and turning.
-                // Cancelled, then leaned by its own few degrees.
-                bob.twist = h.tilt + breath * BREATH - idleSpin(ctx.time, i);
+                // 🔴 The engine rolls every cloud on its own, from a different starting angle — up
+                // to 229° apart across five. Every other pattern is a shape that reads the same
+                // whichever way up it is; a letter is not, and this one was spelling words with its
+                // characters lying on their sides and turning. `roll: 0` stops the turn where it
+                // is; the lean below is this letter's own.
+                bob.roll = 0;
+                bob.twist = h.tilt + breath * BREATH;
 
                 out.push({
                     x: (i - (n - 1) / 2) * SPACING + h.dx,

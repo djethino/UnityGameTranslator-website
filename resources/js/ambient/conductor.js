@@ -25,7 +25,7 @@ import { optedIn, onMotionChange } from './motion.js';
 import { createRogues } from './rogues.js';
 import { rngFrom, lerp, clamp, smoothstep, easeInOut } from './patterns/util.js';
 
-const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway', 'charm'];
+const PROPS = ['gain', 'scale', 'shearX', 'shearY', 'yaw', 'twist', 'grip', 'haste', 'sway', 'charm', 'roll'];
 
 /**
  * 🔴 Which of those are ANGLES, and why they cannot be cross-faded like the rest.
