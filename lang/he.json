@@ -504,6 +504,7 @@
     "docs.models.video_memory": "זיכרון כרטיס מסך",
     "docs.models.download": "הורדה",
     "docs.models.load_time": "זמן טעינה",
+    "docs.models.time_per_line": "זמן לכל שורה",
     "docs.models.retries": "ניסיונות חוזרים",
     "docs.models.languages_claimed": "שפות מוצהרות",
     "docs.models.instructions": "הוראות שבוצעו",

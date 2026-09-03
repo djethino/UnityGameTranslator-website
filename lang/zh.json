@@ -504,6 +504,7 @@
     "docs.models.video_memory": "显存",
     "docs.models.download": "下载",
     "docs.models.load_time": "加载时间",
+    "docs.models.time_per_line": "每行耗时",
     "docs.models.retries": "重试次数",
     "docs.models.languages_claimed": "官方声明语言数",
     "docs.models.instructions": "遵循的指令",

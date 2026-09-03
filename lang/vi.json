@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Bộ nhớ card đồ họa",
     "docs.models.download": "Tải xuống",
     "docs.models.load_time": "Thời gian nạp",
+    "docs.models.time_per_line": "Thời gian mỗi dòng",
     "docs.models.retries": "Lần thử lại",
     "docs.models.languages_claimed": "Số ngôn ngữ công bố",
     "docs.models.instructions": "Chỉ dẫn đã tuân thủ",

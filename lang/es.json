@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Memoria de vídeo",
     "docs.models.download": "Descarga",
     "docs.models.load_time": "Tiempo de carga",
+    "docs.models.time_per_line": "Tiempo por línea",
     "docs.models.retries": "Reintentos",
     "docs.models.languages_claimed": "Idiomas declarados",
     "docs.models.instructions": "Instrucciones seguidas",

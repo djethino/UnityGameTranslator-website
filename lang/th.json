@@ -504,6 +504,7 @@
     "docs.models.video_memory": "หน่วยความจำการ์ดจอ",
     "docs.models.download": "ดาวน์โหลด",
     "docs.models.load_time": "เวลาโหลด",
+    "docs.models.time_per_line": "เวลาต่อบรรทัด",
     "docs.models.retries": "การลองใหม่",
     "docs.models.languages_claimed": "ภาษาที่ระบุไว้",
     "docs.models.instructions": "คำสั่งที่ทำตามได้",

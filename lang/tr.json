@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Ekran kartı belleği",
     "docs.models.download": "İndirme",
     "docs.models.load_time": "Yükleme süresi",
+    "docs.models.time_per_line": "Satır başına süre",
     "docs.models.retries": "Yeniden denemeler",
     "docs.models.languages_claimed": "Belirtilen diller",
     "docs.models.instructions": "Uygulanan yönergeler",

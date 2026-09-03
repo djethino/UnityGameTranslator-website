@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Videogeheugen",
     "docs.models.download": "Download",
     "docs.models.load_time": "Laadtijd",
+    "docs.models.time_per_line": "Tijd per regel",
     "docs.models.retries": "Nieuwe pogingen",
     "docs.models.languages_claimed": "Opgegeven talen",
     "docs.models.instructions": "Gevolgde instructies",

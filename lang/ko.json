@@ -504,6 +504,7 @@
     "docs.models.video_memory": "비디오 메모리",
     "docs.models.download": "다운로드",
     "docs.models.load_time": "로딩 시간",
+    "docs.models.time_per_line": "줄당 시간",
     "docs.models.retries": "재시도",
     "docs.models.languages_claimed": "지원 언어 수(공시)",
     "docs.models.instructions": "따른 지시 수",

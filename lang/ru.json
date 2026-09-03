@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Видеопамять",
     "docs.models.download": "Загрузка",
     "docs.models.load_time": "Загрузка в память",
+    "docs.models.time_per_line": "Время на строку",
     "docs.models.retries": "Повторные попытки",
     "docs.models.languages_claimed": "Заявленные языки",
     "docs.models.instructions": "Выполненные инструкции",

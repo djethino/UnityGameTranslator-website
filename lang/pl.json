@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Pamięć karty graficznej",
     "docs.models.download": "Pobranie",
     "docs.models.load_time": "Czas ładowania",
+    "docs.models.time_per_line": "Czas na wiersz",
     "docs.models.retries": "Ponowne próby",
     "docs.models.languages_claimed": "Deklarowane języki",
     "docs.models.instructions": "Wykonane instrukcje",

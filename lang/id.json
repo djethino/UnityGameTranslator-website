@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Memori video",
     "docs.models.download": "Unduhan",
     "docs.models.load_time": "Waktu muat",
+    "docs.models.time_per_line": "Waktu per baris",
     "docs.models.retries": "Percobaan ulang",
     "docs.models.languages_claimed": "Bahasa yang diklaim",
     "docs.models.instructions": "Instruksi yang diikuti",

@@ -124,6 +124,12 @@
                                  hints at it. --}}
                             <th class="py-2 px-3 font-medium">{{ __('docs.models.load_time') }}</th>
 
+                            {{-- ⚠ Both waits, and neither stands in for the other: this one is paid
+                                 on every line while somebody plays, the one before it once at the
+                                 start. A model can be quick here and slow to arrive, or the
+                                 reverse. --}}
+                            <th class="py-2 px-3 font-medium">{{ __('docs.models.time_per_line') }}</th>
+
                             <th class="py-2 px-3 font-medium">{{ __('docs.models.instructions') }}</th>
 
                             {{-- A model can follow every instruction and still get there by asking
@@ -150,8 +156,11 @@
 
                                          The explanation is that same option's own description,
                                          already written in every language. --}}
+                                    {{-- ⚠ On its own line, not beside the name: the model column is
+                                         the narrowest of the seven, and a mark next to a tag ran
+                                         past its edge. Under it, both are read whole. --}}
                                     @if (($model['measured']['strict_source'] ?? false) === true)
-                                        <span class="ml-2 align-middle text-[10px] text-gray-400
+                                        <span class="block w-fit mt-1 text-[10px] text-gray-400
                                                      border border-gray-600 rounded px-1.5 py-0.5"
                                               title="{{ __('docs.config.strict_source') }}">strict source</span>
                                     @endif
@@ -173,6 +182,13 @@
                                 <td class="py-2 px-3 text-gray-300">
                                     @isset($model['measured']['load_s'])
                                         {{ $model['measured']['load_s'] }}s
+                                    @else
+                                        <span class="text-gray-600">—</span>
+                                    @endisset
+                                </td>
+                                <td class="py-2 px-3 text-gray-300">
+                                    @isset($model['measured']['typical_s'])
+                                        {{ $model['measured']['typical_s'] }}s
                                     @else
                                         <span class="text-gray-600">—</span>
                                     @endisset

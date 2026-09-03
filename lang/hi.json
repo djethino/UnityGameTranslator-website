@@ -504,6 +504,7 @@
     "docs.models.video_memory": "वीडियो मेमोरी",
     "docs.models.download": "डाउनलोड",
     "docs.models.load_time": "लोडिंग समय",
+    "docs.models.time_per_line": "प्रति पंक्ति समय",
     "docs.models.retries": "पुनः प्रयास",
     "docs.models.languages_claimed": "घोषित भाषाएँ",
     "docs.models.instructions": "पालन किए गए निर्देश",

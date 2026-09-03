@@ -504,6 +504,7 @@
     "docs.models.video_memory": "Grafikspeicher",
     "docs.models.download": "Download",
     "docs.models.load_time": "Ladezeit",
+    "docs.models.time_per_line": "Zeit pro Zeile",
     "docs.models.retries": "Wiederholungen",
     "docs.models.languages_claimed": "Angegebene Sprachen",
     "docs.models.instructions": "Befolgte Anweisungen",

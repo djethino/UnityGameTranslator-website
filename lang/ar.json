@@ -504,6 +504,7 @@
     "docs.models.video_memory": "ذاكرة كرت الشاشة",
     "docs.models.download": "التنزيل",
     "docs.models.load_time": "زمن التحميل",
+    "docs.models.time_per_line": "الزمن لكل سطر",
     "docs.models.retries": "إعادة المحاولات",
     "docs.models.languages_claimed": "اللغات المُعلنة",
     "docs.models.instructions": "التعليمات المُنفَّذة",
