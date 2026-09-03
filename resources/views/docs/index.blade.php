@@ -1384,7 +1384,12 @@
                     </div>
                 </div>
 
-                @include('docs._models')
+                {{-- Its own anchor: the mod's README sends people here to find out which model to
+                     run, and the section heading is a screenful of provider tables above. Landing
+                     on the heading means arriving somewhere else and scrolling to look. --}}
+                <div id="local-models" data-nav-anchor class="scroll-mt-8">
+                    @include('docs._models')
+                </div>
             </div>
         </section>
         <!-- First Launch -->
