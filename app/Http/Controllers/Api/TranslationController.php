@@ -107,8 +107,18 @@ class TranslationController extends Controller
         }
         // Search by game name
         elseif ($request->filled('q')) {
+            // 🔴 **The name the machine reads comes first, the loose match only after.**
+            // `unity_name` is exactly what the caller sends — the mod and the Manager both take it
+            // from `<Game>_Data/app.info` — so where the site knows it there is nothing to guess.
+            // The LIKE below is for the games it does not know yet, and it is what lets one lookup
+            // answer about several games at once.
+            $exact = Game::where('unity_name', $request->q)->pluck('id');
+
             $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
-            $matching = Game::where('name', 'like', '%' . $search . '%');
+
+            $matching = $exact->isNotEmpty()
+                ? Game::whereIn('id', $exact)
+                : Game::where('name', 'like', '%' . $search . '%');
         }
 
         if (isset($matching)) {
@@ -319,16 +329,33 @@ class TranslationController extends Controller
         // lowering that remains is on OUR side, for the dictionary keys.
         $lowered = $names->map(fn ($n) => mb_strtolower(trim($n)));
 
+        // 🔴 **On `unity_name` as well as on `name`, and it is the half that matters.** What a
+        // batch sends is what a machine read off the folder; the site's display name comes from
+        // IGDB when it knows the game, so the two are often different strings for one game. Looking
+        // only at the display name is what sent this lookup into the fuzzy pass below — and the
+        // fuzzy pass is where a translation of another game can end up attributed to this one.
+        $trimmed = $names->map(fn ($n) => trim($n))->all();
+
         $byName = $names->isEmpty()
             ? collect()
-            : Game::whereIn('name', $names->map(fn ($n) => trim($n))->all())->get()
-                ->groupBy(fn (Game $g) => mb_strtolower($g->name));
+            : Game::whereIn('unity_name', $trimmed)->orWhereIn('name', $trimmed)->get()
+                ->groupBy(fn (Game $g) => mb_strtolower($g->unity_name ?? $g->name));
 
         // ⚠ A game folder is not always named as the site names it — "Foo" against "Foo: Deluxe
         // Edition". That is why `q=` matched loosely in the first place, and dropping it here
         // would lose those games rather than fix anything. What changes is that the answer now
         // NAMES each game it found, so an ambiguity is visible instead of being flattened into
         // "the translations of your game".
+        // ⚠ Indexed under BOTH names, because either can be what the caller asked with: the group
+        // above is keyed on the Unity name when there is one, so a game found in SQL by its display
+        // name would otherwise have no key and fall into the fuzzy pass — cancelling the gain.
+        foreach ($byName->values()->flatten() as $game) {
+            $alias = mb_strtolower($game->name);
+            if (!$byName->has($alias)) {
+                $byName->put($alias, collect([$game]));
+            }
+        }
+
         $unresolved = $lowered->reject(fn ($n) => $byName->has($n))->values();
 
         if ($unresolved->isNotEmpty()) {
@@ -1321,20 +1348,49 @@ class TranslationController extends Controller
         BranchSubmitted::sendGrouped($main->user, $main, $contributor?->name ?? 'someone');
     }
 
+    /**
+     * The game a upload belongs to — found, or created.
+     *
+     * 🔴 **What the caller reads off the disk is now KEPT** (`unity_name`, `unity_company`). It was
+     * used to look the game up and then thrown away: when the game is new, IGDB or RAWG names it,
+     * and the string every client can actually see — `Application.productName`, the first lines of
+     * `<Game>_Data/app.info` — was recorded nowhere. From then on the only way back to that game
+     * was hoping one title contained the other, which is what `name LIKE %…%` was doing and why a
+     * lookup could answer about several games at once.
+     *
+     * ⚠ Filled in on games that already exist too, and only when empty: every upload carries the
+     * name, so the catalogue completes itself as people publish. Nothing overwrites a value already
+     * there — two machines disagreeing about a game's productName is a thing to notice, not to
+     * settle silently by last-writer-wins.
+     */
     private function findOrCreateGame(Request $request): ?Game
     {
         $steamId = $request->filled('steam_id') ? $request->steam_id : null;
         $gameName = $request->filled('game_name') ? $request->game_name : null;
+        $company = $request->filled('game_company') ? $request->game_company : null;
 
         // Try by Steam ID first
         if ($steamId) {
             $game = Game::where('steam_id', $steamId)->first();
             if ($game) {
+                $this->rememberUnityNames($game, $gameName, $company);
                 return $game;
             }
         }
 
-        // Try by name (case-insensitive)
+        // Then by the name the machine reads, which is what other machines will search with.
+        if ($gameName) {
+            $game = Game::where('unity_name', $gameName)->first();
+            if ($game) {
+                if ($steamId && !$game->steam_id) {
+                    $game->update(['steam_id' => $steamId]);
+                }
+                $this->rememberUnityNames($game, $gameName, $company);
+                return $game;
+            }
+        }
+
+        // Try by display name (case-insensitive)
         if ($gameName) {
             $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
             if ($game) {
@@ -1342,6 +1398,7 @@ class TranslationController extends Controller
                 if ($steamId && !$game->steam_id) {
                     $game->update(['steam_id' => $steamId]);
                 }
+                $this->rememberUnityNames($game, $gameName, $company);
                 return $game;
             }
         }
@@ -1355,19 +1412,50 @@ class TranslationController extends Controller
         $externalGame = $gameSearchService->findGame($steamId, $gameName);
 
         if ($externalGame) {
-            // Create game with external data
+            // Created under the title the world knows it by — and carrying the name the machine
+            // that published it reads, which is what makes it findable from another machine.
             return Game::create([
                 'name' => $externalGame['name'] ?? $gameName,
+                'unity_name' => $gameName,
+                'unity_company' => $company,
                 'steam_id' => $externalGame['steam_id'] ?? $steamId,
                 'image_url' => $externalGame['image_url'] ?? null,
             ]);
         }
 
-        // Fallback: Create basic game entry without external data
+        // Fallback: Create basic game entry without external data. Here the two names are the same
+        // string, and they are still both recorded: a display name can be edited afterwards, and
+        // the lookup must go on working when it is.
         return Game::create([
             'name' => $gameName,
+            'unity_name' => $gameName,
+            'unity_company' => $company,
             'steam_id' => $steamId,
         ]);
+    }
+
+    /**
+     * Writes what a machine reported about a game, without ever overwriting what is there.
+     *
+     * ⚠ Only fills blanks. A game published from two installs can report two different product
+     * names — a repack, a demo, a regional build — and letting the last upload win would move the
+     * key other machines resolve with, silently.
+     */
+    private function rememberUnityNames(Game $game, ?string $gameName, ?string $company): void
+    {
+        $fill = [];
+
+        if ($gameName && !$game->unity_name) {
+            $fill['unity_name'] = $gameName;
+        }
+
+        if ($company && !$game->unity_company) {
+            $fill['unity_company'] = $company;
+        }
+
+        if ($fill !== []) {
+            $game->update($fill);
+        }
     }
 
     /**

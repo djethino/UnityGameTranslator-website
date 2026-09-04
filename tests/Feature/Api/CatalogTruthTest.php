@@ -270,6 +270,113 @@ class CatalogTruthTest extends TestCase
         }
     }
 
+    // =====================================================================================
+    // The name a machine reads, kept beside the one the game is displayed under
+    // =====================================================================================
+
+    public function test_a_game_is_found_by_the_name_its_folder_carries(): void
+    {
+        // The state that used to be unreachable: published under the title IGDB knows, while every
+        // machine on earth reads something else off <Game>_Data/app.info.
+        $game = $this->makeGame('Lonestar: The Game');
+        $game->update(['unity_name' => 'LONESTAR']);
+
+        $this->makeTranslation($game, ['target_language' => 'French']);
+
+        $response = $this->postJson('/api/v1/translations/for-games', [
+            'games' => [['name' => 'LONESTAR']],
+        ])->assertOk();
+
+        $this->assertSame(1, $response->json('results.0.games_total'));
+        $this->assertSame('Lonestar: The Game', $response->json('results.0.games.0.game.name'));
+    }
+
+    public function test_the_unity_name_wins_over_a_loose_title_match(): void
+    {
+        // Two games one search could reach: one because its folder says exactly this, the other
+        // only because its title happens to contain the word. Guessing between them is what put a
+        // stranger's translation on somebody's card.
+        $exact = $this->makeGame('Cat Quest');
+        $exact->update(['unity_name' => 'Cat']);
+
+        $loose = $this->makeGame('Cattails');
+
+        $this->makeTranslation($exact, ['target_language' => 'French']);
+        $this->makeTranslation($loose, ['target_language' => 'German']);
+
+        $response = $this->getJson('/api/v1/translations?q=Cat')->assertOk();
+
+        $this->assertSame(1, $response->json('games_total'), 'the exact machine name settles it');
+        $this->assertSame('Cat Quest', $response->json('games.0.game.name'));
+    }
+
+    public function test_a_game_nobody_has_named_yet_behaves_exactly_as_before(): void
+    {
+        // 🔴 The promise the migration makes: every column starts empty, so until an upload fills
+        // one in, nothing about an existing catalogue changes. This is that promise, held.
+        $game = $this->makeGame('Untouched Game');
+        $this->makeTranslation($game, ['target_language' => 'French']);
+
+        $this->assertNull($game->fresh()->unity_name);
+
+        $response = $this->getJson('/api/v1/translations?q=Untouched')->assertOk();
+
+        $this->assertSame(1, $response->json('games_total'));
+        $this->assertSame('Untouched Game', $response->json('games.0.game.name'));
+    }
+
+    public function test_publishing_records_the_name_the_machine_read(): void
+    {
+        $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->postJson('/api/v1/translations', [
+                'game_name' => 'MYGAME',
+                'game_company' => 'Some Studio',
+                'source_language' => 'English',
+                'target_language' => 'French',
+                'content' => json_encode([
+                    '_uuid' => (string) Str::uuid(),
+                    'Hello' => ['v' => 'Bonjour', 't' => 'H'],
+                ]),
+            ])->assertSuccessful();
+
+        // Whatever the game ends up displayed under — IGDB names it when it knows it — the string
+        // the machine reported is on the row. That is what makes the translation reachable from
+        // another machine, and it is exactly what used to be dropped at this door.
+        $created = Game::whereNotNull('unity_name')->first();
+
+        $this->assertNotNull($created, 'the upload created a game carrying its Unity name');
+        $this->assertSame('MYGAME', $created->unity_name);
+        $this->assertSame('Some Studio', $created->unity_company);
+    }
+
+    public function test_publishing_never_overwrites_a_name_already_recorded(): void
+    {
+        $game = $this->makeGame('Shared Game');
+        $game->update(['unity_name' => 'FIRST-REPORTED', 'unity_company' => 'First Studio']);
+
+        $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->postJson('/api/v1/translations', [
+                'game_name' => 'Shared Game',
+                'game_company' => 'Second Studio',
+                'source_language' => 'English',
+                'target_language' => 'German',
+                'content' => json_encode([
+                    '_uuid' => (string) Str::uuid(),
+                    'Hello' => ['v' => 'Hallo', 't' => 'H'],
+                ]),
+            ])->assertSuccessful();
+
+        // ⚠ Two installs of one game can report two different product names — a repack, a demo, a
+        // regional build. Letting the last upload win would move the key other machines resolve
+        // with, silently, and break lookups that worked yesterday.
+        $this->assertSame('FIRST-REPORTED', $game->fresh()->unity_name);
+        $this->assertSame('First Studio', $game->fresh()->unity_company);
+    }
+
     public function test_a_batch_refuses_more_than_it_promises_to_answer_completely(): void
     {
         $games = [];
