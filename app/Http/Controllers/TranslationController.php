@@ -8,6 +8,7 @@ use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\CatalogStore;
+use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
@@ -40,7 +41,9 @@ class TranslationController extends Controller
             'file' => 'required|file|mimes:json|max:102400', // 100MB max
             'game_source' => 'required_without:game_id|string|in:igdb,rawg',
             'game_external_id' => 'required_without:game_id|integer',
-            'game_image_url' => 'nullable|url|max:500',
+            // ⚠ No image field any more: the picture on a game's card comes from the source the
+            // id names, re-asked server-side — see findOrCreateGame. A URL from the form was one
+            // the visitor's browser then fetched from wherever the uploader chose.
         ]);
 
         // Parse and validate content (includes normalization)
@@ -1473,7 +1476,19 @@ class TranslationController extends Controller
     }
 
     /**
-     * Find or create a game based on existing game_id or external API data
+     * Find or create a game based on existing game_id or external API data.
+     *
+     * 🔴 **The form names the game; the source describes it.** The upload page sent the title and
+     * the cover URL it had shown, and this wrote both into the card as they came. So a line with
+     * the real IGDB id of a popular game and a title of the uploader's choosing captured every
+     * later upload of that game — page title, JSON-LD, og:image included — and a cover hosted on
+     * the uploader's own server made every visitor of the game's pages send it their address,
+     * which is precisely the leak the provider-avatar change was made to close. The id is the only
+     * thing the form is trusted for: what that id names is asked of the source again, here.
+     *
+     * ⚠ When the source does not answer — a rate limit, an outage — the upload still goes through
+     * under the title the form gave, said in the log, and with no cover at all: a card without a
+     * picture is an inconvenience, a card whose picture is somebody's tracker is not.
      */
     private function findOrCreateGame(Request $request): Game
     {
@@ -1482,19 +1497,27 @@ class TranslationController extends Controller
             return Game::findOrFail($request->input('game_id'));
         }
 
-        // Otherwise, we must have external API data
         $source = $request->input('game_source');
-        $externalId = $request->input('game_external_id');
-        $imageUrl = $request->input('game_image_url');
-        $name = $request->input('game_name');
-
+        $externalId = (int) $request->input('game_external_id');
         $idField = $source === 'igdb' ? 'igdb_id' : 'rawg_id';
+
+        $described = app(GameSearchService::class)->getGame($externalId, $source);
+
+        if ($described === null) {
+            Log::info('Web upload: the game source did not answer, the card keeps the form title and no cover', [
+                'source' => $source,
+                'external_id' => $externalId,
+            ]);
+        }
+
+        $name = $described['name'] ?? $request->input('game_name');
+        $imageUrl = $described['image_url'] ?? null;
 
         // Try to find existing game by external ID
         $game = Game::where($idField, $externalId)->first();
 
         if ($game) {
-            // Update image if we have a new one
+            // A cover the card did not have yet, from the source and nowhere else.
             if ($imageUrl && !$game->image_url) {
                 $game->update(['image_url' => $imageUrl]);
             }

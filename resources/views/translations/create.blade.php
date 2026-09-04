@@ -86,7 +86,6 @@
             <input type="hidden" name="game_name" id="game_name" value="">
             <input type="hidden" name="game_source" id="game_source" value="">
             <input type="hidden" name="game_external_id" id="game_external_id" value="">
-            <input type="hidden" name="game_image_url" id="game_image_url" value="">
             <div id="game_suggestions" class="absolute w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 hidden z-10 max-h-80 overflow-y-auto shadow-xl"></div>
             <p id="game_error" class="text-red-400 text-sm mt-1 hidden">{{ __('upload.please_select_game') }}</p>
         </div>
@@ -287,7 +286,6 @@ const gameId = document.getElementById('game_id');
 const gameName = document.getElementById('game_name');
 const gameSource = document.getElementById('game_source');
 const gameExternalId = document.getElementById('game_external_id');
-const gameImageUrl = document.getElementById('game_image_url');
 const gameSearch = document.getElementById('game_search');
 const sourceLang = document.getElementById('source_language');
 const targetLang = document.getElementById('target_language');
@@ -577,7 +575,6 @@ async function showNewTranslation() {
                 gameName.value = game.name;
                 gameSource.value = game.source || '';
                 gameExternalId.value = game.id || '';
-                gameImageUrl.value = game.image_url || '';
 
                 if (game.local_id) {
                     gameId.value = game.local_id;
@@ -690,7 +687,6 @@ gameSearch.addEventListener('input', function() {
     gameName.value = '';
     gameSource.value = '';
     gameExternalId.value = '';
-    gameImageUrl.value = '';
     gameImagePreview.classList.add('hidden');
     gameSearchIcon.classList.remove('hidden');
     gameSelected = false;
@@ -754,7 +750,6 @@ gameSearch.addEventListener('input', function() {
                     gameName.value = g.name;
                     gameSource.value = g.source || '';
                     gameExternalId.value = g.id || '';
-                    gameImageUrl.value = g.image_url || '';
 
                     // For local games, set game_id instead
                     if (g.local_id) {

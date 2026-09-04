@@ -126,6 +126,12 @@ class EmptyTranslationGraceTest extends TestCase
     public function test_uploading_a_file_with_nothing_translated_asks_first(): void
     {
         $user = User::factory()->create();
+
+        // The card is described by the game source, asked server-side; this test is about the
+        // empty-file question, so the source simply does not answer and the form title is kept.
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('getGame')->andReturn(null);
+        });
         $payload = [
             'game_name' => 'Asked Game',
             'game_source' => 'igdb',
