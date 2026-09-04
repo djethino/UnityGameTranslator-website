@@ -213,8 +213,14 @@ For Unix socket: set `REDIS_SOCKET=/path/to/redis.sock` (overrides host/port).
 | `REDIS_SOCKET` | — | Redis Unix socket (overrides URL) |
 | `LARAVEL_API_URL` | `http://localhost:8000/api/v1` | Laravel API for token validation |
 | `ALLOWED_ORIGIN` | — | CORS origin |
-| `PER_IP_LIMIT` | `10` | Max SSE connections per IP |
-| `MAX_CONNECTIONS` | `60` | Global connection limit. An SSE connection holds one of the host's concurrent request slots for its whole life, and shared hosting grants only a few dozen per account — exceeding that budget takes down every site on the account, not just this one. Raise it on a host with room to spare. |
+| `PER_IP_LIMIT` | `30` | Max open SSE streams per IP. One player runs one stream per game plus one per live edit session, and shared NAT adds up. |
+| `MAX_CONNECTIONS` | `1000` | Global limit on open streams. A guard rail against a runaway reconnection loop, not a prediction: measured on the host, nothing caps concurrency in the low hundreds (see the note in `server.js`). |
+| `PER_IP_ATTEMPTS_PER_MINUTE` | `60` | Stream *attempts* per IP per minute, counted on arrival whatever their outcome — what bounds a flood of junk tokens. Sixty is what one machine reaches with three streams reconnecting at the client's `retry: 3000`; beyond it the client gets a 429 and simply retries later. |
+| `HEALTH_TOKEN` | — | Shared secret. When set, `/health` answers its capacity figures (open streams, limits, refusal counters) only to a request carrying it as `X-Health-Token`; everybody else gets the status and uptime alone. The site sends it from `SSE_HEALTH_TOKEN` in its `.env` — same value on both sides. Unset, the figures are public. |
+| `REVALIDATE_INTERVAL_MS` | `300000` | How often an open sync stream re-checks that its access still exists, so a revoked access is cut within that time. |
+| `HEARTBEAT_INTERVAL_MS` | `15000` | SSE heartbeat, which also renews a live edit session's presence key. |
+
+The Laravel side of the health check is `SSE_HEALTH_URL` (where the admin analytics page reads the relay's figures) and `SSE_HEALTH_TOKEN` (the same secret as the relay's `HEALTH_TOKEN`), both in the site's `.env`. Leave them empty and the analytics page simply shows no stream counters.
 
 ## Development
 
