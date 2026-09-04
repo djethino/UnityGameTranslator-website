@@ -1482,9 +1482,15 @@ class TranslationController extends Controller
 
             // Created under the title the world knows it by — and carrying the name the machine
             // that published it reads, which is what makes it findable from another machine.
+            //
+            // ⚠ **The same rule as an update, and it was missing here.** When the title comes from
+            // IGDB rather than from the caller, the declared name is a separate claim about the
+            // game — so it is held to the same test. Without it the FIRST publisher of a game chose
+            // its key freely while every later one was refused, and a key chosen badly cannot be
+            // written again ("never overwrite"), so the real product name was locked out for good.
             return Game::create([
                 'name' => $title,
-                'unity_name' => $gameName,
+                'unity_name' => $this->namesTheSameGame($gameName, $title) ? $gameName : null,
                 'unity_company' => $company,
                 'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
@@ -1578,7 +1584,22 @@ class TranslationController extends Controller
         $declared = $flatten($declared);
         $title = $flatten($title);
 
-        return $declared !== '' && $title !== '' && str_contains($title, $declared);
+        if ($declared === '' || $title === '' || !str_contains($title, $declared)) {
+            return false;
+        }
+
+        // 🔴 **"the", "of", "2" are substrings of half the catalogue.** Being contained in a title
+        // is not enough to be a form of it: those pass the test above, and since a key is never
+        // overwritten, taking one locks the real product name out of that game for good. No
+        // hijack — the search unions — but the game loses the feature.
+        //
+        // ⚠ Two conditions rather than one, because either alone is fooled. A length floor lets
+        // "game" through on a sixty-character title; a share alone lets "ab" through on "abc".
+        //
+        // The share is a QUARTER rather than a third: measured against real names, a third refuses
+        // legitimate ones. "LONESTAR" is 8 of 15, "Silksong" 8 of 20, "The Haunted Island" 16 of
+        // 28 — but "TrailsOfColdSteel4" is 18 of some sixty, and it is a real product name.
+        return mb_strlen($declared) >= 4 && mb_strlen($declared) * 4 >= mb_strlen($title);
     }
 
     /**

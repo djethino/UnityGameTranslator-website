@@ -240,6 +240,45 @@ class UnityNameSquattingTest extends TestCase
         $this->assertNull($second->fresh()->unity_name, 'the key belongs to the first that took it');
     }
 
+    public function test_the_first_publisher_of_a_game_does_not_choose_its_key_freely(): void
+    {
+        // 🔴 **The create path used to skip the rule the update path applies.** A game absent from
+        // the catalogue, resolved by its Steam id, was created with whatever name the upload
+        // declared — so the FIRST publisher chose the key and every later one was refused. And a
+        // key is never overwritten, so a bad one locks the real product name out for good.
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('findGame')->andReturn([
+                'name' => 'A Well Known Game',
+                'steam_id' => '901001',
+                'image_url' => null,
+            ]);
+        });
+
+        $this->publish(['steam_id' => '901001', 'game_name' => 'UnrelatedThing'])
+            ->assertSuccessful();
+
+        $created = Game::where('steam_id', '901001')->first();
+
+        $this->assertNotNull($created, 'the game is still created and the upload still lands');
+        $this->assertNull($created->unity_name, 'but not under a key unrelated to its title');
+    }
+
+    public function test_a_banal_substring_is_not_a_form_of_the_title(): void
+    {
+        // "the", "of", "2" are substrings of half the catalogue. Taking one is not a hijack — the
+        // search unions — but it locks the real product name out of that game for good.
+        $game = Game::create(['name' => 'Frog Detective: The Haunted Island', 'steam_id' => '902001']);
+
+        $this->publish(['steam_id' => '902001', 'game_name' => 'The'])->assertSuccessful();
+        $this->assertNull($game->fresh()->unity_name);
+
+        // And the real one still passes: 16 flattened characters of 28.
+        $this->publish(['steam_id' => '902001', 'game_name' => 'The Haunted Island'])
+            ->assertSuccessful();
+
+        $this->assertSame('The Haunted Island', $game->fresh()->unity_name);
+    }
+
     public function test_the_company_is_refused_when_it_is_too_long_for_the_column(): void
     {
         // It was read straight into a varchar(255) with no rule: in strict mode, a 500.

@@ -42,6 +42,23 @@
         </a>
     </div>
 
+    {{--
+        The one place a name a machine declared can be corrected. Every guard around unity_name
+        refuses a bad value at the door; none of them could repair one already stored.
+    --}}
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-400 text-sm">{{ __('nav.games') }}</p>
+                <p class="text-3xl font-bold text-yellow-400">{{ $totalGames }}</p>
+            </div>
+            <i class="fas fa-gamepad text-4xl text-yellow-400 opacity-50"></i>
+        </div>
+        <a href="{{ route('admin.games') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-4 inline-block">
+            {{ __('admin.manage_games') }} <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div class="flex items-center justify-between">
             <div>

@@ -298,6 +298,7 @@
     "admin.total_games": "إجمالي الألعاب",
     "admin.view_all": "عرض الكل",
     "admin.manage_users": "إدارة المستخدمين",
+    "admin.manage_games": "إدارة الألعاب",
     "admin.recent_reports": "البلاغات الأخيرة",
     "admin.reported_by": "أبلغ عنه :user",
     "admin.review": "مراجعة",

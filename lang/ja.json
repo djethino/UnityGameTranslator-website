@@ -298,6 +298,7 @@
     "admin.total_games": "総ゲーム数",
     "admin.view_all": "すべて表示",
     "admin.manage_users": "ユーザー管理",
+    "admin.manage_games": "ゲーム管理",
     "admin.recent_reports": "最近の報告",
     "admin.reported_by": ":userが報告",
     "admin.review": "確認",

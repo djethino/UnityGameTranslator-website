@@ -9,14 +9,6 @@ use Illuminate\Http\Request;
 
 class GameController extends Controller
 {
-    /**
-     * Escape LIKE wildcards to prevent SQL injection via wildcard abuse
-     */
-    private function escapeLike(string $value): string
-    {
-        return str_replace(['%', '_'], ['\\%', '\\_'], $value);
-    }
-
     public function index(Request $request)
     {
         // A game nobody has published a translation for has nothing to offer a page called

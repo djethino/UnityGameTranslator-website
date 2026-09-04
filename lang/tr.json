@@ -298,6 +298,7 @@
     "admin.total_games": "Toplam oyun",
     "admin.view_all": "Tümünü gör",
     "admin.manage_users": "Kullanıcıları yönet",
+    "admin.manage_games": "Oyunları yönet",
     "admin.recent_reports": "Son bildirimler",
     "admin.reported_by": ":user tarafından bildirildi",
     "admin.review": "İncele",

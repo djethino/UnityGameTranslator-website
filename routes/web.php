@@ -262,6 +262,17 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
         Route::get('/reports/{report}', [AdminController::class, 'showReport'])->name('reports.show');
         Route::post('/reports/{report}', [AdminController::class, 'handleReport'])->name('reports.handle');
+        // 🔴 **Somewhere to repair what a machine declared.** `unity_name` and `unity_company` are
+        // sent by whoever publishes, and they decide which game other machines resolve to. Every
+        // guard around them refuses a bad value at the door — and none of them could correct one
+        // already stored, so a key taken by mistake or on purpose was final short of raw SQL.
+        Route::get('/games', [AdminController::class, 'games'])->name('games');
+        // ⚠ `{game:id}`, not the slug the model binds by everywhere else: a slug follows the
+        // display name, and this screen exists to repair games whose naming is wrong. Every other
+        // admin route addresses its subject by id for the same reason.
+        Route::post('/games/{game:id}/names', [AdminController::class, 'updateGameNames'])
+            ->name('games.names');
+
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
         Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');

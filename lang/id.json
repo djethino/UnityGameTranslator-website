@@ -298,6 +298,7 @@
     "admin.total_games": "Total Game",
     "admin.view_all": "Lihat semua",
     "admin.manage_users": "Kelola pengguna",
+    "admin.manage_games": "Kelola game",
     "admin.recent_reports": "Laporan Terbaru",
     "admin.reported_by": "Dilaporkan oleh :user",
     "admin.review": "Tinjau",

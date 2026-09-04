@@ -298,6 +298,7 @@
     "admin.total_games": "Total jeux",
     "admin.view_all": "Voir tout",
     "admin.manage_users": "Gérer les utilisateurs",
+    "admin.manage_games": "Gérer les jeux",
     "admin.recent_reports": "Signalements récents",
     "admin.reported_by": "Signalé par :user",
     "admin.review": "Examiner",

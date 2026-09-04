@@ -32,6 +32,11 @@ class AdminController extends Controller
         $pendingReports = Report::where('status', 'pending')->count();
         $totalTranslations = Translation::count();
         $totalUsers = User::count();
+
+        // Counted whole, unlike the analytics figure below: this card leads to the screen where a
+        // game is REPAIRED, and a game with no translation yet is exactly one that may be waiting
+        // on a name nobody could correct.
+        $totalGames = Game::count();
         // ⚠ Bans only. Deleting an account bans it — that is how its API tokens are cut — so this
         // counted everybody who had ever left as somebody moderation had punished, and the figure
         // grew with departures rather than with abuse.
@@ -42,7 +47,7 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('pendingReports', 'totalTranslations', 'totalUsers', 'bannedUsers', 'recentReports'));
+        return view('admin.dashboard', compact('pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports'));
     }
 
     public function announcements()
@@ -183,6 +188,90 @@ class AdminController extends Controller
         $providers = User::whereNotNull('provider')->distinct()->orderBy('provider')->pluck('provider');
 
         return view('admin.users', compact('users', 'providers'));
+    }
+
+    /**
+     * The games, with the names machines resolve them by.
+     *
+     * 🔴 **Written because nothing could repair a declared name.** `unity_name` is sent by whoever
+     * publishes and decides which game other machines land on; every guard around it refuses a bad
+     * value at the door, and none could correct one already stored. A key taken by mistake — or on
+     * purpose — was final short of raw SQL, and "never overwrite" made it so by design.
+     *
+     * ⚠ Ordered by what is most likely to need looking at: games carrying no machine name at all
+     * come first, then the rest by name. A catalogue is read here to be corrected, not browsed.
+     */
+    public function games(Request $request)
+    {
+        $query = Game::withCount('translations');
+
+        if ($request->filled('q')) {
+            $search = $this->escapeLike($request->q);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('unity_name', 'like', '%' . $search . '%')
+                    ->orWhere('steam_id', 'like', '%' . $search . '%');
+            });
+        }
+
+        $games = $query
+            ->orderByRaw('unity_name IS NULL DESC')
+            ->orderBy('name')
+            ->paginate(30)
+            ->withQueryString();
+
+        return view('admin.games', compact('games'));
+    }
+
+    /**
+     * Corrects the pair a game is resolved by.
+     *
+     * ⚠ **Emptying is a real answer, and the main one.** A key taken wrongly must be removable so
+     * the next honest upload can record the right one — clearing it is what unlocks a game, since
+     * nothing overwrites a value that is there.
+     *
+     * ⚠ Refused when another game already answers to that name, exactly as an upload is: an admin
+     * correcting one game must not silently break another's lookups.
+     */
+    public function updateGameNames(Request $request, Game $game)
+    {
+        $request->validate([
+            'unity_name' => 'nullable|string|max:255',
+            'unity_company' => 'nullable|string|max:255',
+        ]);
+
+        $name = $request->filled('unity_name') ? trim($request->unity_name) : null;
+
+        if ($name !== null) {
+            $taken = Game::where('id', '!=', $game->id)
+                ->where(fn ($q) => $q->where('unity_name', $name)
+                                     ->orWhereRaw('LOWER(name) = ?', [strtolower($name)]))
+                ->first();
+
+            if ($taken) {
+                return back()->with('error',
+                    "\"{$name}\" is what {$taken->name} is already resolved by.");
+            }
+        }
+
+        $before = ['unity_name' => $game->unity_name, 'unity_company' => $game->unity_company];
+
+        $game->timestamps = false;
+        $game->unity_name = $name;
+        $game->unity_company = $request->filled('unity_company')
+            ? trim($request->unity_company)
+            : null;
+        $game->saveQuietly();
+
+        // What a machine resolves by is worth a trace: it decides where other people's uploads are
+        // filed, and a change here is invisible everywhere else.
+        AuditLog::log('game.names_updated', auth()->id(), 'game', $game->id, [
+            'before' => $before,
+            'after' => ['unity_name' => $game->unity_name, 'unity_company' => $game->unity_company],
+        ]);
+
+        return back()->with('success', "Updated what {$game->name} is resolved by.");
     }
 
     public function banUser(Request $request, User $user)

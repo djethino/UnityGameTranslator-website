@@ -298,6 +298,7 @@
     "admin.total_games": "游戏总数",
     "admin.view_all": "查看全部",
     "admin.manage_users": "用户管理",
+    "admin.manage_games": "游戏管理",
     "admin.recent_reports": "最近举报",
     "admin.reported_by": ":user 举报",
     "admin.review": "审核",

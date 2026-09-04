@@ -298,6 +298,7 @@
     "admin.total_games": "Totaal games",
     "admin.view_all": "Alles bekijken",
     "admin.manage_users": "Gebruikers beheren",
+    "admin.manage_games": "Games beheren",
     "admin.recent_reports": "Recente rapporten",
     "admin.reported_by": "Gerapporteerd door :user",
     "admin.review": "Beoordelen",

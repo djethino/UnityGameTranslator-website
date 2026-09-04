@@ -298,6 +298,7 @@
     "admin.total_games": "총 게임",
     "admin.view_all": "전체 보기",
     "admin.manage_users": "사용자 관리",
+    "admin.manage_games": "게임 관리",
     "admin.recent_reports": "최근 신고",
     "admin.reported_by": ":user님이 신고",
     "admin.review": "검토",

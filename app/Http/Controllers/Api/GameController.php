@@ -11,14 +11,6 @@ use Illuminate\Http\Request;
 class GameController extends Controller
 {
     /**
-     * Escape LIKE wildcards to prevent SQL injection via wildcard abuse
-     */
-    private function escapeLike(string $value): string
-    {
-        return str_replace(['%', '_'], ['\\%', '\\_'], $value);
-    }
-
-    /**
      * List/search games.
      *
      * GET /api/v1/games

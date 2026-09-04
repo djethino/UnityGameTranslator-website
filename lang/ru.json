@@ -298,6 +298,7 @@
     "admin.total_games": "Всего игр",
     "admin.view_all": "Показать все",
     "admin.manage_users": "Управление пользователями",
+    "admin.manage_games": "Управление играми",
     "admin.recent_reports": "Недавние жалобы",
     "admin.reported_by": "Жалоба от :user",
     "admin.review": "Рассмотреть",

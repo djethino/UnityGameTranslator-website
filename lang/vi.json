@@ -298,6 +298,7 @@
     "admin.total_games": "Tổng game",
     "admin.view_all": "Xem tất cả",
     "admin.manage_users": "Quản lý người dùng",
+    "admin.manage_games": "Quản lý game",
     "admin.recent_reports": "Báo cáo gần đây",
     "admin.reported_by": "Báo cáo bởi :user",
     "admin.review": "Xem xét",
