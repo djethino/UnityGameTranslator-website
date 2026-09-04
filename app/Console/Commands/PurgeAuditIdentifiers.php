@@ -36,14 +36,20 @@ class PurgeAuditIdentifiers extends Command
                             {--months=12 : How long an identifier is kept}
                             {--dry-run : Count what would be cleared, write nothing}';
 
-    protected $description = 'Clear IP addresses from audit log entries older than twelve months';
+    protected $description = 'Clear IP addresses and user agents from audit log entries older than twelve months';
 
     public function handle(): int
     {
         $months = max(1, (int) $this->option('months'));
         $cutoff = now()->subMonths($months);
 
-        $query = AuditLog::whereNotNull('ip_address')->where('created_at', '<', $cutoff);
+        // ⚠ Both identifiers, not only the address. The user agent — browser, system, versions —
+        // was written beside the IP on every line and never cleared, so a row kept for ever what the
+        // policy said was gone after a year. The command's name stays: it is what the schedule and
+        // the documentation call, and renaming it would silently stop the job.
+        $query = AuditLog::where(function ($q) {
+            $q->whereNotNull('ip_address')->orWhereNotNull('user_agent');
+        })->where('created_at', '<', $cutoff);
 
         if ($this->option('dry-run')) {
             $this->info("Would clear {$query->count()} identifier(s) older than {$cutoff->toDateString()}.");
@@ -54,7 +60,7 @@ class PurgeAuditIdentifiers extends Command
         // ⚠ update(), never delete(): the line is kept, only the identifier goes. And no touch() —
         // updated_at does not exist on this table, and the moment an event happened must never be
         // rewritten by the job that forgets who caused it.
-        $cleared = $query->update(['ip_address' => null]);
+        $cleared = $query->update(['ip_address' => null, 'user_agent' => null]);
 
         $this->info($cleared > 0
             ? "Cleared {$cleared} identifier(s) older than {$cutoff->toDateString()}."
