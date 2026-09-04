@@ -47,7 +47,13 @@ class LiveEditCapacity
             // to it through Redis and never over HTTP otherwise. Short timeout —
             // this runs inside an admin page render and inside a cron tick, and
             // a missing figure is merely a missing figure.
-            $response = Http::timeout(2)->get($healthUrl);
+            // The detailed figures are behind a shared secret when the relay has one configured
+            // (its HEALTH_TOKEN); without it the relay answers the public minimum and every field
+            // below stays null, which the page already reads as "not reported".
+            $token = config('edit_session.sse_health_token');
+            $response = Http::timeout(2)
+                ->withHeaders($token ? ['X-Health-Token' => $token] : [])
+                ->get($healthUrl);
             if ($response->successful()) {
                 $capacity['streams'] = $response->json('connections');
                 $capacity['streams_max'] = $response->json('max_connections');

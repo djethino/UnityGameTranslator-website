@@ -58,8 +58,30 @@ const MAX_CONNECTIONS = parseInt(process.env.MAX_CONNECTIONS, 10) || 1000;
 // multi-game setup, and shared NAT (campus, mobile carriers) made it worse.
 const PER_IP_LIMIT = parseInt(process.env.PER_IP_LIMIT, 10) || 30;
 
+// How many stream ATTEMPTS one address may make per minute — opened or refused, valid or not.
+//
+// 🔴 PER_IP_LIMIT above counts streams that are OPEN, and a stream is only counted once it is
+// open: for a sync stream that is after two calls to Laravel, for the others after a Redis
+// subscription. So a burst of a thousand requests with junk tokens was never refused by the
+// per-IP limit — none of them stayed open — and each one cost a Laravel round trip on the way
+// (Laravel answers 401 before its own throttle, and sees this relay's address, not the caller's).
+// This counter is incremented on arrival, before anything is spent.
+//
+// Sixty is taken from the client's own reconnect policy, not chosen: `retry: 3000` means a
+// stream that keeps dropping reconnects twenty times a minute, so a machine running three games
+// through a flapping network reaches sixty — and is answered 429, which the mod treats as a
+// temporary refusal and retries after its delay. Nothing is signed out, nothing is lost.
+const PER_IP_ATTEMPTS_PER_MINUTE = parseInt(process.env.PER_IP_ATTEMPTS_PER_MINUTE, 10) || 60;
+
 // Security: CORS — restrict to the main website origin
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://unitygametranslator.asymptomatikgames.com';
+
+// Who may read the detailed /health figures. Unset, the figures are public, as they always were —
+// and that is a regression this closes when the value is set on BOTH sides: here, and in the
+// site's SSE_HEALTH_TOKEN, which LiveEditCapacity sends as X-Health-Token. Capacity, per-IP limit
+// and refusal counts are exactly what somebody sizing a flood wants to know; the site's admin page
+// is the only reader that needs them.
+const HEALTH_TOKEN = process.env.HEALTH_TOKEN || null;
 
 const DEVICE_FLOW_TIMEOUT_MS = 15 * 60 * 1000;  // 15 min
 const SYNC_TIMEOUT_MS = 60 * 60 * 1000;          // 1 hour
@@ -123,7 +145,12 @@ let activeConnections = 0;
 let peakConnections = 0;
 let refusedAtCapacity = 0;
 let refusedPerIp = 0;
+let refusedAttempts = 0;
 const ipConnections = new Map(); // Track connections per IP
+
+// Attempts per IP in the current minute: { count, windowStartedAt }. Swept when a window is
+// found stale, so an address that stopped asking does not stay in memory.
+const ipAttempts = new Map();
 
 // Redis client for GET/SET operations (checking stored results)
 const redis = createRedisClient({ lazyConnect: true });
@@ -173,6 +200,37 @@ function checkRateLimit(req) {
         return 'Too many connections from this IP';
     }
     return null;
+}
+
+/**
+ * Count one attempt from this address; true when it is over the minute's allowance.
+ *
+ * ⚠ Before anything else is done for the request — see PER_IP_ATTEMPTS_PER_MINUTE. A refusal
+ * here costs the two lines it takes to say so.
+ */
+function overAttemptAllowance(req) {
+    const ip = getClientIp(req);
+    const now = Date.now();
+    let entry = ipAttempts.get(ip);
+
+    if (!entry || now - entry.windowStartedAt >= 60000) {
+        entry = { count: 0, windowStartedAt: now };
+        ipAttempts.set(ip, entry);
+
+        // Cheap housekeeping on the same beat: drop windows nobody has touched for a minute.
+        if (ipAttempts.size > 1000) {
+            for (const [other, stale] of ipAttempts) {
+                if (now - stale.windowStartedAt >= 60000) ipAttempts.delete(other);
+            }
+        }
+    }
+
+    entry.count++;
+    if (entry.count > PER_IP_ATTEMPTS_PER_MINUTE) {
+        refusedAttempts++;
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -267,20 +325,43 @@ async function fetchFromLaravel(path, bearerToken) {
 
 // ─── Route: Device Flow SSE ─────────────────────────────────────────────────
 
+/**
+ * Serve a result stored for a late-connecting client, once.
+ *
+ * 🔴 **The stored device result IS the access token, and it was served to whoever asked, for
+ * fifteen minutes.** Laravel writes it so a client whose stream was not yet open when the code
+ * was validated still gets its answer; nothing then removed it, so anyone holding the device
+ * code — it travels in the URL path, hence in every access log in front of this relay — could
+ * open the stream again and be handed the same token, until the key expired.
+ *
+ * Deleted once it has been written out, and only then: `res.end(callback)` fires when the answer
+ * has left this process, so a stream that drops BEFORE that point finds the key still there on
+ * reconnect, while one that received it cannot ask twice. Laravel now keeps such keys for two
+ * minutes instead of fifteen, which is what a reconnect needs and nothing more.
+ *
+ * @returns true when a result was served and the request is finished.
+ */
+async function serveStoredResultOnce(res, key, label) {
+    try {
+        const stored = await redis.get(key);
+        if (!stored) return false;
+
+        const parsed = JSON.parse(stored);
+        setupSSE(res);
+        emitEvent(res, 1, parsed.event, parsed.data);
+        res.end(() => {
+            redis.del(key).catch((e) => console.error(`[${label}] Redis DEL error:`, e.message));
+        });
+        return true;
+    } catch (e) {
+        console.error(`[${label}] Redis GET error:`, e.message);
+        return false;
+    }
+}
+
 async function handleDeviceFlow(req, res, deviceCode) {
     // Check if already authorized (late-connecting client)
-    try {
-        const stored = await redis.get(`sse:device:${deviceCode}:result`);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            setupSSE(res);
-            emitEvent(res, 1, parsed.event, parsed.data);
-            res.end();
-            return;
-        }
-    } catch (e) {
-        console.error('[DeviceFlow] Redis GET error:', e.message);
-    }
+    if (await serveStoredResultOnce(res, `sse:device:${deviceCode}:result`, 'DeviceFlow')) return;
 
     // Subscribe to Redis channel
     const sub = createSubscriber();
@@ -313,7 +394,11 @@ async function handleDeviceFlow(req, res, deviceCode) {
         try {
             const parsed = JSON.parse(message);
             emitEvent(res, ++eventId, parsed.event, parsed.data);
-            res.end();
+            // Delivered live, so the copy Laravel stored for a late client has done its job —
+            // see serveStoredResultOnce for why it must not outlive that.
+            res.end(() => {
+                redis.del(`sse:device:${deviceCode}:result`).catch(() => {});
+            });
             cleanup();
         } catch (e) {
             console.error('[DeviceFlow] Message parse error:', e.message);
@@ -351,6 +436,15 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!bearerToken) {
         emitError(res, 401, 'Authorization required');
+        return;
+    }
+
+    // 🔴 Every access the site issues starts with `ugt_`. Anything else cannot be valid, so it is
+    // refused here for the cost of a string comparison — where it used to cost a round trip to
+    // Laravel, which answers 401 before its own throttle and sees this relay's address rather than
+    // the caller's, so a flood of junk tokens was never slowed by anything.
+    if (!bearerToken.startsWith('ugt_')) {
+        emitError(res, 401, 'Invalid or expired token');
         return;
     }
 
@@ -520,19 +614,9 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
 // ─── Route: Merge SSE ────────────────────────────────────────────────────────
 
 async function handleMerge(req, res, token) {
-    // Check if already completed (late-connecting client)
-    try {
-        const stored = await redis.get(`sse:merge:${token}:result`);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            setupSSE(res);
-            emitEvent(res, 1, parsed.event, parsed.data);
-            res.end();
-            return;
-        }
-    } catch (e) {
-        console.error('[Merge] Redis GET error:', e.message);
-    }
+    // Check if already completed (late-connecting client). Same single delivery as the device
+    // flow: a merge result is one answer to one client, not a thing to be re-read.
+    if (await serveStoredResultOnce(res, `sse:merge:${token}:result`, 'Merge')) return;
 
     // Subscribe to Redis channel
     const sub = createSubscriber();
@@ -565,7 +649,9 @@ async function handleMerge(req, res, token) {
         try {
             const parsed = JSON.parse(message);
             emitEvent(res, ++eventId, parsed.event, parsed.data);
-            res.end();
+            res.end(() => {
+                redis.del(`sse:merge:${token}:result`).catch(() => {});
+            });
             cleanup();
         } catch (e) {
             console.error('[Merge] Message parse error:', e.message);
@@ -689,7 +775,16 @@ async function handleEditSession(req, res, modKey) {
 // ─── HTTP Server ─────────────────────────────────────────────────────────────
 
 const server = http.createServer(async (req, res) => {
-    const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+    // ⚠ Inside the handler, a throw here is an unhandled rejection: a request line that `URL`
+    // refuses would have taken the process down with it, and every open stream with the process.
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+    } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Bad request' }));
+        return;
+    }
     const pathname = parsedUrl.pathname;
     const method = req.method;
 
@@ -712,27 +807,49 @@ const server = http.createServer(async (req, res) => {
     // Counts only, nothing about who is connected.
     if (method === 'GET' && (pathname === '/health' || pathname === '/')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            status: 'ok',
-            connections: activeConnections,
-            max_connections: MAX_CONNECTIONS,
-            // Since this process started — see the declarations above for why
-            // the instant count alone cannot answer "how high does it go?"
-            peak_connections: peakConnections,
-            refused_at_capacity: refusedAtCapacity,
-            refused_per_ip: refusedPerIp,
-            per_ip_limit: PER_IP_LIMIT,
 
-            // 🔴 **"Did my restart take?" had no answer.** Deploying this relay means touching
-            // tmp/restart.txt and hoping: nothing it served said which code it was running, so a
-            // process that never came back looked exactly like one that did.
-            //
-            // Two answers, and the second is the sharper one: a short uptime says it restarted,
-            // and `revalidate_interval_s` EXISTING AT ALL says the running code is new enough to
-            // re-check an open stream's access. A relay from before that answers without the field.
+        // What anybody may read: that it runs, and which code it runs.
+        //
+        // 🔴 **"Did my restart take?" had no answer.** Deploying this relay means touching
+        // tmp/restart.txt and hoping: nothing it served said which code it was running, so a
+        // process that never came back looked exactly like one that did.
+        //
+        // Two answers, and the second is the sharper one: a short uptime says it restarted,
+        // and `revalidate_interval_s` EXISTING AT ALL says the running code is new enough to
+        // re-check an open stream's access. A relay from before that answers without the field.
+        const health = {
+            status: 'ok',
             uptime_s: Math.round(process.uptime()),
             revalidate_interval_s: Math.round(REVALIDATE_INTERVAL_MS / 1000),
-        }));
+        };
+
+        // What only the site's admin page may read — see HEALTH_TOKEN. Served to everybody while
+        // no token is configured, so a relay deployed ahead of its configuration loses nothing.
+        const trusted = HEALTH_TOKEN === null || req.headers['x-health-token'] === HEALTH_TOKEN;
+        if (trusted) {
+            Object.assign(health, {
+                connections: activeConnections,
+                max_connections: MAX_CONNECTIONS,
+                // Since this process started — see the declarations above for why
+                // the instant count alone cannot answer "how high does it go?"
+                peak_connections: peakConnections,
+                refused_at_capacity: refusedAtCapacity,
+                refused_per_ip: refusedPerIp,
+                refused_attempts: refusedAttempts,
+                per_ip_limit: PER_IP_LIMIT,
+                per_ip_attempts_per_minute: PER_IP_ATTEMPTS_PER_MINUTE,
+            });
+        }
+
+        res.end(JSON.stringify(health));
+        return;
+    }
+
+    // Counted on arrival, before the concurrency check and before anything is spent on the
+    // request — see PER_IP_ATTEMPTS_PER_MINUTE. A 429 is retryable for every client we ship.
+    if (overAttemptAllowance(req)) {
+        setCorsHeaders(res);
+        emitError(res, 429, 'Too many attempts from this IP');
         return;
     }
 
@@ -814,8 +931,15 @@ async function start() {
         // reached the wrong thing is this file's oldest failure mode. An open stream's access is
         // re-checked on this rhythm, and there is no other way to know which one it took.
         console.log(`[SSE Server] Access re-checked every ${Math.round(REVALIDATE_INTERVAL_MS / 1000)}s on an open sync stream`);
+        console.log(`[SSE Server] Attempts: ${PER_IP_ATTEMPTS_PER_MINUTE}/min per IP; /health detail ${HEALTH_TOKEN ? 'behind X-Health-Token' : 'PUBLIC (set HEALTH_TOKEN)'}`);
     });
 }
+
+// A promise nobody caught used to end the process — and every open stream with it. Said, and
+// survived: the request that caused it has already been answered or dropped by its own path.
+process.on('unhandledRejection', (reason) => {
+    console.error('[SSE Server] Unhandled rejection:', reason instanceof Error ? reason.message : reason);
+});
 
 start().catch((err) => {
     console.error('[SSE Server] Fatal startup error:', err);

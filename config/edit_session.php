@@ -33,4 +33,12 @@ return [
 
     'sse_health_url' => env('SSE_HEALTH_URL'),
 
+    /*
+    | The secret the relay expects in X-Health-Token before it answers with its capacity, its
+    | limits and its refusal counts — figures that only this site's admin page needs and that
+    | somebody sizing a flood would like to have. Same value as the relay's HEALTH_TOKEN. Leave
+    | empty and the relay answers the public minimum: the counters above simply stay unknown.
+    */
+    'sse_health_token' => env('SSE_HEALTH_TOKEN'),
+
 ];

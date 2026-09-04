@@ -27,11 +27,23 @@ class SsePublisher
     private const REDIS_CONNECTION = 'sse';
 
     /**
-     * TTL for edge-case result storage (seconds).
-     * Covers the case where user validates the device code / merge
-     * before the mod's SSE stream connects.
+     * TTL for the latest live-edit event (seconds).
+     *
+     * Replayed to the mod on every reconnect for the life of the session — it is the mod's way of
+     * catching up on the save it missed — so it has to outlive a reconnect by a wide margin.
      */
     private const RESULT_TTL = 900; // 15 minutes
+
+    /**
+     * TTL for a result that is delivered ONCE: a device authorisation, a merge outcome (seconds).
+     *
+     * 🔴 The device result IS the access token. It was kept fifteen minutes for a client whose
+     * stream was not yet open when the code was validated, and the relay served it to whoever
+     * asked for as long as it lived — the device code travels in the URL path, so in every access
+     * log in front of the relay. The relay now deletes it once delivered; this bounds how long it
+     * waits for a client that never came. Two minutes covers a reconnect (`retry: 3000`) with room.
+     */
+    private const SINGLE_DELIVERY_TTL = 120;
 
     /**
      * Signal that a device code was authorized.
@@ -54,7 +66,7 @@ class SsePublisher
         self::safePublish($channel, $message);
 
         // Store result for late-connecting clients (edge case: user validates before SSE connects)
-        self::safeSetex("sse:device:{$deviceCode}:result", self::RESULT_TTL, $message);
+        self::safeSetex("sse:device:{$deviceCode}:result", self::SINGLE_DELIVERY_TTL, $message);
     }
 
     /**
@@ -126,8 +138,8 @@ class SsePublisher
 
         self::safePublish($channel, $message);
 
-        // Store result for late-connecting clients
-        self::safeSetex("sse:merge:{$token}:result", self::RESULT_TTL, $message);
+        // Store result for late-connecting clients — delivered once, like the device result.
+        self::safeSetex("sse:merge:{$token}:result", self::SINGLE_DELIVERY_TTL, $message);
     }
 
     /**
