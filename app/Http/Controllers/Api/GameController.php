@@ -33,9 +33,9 @@ class GameController extends Controller
         $query = Game::withCount('translations')
             ->whereHas('translations');
 
-        // Search by Steam ID (exact match)
+        // Search by Steam ID (exact match) — a demo's own id reaches the game it is a demo of.
         if ($request->filled('steam_id')) {
-            $query->where('steam_id', $request->steam_id);
+            $query->answeringToSteamId($request->steam_id);
         }
         // Search by name
         elseif ($request->filled('q')) {

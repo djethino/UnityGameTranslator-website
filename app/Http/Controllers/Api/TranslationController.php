@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AnalyticsEvent;
 use App\Models\AuditLog;
 use App\Models\Game;
+use App\Models\GameIdentifier;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Models\User;
@@ -95,9 +96,9 @@ class TranslationController extends Controller
         $gameIds = null;
         $gamesTotal = null;
 
-        // Filter by Steam ID (exact match)
+        // Filter by Steam ID (exact match) — a demo's own id reaches the game it is a demo of.
         if ($request->filled('steam_id')) {
-            $matching = Game::where('steam_id', $request->steam_id);
+            $matching = Game::answeringToSteamId($request->steam_id);
         }
         // Filter by game slug or ID
         elseif ($request->filled('game')) {
@@ -328,9 +329,27 @@ class TranslationController extends Controller
         $steamIds = $asked->pluck('steam_id')->filter()->unique()->values();
         $names = $asked->pluck('name')->filter()->unique()->values();
 
-        $bySteam = $steamIds->isEmpty()
-            ? collect()
-            : Game::whereIn('steam_id', $steamIds)->get()->groupBy('steam_id');
+        // 🔴 **Keyed on the id that was ASKED, not on the one the card carries.** A demo resolves to
+        // the full game's card, whose `steam_id` is a different string — grouping on the column
+        // would file it under an id nobody asked about, and the entry would come back empty while
+        // the game was right there. So each asked id is matched to whatever answers to it.
+        $bySteam = collect();
+
+        if ($steamIds->isNotEmpty()) {
+            $found = Game::answeringToSteamId($steamIds->all())->with('identifiers')->get();
+
+            foreach ($steamIds as $askedId) {
+                $answering = $found->filter(function (Game $g) use ($askedId) {
+                    return (string) $g->steam_id === (string) $askedId
+                        || $g->identifiers->contains(fn ($i) => $i->source === \App\Models\GameIdentifier::Steam
+                            && (string) $i->value === (string) $askedId);
+                })->values();
+
+                if ($answering->isNotEmpty()) {
+                    $bySteam->put($askedId, $answering);
+                }
+            }
+        }
 
         // Exact first, and it is the case that matters: a manager sends the name it read off the
         // game folder, and an indexed equality answers it. The fuzzy pass below runs only for
@@ -1406,9 +1425,10 @@ class TranslationController extends Controller
         $gameName = $request->filled('game_name') ? $request->game_name : null;
         $company = $request->filled('game_company') ? $request->game_company : null;
 
-        // Try by Steam ID first
+        // Try by Steam ID first — the card's own id, or an id recorded as also being this game
+        // (a demo's). See Game::scopeAnsweringToSteamId.
         if ($steamId) {
-            $game = Game::where('steam_id', $steamId)->first();
+            $game = Game::answeringToSteamId($steamId)->first();
             if ($game) {
                 $this->rememberUnityNames($game, $gameName, $company);
                 return $game;
@@ -1422,10 +1442,7 @@ class TranslationController extends Controller
         if ($gameName) {
             $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
             if ($game) {
-                // Update steam_id if we have it now
-                if ($steamId && !$game->steam_id) {
-                    $game->update(['steam_id' => $steamId]);
-                }
+                $this->attachSteamId($game, $steamId);
                 $this->rememberUnityNames($game, $gameName, $company);
                 return $game;
             }
@@ -1435,9 +1452,7 @@ class TranslationController extends Controller
         if ($gameName) {
             $game = Game::where('unity_name', $gameName)->first();
             if ($game) {
-                if ($steamId && !$game->steam_id) {
-                    $game->update(['steam_id' => $steamId]);
-                }
+                $this->attachSteamId($game, $steamId);
                 $this->rememberUnityNames($game, $gameName, $company);
                 return $game;
             }
@@ -1464,7 +1479,7 @@ class TranslationController extends Controller
             // ⚠ Searched on what the resolution ANSWERED, not on what the caller sent — that is
             // the whole point of having asked.
             $known = Game::query()
-                ->when($resolvedSteamId, fn ($q) => $q->where('steam_id', $resolvedSteamId))
+                ->when($resolvedSteamId, fn ($q) => $q->answeringToSteamId($resolvedSteamId))
                 ->when(!$resolvedSteamId, fn ($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($title)]))
                 ->first();
 
@@ -1476,6 +1491,7 @@ class TranslationController extends Controller
                 }
 
                 $this->rememberUnityNames($known, $gameName, $company);
+                $this->rememberDemoId($known, $externalGame);
 
                 return $known;
             }
@@ -1488,13 +1504,17 @@ class TranslationController extends Controller
             // game — so it is held to the same test. Without it the FIRST publisher of a game chose
             // its key freely while every later one was refused, and a key chosen badly cannot be
             // written again ("never overwrite"), so the real product name was locked out for good.
-            return Game::create([
+            $created = Game::create([
                 'name' => $title,
                 'unity_name' => \App\Support\GameNaming::isFormOfTitle($gameName, $title) ? $gameName : null,
                 'unity_company' => $company,
                 'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
             ]);
+
+            $this->rememberDemoId($created, $externalGame);
+
+            return $created;
         }
 
         // Fallback: Create basic game entry without external data. Here the two names are the same
@@ -1506,6 +1526,60 @@ class TranslationController extends Controller
             'unity_company' => $company,
             'steam_id' => $steamId,
         ]);
+    }
+
+    /**
+     * Gives a card the Steam id it was created without — as the id of a game, never of a demo.
+     *
+     * 🔴 **The last place an identity was written without being checked.** A card created from a
+     * copy that has no Steam id (GOG, Epic, a disc) gets one from the first upload that carries one
+     * — and if that upload came from the DEMO, the card's main id became the demo's. Every later
+     * player of the full game then resolved nothing, and the card they were meant to find was
+     * sitting there under an id that is not the game's.
+     *
+     * ⚠ **One store call, and only here**: the condition is a card with no id at all, so it can
+     * happen once per card and never again. If Steam does not answer, the id is written as sent —
+     * the behaviour that shipped — rather than the upload being refused for a detail.
+     *
+     * ⚠ Filling a blank only, exactly as before: an id already recorded is never moved.
+     */
+    private function attachSteamId(Game $game, ?string $steamId): void
+    {
+        if (!$steamId || $game->steam_id) {
+            return;
+        }
+
+        $store = app(GameSearchService::class)->getGameFromSteam($steamId);
+        $demoId = $store['demo_steam_id'] ?? null;
+
+        if ($demoId && !empty($store['steam_id'])) {
+            $game->update(['steam_id' => $store['steam_id']]);
+            GameIdentifier::remember($game, GameIdentifier::Steam, $demoId, GameIdentifier::BecauseDemo);
+
+            return;
+        }
+
+        $game->update(['steam_id' => $steamId]);
+    }
+
+    /**
+     * Records the demo's own app id on the game it is a demo of.
+     *
+     * 🔴 **So the store is asked once, not once per player.** The resolution above only reaches the
+     * network when nothing local matched; without this, every player on that demo would take the
+     * same two round-trips to Steam to reach the same card. With it, the second one resolves in the
+     * database — which is also what makes the card reachable when Steam is down.
+     *
+     * ⚠ The write refuses on its own if that id belongs elsewhere (App\Models\GameIdentifier);
+     * there is nothing to decide here.
+     */
+    private function rememberDemoId(Game $game, array $externalGame): void
+    {
+        $demoId = $externalGame['demo_steam_id'] ?? null;
+
+        if ($demoId) {
+            GameIdentifier::remember($game, GameIdentifier::Steam, $demoId, GameIdentifier::BecauseDemo);
+        }
     }
 
     /**

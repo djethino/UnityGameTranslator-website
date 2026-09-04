@@ -40,7 +40,7 @@ class GameSearchService
         // 2. Search by Steam ID if provided
         if ($steamId) {
             // First check if we have it locally
-            $localBySteam = Game::where('steam_id', $steamId)
+            $localBySteam = Game::answeringToSteamId($steamId)
                 ->withCount('translations')
                 ->first();
             if ($localBySteam) {
@@ -362,8 +362,8 @@ class GameSearchService
      */
     public function findBySteamId(string $steamId): ?array
     {
-        // Check local database first
-        $localGame = Game::where('steam_id', $steamId)->first();
+        // Check local database first — including an id recorded as also being this game (a demo's).
+        $localGame = Game::answeringToSteamId($steamId)->first();
         if ($localGame) {
             return [
                 'id' => $localGame->igdb_id ?? $localGame->rawg_id ?? $localGame->id,
@@ -381,8 +381,58 @@ class GameSearchService
 
     /**
      * Get game details from Steam by Steam App ID
+     *
+     * 🔴 **A demo answers as the game it is a demo of.** Steam publishes the link itself — an app of
+     * `type: "demo"` carries `fullgame: {appid, name}` — so a demo needs no guessing from titles.
+     * Without this, a player on a demo resolved nothing, this method answered with the demo, and a
+     * SECOND card was created for the same text: same strings, same translation work, two places.
+     *
+     * ⚠ The app id that was asked for comes back as `demo_steam_id`, so whoever writes the card can
+     * record it (App\Models\GameIdentifier) and the next player on that demo resolves it locally,
+     * without asking Steam again.
+     *
+     * ⚠ **One redirection, never a chain.** A full game does not carry `fullgame`; following it
+     * twice could only ever be a loop.
      */
     public function getGameFromSteam(string $steamId): ?array
+    {
+        $game = $this->askSteam($steamId);
+
+        if ($game === null) {
+            return null;
+        }
+
+        $fullGameId = ($game['type'] ?? null) === 'demo'
+            ? (string) ($game['fullgame']['appid'] ?? '')
+            : '';
+
+        if ($fullGameId !== '' && $fullGameId !== $steamId) {
+            $full = $this->askSteam($fullGameId);
+
+            return [
+                // ⚠ If Steam does not answer for the full game (it is delisted, or the store is
+                // down), `fullgame` still carried its name — enough to resolve the right card
+                // rather than fall back to creating the demo as a game of its own.
+                'name' => $full['name'] ?? ($game['fullgame']['name'] ?? null),
+                'steam_id' => $fullGameId,
+                'image_url' => $full['header_image'] ?? null,
+                'source' => 'steam',
+                'demo_steam_id' => $steamId,
+            ];
+        }
+
+        return [
+            'name' => $game['name'] ?? null,
+            'steam_id' => $steamId,
+            'image_url' => $game['header_image'] ?? null,
+            'source' => 'steam',
+        ];
+    }
+
+    /**
+     * What the store says about one app id, or null.
+     */
+    private function askSteam(string $steamId): ?array
     {
         try {
             $response = Http::timeout(5)->get('https://store.steampowered.com/api/appdetails', [
@@ -401,14 +451,7 @@ class GameSearchService
                 return null;
             }
 
-            $game = $data[$steamId]['data'];
-
-            return [
-                'name' => $game['name'] ?? null,
-                'steam_id' => $steamId,
-                'image_url' => $game['header_image'] ?? null,
-                'source' => 'steam',
-            ];
+            return $data[$steamId]['data'];
 
         } catch (\Exception $e) {
             Log::warning('Steam API error', ['error' => $e->getMessage()]);

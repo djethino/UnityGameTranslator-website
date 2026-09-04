@@ -65,6 +65,48 @@ class Game extends Model
         return $this->hasMany(Translation::class);
     }
 
+    /**
+     * The other store ids this same game answers to — see App\Models\GameIdentifier.
+     */
+    public function identifiers()
+    {
+        return $this->hasMany(GameIdentifier::class);
+    }
+
+    /**
+     * Games reachable by these Steam app ids — the card's own id, or an id recorded for it.
+     *
+     * 🔴 **One scope, because there are six places that resolve by app id** (`translations` search,
+     * the batch, the upload path, the two game listings and GameSearchService). Written out at each
+     * of them, this rule would be six chances for the next one to forget the alias — which is
+     * exactly what five copies of the LIKE escaping cost.
+     *
+     * ⚠ **`steam_id` stays first and stays untouched.** The alias only ever ADDS what used to
+     * resolve to nothing: with an empty table this scope selects precisely what
+     * `whereIn('steam_id', …)` selected before it, which is what makes it safe to put on paths
+     * that already work.
+     *
+     * ⚠ A sub-select rather than `whereHas`: one plan, and the id list is already indexed by
+     * `(source, value)`.
+     */
+    public function scopeAnsweringToSteamId($query, string|array $ids)
+    {
+        $ids = array_values(array_filter((array) $ids, fn ($id) => $id !== null && $id !== ''));
+
+        if (empty($ids)) {
+            // Asked about nothing, answer nothing — never "everything".
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($q) use ($ids) {
+            $q->whereIn('steam_id', $ids)
+                ->orWhereIn('id', GameIdentifier::query()
+                    ->where('source', GameIdentifier::Steam)
+                    ->whereIn('value', $ids)
+                    ->select('game_id'));
+        });
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';
