@@ -115,13 +115,13 @@ class RefreshCatalog extends Command
             return ['ok' => false, 'message' => 'malformed — kept the local copy'];
         }
 
-        if ($shrunk = $this->shrinkage($name, $text)) {
-            Log::warning('Catalogue refresh: refused a payload that lost entries', [
+        if ($wrong = $this->outOfShape($name, $text)) {
+            Log::warning('Catalogue refresh: refused a payload out of shape', [
                 'catalogue' => $name,
-                'detail' => $shrunk,
+                'detail' => $wrong,
             ]);
 
-            return ['ok' => false, 'message' => "{$shrunk} — kept the local copy"];
+            return ['ok' => false, 'message' => "{$wrong} — kept the local copy"];
         }
 
         $target = $directory . DIRECTORY_SEPARATOR . "{$name}.json";
@@ -150,13 +150,33 @@ class RefreshCatalog extends Command
     }
 
     /**
-     * Whether the incoming document holds dramatically fewer entries than the one in use.
+     * Whether the incoming document is out of shape, measured against the COMMITTED copy.
      *
-     * A catalogue loses an entry occasionally — a provider drops a language, a loader is retired —
-     * so shrinking is not by itself wrong. Losing a third of it at once is not a fact changing, it
-     * is a file that got truncated somewhere between there and here.
+     * 🔴 **The yardstick is the copy that travels with the code, never the copy fetched last.**
+     * This used to compare the incoming file to whatever was already in storage/, and only in one
+     * direction: a file that had lost a third of its entries was refused, a file that had gained
+     * five times as many was accepted. Accepted, it became the yardstick — and from then on the
+     * real catalogue, arriving at every refresh, was "too small" against it and refused for good.
+     * Nothing said so, and nothing a deployment does clears storage/. A stale schema was let in
+     * the same way: a `loaders.json` two schemas old was served over the committed one for weeks.
+     *
+     * The committed copy is refreshed by `sync-common.ps1` at every release, so it is never far
+     * from the truth, and it cannot be moved by anything fetched. Against it, four questions:
+     *
+     *  · every root key it carries is still there;
+     *  · its `schema`, when it has one, has not gone backwards;
+     *  · the entry count is neither a third short nor three times over — a catalogue loses an
+     *    entry now and then and gains a few between releases, never that;
+     *  · the file is not four times its size — the same bound, on the bytes an entry can hide in.
+     *
+     * The ratios are relative to a reference that moves with every release, which is what keeps
+     * them from going stale as the catalogues grow.
+     *
+     * ⚠ **The remedy, if a bad copy ever does get in**: delete `storage/app/catalog/<name>.json` on
+     * the server. Every reader falls back to the committed copy at once, and the next refresh
+     * starts over from it.
      */
-    private function shrinkage(string $name, string $incoming): ?string
+    private function outOfShape(string $name, string $incoming): ?string
     {
         // ⚠ An unlisted document threw here rather than being refused — a `match` with no default
         // on a list that grows. `flags` was the first to arrive after this was written, and the
@@ -168,19 +188,42 @@ class RefreshCatalog extends Command
             'flags' => 'flags',
         };
 
-        $new = count(json_decode($incoming, true)[$key] ?? []);
+        $committedPath = CatalogStore::committedPath($name);
+        $committedText = is_readable($committedPath) ? (string) @file_get_contents($committedPath) : '';
+        $committed = json_decode($committedText, true);
 
-        try {
-            $current = count(CatalogStore::document($name)[$key] ?? []);
-        } catch (\Throwable) {
-            // Nothing readable locally: anything parseable is an improvement.
+        if (!is_array($committed) || $committed === []) {
+            // No reference to measure against: anything parseable is an improvement on nothing.
             return null;
         }
 
-        if ($current === 0 || $new >= $current * 0.7) {
-            return null;
+        $new = json_decode($incoming, true);
+
+        foreach (array_keys($committed) as $rootKey) {
+            if (!array_key_exists($rootKey, $new)) {
+                return "missing '{$rootKey}', which the committed copy carries";
+            }
         }
 
-        return "only {$new} entries against {$current}";
+        if (isset($committed['schema']) && (int) ($new['schema'] ?? 0) < (int) $committed['schema']) {
+            return "schema {$new['schema']} is older than the committed schema {$committed['schema']}";
+        }
+
+        $reference = count($committed[$key] ?? []);
+        $entries = count($new[$key] ?? []);
+
+        if ($reference > 0 && $entries < $reference * 0.7) {
+            return "only {$entries} entries against {$reference} in the committed copy";
+        }
+
+        if ($reference > 0 && $entries > $reference * 3) {
+            return "{$entries} entries against {$reference} in the committed copy";
+        }
+
+        if (strlen($incoming) > strlen($committedText) * 4) {
+            return strlen($incoming) . ' bytes against ' . strlen($committedText) . ' in the committed copy';
+        }
+
+        return null;
     }
 }
