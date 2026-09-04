@@ -37,6 +37,63 @@
                     <i class="fas fa-laptop mr-1"></i> {{ __('connections.page_title') }}
                 </a>
             </p>
+        @elseif(auth()->check() && $pending)
+            {{-- 🔴 The second step: what this code stands for, before anything is linked. A person
+                 handed a code by somebody else sees a game they do not own, a program they are not
+                 in, or a code created long before they started — and has a way out that is not
+                 the Link button. Every fact shown is what the program declared when it asked for
+                 the code; nothing is guessed. --}}
+            @php
+                $program = match ($pending->client_kind) {
+                    'mod' => __('connections.client_mod'),
+                    'manager' => __('connections.client_manager'),
+                    'other' => __('connections.client_other'),
+                    default => __('connections.client_unknown'),
+                };
+                $minutes = max(1, (int) $pending->created_at->diffInMinutes(now()));
+            @endphp
+
+            <div class="text-left bg-gray-900/60 border border-gray-700 rounded-lg p-4 mb-4">
+                <p class="text-sm text-gray-400 mb-3">{{ __('link.confirm_title') }}</p>
+                <dl class="space-y-2 text-sm">
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-gray-400">{{ __('link.confirm_program') }}</dt>
+                        <dd class="text-gray-100 text-right">
+                            <i class="fas {{ $pending->client_kind === 'manager' ? 'fa-toolbox' : ($pending->client_kind === 'mod' ? 'fa-gamepad' : 'fa-circle-question') }} mr-1 text-gray-500"></i>
+                            {{ $program }}@if($pending->client_version) {{ $pending->client_version }}@endif
+                        </dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-gray-400">{{ __('link.confirm_game') }}</dt>
+                        <dd class="text-gray-100 text-right">
+                            @if($pending->game_name)
+                                {{ $pending->game_name }}
+                            @else
+                                <span class="text-gray-400">{{ __('connections.game_not_recorded') }}</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div class="flex justify-end">
+                        <dd class="text-gray-400">{{ __('link.confirm_created', ['minutes' => $minutes]) }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <p class="text-xs text-amber-200/90 mb-6 text-left">{{ __('link.confirm_warning') }}</p>
+
+            <form method="POST" action="{{ route('link.validate') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="code" value="{{ $pending->user_code }}">
+                <input type="hidden" name="confirm" value="1">
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-link mr-2"></i> {{ __('link.submit') }}
+                </button>
+            </form>
+            <p class="mt-3">
+                <a href="{{ route('link', ['cancel' => 1]) }}" class="text-gray-400 hover:text-white text-sm">
+                    {{ __('common.cancel') }}
+                </a>
+            </p>
         @else
             @auth
                 <form method="POST" action="{{ route('link.validate') }}" class="space-y-6">
@@ -60,6 +117,10 @@
                         @error('code')
                             <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                         @enderror
+                        @if($expired ?? false)
+                            {{-- The code ran out while its details were on screen. --}}
+                            <p class="mt-2 text-sm text-red-400">{{ __('link.invalid_code') }}</p>
+                        @endif
                         {{-- 🔴 At the field, because the field is the attack: a code arrives by
                              message with a reason to type it, and typing it hands an access to
                              whoever sent it. Said here, where the hand is, not in a footer. --}}

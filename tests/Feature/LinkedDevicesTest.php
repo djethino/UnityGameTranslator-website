@@ -51,8 +51,15 @@ class LinkedDevicesTest extends TestCase
         // 🔴 assertSessionHasNoErrors, not assertRedirect alone: a link that fails validation or a
         // code that is not found redirects too, so the weaker assertion passes while nothing is
         // created — and every count downstream is then wrong for a reason nothing names.
+        // Two steps, as the page now does them: the code first, which only shows what it stands
+        // for, then the same code confirmed — the POST that actually links.
         $this->actingAs($user)->post('/link', [
             'code' => $init->json('user_code'),
+        ])->assertSessionHasNoErrors()->assertRedirect(route('link'));
+
+        $this->actingAs($user)->post('/link', [
+            'code' => $init->json('user_code'),
+            'confirm' => 1,
         ])->assertSessionHasNoErrors()->assertRedirect();
 
         // ⚠ The link screen no longer asks for a name, so a test that wants one names it where a
@@ -871,8 +878,15 @@ class LinkedDevicesTest extends TestCase
         $init = $this->withHeaders(['User-Agent' => 'UnityGameTranslator/0.12.1 (BepInEx5)'])
             ->postJson('/api/v1/auth/device', ['game_id' => '111111', 'game_name' => 'A Game']);
 
+        // Both steps, with the injected name on each: neither reads it.
         $this->actingAs($user)->post('/link', [
             'code' => $init->json('user_code'),
+            'device_label' => 'Injected',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('link'));
+
+        $this->actingAs($user)->post('/link', [
+            'code' => $init->json('user_code'),
+            'confirm' => 1,
             'device_label' => 'Injected',
         ])->assertSessionHasNoErrors()->assertRedirect();
 

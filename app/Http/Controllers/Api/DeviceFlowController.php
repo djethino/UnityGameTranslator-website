@@ -98,31 +98,71 @@ class DeviceFlowController extends Controller
     /**
      * Show the link page where users enter the code.
      */
-    public function showLinkPage()
+    public function showLinkPage(Request $request)
     {
-        // ⚠ Nothing to prepare any more. This page used to offer the names already in use, for a
-        // field that asked somebody to name their machine before linking it — see the view for why
-        // that went away, and where naming lives now.
-        return view('auth.link');
+        // ⚠ Nothing to prepare for the form itself any more. This page used to offer the names
+        // already in use, for a field that asked somebody to name their machine before linking it
+        // — see the view for why that went away, and where naming lives now.
+
+        // The code entered a moment ago, waiting to be confirmed — see validateCode for the two
+        // steps. Cancelled, or expired while the person was reading, and the form comes back.
+        if ($request->boolean('cancel')) {
+            session()->forget('link.pending');
+        }
+
+        $pending = null;
+        $expired = false;
+
+        if (($userCode = session('link.pending')) !== null) {
+            $pending = DeviceCode::findByUserCode($userCode);
+            if ($pending === null) {
+                session()->forget('link.pending');
+                $expired = true;
+            }
+        }
+
+        return view('auth.link', ['pending' => $pending, 'expired' => $expired]);
     }
 
     /**
-     * Validate the user code entered on the website.
+     * Validate the user code entered on the website — in two steps.
+     *
+     * 🔴 **A valid code used to link on the spot, and the page never said what it was linking.**
+     * That is the shape of the phishing every device flow has met since 2025: "enter ABCD-1234 on
+     * the site to unlock X", and the person types it, and the access — a year-long token under
+     * their name — goes to whoever's program displayed that code. The warning under the field
+     * helps; seeing what one is about to sign is what stops it.
+     *
+     * So the first POST only looks the code up and shows what it stands for — which program, which
+     * version, which game, how long ago — and the second POST, with `confirm`, is the one that
+     * links. The code itself is what is confirmed, carried in the session between the two, never
+     * anything the page could be made to pre-fill from a link.
      */
     public function validateCode(Request $request)
     {
-        // ⚠ The code, and nothing else. A `device_label` used to arrive with it; the field that
-        // sent it is gone, and it is NOT accepted quietly here either — a name that no screen asks
-        // for must not be settable by hand-crafting the request.
+        // ⚠ The code, and whether this is the confirmation. A `device_label` used to arrive with
+        // it; the field that sent it is gone, and it is NOT accepted quietly here either — a name
+        // that no screen asks for must not be settable by hand-crafting the request.
         $request->validate([
             'code' => 'required|string|min:6|max:9', // ABCD-1234 is 9 chars with dash
+            'confirm' => 'nullable|boolean',
         ]);
 
         $deviceCode = DeviceCode::findByUserCode($request->code);
 
         if (!$deviceCode) {
-            return back()->withErrors(['code' => 'Invalid or expired code. Please check the code displayed in your game.']);
+            session()->forget('link.pending');
+
+            return back()->withErrors(['code' => __('link.invalid_code')]);
         }
+
+        if (!$request->boolean('confirm')) {
+            session(['link.pending' => $deviceCode->user_code]);
+
+            return redirect()->route('link');
+        }
+
+        session()->forget('link.pending');
 
         $user = auth()->user();
 
