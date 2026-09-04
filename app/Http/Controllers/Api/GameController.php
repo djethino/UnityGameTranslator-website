@@ -30,8 +30,12 @@ class GameController extends Controller
         // whereHas expresses the same condition as an EXISTS subquery, which both engines run.
         // The code stays portable on purpose: this endpoint must not depend on one engine's
         // tolerance.
-        $query = Game::withCount('translations')
-            ->whereHas('translations');
+        //
+        // ⚠ Public translations only, in the count as in the filter: a branch is a proposal between
+        // its author and a Main's owner, and it was being counted here — and listed by show() — as
+        // if it were a catalogue entry the mod could download. Same rule in the language filter.
+        $query = Game::withCount(['translations' => fn ($q) => $q->public()])
+            ->whereHas('translations', fn ($q) => $q->public());
 
         // Search by Steam ID (exact match) — a demo's own id reaches the game it is a demo of.
         if ($request->filled('steam_id')) {
@@ -52,7 +56,7 @@ class GameController extends Controller
         // Filter by games that have translations in a specific language
         if ($request->filled('lang')) {
             $query->whereHas('translations', function ($q) use ($request) {
-                $q->where('target_language', $request->lang);
+                $q->public()->where('target_language', $request->lang);
             });
         }
 
@@ -107,7 +111,12 @@ class GameController extends Controller
      */
     public function show(Game $game, Request $request): JsonResponse
     {
+        // ⚠ Public translations only, here and in the languages below. A branch inherits its Main's
+        // status, so once the Main was complete every branch came out of this route with an id and
+        // an uploader — and /download then refused it. The API must not announce what it will not
+        // serve, and a branch is a proposal between two people, not a catalogue entry.
         $translationsQuery = $game->translations()
+            ->public()
             ->with('user:id,name')
             ->where('status', 'complete');
 
@@ -123,6 +132,7 @@ class GameController extends Controller
 
         // Get available languages for this game
         $languages = $game->translations()
+            ->public()
             ->where('status', 'complete')
             ->distinct()
             ->pluck('target_language')

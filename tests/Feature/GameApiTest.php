@@ -109,4 +109,37 @@ class GameApiTest extends TestCase
 
         $this->getJson('/api/v1/games/' . $game->id)->assertNotFound();
     }
+
+    /**
+     * 🔴 **A branch is not a catalogue entry, and this route listed it as one.** It inherits its
+     * Main's status, so once the Main was complete every branch came out with an id, an uploader
+     * and a line count — and /download then answered 403. The API must not announce what it will
+     * not serve, and the listing must not count it either.
+     */
+    public function test_a_branch_is_neither_listed_nor_counted_nor_a_language(): void
+    {
+        $game = $this->makeGame('Branched Game', 'branched-game');
+
+        $main = $this->makeTranslation($game, 'French');
+        $main->forceFill(['status' => 'complete'])->save();
+
+        $branch = $this->makeTranslation($game, 'German');
+        $branch->forceFill([
+            'status' => 'complete',
+            'visibility' => 'branch',
+            'parent_id' => $main->id,
+            'file_uuid' => $main->file_uuid,
+        ])->save();
+
+        $detail = $this->getJson('/api/v1/games/branched-game')->assertOk();
+
+        $this->assertSame([$main->id], collect($detail->json('translations'))->pluck('id')->all());
+        $this->assertSame(['French'], $detail->json('available_languages'));
+
+        $listing = $this->getJson('/api/v1/games')->assertOk();
+        $this->assertSame(1, collect($listing->json('games'))->firstWhere('slug', 'branched-game')['translations_count']);
+
+        // A language only a branch holds is not a language the game is available in.
+        $this->getJson('/api/v1/games?lang=German')->assertOk()->assertJsonPath('count', 0);
+    }
 }
