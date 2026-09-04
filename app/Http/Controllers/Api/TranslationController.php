@@ -402,12 +402,15 @@ class TranslationController extends Controller
         }
 
         // ── Their translations, all of them, in one query ─────────────────────────────────────
-        // ⚠ **Bounded by what the batch was asked about.** A hundred loose names can each resolve
-        // to two dozen games, so this set could reach thousands — and every translation of every
-        // one of them was then loaded to answer a request about a hundred games. Past twice the
-        // batch's own size, the answer is about something nobody asked for.
-        $gameIds = $bySteam->flatten()->merge($byName->flatten())
-            ->pluck('id')->unique()->take(self::MaxGamesPerBatch * 2)->values();
+        // 🔴 **Deliberately NOT capped here, and a cap was tried and removed the same day.**
+        // Cutting this set bounds the work and makes the answer lie: `games_total` counts the
+        // candidates that were found, while `games` is built from the ids kept — so an entry could
+        // announce three games and return none. That is the exact fault this whole endpoint was
+        // written to end.
+        //
+        // What bounds the work instead sits upstream, where it costs nothing true: names under
+        // three characters never reach the loose pass, and that pass is limited in SQL.
+        $gameIds = $bySteam->flatten()->merge($byName->flatten())->pluck('id')->unique()->values();
 
         $rows = $gameIds->isEmpty() ? collect() : Translation::with([
             'game:id,name,slug,steam_id,image_url',
@@ -1449,13 +1452,41 @@ class TranslationController extends Controller
         $externalGame = $gameSearchService->findGame($steamId, $gameName);
 
         if ($externalGame) {
+            $title = $externalGame['name'] ?? $gameName;
+            $resolvedSteamId = $externalGame['steam_id'] ?? $steamId;
+
+            // 🔴 **One game is one card, wherever the copy came from** — Steam, GOG, Epic, a disc.
+            // Asking IGDB is what turns "LONESTAR" into "Lonestar: The Game", and creating on that
+            // answer without looking again is how the same game gets a second entry: the first was
+            // published from a Steam copy and carries its id, this one arrives from a store that
+            // has none, and nothing in the lookups above could match the two.
+            //
+            // ⚠ Searched on what the resolution ANSWERED, not on what the caller sent — that is
+            // the whole point of having asked.
+            $known = Game::query()
+                ->when($resolvedSteamId, fn ($q) => $q->where('steam_id', $resolvedSteamId))
+                ->when(!$resolvedSteamId, fn ($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($title)]))
+                ->first();
+
+            if ($known) {
+                // The copy in hand may know something the card does not: an id it was created
+                // without, and the product name a machine reads.
+                if ($resolvedSteamId && !$known->steam_id) {
+                    $known->update(['steam_id' => $resolvedSteamId]);
+                }
+
+                $this->rememberUnityNames($known, $gameName, $company);
+
+                return $known;
+            }
+
             // Created under the title the world knows it by — and carrying the name the machine
             // that published it reads, which is what makes it findable from another machine.
             return Game::create([
-                'name' => $externalGame['name'] ?? $gameName,
+                'name' => $title,
                 'unity_name' => $gameName,
                 'unity_company' => $company,
-                'steam_id' => $externalGame['steam_id'] ?? $steamId,
+                'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
             ]);
         }
@@ -1491,8 +1522,18 @@ class TranslationController extends Controller
         // translations, offered them for install, and had their own uploads filed under it.
         //
         // ⚠ And "never overwrite" made it permanent rather than protecting anything: the squatter
-        // held the name for good. The guard is not to overwrite better, it is not to write here.
-        if ($game->steam_id) {
+        // held the name for good.
+        //
+        // ⚠ **Refusing outright would cost the very case this column exists for**, and it did for
+        // half a day: a game published from a Steam copy carries an id, so it would never record
+        // its product name — and a copy of that game WITHOUT one (a repack, a store that is not
+        // Steam) is exactly who needs it. So the rule is narrower: on a game holding an id, the
+        // declared name is recorded only when it is a FORM OF THE TITLE that game already carries.
+        //
+        // "LONESTAR" against "Lonestar: The Game" passes; "Cattails" against "Cat" does not, and
+        // neither does anything unrelated. Compared without case, spaces or punctuation, because
+        // that is the whole difference between a product name and a shop title.
+        if ($game->steam_id && !$this->namesTheSameGame($gameName, $game->name)) {
             return;
         }
 
@@ -1516,6 +1557,28 @@ class TranslationController extends Controller
         if ($fill !== []) {
             $game->update($fill);
         }
+    }
+
+    /**
+     * Whether a declared product name is a form of a title the catalogue already holds.
+     *
+     * ⚠ The declared name must be CONTAINED in the title, never the reverse. A product name is
+     * normally the shorter, tighter form of a shop title — "HyperEchelon" for "Hyper Echelon",
+     * "LONESTAR" for "Lonestar: The Game". Accepting the other direction would let "Cattails" be
+     * recorded on a game called "Cat", which is the squat this exists to refuse.
+     */
+    private function namesTheSameGame(?string $declared, ?string $title): bool
+    {
+        if ($declared === null || $title === null) {
+            return false;
+        }
+
+        $flatten = fn (string $s) => preg_replace('/[^a-z0-9]+/u', '', mb_strtolower($s));
+
+        $declared = $flatten($declared);
+        $title = $flatten($title);
+
+        return $declared !== '' && $title !== '' && str_contains($title, $declared);
     }
 
     /**

@@ -60,6 +60,35 @@ class UnityNameSquattingTest extends TestCase
         $this->assertNull($popular->fresh()->unity_name);
     }
 
+    public function test_a_game_with_a_steam_id_still_records_a_form_of_its_own_title(): void
+    {
+        // 🔴 **The case the column exists for, and refusing outright would have cost it.** A game
+        // published from a Steam copy carries an id; a copy of that same game WITHOUT one — a
+        // repack, a store that is not Steam — is exactly who needs the product name recorded.
+        $game = Game::create(['name' => 'Lonestar: The Game', 'steam_id' => '505050']);
+
+        $this->publish([
+            'steam_id' => '505050',
+            'game_name' => 'LONESTAR',
+        ])->assertSuccessful();
+
+        $this->assertSame('LONESTAR', $game->fresh()->unity_name);
+    }
+
+    public function test_a_longer_name_cannot_be_recorded_on_a_shorter_title(): void
+    {
+        // The direction matters: a product name is the tighter form of a shop title, never the
+        // wider one. Accepting "Cattails" on a game called "Cat" is the squat, wearing a disguise.
+        $cat = Game::create(['name' => 'Cat', 'steam_id' => '606060']);
+
+        $this->publish([
+            'steam_id' => '606060',
+            'game_name' => 'Cattails',
+        ])->assertSuccessful();
+
+        $this->assertNull($cat->fresh()->unity_name);
+    }
+
     public function test_a_name_another_game_answers_to_cannot_be_claimed(): void
     {
         // ⚠ **Why this case is narrow, and worth holding anyway.** Once a game carrying a Steam id
@@ -129,6 +158,38 @@ class UnityNameSquattingTest extends TestCase
         foreach ($response->json('results') as $result) {
             $this->assertSame(0, $result['games_total'], 'a single letter identifies nothing');
         }
+    }
+
+    public function test_one_game_is_one_card_whatever_the_copy_came_from(): void
+    {
+        // 🔴 **The rule, stated by the owner: same game, same card — Steam, GOG, Epic, a disc.**
+        //
+        // A copy with no Steam id publishes under the product name its folder carries. Nothing in
+        // the ordinary lookups can match it to a card created from a Steam copy under the shop
+        // title, so the resolution asks IGDB — and creating on THAT answer without looking again is
+        // what used to give one game a second entry.
+        //
+        // ⚠ The external lookup is stubbed, and it has to be: it needs credentials and a network,
+        // so a test that let it fail would exercise the fallback and prove nothing about the guard.
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('findGame')->andReturn([
+                'name' => 'Lonestar: The Game',
+                'steam_id' => '707070',
+                'image_url' => null,
+            ]);
+        });
+
+        $existing = Game::create(['name' => 'Lonestar: The Game', 'steam_id' => '707070']);
+        $before = Game::count();
+
+        // The GOG copy: no id, and the name Unity wrote on disk.
+        $this->publish(['game_name' => 'LONESTAR'])->assertSuccessful();
+
+        $this->assertSame($before, Game::count(), 'a second copy of one game makes no second card');
+        $this->assertSame(1, $existing->fresh()->translations()->count());
+
+        // And the card learns what that copy could tell it: the name a machine reads.
+        $this->assertSame('LONESTAR', $existing->fresh()->unity_name);
     }
 
     public function test_the_company_is_refused_when_it_is_too_long_for_the_column(): void
