@@ -291,11 +291,10 @@ class CatalogTruthTest extends TestCase
         $this->assertSame('Lonestar: The Game', $response->json('results.0.games.0.game.name'));
     }
 
-    public function test_the_unity_name_wins_over_a_loose_title_match(): void
+    public function test_the_unity_name_widens_a_search_without_replacing_it(): void
     {
-        // Two games one search could reach: one because its folder says exactly this, the other
-        // only because its title happens to contain the word. Guessing between them is what put a
-        // stranger's translation on somebody's card.
+        // Two games one search can reach: one because its folder says exactly this, the other
+        // because its title happens to contain the word.
         $exact = $this->makeGame('Cat Quest');
         $exact->update(['unity_name' => 'Cat']);
 
@@ -306,8 +305,18 @@ class CatalogTruthTest extends TestCase
 
         $response = $this->getJson('/api/v1/translations?q=Cat')->assertOk();
 
-        $this->assertSame(1, $response->json('games_total'), 'the exact machine name settles it');
-        $this->assertSame('Cat Quest', $response->json('games.0.game.name'));
+        // 🔴 **This case used to assert the opposite, and that was the defect.** The exact match
+        // REPLACED the ordinary search, so one account declaring a name could hide every real
+        // candidate behind it — see UnityNameSquattingTest. `unity_name` is stated by whoever
+        // published; it may widen an answer, never narrow one.
+        //
+        // Which of the two the caller meant is decided client-side on the display name, by the
+        // socle's GameNames — and where it cannot decide, it says so instead of guessing.
+        $this->assertSame(2, $response->json('games_total'));
+
+        $names = collect($response->json('games'))->pluck('game.name');
+        $this->assertTrue($names->contains('Cat Quest'));
+        $this->assertTrue($names->contains('Cattails'));
     }
 
     public function test_a_game_nobody_has_named_yet_behaves_exactly_as_before(): void

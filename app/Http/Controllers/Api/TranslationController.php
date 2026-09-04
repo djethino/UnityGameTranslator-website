@@ -116,16 +116,22 @@ class TranslationController extends Controller
 
             $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
 
-            // ⚠ **The latin handle joins the LOOSE half only.** It is a generated string, so it
-            // must never decide which game an upload belongs to — `$exact` above, on `unity_name`,
-            // is what identifies. Here it does exactly one thing: let somebody reach 龙胤立志传
-            // from a keyboard. See App\Support\LatinSearch.
-            $matching = $exact->isNotEmpty()
-                ? Game::whereIn('id', $exact)
-                : Game::where(function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
-                });
+            // 🔴 **A union, never a short-circuit.** `unity_name` is declared by whoever published,
+            // so letting a match on it REPLACE the ordinary search handed one account the power to
+            // hide every other candidate behind a name it had chosen. Added to them, it can only
+            // ever widen the answer — and the caller picks by display name (GameNames in the
+            // socle), or is told the answer covers several games.
+            //
+            // ⚠ The latin handle is in the same half, and for the same reason: it is generated, so
+            // it may help somebody FIND a game and never decide which one they meant.
+            $matching = Game::where(function ($q) use ($search, $exact) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
+
+                if ($exact->isNotEmpty()) {
+                    $q->orWhereIn('id', $exact);
+                }
+            });
         }
 
         if (isset($matching)) {
@@ -365,13 +371,24 @@ class TranslationController extends Controller
 
         $unresolved = $lowered->reject(fn ($n) => $byName->has($n))->values();
 
+        // 🔴 **A name too short to identify anything never reaches the loose pass.** `%a%` matches
+        // most of a catalogue, and a hundred of them in one batch loaded every game into memory —
+        // with no SQL limit, twenty times a minute, from anybody. The Manager already refuses to
+        // search with fewer than two characters; this is that rule, held where it counts.
+        $unresolved = $unresolved->filter(fn ($n) => mb_strlen($n) >= 3)->values();
+
         if ($unresolved->isNotEmpty()) {
             $fuzzy = Game::where(function ($q) use ($unresolved) {
                 foreach ($unresolved as $name) {
                     $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $name);
                     $q->orWhere('name', 'like', '%' . $escaped . '%');
                 }
-            })->orderBy('name')->get();
+            })
+                // ⚠ Bounded in SQL, not after loading: the per-name cap below runs in PHP, so on
+                // its own it bounded what came BACK and never what was read.
+                ->orderBy('name')
+                ->limit(self::MaxGamesPerAnswer * max(1, $unresolved->count()))
+                ->get();
 
             foreach ($unresolved as $name) {
                 $hits = $fuzzy->filter(fn (Game $g) => str_contains(mb_strtolower($g->name), $name))
@@ -385,7 +402,12 @@ class TranslationController extends Controller
         }
 
         // ── Their translations, all of them, in one query ─────────────────────────────────────
-        $gameIds = $bySteam->flatten()->merge($byName->flatten())->pluck('id')->unique()->values();
+        // ⚠ **Bounded by what the batch was asked about.** A hundred loose names can each resolve
+        // to two dozen games, so this set could reach thousands — and every translation of every
+        // one of them was then loaded to answer a request about a hundred games. Past twice the
+        // batch's own size, the answer is about something nobody asked for.
+        $gameIds = $bySteam->flatten()->merge($byName->flatten())
+            ->pluck('id')->unique()->take(self::MaxGamesPerBatch * 2)->values();
 
         $rows = $gameIds->isEmpty() ? collect() : Translation::with([
             'game:id,name,slug,steam_id,image_url',
@@ -953,6 +975,11 @@ class TranslationController extends Controller
         $request->validate([
             'steam_id' => 'nullable|required_without:game_name|string',
             'game_name' => 'nullable|required_without:steam_id|string|max:255',
+
+            // ⚠ Same shape as the name it travels with. It was read straight into a varchar(255)
+            // with no rule at all: in strict mode a longer string is a 500, and nothing in the
+            // request had said what the field accepts.
+            'game_company' => 'nullable|string|max:255',
             'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             // 'type' is now auto-calculated from HVASM stats
@@ -1385,10 +1412,14 @@ class TranslationController extends Controller
             }
         }
 
-        // Then by the name the machine reads, which is what other machines will search with.
+        // 🔴 **The DISPLAY name before the declared one, and that order is a guard.** The display
+        // name comes from IGDB or from the upload that created the game; `unity_name` is a string a
+        // caller states about itself. Resolving on the declared one first let an account send any
+        // name and be sent to the game holding it — see rememberUnityNames for the other half.
         if ($gameName) {
-            $game = Game::where('unity_name', $gameName)->first();
+            $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
             if ($game) {
+                // Update steam_id if we have it now
                 if ($steamId && !$game->steam_id) {
                     $game->update(['steam_id' => $steamId]);
                 }
@@ -1397,11 +1428,10 @@ class TranslationController extends Controller
             }
         }
 
-        // Try by display name (case-insensitive)
+        // Then by the name the machine reads, which is what other machines will search with.
         if ($gameName) {
-            $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
+            $game = Game::where('unity_name', $gameName)->first();
             if ($game) {
-                // Update steam_id if we have it now
                 if ($steamId && !$game->steam_id) {
                     $game->update(['steam_id' => $steamId]);
                 }
@@ -1450,9 +1480,32 @@ class TranslationController extends Controller
      */
     private function rememberUnityNames(Game $game, ?string $gameName, ?string $company): void
     {
+        // 🔴 **Never on a game that has a Steam id, and that single line closes the hole.**
+        //
+        // `unity_name` is only ever consulted for games WITHOUT a Steam id — anything carrying one
+        // is resolved by it, before any name is looked at. So writing it on a game that has one
+        // buys nothing, and costs everything: an account could publish a translation declaring the
+        // Steam id of a popular game and any product name it liked, and that name became the key
+        // every other machine resolves with. From then on, players of the real game — the ones
+        // without a Steam id, precisely those this column serves — were shown the popular game's
+        // translations, offered them for install, and had their own uploads filed under it.
+        //
+        // ⚠ And "never overwrite" made it permanent rather than protecting anything: the squatter
+        // held the name for good. The guard is not to overwrite better, it is not to write here.
+        if ($game->steam_id) {
+            return;
+        }
+
         $fill = [];
 
-        if ($gameName && !$game->unity_name) {
+        // ⚠ **Refused when the name already belongs to another game**, under either column. A
+        // declared string may not be made to collide with a name somebody else's game answers to.
+        $taken = $gameName !== null && Game::where('id', '!=', $game->id)
+            ->where(fn ($q) => $q->where('unity_name', $gameName)
+                                 ->orWhereRaw('LOWER(name) = ?', [strtolower($gameName)]))
+            ->exists();
+
+        if ($gameName && !$game->unity_name && !$taken) {
             $fill['unity_name'] = $gameName;
         }
 
