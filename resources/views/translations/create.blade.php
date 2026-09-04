@@ -384,16 +384,56 @@ async function handleFileSelect(file) {
     }
 }
 
+// 🔴 Built with the DOM, never with innerHTML and a template. Everything shown in this box comes
+// from somewhere this page does not control: a game name answered by IGDB, RAWG or our own
+// catalogue, the `_game.name` of a translation file that may have been downloaded from another
+// player, the message of a JSON parse error which quotes the file. The CSP nonce stops an inline
+// handler today; it must not be the only thing standing between a game name and a script.
+//
+// `boxClass`/`textClass` are passed whole, as literals, so Tailwind's scanner sees them.
+function showNotice(boxClass, textClass, iconClass, parts, secondLine) {
+    detectionResult.textContent = '';
+
+    const box = document.createElement('div');
+    box.className = boxClass + ' rounded-lg p-4';
+
+    const line = document.createElement('p');
+    line.className = textClass;
+
+    const icon = document.createElement('i');
+    icon.className = iconClass + ' mr-2';
+    line.append(icon);
+
+    // A part is a string (plain text) or { strong: string } (emphasised text). Either way it is a
+    // text node: nothing in it is ever parsed as markup.
+    for (const part of parts) {
+        if (typeof part === 'string') {
+            line.append(part);
+        } else {
+            const strong = document.createElement('strong');
+            strong.textContent = part.strong;
+            line.append(strong);
+        }
+    }
+
+    box.append(line);
+
+    if (secondLine) {
+        const hint = document.createElement('p');
+        hint.className = 'text-gray-400 text-sm mt-1';
+        hint.textContent = secondLine;
+        box.append(hint);
+    }
+
+    detectionResult.append(box);
+}
+
 function showError(message) {
     detectionInfo.classList.remove('hidden');
     detectionLoading.classList.add('hidden');
     detectionResult.classList.remove('hidden');
-    detectionResult.innerHTML = `
-        <div class="bg-red-900/50 border border-red-700 rounded-lg p-4">
-            <i class="fas fa-exclamation-circle text-red-400 mr-2"></i>
-            <span class="text-red-200">${message}</span>
-        </div>
-    `;
+    showNotice('bg-red-900/50 border border-red-700', 'text-red-200',
+               'fas fa-exclamation-circle text-red-400', [message]);
 }
 
 function showAutoDetected(data) {
@@ -514,11 +554,8 @@ async function showNewTranslation() {
     // If we have _game metadata, try to auto-detect the game
     if (fileGameMetadata) {
         detectionResult.classList.remove('hidden');
-        detectionResult.innerHTML = `
-            <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
-                <p class="text-blue-300"><i class="fas fa-search mr-2"></i> New translation! Searching for game "${fileGameMetadata.name || 'Unknown'}"...</p>
-            </div>
-        `;
+        showNotice('bg-blue-900/30 border border-blue-700', 'text-blue-300', 'fas fa-search',
+                   ['New translation! Searching for game "' + (fileGameMetadata.name || 'Unknown') + '"...']);
 
         try {
             // Try steam_id first (more precise), fallback to name
@@ -556,22 +593,16 @@ async function showNewTranslation() {
 
                 // Update detection message
                 const autoLabel = game.auto_detected ? ' (auto-detected from file)' : '';
-                detectionResult.innerHTML = `
-                    <div class="bg-green-900/30 border border-green-700 rounded-lg p-4">
-                        <p class="text-green-300"><i class="fas fa-check-circle mr-2"></i> New translation! Game found: <strong>${game.name}</strong>${autoLabel}</p>
-                        <p class="text-gray-400 text-sm mt-1">You can change the game selection below if needed.</p>
-                    </div>
-                `;
+                showNotice('bg-green-900/30 border border-green-700', 'text-green-300', 'fas fa-check-circle',
+                           ['New translation! Game found: ', { strong: game.name }, autoLabel],
+                           'You can change the game selection below if needed.');
             } else {
                 // No game found - show manual selection
                 if (fileGameMetadata.name) {
                     gameSearch.value = fileGameMetadata.name;
                 }
-                detectionResult.innerHTML = `
-                    <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4">
-                        <p class="text-yellow-300"><i class="fas fa-exclamation-triangle mr-2"></i> New translation! Game "${fileGameMetadata.name || 'Unknown'}" not found. Please select it manually.</p>
-                    </div>
-                `;
+                showNotice('bg-yellow-900/30 border border-yellow-700', 'text-yellow-300', 'fas fa-exclamation-triangle',
+                           ['New translation! Game "' + (fileGameMetadata.name || 'Unknown') + '" not found. Please select it manually.']);
             }
         } catch (e) {
             console.error('Game search error:', e);
