@@ -186,13 +186,24 @@ class LocalAuthController extends Controller
         }
 
         $user = User::where('username', $username)->where('provider', 'local')->first();
+        $code = $user ? RecoveryCode::find($user, $validated['recovery_code']) : null;
 
-        if (!$user || !RecoveryCode::consume($user, $validated['recovery_code'])) {
+        if (!$code) {
             RateLimiter::hit($throttleKey, 3600);
             throw ValidationException::withMessages(['recovery_code' => __('auth.recovery_failed')]);
         }
 
+        // 🔴 **The same door as login(), and it was missing here.** A banned account could not sign
+        // in with its password but could type a recovery code, set a new password and get a
+        // session — for one request, until CheckBanned caught it. Tested AFTER the code, as the
+        // ban is tested after the password above: only somebody holding a valid credential learns
+        // the account is banned, and their code stays unburnt for the day it is allowed back.
+        if ($user->isBanned()) {
+            throw ValidationException::withMessages(['username' => __('auth.account_banned')]);
+        }
+
         RateLimiter::clear($throttleKey);
+        $code->burn();
         $user->forceFill(['password' => Hash::make($validated['password'])])->save();
 
         Auth::login($user);

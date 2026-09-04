@@ -56,20 +56,28 @@ class RecoveryCode extends Model
     }
 
     /**
-     * Consume a recovery code for a user. Returns true (and burns the code)
-     * when it matches an unused one.
+     * The unused code of this user that a typed value matches, or null.
+     *
+     * ⚠ Finds without burning, so the caller can still refuse for a reason of its own — a banned
+     * account, say — and leave the code intact for the day the account is allowed back in.
+     * Burning is a separate act, {@see burn()}, taken once recovery actually goes through.
      */
-    public static function consume(User $user, string $plainCode): bool
+    public static function find(User $user, string $plainCode): ?self
     {
         $codes = self::where('user_id', $user->id)->whereNull('used_at')->get();
 
         foreach ($codes as $code) {
             if (Hash::check(strtoupper(trim($plainCode)), $code->code_hash)) {
-                $code->update(['used_at' => now()]);
-                return true;
+                return $code;
             }
         }
 
-        return false;
+        return null;
+    }
+
+    /** Single use: once burnt, this code opens nothing. */
+    public function burn(): void
+    {
+        $this->update(['used_at' => now()]);
     }
 }
