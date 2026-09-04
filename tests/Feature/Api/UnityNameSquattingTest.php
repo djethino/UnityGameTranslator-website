@@ -192,6 +192,54 @@ class UnityNameSquattingTest extends TestCase
         $this->assertSame('LONESTAR', $existing->fresh()->unity_name);
     }
 
+    public function test_episodes_of_one_series_stay_apart(): void
+    {
+        // 🔴 **Measured on real installs, not assumed.** Frog Detective 1 calls itself "The Haunted
+        // Island" in app.info, under the shop title "Frog Detective: The Haunted Island". A sequel
+        // is a different Unity project with a different product name, so the two never compete for
+        // one key — which is what makes a series safe here.
+        $first = Game::create([
+            'name' => 'Frog Detective: The Haunted Island',
+            'steam_id' => '801001',
+        ]);
+
+        $second = Game::create([
+            'name' => 'Frog Detective 2: The Case of the Invisible Wizard',
+            'steam_id' => '801002',
+        ]);
+
+        // The first episode publishes: its product name is a form of ITS title, so it is recorded.
+        $this->publish(['steam_id' => '801001', 'game_name' => 'The Haunted Island'])
+            ->assertSuccessful();
+
+        $this->assertSame('The Haunted Island', $first->fresh()->unity_name);
+
+        // And it cannot land on the sequel: nothing of that name is in the sequel's title.
+        $this->publish(['steam_id' => '801002', 'game_name' => 'The Haunted Island'])
+            ->assertSuccessful();
+
+        $this->assertNull(
+            $second->fresh()->unity_name,
+            'one episode may not record itself on another'
+        );
+    }
+
+    public function test_a_series_name_shared_by_two_episodes_is_taken_only_once(): void
+    {
+        // ⚠ **The case that stays open, held here so it is known rather than discovered.** A
+        // developer CAN reuse one product name across episodes — "Frog Detective" for both — and
+        // then nothing on disk tells the two apart either. What the guard does is stop the second
+        // entry taking a key the first already answers to.
+        $first = Game::create(['name' => 'Some Series', 'steam_id' => '802001']);
+        $first->update(['unity_name' => 'Some Series']);
+
+        $second = Game::create(['name' => 'Some Series 2', 'steam_id' => '802002']);
+
+        $this->publish(['steam_id' => '802002', 'game_name' => 'Some Series'])->assertSuccessful();
+
+        $this->assertNull($second->fresh()->unity_name, 'the key belongs to the first that took it');
+    }
+
     public function test_the_company_is_refused_when_it_is_too_long_for_the_column(): void
     {
         // It was read straight into a varchar(255) with no rule: in strict mode, a 500.
