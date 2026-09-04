@@ -359,7 +359,43 @@ async function serveStoredResultOnce(res, key, label) {
     }
 }
 
+/**
+ * Whether a stream may be opened on this code at all.
+ *
+ * 🔴 **A well-formed code used to be enough**: any sixty-four characters opened a Redis
+ * subscription and held a connection slot, whether or not the site had ever issued them. The
+ * site now announces each code it issues (`sse:<kind>:<code>:pending`, for the code's lifetime),
+ * and a stream is only opened on an announced code — or on one whose result is already stored.
+ *
+ * ⚠ **Only while the site says it announces them.** The marker `sse:expected` is written by a
+ * site that does; without it, this relay behaves as it always did. That is what makes the two
+ * deployable in ANY order: a relay ahead of its site demands nothing, a site ahead of its relay
+ * is ignored, and the guard switches itself on once both are there. Demanding the key
+ * unconditionally would have refused every device flow for as long as the site lagged — and the
+ * mod treats that refusal as final.
+ *
+ * Fails open on a Redis error: an unreachable Redis is a broken relay whatever this answers, and
+ * the subscription below will say so in its own words.
+ */
+async function isExpected(kind, code) {
+    try {
+        const announcing = await redis.exists('sse:expected');
+        if (!announcing) return true;
+
+        const known = await redis.exists(`sse:${kind}:${code}:pending`, `sse:${kind}:${code}:result`);
+        return known > 0;
+    } catch (e) {
+        console.error(`[${kind}] Redis EXISTS error:`, e.message);
+        return true;
+    }
+}
+
 async function handleDeviceFlow(req, res, deviceCode) {
+    if (!(await isExpected('device', deviceCode))) {
+        emitError(res, 404, 'Unknown code');
+        return;
+    }
+
     // Check if already authorized (late-connecting client)
     if (await serveStoredResultOnce(res, `sse:device:${deviceCode}:result`, 'DeviceFlow')) return;
 
@@ -616,6 +652,11 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
 async function handleMerge(req, res, token) {
     // Check if already completed (late-connecting client). Same single delivery as the device
     // flow: a merge result is one answer to one client, not a thing to be re-read.
+    if (!(await isExpected('merge', token))) {
+        emitError(res, 404, 'Unknown token');
+        return;
+    }
+
     if (await serveStoredResultOnce(res, `sse:merge:${token}:result`, 'Merge')) return;
 
     // Subscribe to Redis channel

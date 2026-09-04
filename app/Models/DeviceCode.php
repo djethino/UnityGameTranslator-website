@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SsePublisher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -26,11 +27,18 @@ class DeviceCode extends Model
         // Clean up expired codes first
         self::where('expires_at', '<', now())->delete();
 
-        return self::create([
+        $code = self::create([
             'device_code' => Str::random(64),
             'user_code' => self::generateUserCode(),
             'expires_at' => now()->addMinutes(15),
         ]);
+
+        // Announced to the relay for as long as the code lives, so a stream may only be opened
+        // on a code this site issued — see SsePublisher::expected for why no order of deployment
+        // is needed for that.
+        SsePublisher::expected('device', $code->device_code, 15 * 60);
+
+        return $code;
     }
 
     /**

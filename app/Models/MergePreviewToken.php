@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SsePublisher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -103,13 +104,19 @@ class MergePreviewToken extends Model
             throw new \RuntimeException('Failed to write merge preview content file.');
         }
 
-        return self::create([
+        $created = self::create([
             'token' => $token,
             'user_id' => $userId,
             'translation_id' => $translationId,
             'destination' => $destination,
             'expires_at' => now()->addMinutes(self::INITIAL_TTL_MINUTES),
         ]);
+
+        // Announced to the relay, as a device code is: a merge stream may only be opened on a
+        // token this site issued. See SsePublisher::expected.
+        SsePublisher::expected('merge', $token, self::INITIAL_TTL_MINUTES * 60);
+
+        return $created;
     }
 
     /**

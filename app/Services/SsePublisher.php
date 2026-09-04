@@ -70,6 +70,38 @@ class SsePublisher
     }
 
     /**
+     * The key that says "this site announces the codes it issues" — see expected().
+     *
+     * ⚠ Written on every announcement and never expiring, so a Redis that lost everything is
+     * back in step at the first code issued after it, with no deployment in between.
+     */
+    public const EXPECTED_MARKER = 'sse:expected';
+
+    /**
+     * Announce a device code or a merge token to the relay BEFORE any client may stream on it.
+     *
+     * 🔴 **Why this needs no deployment order — and it must not.** The relay used to open a
+     * subscription for any well-formed code, whether or not this site had ever issued it. The
+     * remedy is a key per code the relay checks before subscribing. But a relay that demanded the
+     * key while a site did not yet write it would refuse EVERY device flow, and the mod treats
+     * that refusal as final. Site first, relay second, is not an order anybody can guarantee, and
+     * nothing here may depend on one.
+     *
+     * So the key comes with a MARKER. The relay demands the per-code key only while the marker
+     * exists; the marker only exists once this site has issued a code through this code. Relay
+     * deployed first: no marker, nothing demanded. Site deployed first: the old relay ignores
+     * both. Both in place, in either order: the guard is on, by itself.
+     *
+     * @param string $kind 'device' or 'merge' — the channel family, as the relay names it.
+     * @param int $ttl Seconds the code itself lives; the announcement does not outlive it.
+     */
+    public static function expected(string $kind, string $code, int $ttl): void
+    {
+        self::safeSetex("sse:{$kind}:{$code}:pending", $ttl, '1');
+        self::safeSet(self::EXPECTED_MARKER, '1');
+    }
+
+    /**
      * Signal that a device code expired.
      * Called when TTL expires or code is deleted.
      *
@@ -309,6 +341,16 @@ class SsePublisher
             Redis::connection(self::REDIS_CONNECTION)->publish($channel, $message);
         } catch (\Exception $e) {
             Log::warning("[SsePublisher] Redis publish failed on {$channel}: {$e->getMessage()}");
+        }
+    }
+
+    /** Safely store a key with no expiry in Redis. */
+    private static function safeSet(string $key, string $value): void
+    {
+        try {
+            Redis::connection(self::REDIS_CONNECTION)->set($key, $value);
+        } catch (\Exception $e) {
+            Log::warning("[SsePublisher] Redis set failed on {$key}: {$e->getMessage()}");
         }
     }
 
