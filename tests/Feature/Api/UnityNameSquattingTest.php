@@ -263,6 +263,66 @@ class UnityNameSquattingTest extends TestCase
         $this->assertNull($created->unity_name, 'but not under a key unrelated to its title');
     }
 
+    public function test_a_game_with_a_short_title_keeps_its_own_name(): void
+    {
+        // 🔴 **"Rez", "Ib", "Fez", "VVVVVV", "URBO", "Dirt" are real games.** A floor on length,
+        // applied to a name that IS the title, would refuse them their own key — and the floor
+        // exists to catch substrings like "the", which is a different thing entirely.
+        foreach (['Rez' => '950001', 'Ib' => '950002', 'VVVVVV' => '950003'] as $title => $steamId) {
+            $game = Game::create(['name' => $title, 'steam_id' => $steamId]);
+
+            $this->publish(['steam_id' => $steamId, 'game_name' => $title])->assertSuccessful();
+
+            $this->assertSame(
+                $title,
+                $game->fresh()->unity_name,
+                "a game called {$title} may record {$title}"
+            );
+        }
+    }
+
+    public function test_a_title_in_another_script_can_record_its_own_name(): void
+    {
+        // 🔴 **Flattening on `[a-z0-9]` emptied these entirely**, so no game with a non-latin title
+        // could record what its folder says — the very catalogue the latin search handle exists
+        // for. Measured: 龙胤立志传 came out as an empty string, ペルソナ5 as "5", Метро as "".
+        $cases = [
+            '龙胤立志传' => '960001',
+            'ペルソナ5' => '960002',
+            'Метро 2033' => '960003',
+        ];
+
+        foreach ($cases as $title => $steamId) {
+            $game = Game::create(['name' => $title, 'steam_id' => $steamId]);
+
+            $this->publish(['steam_id' => $steamId, 'game_name' => $title])->assertSuccessful();
+
+            $this->assertSame($title, $game->fresh()->unity_name, "{$title} may record its name");
+        }
+    }
+
+    public function test_a_title_carrying_only_punctuation_records_nothing(): void
+    {
+        // Nothing to compare and nothing to resolve by: a name with no letter and no digit is not
+        // a key. It costs that game the feature, and it is the honest answer.
+        $game = Game::create(['name' => '!!!', 'steam_id' => '961001']);
+
+        $this->publish(['steam_id' => '961001', 'game_name' => '!!!'])->assertSuccessful();
+
+        $this->assertNull($game->fresh()->unity_name);
+    }
+
+    public function test_a_short_name_still_earns_its_place_inside_a_longer_title(): void
+    {
+        // Shorter than the title, so it is weighed: three characters of eleven is a quarter, and
+        // it passes. This is the case a floor of four used to refuse for nothing.
+        $game = Game::create(['name' => 'Rez Infinite', 'steam_id' => '951001']);
+
+        $this->publish(['steam_id' => '951001', 'game_name' => 'Rez'])->assertSuccessful();
+
+        $this->assertSame('Rez', $game->fresh()->unity_name);
+    }
+
     public function test_a_banal_substring_is_not_a_form_of_the_title(): void
     {
         // "the", "of", "2" are substrings of half the catalogue. Taking one is not a hijack — the

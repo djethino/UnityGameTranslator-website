@@ -114,7 +114,7 @@ class TranslationController extends Controller
             // answer about several games at once.
             $exact = Game::where('unity_name', $request->q)->pluck('id');
 
-            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
+            $search = $this->escapeLike($request->q);
 
             // 🔴 **A union, never a short-circuit.** `unity_name` is declared by whoever published,
             // so letting a match on it REPLACE the ordinary search handed one account the power to
@@ -380,7 +380,7 @@ class TranslationController extends Controller
         if ($unresolved->isNotEmpty()) {
             $fuzzy = Game::where(function ($q) use ($unresolved) {
                 foreach ($unresolved as $name) {
-                    $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $name);
+                    $escaped = $this->escapeLike($name);
                     $q->orWhere('name', 'like', '%' . $escaped . '%');
                 }
             })
@@ -1579,27 +1579,44 @@ class TranslationController extends Controller
             return false;
         }
 
-        $flatten = fn (string $s) => preg_replace('/[^a-z0-9]+/u', '', mb_strtolower($s));
+        // 🔴 **Letters and digits of ANY script, never just ASCII.** `[^a-z0-9]` empties a title
+        // written in another alphabet — 龙胤立志传 came out as an empty string, ペルソナ5 as "5",
+        // Метро 2033 as "2033" — so no game with a non-latin title could ever record its own name.
+        // That is the very catalogue the latin search handle was built for.
+        $flatten = fn (string $s) => preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($s));
 
         $declared = $flatten($declared);
         $title = $flatten($title);
 
-        if ($declared === '' || $title === '' || !str_contains($title, $declared)) {
+        if ($declared === '' || $title === '') {
             return false;
         }
 
-        // 🔴 **"the", "of", "2" are substrings of half the catalogue.** Being contained in a title
-        // is not enough to be a form of it: those pass the test above, and since a key is never
-        // overwritten, taking one locks the real product name out of that game for good. No
-        // hijack — the search unions — but the game loses the feature.
+        // 🔴 **The name IS the title: nothing to weigh.** "Rez", "Ib", "Fez", "VVVVVV" are real
+        // games, and a floor on length would refuse them their own product name — for a game whose
+        // title is exactly what its folder says, there is no substring to be suspicious of. Only
+        // what is SHORTER than the title has to earn its place below.
+        if ($declared === $title) {
+            return true;
+        }
+
+        if (!str_contains($title, $declared)) {
+            return false;
+        }
+
+        // 🔴 **A strict substring has to earn its place.** "the", "of", "2" are inside half a
+        // catalogue, and since a key is never overwritten, taking one locks the real product name
+        // out of that game for good. No hijack — the search unions — but the game loses the
+        // feature, and only an admin can give it back.
         //
-        // ⚠ Two conditions rather than one, because either alone is fooled. A length floor lets
-        // "game" through on a sixty-character title; a share alone lets "ab" through on "abc".
+        // The share carries the weight: a QUARTER, measured against real names rather than picked.
+        // "LONESTAR" is 8 of 15, "Silksong" 8 of 20, "The Haunted Island" 16 of 28, and
+        // "TrailsOfColdSteel4" is 18 of some sixty — a third would have refused that last one.
         //
-        // The share is a QUARTER rather than a third: measured against real names, a third refuses
-        // legitimate ones. "LONESTAR" is 8 of 15, "Silksong" 8 of 20, "The Haunted Island" 16 of
-        // 28 — but "TrailsOfColdSteel4" is 18 of some sixty, and it is a real product name.
-        return mb_strlen($declared) >= 4 && mb_strlen($declared) * 4 >= mb_strlen($title);
+        // ⚠ The floor is THREE, and it only ever applies to a strict substring: one or two letters
+        // name nothing, which is the same scale the client search (2) and the batch's loose pass
+        // (3) already work on. A title of its own length is settled above, so "Rez" keeps its name.
+        return mb_strlen($declared) >= 3 && mb_strlen($declared) * 4 >= mb_strlen($title);
     }
 
     /**

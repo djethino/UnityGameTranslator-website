@@ -92,7 +92,7 @@ class GameSearchService
      */
     public function searchLocal(string $query, int $limit = 5): array
     {
-        $search = str_replace(['%', '_'], ['\\%', '\\_'], $query);
+        $search = \App\Support\Like::escape($query);
 
         return Game::where('name', 'like', '%' . $search . '%')
             ->withCount('translations')

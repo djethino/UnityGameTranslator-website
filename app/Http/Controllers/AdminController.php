@@ -151,7 +151,7 @@ class AdminController extends Controller
             ->withMax('apiTokens as last_mod_activity', 'last_used_at');
 
         if ($request->filled('search')) {
-            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
+            $search = $this->escapeLike($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
@@ -308,7 +308,7 @@ class AdminController extends Controller
 
         // Search by game name or user name
         if ($request->filled('search')) {
-            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
+            $search = $this->escapeLike($request->search);
             $query->where(function ($q) use ($search) {
                 $q->whereHas('game', fn($g) => $g->where('name', 'like', "%{$search}%"))
                   ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
