@@ -1490,7 +1490,7 @@ class TranslationController extends Controller
             // written again ("never overwrite"), so the real product name was locked out for good.
             return Game::create([
                 'name' => $title,
-                'unity_name' => $this->namesTheSameGame($gameName, $title) ? $gameName : null,
+                'unity_name' => \App\Support\GameNaming::isFormOfTitle($gameName, $title) ? $gameName : null,
                 'unity_company' => $company,
                 'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
@@ -1539,7 +1539,7 @@ class TranslationController extends Controller
         // "LONESTAR" against "Lonestar: The Game" passes; "Cattails" against "Cat" does not, and
         // neither does anything unrelated. Compared without case, spaces or punctuation, because
         // that is the whole difference between a product name and a shop title.
-        if ($game->steam_id && !$this->namesTheSameGame($gameName, $game->name)) {
+        if ($game->steam_id && !\App\Support\GameNaming::isFormOfTitle($gameName, $game->name)) {
             return;
         }
 
@@ -1565,59 +1565,6 @@ class TranslationController extends Controller
         }
     }
 
-    /**
-     * Whether a declared product name is a form of a title the catalogue already holds.
-     *
-     * ⚠ The declared name must be CONTAINED in the title, never the reverse. A product name is
-     * normally the shorter, tighter form of a shop title — "HyperEchelon" for "Hyper Echelon",
-     * "LONESTAR" for "Lonestar: The Game". Accepting the other direction would let "Cattails" be
-     * recorded on a game called "Cat", which is the squat this exists to refuse.
-     */
-    private function namesTheSameGame(?string $declared, ?string $title): bool
-    {
-        if ($declared === null || $title === null) {
-            return false;
-        }
-
-        // 🔴 **Letters and digits of ANY script, never just ASCII.** `[^a-z0-9]` empties a title
-        // written in another alphabet — 龙胤立志传 came out as an empty string, ペルソナ5 as "5",
-        // Метро 2033 as "2033" — so no game with a non-latin title could ever record its own name.
-        // That is the very catalogue the latin search handle was built for.
-        $flatten = fn (string $s) => preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($s));
-
-        $declared = $flatten($declared);
-        $title = $flatten($title);
-
-        if ($declared === '' || $title === '') {
-            return false;
-        }
-
-        // 🔴 **The name IS the title: nothing to weigh.** "Rez", "Ib", "Fez", "VVVVVV" are real
-        // games, and a floor on length would refuse them their own product name — for a game whose
-        // title is exactly what its folder says, there is no substring to be suspicious of. Only
-        // what is SHORTER than the title has to earn its place below.
-        if ($declared === $title) {
-            return true;
-        }
-
-        if (!str_contains($title, $declared)) {
-            return false;
-        }
-
-        // 🔴 **A strict substring has to earn its place.** "the", "of", "2" are inside half a
-        // catalogue, and since a key is never overwritten, taking one locks the real product name
-        // out of that game for good. No hijack — the search unions — but the game loses the
-        // feature, and only an admin can give it back.
-        //
-        // The share carries the weight: a QUARTER, measured against real names rather than picked.
-        // "LONESTAR" is 8 of 15, "Silksong" 8 of 20, "The Haunted Island" 16 of 28, and
-        // "TrailsOfColdSteel4" is 18 of some sixty — a third would have refused that last one.
-        //
-        // ⚠ The floor is THREE, and it only ever applies to a strict substring: one or two letters
-        // name nothing, which is the same scale the client search (2) and the batch's loose pass
-        // (3) already work on. A title of its own length is settled above, so "Rez" keeps its name.
-        return mb_strlen($declared) >= 3 && mb_strlen($declared) * 4 >= mb_strlen($title);
-    }
 
     /**
      * Vote on a translation.
