@@ -280,6 +280,68 @@ class DemoSharesTheGameCardTest extends TestCase
         $this->assertSame(1, $full->fresh()->translations()->count());
     }
 
+    // ── Reading from a demo nobody has published from ─────────────────────────────────────────
+
+    public function test_a_demo_nobody_published_from_still_finds_the_game(): void
+    {
+        $full = $this->game();
+        $this->published($full);
+
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('getGameFromSteam')->once()->with('4428690')->andReturn([
+                'name' => 'Hauntmates',
+                'steam_id' => '4400300',
+                'image_url' => null,
+                'source' => 'steam',
+                'demo_steam_id' => '4428690',
+            ]);
+        });
+
+        $response = $this->getJson('/api/v1/translations?steam_id=4428690');
+
+        $response->assertOk();
+        $this->assertSame(1, $response->json('count'));
+
+        // 🔴 And the answer is recorded, so the batch and every later lookup resolve without Steam.
+        $this->assertDatabaseHas('game_identifiers', [
+            'game_id' => $full->id,
+            'value' => '4428690',
+        ]);
+    }
+
+    public function test_an_id_that_is_not_a_demo_is_asked_about_once_and_never_again(): void
+    {
+        // 🔴 The common case by far — 23 of 26 games in a real library resolve to nothing simply
+        // because nobody has published for them. Without remembering the negative, every one of
+        // them would call Steam on every launch.
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('getGameFromSteam')->once()->andReturn([
+                'name' => 'Some Game',
+                'steam_id' => '1234567',
+                'image_url' => null,
+                'source' => 'steam',
+            ]);
+        });
+
+        foreach (range(1, 3) as $ignored) {
+            $this->getJson('/api/v1/translations?steam_id=1234567')->assertOk();
+        }
+
+        $this->assertDatabaseCount('game_identifiers', 0);
+    }
+
+    public function test_a_resolved_id_never_reaches_the_store_at_all(): void
+    {
+        $full = $this->game();
+        $this->published($full);
+
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldNotReceive('getGameFromSteam');
+        });
+
+        $this->getJson('/api/v1/translations?steam_id=4400300')->assertOk();
+    }
+
     public function test_an_empty_id_list_selects_nothing_rather_than_everything(): void
     {
         $this->game();

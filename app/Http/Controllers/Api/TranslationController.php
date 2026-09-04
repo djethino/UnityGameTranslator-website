@@ -99,6 +99,12 @@ class TranslationController extends Controller
         // Filter by Steam ID (exact match) — a demo's own id reaches the game it is a demo of.
         if ($request->filled('steam_id')) {
             $matching = Game::answeringToSteamId($request->steam_id);
+
+            // Nothing answers to it yet: it may be a demo nobody has published from. Asking the
+            // store settles it and records the answer, so this happens once per app id, ever.
+            if (!$matching->exists() && ($full = $this->fullGameOfDemo($request->steam_id))) {
+                $matching = Game::answeringToSteamId($full);
+            }
         }
         // Filter by game slug or ID
         elseif ($request->filled('game')) {
@@ -1526,6 +1532,54 @@ class TranslationController extends Controller
             'unity_company' => $company,
             'steam_id' => $steamId,
         ]);
+    }
+
+    /**
+     * The app id of the game this one is a demo of, or null — asked of the store, once ever.
+     *
+     * 🔴 **Reading, not publishing.** The alias table fills itself when somebody publishes from a
+     * demo. Until the first person does, a player ON that demo finds nothing while the full game
+     * may hold translations. The store knows; nothing else does.
+     *
+     * ⚠ **Here and NOT in the batch, and that is the whole cost control.** This path answers about
+     * ONE game somebody is looking at; the batch answers about a whole library at once, where the
+     * same call would be one store request per unresolved id — 23 of 26 in a real library, in the
+     * user's own HTTP request. The alias recorded here is what the batch then reads for free.
+     *
+     * ⚠ **The negative is cached too, and it has to be**: an app id that is not a demo is the
+     * common case, and without remembering that, every launch of every unpublished game would ask
+     * Steam again. An empty string is the "asked, and it is not a demo" answer — null would be
+     * indistinguishable from "never asked".
+     *
+     * ⚠ 30 days because the answer does not change: a demo does not become a different game. What
+     * can change is the full game appearing in our catalogue later — which needs no new store call,
+     * since the alias resolves locally from then on.
+     */
+    private function fullGameOfDemo(string $steamId): ?string
+    {
+        $fullId = \Illuminate\Support\Facades\Cache::remember(
+            'steam:fullgame:' . $steamId,
+            now()->addDays(30),
+            function () use ($steamId) {
+                $store = app(GameSearchService::class)->getGameFromSteam($steamId);
+
+                return ($store['demo_steam_id'] ?? null) ? (string) ($store['steam_id'] ?? '') : '';
+            }
+        );
+
+        if ($fullId === '') {
+            return null;
+        }
+
+        // The card exists: record the demo's id on it, so every later lookup — this endpoint, the
+        // batch, the listings — resolves without the store.
+        $card = Game::where('steam_id', $fullId)->first();
+
+        if ($card) {
+            GameIdentifier::remember($card, GameIdentifier::Steam, $steamId, GameIdentifier::BecauseDemo);
+        }
+
+        return $fullId;
     }
 
     /**
