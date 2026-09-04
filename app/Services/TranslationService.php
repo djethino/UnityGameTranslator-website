@@ -67,6 +67,23 @@ class TranslationService
             throw new \InvalidArgumentException('Missing _uuid in translation file');
         }
 
+        // 🔴 **And it has a shape, because of where it goes.** The uuid names the stored file, fills
+        // a char(36) column and keys the Redis channels of a live session — and it was accepted as
+        // any string at all. `../` was normalised away by the filesystem layer but still chose a
+        // folder; anything past 36 characters was a 500 after the file had been written; and an
+        // EMPTY uuid made whoever published it the Main of the lineage "", every later one its
+        // branch. The mod writes a GUID and refuses anything else on download; the site now
+        // refuses at the door what the mod could never read back.
+        //
+        // ⚠ Letters, digits and dashes, up to 36 — the shape, not the GUID grammar: every real
+        // lineage is a lowercase GUID, and the grammar can be tightened once nothing else is
+        // written into this field by the tests either.
+        if (!preg_match('/^[A-Za-z0-9-]{1,36}$/', $json['_uuid'])) {
+            throw new \InvalidArgumentException(
+                '_uuid must be an identifier of letters, digits and dashes, 36 characters at most'
+            );
+        }
+
         // Validate translation entries format
         $errors = $this->validateEntries($json);
         if (!empty($errors)) {
