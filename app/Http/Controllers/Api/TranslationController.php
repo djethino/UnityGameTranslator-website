@@ -371,6 +371,14 @@ class TranslationController extends Controller
         // ── The lineage each game is actually running ─────────────────────────────────────────
         $uuids = $asked->pluck('uuid')->filter()->unique()->values();
 
+        // ⚠ **`parent` préchargé ici aussi, et il a fallu le mesurer pour le savoir.** Ces lignes
+        // ne passent par aucun classement, donc rien n'y lit `fork_bonus` — et le retirer semblait
+        // donc juste. Retiré, une requête PARESSEUSE apparaît pendant le rendu : quelque chose de
+        // la ligne publiée lit la relation. Sur un lot d'une centaine de jeux, ce serait une
+        // requête par fork.
+        //
+        // 🔴 Le raisonnement disait une chose et le compteur en disait une autre. Ne pas
+        // « nettoyer » ce préchargement sans le remesurer.
         $matching = $uuids->isEmpty() ? collect() : Translation::with([
             'game:id,name,slug,steam_id,image_url',
             'user:id,name',
