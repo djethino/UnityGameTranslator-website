@@ -197,6 +197,24 @@ class CatalogTruthTest extends TestCase
         $this->assertSame(0, $results[2]['games_total']);
     }
 
+    public function test_a_batch_matches_a_name_whatever_its_case(): void
+    {
+        $game = $this->makeGame('Case Game');
+        $this->makeTranslation($game, ['target_language' => 'French']);
+
+        // 🔴 **This leans on the column's collation, so it is held by a test.** `games.name` is
+        // indexed and the table collates utf8mb4_unicode_ci, which ignores case — so the lookup is
+        // a plain `whereIn` that USES the index. Wrapping the column in LOWER() would have matched
+        // just as well and forced a full scan of the table instead. If the collation ever changes,
+        // this fails here rather than silently sending every library lookup through a scan.
+        $response = $this->postJson('/api/v1/translations/for-games', [
+            'games' => [['name' => 'cASE gAME']],
+        ])->assertOk();
+
+        $this->assertSame(1, $response->json('results.0.games_total'));
+        $this->assertSame('Case Game', $response->json('results.0.games.0.game.name'));
+    }
+
     public function test_a_batch_finds_the_lineage_a_game_runs_even_when_it_left_the_catalogue(): void
     {
         $game = $this->makeGame('Delisted Game', '999102');

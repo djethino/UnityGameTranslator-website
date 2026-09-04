@@ -293,11 +293,16 @@ class TranslationController extends Controller
         // Exact first, and it is the case that matters: a manager sends the name it read off the
         // game folder, and an indexed equality answers it. The fuzzy pass below runs only for
         // what that missed.
+        //
+        // ⚠ **No LOWER() around the column.** `games.name` carries an index and the table collates
+        // `utf8mb4_unicode_ci`, which already ignores case — so a plain `whereIn` matches "Cat" for
+        // "cat" AND uses the index, where a function on the column would force a full scan. The
+        // lowering that remains is on OUR side, for the dictionary keys.
         $lowered = $names->map(fn ($n) => mb_strtolower(trim($n)));
 
-        $byName = $lowered->isEmpty()
+        $byName = $names->isEmpty()
             ? collect()
-            : Game::whereIn(\DB::raw('LOWER(name)'), $lowered->all())->get()
+            : Game::whereIn('name', $names->map(fn ($n) => trim($n))->all())->get()
                 ->groupBy(fn (Game $g) => mb_strtolower($g->name));
 
         // ⚠ A game folder is not always named as the site names it — "Foo" against "Foo: Deluxe
