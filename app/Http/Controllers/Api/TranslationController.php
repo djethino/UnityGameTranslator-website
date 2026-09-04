@@ -82,6 +82,11 @@ class TranslationController extends Controller
             'game:id,name,slug,steam_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
+
+            // ⚠ **Loaded because the ranking reads it.** `ranking_score` reads `fork_bonus`, which
+            // reads `$this->parent` — one query per fork otherwise. GameController::show says the
+            // same thing about the same accessor; the API had simply never been told.
+            'parent',
         ])->publiclyListed();
 
         // 🔴 **Which GAMES first, translations second.** The filters used to be `whereHas` on the
@@ -186,7 +191,9 @@ class TranslationController extends Controller
             // Absent when no game filter was given: there is no "per game" to be complete about,
             // and a caller must never be handed a shape that implies exhaustiveness we cannot give.
             ...($gameIds === null ? [] : [
-                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes),
+                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes,
+                                               $this->languageTallies($gameIds),
+                                               Game::whereIn('id', $gameIds)->get()),
                 'games_total' => $gamesTotal,
             ]),
         ]);
@@ -204,22 +211,34 @@ class TranslationController extends Controller
      * ignoring them. Both are needed and they are not the same question: "3 French ones match what
      * you asked" and "this game exists in 12 languages" are what a screen says side by side.
      */
-    private function groupsByGame($ranked, $gameIds, $userVotes): array
+    /// <summary>The language tallies for a set of games, in ONE query.</summary>
+    private function languageTallies($gameIds)
     {
-        // One query for every game in the answer — never one per game, and never derived from the
-        // rows above, which a language filter would have narrowed.
-        $tallies = Translation::whereIn('game_id', $gameIds)
+        return Translation::whereIn('game_id', $gameIds)
             ->publiclyListed()
             ->groupBy('game_id', 'target_language')
             ->selectRaw('game_id, target_language, COUNT(*) as n')
             ->get()
             ->groupBy('game_id');
+    }
 
+    /**
+     * 🔴 **The two lookups are handed IN, never made here.** This method is called once per entry a
+     * batch asks about, so making them inside it meant two queries per game — 47 for a library of
+     * seventeen, and it would have been 200 for a hundred. The whole point of the batch is to stop
+     * multiplying work by the size of a library; doing it in SQL instead of in HTTP would have been
+     * the same fault one floor down.
+     */
+    private function groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games): array
+    {
         $byGame = $ranked->groupBy('game_id');
 
         // Games with nothing published still appear, saying zero. A key that is simply missing
         // reads as "not asked about", and the caller cannot tell the two apart.
-        return Game::whereIn('id', $gameIds)->get()->map(function (Game $game) use ($byGame, $tallies, $userVotes) {
+        return $games->whereIn('id', $gameIds instanceof \Illuminate\Support\Collection
+                ? $gameIds->all()
+                : $gameIds)
+            ->map(function (Game $game) use ($byGame, $tallies, $userVotes) {
             $rows = $byGame->get($game->id, collect());
 
             return [
@@ -338,6 +357,8 @@ class TranslationController extends Controller
             'game:id,name,slug,steam_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
+            // Same reason as the search above: the ranking reads `parent` through `fork_bonus`.
+            'parent',
         ])->publiclyListed()->whereIn('game_id', $gameIds)->get();
 
         $gameMaxes = Translation::maxResolvedLinesByGame($gameIds);
@@ -354,6 +375,7 @@ class TranslationController extends Controller
             'game:id,name,slug,steam_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
+            'parent',
         ])->public()->whereIn('file_uuid', $uuids)->get()->keyBy('file_uuid');
 
         foreach ($matching as $row) {
@@ -368,12 +390,19 @@ class TranslationController extends Controller
                 ->pluck('value', 'translation_id')
             : collect();
 
+        // 🔴 **Once for the whole batch, and this is the difference between a batch and a loop.**
+        // Both of these used to be made inside the per-entry composition below: seventeen games
+        // cost 47 queries, a hundred would have cost 200. Saving a hundred HTTP requests only to
+        // spend two hundred SQL ones is the same fault moved one floor down.
+        $tallies = $gameIds->isEmpty() ? collect() : $this->languageTallies($gameIds);
+        $games = $gameIds->isEmpty() ? collect() : Game::whereIn('id', $gameIds)->get();
+
         // ── One result per entry ASKED, in the order asked ────────────────────────────────────
         //
         // ⚠ Including the ones that found nothing. A missing key reads as "not asked about", and a
         // caller cannot tell that apart from "no translation exists" — the distinction the whole
         // sweep already keeps (`OnlineCatalogCache` never caches a failure as an empty catalogue).
-        $results = $asked->map(function ($entry) use ($bySteam, $byName, $ranked, $gameIds, $userVotes, $matching) {
+        $results = $asked->map(function ($entry) use ($bySteam, $byName, $ranked, $userVotes, $matching, $tallies, $games) {
             $steamId = $entry['steam_id'] ?? null;
             $name = isset($entry['name']) ? mb_strtolower(trim($entry['name'])) : null;
 
@@ -392,7 +421,9 @@ class TranslationController extends Controller
                     'steam_id' => $steamId,
                     'name' => $entry['name'] ?? null,
                 ], fn ($v) => $v !== null),
-                'games' => $ids->isEmpty() ? [] : $this->groupsByGame($ranked, $ids, $userVotes),
+                'games' => $ids->isEmpty()
+                    ? []
+                    : $this->groupsByGame($ranked, $ids, $userVotes, $tallies, $games),
                 'games_total' => $games->count(),
                 'matching' => $uuid !== null && $matching->has($uuid)
                     ? $this->listingRow($matching->get($uuid), $userVotes)
