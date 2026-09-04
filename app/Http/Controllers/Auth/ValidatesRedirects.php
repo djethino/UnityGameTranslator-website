@@ -20,7 +20,14 @@ trait ValidatesRedirects
 {
     /**
      * Validate redirect URL to prevent open redirect attacks.
-     * Only allows relative URLs or URLs on the same domain.
+     * Only allows relative URLs or URLs on the same origin.
+     *
+     * 🔴 **The origin is COMPARED, never prefix-matched.** This used to accept any URL that started
+     * with `app.url` as a string — and a URL is not a string. `https://our.host@evil.example/` starts
+     * with our address and lands on evil.example (everything before the `@` is a user name);
+     * `https://our.host.evil.example/` starts with it too and is somebody else's domain. Either one,
+     * handed to /login?redirect=, turned our sign-in page into a door that opens where an attacker
+     * chose. So the URL is parsed, and scheme, host and port are compared one by one.
      */
     protected function validateRedirectUrl(?string $url): ?string
     {
@@ -33,18 +40,48 @@ trait ValidatesRedirects
 
         // Allow relative URLs starting with /
         // ⚠ "//evil.example" is a protocol-relative URL, i.e. another host — hence the second test.
-        if (Str::startsWith($url, '/') && !Str::startsWith($url, '//')) {
+        // And "/\evil.example" is read the same way by browsers, which accept a backslash where the
+        // standard says slash — hence the third.
+        if (Str::startsWith($url, '/') && !Str::startsWith($url, '//') && !Str::startsWith($url, '/\\')) {
             return $url;
         }
 
-        // Allow same-origin absolute URLs
-        $appUrl = config('app.url');
-        if ($appUrl && Str::startsWith($url, $appUrl)) {
-            return $url;
+        return $this->isSameOrigin($url) ? $url : null;
+    }
+
+    /**
+     * Whether an absolute URL points at this site and nowhere else.
+     *
+     * ⚠ Everything is measured against `app.url`, so that value has to be exact in production —
+     * scheme included. It is, and a mismatch would not open anything: a URL that fails here simply
+     * lands on the default page.
+     */
+    private function isSameOrigin(string $url): bool
+    {
+        $ours = parse_url((string) config('app.url'));
+        $theirs = parse_url($url);
+
+        if ($ours === false || $theirs === false || empty($ours['host']) || empty($theirs['host'])) {
+            return false;
         }
 
-        // Reject all other URLs (potential open redirect)
-        return null;
+        // A user name in the URL is the classic disguise: the host that follows the `@` is the
+        // real one. Nothing on this site is ever addressed that way.
+        if (isset($theirs['user']) || isset($theirs['pass'])) {
+            return false;
+        }
+
+        $scheme = fn (array $parts) => strtolower($parts['scheme'] ?? '');
+        $port = fn (array $parts) => $parts['port'] ?? match ($scheme($parts)) {
+            'https' => 443,
+            'http' => 80,
+            default => null,
+        };
+
+        return $scheme($theirs) !== ''
+            && $scheme($theirs) === $scheme($ours)
+            && strtolower($theirs['host']) === strtolower($ours['host'])
+            && $port($theirs) === $port($ours);
     }
 
     /**
