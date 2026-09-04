@@ -21,11 +21,53 @@ use Illuminate\Support\Facades\Storage;
 class TranslationController extends Controller
 {
     /**
+     * How many GAMES one answer may describe.
+     *
+     * ⚠ Not a cap on translations — a cap on how many games a fuzzy `q=` may resolve to, and the
+     * answer says how many there were (`games_total`). Taken from what the site already shows in
+     * one go rather than picked: `GameController::index` paginates games by 24.
+     *
+     * 🔴 The distinction this whole class had lost: **a limit bounds the transport, never the
+     * truth.** Nothing here may make a caller believe there is less than there is.
+     */
+    private const MaxGamesPerAnswer = 24;
+
+    /**
+     * How many rows the FLAT `translations` array carries.
+     *
+     * 🔴 **Kept only for callers that predate `games`** — every mod already published reads
+     * `count` and `translations` and nothing else. Its value is the one it has always had, so a
+     * deployed mod sees exactly what it saw yesterday.
+     *
+     * ⚠ Everything true lives in `games` now: complete per game, with its own total. The flat
+     * array is a legacy view, and the note beside it in the payload says so.
+     */
+    private const LegacyFlatRows = 50;
+
+    /**
      * Search translations by game (steam_id, game name, or game slug) and language.
      *
      * GET /api/v1/translations?steam_id=111111&lang=French
      * GET /api/v1/translations?game=hollow-knight&lang=French
      * GET /api/v1/translations?q=Hollow&lang=French
+     *
+     * 🔴 **Rewritten 2026-09-04. What it used to do, and why it was wrong** (the full account is
+     * in `analyse/api-search-troncature.md`):
+     *
+     *  · `limit(300)` with NO `orderBy` — so past 300 matches the sample was whatever the engine
+     *    returned first, and two identical calls could answer differently;
+     *  · `take(50)` with no total and no pagination — past 50, legitimate translations became
+     *    invisible and the caller had no way to know. The Manager then said "50 translations are
+     *    published", listed a truncated set of languages, and OFFERED ONE FOR INSTALL out of a
+     *    sample;
+     *  · with `q=` the cap was not even per game: `name LIKE %…%` spans several, and neither the
+     *    mod nor the Manager filtered the answer back onto the game they asked about.
+     *
+     * What replaces it, and it is what the site itself already does on a game's page
+     * (`GameController::show` — *"Get ALL translations for this game"*, no cap, same ranking):
+     * everything matching is loaded and ranked, and the answer is GROUPED BY GAME. Ranking only
+     * ever happens inside one game — comparing a translation of one game to another's is meaningless
+     * — which is also why `ranking_score` never needed to move into SQL.
      */
     public function search(Request $request): JsonResponse
     {
@@ -42,26 +84,38 @@ class TranslationController extends Controller
             'originAuthor:id,name',
         ])->publiclyListed();
 
+        // 🔴 **Which GAMES first, translations second.** The filters used to be `whereHas` on the
+        // translation query, so nothing ever knew how many games were involved — which is exactly
+        // how a cap meant for one game ended up shared between four.
+        $gameIds = null;
+        $gamesTotal = null;
+
         // Filter by Steam ID (exact match)
         if ($request->filled('steam_id')) {
-            $query->whereHas('game', function ($q) use ($request) {
-                $q->where('steam_id', $request->steam_id);
-            });
+            $matching = Game::where('steam_id', $request->steam_id);
         }
         // Filter by game slug or ID
         elseif ($request->filled('game')) {
             $gameIdentifier = $request->game;
-            $query->whereHas('game', function ($q) use ($gameIdentifier) {
-                $q->where('slug', $gameIdentifier)
-                    ->orWhere('id', is_numeric($gameIdentifier) ? $gameIdentifier : 0);
-            });
+            $matching = Game::where('slug', $gameIdentifier)
+                ->orWhere('id', is_numeric($gameIdentifier) ? $gameIdentifier : 0);
         }
         // Search by game name
         elseif ($request->filled('q')) {
             $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
-            $query->whereHas('game', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            });
+            $matching = Game::where('name', 'like', '%' . $search . '%');
+        }
+
+        if (isset($matching)) {
+            // Counted before the cap, and reported: a caller that receives 24 games must be able
+            // to know there were 40.
+            $gamesTotal = (clone $matching)->count();
+
+            // ⚠ Ordered before the cap, or "the first 24" means nothing — the very fault the old
+            // `limit(300)` had.
+            $gameIds = $matching->orderBy('name')->limit(self::MaxGamesPerAnswer)->pluck('id');
+
+            $query->whereIn('game_id', $gameIds);
         }
 
         // Filter by target language (full name, e.g., "French")
@@ -86,35 +140,275 @@ class TranslationController extends Controller
         // review, coverage and whether the file was still maintained.
         //
         // Sorted in PHP because usefulness reads the game's other translations and cannot be
-        // expressed in this query. The cap is applied AFTER sorting, so the top of the list is
-        // the real top: cutting first would have ranked an arbitrary fifty.
-        $candidates = $query->limit(300)->get();
+        // expressed in this query.
+        //
+        // ⚠ **No cap here any more, and that is the point.** What bounds this query is the number
+        // of GAMES above; within them everything is loaded, exactly as a game's own page on the
+        // site does. `limit(300)` stood here with no `orderBy` in front of it, which made the
+        // sample arbitrary at the very moment it started to matter.
+        //
+        // ⚠ Without a game filter — nobody in this project calls it that way — this is still every
+        // published translation, and the old cap is the honest thing to keep: there is no "per
+        // game" to be complete about.
+        $candidates = $gameIds === null ? $query->limit(300)->get() : $query->get();
 
         $gameMaxes = Translation::maxResolvedLinesByGame($candidates->pluck('game_id'));
         foreach ($candidates as $candidate) {
             $candidate->gameMaxHint = $gameMaxes[$candidate->game_id] ?? 0;
         }
 
-        $translations = $candidates
-            ->sortByDesc(fn (Translation $t) => $t->ranking_score)
-            ->take(50)
-            ->values();
+        $ranked = $candidates->sortByDesc(fn (Translation $t) => $t->ranking_score)->values();
+
+        // The flat array every published mod reads, unchanged — see LegacyFlatRows.
+        $translations = $ranked->take(self::LegacyFlatRows)->values();
 
         // The caller's own votes, in ONE query for the whole page (auth.api.optional resolves the
         // user only when a valid token was sent; voting requires an account, so anonymous callers
         // simply get null). Without this the mod cannot colour the arrows until the user votes
         // again — it only ever learned its vote from the POST response.
+        // ⚠ Over everything ranked, not just the flat fifty: the same rows are served again inside
+        // `games`, and a vote missing there would draw a neutral arrow to somebody who has voted —
+        // which is how a second click WITHDRAWS the vote they meant to confirm.
         $user = $request->user();
         $userVotes = $user
             ? \App\Models\Vote::where('user_id', $user->id)
-                ->whereIn('translation_id', $translations->pluck('id'))
+                ->whereIn('translation_id', $ranked->pluck('id'))
                 ->pluck('value', 'translation_id')
             : collect();
 
         return response()->json([
+            // ── What every published mod reads. Unchanged, on purpose. ────────────────────────
             'count' => $translations->count(),
-            'translations' => $translations->map(function ($t) use ($userVotes) {
-                return [
+            'translations' => $translations->map(fn ($t) => $this->listingRow($t, $userVotes)),
+
+            // ── The truth, per game, complete. ───────────────────────────────────────────────
+            //
+            // Absent when no game filter was given: there is no "per game" to be complete about,
+            // and a caller must never be handed a shape that implies exhaustiveness we cannot give.
+            ...($gameIds === null ? [] : [
+                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes),
+                'games_total' => $gamesTotal,
+            ]),
+        ]);
+    }
+
+    /**
+     * The published translations of each game, complete, with what the whole game holds beside it.
+     *
+     * 🔴 **`total` and `languages` are what make any cap harmless.** They are measured, not counted
+     * off the rows returned, so a caller can never conclude "there are 50" or "none in French" from
+     * a partial list. That conclusion — drawn from a truncated answer, then used to OFFER AN
+     * INSTALL — is the defect this whole rewrite is about.
+     *
+     * ⚠ `total` answers the request (language filters included); `languages` answers about the GAME,
+     * ignoring them. Both are needed and they are not the same question: "3 French ones match what
+     * you asked" and "this game exists in 12 languages" are what a screen says side by side.
+     */
+    private function groupsByGame($ranked, $gameIds, $userVotes): array
+    {
+        // One query for every game in the answer — never one per game, and never derived from the
+        // rows above, which a language filter would have narrowed.
+        $tallies = Translation::whereIn('game_id', $gameIds)
+            ->publiclyListed()
+            ->groupBy('game_id', 'target_language')
+            ->selectRaw('game_id, target_language, COUNT(*) as n')
+            ->get()
+            ->groupBy('game_id');
+
+        $byGame = $ranked->groupBy('game_id');
+
+        // Games with nothing published still appear, saying zero. A key that is simply missing
+        // reads as "not asked about", and the caller cannot tell the two apart.
+        return Game::whereIn('id', $gameIds)->get()->map(function (Game $game) use ($byGame, $tallies, $userVotes) {
+            $rows = $byGame->get($game->id, collect());
+
+            return [
+                'game' => [
+                    'id' => $game->id,
+                    'name' => $game->name,
+                    'slug' => $game->slug,
+                    'steam_id' => $game->steam_id,
+                    'image_url' => $game->image_url,
+                ],
+                'total' => $rows->count(),
+                'languages' => $tallies->get($game->id, collect())
+                    ->mapWithKeys(fn ($row) => [$row->target_language => (int) $row->n])
+                    ->toArray(),
+                'translations' => $rows->map(fn ($t) => $this->listingRow($t, $userVotes))->values(),
+            ];
+        })->values()->toArray();
+    }
+
+    /**
+     * How many games one batch may ask about.
+     *
+     * ⚠ A transport bound, and the answer is complete for every one of them — nothing is dropped
+     * silently. A caller with more games sends a second batch; two hundred games is two requests
+     * where it is two hundred today.
+     */
+    private const MaxGamesPerBatch = 100;
+
+    /**
+     * Everything a manager needs about a whole library, in one request.
+     *
+     * 🔴 **Why this exists.** The community lookup is the only call that grows with the number of
+     * games — one per game, 120 ms apart, against a `throttle:60,1` counted per IP. Under sixty
+     * games it passes by luck; past that the rest are refused, nothing is cached for them (a
+     * failure is not an empty catalogue), and the next launch repeats it identically. A game past
+     * the sixtieth would never get an answer at all.
+     *
+     * POST body: `{"games":[{"steam_id":"367520","uuid":"abc"},{"name":"Foo"}]}`
+     *
+     * ⚠ **`uuid` resolves with plain visibility, everything else with `publiclyListed`** — and that
+     * difference is the point of carrying it. A delisted Main is still the Main of its lineage: it
+     * is out of the catalogue but it is what the game is running, and a manager that could not
+     * find it would lose the author, the sync verdict and the votes of the very file in front of
+     * the reader. It is the rule `scopePubliclyListed` already states: *"never where it resolves
+     * one"*.
+     *
+     * ⚠ **Nothing private is reachable here.** Both paths answer with `visibility = public` only,
+     * so a branch is never returned whoever asks — which is why this endpoint needs no permission
+     * rule of its own. Where the account stands in a lineage is a different question, and
+     * `/me/translations` already answers it for the whole account in one call.
+     */
+    public function forGames(Request $request): JsonResponse
+    {
+        $request->validate([
+            'games' => 'required|array|min:1|max:' . self::MaxGamesPerBatch,
+            'games.*.steam_id' => 'nullable|string|max:32',
+            'games.*.name' => 'nullable|string|max:255',
+            'games.*.uuid' => 'nullable|string|max:36',
+        ]);
+
+        $asked = collect($request->input('games'));
+
+        // ── Which games, in as few queries as the shapes allow ────────────────────────────────
+        $steamIds = $asked->pluck('steam_id')->filter()->unique()->values();
+        $names = $asked->pluck('name')->filter()->unique()->values();
+
+        $bySteam = $steamIds->isEmpty()
+            ? collect()
+            : Game::whereIn('steam_id', $steamIds)->get()->groupBy('steam_id');
+
+        // Exact first, and it is the case that matters: a manager sends the name it read off the
+        // game folder, and an indexed equality answers it. The fuzzy pass below runs only for
+        // what that missed.
+        $lowered = $names->map(fn ($n) => mb_strtolower(trim($n)));
+
+        $byName = $lowered->isEmpty()
+            ? collect()
+            : Game::whereIn(\DB::raw('LOWER(name)'), $lowered->all())->get()
+                ->groupBy(fn (Game $g) => mb_strtolower($g->name));
+
+        // ⚠ A game folder is not always named as the site names it — "Foo" against "Foo: Deluxe
+        // Edition". That is why `q=` matched loosely in the first place, and dropping it here
+        // would lose those games rather than fix anything. What changes is that the answer now
+        // NAMES each game it found, so an ambiguity is visible instead of being flattened into
+        // "the translations of your game".
+        $unresolved = $lowered->reject(fn ($n) => $byName->has($n))->values();
+
+        if ($unresolved->isNotEmpty()) {
+            $fuzzy = Game::where(function ($q) use ($unresolved) {
+                foreach ($unresolved as $name) {
+                    $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $name);
+                    $q->orWhere('name', 'like', '%' . $escaped . '%');
+                }
+            })->orderBy('name')->get();
+
+            foreach ($unresolved as $name) {
+                $hits = $fuzzy->filter(fn (Game $g) => str_contains(mb_strtolower($g->name), $name))
+                    ->take(self::MaxGamesPerAnswer)
+                    ->values();
+
+                if ($hits->isNotEmpty()) {
+                    $byName->put($name, $hits);
+                }
+            }
+        }
+
+        // ── Their translations, all of them, in one query ─────────────────────────────────────
+        $gameIds = $bySteam->flatten()->merge($byName->flatten())->pluck('id')->unique()->values();
+
+        $rows = $gameIds->isEmpty() ? collect() : Translation::with([
+            'game:id,name,slug,steam_id,image_url',
+            'user:id,name',
+            'originAuthor:id,name',
+        ])->publiclyListed()->whereIn('game_id', $gameIds)->get();
+
+        $gameMaxes = Translation::maxResolvedLinesByGame($gameIds);
+        foreach ($rows as $row) {
+            $row->gameMaxHint = $gameMaxes[$row->game_id] ?? 0;
+        }
+
+        $ranked = $rows->sortByDesc(fn (Translation $t) => $t->ranking_score)->values();
+
+        // ── The lineage each game is actually running ─────────────────────────────────────────
+        $uuids = $asked->pluck('uuid')->filter()->unique()->values();
+
+        $matching = $uuids->isEmpty() ? collect() : Translation::with([
+            'game:id,name,slug,steam_id,image_url',
+            'user:id,name',
+            'originAuthor:id,name',
+        ])->public()->whereIn('file_uuid', $uuids)->get()->keyBy('file_uuid');
+
+        foreach ($matching as $row) {
+            $row->gameMaxHint = $gameMaxes[$row->game_id]
+                ?? Translation::maxResolvedLinesForGame($row->game_id);
+        }
+
+        $user = $request->user();
+        $userVotes = $user
+            ? \App\Models\Vote::where('user_id', $user->id)
+                ->whereIn('translation_id', $ranked->pluck('id')->merge($matching->pluck('id')))
+                ->pluck('value', 'translation_id')
+            : collect();
+
+        // ── One result per entry ASKED, in the order asked ────────────────────────────────────
+        //
+        // ⚠ Including the ones that found nothing. A missing key reads as "not asked about", and a
+        // caller cannot tell that apart from "no translation exists" — the distinction the whole
+        // sweep already keeps (`OnlineCatalogCache` never caches a failure as an empty catalogue).
+        $results = $asked->map(function ($entry) use ($bySteam, $byName, $ranked, $gameIds, $userVotes, $matching) {
+            $steamId = $entry['steam_id'] ?? null;
+            $name = isset($entry['name']) ? mb_strtolower(trim($entry['name'])) : null;
+
+            $games = collect();
+            if ($steamId !== null && $bySteam->has($steamId)) {
+                $games = $bySteam->get($steamId);
+            } elseif ($name !== null && $byName->has($name)) {
+                $games = $byName->get($name);
+            }
+
+            $ids = $games->pluck('id');
+            $uuid = $entry['uuid'] ?? null;
+
+            return [
+                'key' => array_filter([
+                    'steam_id' => $steamId,
+                    'name' => $entry['name'] ?? null,
+                ], fn ($v) => $v !== null),
+                'games' => $ids->isEmpty() ? [] : $this->groupsByGame($ranked, $ids, $userVotes),
+                'games_total' => $games->count(),
+                'matching' => $uuid !== null && $matching->has($uuid)
+                    ? $this->listingRow($matching->get($uuid), $userVotes)
+                    : null,
+            ];
+        })->values();
+
+        return response()->json(['results' => $results]);
+    }
+
+    /**
+     * One translation, as every listing in this API describes it.
+     *
+     * 🔴 **One mapper, used by the search, by the per-game groups and by the batch endpoint.** Two
+     * shapes for one object is two truths waiting to drift, and this project has paid for that
+     * before — a field added to one and forgotten in the other is invisible until somebody reports
+     * that the same file reads differently in two windows.
+     */
+    private function listingRow(Translation $t, $userVotes): array
+    {
+        return [
                     'id' => $t->id,
                     'game' => [
                         'id' => $t->game->id,
@@ -178,9 +472,7 @@ class TranslationController extends Controller
                     // or a download — content_updated_at is the honest one
                     'updated_at' => $t->updated_at->toIso8601String(),
                     'content_updated_at' => $t->contentChangedAt()->toIso8601String(),
-                ];
-            }),
-        ]);
+        ];
     }
 
     /**

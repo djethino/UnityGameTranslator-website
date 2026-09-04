@@ -32,6 +32,20 @@ Route::prefix('v1')->group(function () {
     // PUBLIC ENDPOINTS (anonymous users)
     // Can: browse, download translations
     // ===========================================
+    // 🔴 **A whole library in one request.** The community lookup is the only call that grows with
+    // the number of games: one per game against the 60/min below, counted per IP. Past sixty games
+    // the rest are refused, nothing is cached for them, and the next launch repeats it — so a game
+    // past the sixtieth never gets an answer. A batch is capped at 100 games and answers COMPLETELY
+    // for each of them, so nothing is traded away for the saving.
+    //
+    // ⚠ Its own throttle, because one call here is worth a hundred below. POST because a library
+    // carries game names, and two hundred of them do not fit in a URL.
+    //
+    // ⚠ Same visibility rules as the search — public translations only, whoever asks. Where an
+    // account stands in a lineage is a different question and `/me/translations` answers it.
+    Route::post('translations/for-games', [TranslationController::class, 'forGames'])
+        ->middleware(['auth.api.optional', 'throttle:20,1']);
+
     Route::middleware('throttle:60,1')->group(function () {
         // Browse translations and games. Search stays public, but reads the token when the
         // caller sends one so the response can carry that user's own vote.
