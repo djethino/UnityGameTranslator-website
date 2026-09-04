@@ -23,6 +23,9 @@ class ForkOriginTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** The shape the site fingerprints a file in: sixty-four hex digits. */
+    private const ORIGIN_HASH = '5f2b7c0d9e1a4b6c8d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c';
+
     private function upload(User $user, array $extra = []): \Illuminate\Testing\TestResponse
     {
         $token = ApiToken::createForUser($user, 'test')->plain_token;
@@ -52,8 +55,28 @@ class ForkOriginTest extends TestCase
             'file_path' => 'translations/not-read-by-these-tests.json',
             'file_uuid' => 'origin-uuid',
             'visibility' => 'public',
-            'file_hash' => 'origin-hash',
+            'file_hash' => self::ORIGIN_HASH,
             'human_count' => 3000,
+        ])->save();
+
+        return $t->refresh();
+    }
+
+    /** A contribution to $main, held by $author: readable by the two of them and nobody else. */
+    private function branchOf(Translation $main, User $author): Translation
+    {
+        $t = new Translation();
+        $t->forceFill([
+            'game_id' => $main->game_id,
+            'user_id' => $author->id,
+            'source_language' => 'English',
+            'target_language' => 'French',
+            'file_path' => 'translations/not-read-by-these-tests.json',
+            'file_uuid' => $main->file_uuid,
+            'visibility' => 'branch',
+            'parent_id' => $main->id,
+            'file_hash' => 'branch-hash',
+            'human_count' => 40,
         ])->save();
 
         return $t->refresh();
@@ -66,7 +89,7 @@ class ForkOriginTest extends TestCase
 
         $this->upload(User::factory()->create(), [
             'forked_from_id' => $source->id,
-            'forked_from_hash' => 'origin-hash',
+            'forked_from_hash' => self::ORIGIN_HASH,
             'forked_from_lines' => 3000,
         ])->assertSuccessful();
 
@@ -74,8 +97,89 @@ class ForkOriginTest extends TestCase
         $this->assertSame($source->id, $fork->origin_translation_id);
         $this->assertSame($author->id, $fork->origin_user_id);
         $this->assertSame(3000, $fork->origin_resolved_lines);
+        $this->assertSame(self::ORIGIN_HASH, $fork->origin_file_hash);
         $this->assertTrue($fork->hasOrigin());
         $this->assertTrue($source->publicForks()->where('id', $fork->id)->exists());
+    }
+
+    /**
+     * 🔴 **An origin is something the caller HOLDS, not any row whose id it can guess.** It used to
+     * be enough that the id resolved: an account could name somebody's private branch — or a
+     * translation it had never seen — and be credited "forked from @them", while their page listed
+     * the stranger's upload among their own community forks.
+     */
+    public function test_a_stranger_cannot_claim_a_private_branch_as_its_origin(): void
+    {
+        $mainOwner = User::factory()->create();
+        $main = $this->original($mainOwner);
+        $branch = $this->branchOf($main, User::factory()->create());
+
+        $this->upload(User::factory()->create(), [
+            'forked_from_id' => $branch->id,
+            'forked_from_hash' => self::ORIGIN_HASH,
+            'forked_from_lines' => 40,
+        ])->assertSuccessful();
+
+        $fork = Translation::latest('id')->first();
+        $this->assertNull($fork->origin_translation_id, 'a branch you cannot read credits nobody');
+        $this->assertNull($fork->origin_user_id);
+        $this->assertNull($fork->origin_resolved_lines);
+        $this->assertFalse($fork->hasOrigin());
+    }
+
+    /**
+     * The Main's owner can READ a branch sent to them — that is what reviewing it means — but a
+     * fork is made of something one holds as one's own copy, and a contribution received is not
+     * that. Merging is how it is taken; forking it would be crediting oneself with a stranger's
+     * work under the name of a stranger.
+     */
+    public function test_the_main_owner_cannot_declare_a_received_branch_as_an_origin(): void
+    {
+        $mainOwner = User::factory()->create();
+        $main = $this->original($mainOwner);
+        $branch = $this->branchOf($main, User::factory()->create());
+
+        $this->upload($mainOwner, ['forked_from_id' => $branch->id])->assertSuccessful();
+
+        $this->assertNull(Translation::latest('id')->first()->origin_translation_id);
+    }
+
+    /** One's own branch, taken off on its own: that is precisely a fork. */
+    public function test_an_author_can_fork_their_own_branch(): void
+    {
+        $main = $this->original(User::factory()->create());
+        $contributor = User::factory()->create();
+        $branch = $this->branchOf($main, $contributor);
+
+        $this->upload($contributor, [
+            'forked_from_id' => $branch->id,
+            'forked_from_lines' => 40,
+        ])->assertSuccessful();
+
+        $fork = Translation::latest('id')->first();
+        $this->assertSame($branch->id, $fork->origin_translation_id);
+        $this->assertSame($contributor->id, $fork->origin_user_id);
+    }
+
+    /**
+     * ⚠ Left out, never refused: nothing in these fields may fail an upload. But what is stored
+     * has a shape — a hash is sixty-four hex digits, a count is a number the column can hold —
+     * and anything else is simply not recorded.
+     */
+    public function test_a_malformed_hash_or_count_is_left_out_and_the_pointer_kept(): void
+    {
+        $source = $this->original(User::factory()->create());
+
+        $this->upload(User::factory()->create(), [
+            'forked_from_id' => $source->id,
+            'forked_from_hash' => str_repeat('z', 255),
+            'forked_from_lines' => 99999999999,
+        ])->assertSuccessful();
+
+        $fork = Translation::latest('id')->first();
+        $this->assertSame($source->id, $fork->origin_translation_id, 'the pointer is real');
+        $this->assertNull($fork->origin_file_hash, 'that is not a fingerprint');
+        $this->assertNull($fork->origin_resolved_lines, 'and that is not a count the column holds');
     }
 
     public function test_an_origin_pointing_at_nothing_is_dropped_whole(): void
@@ -115,7 +219,7 @@ class ForkOriginTest extends TestCase
 
         $this->upload(User::factory()->create(), [
             'forked_from_id' => $source->id,
-            'forked_from_hash' => 'origin-hash',
+            'forked_from_hash' => self::ORIGIN_HASH,
             'forked_from_lines' => 3000,
         ])->assertSuccessful();
 
@@ -142,7 +246,7 @@ class ForkOriginTest extends TestCase
 
         $this->upload(User::factory()->create(), [
             'forked_from_id' => $source->id,
-            'forked_from_hash' => 'origin-hash',
+            'forked_from_hash' => self::ORIGIN_HASH,
             'forked_from_lines' => 3000,
         ])->assertSuccessful();
 

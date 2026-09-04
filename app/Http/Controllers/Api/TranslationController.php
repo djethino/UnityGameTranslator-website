@@ -963,8 +963,17 @@ class TranslationController extends Controller
      * the original held at the instant of the fork, since it has grown since. A pointer that
      * resolves to nothing is dropped whole rather than stored dangling.
      *
+     * 🔴 **Verified means "this caller could have forked it", not "a row with this id exists".** A
+     * fork is what you make of a translation you HOLD — one you downloaded, or your own branch
+     * leaving its lineage. It used to be enough that the id resolved: an account could then
+     * declare somebody's private branch, or a translation it had never seen, as its origin, and
+     * the catalogue credited "forked from @them" on the fork while their own page listed it among
+     * their community forks. So the source has to be readable by the caller, and either public
+     * or the caller's own. What fails that test is dropped whole, as a pointer to nothing is.
+     *
      * A mod that sends none of this — every released version — lands on the same nulls as
-     * before. Nothing here is required, and nothing here can fail an upload.
+     * before. Nothing here is required, and nothing here can fail an upload: a malformed number or
+     * hash is left out, never refused.
      *
      * @return array{translation_id: ?int, user_id: ?int, resolved_lines: ?int, file_hash: ?string}
      */
@@ -981,18 +990,33 @@ class TranslationController extends Controller
             return $empty;
         }
 
+        $user = $request->user();
         $source = Translation::find($declaredId);
-        if (!$source) {
+
+        if (!$source || !$source->isReadableBy($user)) {
             return $empty;
         }
+
+        if ($source->visibility !== 'public' && $source->user_id !== $user->id) {
+            return $empty;
+        }
+
+        // The snapshot, as declared — and only as a number the column can hold. Anything else
+        // (a word, a negative, a figure past a 32-bit integer that would fail the insert) is no
+        // number at all.
+        $lines = filter_var($request->input('forked_from_lines'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 0, 'max_range' => 2147483647],
+        ]);
+
+        // The version that was taken, as the site itself fingerprints one: sixty-four hex digits.
+        $hash = $request->input('forked_from_hash');
+        $hash = is_string($hash) && preg_match('/^[0-9a-f]{64}$/', $hash) ? $hash : null;
 
         return [
             'translation_id' => $source->id,
             'user_id' => $source->user_id,
-            'resolved_lines' => $request->filled('forked_from_lines')
-                ? max(0, (int) $request->input('forked_from_lines'))
-                : null,
-            'file_hash' => $request->input('forked_from_hash'),
+            'resolved_lines' => $lines === false ? null : $lines,
+            'file_hash' => $hash,
         ];
     }
 
