@@ -17,6 +17,10 @@ class Game extends Model
         'unity_name',
         'unity_company',
 
+        // A latin handle for a title written in another script — see App\Support\LatinSearch.
+        // Filled by the model itself on save; listed here so a mass assignment can set it too.
+        'latin_search',
+
         'slug',
         'igdb_id',
         'rawg_id',
@@ -40,6 +44,18 @@ class Game extends Model
                     $slug = 'game-' . uniqid();
                 }
                 $game->slug = $slug;
+            }
+        });
+
+        // Something to TYPE for a title written in another script — 龙胤立志传 cannot be reached
+        // from a keyboard otherwise. Never shown, and never used to decide which game an upload
+        // belongs to; see App\Support\LatinSearch for why both of those matter.
+        //
+        // ⚠ On `saving`, not `creating`: a game renamed afterwards — an admin tidying a title, an
+        // IGDB match arriving late — would otherwise keep a handle for the name it no longer has.
+        static::saving(function ($game) {
+            if ($game->isDirty('name')) {
+                $game->latin_search = \App\Support\LatinSearch::for($game->name);
             }
         });
     }

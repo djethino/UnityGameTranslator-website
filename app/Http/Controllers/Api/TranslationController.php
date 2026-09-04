@@ -116,9 +116,16 @@ class TranslationController extends Controller
 
             $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
 
+            // ⚠ **The latin handle joins the LOOSE half only.** It is a generated string, so it
+            // must never decide which game an upload belongs to — `$exact` above, on `unity_name`,
+            // is what identifies. Here it does exactly one thing: let somebody reach 龙胤立志传
+            // from a keyboard. See App\Support\LatinSearch.
             $matching = $exact->isNotEmpty()
                 ? Game::whereIn('id', $exact)
-                : Game::where('name', 'like', '%' . $search . '%');
+                : Game::where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
+                });
         }
 
         if (isset($matching)) {

@@ -33,7 +33,13 @@ class GameController extends Controller
         // Search by game name
         if ($request->filled('q')) {
             $search = $this->escapeLike($request->q);
-            $query->where('name', 'like', '%' . $search . '%');
+
+            // ⚠ The latin handle beside the title, so a game written in another script can be
+            // reached from a keyboard. Never displayed — see App\Support\LatinSearch.
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
+            });
         }
 
         // Filter by target language
@@ -366,6 +372,8 @@ class GameController extends Controller
 
         $search = $this->escapeLike($query);
         $games = Game::where('name', 'like', '%' . $search . '%')
+            // Same reason as the listing above: typing "longyin" has to reach 龙胤立志传.
+            ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%')
             ->limit(10)
             ->get(['id', 'name', 'slug']);
 
