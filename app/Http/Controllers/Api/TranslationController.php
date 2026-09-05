@@ -837,6 +837,14 @@ class TranslationController extends Controller
                 // to contribute for the first time needs it before the click, not after — it is
                 // the same "no dead ends" rule the rest of this product follows. Additive.
                 'main_abandoned' => (bool) $mainTranslation->user?->isDeletedAccount(),
+
+                // 🔴 **The Main's refusal of contributions, to the one person it is FOR.** It was
+                // sent on the caller's own row only — to somebody who had already contributed —
+                // and never here, to somebody about to. Both clients read a missing field as "not
+                // asked" (rightly: an older site never says), so both announced "Contribute" over a
+                // translation whose author works alone, and determineOwnership refused after the
+                // upload. Additive; sync/state has said it at this level all along.
+                'accepts_branches' => (bool) $mainTranslation->accepts_branches,
                 'main' => [
                     'id' => $mainTranslation->id,
                     'uploader' => $mainTranslation->user->name,
