@@ -472,6 +472,21 @@
                     cancel="clearAll()" :cancel-label="__('merge_preview.cancel_changes')"
                     download="downloadMerged()" :download-label="__('merge_preview.download_merged')" />
 
+                {{-- ⚠ La sortie de la comparaison, jumelle de celle de la session d'édition : un
+                     POST avec sa propre confirmation, ici et pas dans l'établi — ce n'est pas une
+                     action d'édition mais la façon de quitter, et un formulaire ne se passe pas
+                     dans un slot comme une expression de clic.
+                     Elle n'applique rien : elle relâche le jeton, donc cette page cesse d'être
+                     vivante (sa sonde répond 410) et le jeu ferme son écran de fusion. --}}
+                <form method="POST" action="{{ route('translations.merge-preview.end', $translation) }}"
+                    data-confirm="{{ __('merge_preview.end_confirm') }}">
+                    @csrf
+                    <button type="submit" x-show="!sessionLost"
+                        class="text-red-400 hover:text-red-300 text-sm transition whitespace-nowrap">
+                        <i class="fas fa-power-off mr-1"></i> {{ __('merge_preview.end') }}
+                    </button>
+                </form>
+
                 {{-- 🔴 **The button names where the result GOES, and the two places are not the
                      same.** It said "Save to server" whichever way the comparison ran, three inches
                      under a banner reading "Nothing is published" — and nothing does go to the

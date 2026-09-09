@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
+use App\Services\SsePublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -62,6 +63,34 @@ class MergePreviewController extends Controller
             ]),
             'expires_at' => $token->expires_at->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Let go of a comparison, from the mod.
+     *
+     * DELETE /api/v1/merge-preview/{token}
+     *
+     * 🔴 A comparison describes two exact files. When the mod loads a different translation the
+     * question it was asking no longer has a subject — but the page opened in the browser has no
+     * way to know that, so it stays there for as long as the tab does, offering to apply a
+     * decision to a file nobody holds any more. Measured 2026-09-09: twenty minutes and several
+     * translation switches later, the tab was still live.
+     *
+     * ⚠ The token is checked against the caller, like every other route here: holding a leaked
+     * token must not be enough to end somebody's comparison.
+     *
+     * Idempotent — an already-gone comparison is a success for the caller.
+     */
+    public function destroy(Request $request, string $token): JsonResponse
+    {
+        $mergeToken = MergePreviewToken::findForResult($token);
+
+        if ($mergeToken && (int) $mergeToken->user_id === (int) $request->user()->id) {
+            SsePublisher::mergePreviewEnded($mergeToken->token);
+            $mergeToken->deleteWithFile();
+        }
+
+        return response()->json(['ended' => true]);
     }
 
     /**

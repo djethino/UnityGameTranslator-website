@@ -200,6 +200,11 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         // result back to the mod. See TranslationController::applyMergePreviewLocally.
         Route::post('/translations/{translation}/merge-preview/local', [TranslationController::class, 'applyMergePreviewLocally'])->name('translations.merge-preview.apply-local');
 
+        // The way out of a comparison, from the browser — the twin of edit-session.end. It applies
+        // nothing: it releases the token, so the page stops being live and the game is told.
+        Route::post('/translations/{translation}/merge-preview/end', [TranslationController::class, 'endMergePreview'])
+            ->middleware('throttle:10,1')->name('translations.merge-preview.end');
+
         // Notifications page (browsed → localizable)
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 

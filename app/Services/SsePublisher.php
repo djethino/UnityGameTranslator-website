@@ -175,6 +175,32 @@ class SsePublisher
     }
 
     /**
+     * Signal that a comparison is over without a result — the mod let go of it, or the person in
+     * the browser closed it.
+     *
+     * 🔴 A comparison is an answer about two exact files. Replace either side and there is nothing
+     * left to arbitrate: the mod drops it when the translation underneath changes, and the page
+     * has to learn that from somewhere, or it sits there for as long as the tab stays open
+     * offering to apply a decision to a file that is gone.
+     *
+     * Same shape as editSessionEnded, including overwriting any stored result: a replayed
+     * merge_completed would send the mod to a token that no longer exists.
+     *
+     * @param string $token The merge preview token
+     */
+    public static function mergePreviewEnded(string $token): void
+    {
+        $channel = "sse:merge:{$token}";
+        $message = json_encode([
+            'event' => 'merge_preview_ended',
+            'data' => [],
+        ]);
+
+        self::safePublish($channel, $message);
+        self::safeSetex("sse:merge:{$token}:result", self::SINGLE_DELIVERY_TTL, $message);
+    }
+
+    /**
      * Signal that the browser saved during a live edit session.
      * Called from EditSessionController::save(). Unlike merges, one session
      * can emit many of these — the SSE stream stays open between saves.

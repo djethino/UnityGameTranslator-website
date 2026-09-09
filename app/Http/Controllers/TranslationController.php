@@ -1196,6 +1196,36 @@ class TranslationController extends Controller
      * one forgets to check; two routes cannot be confused, and each one refuses a token that
      * does not belong to it.
      */
+    /**
+     * Close a comparison from the browser.
+     *
+     * 🔴 **The same way out the live edit session has, and for the same reason.** A comparison is
+     * an answer about two exact files; whoever decides they are done with it should not have to
+     * abandon a tab and wait for a TTL. Ending it here releases the token, so the page's own
+     * freshness poll answers 410 and says so, and the game hears it on the stream it opened —
+     * which closes the merge screen there instead of leaving it describing a token that is gone.
+     *
+     * ⚠ Nothing is applied. This is the way out, not a decision: what was arbitrated and never
+     * saved is lost, exactly as the confirmation says.
+     */
+    public function endMergePreview(Request $request, Translation $translation)
+    {
+        $token = session('merge_preview_token')
+            && (int) session('merge_preview_translation_id') === (int) $translation->id
+                ? MergePreviewToken::findForSession(session('merge_preview_token'), $translation->id)
+                : null;
+
+        if ($token) {
+            SsePublisher::mergePreviewEnded($token->token);
+            $token->deleteWithFile();
+        }
+
+        $request->session()->forget(['merge_preview_token', 'merge_preview_translation_id']);
+
+        return redirect()->route('translations.show', $translation)
+            ->with('success', __('merge_preview.ended'));
+    }
+
     public function applyMergePreviewLocally(Request $request, Translation $translation, TranslationService $service)
     {
         $token = session('merge_preview_token')

@@ -150,6 +150,11 @@ Route::prefix('v1')->group(function () {
         Route::get('merge-preview/{token}/result', [MergePreviewController::class, 'result'])
             ->middleware('throttle:30,1');
 
+        // Let go of a comparison whose subject has changed — the mod loaded another translation.
+        // Same shape as DELETE edit-session/{modKey}: the page learns over its own stream.
+        Route::delete('merge-preview/{token}', [MergePreviewController::class, 'destroy'])
+            ->middleware('throttle:30,1');
+
         // Vote on translation
         Route::post('translations/{translation}/vote', [TranslationController::class, 'vote'])
             ->middleware('throttle:30,1');
