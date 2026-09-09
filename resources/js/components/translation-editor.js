@@ -156,6 +156,7 @@ export function editorCore(config) {
         sessionLost: false,
         /** The mark the last answer carried, or null until the first one establishes it. */
         _freshMark: null,
+        _freshnessTimer: null,
 
         /** Page hook: where to ask. Null on a screen with nothing to check. */
         freshnessUrl() { return null; },
@@ -167,6 +168,24 @@ export function editorCore(config) {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') this.checkFreshness();
             });
+
+            // 🔴 **Coming back to the tab was the ONLY thing that asked**, and it is the one case
+            // where somebody is not looking. Watched in the foreground — a comparison open beside
+            // the game — the page never asked again: the mod released the token, the site had the
+            // answer ready, and the page went on offering to save into a comparison that no longer
+            // existed. Observed 2026-09-09: a backup restored in the game, and the page still live
+            // minutes later.
+            //
+            // ⚠ Half a minute rather than seconds. It answers two questions that both keep — the
+            // file was changed elsewhere, the session is gone — and neither is worth a request per
+            // second. The check stops asking on its own once it knows (see checkFreshness), so this
+            // does not keep polling after the answer.
+            //
+            // ⚠ Only while visible: a background tab asking every thirty seconds for hours is the
+            // kind of thing that gets a page throttled, and it learns nothing nobody is reading.
+            this._freshnessTimer = setInterval(() => {
+                if (document.visibilityState === 'visible') this.checkFreshness();
+            }, 30000);
         },
 
         /**
@@ -184,7 +203,18 @@ export function editorCore(config) {
          */
         checkFreshness() {
             const url = this.freshnessUrl();
-            if (!url || this.stale || this.sessionLost) return;
+
+            // ⚠ Nothing more to learn: both answers are final and the banner stays until the page
+            // is reloaded. Stopping the timer here is what keeps "asks until it knows" true.
+            if (this.stale || this.sessionLost) {
+                if (this._freshnessTimer) {
+                    clearInterval(this._freshnessTimer);
+                    this._freshnessTimer = null;
+                }
+                return;
+            }
+
+            if (!url) return;
 
             fetch(url, { headers: { Accept: 'application/json' } })
                 .then((response) => {
