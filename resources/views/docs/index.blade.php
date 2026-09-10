@@ -2219,7 +2219,7 @@ c = 0.8 → 1.0</pre>
 
                                     ['group' => 'docs.config.group_perf'],
                                     ['max_text_detection_latency_seconds', '1.0', 'docs.config.detection_latency'],
-                                    ['timeout_ms', '30000', 'docs.config.timeout'],
+                                    ['timeout_ms', '300000', 'docs.config.timeout'],
                                     ['rate_limit_retry_delay', '3.0', 'docs.config.rate_limit'],
                                     ['max_font_atlas_size', '0', 'docs.config.atlas_size'],
 
