@@ -866,7 +866,25 @@ const server = http.createServer(async (req, res) => {
 
         // What only the site's admin page may read — see HEALTH_TOKEN. Served to everybody while
         // no token is configured, so a relay deployed ahead of its configuration loses nothing.
-        const trusted = HEALTH_TOKEN === null || req.headers['x-health-token'] === HEALTH_TOKEN;
+        const offered = req.headers['x-health-token'];
+        const trusted = HEALTH_TOKEN === null || offered === HEALTH_TOKEN;
+
+        // 🔴 **A wrong token behaved exactly like no token: silence.** The site then stored
+        // "unknown" for the figure, the analytics kept the day at its default zero, and the graph
+        // read as "nobody connected" — for five days, before anybody looked. Said here, in the
+        // relay's own log, the cause is one line instead of an investigation.
+        //
+        // ⚠ Nothing changes in the RESPONSE, so a prober learns no more than before. And the
+        // lengths, never the values: they separate the two mistakes that actually happen — a
+        // value quoted or space-padded on one side only (the lengths differ), and a header
+        // stripped in transit (nothing offered at all).
+        if (!trusted) {
+            console.warn(offered === undefined
+                ? '[health] detailed figures asked for without a token, and one is configured — ' +
+                  'if this is the site, its X-Health-Token is not reaching us'
+                : `[health] token mismatch: offered ${offered.length} chars, expected ${HEALTH_TOKEN.length}`);
+        }
+
         if (trusted) {
             Object.assign(health, {
                 connections: activeConnections,
