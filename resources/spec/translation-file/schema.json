@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unitygametranslator.asymptomatikgames.com/spec/translation-file/schema.json",
+  "title": "translations.json — the written form",
+  "description": "The file a Core writes beside a game and the site publishes. This is the WRITTEN form: what a current Core must produce, and what the site takes at upload without tolerance. Readers are more lenient (see cases.json, `read`), the site's door slightly more so (`upload`). Keys starting with an underscore are metadata; every other key is a line of the game's text, in the source language, translated by the value. Line endings are LF only, in keys and values: every reader normalises CRLF before anything else, and the hash is computed on the normalised form.",
+  "type": "object",
+  "properties": {
+    "_engine_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The placeholder format the lines were written with. 1 = [!v*N] for numbers, [!t*N] for tags, [!STR*N] for variables, [!nl] for a line break. A reader migrates older forms; a Core writes the current one."
+    },
+    "_uuid": {
+      "$ref": "#/$defs/uuid",
+      "description": "The lineage. Generated once for a new file, kept through download, upload, contribution and update; replaced only by a fork. Every reader that finds none gives the file a fresh one."
+    },
+    "_source_language": {
+      "$ref": "#/$defs/language",
+      "description": "The game's language, as stated by the file. Absent until settled; never \"auto\" in the written form (a mode is not an answer — a reader hands \"auto\" over unjudged)."
+    },
+    "_target_language": {
+      "$ref": "#/$defs/language",
+      "description": "The language the values are in. Absent until settled."
+    },
+    "_local_changes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Lines changed since the last sync with the server, recounted against the ancestor at every write. A writer omits it at 0."
+    },
+    "_metadata_dirty": {
+      "type": "boolean",
+      "description": "The settings sections changed since the last sync. A writer omits it when false."
+    },
+    "_game": {
+      "type": "object",
+      "description": "Which game the file was written for, as the Core detected it.",
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "The product name, or the game folder's name when there is none." },
+        "steam_id": { "type": ["string", "null"], "description": "The Steam app id as a string, or null for a game that has none. Never a number." }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "_source": {
+      "type": "object",
+      "description": "Where the file stands against the server. Written only once the file has met it.",
+      "properties": {
+        "hash": { "$ref": "#/$defs/hash", "description": "The server's file_hash at the last sync (download or upload). Compared with the server's current hash to tell 'up to date' from 'update available'." },
+        "main_hash": { "$ref": "#/$defs/hash", "description": "For a branch: the Main's hash at the last merge from it." },
+        "site_id": { "type": "integer", "minimum": 1, "description": "The server row of this lineage's line for this account — the only handle an anonymous download keeps." }
+      },
+      "additionalProperties": false
+    },
+    "_forked_from": {
+      "type": "object",
+      "description": "Present on a fork only: where it came from, frozen at the moment of the fork and never recomputed.",
+      "properties": {
+        "site_id": { "type": "integer", "minimum": 1 },
+        "hash": { "$ref": "#/$defs/hash" },
+        "resolved_lines": { "type": "integer", "minimum": 0, "description": "How many translated lines were taken, a snapshot at the fork." },
+        "content_hash": { "$ref": "#/$defs/hash", "description": "The content taken, without the lineage — what says whether the fork is still the copy. Absent from a fork made before the key existed: 'we cannot tell'." }
+      },
+      "additionalProperties": false
+    },
+    "_fonts": { "type": "object", "description": "Settings section `fonts`: an inventory keyed by font name. Internal shape: a later artefact." },
+    "_font_overrides": { "type": "array", "description": "Settings section `font_rules`: ordered, first match wins. Internal shape: a later artefact." },
+    "_image_replacements": { "type": "array", "description": "Settings section `images`. Internal shape: a later artefact." },
+    "_exclusions": { "type": "array", "description": "Settings section `exclusions`: path patterns whose text is never sent. Internal shape: a later artefact." },
+    "_variables": { "type": "array", "description": "Settings section `variables`: game values lifted out of texts as [!STR*N]. Internal shape: a later artefact." },
+    "_settings": { "type": "object", "description": "Settings section `game_settings`: per-game switches. Internal shape: a later artefact." }
+  },
+  "patternProperties": {
+    "^[^_]": { "$ref": "#/$defs/line" }
+  },
+  "propertyNames": {
+    "pattern": "^[^\\r]*$",
+    "$comment": "LF only: a key holding CR is not the written form. Every reader normalises CRLF, so a Core that writes it has keys the site never finds."
+  },
+  "additionalProperties": false,
+  "required": ["_uuid"],
+  "not": {
+    "propertyNames": { "pattern": "^_" },
+    "$comment": "At least one line: a file made only of metadata has nothing to publish and is refused at the door."
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "A lowercase GUID. The site's door is wider ([A-Za-z0-9-]{1,36}) for files written before this was fixed; a Core writes a GUID."
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256, 64 lowercase hex digits, no prefix."
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "const": "auto" },
+      "description": "A language name exactly as catalogs/languages.json spells it (the name IS the upload contract)."
+    },
+    "line": {
+      "type": "object",
+      "description": "One line: the key is the game's text, the value what to show instead.",
+      "properties": {
+        "v": {
+          "type": ["string", "null"],
+          "pattern": "^[^\\r]*$",
+          "description": "The translation, LF only. Empty or null = a capture waiting for one (with t = H), or a line the model declined (with t = S, where v then repeats the key)."
+        },
+        "t": {
+          "enum": ["H", "V", "A", "S", "M"],
+          "description": "Who wrote it: H a human, V a human validated a machine's, A a machine, S skipped (not in the source language; v = the key), M the mod's own interface — legacy in this file, interface lines live in modui-translate.json and a reader takes them out."
+        },
+        "i": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Capture order, for the web editors to sort by. Omitted when absent, never null. Presentation only: excluded from every hash and every merge comparison."
+        }
+      },
+      "required": ["v", "t"],
+      "additionalProperties": false
+    }
+  }
+}

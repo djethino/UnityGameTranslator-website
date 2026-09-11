@@ -1,0 +1,685 @@
+{
+  "artefact": "translation-file",
+  "note": "The verdicts are what the WRITTEN form demands (schema.json), what the site DOES at upload today, and what a READER derives. Where the three differ the case says so: that difference is the contract's tolerance, listed on purpose. `read` is the reader's view (the mod's, a Core's); `site` is what the door derives at upload — line count and tag bands — which counts the file as sent, before any reader normalises it.",
+  "cases": [
+    {
+      "id": "translation-file/minimal",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 0,
+          "validated": 0,
+          "ai": 1,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 0,
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        },
+        "rewrite": false
+      },
+      "why": "a lineage and one line is a file; everything else is optional"
+    },
+    {
+      "id": "translation-file/everything",
+      "document": {
+        "_engine_version": 1,
+        "_uuid": "a99ba419-8026-4c57-9f3d-a88a835dc741",
+        "_source_language": "English",
+        "_target_language": "French",
+        "_local_changes": 42,
+        "_metadata_dirty": true,
+        "_game": {
+          "name": "Some game",
+          "steam_id": "367520"
+        },
+        "_source": {
+          "hash": "7fc6973fe848537741157594135f0271110bb7abdc8f6f551c6f0bd2bfa4efb7",
+          "main_hash": "57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a",
+          "site_id": 16
+        },
+        "_forked_from": {
+          "site_id": 12,
+          "hash": "0000000000000000000000000000000000000000000000000000000000000001",
+          "resolved_lines": 300,
+          "content_hash": "0000000000000000000000000000000000000000000000000000000000000002"
+        },
+        "_fonts": {
+          "Arial": {
+            "enabled": true
+          }
+        },
+        "_font_overrides": [],
+        "_image_replacements": [],
+        "_exclusions": [
+          "Canvas/Debug/**"
+        ],
+        "_variables": [],
+        "_settings": {
+          "typewriting_detection": true
+        },
+        "Play": {
+          "v": "Jouer",
+          "t": "H",
+          "i": 1
+        },
+        "Quit": {
+          "v": "Quitter",
+          "t": "V",
+          "i": 2
+        },
+        "Level [!v*0]": {
+          "v": "Niveau [!v*0]",
+          "t": "A",
+          "i": 3
+        },
+        "Ingame text": {
+          "v": "",
+          "t": "H",
+          "i": 4
+        },
+        "Bonjour": {
+          "v": "Bonjour",
+          "t": "S",
+          "i": 5
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 5,
+        "tag_counts": {
+          "human": 1,
+          "validated": 1,
+          "ai": 1,
+          "capture": 1,
+          "skipped": 1
+        }
+      },
+      "read": {
+        "uuid": "a99ba419-8026-4c57-9f3d-a88a835dc741",
+        "engine_version": 1,
+        "source_language": "English",
+        "target_language": "French",
+        "local_changes": 42,
+        "metadata_dirty": true,
+        "source_hash": "7fc6973fe848537741157594135f0271110bb7abdc8f6f551c6f0bd2bfa4efb7",
+        "main_hash": "57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a57881c8a",
+        "site_id": 16,
+        "forked_from_site_id": 12,
+        "forked_from_resolved_lines": 300,
+        "forked_from_content_hash": "0000000000000000000000000000000000000000000000000000000000000002",
+        "steam_id": "367520",
+        "sections": [
+          "_fonts",
+          "_font_overrides",
+          "_image_replacements",
+          "_exclusions",
+          "_variables",
+          "_settings"
+        ],
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "H",
+            "i": 1
+          },
+          "Quit": {
+            "v": "Quitter",
+            "t": "V",
+            "i": 2
+          },
+          "Level [!v*0]": {
+            "v": "Niveau [!v*0]",
+            "t": "A",
+            "i": 3
+          },
+          "Ingame text": {
+            "v": "",
+            "t": "H",
+            "i": 4
+          },
+          "Bonjour": {
+            "v": "Bonjour",
+            "t": "S",
+            "i": 5
+          }
+        },
+        "rewrite": false
+      },
+      "why": "every key the current mod writes, read back as written — the whole file, none of it inherited"
+    },
+    {
+      "id": "translation-file/metadata-only",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_game": {
+          "name": "Some game",
+          "steam_id": null
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "lines": {}
+      },
+      "why": "a file with no line has nothing to publish: a game set up a minute ago holds exactly this, and it must not become a catalogue row"
+    },
+    {
+      "id": "translation-file/no-uuid",
+      "document": {
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "uuid": null,
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        }
+      },
+      "why": "a reader gives such a file a fresh lineage on its own machine; the site cannot — a lineage is what it files under"
+    },
+    {
+      "id": "translation-file/line/null-value-is-a-capture",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": null,
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 0,
+          "capture": 1
+        }
+      },
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "",
+            "t": "H"
+          }
+        }
+      },
+      "why": "null and empty are the same capture: a line waiting for a translation, excluded from every score"
+    },
+    {
+      "id": "translation-file/line/skipped-repeats-the-key",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Bonjour": {
+          "v": "Bonjour",
+          "t": "S"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "skipped": 1,
+          "ai": 0
+        }
+      },
+      "read": {
+        "lines": {
+          "Bonjour": {
+            "v": "Bonjour",
+            "t": "S"
+          }
+        }
+      },
+      "why": "S says the text was not in the source language; the value repeats the key so the game shows its own text, and the line is never asked again"
+    },
+    {
+      "id": "translation-file/line/bare-string-is-legacy",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": "Jouer"
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        },
+        "rewrite": true
+      },
+      "why": "the first format: a reader still takes it as a machine line and rewrites the file in the current form; the site refuses it at the door"
+    },
+    {
+      "id": "translation-file/line/missing-tag",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        }
+      },
+      "why": "a reader assumes a machine wrote it; a Core that writes it is refused at upload without warning — which is why it is written here"
+    },
+    {
+      "id": "translation-file/line/unknown-tag",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "X"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "five letters, no sixth"
+    },
+    {
+      "id": "translation-file/line/empty-tag",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": ""
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "an empty tag is not 'no tag': it is refused, where a missing one is read as A"
+    },
+    {
+      "id": "translation-file/line/index-null-is-refused",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A",
+          "i": null
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        }
+      },
+      "why": "i is omitted when absent, never null: a reader takes null as absent, the site refuses it"
+    },
+    {
+      "id": "translation-file/line/index-zero-is-refused",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A",
+          "i": 0
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "capture order starts at 1"
+    },
+    {
+      "id": "translation-file/line/index-beyond-safe-integer",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A",
+          "i": 9007199254740992
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "the web editor sorts by it in JavaScript: above 2^53-1 the number is no longer exact"
+    },
+    {
+      "id": "translation-file/line/extra-field",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A",
+          "note": "x"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        }
+      },
+      "why": "a line is {v, t, i} and nothing else in the written form; the site does not look at a fourth field, a reader drops it"
+    },
+    {
+      "id": "translation-file/line/tag-m-is-legacy",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        },
+        "Apply": {
+          "v": "Appliquer",
+          "t": "M"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 2,
+        "tag_counts": {
+          "ai": 1
+        }
+      },
+      "read": {
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        },
+        "stranded_interface": 1,
+        "rewrite": true
+      },
+      "why": "M is the interface's tag: its lines live in modui-translate.json since 2026-09-04; a reader takes one found here out and rewrites, the site still accepts a file written before the split"
+    },
+    {
+      "id": "translation-file/line/crlf-is-normalised-on-read",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Line one\r\nLine two": {
+          "v": "Ligne un\r\nLigne deux",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "lines": {
+          "Line one\nLine two": {
+            "v": "Ligne un\nLigne deux",
+            "t": "A"
+          }
+        },
+        "rewrite": true
+      },
+      "why": "LF only in the written form; every reader normalises CRLF in keys and values before anything else, and the hash is computed on that form — a Core that keeps CRLF has keys the site never finds"
+    },
+    {
+      "id": "translation-file/line/collision-after-normalisation",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "a\r\nb": {
+          "v": "machine",
+          "t": "A"
+        },
+        "a\nb": {
+          "v": "person",
+          "t": "H"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "site": {
+        "line_count": 2,
+        "tag_counts": {
+          "ai": 1,
+          "human": 1
+        }
+      },
+      "read": {
+        "lines": {
+          "a\nb": {
+            "v": "person",
+            "t": "H"
+          }
+        },
+        "rewrite": true
+      },
+      "why": "two keys that meet after normalisation are one line, and the one with the higher tag priority wins — a person over a review over a machine"
+    },
+    {
+      "id": "translation-file/uuid/not-a-guid-is-tolerated-by-the-site",
+      "document": {
+        "_uuid": "abc-123",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "uuid": "abc-123"
+      },
+      "why": "a Core writes a lowercase GUID; the site's door still takes letters, digits and dashes up to 36 for files written before this was fixed — a tolerance, not the form"
+    },
+    {
+      "id": "translation-file/uuid/too-long-is-refused",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df-extra",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "36 characters is what the site stores; beyond that the file was written and then the row failed"
+    },
+    {
+      "id": "translation-file/uuid/empty-is-refused",
+      "document": {
+        "_uuid": "",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "uuid": ""
+      },
+      "why": "an empty lineage made whoever published it the Main of the lineage \"\" and every later one its branch"
+    },
+    {
+      "id": "translation-file/uuid/path-is-refused",
+      "document": {
+        "_uuid": "../x",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "the uuid names a stored file; a step up is a folder chosen by the sender"
+    },
+    {
+      "id": "translation-file/metadata/version-not-a-number",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_engine_version": "one",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": "throws",
+      "why": "a reader refuses the whole file rather than keep half of it (a fresh cache, not a wrong version); the site does not read this key"
+    },
+    {
+      "id": "translation-file/metadata/source-not-an-object",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_source": "7fc6973f",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "source_hash": null,
+        "site_id": null
+      },
+      "why": "a block that is not an object reads as nothing; the site does not read this key at upload"
+    },
+    {
+      "id": "translation-file/metadata/unknown-underscore-key",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_something_newer": {
+          "x": 1
+        },
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "sections": [],
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        }
+      },
+      "why": "a Core does not invent metadata; a reader leaves a key it does not know alone — neither a section nor a line — and the site skips every underscore key"
+    },
+    {
+      "id": "translation-file/metadata/auto-is-not-a-language",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_source_language": "auto",
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "source_language": "auto"
+      },
+      "why": "a mode is not an answer: a Core never writes it, a reader hands it over as stated and lets the language rule judge it"
+    },
+    {
+      "id": "translation-file/metadata/steam-id-as-number",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_game": {
+          "name": "Some game",
+          "steam_id": 367520
+        },
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "steam_id": "367520"
+      },
+      "why": "a string in the written form; a reader that meets a number reads its digits"
+    },
+    {
+      "id": "translation-file/sections/every-section-in-file-order",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_settings": {},
+        "_fonts": {},
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        },
+        "_variables": []
+      },
+      "written": true,
+      "upload": "accepted",
+      "read": {
+        "sections": [
+          "_settings",
+          "_fonts",
+          "_variables"
+        ]
+      },
+      "why": "the sections a file carries are read in file order and handed to their owners; a section absent from the file means this translation has none"
+    },
+    {
+      "id": "translation-file/sections/wrong-container",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_fonts": [],
+        "_exclusions": {},
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "read": {
+        "sections": [
+          "_fonts",
+          "_exclusions"
+        ]
+      },
+      "why": "_fonts is an object keyed by name, _exclusions a list: the written form fixes each container; a reader still hands the token to the owner, who yields an empty section"
+    }
+  ]
+}
