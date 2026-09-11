@@ -1,4 +1,4 @@
 {
   "schema_version": 1,
-  "artefacts": ["translation-file", "api-v1", "sse-events"]
+  "artefacts": ["translation-file", "api-v1", "sse-events", "config"]
 }

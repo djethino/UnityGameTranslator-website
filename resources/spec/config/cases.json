@@ -1,0 +1,206 @@
+{
+  "$comment": "config.json, as written today and as written by older builds, with three verdicts: `written` (the schema — check-spec.py), `read` (what the mod derives once the file is parsed and its migrations have run — Core.Checks/ConfigSpecChecks over Engine/ModConfig), `manager` (what the Manager reads off the same file to show a game's setup — Manager.Core.Checks/ConfigContractChecks over GameConfigWriter.Read). A case carries `document` (a JSON object) or `raw` (bytes that may not be JSON). `input.system_language` is what the machine would answer for a target left at `auto`. Secrets in these documents are in the CLEAR on purpose: an encrypted value only reads on the machine that wrote it.",
+  "cases": [
+    {
+      "id": "config/fresh-file-as-the-mod-writes-it",
+      "document": {
+        "translation_backend": "none", "ai_url": "http://127.0.0.1:11434", "ai_model": "", "target_language": "auto", "source_language": "auto",
+        "strict_source_language": false, "game_context": "", "timeout_ms": 300000, "enable_ai": false, "cache_new_translations": true,
+        "normalize_numbers": true, "debug": false, "debug_ai": false, "preload_model": true, "ai_api_key": null, "google_api_key": null,
+        "deepl_api_key": null, "deepl_use_free": true, "rate_limit_retry_delay": 3.0, "ai_max_attempts": 3, "ai_temperature": 0.0,
+        "ai_temperature_repair": 0.3, "ai_temperature_retranslate": 0.8, "ai_seed": null, "ai_seed_repair": null, "ai_seed_retranslate": null,
+        "max_text_detection_latency_seconds": 1.0, "config_version": 3, "capture_keys_only": false, "translate_mod_ui": null, "interface_font": null,
+        "translate_localization_fallback": false, "first_run_completed": false, "online_mode": false, "enable_translations": true,
+        "enable_image_replacement": true, "enable_font_replacement": true, "capture_keyboard": true, "capture_keyboard_focus_only": true,
+        "capture_game_menus": false, "capture_game_clicks": false, "capture_mouse_axes": false, "pause_game": false,
+        "panel_opacity_focused": 1.0, "panel_opacity_unfocused": 0.75, "max_font_atlas_size": 0, "settings_hotkey": "F10",
+        "toggle_translations_hotkey": "", "toggle_ai_hotkey": "", "toggle_images_hotkey": "", "toggle_fonts_hotkey": "", "toggle_overlay_hotkey": "",
+        "open_inspector_hotkey": "", "open_upload_hotkey": "", "open_exclusion_mode_hotkey": "", "open_text_editor_hotkey": "", "force_scan_hotkey": "",
+        "api_token": null, "api_user": null, "api_token_server": null, "api_base_url": null, "website_base_url": null, "sse_base_url": null,
+        "proxy_mode": "default", "proxy_url": null, "proxy_username": null, "proxy_password": null, "proxy_bypass_local": true,
+        "sync": { "update_check_frequency": "1h", "realtime_own_translation": true, "auto_download": false, "notify_updates": true, "notifications_enabled": true, "notification_position": "top-right", "merge_strategy": "ask", "ignored_uuids": [], "dismissed_notices": [], "check_mod_updates": true, "notify_prereleases": false },
+        "window_preferences": { "screenWidth": 0, "screenHeight": 0, "panels": {} }
+      },
+      "input": { "system_language": "French" },
+      "written": true,
+      "read": { "translation_backend": "none", "enable_ai": false, "IsTranslationEnabled": false, "config_version": 3, "TargetLanguage": "French", "SourceLanguage": null, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": true, "AttemptsAllowed": 3, "TemperatureNormal": 0.0 },
+      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": "F10", "AutoTranslate": false, "Values.TargetLanguage": "auto", "Values.TranslationBackend": "none", "Values.Channel": "stable", "Values.AiApiKey": null },
+      "why": "the current written form, every key present: a Core must produce this shape. ⚠ The Manager reads it as a CONFIGURED game — the hotkey the mod wrote by default counts as a key the game carries — and `auto` as a mode of its own (follow the system), never as a language nor as 'nothing said'"
+    },
+    {
+      "id": "config/nothing-at-all",
+      "document": {},
+      "input": { "system_language": "French" },
+      "written": true,
+      "read": { "translation_backend": "none", "enable_ai": false, "ai_url": "http://127.0.0.1:11434", "target_language": "auto", "TargetLanguage": "French", "config_version": 3, "timeout_ms": 300000, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": false, "settings_hotkey": "F10" },
+      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": null, "AutoTranslate": null, "Values.TargetLanguage": null, "Values.TranslationBackend": null, "Values.Channel": null },
+      "why": "every key has a default, so an empty file is a valid file. ⚠ A file that says nothing about `sync` is an EXISTING file that predates the stream switch, so it is read as having declined it (realtime false), where a fresh install writes true"
+    },
+    {
+      "id": "config/legacy-ollama-keys",
+      "document": { "ollama_url": "http://127.0.0.1:11434", "enable_ollama": true, "debug_ollama": true, "model": "gemma" },
+      "written": false,
+      "read": { "ai_url": "http://127.0.0.1:11434", "enable_ai": true, "debug_ai": true, "ai_model": "gemma", "translation_backend": "llm", "config_version": 3, "IsTranslationEnabled": true },
+      "why": "the first shape of the file, from before the backend choice: the four keys are renamed, and AI on means the backend is llm"
+    },
+    {
+      "id": "config/before-v1-mod-ui-false-goes-back-to-undecided",
+      "document": { "config_version": 0, "translate_mod_ui": false },
+      "written": false,
+      "read": { "translate_mod_ui": null, "config_version": 3 },
+      "why": "every older file carried an explicit false the mod had serialised itself; read as a refusal it would hide the feature from everyone who upgrades — once, then a false is a choice"
+    },
+    {
+      "id": "config/at-v1-mod-ui-false-is-a-choice",
+      "document": { "config_version": 1, "translate_mod_ui": false },
+      "written": false,
+      "read": { "translate_mod_ui": false, "config_version": 3 },
+      "why": "the migration is one-shot: past v1, false is what the person decided"
+    },
+    {
+      "id": "config/before-v2-google-was-on",
+      "document": { "config_version": 1, "translation_backend": "google", "enable_ai": false },
+      "written": false,
+      "read": { "enable_ai": true, "translation_backend": "google", "IsTranslationEnabled": true, "ActiveBackendRequiresOnline": true },
+      "why": "enable_ai used to mean 'the backend is llm' and was false for every Google and DeepL user; read as 'switched off' it would stop translating for them the moment they update"
+    },
+    {
+      "id": "config/before-v2-llm-off-stays-off",
+      "document": { "config_version": 1, "translation_backend": "llm", "enable_ai": false },
+      "written": false,
+      "read": { "enable_ai": false, "IsTranslationEnabled": false },
+      "why": "on llm, false already meant off under both readings; turning it on would resume a translation somebody stopped on purpose"
+    },
+    {
+      "id": "config/before-v3-dead-timeout",
+      "document": { "config_version": 2, "timeout_ms": 30000 },
+      "written": false,
+      "read": { "timeout_ms": 300000, "config_version": 3 },
+      "why": "30000 was serialised into every file and read by nothing: a default nobody chose, for an effect that did not exist"
+    },
+    {
+      "id": "config/before-v3-chosen-timeout-is-kept",
+      "document": { "config_version": 2, "timeout_ms": 45000 },
+      "written": false,
+      "read": { "timeout_ms": 45000 },
+      "why": "anyone who typed a different number made a real choice about a real setting as far as they knew"
+    },
+    {
+      "id": "config/check-update-on-start-true",
+      "document": { "config_version": 3, "sync": { "check_update_on_start": true } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "1h", "sync.check_update_on_start": null, "sync.realtime_own_translation": false },
+      "why": "the switch became a frequency: true meant 'look on every connection', which lands on the new default rather than a stream kept open all session"
+    },
+    {
+      "id": "config/check-update-on-start-false",
+      "document": { "config_version": 3, "sync": { "check_update_on_start": false } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "never", "sync.check_update_on_start": null, "sync.realtime_own_translation": false },
+      "why": "false meant 'never look', and somebody who asked for silence keeps it whole"
+    },
+    {
+      "id": "config/frequency-auto-asked-for-a-stream",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "auto" } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "1h", "sync.realtime_own_translation": true },
+      "why": "one setting became two: `auto` opened a stream for anybody owning a translation, so the new switch is filled from it — decided from the value AS STORED, before it is folded into a rhythm"
+    },
+    {
+      "id": "config/frequency-realtime-asked-for-a-stream",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "realtime" } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "1h", "sync.realtime_own_translation": true },
+      "why": "`realtime` opened one for everybody"
+    },
+    {
+      "id": "config/frequency-30m-did-not",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "30m" } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "1h", "sync.realtime_own_translation": false },
+      "why": "every other retired value never opened a stream; handing somebody a permanent connection they had declined is the one outcome this must not produce"
+    },
+    {
+      "id": "config/frequency-unknown-reads-as-hourly",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "weekly" } },
+      "written": false,
+      "read": { "sync.update_check_frequency": "1h", "sync.realtime_own_translation": false },
+      "why": "a typo, or a value written by a newer version, must not silently stop somebody from ever hearing about an update — never read as `never`"
+    },
+    {
+      "id": "config/realtime-already-decided-is-left-alone",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "6h", "realtime_own_translation": false } },
+      "written": true,
+      "read": { "sync.update_check_frequency": "6h", "sync.realtime_own_translation": false },
+      "why": "the raw file carries the switch, so nothing is derived: a stored false is a decision, which the property's default of true could not tell from an absent field"
+    },
+    {
+      "id": "config/attempts-and-temperatures-are-clamped-on-read",
+      "document": { "config_version": 3, "ai_max_attempts": 50, "ai_temperature": 5.0, "ai_temperature_retranslate": -1.0 },
+      "written": true,
+      "read": { "ai_max_attempts": 50, "AttemptsAllowed": 10, "TemperatureNormal": 2.0, "TemperatureRetranslate": 0.0 },
+      "why": "every unit above 1 is a real request to a real backend; the file is kept as written and the usable number is what the mod sends"
+    },
+    {
+      "id": "config/zero-attempts-still-asks-once",
+      "document": { "config_version": 3, "ai_max_attempts": 0 },
+      "written": true,
+      "read": { "AttemptsAllowed": 1 },
+      "why": "a line is asked for at least once, whatever the file says"
+    },
+    {
+      "id": "config/target-language-is-a-name",
+      "document": { "config_version": 3, "target_language": "German", "source_language": "English" },
+      "input": { "system_language": "French" },
+      "written": true,
+      "read": { "TargetLanguage": "German", "SourceLanguage": "English" },
+      "manager": { "Values.TargetLanguage": "German" },
+      "why": "a catalogue name, handed as-is to the site (?lang=) and to the model ('translate to German'); `fr` would be a language nobody publishes under"
+    },
+    {
+      "id": "config/auto-follows-the-machine",
+      "document": { "config_version": 3, "target_language": "auto", "source_language": "auto" },
+      "input": { "system_language": "Polish" },
+      "written": true,
+      "read": { "target_language": "auto", "TargetLanguage": "Polish", "SourceLanguage": null },
+      "manager": { "Values.TargetLanguage": "auto" },
+      "why": "`auto` is a MODE: the mod resolves it on each machine, the Manager keeps the word and offers it as the 'follow the system' choice; a source of auto is 'unknown', never a language"
+    },
+    {
+      "id": "config/a-secret-in-the-clear-still-reads",
+      "document": { "config_version": 3, "api_token": "ugt_plainFromAnOlderBuild", "api_user": "alice", "deepl_api_key": "deepl-plain" },
+      "written": true,
+      "read": { "api_token": "ugt_plainFromAnOlderBuild", "api_user": "alice", "deepl_api_key": "deepl-plain" },
+      "manager": { "Values.DeeplApiKey": "deepl-plain" },
+      "why": "a value without the ENCRYPTED: prefix was saved by an older version; it keeps working and is re-encrypted at the next save"
+    },
+    {
+      "id": "config/manager-reads-a-configured-game",
+      "document": {
+        "config_version": 3, "target_language": "French", "translation_backend": "deepl", "enable_ai": true, "deepl_api_key": "k-plain", "deepl_use_free": false,
+        "online_mode": true, "first_run_completed": true, "settings_hotkey": "F9", "ai_url": "http://127.0.0.1:11434", "ai_model": "",
+        "sync": { "update_check_frequency": "1h", "realtime_own_translation": true, "auto_download": true, "notify_updates": false, "check_mod_updates": true, "merge_strategy": "ask", "notifications_enabled": true, "notification_position": "bottom-left", "notify_prereleases": true }
+      },
+      "written": true,
+      "read": { "IsTranslationEnabled": true, "ActiveBackendRequiresOnline": true, "sync.notify_prereleases": true },
+      "manager": { "Exists": true, "FirstRunCompleted": true, "InGameHotkey": "F9", "AutoTranslate": true, "Values.TargetLanguage": "French", "Values.TranslationBackend": "deepl", "Values.DeeplApiKey": "k-plain", "Values.DeeplUseFree": false, "Values.ModOnlineMode": true, "Values.AutoDownload": true, "Values.NotifyUpdates": false, "Values.CheckModUpdates": true, "Values.MergeStrategy": "ask", "Values.NotificationsEnabled": true, "Values.NotificationPosition": "bottom-left", "Values.Channel": "beta" },
+      "why": "the mirror of what the Manager writes: every key it owns is read back into its own terms, so a screen offering to override starts from what the player set inside the game"
+    },
+    {
+      "id": "config/manager-does-not-invent-a-channel",
+      "document": { "config_version": 3, "sync": { "update_check_frequency": "1h", "realtime_own_translation": true } },
+      "written": true,
+      "read": { "sync.notify_prereleases": false },
+      "manager": { "Values.Channel": null },
+      "why": "the mod reads an absent notify_prereleases as false; the Manager reads it as 'not said' — reading 'no pre-release notices' as stable would invent an answer for every game written before the key existed"
+    },
+    {
+      "id": "config/a-file-that-is-not-json",
+      "raw": "{ \"translation_backend\": \"llm\", ",
+      "written": false,
+      "read": "throws",
+      "manager": { "Exists": false },
+      "why": "the mod's reader throws and its caller starts a fresh file; the Manager reports Unknown and its install path refuses to touch the game"
+    }
+  ]
+}
