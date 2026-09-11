@@ -46,12 +46,22 @@ export function frozenSequences(source) {
     for (const match of source.matchAll(TOKEN)) {
         let start = match.index;
         let end = match.index + match[0].length;
-        while (start > 0 && '{(['.includes(source[start - 1])) start--;
-        while (end < source.length && '})]'.includes(source[end])) end++;
+        // Outward one PAIR at a time: a bracket the game wrapped around the token sits on both
+        // sides of it — "({[!v*0]})". A bracket on one side only belongs to the sentence:
+        // "boltcutters ([!v*0] off)" wraps a phrase, which moves with the language.
+        while (start > 0 && end < source.length && wraps(source[start - 1], source[end])) {
+            start--;
+            end++;
+        }
         const sequence = source.slice(start, end);
         if (!sequences.includes(sequence)) sequences.push(sequence);
     }
     return sequences;
+}
+
+/** An opening bracket and the closing one that answers it. */
+function wraps(before, after) {
+    return (before === '(' && after === ')') || (before === '{' && after === '}') || (before === '[' && after === ']');
 }
 
 /**

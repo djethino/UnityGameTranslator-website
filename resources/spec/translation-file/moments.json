@@ -1,0 +1,146 @@
+{
+  "$comment": "The moments of the translation file, as sequences (moments.md is the prose). Each case is a list of acts on a fresh translation folder, then what the file and its companions must say. Acts: `download` {hash, site_id, lines} (the server's file replaces the local one), `edit` {key, v, t}, `remove` {key}, `write` (the file is written: the count is measured), `merge` {hash, published, merged} (published = the server's lines, may be null; merged = the result taken), `upload` {hash, site_id}, `main_merge` {hash, lines} (a branch took its Main), `fork` {uuid, resolved_lines, content_hash}, `load` (a fresh reader re-derives everything from the files). Facts: `uuid`, `source_hash`, `site_id`, `main_hash`, `local_changes`, `forked_from` (object or null), `ancestor` and `main_ancestor` (`absent`, or the exact lines). `held_by` names the executors: `mod` (Core.Checks/TranslationStoreChecks over Engine/TranslationStore) and `manager` (Manager.Core.Checks/MomentsContractChecks over Install/TranslationInstaller); a side skips a case it does not hold and says so.",
+  "cases": [
+    {
+      "id": "moments/download-stamps-the-file-and-agrees",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } }
+      ],
+      "expect": { "source_hash": "h1", "site_id": 12, "local_changes": 0, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } }, "main_ancestor": "absent" },
+      "held_by": ["mod", "manager"],
+      "why": "the file is the server's: its hash is what this machine has now seen, the row is remembered (what lets a mod with nobody signed in ask the public check), nothing is local yet, and the ancestor is the file itself — the two sides provably agree at this instant"
+    },
+    {
+      "id": "moments/download-resets-a-count-the-file-carried",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" } }, "local_changes_in_file": 7 } }
+      ],
+      "expect": { "local_changes": 0 },
+      "held_by": ["manager"],
+      "why": "leaving a count inherited from whoever uploaded it would make the mod believe the player had edits they never made, and offer to merge them"
+    },
+    {
+      "id": "moments/edits-count-against-the-ancestor",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } },
+        { "edit": { "key": "Play", "v": "Jouer !", "t": "H" } },
+        { "edit": { "key": "New", "v": "Nouveau", "t": "A" } },
+        { "write": {} }
+      ],
+      "expect": { "source_hash": "h1", "local_changes": 2, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } },
+      "held_by": ["mod"],
+      "why": "a changed line and a new line are two things still to publish; the ancestor does not move on an edit, only on a sync"
+    },
+    {
+      "id": "moments/a-deleted-line-counts-too",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } },
+        { "remove": { "key": "Quit" } },
+        { "write": {} }
+      ],
+      "expect": { "local_changes": 1 },
+      "held_by": ["mod"],
+      "why": "walking only the local lines made deletions invisible: the count stayed at zero, 'in sync' was judged true, and the divergence read as a SERVER update that would have restored what the player deleted"
+    },
+    {
+      "id": "moments/a-dropped-interface-line-is-not-a-change",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Settings": { "v": "Réglages", "t": "M" } } } },
+        { "remove": { "key": "Settings" } },
+        { "write": {} }
+      ],
+      "expect": { "local_changes": 0 },
+      "held_by": ["mod"],
+      "why": "an interface line the server's copy holds and this file no longer does was published by a version that kept the mod's interface inside the game's translation; taking it out is this version doing what it must, not work waiting to be shared"
+    },
+    {
+      "id": "moments/merge-the-ancestor-is-the-published-content",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } },
+        { "edit": { "key": "Play", "v": "Jouer !", "t": "H" } },
+        { "merge": {
+            "hash": "h2",
+            "published": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" }, "Extra": { "v": "En plus", "t": "A" } },
+            "merged": { "Play": { "v": "Jouer !", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" }, "Extra": { "v": "En plus", "t": "A" } } } },
+        { "write": {} }
+      ],
+      "expect": { "source_hash": "h2", "site_id": 12, "local_changes": 1, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" }, "Extra": { "v": "En plus", "t": "A" } } },
+      "held_by": ["mod", "manager"],
+      "why": "three facts: the hash is the PUBLISHED version's (now seen, whether or not all of it was kept); the ancestor is the PUBLISHED content, never the merged one (what the two sides last agreed on is what was published — the merged file as ancestor would make the kept line look like common ground and the next merge would drop it); the count is what the merged file has that the published one does not — the one line still to publish"
+    },
+    {
+      "id": "moments/merge-without-the-published-lines-takes-the-merged",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" } } } },
+        { "merge": { "hash": "h2", "published": null, "merged": { "Play": { "v": "Jouer", "t": "H" }, "Extra": { "v": "En plus", "t": "A" } } } },
+        { "write": {} }
+      ],
+      "expect": { "source_hash": "h2", "local_changes": 0, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Extra": { "v": "En plus", "t": "A" } } },
+      "held_by": ["mod"],
+      "why": "with only the result in hand there is no published content to name; the merged lines stand as the baseline, which claims nothing beyond what was actually seen"
+    },
+    {
+      "id": "moments/upload-settles-everything",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" } } } },
+        { "edit": { "key": "New", "v": "Nouveau", "t": "A" } },
+        { "upload": { "hash": "h3", "site_id": 12 } },
+        { "write": {} }
+      ],
+      "expect": { "source_hash": "h3", "site_id": 12, "local_changes": 0, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "New": { "v": "Nouveau", "t": "A" } } },
+      "held_by": ["mod"],
+      "why": "what was just sent IS what the site now holds: the ancestor is the local file as sent, the hash is the one the site answered, nothing is left to publish"
+    },
+    {
+      "id": "moments/upload-without-an-id-keeps-the-row",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" } } } },
+        { "upload": { "hash": "h3", "site_id": null } }
+      ],
+      "expect": { "source_hash": "h3", "site_id": 12 },
+      "held_by": ["mod"],
+      "why": "an answer that names no row is not a row lost"
+    },
+    {
+      "id": "moments/main-merge-writes-its-own-ancestor",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" } } } },
+        { "main_merge": { "hash": "m1", "lines": { "Play": { "v": "Jouer", "t": "H" }, "Main": { "v": "Principal", "t": "A" } } } }
+      ],
+      "expect": { "source_hash": "h1", "main_hash": "m1", "main_ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Main": { "v": "Principal", "t": "A" } }, "ancestor": { "Play": { "v": "Jouer", "t": "H" } } },
+      "held_by": ["mod"],
+      "why": "the Main goes into ITS ancestor, never into ours: the two baselines answer different questions (what did the Main last look like / what did my own line last agree on) and must not mix"
+    },
+    {
+      "id": "moments/fork-leaves-the-lineage",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } },
+        { "main_merge": { "hash": "m1", "lines": { "Play": { "v": "Jouer", "t": "H" } } } },
+        { "fork": { "uuid": "0f0e0d0c-0b0a-4908-8706-050403020100", "resolved_lines": 2, "content_hash": "c1" } },
+        { "write": {} }
+      ],
+      "expect": { "uuid": "0f0e0d0c-0b0a-4908-8706-050403020100", "source_hash": null, "site_id": null, "main_hash": null, "local_changes": 2, "forked_from": { "site_id": 12, "hash": "h1", "resolved_lines": 2, "content_hash": "c1" }, "ancestor": "absent", "main_ancestor": "absent" },
+      "held_by": ["mod"],
+      "why": "a new lineage: where it came from is written down before the reset wipes the sync state, every line is now local, and BOTH ancestors are deleted — a lineage left has no common ground with the one joined (the moment that did not happen for months, when the clean-up looked for a misspelt file)"
+    },
+    {
+      "id": "moments/write-says-nothing-when-there-is-nothing",
+      "acts": [ { "write": {} } ],
+      "expect": { "source_hash": null, "site_id": null, "local_changes": 0, "forked_from": null, "ancestor": "absent" },
+      "held_by": ["mod"],
+      "why": "a fresh file carries no _source, no _forked_from and no _local_changes: absent is the written form of 'nothing to say'"
+    },
+    {
+      "id": "moments/load-re-derives-every-fact-from-the-files",
+      "acts": [
+        { "download": { "hash": "h1", "site_id": 12, "lines": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } } },
+        { "edit": { "key": "Play", "v": "Jouer !", "t": "H" } },
+        { "write": {} },
+        { "load": {} }
+      ],
+      "expect": { "source_hash": "h1", "site_id": 12, "local_changes": 1, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } } },
+      "held_by": ["mod"],
+      "why": "a fresh reader over the written file and its ancestor lands on the same facts — nothing about the file lives only in memory, and nothing of a previous file survives a load"
+    }
+  ]
+}

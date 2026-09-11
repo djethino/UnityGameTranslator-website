@@ -63,10 +63,11 @@ final class Placeholders
         foreach ($matches[0] as [$token, $offset]) {
             $start = $offset;
             $end = $offset + strlen($token);
-            while ($start > 0 && str_contains('{([', $source[$start - 1])) {
+            // Outward one PAIR at a time: a bracket the game wrapped around the token sits on
+            // both sides of it — "({[!v*0]})". A bracket on one side only belongs to the
+            // sentence: "boltcutters ([!v*0] off)" wraps a phrase, which moves with the language.
+            while ($start > 0 && $end < $length && self::wraps($source[$start - 1], $source[$end])) {
                 $start--;
-            }
-            while ($end < $length && str_contains('})]', $source[$end])) {
                 $end++;
             }
             $sequence = substr($source, $start, $end - $start);
@@ -76,6 +77,14 @@ final class Placeholders
         }
 
         return $sequences;
+    }
+
+    /** An opening bracket and the closing one that answers it. */
+    private static function wraps(string $before, string $after): bool
+    {
+        return ($before === '(' && $after === ')')
+            || ($before === '{' && $after === '}')
+            || ($before === '[' && $after === ']');
     }
 
     /**
