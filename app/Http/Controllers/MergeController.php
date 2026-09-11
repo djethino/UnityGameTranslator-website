@@ -473,6 +473,7 @@ class MergeController extends Controller
         $main->ai_count = $tagCounts['ai_count'];
         $main->capture_count = $tagCounts['capture_count'];
         $main->skipped_count = $tagCounts['skipped_count'];
+        $main->broken_placeholder_count = $tagCounts['broken_placeholder_count'];
         $main->line_count = count(array_filter(
             array_keys($content),
             fn($k) => !str_starts_with($k, '_')

@@ -579,6 +579,9 @@ class TranslationController extends Controller
                     'capture_count' => $t->capture_count,
                     // Neither a translation nor missing work: shown on its own, never in the bar
                     'skipped_count' => $t->skipped_count,
+                    // Lines whose placeholders no longer match the source — a fact about the file,
+                    // never a refusal. Additive: an older mod ignores it.
+                    'broken_placeholder_count' => $t->broken_placeholder_count,
                     // Kept for mods already published that read it; superseded by the two below
                     'quality_score' => $t->quality_score,
                     // Share of the file a human settled, and share of the game it reaches. The
@@ -1239,6 +1242,7 @@ class TranslationController extends Controller
                 'ai_count' => $parsed['tag_counts']['ai_count'],
                 'capture_count' => $parsed['tag_counts']['capture_count'],
                 'skipped_count' => $parsed['tag_counts']['skipped_count'],
+                'broken_placeholder_count' => $parsed['tag_counts']['broken_placeholder_count'],
                 'status' => $status,
                 'notes' => $request->notes,
                 'resources_url' => $request->resources_url,
@@ -1319,6 +1323,7 @@ class TranslationController extends Controller
             'ai_count' => $parsed['tag_counts']['ai_count'],
             'capture_count' => $parsed['tag_counts']['capture_count'],
             'skipped_count' => $parsed['tag_counts']['skipped_count'],
+            'broken_placeholder_count' => $parsed['tag_counts']['broken_placeholder_count'],
             'status' => $status,
             'visibility' => $visibility,
             'notes' => $request->notes,

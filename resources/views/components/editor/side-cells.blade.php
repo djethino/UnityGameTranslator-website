@@ -83,11 +83,13 @@
                   valueUnchanged(key) ? 'opacity-50' : ''
               ]">
             @if ($target)
-                {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
+                {{-- The row, as it will be saved, breaks a placeholder of its source; the tooltip
+                     names which. Never blocks: the modal already refused the edit, this names
+                     what arrived broken or was staged by a replace-all. --}}
                 <span x-show="hasPlaceholderWarning(key)" x-cloak
                       class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
-                      title="{{ __('merge.placeholder_warning') }}">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
+                      :title="placeholderWarningTitle(key)">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholders') }}
                 </span>
             @endif
             <span class="editor-text" x-safe-html="valueHtmlOf(key, '{{ $side }}')"></span>

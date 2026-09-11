@@ -116,6 +116,11 @@
 
     <span class="w-px h-5 bg-gray-700 shrink-0 hidden 2xl:inline-block"></span>
 
+    {{-- Everything up to the broken-placeholder box is set aside while that box is on — greyed
+         and unclickable, state kept — for the reason filter-bar gives: that filter is a task. --}}
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0"
+         :class="filters.brokenOnly ? 'opacity-40 pointer-events-none' : ''"
+         :aria-disabled="filters.brokenOnly ? 'true' : 'false'">
     {{-- Screen-specific categories --}}
     {{ $slot }}
 
@@ -142,6 +147,15 @@
         <input type="checkbox" :checked="filters.{{ $modifiedFilter }}" @change="toggleFilter('{{ $modifiedFilter }}')"
                class="rounded bg-gray-700 border-gray-600 text-purple-600">
         <i class="fas fa-pen text-purple-400"></i>
+    </label>
+    </div>
+    {{-- The same box as the ordinary bar's, and under the same condition (see filter-bar) --}}
+    <label class="flex items-center gap-1 text-xs cursor-pointer shrink-0" title="{{ __('progress.broken_placeholders') }}"
+           x-show="tagCounts.broken > 0 || filters.brokenOnly" x-cloak>
+        <input type="checkbox" :checked="filters.brokenOnly" @change="toggleFilter('brokenOnly')"
+               class="rounded bg-gray-700 border-gray-600 text-amber-600">
+        <i class="fas fa-triangle-exclamation text-amber-400"></i>
+        <span class="text-amber-400 tabular-nums" x-text="tagCounts.broken"></span>
     </label>
     {{-- The same two icons, from the same file, as the ordinary bar behind --}}
     <x-editor.view-options />

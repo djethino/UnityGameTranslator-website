@@ -174,6 +174,7 @@ class TranslationController extends Controller
                 'ai_count' => $parsed['tag_counts']['ai_count'],
                 'capture_count' => $parsed['tag_counts']['capture_count'],
                 'skipped_count' => $parsed['tag_counts']['skipped_count'],
+                'broken_placeholder_count' => $parsed['tag_counts']['broken_placeholder_count'],
                 'status' => $status,
                 'notes' => $request->notes,
                 'file_path' => $fileName,
@@ -224,6 +225,7 @@ class TranslationController extends Controller
             'ai_count' => $parsed['tag_counts']['ai_count'],
             'capture_count' => $parsed['tag_counts']['capture_count'],
             'skipped_count' => $parsed['tag_counts']['skipped_count'],
+            'broken_placeholder_count' => $parsed['tag_counts']['broken_placeholder_count'],
             'status' => $status,
             'notes' => $request->notes,
 
@@ -771,6 +773,7 @@ class TranslationController extends Controller
             'ai_count' => $translation->ai_count,
             'capture_count' => $translation->capture_count,
             'skipped_count' => $translation->skipped_count,
+            'broken_placeholder_count' => $translation->broken_placeholder_count,
             'status' => $translation->status,
             'visibility' => 'public',
             'notes' => $translation->notes,
@@ -1442,6 +1445,7 @@ class TranslationController extends Controller
         $translation->ai_count = $tagCounts['ai_count'];
         $translation->capture_count = $tagCounts['capture_count'];
         $translation->skipped_count = $tagCounts['skipped_count'];
+        $translation->broken_placeholder_count = $tagCounts['broken_placeholder_count'];
         $translation->line_count = count(array_filter(
             array_keys($content),
             fn($k) => !str_starts_with($k, '_')

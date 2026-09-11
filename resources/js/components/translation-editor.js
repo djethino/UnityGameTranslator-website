@@ -24,7 +24,7 @@ import { editorHScroll } from './editor-hscroll.js';
 import { editorOffScreen } from './editor-offscreen.js';
 import { editorMetadata } from './editor-metadata.js';
 import { editorPin } from './editor-pin.js';
-import { acceptsEdit, editProblems } from '../rules/placeholders.js';
+import { editProblems } from '../rules/placeholders.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -122,6 +122,13 @@ export function editorCore(config) {
     const persistKey = workKey + '_ui';
     const pendingKey = workKey + '_pending';
     const widthsKey = 'ugt_cols_' + view + (config.scope ? '_' + config.scope : '');
+
+    // Placeholder verdicts, one per row, keyed by the row and remembered against the exact text
+    // judged. The quality bar and the filter ask for every row of the file on every recompute
+    // (a search keystroke, a staged edit), and the rule runs five passes over each value; with
+    // this, a row is re-judged only when its projected text changed. Closure state, not a data
+    // member: a reactive Map would make each verdict a dependency of everything that read it.
+    const placeholderVerdicts = new Map();
 
     return {
         // ── Workbench mode (see editor-workbench.js) ──────────────────────
@@ -334,7 +341,7 @@ export function editorCore(config) {
         // ── filteredKeys memoization (see the getter) ─────────────────────
         _fkVersion: 0,
         _fkCache: [],
-        _tagCounts: { H: 0, V: 0, A: 0, S: 0, M: 0, total: 0 },
+        _tagCounts: { H: 0, V: 0, A: 0, S: 0, M: 0, total: 0, broken: 0 },
 
         /**
          * Wire persistence + the memoized filter pipeline. Call from the
@@ -996,8 +1003,19 @@ export function editorCore(config) {
         _computeFilteredKeys() {
             const query = this._debouncedQuery.toLowerCase().trim();
 
+            // 🔴 The broken-placeholder filter is a TASK, not a facet (user, 2026-09-11): while it
+            // is on, the rows are exactly the ones the banner counts, and every other filter —
+            // tags, categories, pending work, whatever the page adds — is set aside and greyed
+            // on the bar. Combined with them, an unchecked A would hide broken A lines while the
+            // banner still said 88, and the number on the box would not be the rows below it.
+            // The search stays: looking for a word among the broken lines is the point of it.
+            const brokenOnly = this.filters.brokenOnly === true;
             const keys = this.allKeys.filter(key => {
-                if (!this.rowPassesFilters(key)) return false;
+                if (brokenOnly) {
+                    if (!this.hasPlaceholderWarning(key)) return false;
+                } else if (!this.rowPassesFilters(key)) {
+                    return false;
+                }
                 if (query && !this.rowMatchesSearch(key, query)) return false;
                 return true;
             });
@@ -1424,13 +1442,45 @@ export function editorCore(config) {
         // says which one (decision of 2026-09-08: prevent while the edit is still open rather
         // than fail on the server after the work is gone). The group save is deliberately NOT a
         // second barrier: saveEditModal is the only door to stageEdit for the modal, so a broken
-        // line never enters editedValues from here; a replace-all can still stage one, which is
-        // what the row badge below is for.
+        // line never enters editedValues from here; a replace-all can still stage one, and a
+        // file can ARRIVE with one — from a mod released before its editor refused, or edited by
+        // hand. The server counts those and refuses nothing (2026-09-11); this is where they are
+        // named: the row badge, the banner over the grid and the filter behind it.
 
-        /** A pending edit breaks a placeholder of the source. Silent on one set aside: nothing goes. */
+        /**
+         * What is wrong with a row AS IT WILL BE SAVED — the pending edit if one is held, the
+         * stored value otherwise. Empty when nothing is: a deleted row goes whatever it holds, a
+         * row this page does not hold (an arrival on the merge screen) has no value to judge.
+         */
+        placeholderProblemsOf(key) {
+            if (this.isDeleted(key)) return [];
+            const held = this.editIsHeld(key);
+            if (!held && this.entryOnFile(key) === undefined) return [];
+            const value = held ? this.editedValues[key] : this.storedValue(key);
+            if (typeof value !== 'string') return [];
+
+            const known = placeholderVerdicts.get(key);
+            if (known && known.value === value) return known.problems;
+            const problems = editProblems(key, value);
+            placeholderVerdicts.set(key, { value, problems });
+            return problems;
+        },
+
+        /** The row breaks a placeholder of its source. Silent on one set aside: nothing goes. */
         hasPlaceholderWarning(key) {
-            if (!this.editIsHeld(key)) return false;
-            return !acceptsEdit(key, this.editedValues[key]).accepted;
+            return this.placeholderProblemsOf(key).length > 0;
+        },
+
+        /** The badge's tooltip: every problem of the row, one per line, in the page's words. */
+        placeholderWarningTitle(key) {
+            return this.placeholderProblemsOf(key).map((problem) => this.placeholderProblemText(problem)).join('\n');
+        },
+
+        /** Banner click: focus the grid on the rows it counts. */
+        showBrokenPlaceholders() {
+            this.filters.brokenOnly = true;
+            this.persistUiState();
+            this.scrollToTop();
         },
 
         /** What is wrong with the modal's text, live, as facts; empty when it may be saved. */
@@ -1718,9 +1768,12 @@ export function editorCore(config) {
         rowQualityTag(key) { return null; },
 
         _computeTagCounts() {
-            const counts = { H: 0, V: 0, A: 0, S: 0, C: 0, total: 0 };
+            const counts = { H: 0, V: 0, A: 0, S: 0, C: 0, total: 0, broken: 0 };
             for (const key of this.allKeys) {
                 if (this.isDeleted(key)) continue;
+                // Not a band — a line is H and broken at once — but the same pass: the banner over
+                // the grid states the projected count, the way the server's card states the saved one.
+                if (this.hasPlaceholderWarning(key)) counts.broken++;
                 const tag = this.rowQualityTag(key);
                 // M is the mod's own interface, not the game's text. The server keeps no counter
                 // for it and neither the mod's bar nor the site's shows it, so counting it here

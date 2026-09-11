@@ -384,6 +384,26 @@ class TranslationCardContentTest extends TestCase
             ->assertDontSee(__('progress.skipped') . ': 0');
     }
 
+    public function test_lines_with_a_broken_placeholder_are_named_beside_the_bar(): void
+    {
+        $translation = $this->makeTranslation(['broken_placeholder_count' => 7]);
+
+        // Not a band — a line is H and broken at once — so beside the key, never inside the
+        // total; and named, because a number with no word would be unreadable
+        $this->get(route('games.show', $translation->game))
+            ->assertOk()
+            ->assertSee(__('progress.broken_placeholders') . ': 7');
+    }
+
+    public function test_a_file_with_no_broken_placeholder_says_nothing_about_them(): void
+    {
+        $translation = $this->makeTranslation(['broken_placeholder_count' => 0]);
+
+        $this->get(route('games.show', $translation->game))
+            ->assertOk()
+            ->assertDontSee(__('progress.broken_placeholders'));
+    }
+
     public function test_kept_lines_take_their_share_of_the_bar_rather_than_the_grey(): void
     {
         // 100 translated, 100 kept as is, nothing left to do

@@ -63,6 +63,31 @@ class TagCountsTest extends TestCase
         $this->assertSame(5, $careful['capture_count']);
     }
 
+    /**
+     * A line whose placeholders no longer match its source is counted, whoever wrote it and
+     * whatever its tag — and only counted: the file is measured, never refused. A capture holds
+     * nothing to keep; the mod's own interface is counted nowhere, as for every other bucket.
+     */
+    public function test_lines_with_a_broken_placeholder_are_counted_apart(): void
+    {
+        $counts = $this->counts([
+            'Level [!v*0]'      => ['v' => 'Niveau [!v*0]', 't' => 'H'],          // kept
+            'Gold: [!v*0]'      => ['v' => 'Or :', 't' => 'A'],                   // dropped
+            'Cost: ({[!v*0]})'  => ['v' => 'Prix : ({[!v*0]}', 't' => 'V'],       // the game's bracket lost
+            'Hello'             => ['v' => 'Bonjour [!STR*0]', 't' => 'H'],       // invented
+            'Wait [!v*0]s'      => ['v' => '', 't' => 'H'],                       // a capture: nothing to keep
+            'Settings [!v*0]'   => ['v' => 'Réglages', 't' => 'M'],               // mod UI: counted nowhere
+            'Old [!v*0]'        => 'Ancien',                                      // the bare form, judged too
+        ]);
+
+        $this->assertSame(4, $counts['broken_placeholder_count']);
+        // ...and nothing else moved because of it: the line is still H, A or V
+        $this->assertSame(2, $counts['human_count']);
+        $this->assertSame(1, $counts['validated_count']);
+        $this->assertSame(2, $counts['ai_count']);
+        $this->assertSame(1, $counts['capture_count']);
+    }
+
     public function test_marking_lines_cannot_inflate_the_quality_score(): void
     {
         $entries = array_fill_keys(range('a', 'e'), ['v' => 'Bonjour', 't' => 'A']);

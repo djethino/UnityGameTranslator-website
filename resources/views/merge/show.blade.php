@@ -623,11 +623,12 @@
                                     <template x-if="mainData[key] !== undefined || isEdited(key)">
                                         <span class="break-words"
                                             :class="[isEdited(key) ? 'text-purple-300' : '', isDeleted(key) ? 'line-through opacity-40' : '']">
-                                            {{-- Non-blocking guard: the pending edit altered [!v*N] placeholders --}}
+                                            {{-- The row, as it will be saved, breaks a placeholder of its
+                                                 source; the tooltip names which (see components/editor/side-cells). --}}
                                             <span x-show="hasPlaceholderWarning(key)" x-cloak
                                                 class="inline-block mb-1 px-1.5 py-0.5 rounded bg-orange-900/60 text-orange-300 text-xs"
-                                                title="{{ __('merge.placeholder_warning') }}">
-                                                <i class="fas fa-exclamation-triangle mr-1"></i>Placeholders
+                                                :title="placeholderWarningTitle(key)">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholders') }}
                                             </span>
                                             <span class="editor-text" x-show="isEdited(key)" x-safe-html="highlightValue(editedValues[key])"></span>
                                             <span class="editor-text" x-show="!isEdited(key)" x-safe-html="mainValueHtml(key)"></span>

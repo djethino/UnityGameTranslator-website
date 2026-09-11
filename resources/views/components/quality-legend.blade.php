@@ -83,5 +83,20 @@
         </span>
     @endforeach
 
+    {{-- ⚠ Not a band: a line is H and broken at once, so this never enters the total above. A
+         fact about the file, beside the bar like the kept lines — and, like them, absent when
+         there is nothing to say. Counted by Translation::extractTagCounts, never refused. --}}
+    @if(($translation->broken_placeholder_count ?? 0) >= 1)
+        <span class="flex items-center gap-1 text-amber-400"
+              title="{{ __('progress.broken_placeholders') }}: {{ number_format($translation->broken_placeholder_count) }}">
+            <i class="fas fa-triangle-exclamation text-[10px]"></i>
+            @if($compact)
+                {{ number_format($translation->broken_placeholder_count) }}
+            @else
+                {{ __('progress.broken_placeholders') }}: {{ number_format($translation->broken_placeholder_count) }}
+            @endif
+        </span>
+    @endif
+
     {{ $slot }}
 </div>

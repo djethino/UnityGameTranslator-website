@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService;
+use App\Support\Placeholders;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,7 @@ class Translation extends Model
         'line_count',
         'capture_count',
         'skipped_count',
+        'broken_placeholder_count',
         'human_count',
         'validated_count',
         'ai_count',
@@ -60,6 +62,7 @@ class Translation extends Model
         'line_count' => 'integer',
         'capture_count' => 'integer',
         'skipped_count' => 'integer',
+        'broken_placeholder_count' => 'integer',
         'human_count' => 'integer',
         'validated_count' => 'integer',
         'ai_count' => 'integer',
@@ -1080,8 +1083,17 @@ class Translation extends Model
      * neither the composition bar nor the score, but they say something about the care
      * put into the file. M entries (mod UI) are technical noise and counted nowhere.
      *
+     * Measured in the same pass, because it is the same question — what the file is made of —
+     * asked by every writer at once: lines whose placeholders no longer match their source key
+     * (`broken_placeholder_count`). Counted and shown, never refused (2026-09-11): the editors
+     * refuse the edit while it is typed, and what still arrives broken comes from a mod released
+     * before that gate, a file edited by hand or a replace-all — people a refusal here could not
+     * tell which line. The judge is the shared corpus's (App\Support\Placeholders::acceptsEdit):
+     * an empty value is a capture and holds nothing to keep, a kept line (S) is judged like any
+     * other, the mod's own interface (M) is counted nowhere, as everywhere in this method.
+     *
      * @param array $json Parsed translation JSON
-     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int, 'capture_count' => int, 'skipped_count' => int]
+     * @return array ['human_count' => int, 'validated_count' => int, 'ai_count' => int, 'capture_count' => int, 'skipped_count' => int, 'broken_placeholder_count' => int]
      */
     public static function extractTagCounts(array $json): array
     {
@@ -1090,6 +1102,7 @@ class Translation extends Model
         $ai = 0;
         $capture = 0;
         $skipped = 0;
+        $broken = 0;
 
         foreach ($json as $key => $value) {
             // Skip metadata keys
@@ -1115,9 +1128,17 @@ class Translation extends Model
                         default => $ai++,   // Fallback to AI
                     };
                 }
+
+                if ($tag !== 'M' && is_string($val) && !Placeholders::acceptsEdit((string) $key, $val)['accepted']) {
+                    $broken++;
+                }
             } else {
                 // Old format (string value) = AI by default
                 $ai++;
+
+                if (is_string($value) && !Placeholders::acceptsEdit((string) $key, $value)['accepted']) {
+                    $broken++;
+                }
             }
         }
 
@@ -1127,6 +1148,7 @@ class Translation extends Model
             'ai_count' => $ai,
             'capture_count' => $capture,
             'skipped_count' => $skipped,
+            'broken_placeholder_count' => $broken,
         ];
     }
 
