@@ -24,6 +24,7 @@ import { editorHScroll } from './editor-hscroll.js';
 import { editorOffScreen } from './editor-offscreen.js';
 import { editorMetadata } from './editor-metadata.js';
 import { editorPin } from './editor-pin.js';
+import { acceptsEdit, editProblems } from '../rules/placeholders.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -285,6 +286,10 @@ export function editorCore(config) {
             x: 0,
             y: 0
         },
+
+        // The page's wording for a broken placeholder (sequence, count, invented, blocked), in
+        // its own language — see placeholderProblemText. The rule itself has no screen.
+        placeholderLabels: { ...(config.placeholderLabels ?? {}) },
 
         // ── Search / filters / sort (persisted across refreshes) ─────────
         filters: { ...config.filters },
@@ -1406,28 +1411,67 @@ export function editorCore(config) {
             this.nextMatch();
         },
 
-        // ── Placeholder guard (non-blocking) ──────────────────────────────
-        // [!v*N] placeholders carry the game's dynamic numbers: an edit or
-        // replacement that alters them silently breaks those values
-        // in-game. Warn, never block.
+        // ── Placeholder gate ──────────────────────────────────────────────
+        // A game's text carries technical placeholders — [!v*N], [!t*N], [!STR*N], [!nl] — that
+        // the game substitutes at runtime: one dropped, duplicated or invented breaks the line
+        // whoever wrote it. The rule is resources/js/rules/placeholders.js, the same one the
+        // mod refuses on and the PHP door holds, judged by one file of cases.
+        //
+        // 🔴 Compared to the SOURCE KEY, never to the stored value. Until 2026-09-11 this asked
+        // "did you change the placeholders relative to the previous translation", on [!v*N]
+        // alone, and only warned — so a translation that had already lost a token kept passing,
+        // and a dropped [!nl] never showed. The modal's Save is greyed while a problem stands and
+        // says which one (decision of 2026-09-08: prevent while the edit is still open rather
+        // than fail on the server after the work is gone). The group save is deliberately NOT a
+        // second barrier: saveEditModal is the only door to stageEdit for the modal, so a broken
+        // line never enters editedValues from here; a replace-all can still stage one, which is
+        // what the row badge below is for.
 
-        _placeholderSignature(text) {
-            const matches = String(text ?? '').match(/\[!v\*\d+\]/g);
-            return matches ? matches.sort().join('') : '';
-        },
-
-        /** A pending edit changed the row's placeholders. Silent on one set aside: nothing goes. */
+        /** A pending edit breaks a placeholder of the source. Silent on one set aside: nothing goes. */
         hasPlaceholderWarning(key) {
             if (!this.editIsHeld(key)) return false;
-            return this._placeholderSignature(this.storedValue(key))
-                !== this._placeholderSignature(this.editedValues[key]);
+            return !acceptsEdit(key, this.editedValues[key]).accepted;
         },
 
-        /** Live warning while typing in the edit modal. */
-        get editModalPlaceholderMismatch() {
-            if (!this.editModal.open) return false;
-            return this._placeholderSignature(this.editModal.originalValue)
-                !== this._placeholderSignature(this.editModalValue);
+        /** What is wrong with the modal's text, live, as facts; empty when it may be saved. */
+        get editModalProblems() {
+            if (!this.editModal.open) return [];
+            // A description or a note edited in the same box has no placeholder to keep.
+            if (this.editModal.scope !== undefined && this.editModal.scope !== 'line') return [];
+            return editProblems(this.editModal.key, this.editModalValue);
+        },
+
+        /** The modal cannot be saved as it stands. Greys the button; saveEditModal refuses too. */
+        get editModalBlocked() {
+            return this.editModalProblems.length > 0;
+        },
+
+        /** The button's tooltip while it is greyed, in the page's language; empty otherwise. */
+        editModalSaveTitle() {
+            return this.editModalBlocked ? (this.placeholderLabels.blocked ?? '') : '';
+        },
+
+        /**
+         * One problem, worded for the screen from the page's own labels (the English lines of
+         * the rule are a model's, not a person's). Labels arrive from the page as
+         * `placeholderLabels`; a missing label falls back to the rule's line rather than to
+         * nothing, so a problem is never silent.
+         */
+        placeholderProblemText(problem) {
+            const labels = this.placeholderLabels ?? {};
+            const fill = (template, values) => Object.entries(values)
+                .reduce((text, [name, value]) => text.split(':' + name).join(String(value)), template);
+            switch (problem.kind) {
+                case 'sequence':
+                    return labels.sequence ? fill(labels.sequence, { sequence: problem.sequence })
+                        : `the exact sequence "${problem.sequence}" is missing or altered`;
+                case 'count':
+                    return labels.count ? fill(labels.count, { token: problem.token, found: problem.found, expected: problem.expected })
+                        : `token ${problem.token} appears ${problem.found} time(s) instead of ${problem.expected}`;
+                default:
+                    return labels.invented ? fill(labels.invented, { token: problem.token })
+                        : `token ${problem.token} does not exist in the source`;
+            }
         },
 
         /**
@@ -1978,6 +2022,8 @@ export function editorCore(config) {
         },
 
         saveEditModal() {
+            // The same refusal as the greyed button: Ctrl+Enter must not be a way around it.
+            if (this.editModalBlocked) return;
             const { key, originalValue, scope } = this.editModal;
             if (scope === 'line' || scope === undefined) {
                 this.stageEdit(key, this.editModalValue, originalValue);

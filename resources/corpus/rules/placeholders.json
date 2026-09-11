@@ -114,6 +114,9 @@
     { "id": "placeholders/accepts_edit/empty", "op": "accepts_edit",
       "in": { "source": "", "edited": "" }, "out": { "accepted": true },
       "why": "nothing to keep" },
+    { "id": "placeholders/accepts_edit/cleared-is-a-capture", "op": "accepts_edit",
+      "in": { "source": "Level [!v*0]", "edited": "" }, "out": { "accepted": true, "errors": [] },
+      "why": "an empty edit is not a translation: the game shows its source and substitutes nothing, so there is no placeholder to keep. The mod never stores one (SetTranslationFromEditor returns on empty); the site keeps the line as a capture. Refusing it made an untranslated line open on every marker 'missing' before a word was typed" },
 
     { "id": "placeholders/repair_trailing_breaks/put-back", "op": "repair_trailing_breaks",
       "in": { "source": "Line[!nl][!nl]", "translation": "Ligne" }, "out": "Ligne[!nl][!nl]",

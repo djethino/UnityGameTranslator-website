@@ -115,10 +115,17 @@ final class Placeholders
      * ⚠ One check a MODEL is held to and a person is not: the count of brackets over the whole
      * text. Applied to a person it would refuse "Save" → "Save [F5]", which is theirs to make.
      *
+     * ⚠ An empty edit is accepted whatever the source holds: it is a capture, not a translation —
+     * the game shows its source and substitutes nothing, so there is no placeholder to keep.
+     *
      * @return array{accepted: bool, errors: list<string>} the lines are the corpus's, verbatim.
      */
     public static function acceptsEdit(string $source, string $edited): array
     {
+        if ($edited === '') {
+            return ['accepted' => true, 'errors' => []];
+        }
+
         $errors = [];
 
         foreach (self::frozenSequences($source) as $sequence) {

@@ -849,9 +849,16 @@
                         class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                         placeholder="{{ __('merge.enter_translation') }}"
                     ></textarea>
-                    <p x-show="editModalPlaceholderMismatch" x-cloak class="mt-2 text-xs text-orange-400">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholder_warning') }}
-                    </p>
+                    {{-- 🔴 The placeholder gate, live: the same rule the mod refuses on
+                         (resources/js/rules/placeholders.js), compared to the source key. While a
+                         problem stands the Save below is greyed and each problem is named here, so
+                         the fix happens while the edit is still open — never as a server error
+                         after the work is gone (decision of 2026-09-08). --}}
+                    <template x-for="problem in editModalProblems">
+                        <p class="mt-2 text-xs text-red-400">
+                            <i class="fas fa-exclamation-triangle mr-1"></i><span x-text="placeholderProblemText(problem)"></span>
+                        </p>
+                    </template>
                     <p class="mt-2 text-xs text-gray-500">
                         <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl+Enter</kbd> {{ __('merge.save_shortcut') }} &bull;
                         <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> {{ __('merge.cancel_shortcut') }}
@@ -862,8 +869,8 @@
                         class="px-4 py-2 text-gray-400 hover:text-white transition">
                         {{ __('common.cancel') }}
                     </button>
-                    <button type="button" @click="saveEditModal()"
-                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
+                    <button type="button" @click="saveEditModal()" :disabled="editModalBlocked" :title="editModalSaveTitle()"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition">
                         <i class="fas fa-check mr-1"></i> {{ __('common.save') }}
                     </button>
                 </div>
@@ -960,6 +967,14 @@ document.addEventListener('alpine:init', () => {
         // ⚠ Encoded, never echoed between quotes: inside a <script>, HTML escaping protects
         // nothing, and this value comes from the URL. The rule the rest of this file follows.
         scope: @json($uuid),
+        // The page's wording for a broken placeholder, composed by the editor from these
+        // templates — the rule itself (resources/js/rules/placeholders.js) has no screen.
+        placeholderLabels: @js([
+            'sequence' => __('merge.placeholder_sequence_missing'),
+            'count' => __('merge.placeholder_count'),
+            'invented' => __('merge.placeholder_invented'),
+            'blocked' => __('merge.placeholder_blocked'),
+        ]),
         // ⚠ Named after the SITUATIONS the core counts (`catNew`, `catDiffering`, `catSame`), not
         // after boxes this screen invented. `catSame` also carries `onlyOnTarget` here — see
         // categoryFilter below, where that fold is stated once.
