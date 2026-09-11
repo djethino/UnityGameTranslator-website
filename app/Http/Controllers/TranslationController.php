@@ -91,19 +91,20 @@ class TranslationController extends Controller
         // Check for existing translation with same UUID (UPDATE case)
         $existingTranslation = $service->findUserTranslation($fileUuid, $userId);
 
-        // Determine ownership and visibility
-        $ownership = $service->determineOwnership($fileUuid, $userId);
-
-        // Same two doors as the API path — see the note there. This one is the website's own
-        // upload form, and it must not be the way round the decision.
-        if (isset($ownership['refused'])) {
-            return back()->withErrors(['file' => $ownership['refused']]);
-        }
-
+        // Same two doors as the API path, in the same order — see the note there: the frozen
+        // branch is asked FIRST, or determineOwnership's generic refusal takes its sentence away.
+        // This one is the website's own upload form, and it must not be the way round the decision.
         if ($existingTranslation && $existingTranslation->isFrozenBranch()) {
             return back()->withErrors(['file' =>
                 'The translation you contribute to no longer accepts contributions. '
                 . 'Your work is untouched — turn it into your own version to carry on.']);
+        }
+
+        // Determine ownership and visibility
+        $ownership = $service->determineOwnership($fileUuid, $userId);
+
+        if (isset($ownership['refused'])) {
+            return back()->withErrors(['file' => $ownership['refused']]);
         }
 
         $originalTranslation = $existingTranslation ? null : $ownership['original'];

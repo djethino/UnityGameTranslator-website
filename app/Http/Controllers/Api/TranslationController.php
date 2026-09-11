@@ -1077,24 +1077,32 @@ class TranslationController extends Controller
         // Check for existing translation with same UUID (UPDATE case)
         $existingTranslation = $service->findUserTranslation($fileUuid, $userId);
 
-        // Determine ownership and visibility
-        $ownership = $service->determineOwnership($fileUuid, $userId);
-
         // 🔴 **Two ways in, and the second is the one that gets forgotten.** A NEW contribution is
-        // refused by determineOwnership; an EXISTING branch never reaches that decision at all,
-        // because $existingTranslation short-circuits it — so a Main who closes would still be
-        // receiving updates from every branch already in place.
+        // refused by determineOwnership below; an EXISTING branch whose Main has closed since is
+        // this door, and it has to come FIRST: determineOwnership answers "the Main takes no
+        // contributions" for anybody who is not its owner, the frozen contributor included, and
+        // asked first it took this door's sentence away — the contract cases found it standing
+        // after the refusal, unreachable (spec/api-v1, `upload/refused-frozen-branch`).
         //
         // Frozen means frozen: as a branch, nothing more can be done. Turning it into a fork is
         // the one move left, and it is the client that asks for it.
-        if (isset($ownership['refused'])) {
-            return response()->json(['error' => $ownership['refused']], 403);
-        }
-
         if ($existingTranslation && $existingTranslation->isFrozenBranch()) {
             return response()->json([
                 'error' => 'The translation you contribute to no longer accepts contributions. '
                          . 'Your work is untouched — turn it into your own version to carry on.',
+                'refused_code' => 'branch_frozen',
+            ], 403);
+        }
+
+        // Determine ownership and visibility
+        $ownership = $service->determineOwnership($fileUuid, $userId);
+
+        // ⚠ The sentence is what every published mod shows as-is; `refused_code` is the same
+        // verdict for a client that wants to decide rather than display (spec/api-v1, additive).
+        if (isset($ownership['refused'])) {
+            return response()->json([
+                'error' => $ownership['refused'],
+                'refused_code' => $ownership['refused_code'],
             ], 403);
         }
 

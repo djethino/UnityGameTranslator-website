@@ -1,0 +1,847 @@
+{
+  "$comment": "The contract cases of API v1. The site REPLAYS each one (tests/Feature/ApiContractTest.php: build `setup`, send `request`, compare `response`); the mod READS each response body (Core.Checks: feed `response.body` to the reader named in `read`, compare what it derives); check-spec.py holds every request and response body to openapi.json. One file, three executors — see spec/README.md.",
+  "conventions": {
+    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, status?, accepts_branches?, notes?, resources_url?, file_hash, lines, vote_count?}}, votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
+    "request": "{method, path, as?, query?, headers?, body?, body_encoding?}. `as` names a user of the setup: the site sends a fresh token of theirs. `{{a.b.c}}` in path, query and header strings is a setup value (`translations.main.id`) or a `capture` of the prelude. In a body, {\"$ref\": \"translations.main.id\"} is the same thing as a JSON value and {\"$json\": {...}} is that object serialised as a string (the upload's `content`).",
+    "prelude": "Requests sent before the one under test, in order; `capture: {name: \"header:ETag\" | \"body:token\"}` keeps a value for `{{name}}`. Site only.",
+    "request_valid": "false when the request body is one the route must REFUSE: check-spec.py then requires the schema to refuse it too.",
+    "response": "{status, headers?, body?}. Objects match PARTIALLY (keys named must match, others are not looked at); arrays match exactly in length, element by element. Matchers: {\"$is\": \"integer\" | \"number\" | \"string\" | \"boolean\" | \"iso8601\" | \"file_hash\" | \"session_key\" | \"url\" | \"any\"}, {\"$ref\": ...} (the setup value), {\"$contains\": \"text\"}, {\"$absent\": true} (the key must NOT be there). Both executors resolve these the same way; the mod resolves a `$ref` to a stable number of its own.",
+    "read": "{reader, expects}: which reader of the mod's ApiReaders takes this body, and the values it must derive, as dotted paths of the result (`Vote.CanVote`). Absent when the mod does not read this route."
+  },
+  "fixtures": {
+    "lineage": {
+      "users": { "alice": { "name": "alice" }, "bob": { "name": "bob" }, "carol": { "name": "carol" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true, "notes": "Full run",
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" } }
+        },
+        "branch": {
+          "game": "g", "user": "bob", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "branch", "parent": "main",
+          "status": "complete",
+          "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
+        }
+      }
+    },
+    "closed": {
+      "users": { "alice": { "name": "alice" }, "bob": { "name": "bob" }, "carol": { "name": "carol" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": false,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" } }
+        },
+        "branch": {
+          "game": "g", "user": "bob", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "branch", "parent": "main",
+          "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
+        }
+      }
+    },
+    "abandoned": {
+      "users": { "alice": { "name": "alice", "deleted": true }, "carol": { "name": "carol" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" } }
+        }
+      }
+    },
+    "headless": {
+      "users": { "bob": { "name": "bob" }, "carol": { "name": "carol" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "branch": {
+          "game": "g", "user": "bob", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "branch",
+          "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
+        }
+      }
+    },
+    "two-games": {
+      "users": { "alice": { "name": "alice" }, "carol": { "name": "carol" } },
+      "games": {
+        "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" },
+        "h": { "name": "Sample Game II", "slug": "sample-game-ii", "steam_id": "367521" }
+      },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" } }
+        },
+        "second": {
+          "game": "h", "user": "carol", "uuid": "0c2d3e4f-5061-4728-9bac-1d2e3f4a5b6c", "visibility": "public",
+          "status": "in_progress",
+          "file_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "lines": { "Shop": { "v": "Tienda", "t": "A" } }
+        }
+      }
+    },
+    "banned": {
+      "users": { "bob": { "name": "bob", "banned": true } },
+      "games": {},
+      "translations": {}
+    }
+  },
+  "cases": [
+    {
+      "id": "api-v1/search/by-steam-id",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520", "lang": "French" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "count": 1,
+          "translations": [
+            {
+              "id": { "$ref": "translations.main.id" },
+              "game": { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "slug": "sample-game", "steam_id": "367520", "image_url": null },
+              "uploader": "alice", "source_language": "English", "target_language": "French",
+              "line_count": 2, "status": "complete", "accepts_branches": true, "origin": null,
+              "type": "human", "notes": "Full run", "resources_url": null,
+              "vote_count": 0, "user_vote": null, "download_count": 0,
+              "human_count": 2, "validated_count": 0, "ai_count": 0, "capture_count": 0, "skipped_count": 0, "broken_placeholder_count": 0,
+              "quality_score": { "$is": "number" }, "review_coverage": { "$is": "any" }, "game_coverage": { "$is": "any" }, "completeness": { "$is": "any" },
+              "created_at": { "$is": "iso8601" },
+              "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "file_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b",
+              "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }
+            }
+          ],
+          "games": [
+            {
+              "game": { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "slug": "sample-game", "steam_id": "367520", "image_url": null },
+              "total": 1,
+              "languages": { "French": 1 },
+              "translations": [ { "id": { "$ref": "translations.main.id" }, "uploader": "alice" } ]
+            }
+          ],
+          "games_total": 1
+        }
+      },
+      "read": { "reader": "search_by_steam_id", "expects": { "Count": 1, "Translations.0.Uploader": "alice", "Translations.0.GameSlug": "sample-game", "Translations.0.AcceptsBranches": true, "Translations.0.Origin": null, "Translations.0.UserVote": null, "Translations.0.SkippedCount": 0 } },
+      "why": "the branch is a proposal between two people, never a catalogue entry: one row, and the per-game group says the same"
+    },
+    {
+      "id": "api-v1/search/by-name-answers-per-game",
+      "setup": "two-games",
+      "request": { "method": "GET", "path": "/translations", "query": { "q": "Sample Game" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "count": 2,
+          "translations": [ { "id": { "$is": "integer" } }, { "id": { "$is": "integer" } } ],
+          "games": [
+            { "game": { "name": "Sample Game" }, "total": 1, "languages": { "French": 1 }, "translations": [ { "uploader": "alice", "game": { "name": "Sample Game", "slug": "sample-game" } } ] },
+            { "game": { "name": "Sample Game II" }, "total": 1, "languages": { "French": 1 }, "translations": [ { "uploader": "carol", "type": "ai", "game": { "name": "Sample Game II", "slug": "sample-game-ii" } } ] }
+          ],
+          "games_total": 2
+        }
+      },
+      "read": { "reader": "search_by_name", "expects": { "Count": 1, "Translations.0.Uploader": "alice", "Translations.0.GameName": "Sample Game" }, "input": { "game_name": "Sample Game" } },
+      "why": "a loose name touches several games on purpose; the answer names each, and the client keeps the group it asked about (GameNames.Which picks the exact one)"
+    },
+    {
+      "id": "api-v1/search/no-selector-no-groups",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations", "query": { "lang": "French" } },
+      "response": { "status": 200, "body": { "count": 1, "games": { "$absent": true }, "games_total": { "$absent": true } } },
+      "why": "without a game there is no 'per game' to be complete about, and a shape that implied it would be a lie"
+    },
+    {
+      "id": "api-v1/search/signed-in-sees-own-vote",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/translations/{{translations.main.id}}/vote", "as": "bob", "body": { "value": 1 } } } ],
+      "request": { "method": "GET", "path": "/translations", "as": "bob", "query": { "steam_id": "367520" } },
+      "response": { "status": 200, "body": { "translations": [ { "vote_count": 1, "user_vote": 1 } ] } },
+      "read": { "reader": "search_by_steam_id", "expects": { "Translations.0.UserVote": 1, "Translations.0.VoteCount": 1 } },
+      "why": "the arrow is coloured when the panel opens, not after a second click that would withdraw the vote"
+    },
+    {
+      "id": "api-v1/for-games/one-result-per-entry-asked",
+      "setup": "two-games",
+      "request": {
+        "method": "POST", "path": "/translations/for-games",
+        "body": { "games": [ { "steam_id": "367520", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" }, { "name": "Sample Game II" }, { "name": "Nothing Of That Name" } ] }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "results": [
+            { "key": { "steam_id": "367520" }, "games": [ { "game": { "slug": "sample-game" }, "total": 1, "languages": { "French": 1 } } ], "games_total": 1, "matching": { "id": { "$ref": "translations.main.id" }, "uploader": "alice" } },
+            { "key": { "name": "Sample Game II" }, "games": [ { "game": { "slug": "sample-game-ii" }, "total": 1 } ], "games_total": 1, "matching": null },
+            { "key": { "name": "Nothing Of That Name" }, "games": [], "games_total": 0, "matching": null }
+          ]
+        }
+      },
+      "why": "an entry that found nothing still answers, in its place: a missing key would read as 'not asked', which a caller cannot tell from 'nothing exists'"
+    },
+    {
+      "id": "api-v1/check-uuid/new-lineage",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "alice", "query": { "uuid": "ffffffff-0000-4000-8000-000000000000" } },
+      "response": { "status": 200, "body": { "exists": false, "role": "none" } },
+      "read": { "reader": "check_uuid", "expects": { "Exists": false, "IsOwner": false, "Role": "None", "MainUsername": null, "AcceptsBranches": null, "Vote": null } },
+      "why": "nothing exists: an upload would create a new Main"
+    },
+    {
+      "id": "api-v1/check-uuid/own-main-with-a-contribution-waiting",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "alice", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "main",
+          "main_missing": null, "main_abandoned": null, "main_ignoring": null,
+          "accepts_branches": true, "branch_frozen": false, "merged_lines_total": null,
+          "branches_with_work": 1, "lines_available": 1,
+          "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] },
+          "lines_offered": null,
+          "translation": {
+            "id": { "$ref": "translations.main.id" }, "source_language": "English", "target_language": "French", "type": "human",
+            "status": "complete", "notes": "Full run", "resources_url": null, "resources_url_own": null,
+            "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }
+          },
+          "branches_count": 1,
+          "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false }
+        }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Main", "BranchesCount": 1, "BranchesWithWork": 1, "LinesAvailable": 1, "LinesToReview": 1, "LinesNew.Human": 1, "LinesDiffering.Human": 0, "LinesOffered": null, "AcceptsBranches": true, "BranchFrozen": false, "MainMissing": null, "ExistingTranslation.Status": "complete", "ExistingTranslation.OwnResourcesUrl": null, "Vote.CanVote": false, "Vote.Count": 0 } },
+      "why": "the Main learns what its contributions HOLD, not how many people took the file: one branch, one new hand-written line to review"
+    },
+    {
+      "id": "api-v1/check-uuid/own-branch",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "bob", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "branch",
+          "main_missing": false, "main_abandoned": false, "main_ignoring": false,
+          "accepts_branches": true, "branch_frozen": false, "merged_lines_total": 0,
+          "branches_with_work": null, "lines_available": null, "lines_waiting": null,
+          "lines_offered": 1,
+          "translation": { "id": { "$ref": "translations.branch.id" }, "status": "complete", "line_count": 3, "resources_url_own": null },
+          "branches_count": null,
+          "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": true }
+        }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Branch", "MainMissing": false, "MainAbandoned": false, "BranchesCount": 0, "BranchesWithWork": null, "LinesToReview": null, "LinesOffered": 1, "Vote.CanVote": true } },
+      "why": "a contributor learns what THEIR contribution holds and whether its Main is still there; what other contributors do is none of their business"
+    },
+    {
+      "id": "api-v1/check-uuid/somebody-elses-main",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "carol", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "none", "main_abandoned": false, "accepts_branches": true,
+          "main": { "id": { "$ref": "translations.main.id" }, "uploader": "alice", "source_language": "English", "target_language": "French", "line_count": 2, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" } },
+          "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": true }
+        }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": false, "Role": "None", "MainUsername": "alice", "AcceptsBranches": true, "MainAbandoned": false, "OriginalTranslation.Uploader": "alice", "OriginalTranslation.LineCount": 2, "ExistingTranslation": null } },
+      "why": "told BEFORE the click, to the one person it is for: an upload would become her branch, and the Main takes them"
+    },
+    {
+      "id": "api-v1/check-uuid/main-works-alone",
+      "setup": "closed",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "carol", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": { "status": 200, "body": { "exists": true, "role": "none", "accepts_branches": false, "main": { "uploader": "alice" } } },
+      "read": { "reader": "check_uuid", "expects": { "AcceptsBranches": false, "IsOwner": false } },
+      "why": "a client that reads false stops offering Contribute instead of letting somebody find out on the click"
+    },
+    {
+      "id": "api-v1/check-uuid/frozen-branch",
+      "setup": "closed",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "bob", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": { "status": 200, "body": { "exists": true, "role": "branch", "accepts_branches": false, "branch_frozen": true, "main_missing": false } },
+      "read": { "reader": "check_uuid", "expects": { "Role": "Branch", "BranchFrozen": true, "AcceptsBranches": false } },
+      "why": "the Main closed since: nothing more can be done with this row as a branch, and the one way on is a fork"
+    },
+    {
+      "id": "api-v1/check-uuid/main-gone",
+      "setup": "headless",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "bob", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": { "status": 200, "body": { "exists": true, "role": "branch", "main_missing": true, "main_abandoned": false, "lines_offered": 0, "vote": null } },
+      "read": { "reader": "check_uuid", "expects": { "Role": "Branch", "MainMissing": true, "Vote": null, "LinesOffered": 0 } },
+      "why": "a branch of nothing: the mod used to keep saying 'you are a branch' long after there was anything to be a branch of"
+    },
+    {
+      "id": "api-v1/check-uuid/without-a-token",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": { "status": 401, "body": { "error": "Unauthorized", "message": "API token required" } },
+      "read": { "reader": "error", "expects": { "Message": "Unauthorized" } },
+      "why": "where an account stands is a question only an account can ask"
+    },
+    {
+      "id": "api-v1/sync-state/own-main-with-lineage",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/sync/state", "as": "alice", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "main",
+          "translation": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "accepts_branches": true, "branch_frozen": false, "notes": "Full run", "resources_url": null, "type": "human", "line_count": 2 },
+          "main": null,
+          "branches_count": 1, "has_update": false,
+          "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false },
+          "accepts_branches": true,
+          "branches_pending_review": 1, "branches_with_work": 1, "lines_available": 1,
+          "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] }
+        }
+      },
+      "why": "check-uuid and check in one payload, as the sync stream's `state` event carries it; `branches_pending_review` is `branches_with_work`, deliberately"
+    },
+    {
+      "id": "api-v1/sync-state/own-row-only",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/sync/state", "as": "alice", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "lineage": "0" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "main", "has_update": false, "accepts_branches": true,
+          "translation": { "id": { "$ref": "translations.main.id" } },
+          "branches_count": { "$absent": true }, "branches_with_work": { "$absent": true }, "lines_waiting": { "$absent": true }, "lines_available": { "$absent": true }
+        }
+      },
+      "why": "absent, never zero: a client that asked not to be told has not been told there is nothing"
+    },
+    {
+      "id": "api-v1/sync-state/holder-of-somebody-elses-main",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/sync/state", "as": "carol", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "hash": "0000000000000000000000000000000000000000000000000000000000000000" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "none", "translation": null,
+          "main": { "id": { "$ref": "translations.main.id" }, "uploader": "alice", "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 2 },
+          "branches_count": 0, "has_update": true, "accepts_branches": true,
+          "vote": { "can_vote": true }
+        }
+      },
+      "why": "the player holding somebody else's file — the one person who most needs to know whether they may send corrections back — is told at the top level"
+    },
+    {
+      "id": "api-v1/check/anonymous-is-told-who-published",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/check", "query": { "hash": "0000000000000000000000000000000000000000000000000000000000000000" } },
+      "response": {
+        "status": 200,
+        "headers": { "ETag": { "$is": "string" }, "Cache-Control": "must-revalidate, private" },
+        "body": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "uploader": "alice", "line_count": 2, "vote_count": 0, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }, "has_update": true }
+      },
+      "read": { "reader": "check", "input": { "local_hash": "0000000000000000000000000000000000000000000000000000000000000000" }, "expects": { "HasUpdate": true, "Uploader": "alice", "LineCount": 2, "VoteCount": 0, "NotModified": false } },
+      "why": "the one call somebody with no account can make about the file they installed; without `uploader` the mod could only call the work 'Website'"
+    },
+    {
+      "id": "api-v1/check/if-none-match-answers-304",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/check" }, "capture": { "etag": "header:ETag" } } ],
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/check", "headers": { "If-None-Match": "{{etag}}" } },
+      "response": { "status": 304 },
+      "why": "the validator covers the vote count and the uploader too, so a 304 really means nothing the caller could see has moved — and the caller keeps every value it has"
+    },
+    {
+      "id": "api-v1/check/branch-refused-to-a-stranger",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.branch.id}}/check", "as": "carol" },
+      "response": { "status": 403, "body": { "error": "Forbidden", "message": "A branch is visible to whoever wrote it, and to the Main owner for merging" } },
+      "read": { "reader": "error", "expects": { "Message": "Forbidden" } },
+      "why": "a proposal between two people; the API must not describe what it will not serve"
+    },
+    {
+      "id": "api-v1/check/branch-answers-its-author",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.branch.id}}/check", "as": "bob" },
+      "response": { "status": 200, "body": { "id": { "$ref": "translations.branch.id" }, "uploader": "bob", "line_count": 3 } },
+      "why": "its author, always — a contributor who could not ask whether their own branch changed would be told nothing about work they wrote"
+    },
+    {
+      "id": "api-v1/download/the-published-file",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/download" },
+      "response": {
+        "status": 200,
+        "headers": { "ETag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"", "Content-Disposition": "attachment; filename=\"translations.json\"" },
+        "body": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } }
+      },
+      "why": "the file itself, fingerprinted by its ETag; a copy held with that hash is the published one"
+    },
+    {
+      "id": "api-v1/download/held-copy-is-current",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/download", "headers": { "If-None-Match": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"" } },
+      "response": { "status": 304, "headers": { "ETag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"" } },
+      "why": "the mod sends the hash it holds, quoted, and is spared the body"
+    },
+    {
+      "id": "api-v1/download/branch-refused-to-a-stranger",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.branch.id}}/download" },
+      "response": { "status": 403, "body": { "error": "Forbidden" } },
+      "why": "same single definition as check: isReadableBy"
+    },
+    {
+      "id": "api-v1/branches/the-main-owner-lists-them",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b/branches", "as": "alice" },
+      "response": {
+        "status": 200,
+        "body": { "main_id": { "$ref": "translations.main.id" }, "branches_count": 1, "branches": [ { "id": { "$ref": "translations.branch.id" }, "user": { "id": { "$ref": "users.bob.id" }, "name": "bob" }, "line_count": 3, "human_count": 3, "validated_count": 0, "ai_count": 0, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" } } ] }
+      },
+      "read": { "reader": "branches", "expects": { "Branches.0.Username": "bob", "Branches.0.LineCount": 3, "Branches.0.HumanCount": 3 } },
+      "why": "ordered on the content date, which a vote or a download does not move"
+    },
+    {
+      "id": "api-v1/branches/a-contributor-may-not",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b/branches", "as": "bob" },
+      "response": { "status": 403, "body": { "error": "Forbidden", "message": "You are not the Main owner of this translation" } },
+      "why": "what the other contributions carry is not a contributor's business"
+    },
+    {
+      "id": "api-v1/upload/a-new-main",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": {
+          "steam_id": "367520", "game_name": "Sample Game", "source_language": "English", "target_language": "German",
+          "status": "in_progress", "notes": "Erster Durchgang", "accepts_branches": true,
+          "content": { "$json": { "_uuid": "d1e2f3a4-b5c6-4d7e-8f90-a1b2c3d4e5f6", "Shop": { "v": "Laden", "t": "H" }, "Quit": { "v": "Beenden", "t": "A" } } }
+        }
+      },
+      "response": { "status": 201, "body": { "success": true, "translation": { "id": { "$is": "integer" }, "file_hash": { "$is": "file_hash" }, "line_count": 2, "role": "main", "web_url": { "$contains": "/games/sample-game" } } } },
+      "read": { "reader": "upload", "expects": { "Success": true, "Role": "Main", "LineCount": 2 } },
+      "why": "a uuid nobody has published: the sender becomes the Main of a new lineage and the file records id and hash as `_source`"
+    },
+    {
+      "id": "api-v1/upload/updating-ones-own-main",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "alice",
+        "body": {
+          "steam_id": "367520", "source_language": "German", "target_language": "Spanish",
+          "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "V" }, "Quit": { "v": "Quitter", "t": "H" } } }
+        }
+      },
+      "response": { "status": 200, "body": { "success": true, "translation": { "id": { "$ref": "translations.main.id" }, "line_count": 3, "role": "main" } } },
+      "read": { "reader": "upload", "expects": { "Role": "Main", "LineCount": 3 } },
+      "why": "an update keeps the row and its languages whatever the request says about them — here a pair that would be refused on a new translation"
+    },
+    {
+      "id": "api-v1/upload/contributing-to-somebodys-main",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": {
+          "game_name": "Sample Game", "source_language": "English", "target_language": "French",
+          "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Inventory": { "v": "Inventaire", "t": "H" } } }
+        }
+      },
+      "response": { "status": 201, "body": { "success": true, "translation": { "role": "branch", "line_count": 2 } } },
+      "read": { "reader": "upload", "expects": { "Role": "Branch" } },
+      "why": "nobody writes on somebody else's row: an upload into a lineage one does not lead becomes one's own branch of it"
+    },
+    {
+      "id": "api-v1/upload/refused-the-main-works-alone",
+      "setup": "closed",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Échoppe", "t": "H" } } } }
+      },
+      "response": { "status": 403, "body": { "error": "This translation does not accept contributions. Your lines are safe: use Fork in the mod to publish your own version of it instead.", "refused_code": "branches_refused" } },
+      "read": { "reader": "upload", "expects": { "Success": false, "Error": "This translation does not accept contributions. Your lines are safe: use Fork in the mod to publish your own version of it instead." } },
+      "why": "a refusal is a refusal, never a quiet substitution: turning it into a fork would change the file's uuid from a server that cannot see that file"
+    },
+    {
+      "id": "api-v1/upload/refused-the-mains-owner-is-gone",
+      "setup": "abandoned",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Échoppe", "t": "H" } } } }
+      },
+      "response": { "status": 403, "body": { "error": { "$contains": "The account that owned this translation has been deleted" }, "refused_code": "main_abandoned" } },
+      "why": "the Main is still there and still says it accepts branches; nobody will ever read one, and a contribution nobody can merge is a refusal that takes months to notice"
+    },
+    {
+      "id": "api-v1/upload/refused-the-main-is-gone",
+      "setup": "headless",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Échoppe", "t": "H" } } } }
+      },
+      "response": { "status": 403, "body": { "error": { "$contains": "has been removed by its author" }, "refused_code": "main_gone" } },
+      "why": "a lineage that lost its head is not a new translation: the next upload must not take it over, inheriting a following it never earned"
+    },
+    {
+      "id": "api-v1/upload/refused-frozen-branch",
+      "setup": "closed",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "bob",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" }, "Inventory": { "v": "Inventaire", "t": "H" } } } }
+      },
+      "response": { "status": 403, "body": { "error": { "$contains": "no longer accepts contributions" }, "refused_code": "branch_frozen" } },
+      "why": "a Main who closes must stop receiving updates from every branch already in place — and the contributor is told THEIR branch is frozen, not merely that the Main takes none. This door stood after determineOwnership, which refused first with the generic sentence; the case found it unreachable"
+    },
+    {
+      "id": "api-v1/upload/refused-twin-of-a-published-file",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9", "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" } } } }
+      },
+      "response": { "status": 422, "body": { "error": { "$contains": "identical to a translation already published by @alice" } } },
+      "why": "the same lines under another uuid publish one person's work under another's name; the author is named only because her row is public"
+    },
+    {
+      "id": "api-v1/upload/refused-bare-lines",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9", "Shop": "Boutique" } } }
+      },
+      "response": { "status": 422, "body": { "error": "Invalid translation format: 1 entries have errors", "details": [ { "$is": "string" } ], "hint": { "$is": "string" } } },
+      "read": { "reader": "upload", "expects": { "Success": false, "Error": "Invalid translation format: 1 entries have errors" } },
+      "why": "the bare form is still READ by the mod but refused at the door: every published line is `{v, t}`"
+    },
+    {
+      "id": "api-v1/upload/refused-same-languages",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "French", "target_language": "French", "content": { "$json": { "_uuid": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9", "Shop": { "v": "Échoppe", "t": "H" } } } }
+      },
+      "response": { "status": 422, "body": { "error": "Source and target languages must be different." } },
+      "why": "on a NEW translation the pair is checked; on an update or a branch it is ignored"
+    },
+    {
+      "id": "api-v1/upload/refused-unknown-language",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "fr", "content": { "$json": { "_uuid": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9", "Shop": { "v": "Échoppe", "t": "H" } } } }
+      },
+      "response": { "status": 422, "body": { "message": { "$is": "string" }, "errors": { "target_language": [ { "$is": "string" } ] } } },
+      "read": { "reader": "upload", "expects": { "Success": false } },
+      "why": "a name, never a code: Laravel's validation body, whose `errors` the mod joins into one sentence"
+    },
+    {
+      "id": "api-v1/upload/compressed-body",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol", "body_encoding": "gzip",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "German", "content": { "$json": { "_uuid": "d1e2f3a4-b5c6-4d7e-8f90-a1b2c3d4e5f6", "Shop": { "v": "Laden", "t": "H" } } } }
+      },
+      "response": { "status": 201, "body": { "success": true, "translation": { "role": "main", "line_count": 1 } } },
+      "why": "every client we ship compresses its POST bodies: `Content-Encoding: gzip`, inflated by the site before validation"
+    },
+    {
+      "id": "api-v1/gzip/refused-on-a-get",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/games", "headers": { "Content-Encoding": "gzip" } },
+      "response": { "status": 415, "body": { "error": "Unsupported Media Type" } },
+      "why": "a GET carries no body worth decompressing; refusing the header is what keeps the decoder unreachable from every route"
+    },
+    {
+      "id": "api-v1/details/a-description-without-a-release",
+      "setup": "lineage",
+      "request": { "method": "PATCH", "path": "/translations/{{translations.main.id}}/details", "as": "alice", "body": { "notes": "Second pass, menus done", "resources_url": null } },
+      "response": { "status": 200, "body": { "translation": { "id": { "$ref": "translations.main.id" }, "status": "complete", "notes": "Second pass, menus done", "resources_url": null, "resources_url_own": null } } },
+      "read": { "reader": "details", "expects": { "Success": true } },
+      "why": "only what was sent is written, and the content date does not move: a better wording is not a release"
+    },
+    {
+      "id": "api-v1/details/status-refused-on-a-branch",
+      "setup": "lineage",
+      "request": { "method": "PATCH", "path": "/translations/{{translations.branch.id}}/details", "as": "bob", "body": { "status": "in_progress" } },
+      "response": { "status": 422, "body": { "error": "Unprocessable", "message": "A contribution inherits whether it is finished from the translation it contributes to." } },
+      "read": { "reader": "details", "expects": { "Success": false, "Error": "A contribution inherits whether it is finished from the translation it contributes to." } },
+      "why": "refused rather than ignored: answering 200 to a request that changed nothing would teach a client that it had"
+    },
+    {
+      "id": "api-v1/details/somebody-elses-row",
+      "setup": "lineage",
+      "request": { "method": "PATCH", "path": "/translations/{{translations.main.id}}/details", "as": "bob", "body": { "notes": "mine now" } },
+      "response": { "status": 403, "body": { "error": "Forbidden", "message": "This translation belongs to somebody else." } },
+      "why": "one writes on one's own row and nowhere else; the admin path stays in /admin"
+    },
+    {
+      "id": "api-v1/vote/thanking-a-translation",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/translations/{{translations.main.id}}/vote", "as": "bob", "body": { "value": 1 } },
+      "response": { "status": 200, "body": { "vote_count": 1, "user_vote": 1 } },
+      "read": { "reader": "vote", "expects": { "Success": true, "VoteCount": 1, "UserVote": 1 } },
+      "why": "the answer carries the caller's own vote so the arrow can be drawn without asking again"
+    },
+    {
+      "id": "api-v1/vote/the-same-vote-again-withdraws-it",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/translations/{{translations.main.id}}/vote", "as": "bob", "body": { "value": 1 } } } ],
+      "request": { "method": "POST", "path": "/translations/{{translations.main.id}}/vote", "as": "bob", "body": { "value": 1 } },
+      "response": { "status": 200, "body": { "vote_count": 0, "user_vote": null } },
+      "read": { "reader": "vote", "expects": { "VoteCount": 0, "UserVote": null } },
+      "why": "one gesture, both ways; null is 'no vote', which the client draws as a neutral arrow"
+    },
+    {
+      "id": "api-v1/vote/never-on-ones-own",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/translations/{{translations.main.id}}/vote", "as": "alice", "body": { "value": 1 } },
+      "response": { "status": 403, "body": { "error": "Forbidden", "message": "You cannot vote on this translation" } },
+      "read": { "reader": "vote", "expects": { "Success": false, "Error": "Forbidden" } },
+      "why": "whether a caller MAY vote is the server's rule; `vote.can_vote` says it before the click"
+    },
+    {
+      "id": "api-v1/games/the-catalogue",
+      "setup": "two-games",
+      "request": { "method": "GET", "path": "/games", "query": { "lang": "French" } },
+      "response": { "status": 200, "body": { "count": 2, "games": [ { "id": { "$is": "integer" }, "name": { "$is": "string" }, "slug": { "$is": "string" }, "steam_id": { "$is": "string" }, "image_url": null, "translations_count": 1 }, { "translations_count": 1 } ] } },
+      "read": { "reader": "games", "expects": { "Count": 2, "Games.0.TranslationsCount": 1 } },
+      "why": "games holding a published translation, and only those: a branch is neither counted nor listed"
+    },
+    {
+      "id": "api-v1/games/one-game-and-its-complete-translations",
+      "setup": "two-games",
+      "request": { "method": "GET", "path": "/games/sample-game-ii" },
+      "response": { "status": 200, "body": { "game": { "id": { "$ref": "games.h.id" }, "name": "Sample Game II", "slug": "sample-game-ii", "steam_id": "367521", "image_url": null }, "available_languages": [], "translations": [] } },
+      "why": "only `status: complete` rows reach this listing — the second game's is in progress, so it lists nothing and no language"
+    },
+    {
+      "id": "api-v1/games/search-answers-the-local-catalogue-first",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/games/search", "as": "alice", "query": { "steam_id": "367520" } },
+      "response": { "status": 200, "body": { "count": 1, "games": [ { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "steam_id": "367520", "image_url": null, "source": "local", "translations_count": 2 } ] } },
+      "read": { "reader": "games_external", "expects": { "Count": 1, "Games.0.Source": "local", "Games.0.Name": "Sample Game" } },
+      "why": "the catalogue before any external quota; a game already known is answered without a store call"
+    },
+    {
+      "id": "api-v1/me/who-this-token-is",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/me", "as": "alice" },
+      "response": { "status": 200, "body": { "id": { "$ref": "users.alice.id" }, "name": "alice", "created_at": { "$is": "iso8601" }, "access_code": { "$is": "string" } } },
+      "read": { "reader": "access_code", "expects": { "AccessCode": { "$is": "string" } } },
+      "why": "`access_code` is what the Linked devices screen calls this line; without it nobody could tell which access is theirs"
+    },
+    {
+      "id": "api-v1/me/banned",
+      "setup": "banned",
+      "request": { "method": "GET", "path": "/me", "as": "bob" },
+      "response": { "status": 403, "body": { "error": "Account banned", "message": "Your account has been banned.", "reason": { "$is": "string" } } },
+      "read": { "reader": "error", "expects": { "Message": "Account banned" } },
+      "why": "the one 403 a client reads as 'sign out': `error` is exactly `Account banned`"
+    },
+    {
+      "id": "api-v1/me-translations/a-mains-library",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/me/translations", "as": "alice" },
+      "response": {
+        "status": 200,
+        "body": { "count": 1, "translations": [ {
+          "id": { "$ref": "translations.main.id" }, "game": { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" },
+          "file_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "role": "main", "branches_count": 1,
+          "branches_with_work": 1, "lines_available": 1, "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] },
+          "main_missing": null, "main_abandoned": null, "accepts_branches": true, "branch_frozen": null,
+          "source_language": "English", "target_language": "French", "line_count": 2, "type": "human", "status": "complete",
+          "vote_count": 0, "download_count": 0, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "updated_at": { "$is": "iso8601" }
+        } ] }
+      },
+      "why": "a whole library in one call, with what waits on each row — fifty calls to check-uuid would starve the account's budget"
+    },
+    {
+      "id": "api-v1/me-translations/a-contributors-library",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/me/translations", "as": "bob" },
+      "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.branch.id" }, "role": "branch", "branches_count": null, "branches_with_work": null, "lines_waiting": null, "main_missing": false, "main_abandoned": false, "accepts_branches": true, "branch_frozen": false } ] } },
+      "why": "null on the side the question does not apply to — 'not a branch' is not 'fine', and 'not a Main' is not 'nothing waits'"
+    },
+    {
+      "id": "api-v1/notifications/a-contribution-to-review",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/translations", "as": "carol", "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Inventory": { "v": "Inventaire", "t": "H" } } } } } } ],
+      "request": { "method": "GET", "path": "/me/notifications", "as": "alice" },
+      "response": { "status": 200, "body": { "unread": 1, "items": [ { "id": { "$is": "string" }, "type": "branch_submitted", "text": { "$contains": "contribution(s) to review on your Sample Game translation (French)" }, "url": { "$contains": "/translations/9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b/merge" } } ] } },
+      "read": { "reader": "notifications", "expects": { "Unread": 1, "Items.0.Type": "branch_submitted" } },
+      "why": "pre-rendered English for an overlay, with the page that answers it"
+    },
+    {
+      "id": "api-v1/notifications/mark-all-read",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/me/notifications/read", "as": "alice", "body": {} },
+      "response": { "status": 200, "body": { "success": true } },
+      "why": "no ids: everything unread"
+    },
+    {
+      "id": "api-v1/auth/device-flow-starts",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/auth/device", "body": { "game_id": "367520", "game_name": "Sample Game" } },
+      "response": { "status": 200, "body": { "device_code": { "$is": "string" }, "user_code": { "$is": "string" }, "verification_uri": { "$contains": "/link" }, "expires_in": 900, "interval": 5 } },
+      "read": { "reader": "device_flow", "expects": { "Success": true, "ExpiresIn": 900, "Interval": 5 } },
+      "why": "the token never comes back through this API: it arrives once over the SSE stream named by `device_code`"
+    },
+    {
+      "id": "api-v1/auth/device-flow-with-nothing-declared",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/auth/device" },
+      "response": { "status": 200, "body": { "device_code": { "$is": "string" }, "user_code": { "$is": "string" }, "expires_in": 900 } },
+      "why": "every mod already installed calls this with an empty body, and none of them will ever be updated"
+    },
+    {
+      "id": "api-v1/auth/handing-the-token-back",
+      "setup": "lineage",
+      "request": { "method": "DELETE", "path": "/auth/token", "as": "alice" },
+      "response": { "status": 200, "body": { "message": "Token revoked" } },
+      "why": "revokes the token presented and no other"
+    },
+    {
+      "id": "api-v1/auth/a-banned-account-may-still-hand-it-back",
+      "setup": "banned",
+      "request": { "method": "DELETE", "path": "/auth/token", "as": "bob" },
+      "response": { "status": 200, "body": { "message": "Token revoked" } },
+      "why": "giving up a credential is not a privilege; this route sits outside the ban check on purpose"
+    },
+    {
+      "id": "api-v1/merge-preview/publishing-comparison-on-ones-own",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/merge-preview/init", "as": "alice", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H", "i": 3 } } } },
+      "response": { "status": 200, "body": { "token": { "$is": "session_key" }, "url": { "$contains": "/merge-preview?token=" }, "expires_at": { "$is": "iso8601" } } },
+      "read": { "reader": "merge_preview_init", "expects": { "Success": true } },
+      "why": "destination server by default: the arbitrated result becomes the published translation, so only its owner may open it"
+    },
+    {
+      "id": "api-v1/merge-preview/publishing-comparison-refused-on-somebodys",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/merge-preview/init", "as": "bob", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } } } },
+      "response": { "status": 403, "body": { "error": "You can only merge preview your own translations." } },
+      "read": { "reader": "merge_preview_init", "expects": { "Success": false, "Error": "You can only merge preview your own translations." } },
+      "why": "ownership is what publishing requires"
+    },
+    {
+      "id": "api-v1/merge-preview/local-comparison-against-the-main",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/merge-preview/init", "as": "bob", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } }, "destination": "local" } },
+      "response": { "status": 200, "body": { "token": { "$is": "session_key" } } },
+      "why": "a comparison whose result only goes back to the game writes nothing here, so a branch may measure itself against its Main"
+    },
+    {
+      "id": "api-v1/merge-preview/result-of-a-local-comparison",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/merge-preview/init", "as": "bob", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } }, "destination": "local" } }, "capture": { "token": "body:token" } } ],
+      "request": { "method": "GET", "path": "/merge-preview/{{token}}/result", "as": "bob" },
+      "response": { "status": 200, "body": { "translation_id": { "$ref": "translations.main.id" }, "content": { "Shop": { "v": "Boutique", "t": "H" } } } },
+      "read": { "reader": "merge_preview_result", "expects": { "Success": true } },
+      "why": "one channel: the file holds what the player sent until the page replaces it with what they decided, and a client collects it only after the stream's `merge_completed` event"
+    },
+    {
+      "id": "api-v1/merge-preview/result-of-an-unknown-token",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/merge-preview/0000000000000000000000000000000000000000000000000000000000000000/result", "as": "bob" },
+      "response": { "status": 404, "body": { "error": "Merge result not found or expired." } },
+      "read": { "reader": "merge_preview_result", "expects": { "Success": false, "Error": "Merge result not found or expired." } },
+      "why": "unknown, expired or somebody else's: one answer, so a leaked token learns nothing"
+    },
+    {
+      "id": "api-v1/merge-preview/result-of-a-published-comparison",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/merge-preview/init", "as": "alice", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "token": "body:token" } } ],
+      "request": { "method": "GET", "path": "/merge-preview/{{token}}/result", "as": "alice" },
+      "response": { "status": 409, "body": { "error": "This comparison was published; download the translation instead." } },
+      "why": "a published comparison became the online version and is read back through the ordinary download"
+    },
+    {
+      "id": "api-v1/merge-preview/letting-go",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/merge-preview/init", "as": "alice", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "token": "body:token" } } ],
+      "request": { "method": "DELETE", "path": "/merge-preview/{{token}}", "as": "alice" },
+      "response": { "status": 200, "body": { "ended": true } },
+      "why": "the mod loaded another translation; the page learns it over its own stream"
+    },
+    {
+      "id": "api-v1/edit-session/opening-one",
+      "setup": "lineage",
+      "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "_game": { "name": "Sample Game" }, "Shop": { "v": "Boutique", "t": "H" } }, "game_name": "Sample Game", "source_language": "English", "target_language": "French", "ai_available": false, "ai_model": null, "holder": "game" } },
+      "response": { "status": 200, "body": { "mod_key": { "$is": "session_key" }, "url": { "$contains": "/edit-session/" }, "expires_at": { "$is": "iso8601" } } },
+      "read": { "reader": "edit_session_init", "expects": { "Success": true } },
+      "why": "anonymous by design: the 64-character mod key is the whole credential, and it never reaches a browser"
+    },
+    {
+      "id": "api-v1/edit-session/what-is-going-on",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "GET", "path": "/edit-session/{{key}}/state" },
+      "response": { "status": 200, "body": { "content_hash": { "$is": "file_hash" }, "expires_at": { "$is": "iso8601" }, "browser_seen_seconds_ago": null, "browser_left": false, "pending_changes": 0 } },
+      "read": { "reader": "edit_session_state", "expects": { "Exists": true, "PendingChanges": 0 } },
+      "why": "a few dozen bytes: the file is fetched only once the hash says it is worth fetching"
+    },
+    {
+      "id": "api-v1/edit-session/pushing-the-file",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "POST", "path": "/edit-session/{{key}}/update", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "A" } }, "ai_available": true, "ai_model": "gemma" } },
+      "response": { "status": 200, "body": { "content_hash": { "$is": "file_hash" }, "browser_seen_seconds_ago": null, "browser_left": false } },
+      "read": { "reader": "edit_session_update", "expects": { "Success": true, "BrowserLeft": false, "BrowserSeenSecondsAgo": null } },
+      "why": "the browser picks it up on its next state poll; the answer carries browser presence so the holder can conclude the page was closed"
+    },
+    {
+      "id": "api-v1/edit-session/the-file-after-a-save",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "GET", "path": "/edit-session/{{key}}/content" },
+      "response": { "status": 200, "headers": { "Cache-Control": "no-store, private" }, "body": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } },
+      "why": "verbatim, metadata included: it replaces translations.json, so `_uuid` and `_source` must survive the round trip"
+    },
+    {
+      "id": "api-v1/edit-session/a-retranslation-answered",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "POST", "path": "/edit-session/{{key}}/retranslation", "body": { "id": "req-1", "key": "Shop", "value": "Échoppe", "outcome": "replaced" } },
+      "response": { "status": 200, "body": { "received": true } },
+      "why": "a proposal, staged under the page's own Save; nothing is written on the holder's side"
+    },
+    {
+      "id": "api-v1/edit-session/still-here",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "POST", "path": "/edit-session/{{key}}/keepalive" },
+      "response": { "status": 200, "body": { "expires_at": { "$is": "iso8601" }, "browser_left": false } },
+      "why": "a session ends when the page is closed or the holder stops, never on a timer; the TTL is a backstop for orphans"
+    },
+    {
+      "id": "api-v1/edit-session/ending-it",
+      "setup": "lineage",
+      "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
+      "request": { "method": "DELETE", "path": "/edit-session/{{key}}" },
+      "response": { "status": 200, "body": { "ended": true } },
+      "why": "idempotent: an already-gone session is a success for the caller"
+    },
+    {
+      "id": "api-v1/edit-session/a-session-that-is-gone",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/edit-session/0000000000000000000000000000000000000000000000000000000000000000/state" },
+      "response": { "status": 404, "body": { "error": "Edit session expired or not found." } },
+      "read": { "reader": "edit_session_state", "expects": { "Exists": false } },
+      "why": "the client forgets the session; a network failure is NOT this and keeps a resumable session on disk"
+    },
+    {
+      "id": "api-v1/edit-session/an-unknown-holder-is-refused",
+      "setup": "lineage",
+      "request_valid": false,
+      "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } }, "holder": "toaster" } },
+      "response": { "status": 422, "body": { "message": { "$is": "string" }, "errors": { "holder": [ { "$is": "string" } ] } } },
+      "why": "`holder` is a closed word: game or manager; it decides what a human is shown, so an invented one is refused rather than filed as the mod"
+    }
+  ]
+}

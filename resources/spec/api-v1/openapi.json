@@ -1,0 +1,1260 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "UnityGameTranslator API v1",
+    "version": "1",
+    "summary": "What a Core (the mod, the Manager, a second engine's Core) and the site say to each other over HTTP.",
+    "description": "Read this together with `cases.json`: every route here has at least one case the site replays (PHPUnit) and the mod reads (Core.Checks), and `check-spec.py` holds the cases to these schemas. The four rules every client applies, written once:\n\n1. **Absent = not asked, never no.** A field missing from an answer means the server did not say — an older site, a narrower question — and the client keeps what it knew. It never reads as zero, false or empty. Every field below marked *additive* was added after a mod had shipped that does not read it; a server may omit it, a client must not require it.\n2. **Errors carry a sentence.** A refused call answers a JSON object with `error` and/or `message`, both meant to be shown as they are; the mod and the Manager show the first one present. A 429 carries `Retry-After` in seconds. Anything else (a proxy page, an empty body) is described by its status code alone.\n3. **Names, never codes.** Every language is its catalogue name (`French`, `Traditional Chinese`), never an ISO code, and `auto` is not a language.\n4. **A declaration is never a proof.** `User-Agent`, `X-UGT-Game` and `X-UGT-Device` describe the caller and may be displayed or used to group its own lines; only the bearer token authorises anything.\n\nThrottles are per IP for public routes and per token for authenticated ones (`x-throttle`), Laravel's `throttle:N,1`: N calls per minute, refused with 429 `{message: \"Too Many Attempts.\"}` and `Retry-After`.\n\nRequest bodies may be sent gzip-compressed on POST, PUT and PATCH only: `Content-Encoding: gzip`, at most 16 MiB on the wire and 100 MiB decompressed, sixty compressed bodies a minute per IP, one layer. A compressed GET is 415; a body past either bound is 413; a body that is not gzip is 400. Responses may come back compressed when the client accepts it; a client must either not ask or be able to inflate.",
+    "x-rules": {
+      "absent-means-unknown": "A missing key is 'not said', never a value. Clients keep the previous value; servers may omit any field marked additive.",
+      "error-body": "{error?: string, message?: string, reason?: string, refused_code?: string, errors?: {field: [string]}} — show error or message as-is.",
+      "languages": "Catalogue names only (catalogs/languages.json), never ISO codes; 'auto' is refused where a language is required.",
+      "declarations": "User-Agent, X-UGT-Game and X-UGT-Device are read for display and grouping of the caller's own lines; never for authorisation."
+    }
+  },
+  "servers": [
+    { "url": "https://unitygametranslator.asymptomatikgames.com/api/v1", "description": "Production. The mod and the Manager compile this in (Directory.Build.props); config.json's api_base_url overrides it for a self-hosted site." }
+  ],
+  "x-client-headers": {
+    "User-Agent": {
+      "description": "Which program is calling. `UnityGameTranslator/{version} ({loader})` for the mod — the loader in parentheses is one of the closed list below, and its ABSENCE marks a build older than 2026-08-20 that cannot inflate a compressed response; `UnityGameTranslatorManager/{version}` for the Manager. Anything else is filed as `other`. The relay prefix `UnityGameTranslator-SSE/` is ignored on purpose.",
+      "loaders": ["BepInEx5", "BepInEx6-Mono", "BepInEx6-IL2CPP", "MelonLoader-Mono", "MelonLoader-IL2CPP"],
+      "examples": ["UnityGameTranslator/0.13.2 (BepInEx6-IL2CPP)", "UnityGameTranslatorManager/0.1.1"]
+    },
+    "X-UGT-Game": {
+      "description": "Which game this access speaks for: base64url of the JSON `{game_id?: string of 1–32 digits, game_name?: string ≤120}` — the same payload `POST /auth/device` takes in its body. Sent ONLY beside a bearer token and on `POST /auth/device`; an anonymous search or download must not carry it (it names the game and the machine of somebody who chose not to be named). The server fills an empty line and never overwrites one. Malformed: ignored, never a refusal.",
+      "maxLength": 512
+    },
+    "X-UGT-Device": {
+      "description": "Which machine, so an account can group its games: `[A-Za-z0-9-]{16,64}`, a random draw the Manager made once (`device.id`), never a measurement of the machine. Same sending rule as X-UGT-Game. Shape-checked only.",
+      "pattern": "^[A-Za-z0-9-]{16,64}$"
+    },
+    "If-None-Match": "The ETag a previous `check` or `download` answered, sent back verbatim (quotes included). A match answers 304 with no body.",
+    "Content-Encoding": "`gzip` on POST/PUT/PATCH bodies only — see the description above for the bounds."
+  },
+  "security": [],
+  "x-common-responses": {
+    "description": "Answered by the middleware in front of EVERY route below, so they are written once here rather than on each operation; a checker treats them as declared everywhere.",
+    "400": { "description": "`Content-Encoding: gzip` on a body that is not gzip: `{error: \"Invalid gzip content\", message}`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+    "413": { "$ref": "#/components/responses/TooLarge" },
+    "415": { "description": "`Content-Encoding: gzip` on anything but POST, PUT, PATCH: `{error: \"Unsupported Media Type\", message}`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+    "429": { "$ref": "#/components/responses/TooMany" }
+  },
+  "tags": [
+    { "name": "catalogue", "description": "Public: what is published, for anyone." },
+    { "name": "lineage", "description": "Where the caller stands in a lineage: their own row, the Main, what waits. Needs an account." },
+    { "name": "publish", "description": "Sending a file, describing it, voting. Needs an account." },
+    { "name": "account", "description": "Signing in (device flow), the token, notifications." },
+    { "name": "edit-session", "description": "The live editor: anonymous by design, authorised by the 64-character mod key alone." },
+    { "name": "merge-preview", "description": "A comparison arbitrated in the browser, published or handed back to the game." }
+  ],
+  "paths": {
+    "/translations": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "searchTranslations",
+        "summary": "Published translations of a game (or of the games a name touches), ranked as the site ranks them.",
+        "description": "Exactly one of `steam_id`, `game`, `q` selects the games; `lang` and `source_lang` filter the translations. `count` and `translations` are the FLAT legacy view every published mod reads (at most 50 rows, ranked over every game matched). `games` is the truth: one group per game, complete, with the game's own totals — present only when a game selector was given, absent otherwise because there is no 'per game' to be complete about. A caller that asked by name must pick which group it meant (`common/GameNames.Which`): a loose match answers about several games on purpose. A Steam id that names a demo answers with the full game's card.",
+        "security": [{}, { "bearer": [] }],
+        "x-auth": "optional — with a valid token, `user_vote` is filled",
+        "x-throttle": "60/min per IP",
+        "parameters": [
+          { "name": "steam_id", "in": "query", "schema": { "type": "string" }, "description": "Exact Steam app id; a demo's id reaches the game it is a demo of." },
+          { "name": "game", "in": "query", "schema": { "type": "string" }, "description": "Slug or numeric id of a game." },
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Name as read off the game folder (`unity_name`, exact) or a loose match on the display name." },
+          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Target language." },
+          { "name": "source_lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Source language." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      },
+      "post": {
+        "tags": ["publish"],
+        "operationId": "uploadTranslation",
+        "summary": "Publish a file: a new Main, an update of one's own row, or a contribution (branch) to somebody's Main.",
+        "description": "The server decides which of the three it is, from `_uuid` in `content` and who is asking (`common/Uploads` is the client-side prediction; `check-uuid` asks). One of `steam_id`, `game_name` is required. `source_language` and `target_language` are required as catalogue names but IGNORED on an update and on a branch, which keep the row's / the Main's pair. `content` is the translation file as a JSON STRING (see `spec/translation-file`): it must carry `_uuid`, at least one line, and lines in the `{v, t, i?}` form — a bare `\"key\": \"value\"` is refused with 422. `accepts_branches` is only written on a Main and only when sent: absent is 'no opinion'. A fork declares its origin with `forked_from_*`; a pointer the caller could not have held is dropped, never refused. Nobody writes on somebody else's row: an upload into a lineage the caller does not lead becomes THEIR branch, or is refused with 403 and a sentence to show as-is.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "10/min per token",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadBody" } } } },
+        "responses": {
+          "201": { "description": "Created — a new Main, or a new branch.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadResponse" } } } },
+          "200": { "description": "Updated — the caller's existing row in this lineage.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "Refused: the Main takes no contributions, its owner's account is gone, the Main itself is gone while branches remain, or the caller's branch is frozen. `error` is a whole sentence the mod shows as-is; `refused_code` names the case (additive).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadRefused" } } } },
+          "413": { "$ref": "#/components/responses/TooLarge" },
+          "422": { "description": "The file or the request cannot be taken: invalid JSON or lines, no `_uuid`, no line at all, a file identical to one already published (twins), `auto` or equal languages on a new translation, or a Laravel validation failure (`{message, errors}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadUnprocessable" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/for-games": {
+      "post": {
+        "tags": ["catalogue"],
+        "operationId": "translationsForGames",
+        "summary": "A whole library in one request: the published translations of up to 100 games, and the row each is running.",
+        "description": "One result per entry ASKED, in the order asked, including entries that found nothing (`games: []`, `games_total: 0`) — a missing key would read as 'not asked'. `steam_id` resolves exactly (a demo's id reaches the full game); `name` resolves exactly on the display or Unity name, then loosely on the display name when it is at least 3 characters; `uuid` resolves the published row of that lineage with plain visibility, so a delisted Main is still found (`matching`). Never a private row: branches are not catalogue entries.",
+        "security": [{}, { "bearer": [] }],
+        "x-auth": "optional — with a valid token, `user_vote` is filled",
+        "x-throttle": "20/min per IP",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ForGamesBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ForGamesResponse" } } } },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/check-uuid": {
+      "get": {
+        "tags": ["lineage"],
+        "operationId": "checkUuid",
+        "summary": "Before an upload: where does this account stand in this lineage?",
+        "description": "Three shapes, told apart by `exists` and `role`: the caller holds a row (`role` main or branch — the answer describes THEIR row under `translation`, and what waits on it); a Main exists and the caller holds nothing (`exists: true, role: none` — an upload would become their branch, `main` describes the Main); nothing exists (`exists: false`). `role` never says `fork`: a fork is a Main of its own lineage. Every field past `exists`, `role`, `translation`, `main`, `branches_count` and `vote` is additive, and null on the side of the question it does not apply to (`branches_count` on a branch, `main_missing` on a Main) — 'not a branch' is not 'fine'.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "parameters": [
+          { "name": "uuid", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 36 }, "description": "The file's `_uuid`." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckUuidResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/{translation}/check": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "checkTranslation",
+        "summary": "Has this translation moved? The one call somebody with no account can make about the file they installed.",
+        "description": "Answers `file_hash`, `uploader`, `line_count`, `vote_count`, and `has_update` when `hash` was sent (`file_hash !== hash`). The `ETag` covers everything this answer carries — the hash, the line count, the vote count and the uploader, deliberately not `updated_at`, which a download by anyone moves — so `If-None-Match` with the last ETag answers 304 with no body when nothing the caller could see has changed. A branch answers only to its author and to its Main's owner (403 otherwise).",
+        "security": [{}, { "bearer": [] }],
+        "x-auth": "optional — needed to read one's own branch",
+        "x-throttle": "120/min per IP",
+        "parameters": [
+          { "$ref": "#/components/parameters/TranslationId" },
+          { "name": "hash", "in": "query", "schema": { "$ref": "#/components/schemas/FileHash" }, "description": "The `file_hash` the caller holds." },
+          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "The ETag of the last answer, verbatim." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "headers": { "ETag": { "$ref": "#/components/headers/CheckETag" }, "Cache-Control": { "description": "Written `private, must-revalidate`; the framework serialises the directives in its own order.", "schema": { "type": "string", "const": "must-revalidate, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckResponse" } } } },
+          "304": { "description": "Nothing the caller could see has changed. No body: the caller keeps every value it has." },
+          "403": { "$ref": "#/components/responses/BranchForbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/{translation}/download": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "downloadTranslation",
+        "summary": "The translation file itself, as published.",
+        "description": "The body is the file (`spec/translation-file`), served as an attachment; `ETag` is `\"<file_hash>\"` and `If-None-Match` with it answers 304. Counted as a download. A branch answers only to its author and to its Main's owner. Not gzip-compressed by this route: the site compresses responses once, at its edge, for clients that can inflate.",
+        "security": [{}, { "bearer": [] }],
+        "x-auth": "optional — needed to read one's own branch",
+        "x-throttle": "30/min per IP",
+        "parameters": [
+          { "$ref": "#/components/parameters/TranslationId" },
+          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "`\"<file_hash>\"` of the copy held." }
+        ],
+        "responses": {
+          "200": { "description": "The file.", "headers": { "ETag": { "$ref": "#/components/headers/FileETag" }, "Content-Disposition": { "schema": { "type": "string", "const": "attachment; filename=\"translations.json\"" } }, "Cache-Control": { "description": "Written `private, max-age=3600`; serialised in the framework's order.", "schema": { "type": "string", "const": "max-age=3600, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationFile" } } } },
+          "304": { "description": "The copy held is the published one.", "headers": { "ETag": { "$ref": "#/components/headers/FileETag" } } },
+          "403": { "$ref": "#/components/responses/BranchForbidden" },
+          "404": { "description": "No such translation, or its file is missing on the server (`{error: \"File not found\"}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/{uuid}/branches": {
+      "get": {
+        "tags": ["lineage"],
+        "operationId": "listBranches",
+        "summary": "The contributions received on a Main the caller leads.",
+        "description": "Ordered on the content date (a vote or a download moves `updated_at`, not this). 403 when the caller does not lead this lineage.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "parameters": [
+          { "name": "uuid", "in": "path", "required": true, "schema": { "type": "string", "maxLength": 36 } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BranchesResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "Not the Main owner of this lineage.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/{translation}/details": {
+      "patch": {
+        "tags": ["publish"],
+        "operationId": "updateDetails",
+        "summary": "Change what a translation SAYS about itself without sending the file again.",
+        "description": "Only the fields SENT are written; an absent field is 'no opinion' — the opposite of the upload's rule, deliberately. `status` and `accepts_branches` belong to a Main: on a branch, `status` is refused with 422 (a contribution inherits its Main's) and `accepts_branches` is ignored. A frozen branch is refused whole (403). Never bumps the content date: nothing about the file changed.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "20/min per token",
+        "parameters": [{ "$ref": "#/components/parameters/TranslationId" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DetailsBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DetailsResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "Somebody else's row, or a frozen branch (`error: \"Frozen\"`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "description": "`status` sent on a branch (`error: \"Unprocessable\"`), or a validation failure.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/translations/{translation}/vote": {
+      "post": {
+        "tags": ["publish"],
+        "operationId": "vote",
+        "summary": "Thank, or not, a published translation that is not one's own.",
+        "description": "`value` is -1 or 1. Voting the same value again withdraws the vote; the other value flips it. Refused (403) on a branch and on one's own row — whether a caller MAY vote is `vote.can_vote` in `check-uuid` / `sync/state`, a server rule clients never re-implement.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "30/min per token",
+        "parameters": [{ "$ref": "#/components/parameters/TranslationId" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["value"], "properties": { "value": { "type": "integer", "enum": [-1, 1] } } } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoteResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "`message: \"You cannot vote on this translation\"`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/games": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "listGames",
+        "summary": "Games holding at least one published translation, most translated first (50 at most).",
+        "security": [],
+        "x-throttle": "60/min per IP",
+        "parameters": [
+          { "name": "steam_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Loose match on the display name or its latin handle." },
+          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Only games with a published translation into this language." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GamesResponse" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/games/search": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "searchGamesExternal",
+        "summary": "Find a game the site may not know yet: local catalogue first, then Steam, IGDB, RAWG.",
+        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from; `id` and `translations_count` exist only on `local` hits.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string", "minLength": 2 } },
+          { "name": "steam_id", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExternalGamesResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/games/{game}": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "showGame",
+        "summary": "One game and its COMPLETE published translations.",
+        "description": "Only `status: complete` rows, votes then downloads first. `available_languages` lists the target languages published for it.",
+        "security": [],
+        "x-throttle": "60/min per IP",
+        "parameters": [
+          { "name": "game", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The game's slug (`Game::getRouteKeyName`), as listed by `/games` — never its numeric id." },
+          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameShowResponse" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/sync/state": {
+      "get": {
+        "tags": ["lineage"],
+        "operationId": "syncState",
+        "summary": "check-uuid and check in one payload — what the sync stream's `state` event carries.",
+        "description": "Same three shapes as `check-uuid`, plus `has_update` when `hash` was sent, and `accepts_branches` at the TOP level (a fact about the lineage, told to whoever asks — including somebody holding the file who has published nothing). `lineage=0` asks about the caller's OWN row only: `branches_count`, `branches_pending_review`, `branches_with_work`, `lines_available`, `lines_waiting`, `main`, `main_missing`, `main_abandoned`, `main_ignoring` and `merged_lines_total` are then ABSENT, never zero. `branches_pending_review` and `branches_with_work` are the same number on purpose.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "parameters": [
+          { "name": "uuid", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 36 } },
+          { "name": "hash", "in": "query", "schema": { "type": "string", "maxLength": 100 }, "description": "The `file_hash` the caller holds." },
+          { "name": "lineage", "in": "query", "schema": { "type": "string", "enum": ["0", "1"] }, "description": "`0`: own row only. Default: the lineage too." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SyncStateResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["account"],
+        "operationId": "me",
+        "summary": "Who this token belongs to, and the short code the site names this access by.",
+        "description": "`access_code` is what the Linked devices screen calls this line (`#QKADJN`); display only, no endpoint accepts it.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MeResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/me/translations": {
+      "get": {
+        "tags": ["lineage"],
+        "operationId": "myTranslations",
+        "summary": "Every row this account holds, with its lineage and what waits on it — a whole library in one call.",
+        "description": "Ordered on the content date. Per row: `role`, and the fields that only make sense on one side, null on the other (`branches_count`, `branches_with_work`, `lines_available`, `lines_waiting` on a branch; `main_missing`, `main_abandoned`, `branch_frozen` on a Main). `accepts_branches` is the lineage's decision on either side.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MyTranslationsResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "tags": ["account"],
+        "operationId": "notifications",
+        "summary": "Unread notifications, summarised in English for an overlay.",
+        "description": "`unread` counts them all; `items` carries the first five, each with a pre-rendered `text` and a `url` to open, or null.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "30/min per token",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotificationsResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/me/notifications/read": {
+      "post": {
+        "tags": ["account"],
+        "operationId": "markNotificationsRead",
+        "summary": "Mark notifications read: the ids given, or all of them when none is.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "30/min per token",
+        "requestBody": { "required": false, "content": { "application/json": { "schema": { "type": "object", "properties": { "ids": { "type": "array", "maxItems": 50, "items": { "type": "string", "maxLength": 64 } } } } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "required": ["success"], "properties": { "success": { "type": "boolean", "const": true } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/auth/device": {
+      "post": {
+        "tags": ["account"],
+        "operationId": "deviceFlowStart",
+        "summary": "Start signing in: a code to show, a page to type it on.",
+        "description": "The token does NOT come back through this API: the client opens the SSE stream `{sse}/auth/device/{device_code}/stream` (see `spec/sse-events`) and receives it in the `authorized` event, once. `interval` is inert — nothing polls. The body is optional and every field in it is: it names the game for the Linked devices screen and lets the site replace the previous access of the same game on the same machine (`X-UGT-Device`) rather than pile them up.",
+        "security": [],
+        "x-throttle": "10/min per IP",
+        "requestBody": { "required": false, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameDeclaration" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeviceFlowResponse" } } } },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/auth/token": {
+      "delete": {
+        "tags": ["account"],
+        "operationId": "revokeToken",
+        "summary": "Hand the presented token back. Works for a banned account too: giving up a credential is not a privilege.",
+        "description": "Revokes the token in `Authorization` and no other. A token already revoked is refused by the authentication itself (401), which a client treats as done: there is nothing left to hand back.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "required": ["message"], "properties": { "message": { "type": "string", "const": "Token revoked" } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/merge-preview/init": {
+      "post": {
+        "tags": ["merge-preview"],
+        "operationId": "mergePreviewInit",
+        "summary": "Send the local file for a comparison arbitrated in the browser.",
+        "description": "`destination: server` (default) publishes the arbitrated result as the translation — allowed on one's own row only (403 otherwise). `destination: local` hands the result back to the game through `GET /merge-preview/{token}/result` and writes nothing on the site — allowed on any translation the caller could download, which is how a branch compares itself with its Main. `local_content` carries the lines only (`{key: {v, t, i?}}`), never the `_` metadata. The token lives 15 minutes, then 120 once the browser has used it.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "10/min per token",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MergePreviewInitBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TokenSessionResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "Not one's own translation (`server`), or not readable by the caller (`local`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "413": { "$ref": "#/components/responses/TooLarge" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/merge-preview/{token}/result": {
+      "get": {
+        "tags": ["merge-preview"],
+        "operationId": "mergePreviewResult",
+        "summary": "Collect the arbitrated file of a comparison that ends in the game.",
+        "description": "Only for `destination: local`: a published comparison became the online version and is read back with the ordinary download (409 here). One channel: the file holds what the player SENT until the page replaces it with what they decided, so a client collects it only after the stream's `merge_completed` event. The token is checked against the caller; a leaked token is not enough (404, the same answer as unknown or expired).",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "30/min per token",
+        "parameters": [{ "$ref": "#/components/parameters/SessionToken" }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MergePreviewResultResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "description": "`{error: \"Merge result not found or expired.\"}` — unknown, expired, somebody else's, or not arbitrated yet.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "409": { "description": "`{error: \"This comparison was published; download the translation instead.\"}`", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/merge-preview/{token}": {
+      "delete": {
+        "tags": ["merge-preview"],
+        "operationId": "mergePreviewEnd",
+        "summary": "Let go of a comparison whose subject changed; the page learns it over its stream.",
+        "description": "Idempotent: a comparison already gone, or somebody else's, answers `ended: true` all the same.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "30/min per token",
+        "parameters": [{ "$ref": "#/components/parameters/SessionToken" }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EndedResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/init": {
+      "post": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionInit",
+        "summary": "Open a live editor on the local file, without an account.",
+        "description": "`content` is the WHOLE file, `_` keys included: it comes back verbatim to replace `translations.json`. `mod_key` (64 characters) authorises every other edit-session call and the stream, and is never shown to a browser; `url` carries the one-time browser token. `holder` says which product is on the other end (`game` when absent). The session lives 15 minutes and is kept alive by `keepalive` every third of that; at most 20 MiB.",
+        "security": [],
+        "x-throttle": "6/min per IP",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionInitBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionInitResponse" } } } },
+          "413": { "description": "`{error: \"Content exceeds the size limit.\"}` (20 MiB).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" },
+          "503": { "description": "`{error: \"Too many active edit sessions, please try again later.\"}`", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } }
+        }
+      }
+    },
+    "/edit-session/{modKey}/content": {
+      "get": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionContent",
+        "summary": "The session file, after a browser save — the only proof the edits reached the holder.",
+        "description": "Counts as the holder's presence and clears `pending_changes`. The body is the file, verbatim.",
+        "security": [],
+        "x-throttle": "30/min per IP",
+        "parameters": [{ "$ref": "#/components/parameters/ModKey" }],
+        "responses": {
+          "200": { "description": "The file.", "headers": { "Cache-Control": { "schema": { "type": "string", "const": "no-store, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationFile" } } } },
+          "404": { "$ref": "#/components/responses/SessionGone" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/{modKey}/state": {
+      "get": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionState",
+        "summary": "What is going on in a session, in a few dozen bytes, without moving the file.",
+        "description": "For a client that cannot hold a stream open. Asking is NOT being present: it never extends the session. `?following=1` is the one claim of presence, made only by the holder that applies saves — never by a product inspecting a session the other one opened.",
+        "security": [],
+        "x-throttle": "60/min per IP",
+        "parameters": [
+          { "$ref": "#/components/parameters/ModKey" },
+          { "name": "following", "in": "query", "schema": { "type": "string", "enum": ["1"] }, "description": "Present when the caller is the holder applying saves." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionStateResponse" } } } },
+          "404": { "$ref": "#/components/responses/SessionGone" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/{modKey}/update": {
+      "post": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionUpdate",
+        "summary": "The local file changed on the holder's side: replace the session file.",
+        "description": "The browser picks it up on its next state poll. `ai_available` and `ai_model` refresh the retranslate offer when sent.",
+        "security": [],
+        "x-throttle": "30/min per IP",
+        "parameters": [{ "$ref": "#/components/parameters/ModKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionUpdateBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionUpdateResponse" } } } },
+          "404": { "$ref": "#/components/responses/SessionGone" },
+          "413": { "description": "`{error: \"Content exceeds the size limit.\"}`", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/{modKey}/retranslation": {
+      "post": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionRetranslation",
+        "summary": "The answer to a per-line retranslation the browser asked for over the stream.",
+        "description": "A PROPOSAL: the page stages it as a pending edit under its own Save; nothing is written on the holder's side. `value` is absent when the backend gave nothing back, and `outcome` says which. Kept five minutes in a cache, never in the file.",
+        "security": [],
+        "x-throttle": "30/min per IP",
+        "parameters": [{ "$ref": "#/components/parameters/ModKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RetranslationBody" } } } },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "required": ["received"], "properties": { "received": { "type": "boolean", "const": true } } } } } },
+          "404": { "$ref": "#/components/responses/SessionGone" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/{modKey}/keepalive": {
+      "post": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionKeepAlive",
+        "summary": "Still here: push the session's expiry back.",
+        "description": "Sent by the holder every `EditSessions.KeepAliveSeconds` (a third of the 15-minute TTL) for as long as it runs. A session only ends when the browser page is closed or the holder stops; the TTL is a backstop for orphans.",
+        "security": [],
+        "x-throttle": "30/min per IP",
+        "parameters": [{ "$ref": "#/components/parameters/ModKey" }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditSessionKeepAliveResponse" } } } },
+          "404": { "$ref": "#/components/responses/SessionGone" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
+    "/edit-session/{modKey}": {
+      "delete": {
+        "tags": ["edit-session"],
+        "operationId": "editSessionEnd",
+        "summary": "End the session from the holder's side; the page learns it over its stream.",
+        "description": "Idempotent: an already-gone session answers `ended: true`.",
+        "security": [],
+        "x-throttle": "30/min per IP",
+        "parameters": [{ "$ref": "#/components/parameters/ModKey" }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EndedResponse" } } } },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": { "type": "http", "scheme": "bearer", "description": "`Authorization: Bearer ugt_…` — the token the device flow delivered. A missing or unknown token is 401 `{error: \"Unauthorized\", message}`; a banned account is 403 `{error: \"Account banned\", message, reason}` on every route but `DELETE /auth/token`. A client that receives 401 on a call it sent a token with signs itself out; a 403 does not mean that unless `error` is exactly `Account banned`." }
+    },
+    "parameters": {
+      "TranslationId": { "name": "translation", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1 }, "description": "The translation's numeric id (`site_id` in the file's `_source`)." },
+      "ModKey": { "name": "modKey", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SessionKey" }, "description": "The 64-character key `edit-session/init` answered." },
+      "SessionToken": { "name": "token", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SessionKey" }, "description": "The 64-character token `merge-preview/init` answered." }
+    },
+    "headers": {
+      "CheckETag": { "description": "`\"<32 hex>\"`: the first 32 hex digits of sha256(`file_hash|line_count|vote_count|uploader`) — every value the answer carries, and not `updated_at`. Opaque to the client: sent back verbatim, never rebuilt.", "schema": { "type": "string", "pattern": "^\"[0-9a-f]{32}\"$" } },
+      "FileETag": { "description": "`\"<file_hash>\"` — the sha256 fingerprint of the published file.", "schema": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" } }
+    },
+    "responses": {
+      "Unauthorized": { "description": "No token, or a token the site does not know: `{error: \"Unauthorized\", message: \"API token required\" | \"Invalid API token\"}`. The client signs out.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "Banned": { "description": "`{error: \"Account banned\", message, reason}` — the one 403 a client reads as 'sign out'.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "BranchForbidden": { "description": "A branch, read by somebody who is neither its author nor its Main's owner: `{error: \"Forbidden\", message: \"A branch is visible to whoever wrote it, and to the Main owner for merging\"}`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "NotFound": { "description": "No such row. Laravel's `{message}`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "SessionGone": { "description": "`{error: \"Edit session expired or not found.\"}` — the client forgets the session; a network failure is NOT this and keeps a resumable session on disk.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "TooMany": { "description": "Throttled. `Retry-After` in seconds; the client waits it out rather than reporting a failure.", "headers": { "Retry-After": { "schema": { "type": "integer" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "TooLarge": { "description": "`{error: \"Payload too large\", message}` — 16 MiB on the wire or 100 MiB decompressed (`common/Limits.TranslationFileBytes`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+      "ValidationFailed": { "description": "Laravel validation: `{message, errors: {field: [sentence]}}`. The mod joins the sentences.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } }
+    },
+    "schemas": {
+      "LanguageName": { "type": "string", "minLength": 2, "maxLength": 64, "description": "A catalogue name (catalogs/languages.json), e.g. `French`. Never a code, never `auto`." },
+      "FileHash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the file as `common/Sync` computes it: 64 lowercase hex, no prefix." },
+      "ContentHash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the lines alone (`common/Sync.ContentHash`), stable across a change of lineage." },
+      "Iso8601": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$", "description": "Carbon's `toIso8601String()`: `2026-09-11T14:03:22+00:00`." },
+      "Uuid": { "type": "string", "maxLength": 36, "description": "The lineage identifier a file carries as `_uuid`. Every real one is a lowercase GUID; the door accepts `[A-Za-z0-9-]{1,36}`." },
+      "SessionKey": { "type": "string", "pattern": "^[A-Za-z0-9]{64}$" },
+      "Role": { "type": "string", "enum": ["main", "branch", "none"], "description": "Where a row stands in its lineage. `main`: leads it (a fork is a Main of its own lineage — `fork` is never a role). `branch`: contributes to a Main. `none`: the caller holds no row." },
+      "Status": { "type": "string", "enum": ["in_progress", "complete"], "description": "The author's own word on whether the work is finished. A branch inherits its Main's." },
+      "TranslationType": { "type": "string", "enum": ["human", "ai_corrected", "ai"], "description": "Derived from the tag counts: more than half H → `human`; any H or V → `ai_corrected`; otherwise `ai`." },
+      "Tag": { "type": "string", "enum": ["H", "V", "A", "S", "M"], "description": "Who wrote a line: Human, Validated (machine wording a person accepted), AI, Skipped (kept as is), Mod UI (legacy in a game file)." },
+      "NotificationType": { "type": "string", "enum": ["branch_submitted", "branch_merged", "branches_closed", "branch_orphaned", "announcement", "unknown"] },
+      "Holder": { "type": "string", "enum": ["game", "manager"], "description": "Which product opened an edit session; absent reads as `game`." },
+      "RetranslationOutcome": { "type": "string", "enum": ["replaced", "unchanged", "failed"] },
+      "MergeDestination": { "type": "string", "enum": ["server", "local"] },
+      "RefusedCode": { "type": "string", "enum": ["branches_refused", "main_abandoned", "main_gone", "branch_frozen"], "description": "Why an upload was refused with 403, beside the sentence: the Main takes no contributions; the Main's owner erased their account; the Main was removed while branches remain; the caller's own branch is frozen (its Main closed since)." },
+      "GameSource": { "type": "string", "enum": ["local", "steam", "igdb", "rawg"] },
+      "ErrorBody": {
+        "type": "object",
+        "description": "What a refused call answers. `error` and `message` are sentences to show as they are; the mod shows `error` first, then `message`. `reason` comes with a ban; `refused_code` with an upload refusal; `errors` with a Laravel validation failure.",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "reason": { "type": "string" },
+          "refused_code": { "$ref": "#/components/schemas/RefusedCode" },
+          "errors": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+          "details": { "type": "array", "items": { "type": "string" } },
+          "hint": { "type": "string" }
+        },
+        "anyOf": [{ "required": ["error"] }, { "required": ["message"] }]
+      },
+      "TranslationFile": { "type": "object", "description": "A translation file — `spec/translation-file/schema.json` is its schema; the site's copy of a published file is what `upload` accepted, normalised to LF." },
+      "GameCard": {
+        "type": "object",
+        "required": ["id", "name", "slug", "steam_id", "image_url"],
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "steam_id": { "type": ["string", "null"] },
+          "image_url": { "type": ["string", "null"] }
+        }
+      },
+      "Origin": {
+        "type": ["object", "null"],
+        "description": "Where a fork came from; null when it came from nowhere. `author` null inside a present block is a credit whose account is gone — still a credit. `lines` is the SNAPSHOT taken at the fork, never recomputed.",
+        "required": ["author", "lines"],
+        "properties": { "author": { "type": ["string", "null"] }, "lines": { "type": ["integer", "null"] } }
+      },
+      "ListingRow": {
+        "type": "object",
+        "description": "One translation, as every listing describes it — the search, the per-game groups, the batch. One mapper on the site (`listingRow`), one reader in each client.",
+        "required": ["id", "game", "uploader", "source_language", "target_language", "line_count", "status", "type", "notes", "resources_url", "vote_count", "user_vote", "download_count", "human_count", "validated_count", "ai_count", "capture_count", "file_hash", "file_uuid", "updated_at"],
+        "properties": {
+          "id": { "type": "integer" },
+          "game": { "$ref": "#/components/schemas/GameCard" },
+          "uploader": { "type": "string" },
+          "source_language": { "$ref": "#/components/schemas/LanguageName" },
+          "target_language": { "$ref": "#/components/schemas/LanguageName" },
+          "line_count": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/Status" },
+          "accepts_branches": { "type": "boolean", "description": "Additive. Whether this lineage takes contributions." },
+          "origin": { "$ref": "#/components/schemas/Origin" },
+          "type": { "$ref": "#/components/schemas/TranslationType" },
+          "notes": { "type": ["string", "null"] },
+          "resources_url": { "type": ["string", "null"], "description": "The effective link: this row's own, or its Main's when a branch has none." },
+          "vote_count": { "type": "integer" },
+          "user_vote": { "type": ["integer", "null"], "enum": [-1, 1, null], "description": "The caller's own vote; null for an anonymous caller or none cast." },
+          "download_count": { "type": "integer" },
+          "human_count": { "type": "integer" },
+          "validated_count": { "type": "integer" },
+          "ai_count": { "type": "integer" },
+          "capture_count": { "type": "integer", "description": "H lines with nothing in them: met, not translated." },
+          "skipped_count": { "type": "integer", "description": "Additive. Lines kept as they are (S): neither in the bar nor in the score." },
+          "broken_placeholder_count": { "type": "integer", "description": "Additive. Lines whose placeholders no longer match the source (`corpus/rules/placeholders`, `accepts_edit`). A fact, never a refusal." },
+          "quality_score": { "type": "number", "description": "Legacy, kept for mods that read it: (H·3 + V·2 + A) / (H+V+A)." },
+          "review_coverage": { "type": ["number", "null"], "description": "Additive. Share of the file a person settled, 0–1." },
+          "game_coverage": { "type": ["number", "null"], "description": "Additive. Share of the game this file reaches, 0–1, against the furthest translation of the same game. Null: unknown, never 'nothing'." },
+          "completeness": { "type": ["number", "null"], "description": "Additive. Share of what the file met in game that is translated, 0–1." },
+          "created_at": { "$ref": "#/components/schemas/Iso8601" },
+          "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "file_uuid": { "$ref": "#/components/schemas/Uuid" },
+          "updated_at": { "$ref": "#/components/schemas/Iso8601", "description": "Moves on a vote or a download too — `content_updated_at` is the honest one." },
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601", "description": "Additive. When the translation itself last changed." }
+        }
+      },
+      "GameGroup": {
+        "type": "object",
+        "description": "The published translations of one game, complete. `total` answers the request (language filters included); `languages` answers about the game, ignoring them — both measured, never counted off the rows.",
+        "required": ["game", "total", "languages", "translations"],
+        "properties": {
+          "game": { "$ref": "#/components/schemas/GameCard" },
+          "total": { "type": "integer" },
+          "languages": { "type": "object", "additionalProperties": { "type": "integer" }, "description": "`{target language: how many published}` for the whole game." },
+          "translations": { "type": "array", "items": { "$ref": "#/components/schemas/ListingRow" } }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": ["count", "translations"],
+        "properties": {
+          "count": { "type": "integer", "description": "Legacy: rows in `translations`." },
+          "translations": { "type": "array", "maxItems": 50, "items": { "$ref": "#/components/schemas/ListingRow" }, "description": "Legacy flat view, ranked over every game matched, 50 at most." },
+          "games": { "type": "array", "maxItems": 24, "items": { "$ref": "#/components/schemas/GameGroup" }, "description": "Additive. Present when a game selector was given: one complete group per game, 24 games at most, ordered by name." },
+          "games_total": { "type": "integer", "description": "Additive, with `games`. How many games matched before the cap of 24." }
+        }
+      },
+      "ForGamesBody": {
+        "type": "object",
+        "required": ["games"],
+        "properties": {
+          "games": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "type": "object", "properties": { "steam_id": { "type": ["string", "null"], "maxLength": 32 }, "name": { "type": ["string", "null"], "maxLength": 255 }, "uuid": { "type": ["string", "null"], "maxLength": 36 } } } }
+        }
+      },
+      "ForGamesResponse": {
+        "type": "object",
+        "required": ["results"],
+        "properties": {
+          "results": { "type": "array", "items": {
+            "type": "object",
+            "required": ["key", "games", "games_total", "matching"],
+            "properties": {
+              "key": { "type": "object", "description": "The `steam_id` and/or `name` asked, as sent.", "properties": { "steam_id": { "type": "string" }, "name": { "type": "string" } } },
+              "games": { "type": "array", "items": { "$ref": "#/components/schemas/GameGroup" } },
+              "games_total": { "type": "integer" },
+              "matching": { "oneOf": [{ "$ref": "#/components/schemas/ListingRow" }, { "type": "null" }], "description": "The published row of the `uuid` asked, whether or not it is still listed; null when none, or when no uuid was asked." }
+            }
+          } }
+        }
+      },
+      "VoteState": {
+        "type": ["object", "null"],
+        "description": "Votes on the PUBLISHED translation of a lineage — the one being played. Null when nothing of it is published: no vote to show, not zero votes.",
+        "required": ["target_id", "count", "user_vote", "can_vote"],
+        "properties": {
+          "target_id": { "type": "integer", "description": "The translation a vote from here lands on." },
+          "count": { "type": "integer" },
+          "user_vote": { "type": ["integer", "null"], "enum": [-1, 1, null] },
+          "can_vote": { "type": "boolean", "description": "The server's rule: signed in, published, not one's own." }
+        }
+      },
+      "TagTally": {
+        "description": "Lines by the contribution's tag. Only the tags counted are present; an absent letter is zero here — what stands for 'unknown' is the whole `lines_waiting` block being absent or null. ⚠ EMPTY, it is `[]` and not `{}` (a PHP array with no key serialises as a list): a reader takes 'not an object' as 'nothing counted'.",
+        "oneOf": [
+          { "type": "object", "propertyNames": { "enum": ["H", "V", "A", "S"] }, "additionalProperties": { "type": "integer" } },
+          { "type": "array", "maxItems": 0 }
+        ]
+      },
+      "LinesWaiting": {
+        "type": ["object", "null"],
+        "description": "What waits on a Main: `review` rows need a decision (new lines plus lines both sides hold differently), `take` is what would be taken as it stands (`lines_available`, unchanged to the byte for published mods), `new` and `differing` break the review down by tag. Null on a branch.",
+        "required": ["review", "take", "new", "differing"],
+        "properties": {
+          "review": { "type": "integer" },
+          "take": { "type": "integer" },
+          "new": { "$ref": "#/components/schemas/TagTally" },
+          "differing": { "$ref": "#/components/schemas/TagTally" }
+        }
+      },
+      "OwnRow": {
+        "type": "object",
+        "description": "The caller's own row in a lineage, as `check-uuid` describes it.",
+        "required": ["id", "source_language", "target_language", "type", "status", "notes", "resources_url", "line_count", "file_hash", "updated_at"],
+        "properties": {
+          "id": { "type": "integer" },
+          "source_language": { "$ref": "#/components/schemas/LanguageName" },
+          "target_language": { "$ref": "#/components/schemas/LanguageName" },
+          "type": { "$ref": "#/components/schemas/TranslationType" },
+          "status": { "$ref": "#/components/schemas/Status", "description": "Sent so the client can SHOW it and send it back unchanged on the next upload." },
+          "notes": { "type": ["string", "null"] },
+          "resources_url": { "type": ["string", "null"], "description": "To DISPLAY: own or inherited from the Main." },
+          "resources_url_own": { "type": ["string", "null"], "description": "Additive. To EDIT: this row's own, never inherited — prefilling an edit from the effective value makes a branch adopt its Main's link." },
+          "line_count": { "type": "integer" },
+          "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+        }
+      },
+      "MainRow": {
+        "type": "object",
+        "description": "The Main of a lineage, seen by somebody who does not lead it.",
+        "required": ["id", "uploader", "source_language", "target_language", "line_count", "updated_at"],
+        "properties": {
+          "id": { "type": "integer" },
+          "uploader": { "type": "string" },
+          "source_language": { "$ref": "#/components/schemas/LanguageName" },
+          "target_language": { "$ref": "#/components/schemas/LanguageName" },
+          "line_count": { "type": "integer" },
+          "file_hash": { "$ref": "#/components/schemas/FileHash", "description": "On `sync/state`; not on `check-uuid`." },
+          "updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+        }
+      },
+      "CheckUuidResponse": {
+        "oneOf": [
+          {
+            "title": "The caller holds a row",
+            "type": "object",
+            "required": ["exists", "role", "translation", "branches_count", "vote"],
+            "properties": {
+              "exists": { "type": "boolean", "const": true },
+              "role": { "type": "string", "enum": ["main", "branch"] },
+              "main_missing": { "type": ["boolean", "null"], "description": "Additive. On a branch: its Main is gone. Null on a Main." },
+              "main_abandoned": { "type": ["boolean", "null"], "description": "Additive. On a branch: the Main is there, its owner's account is not. Null on a Main." },
+              "main_ignoring": { "type": ["boolean", "null"], "description": "Additive. On a branch: the Main's owner came back and took nothing. Null on a Main." },
+              "accepts_branches": { "type": "boolean", "description": "Additive. The lineage's decision, whichever side asks." },
+              "branch_frozen": { "type": "boolean", "description": "Additive. This row is a branch whose Main closed since: nothing more can be done with it as a branch." },
+              "merged_lines_total": { "type": ["integer", "null"], "description": "Additive. On a branch: how many of its lines Mains have taken over time. Null on a Main." },
+              "branches_with_work": { "type": ["integer", "null"], "description": "Additive. On a Main: contributions not yet reviewed AND holding something. Null on a branch." },
+              "lines_available": { "type": ["integer", "null"], "description": "Additive. On a Main: lines those hold, counted once each. Null on a branch." },
+              "lines_waiting": { "$ref": "#/components/schemas/LinesWaiting" },
+              "lines_offered": { "type": ["integer", "null"], "description": "Additive. On a branch: what this contribution still holds for its Main. Null on a Main." },
+              "translation": { "$ref": "#/components/schemas/OwnRow" },
+              "branches_count": { "type": ["integer", "null"], "description": "On a Main: how many people contribute. Null on a branch." },
+              "vote": { "$ref": "#/components/schemas/VoteState" }
+            }
+          },
+          {
+            "title": "A Main exists, the caller holds nothing: an upload would become their branch",
+            "type": "object",
+            "required": ["exists", "role", "main", "vote"],
+            "properties": {
+              "exists": { "type": "boolean", "const": true },
+              "role": { "type": "string", "const": "none" },
+              "main_abandoned": { "type": "boolean", "description": "Additive." },
+              "accepts_branches": { "type": "boolean", "description": "Additive. Told to the one person it is for: somebody about to contribute." },
+              "main": { "$ref": "#/components/schemas/MainRow" },
+              "vote": { "$ref": "#/components/schemas/VoteState" }
+            }
+          },
+          {
+            "title": "Nothing exists: an upload would create a new Main",
+            "type": "object",
+            "required": ["exists", "role"],
+            "properties": {
+              "exists": { "type": "boolean", "const": false },
+              "role": { "type": "string", "const": "none" }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "SyncStateResponse": {
+        "type": "object",
+        "description": "The `state` event's payload. `exists`, `role`, `translation`, `main`, `has_update`, `vote` are always present; `accepts_branches` (lineage-level) too since 2026-08; the rest depends on the role and on `lineage`.",
+        "required": ["exists", "role", "translation", "main", "has_update", "vote", "accepts_branches"],
+        "properties": {
+          "exists": { "type": "boolean" },
+          "role": { "$ref": "#/components/schemas/Role" },
+          "translation": { "oneOf": [{ "$ref": "#/components/schemas/SyncOwnRow" }, { "type": "null" }] },
+          "main": { "oneOf": [{ "$ref": "#/components/schemas/MainRow" }, { "type": "null" }] },
+          "branches_count": { "type": "integer", "description": "On a Main with `lineage` asked. ABSENT with `lineage=0`, never zero." },
+          "has_update": { "type": "boolean", "description": "`hash` sent and different from the row's (own row, or the Main's when the caller holds nothing). False when no hash was sent." },
+          "vote": { "$ref": "#/components/schemas/VoteState" },
+          "accepts_branches": { "type": ["boolean", "null"], "description": "Whether the lineage takes contributions; null when nothing of it is published." },
+          "branches_pending_review": { "type": "integer", "description": "Additive, Main with lineage. Same number as `branches_with_work`, deliberately." },
+          "branches_with_work": { "type": "integer", "description": "Additive, Main with lineage." },
+          "lines_available": { "type": "integer", "description": "Additive, Main with lineage." },
+          "lines_waiting": { "$ref": "#/components/schemas/LinesWaiting" },
+          "main_missing": { "type": "boolean", "description": "Additive, branch with lineage." },
+          "main_abandoned": { "type": "boolean", "description": "Additive, branch with lineage." },
+          "main_ignoring": { "type": "boolean", "description": "Additive, branch with lineage." },
+          "merged_lines_total": { "type": ["integer", "null"], "description": "Additive, branch with lineage." }
+        }
+      },
+      "SyncOwnRow": {
+        "type": "object",
+        "required": ["id", "source_language", "target_language", "type", "notes", "resources_url", "line_count", "file_hash", "vote_count", "updated_at", "content_updated_at", "accepts_branches", "branch_frozen"],
+        "properties": {
+          "id": { "type": "integer" },
+          "source_language": { "$ref": "#/components/schemas/LanguageName" },
+          "target_language": { "$ref": "#/components/schemas/LanguageName" },
+          "type": { "$ref": "#/components/schemas/TranslationType" },
+          "notes": { "type": ["string", "null"] },
+          "resources_url": { "type": ["string", "null"] },
+          "line_count": { "type": "integer" },
+          "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "vote_count": { "type": "integer" },
+          "updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "accepts_branches": { "type": "boolean", "description": "The lineage's decision: own on a Main, the Main's on a branch." },
+          "branch_frozen": { "type": "boolean" }
+        }
+      },
+      "CheckResponse": {
+        "type": "object",
+        "required": ["id", "file_hash", "uploader", "line_count", "vote_count", "updated_at", "content_updated_at"],
+        "properties": {
+          "id": { "type": "integer" },
+          "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "uploader": { "type": "string", "description": "Who published it — the one place somebody with no account learns whose work they installed. Empty string when the account is gone." },
+          "line_count": { "type": "integer" },
+          "vote_count": { "type": "integer" },
+          "updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "has_update": { "type": "boolean", "description": "Present when `hash` was sent: `file_hash !== hash`. Clients compare the hashes themselves anyway." }
+        }
+      },
+      "BranchesResponse": {
+        "type": "object",
+        "required": ["main_id", "branches_count", "branches"],
+        "properties": {
+          "main_id": { "type": "integer" },
+          "branches_count": { "type": "integer" },
+          "branches": { "type": "array", "items": {
+            "type": "object",
+            "required": ["id", "user", "line_count", "human_count", "validated_count", "ai_count", "updated_at", "content_updated_at"],
+            "properties": {
+              "id": { "type": "integer" },
+              "user": { "type": "object", "required": ["id", "name"], "properties": { "id": { "type": "integer" }, "name": { "type": "string" } } },
+              "line_count": { "type": "integer" },
+              "human_count": { "type": "integer" },
+              "validated_count": { "type": "integer" },
+              "ai_count": { "type": "integer" },
+              "updated_at": { "$ref": "#/components/schemas/Iso8601" },
+              "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+            }
+          } }
+        }
+      },
+      "UploadBody": {
+        "type": "object",
+        "required": ["source_language", "target_language", "content"],
+        "anyOf": [{ "required": ["steam_id"] }, { "required": ["game_name"] }],
+        "properties": {
+          "steam_id": { "type": ["string", "null"], "description": "Required without `game_name`." },
+          "game_name": { "type": ["string", "null"], "maxLength": 255, "description": "Required without `steam_id`: the product name the machine reads (`Application.productName`), kept as the game's `unity_name`." },
+          "game_company": { "type": ["string", "null"], "maxLength": 255, "description": "The studio Unity records beside the product name." },
+          "source_language": { "$ref": "#/components/schemas/LanguageName" },
+          "target_language": { "$ref": "#/components/schemas/LanguageName" },
+          "status": { "$ref": "#/components/schemas/Status", "description": "Main only; a branch inherits. Absent keeps the row's, `in_progress` on a new one." },
+          "content": { "type": "string", "minLength": 2, "maxLength": 104857600, "description": "The translation file, serialised as a JSON string." },
+          "notes": { "type": ["string", "null"], "maxLength": 1000 },
+          "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s) URL where the file's assets (image replacements) are downloaded from." },
+          "accepts_branches": { "type": ["boolean", "null"], "description": "Main only, written only when sent. Null: no opinion (a branch, or an older mod)." },
+          "forked_from_id": { "type": ["integer", "null"], "description": "A fork's origin: the translation it was taken from. Verified — the caller must have been able to hold it — and dropped whole otherwise, never refused." },
+          "forked_from_hash": { "oneOf": [{ "$ref": "#/components/schemas/FileHash" }, { "type": "null" }], "description": "The version taken." },
+          "forked_from_lines": { "type": ["integer", "null"], "minimum": 0, "description": "How many lines the origin held at the fork — a snapshot, as declared." }
+        }
+      },
+      "UploadResponse": {
+        "type": "object",
+        "required": ["success", "translation"],
+        "properties": {
+          "success": { "type": "boolean", "const": true },
+          "translation": {
+            "type": "object",
+            "required": ["id", "file_hash", "line_count", "role", "web_url"],
+            "properties": {
+              "id": { "type": "integer", "description": "What the file records as `_source.site_id`." },
+              "file_hash": { "$ref": "#/components/schemas/FileHash", "description": "What the file records as `_source.hash`." },
+              "line_count": { "type": "integer" },
+              "role": { "type": "string", "enum": ["main", "branch"], "description": "What the row became." },
+              "web_url": { "type": "string", "description": "The game's page on the site." }
+            }
+          }
+        }
+      },
+      "UploadRefused": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string", "description": "A whole sentence, shown as-is by every published mod: it says what became of the work and points at Fork in the mod." },
+          "refused_code": { "$ref": "#/components/schemas/RefusedCode" }
+        }
+      },
+      "UploadUnprocessable": {
+        "type": "object",
+        "description": "Either the site's own refusal (`error`, with `details` and `hint` when lines are malformed) or Laravel's validation body (`message`, `errors`).",
+        "properties": {
+          "error": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" }, "description": "Up to ten malformed lines, named." },
+          "hint": { "type": "string" },
+          "message": { "type": "string" },
+          "errors": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+        },
+        "anyOf": [{ "required": ["error"] }, { "required": ["message", "errors"] }]
+      },
+      "DetailsBody": {
+        "type": "object",
+        "properties": {
+          "notes": { "type": ["string", "null"], "maxLength": 1000 },
+          "resources_url": { "type": ["string", "null"], "maxLength": 2048 },
+          "status": { "$ref": "#/components/schemas/Status", "description": "Main only; 422 on a branch." },
+          "accepts_branches": { "type": ["boolean", "null"], "description": "Main only; ignored on a branch. Closing a Main notifies its branches." }
+        }
+      },
+      "DetailsResponse": {
+        "type": "object",
+        "required": ["translation"],
+        "properties": {
+          "translation": {
+            "type": "object",
+            "required": ["id", "status", "notes", "resources_url", "resources_url_own"],
+            "properties": {
+              "id": { "type": "integer" },
+              "status": { "$ref": "#/components/schemas/Status" },
+              "notes": { "type": ["string", "null"] },
+              "resources_url": { "type": ["string", "null"] },
+              "resources_url_own": { "type": ["string", "null"] }
+            }
+          }
+        }
+      },
+      "VoteResponse": {
+        "type": "object",
+        "required": ["vote_count", "user_vote"],
+        "properties": {
+          "vote_count": { "type": "integer" },
+          "user_vote": { "type": ["integer", "null"], "enum": [-1, 1, null], "description": "Null once a vote was withdrawn." }
+        }
+      },
+      "GamesResponse": {
+        "type": "object",
+        "required": ["count", "games"],
+        "properties": {
+          "count": { "type": "integer" },
+          "games": { "type": "array", "maxItems": 50, "items": {
+            "type": "object",
+            "required": ["id", "name", "slug", "steam_id", "image_url", "translations_count"],
+            "properties": {
+              "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" },
+              "steam_id": { "type": ["string", "null"] }, "image_url": { "type": ["string", "null"] },
+              "translations_count": { "type": "integer", "description": "Published translations only." }
+            }
+          } }
+        }
+      },
+      "ExternalGamesResponse": {
+        "type": "object",
+        "required": ["count", "games"],
+        "properties": {
+          "count": { "type": "integer" },
+          "games": { "type": "array", "items": {
+            "type": "object",
+            "required": ["name", "source"],
+            "properties": {
+              "id": { "type": "integer", "description": "`local` hits only." },
+              "name": { "type": "string" },
+              "steam_id": { "type": ["string", "integer", "null"] },
+              "image_url": { "type": ["string", "null"] },
+              "source": { "$ref": "#/components/schemas/GameSource" },
+              "translations_count": { "type": "integer", "description": "`local` hits only." }
+            }
+          } }
+        }
+      },
+      "GameShowResponse": {
+        "type": "object",
+        "required": ["game", "available_languages", "translations"],
+        "properties": {
+          "game": { "$ref": "#/components/schemas/GameCard" },
+          "available_languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageName" } },
+          "translations": { "type": "array", "items": {
+            "type": "object",
+            "required": ["id", "uploader", "source_language", "target_language", "line_count", "type", "vote_count", "download_count", "file_hash", "updated_at", "content_updated_at"],
+            "properties": {
+              "id": { "type": "integer" }, "uploader": { "type": "string" },
+              "source_language": { "$ref": "#/components/schemas/LanguageName" }, "target_language": { "$ref": "#/components/schemas/LanguageName" },
+              "line_count": { "type": "integer" }, "type": { "$ref": "#/components/schemas/TranslationType" },
+              "vote_count": { "type": "integer" }, "download_count": { "type": "integer" },
+              "file_hash": { "$ref": "#/components/schemas/FileHash" },
+              "updated_at": { "$ref": "#/components/schemas/Iso8601" }, "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+            }
+          } }
+        }
+      },
+      "MeResponse": {
+        "type": "object",
+        "required": ["id", "name", "created_at", "access_code"],
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "created_at": { "$ref": "#/components/schemas/Iso8601" },
+          "access_code": { "type": ["string", "null"], "description": "Six characters the Linked devices screen names this access by." }
+        }
+      },
+      "MyTranslationsResponse": {
+        "type": "object",
+        "required": ["count", "translations"],
+        "properties": {
+          "count": { "type": "integer" },
+          "translations": { "type": "array", "items": {
+            "type": "object",
+            "required": ["id", "game", "file_uuid", "role", "branches_count", "branches_with_work", "lines_available", "lines_waiting", "main_missing", "main_abandoned", "accepts_branches", "branch_frozen", "source_language", "target_language", "line_count", "type", "status", "vote_count", "download_count", "file_hash", "updated_at"],
+            "properties": {
+              "id": { "type": "integer" },
+              "game": { "type": "object", "required": ["id", "name", "slug", "steam_id"], "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" }, "steam_id": { "type": ["string", "null"] } } },
+              "file_uuid": { "$ref": "#/components/schemas/Uuid" },
+              "role": { "type": "string", "enum": ["main", "branch"] },
+              "branches_count": { "type": ["integer", "null"], "description": "Main: how many contribute. Null on a branch." },
+              "branches_with_work": { "type": ["integer", "null"] },
+              "lines_available": { "type": ["integer", "null"] },
+              "lines_waiting": { "$ref": "#/components/schemas/LinesWaiting" },
+              "main_missing": { "type": ["boolean", "null"], "description": "Branch: its Main is gone. Null on a Main." },
+              "main_abandoned": { "type": ["boolean", "null"] },
+              "accepts_branches": { "type": "boolean", "description": "The lineage's decision, on either side." },
+              "branch_frozen": { "type": ["boolean", "null"], "description": "Branch: its Main closed since. False on an orphan — nobody refused them. Null on a Main." },
+              "source_language": { "$ref": "#/components/schemas/LanguageName" },
+              "target_language": { "$ref": "#/components/schemas/LanguageName" },
+              "line_count": { "type": "integer" },
+              "type": { "$ref": "#/components/schemas/TranslationType" },
+              "status": { "$ref": "#/components/schemas/Status" },
+              "vote_count": { "type": "integer" },
+              "download_count": { "type": "integer" },
+              "file_hash": { "$ref": "#/components/schemas/FileHash" },
+              "updated_at": { "$ref": "#/components/schemas/Iso8601" }
+            }
+          } }
+        }
+      },
+      "NotificationsResponse": {
+        "type": "object",
+        "required": ["unread", "items"],
+        "properties": {
+          "unread": { "type": "integer" },
+          "items": { "type": "array", "maxItems": 5, "items": {
+            "type": "object",
+            "required": ["id", "type", "text", "url"],
+            "properties": {
+              "id": { "type": "string", "description": "The notification's uuid." },
+              "type": { "$ref": "#/components/schemas/NotificationType" },
+              "text": { "type": "string", "description": "Pre-rendered English." },
+              "url": { "type": ["string", "null"] }
+            }
+          } }
+        }
+      },
+      "GameDeclaration": {
+        "type": "object",
+        "description": "What a program says about the game it speaks for. The same shape travels base64url-encoded in `X-UGT-Game`.",
+        "properties": {
+          "game_id": { "type": ["string", "null"], "pattern": "^[0-9]{1,32}$", "description": "The Steam app id, as a string of digits: the identity half — one game holds one access." },
+          "game_name": { "type": ["string", "null"], "maxLength": 120, "description": "The label half: `Application.productName`, never the folder name. Two games can share one, which is why it never identifies." }
+        }
+      },
+      "DeviceFlowResponse": {
+        "type": "object",
+        "required": ["device_code", "user_code", "verification_uri", "expires_in", "interval"],
+        "properties": {
+          "device_code": { "type": "string", "description": "Secret to the client: names the SSE stream the token arrives on." },
+          "user_code": { "type": "string", "description": "What the person types on `verification_uri`, e.g. `ABCD-1234`." },
+          "verification_uri": { "type": "string", "description": "The site's `/link` page." },
+          "expires_in": { "type": "integer", "const": 900, "description": "Seconds." },
+          "interval": { "type": "integer", "const": 5, "description": "Inert: nothing polls. Kept for clients that read it." }
+        }
+      },
+      "MergePreviewInitBody": {
+        "type": "object",
+        "required": ["translation_id", "local_content"],
+        "properties": {
+          "translation_id": { "type": "integer", "description": "Must exist." },
+          "local_content": { "type": "object", "description": "The local lines only: `{key: {v, t, i?}}`, no `_` key.", "additionalProperties": { "$ref": "#/components/schemas/Line" } },
+          "destination": { "$ref": "#/components/schemas/MergeDestination", "description": "Default `server`." }
+        }
+      },
+      "Line": {
+        "type": "object",
+        "required": ["v", "t"],
+        "properties": {
+          "v": { "type": ["string", "null"] },
+          "t": { "$ref": "#/components/schemas/Tag" },
+          "i": { "type": "integer", "minimum": 1, "description": "Capture order; omitted, never null, when absent." }
+        }
+      },
+      "TokenSessionResponse": {
+        "type": "object",
+        "required": ["token", "url", "expires_at"],
+        "properties": {
+          "token": { "$ref": "#/components/schemas/SessionKey" },
+          "url": { "type": "string", "description": "The page to open in a browser (absolute)." },
+          "expires_at": { "$ref": "#/components/schemas/Iso8601" }
+        }
+      },
+      "MergePreviewResultResponse": {
+        "type": "object",
+        "required": ["translation_id", "content"],
+        "properties": {
+          "translation_id": { "type": "integer" },
+          "content": { "type": "object", "description": "The arbitrated lines, `{key: {v, t, i?}}`.", "additionalProperties": { "$ref": "#/components/schemas/Line" } }
+        }
+      },
+      "EndedResponse": { "type": "object", "required": ["ended"], "properties": { "ended": { "type": "boolean", "const": true } } },
+      "EditSessionInitBody": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": { "$ref": "#/components/schemas/TranslationFile" },
+          "game_name": { "type": ["string", "null"], "maxLength": 255 },
+          "source_language": { "oneOf": [{ "$ref": "#/components/schemas/LanguageName" }, { "type": "null" }] },
+          "target_language": { "oneOf": [{ "$ref": "#/components/schemas/LanguageName" }, { "type": "null" }] },
+          "ai_available": { "type": "boolean", "description": "The holder advertises its OWN backend so the page can offer retranslation; no credential ever reaches the site." },
+          "ai_model": { "type": ["string", "null"], "maxLength": 100, "description": "A label for the retranslate button's tooltip." },
+          "holder": { "oneOf": [{ "$ref": "#/components/schemas/Holder" }, { "type": "null" }] }
+        }
+      },
+      "EditSessionInitResponse": {
+        "type": "object",
+        "required": ["mod_key", "url", "expires_at"],
+        "properties": {
+          "mod_key": { "$ref": "#/components/schemas/SessionKey" },
+          "url": { "type": "string", "description": "The editor page, carrying the one-time browser token (absolute)." },
+          "expires_at": { "$ref": "#/components/schemas/Iso8601" }
+        }
+      },
+      "EditSessionUpdateBody": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": { "$ref": "#/components/schemas/TranslationFile" },
+          "ai_available": { "type": "boolean" },
+          "ai_model": { "type": ["string", "null"], "maxLength": 100 }
+        }
+      },
+      "EditSessionUpdateResponse": {
+        "type": "object",
+        "required": ["content_hash", "browser_seen_seconds_ago", "browser_left"],
+        "properties": {
+          "content_hash": { "$ref": "#/components/schemas/ContentHash", "description": "sha256 of the session file after this push." },
+          "browser_seen_seconds_ago": { "type": ["integer", "null"], "description": "Null: the page was never opened." },
+          "browser_left": { "type": "boolean", "description": "The page's leave beacon fired and nothing rejoined since." }
+        }
+      },
+      "EditSessionStateResponse": {
+        "type": "object",
+        "required": ["content_hash", "expires_at", "browser_seen_seconds_ago", "browser_left", "pending_changes"],
+        "properties": {
+          "content_hash": { "oneOf": [{ "$ref": "#/components/schemas/ContentHash" }, { "type": "null" }] },
+          "expires_at": { "$ref": "#/components/schemas/Iso8601" },
+          "browser_seen_seconds_ago": { "type": ["integer", "null"] },
+          "browser_left": { "type": "boolean" },
+          "pending_changes": { "type": "integer", "description": "Saves the browser made that no holder has fetched. Until one does, the session is the only place that work exists." }
+        }
+      },
+      "EditSessionKeepAliveResponse": {
+        "type": "object",
+        "required": ["expires_at", "browser_left"],
+        "properties": {
+          "expires_at": { "$ref": "#/components/schemas/Iso8601" },
+          "browser_left": { "type": "boolean" }
+        }
+      },
+      "RetranslationBody": {
+        "type": "object",
+        "required": ["id", "key", "outcome"],
+        "properties": {
+          "id": { "type": "string", "maxLength": 64, "description": "The request id the stream's `edit_retranslate` event carried." },
+          "key": { "type": "string", "maxLength": 10000 },
+          "value": { "type": ["string", "null"], "maxLength": 20000 },
+          "outcome": { "$ref": "#/components/schemas/RetranslationOutcome" }
+        }
+      }
+    }
+  }
+}
