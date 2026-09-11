@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers"],
+  "sides": {
+    "site": {
+      "sync": ["content_hash"],
+      "settings": ["all", "json_key", "section_of"],
+      "merge": ["priority_of"]
+    }
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "rule": "settings",
+  "classes": ["SettingsSections"],
+  "note": "The six settings sections that travel inside a translation file beside its lines. The list existed twice — in the mod's C# and in the website's PHP — with a comment asking whoever touched one to remember the other, which is a request rather than a mechanism. The ORDER is part of the table: every screen that lists or compares them reads it. The file keys are a contract, not an implementation detail: renaming one is a migration. The classification exists so a sync asks RARELY — everything but a genuine two-sided change decides itself.",
+  "operations": {
+    "all": { "in": {}, "out": "the six section names, in display order" },
+    "json_key": { "in": { "section": "string" }, "out": "the key it uses inside the translation file, or null" },
+    "section_of": { "in": { "json_key": "a key met inside a translation file" }, "out": "the section it belongs to, or null for anything else the file carries" },
+    "name": { "in": { "section": "string" }, "out": "the short label shown to a player" },
+    "description": { "in": { "section": "string" }, "out": "one line saying what replacing it costs or gains" },
+    "classify": {
+      "in": {
+        "ours_matches_theirs": "the two sides hold the same thing in this section",
+        "has_ancestor": "there is a snapshot of what both sides last agreed on",
+        "ours_matches_ancestor": "ours is unchanged since that snapshot",
+        "theirs_matches_ancestor": "theirs is unchanged since that snapshot"
+      },
+      "out": "Same | TheirsChanged | OursChanged | BothChanged | Unknown"
+    },
+    "needs_decision": { "in": { "state": "a section state" }, "out": "bool: this one has to reach the player" }
+  },
+  "cases": [
+    {
+      "id": "settings/all/the-six-in-display-order",
+      "op": "all",
+      "in": {},
+      "out": ["fonts", "font_rules", "images", "exclusions", "variables", "game_settings"],
+      "why": "the same six names in the same order as the website's Translation::SETTINGS_SECTIONS — two products listing the same things differently is the defect this table exists to prevent"
+    },
+
+    { "id": "settings/json_key/fonts", "op": "json_key", "in": { "section": "fonts" }, "out": "_fonts",
+      "why": "the key a translation file carries on disk, and what the website reads back out of it" },
+    { "id": "settings/json_key/font-rules-is-not-named-after-its-section", "op": "json_key", "in": { "section": "font_rules" }, "out": "_font_overrides",
+      "why": "the section is called font_rules and the key is _font_overrides: they were named at different times, and the file's name is the one that cannot change" },
+    { "id": "settings/json_key/images-is-not-named-after-its-section", "op": "json_key", "in": { "section": "images" }, "out": "_image_replacements",
+      "why": "same divergence, and the one that cost: three products read a translation's images from _images while the file writes them here, so a saved copy carried no image at all" },
+    { "id": "settings/json_key/exclusions", "op": "json_key", "in": { "section": "exclusions" }, "out": "_exclusions", "why": "the ordinary case, where section and key agree" },
+    { "id": "settings/json_key/variables", "op": "json_key", "in": { "section": "variables" }, "out": "_variables", "why": "likewise" },
+    { "id": "settings/json_key/game-settings-is-just-settings", "op": "json_key", "in": { "section": "game_settings" }, "out": "_settings",
+      "why": "the file says _settings where the section says game_settings" },
+    { "id": "settings/json_key/an-unknown-section-has-no-key", "op": "json_key", "in": { "section": "sounds" }, "out": null,
+      "why": "null rather than a guessed key: writing under an invented name would put content somewhere nothing reads" },
+
+    { "id": "settings/section_of/fonts", "op": "section_of", "in": { "json_key": "_fonts" }, "out": "fonts",
+      "why": "the way back from the file to the table: a Core BUILDS a file by walking the six names, and must be able to READ one the same way instead of holding a second list of keys" },
+    { "id": "settings/section_of/font-rules-comes-back-under-its-own-name", "op": "section_of", "in": { "json_key": "_font_overrides" }, "out": "font_rules",
+      "why": "the divergence read the other way: the file says _font_overrides and the table says font_rules, and only this makes the two one thing" },
+    { "id": "settings/section_of/images-comes-back-under-its-own-name", "op": "section_of", "in": { "json_key": "_image_replacements" }, "out": "images",
+      "why": "the same divergence that once cost every backup its images, now unable to be spelt two ways" },
+    { "id": "settings/section_of/exclusions", "op": "section_of", "in": { "json_key": "_exclusions" }, "out": "exclusions", "why": "the ordinary case" },
+    { "id": "settings/section_of/variables", "op": "section_of", "in": { "json_key": "_variables" }, "out": "variables", "why": "likewise" },
+    { "id": "settings/section_of/game-settings", "op": "section_of", "in": { "json_key": "_settings" }, "out": "game_settings",
+      "why": "the shortest key of the six, and the one most easily read as something generic" },
+    { "id": "settings/section_of/another-metadata-key-is-not-a-section", "op": "section_of", "in": { "json_key": "_uuid" }, "out": null,
+      "why": "a translation file carries plenty of underscore keys that belong to nobody here; claiming one would hand the lineage identity to a section owner" },
+    { "id": "settings/section_of/a-translated-line-is-not-a-section", "op": "section_of", "in": { "json_key": "Play" }, "out": null,
+      "why": "the reader asks about every key it meets, lines included, so somebody's text must never come back as a section" },
+    { "id": "settings/section_of/nothing-is-not-a-section", "op": "section_of", "in": { "json_key": "" }, "out": null,
+      "why": "an empty key is not a section, and the reader must not have to test for it before asking" },
+
+    { "id": "settings/name/fonts", "op": "name", "in": { "section": "fonts" }, "out": "Fonts", "why": "the label a player reads" },
+    { "id": "settings/name/font-rules", "op": "name", "in": { "section": "font_rules" }, "out": "Font rules", "why": "words, not the file key" },
+    { "id": "settings/name/images", "op": "name", "in": { "section": "images" }, "out": "Image replacements", "why": "what it holds, said in full" },
+    { "id": "settings/name/exclusions", "op": "name", "in": { "section": "exclusions" }, "out": "Exclusions", "why": "the label a player reads" },
+    { "id": "settings/name/variables", "op": "name", "in": { "section": "variables" }, "out": "Variables", "why": "the label a player reads" },
+    { "id": "settings/name/game-settings", "op": "name", "in": { "section": "game_settings" }, "out": "Game settings", "why": "the label a player reads" },
+    { "id": "settings/name/an-unknown-section-keeps-its-own-name", "op": "name", "in": { "section": "sounds" }, "out": "sounds",
+      "why": "written as it arrived rather than dropped: a screen listing five of six sections says nothing about the sixth" },
+
+    { "id": "settings/description/fonts", "op": "description", "in": { "section": "fonts" },
+      "out": "Which fonts are translated, their fallback and their size",
+      "why": "a section name alone does not let anyone decide" },
+    { "id": "settings/description/font-rules", "op": "description", "in": { "section": "font_rules" },
+      "out": "Font substitutions applied by pattern", "why": "what makes this one different from Fonts" },
+    { "id": "settings/description/images", "op": "description", "in": { "section": "images" },
+      "out": "Images swapped in-game (the PNG files stay on your disk)",
+      "why": "the parenthesis answers the fear the sentence raises: replacing this section deletes nothing of yours" },
+    { "id": "settings/description/exclusions", "op": "description", "in": { "section": "exclusions" },
+      "out": "Text left in the game's original language", "why": "said as an effect, not as a mechanism" },
+    { "id": "settings/description/variables", "op": "description", "in": { "section": "variables" },
+      "out": "Game values inserted into translated sentences", "why": "said as an effect, not as a mechanism" },
+    { "id": "settings/description/game-settings", "op": "description", "in": { "section": "game_settings" },
+      "out": "Per-game options such as typewriter detection", "why": "an example, because the category alone says nothing" },
+    { "id": "settings/description/an-unknown-section-explains-nothing", "op": "description", "in": { "section": "sounds" }, "out": "",
+      "why": "empty rather than invented: a sentence about a section nobody wrote would be a sentence nobody can trust" },
+
+    {
+      "id": "settings/classify/identical-is-settled",
+      "op": "classify",
+      "in": { "ours_matches_theirs": true, "has_ancestor": true, "ours_matches_ancestor": false, "theirs_matches_ancestor": false },
+      "out": "Same",
+      "why": "asked first and it settles on its own: two sides holding the same thing have nothing to decide, however they got there"
+    },
+    {
+      "id": "settings/classify/only-theirs-moved",
+      "op": "classify",
+      "in": { "ours_matches_theirs": false, "has_ancestor": true, "ours_matches_ancestor": true, "theirs_matches_ancestor": false },
+      "out": "TheirsChanged",
+      "why": "an untouched section takes the incoming value, silently — nothing of ours is at stake"
+    },
+    {
+      "id": "settings/classify/only-ours-moved",
+      "op": "classify",
+      "in": { "ours_matches_theirs": false, "has_ancestor": true, "ours_matches_ancestor": false, "theirs_matches_ancestor": true },
+      "out": "OursChanged",
+      "why": "a section only we changed keeps ours, silently — same, mirrored"
+    },
+    {
+      "id": "settings/classify/both-moved-reaches-the-player",
+      "op": "classify",
+      "in": { "ours_matches_theirs": false, "has_ancestor": true, "ours_matches_ancestor": false, "theirs_matches_ancestor": false },
+      "out": "BothChanged",
+      "why": "the only genuine question, and the reason the other four answers are worth deciding here: without them every download would either ask about six sections or silently overwrite them"
+    },
+    {
+      "id": "settings/classify/no-baseline-is-not-a-verdict",
+      "op": "classify",
+      "in": { "ours_matches_theirs": false, "has_ancestor": false, "ours_matches_ancestor": false, "theirs_matches_ancestor": false },
+      "out": "Unknown",
+      "why": "with no shared baseline there is no way to attribute the change, and picking a side on that would overwrite at random"
+    },
+    {
+      "id": "settings/classify/no-baseline-still-settles-an-agreement",
+      "op": "classify",
+      "in": { "ours_matches_theirs": true, "has_ancestor": false, "ours_matches_ancestor": false, "theirs_matches_ancestor": false },
+      "out": "Same",
+      "why": "the two sides agreeing needs no baseline to be read"
+    },
+    {
+      "id": "settings/classify/a-contradiction-is-asked-about",
+      "op": "classify",
+      "in": { "ours_matches_theirs": false, "has_ancestor": true, "ours_matches_ancestor": true, "theirs_matches_ancestor": true },
+      "out": "Unknown",
+      "why": "they differ from each other yet neither differs from the ancestor: impossible unless the comparison is inconsistent, so ask rather than pick a side on a contradiction"
+    },
+
+    { "id": "settings/needs_decision/same-decides-itself", "op": "needs_decision", "in": { "state": "Same" }, "out": false,
+      "why": "everything that can decide itself does, which is what makes the question worth asking when it is finally put" },
+    { "id": "settings/needs_decision/theirs-changed-decides-itself", "op": "needs_decision", "in": { "state": "TheirsChanged" }, "out": false,
+      "why": "taken silently" },
+    { "id": "settings/needs_decision/ours-changed-decides-itself", "op": "needs_decision", "in": { "state": "OursChanged" }, "out": false,
+      "why": "kept silently" },
+    { "id": "settings/needs_decision/both-changed-needs-the-player", "op": "needs_decision", "in": { "state": "BothChanged" }, "out": true,
+      "why": "only the player can settle two sides that both moved" },
+    { "id": "settings/needs_decision/unknown-needs-the-player", "op": "needs_decision", "in": { "state": "Unknown" }, "out": true,
+      "why": "indistinguishable from BothChanged in practice — ask" }
+  ]
+}

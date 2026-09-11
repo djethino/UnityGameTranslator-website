@@ -1,0 +1,156 @@
+{
+  "rule": "mod_ui_migration",
+  "classes": ["ModUiMigration"],
+  "note": "What becomes of the mod's interface lines a game translation is still carrying. The stake, both ways: keep too much and an interface line written by a stranger comes back — somebody else choosing what 'Apply' and 'Keep mine' say on a mod that handles tokens and file replacement. Keep too little and a pass of the translator is thrown away silently. The second rule is quieter still: it decides whether a file whose only difference with the published copy is WHERE the mod's labels are kept reads as in sync or as work waiting to be shared — and no exception is thrown either way.",
+  "operations": {
+    "decide": {
+      "in": {
+        "in_ancestor": "the published copy carries this key",
+        "already_held": "the interface file already has this key",
+        "is_empty": "nothing in the line",
+        "line_language": "the language of the file the stranded line was found in; null or 'auto' when it does not say",
+        "interface_language": "the language of the interface file; null when it holds nothing yet"
+      },
+      "out": "Move | Drop"
+    },
+    "still_counts_as_published": {
+      "in": { "ancestor_tag": "the tag the published copy carries for this key", "present_locally": "the game's file still has this key" },
+      "out": "bool"
+    }
+  },
+  "cases": [
+    {
+      "id": "mod_ui_migration/decide/a-line-this-machine-wrote-is-kept",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": null, "interface_language": null },
+      "out": "Move",
+      "why": "a line absent from the ancestor was produced here, and throwing away a pass of the translator would be a loss for no gain"
+    },
+    {
+      "id": "mod_ui_migration/decide/a-published-line-is-dropped",
+      "op": "decide",
+      "in": { "in_ancestor": true, "already_held": false, "is_empty": false, "line_language": null, "interface_language": null },
+      "out": "Drop",
+      "why": "the ancestor is the copy of what the server holds, so a line in it arrived with somebody else's translation — that is the deception this closes"
+    },
+    {
+      "id": "mod_ui_migration/decide/the-interface-file-wins-over-a-leftover",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": true, "is_empty": false, "line_language": null, "interface_language": null },
+      "out": "Drop",
+      "why": "what the interface file holds is the current language's work; this is what an old file still had"
+    },
+    {
+      "id": "mod_ui_migration/decide/an-empty-line-is-dropped",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": true, "line_language": null, "interface_language": null },
+      "out": "Drop",
+      "why": "there is no work to save in an empty line, and the interface file has no editor to fill one in"
+    },
+    {
+      "id": "mod_ui_migration/decide/reasons-to-drop-do-not-cancel-out",
+      "op": "decide",
+      "in": { "in_ancestor": true, "already_held": true, "is_empty": true, "line_language": null, "interface_language": null },
+      "out": "Drop",
+      "why": "any one reason is enough: a rule that needed all three would keep a stranger's line whenever one was absent"
+    },
+    {
+      "id": "mod_ui_migration/decide/another-language-is-dropped",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": "Thai", "interface_language": "French" },
+      "out": "Drop",
+      "why": "an interface translated into one language is noise in another — this shipped broken: a translations.json restored from a Thai-era backup put 28 Thai labels into an interface file stamped French, because the only questions asked were about provenance"
+    },
+    {
+      "id": "mod_ui_migration/decide/the-same-language-is-kept",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": "French", "interface_language": "French" },
+      "out": "Move",
+      "why": "the ordinary case, and refusing it would throw away a pass of the translator"
+    },
+    {
+      "id": "mod_ui_migration/decide/a-code-and-a-name-are-one-language",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": "fr", "interface_language": "French" },
+      "out": "Move",
+      "why": "comparing them as text answers 'different language' for a language against itself"
+    },
+    {
+      "id": "mod_ui_migration/decide/unknown-may-not-join-a-settled-file",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": null, "interface_language": "French" },
+      "out": "Drop",
+      "why": "refusing costs a pass of the translator; accepting mixes an interface for good — unknown is not a match"
+    },
+    {
+      "id": "mod_ui_migration/decide/auto-is-unknown-too",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": "auto", "interface_language": "French" },
+      "out": "Drop",
+      "why": "a translations.json written before it stamped its language says nothing, and 'auto' is that same silence spelled out"
+    },
+    {
+      "id": "mod_ui_migration/decide/an-empty-interface-file-takes-anything",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": "Thai", "interface_language": null },
+      "out": "Move",
+      "why": "there is nothing to contradict, and the line is what settles the file's language"
+    },
+    {
+      "id": "mod_ui_migration/decide/an-interface-file-saying-auto-takes-anything",
+      "op": "decide",
+      "in": { "in_ancestor": false, "already_held": false, "is_empty": false, "line_language": null, "interface_language": "auto" },
+      "out": "Move",
+      "why": "nothing is established on the receiving side either way it is spelled"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/a-published-interface-line-still-counts",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "M", "present_locally": false },
+      "out": true,
+      "why": "the file_hash is a contract with the website — a hash that moves is every installed mod being told the server changed — and what moved is where we keep our own labels, not the translation"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/one-still-held-is-not-counted-twice",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "M", "present_locally": true },
+      "out": false,
+      "why": "it is already in the lines being hashed"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/a-missing-hand-written-line-is-not-added-back",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "H", "present_locally": false },
+      "out": false,
+      "why": "a game line missing locally is a deletion somebody made, and saying otherwise would hide it"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/a-missing-machine-line-is-not-added-back",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "A", "present_locally": false },
+      "out": false,
+      "why": "same, whatever produced the line"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/a-missing-validated-line-is-not-added-back",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "V", "present_locally": false },
+      "out": false,
+      "why": "same, and a review is exactly the work a hidden deletion would cost"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/a-missing-refusal-is-not-added-back",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": "S", "present_locally": false },
+      "out": false,
+      "why": "same: a refusal is a decision about a line of the game"
+    },
+    {
+      "id": "mod_ui_migration/still_counts_as_published/no-tag-at-all-is-a-game-line",
+      "op": "still_counts_as_published",
+      "in": { "ancestor_tag": null, "present_locally": false },
+      "out": false,
+      "why": "files written before tags existed hold bare strings; they are the game's"
+    }
+  ]
+}

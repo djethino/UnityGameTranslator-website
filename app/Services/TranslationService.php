@@ -948,6 +948,26 @@ class TranslationService
     private const SETTING_OBJECT_SECTIONS = ['fonts', 'game_settings'];
 
     /**
+     * The key a section uses inside the translation file, or null for a name that is not one.
+     *
+     * The same table as the socle's `SettingsSections.JsonKey`, held to it by the corpus
+     * (`settings/json_key`, tests/Unit/CorpusTest.php): two products naming the same six things
+     * differently is the defect that table exists to prevent.
+     */
+    public static function sectionKey(string $section): ?string
+    {
+        return self::SETTING_SECTION_KEYS[$section] ?? null;
+    }
+
+    /** The way back: the section a file key belongs to, or null for anything else the file carries. */
+    public static function sectionOf(string $jsonKey): ?string
+    {
+        $section = array_search($jsonKey, self::SETTING_SECTION_KEYS, true);
+
+        return $section === false ? null : $section;
+    }
+
+    /**
      * Apply per-setting choices, taking each winning entry FROM ITS SOURCE FILE.
      *
      * The entries are copied, never rebuilt: what the browser displayed is a readable summary

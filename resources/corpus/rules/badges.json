@@ -1,0 +1,564 @@
+{
+  "rule": "badges",
+  "classes": ["Badges"],
+  "note": "What a translation IS, in chips somebody reads without reading. The ORDER is part of the rule: a strip read left to right must not be reshuffled between screens, or the eye has to start reading again each time. Silence is a decision, not an omission — a count of zero votes reads as a verdict, a completeness of 100% is the ordinary state, and both stay out. Selection is a rendering decision (a screen may drop a chip it already says another way); the words, the order and the tones are not. Every expectation here is the WHOLE strip, so a chip appearing, disappearing or moving fails the case.",
+  "operations": {
+    "for": {
+      "in": {
+        "publication": "NeverPublished | Published | NotYours | NotDownloaded — required",
+        "is_main": "true when this account leads the lineage, false on a branch of somebody else's, null when the question has no answer here",
+        "branches_waiting": "contributions sent to your Main and not settled",
+        "main_missing": "bool: the Main this branch hangs from is no longer on the site",
+        "sync": "InSync | Download | Upload | Merge",
+        "stage": "Machine | Started | Advanced | Reviewed",
+        "completeness": "share of what the file met in game that is translated, 0..1",
+        "votes": "int", "downloads": "int",
+        "finished": "the author's own declaration, null when not known",
+        "accepts_contributions": "whether the Main of this lineage takes branches, null when unknown",
+        "lines_available": "how many lines the waiting contributions hold, null when the server did not count",
+        "origin": "{author, lines} when this was forked from another translation",
+        "main_owner": "who leads this lineage, to name them in the Not yours tip",
+        "main_abandoned": "bool: the Main is still there and its owner erased their account",
+        "branch_frozen": "bool: the Main still exists and has closed its contributions"
+      },
+      "out": "the whole strip, in order: [{kind, text, tone, tip}]"
+    }
+  },
+  "cases": [
+    {
+      "id": "badges/for/never-published-alone",
+      "op": "for",
+      "in": { "publication": "NeverPublished" },
+      "out": [
+        { "kind": "Publication", "text": "Never published", "tone": "Attention",
+          "tip": "This exists on this machine only. Publishing it would put it on the site under your name for the first time." }
+      ],
+      "why": "the publication chip is first and always: it decides what the buttons MEAN, and 'Never published' is warm because it is the one state where the work exists in exactly one place"
+    },
+    {
+      "id": "badges/for/published-main-at-rest",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
+      ],
+      "why": "a published Main with nothing else known wears two chips and no more — an unknown declaration shows nothing rather than a guess, since an older server saying nothing is not the same as saying 'still writing'"
+    },
+    {
+      "id": "badges/for/not-yours-names-the-owner",
+      "op": "for",
+      "in": { "publication": "NotYours", "main_owner": "alice" },
+      "out": [
+        { "kind": "Publication", "text": "Not yours", "tone": "Notice",
+          "tip": "@alice leads this translation. Nothing of yours is on the site. Sending your version makes it a contribution for them to review." }
+      ],
+      "why": "the third act, and the one that used to be invisible: publishing here contributes rather than creates, and a Notice never a warning — holding somebody else's translation is the ordinary way a player starts"
+    },
+    {
+      "id": "badges/for/not-yours-without-a-name",
+      "op": "for",
+      "in": { "publication": "NotYours" },
+      "out": [
+        { "kind": "Publication", "text": "Not yours", "tone": "Notice",
+          "tip": "Somebody else leads this translation. Nothing of yours is on the site. Sending your version makes it a contribution for them to review." }
+      ],
+      "why": "the sentence still works without a name, since an account can be gone or a server too old to say"
+    },
+    {
+      "id": "badges/for/not-downloaded",
+      "op": "for",
+      "in": { "publication": "NotDownloaded" },
+      "out": [
+        { "kind": "Publication", "text": "Not downloaded", "tone": "Plain",
+          "tip": "Published by somebody, and nothing for this game is on this machine yet." }
+      ],
+      "why": "published by somebody and nothing here yet is a state of its own, not an absence"
+    },
+    {
+      "id": "badges/for/branch",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." }
+      ],
+      "why": "a branch is the one worth spotting: it is not public, only its Main can read it, and what you do with it is not the act you would perform on something everyone can see"
+    },
+    {
+      "id": "badges/for/branch-whose-main-closed",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false, "branch_frozen": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." },
+        { "kind": "BranchFrozen", "text": "Main closed", "tone": "Attention",
+          "tip": "Its author no longer takes contributions. Your work is untouched — publishing it as your own version is the way to carry on." }
+      ],
+      "why": "the state was reachable nowhere else on a branch's card, and Attention not Wrong: nothing is broken and nothing is lost — what changed is the road it was on, and the way forward is one step away"
+    },
+    {
+      "id": "badges/for/main-gone-outranks-main-closed",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false, "main_missing": true, "branch_frozen": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." },
+        { "kind": "MainMissing", "text": "Main is gone", "tone": "Wrong",
+          "tip": "The translation yours contributes to is no longer on the site." }
+      ],
+      "why": "nobody refused anything when the translation itself is no longer there: the three answer one question — can this work still be merged — and wearing two would suggest two problems"
+    },
+    {
+      "id": "badges/for/no-owner-outranks-main-closed",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false, "main_abandoned": true, "branch_frozen": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." },
+        { "kind": "MainMissing", "text": "No owner", "tone": "Wrong",
+          "tip": "The account behind the translation yours contributes to has been deleted. The translation itself is still there." }
+      ],
+      "why": "its own wording rather than 'Main is gone', because the difference is the one thing a reader actually needs: the translation is still on the site, still downloadable, and still good to play with"
+    },
+    {
+      "id": "badges/for/main-gone-outranks-no-owner",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false, "main_missing": true, "main_abandoned": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." },
+        { "kind": "MainMissing", "text": "Main is gone", "tone": "Wrong",
+          "tip": "The translation yours contributes to is no longer on the site." }
+      ],
+      "why": "when the Main is gone that is the whole story and the account behind it no longer matters"
+    },
+    {
+      "id": "badges/for/contributions-waiting-with-their-weight",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "branches_waiting": 2, "lines_available": 57 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "BranchesWaiting", "text": "2 waiting", "tone": "Good",
+          "tip": "2 contributions you have not been through, holding 57 lines to take." }
+      ],
+      "why": "the chip stays two words; what it is worth goes in the tip, which is where somebody looks before deciding whether to open the merge screen at all"
+    },
+    {
+      "id": "badges/for/one-contribution-one-line",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "branches_waiting": 1, "lines_available": 1 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "BranchesWaiting", "text": "1 waiting", "tone": "Good",
+          "tip": "1 contribution you have not been through, holding 1 line to take." }
+      ],
+      "why": "both counts read in the singular when they are one"
+    },
+    {
+      "id": "badges/for/contributions-waiting-weight-unknown",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "branches_waiting": 3 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "BranchesWaiting", "text": "3 waiting", "tone": "Good",
+          "tip": "3 contributions you have not been through." }
+      ],
+      "why": "on a server too old to count them the sentence says how many contributions without claiming what they carry, because an unknown amount of work is not the same as none"
+    },
+    {
+      "id": "badges/for/nothing-waiting-says-nothing",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "branches_waiting": 0 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
+      ],
+      "why": "a screen with nothing to say says nothing rather than announcing a zero"
+    },
+    {
+      "id": "badges/for/fork-credits-where-it-came-from",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "origin": { "author": "alice", "lines": 3120 } },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Origin", "text": "Forked from @alice", "tone": "Quiet",
+          "tip": "Started from @alice's work, 3120 lines of it at the time. It has been a separate translation ever since." }
+      ],
+      "why": "a fork reads as a Main in every other respect, so nothing else in the strip can tell one apart from a translation somebody wrote from scratch — and quiet, because it is a credit and not a warning"
+    },
+    {
+      "id": "badges/for/fork-count-unknown",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "origin": { "author": "bob" } },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Origin", "text": "Forked from @bob", "tone": "Quiet",
+          "tip": "Started from @bob's work. It has been a separate translation ever since." }
+      ],
+      "why": "a server that never counted the lines still credits the author, and the closing sentence stays: without it the chip reads as a live link to updates that forking gave up"
+    },
+    {
+      "id": "badges/for/fork-from-a-removed-account",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "origin": { "author": null, "lines": null } },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Origin", "text": "Forked from a removed account", "tone": "Quiet",
+          "tip": "Started from work whose account is no longer on the site. It has been a separate translation ever since." }
+      ],
+      "why": "the credit stands without a name rather than not at all"
+    },
+    {
+      "id": "badges/for/sync-in-step",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "sync": "InSync" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Sync", "text": "Up to date", "tone": "Good",
+          "tip": "This file and the published version hold the same content." }
+      ],
+      "why": "the four words every piece of software has used for thirty years, not the precise-but-bookish ones: this read 'In step' until somebody pointed out that nobody outside a version-control habit says it"
+    },
+    {
+      "id": "badges/for/sync-behind",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "sync": "Download" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Sync", "text": "Update available", "tone": "Notice",
+          "tip": "The published version has moved on. Nothing of yours is at risk — you have no unpublished changes here." }
+      ],
+      "why": "'Behind' said the same thing to nobody; taking the update costs nothing, hence a notice rather than a warning"
+    },
+    {
+      "id": "badges/for/sync-ahead",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "sync": "Upload" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Sync", "text": "Unpublished changes", "tone": "Attention",
+          "tip": "You have changes here that the published version does not have." }
+      ],
+      "why": "work that exists in one place only is worth catching an eye"
+    },
+    {
+      "id": "badges/for/sync-diverged",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "sync": "Merge" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Sync", "text": "Conflict", "tone": "Attention",
+          "tip": "Both this file and the published one have moved. Settling that is done line by line." }
+      ],
+      "why": "'Diverged' is the version-control word; 'Conflict' is the one every program uses"
+    },
+    {
+      "id": "badges/for/author-says-finished",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "finished": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Finished", "text": "Finished", "tone": "Good",
+          "tip": "Its author says this translation is finished." }
+      ],
+      "why": "a DECLARATION, not a measurement: only its author can change it, and a card showing the measurements and hiding the declaration leaves them unable to tell whether they still have to go and say it"
+    },
+    {
+      "id": "badges/for/author-says-still-writing",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "finished": false },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Finished", "text": "Still writing", "tone": "Quiet",
+          "tip": "Its author is still working on this one." }
+      ],
+      "why": "quiet either way: this is a statement of intent, not a verdict on quality, and colouring 'finished' as good would rank two legitimate answers"
+    },
+    {
+      "id": "badges/for/nothing-to-declare-before-publishing",
+      "op": "for",
+      "in": { "publication": "NeverPublished", "finished": false },
+      "out": [
+        { "kind": "Publication", "text": "Never published", "tone": "Attention",
+          "tip": "This exists on this machine only. Publishing it would put it on the site under your name for the first time." }
+      ],
+      "why": "before publishing there is nobody to declare it to, and a chip saying 'in progress' on a private file would report a state that does not exist yet rather than one somebody chose"
+    },
+    {
+      "id": "badges/for/main-takes-contributions",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "accepts_contributions": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Contributions", "text": "Accepts contributions", "tone": "Quiet",
+          "tip": "Its author takes contributions: your work can be sent to them for review." }
+      ],
+      "why": "the Main's own declaration, quiet like Finished: two legitimate ways of working, and colouring one as good would make the other read as a refusal"
+    },
+    {
+      "id": "badges/for/main-works-alone",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "accepts_contributions": false },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Contributions", "text": "Solo work", "tone": "Quiet",
+          "tip": "Its author works alone on this one. You can still publish your own version of it." }
+      ],
+      "why": "both states are shown and neither is a reproach: 'Solo work' says how somebody works, not that they refused anybody"
+    },
+    {
+      "id": "badges/for/never-on-a-branch-whatever-the-caller-passes",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": false, "accepts_contributions": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Branch", "tone": "Attention",
+          "tip": "Yours is a contribution to somebody else's translation. They decide what they keep." }
+      ],
+      "why": "the decision belongs to the lineage's Main; rendered beside 'Branch' it reads as a claim about THIS row, which its author cannot change and did not make"
+    },
+    {
+      "id": "badges/for/somebody-holding-a-download-still-learns-the-door-is-open",
+      "op": "for",
+      "in": { "publication": "NotYours", "main_owner": "alice", "accepts_contributions": true },
+      "out": [
+        { "kind": "Publication", "text": "Not yours", "tone": "Notice",
+          "tip": "@alice leads this translation. Nothing of yours is on the site. Sending your version makes it a contribution for them to review." },
+        { "kind": "Contributions", "text": "Accepts contributions", "tone": "Quiet",
+          "tip": "Its author takes contributions: your work can be sent to them for review." }
+      ],
+      "why": "no publication guard: it carried one and that imported a question about YOUR standing into a fact about the LINEAGE — the person holding a downloaded translation is exactly the one who needs to know whether their corrections can be sent back"
+    },
+    {
+      "id": "badges/for/review-fully-read",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "stage": "Reviewed" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "ReviewStage", "text": "Fully reviewed", "tone": "Good",
+          "tip": "How much of this file a human has settled." }
+      ],
+      "why": "read from end to end is the one stage worth calling good"
+    },
+    {
+      "id": "badges/for/review-in-progress",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "stage": "Advanced" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "ReviewStage", "text": "Review in progress", "tone": "Notice",
+          "tip": "How much of this file a human has settled." }
+      ],
+      "why": "'Review well under way' was the bookish form of the same fact"
+    },
+    {
+      "id": "badges/for/review-started",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "stage": "Started" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "ReviewStage", "text": "Review started", "tone": "Quiet",
+          "tip": "How much of this file a human has settled." }
+      ],
+      "why": "somebody has begun reading it, which is worth saying and not worth colouring"
+    },
+    {
+      "id": "badges/for/review-not-begun",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "stage": "Machine" },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "ReviewStage", "text": "Machine translation", "tone": "Quiet",
+          "tip": "How much of this file a human has settled." }
+      ],
+      "why": "translated and nobody has read it back yet — the ordinary starting point, stated without reproach"
+    },
+    {
+      "id": "badges/for/incomplete-says-how-much",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "completeness": 0.9 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Completeness", "text": "90% translated", "tone": "Attention",
+          "tip": "Share of the lines this file has met in game that are actually translated." }
+      ],
+      "why": "a share below everything is worth catching an eye, and the figure is rounded to the nearest whole percent"
+    },
+    {
+      "id": "badges/for/completeness-rounds-to-the-nearest",
+      "op": "for",
+      "in": { "publication": "NeverPublished", "completeness": 0.876 },
+      "out": [
+        { "kind": "Publication", "text": "Never published", "tone": "Attention",
+          "tip": "This exists on this machine only. Publishing it would put it on the site under your name for the first time." },
+        { "kind": "Completeness", "text": "88% translated", "tone": "Attention",
+          "tip": "Share of the lines this file has met in game that are actually translated." }
+      ],
+      "why": "87.6 reads as 88, not as 87: truncating would report less work than was done"
+    },
+    {
+      "id": "badges/for/complete-says-nothing",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "completeness": 1.0 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
+      ],
+      "why": "silent at 100% like the website: a number is worth showing when it says something, and 'everything it met is translated' is the ordinary state"
+    },
+    {
+      "id": "badges/for/no-votes-no-downloads-no-chips",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "votes": 0, "downloads": 0 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
+      ],
+      "why": "'0 votes' reads as a verdict on the translation; the absence of the chip reads as nobody having voted, which is what is true"
+    },
+    {
+      "id": "badges/for/one-vote-one-download",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "votes": 1, "downloads": 1 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Votes", "text": "1 vote", "tone": "Plain",
+          "tip": "What players thought of it on the site." },
+        { "kind": "Downloads", "text": "1 download", "tone": "Quiet",
+          "tip": "How many times it has been taken from the site." }
+      ],
+      "why": "one of each reads in the singular"
+    },
+    {
+      "id": "badges/for/many-votes-many-downloads",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "votes": 12, "downloads": 300 },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "Votes", "text": "12 votes", "tone": "Plain",
+          "tip": "What players thought of it on the site." },
+        { "kind": "Downloads", "text": "300 downloads", "tone": "Quiet",
+          "tip": "How many times it has been taken from the site." }
+      ],
+      "why": "what the world made of it comes last, and the download count is the quieter of the two"
+    },
+    {
+      "id": "badges/for/the-whole-strip-in-order",
+      "op": "for",
+      "in": {
+        "publication": "Published", "is_main": true, "branches_waiting": 2, "lines_available": 57,
+        "origin": { "author": "alice", "lines": 3120 }, "sync": "Upload", "finished": true,
+        "accepts_contributions": true, "stage": "Reviewed", "completeness": 0.9,
+        "votes": 12, "downloads": 300
+      },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "BranchesWaiting", "text": "2 waiting", "tone": "Good",
+          "tip": "2 contributions you have not been through, holding 57 lines to take." },
+        { "kind": "Origin", "text": "Forked from @alice", "tone": "Quiet",
+          "tip": "Started from @alice's work, 3120 lines of it at the time. It has been a separate translation ever since." },
+        { "kind": "Sync", "text": "Unpublished changes", "tone": "Attention",
+          "tip": "You have changes here that the published version does not have." },
+        { "kind": "Finished", "text": "Finished", "tone": "Good",
+          "tip": "Its author says this translation is finished." },
+        { "kind": "Contributions", "text": "Accepts contributions", "tone": "Quiet",
+          "tip": "Its author takes contributions: your work can be sent to them for review." },
+        { "kind": "ReviewStage", "text": "Fully reviewed", "tone": "Good",
+          "tip": "How much of this file a human has settled." },
+        { "kind": "Completeness", "text": "90% translated", "tone": "Attention",
+          "tip": "Share of the lines this file has met in game that are actually translated." },
+        { "kind": "Votes", "text": "12 votes", "tone": "Plain",
+          "tip": "What players thought of it on the site." },
+        { "kind": "Downloads", "text": "300 downloads", "tone": "Quiet",
+          "tip": "How many times it has been taken from the site." }
+      ],
+      "why": "THE order, and it is the case that guards it: publication first because it decides what every button means, then who you are in the lineage, then whether you are up to date, then what the file is made of, then what the world made of it"
+    }
+  ]
+}
