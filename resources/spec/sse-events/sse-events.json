@@ -1,0 +1,164 @@
+{
+  "title": "UnityGameTranslator server-sent events",
+  "version": "1",
+  "description": "What travels on the four streams the relay (website/sse-server/server.js) serves, and how the site feeds them. The site never writes a stream itself: it PUBLISHES a message on a Redis channel (App\\Services\\SsePublisher) and, for answers a client may miss, STORES the same message under a key; the relay subscribes, replays what was stored, and writes the wire. A client reads the wire with a plain SSE parser (the mod's Engine/SseStream) and hands each event's `data` to a reader (Engine/ApiReaders). Held by: check-spec.py (the cases against these schemas), tests/Unit/SsePublisherContractTest.php (the site publishes exactly these messages), Core.Checks/SseEventsChecks (the mod parses these frames and derives these values).",
+  "x-relay-note": "The relay has no test runner of its own: it is one file without exports, and cutting it up is a decision for another day. Its wire format is therefore described here from a reading of server.js (2026-09-11) and proved from the OTHER end — the frames the mod's parser is held to are written in exactly that format.",
+  "base": {
+    "url": "https://unitygametranslator.asymptomatikgames.com:3000 (production) — compiled into the mod as SseBaseUrl; config.json's sse_base_url overrides it. The relay listens on 127.0.0.1:3000 behind the site's reverse proxy.",
+    "health": "GET /health (or /) → {status: \"ok\", uptime_s, revalidate_interval_s, and — with the configured X-Health-Token — connections, max_connections, peak_connections, refused_at_capacity, refused_per_ip, refused_attempts, per_ip_limit, per_ip_attempts_per_minute}. Not a stream."
+  },
+  "wire": {
+    "content_type": "text/event-stream",
+    "headers": { "Cache-Control": "no-cache, no-store, must-revalidate", "Connection": "keep-alive", "X-Accel-Buffering": "no" },
+    "preamble": "`retry: 3000\\n\\n` as the first bytes of every stream: the reconnection delay the client starts from (SseStream.RetryDelayMs).",
+    "event": "`id: <n>\\nevent: <name>\\ndata: <one-line JSON>\\n\\n` — `n` counts from 1 per CONNECTION (it restarts on every reconnect; nothing is replayed by id, see `replay`). `data` is one line: the payload is serialised without newlines.",
+    "heartbeat": "`: heartbeat\\n\\n` every 15 s (HEARTBEAT_INTERVAL_MS) on every stream; a comment line the parser drops. A client that hears nothing for 60 s treats the stream as gone (SseStream.HeartbeatTimeoutMs) and reconnects.",
+    "last_event_id": "The client sends `Last-Event-ID` on a reconnect (SseClient) and the relay IGNORES it: what a client may have missed is replayed from the stored message, not by id. The header is harmless and kept for a relay that might one day use it.",
+    "refusal": "A stream refused before it opens answers an HTTP error status with the same content type and one frame: `event: error\\ndata: {\"error\": \"<sentence>\"}\\n\\n`, then closes. 400 (bad request), 401 (sync: no or invalid token), 404 (device or merge: a code the site never issued — see `expected`), 429 (too many attempts or streams from this address), 502 (the site did not answer the relay), 503 (the relay is at capacity).",
+    "client": {
+      "accept": "`Accept: text/event-stream`",
+      "authorization": "`Authorization: Bearer ugt_…` on the sync stream ONLY. The device, merge and edit streams are authorised by the code, token or key in their path.",
+      "reconnect": "On end of stream, a dropped connection or a heartbeat timeout: wait the retry delay (3 s, doubled up to 30 s, reset on a successful connection), reconnect with `Last-Event-ID`. A stream opened for ONE event (device flow) stops once it has it (SseClient.StopAfterFirstEvent) — the relay closing it then is the ordinary end, not a loss.",
+      "definitive": "401, 403 and 404 at the door are final: the client stops and reports the body. 429, 5xx and network failures are retried with the backoff.",
+      "revoked": "A sync stream whose access is cut receives `error {code: \"revoked\"}` and is closed by the relay: the client signs out, exactly as on an HTTP 401. Any other `error` is a stream that ended, which the connection loop handles."
+    }
+  },
+  "expected": {
+    "description": "A device code or a merge token must have been ANNOUNCED by the site before a stream may open on it: SsePublisher::expected writes `sse:<kind>:<code>:pending` for the code's lifetime, and the marker `sse:expected` (never expiring) says this site announces. The relay demands the announcement only while the marker exists — so the two deploy in any order — and also accepts a code whose `:result` is already stored.",
+    "device_ttl_s": 900,
+    "merge_ttl_s": 900
+  },
+  "streams": {
+    "device": {
+      "path": "GET /auth/device/{device_code}/stream",
+      "path_pattern": "^/auth/device/([A-Za-z0-9_-]{1,128})/stream$",
+      "auth": "the device code in the path (secret to the client)",
+      "channel": "sse:device:{device_code}",
+      "stored": { "key": "sse:device:{device_code}:result", "ttl_s": 120, "delivery": "once — the relay deletes the key once the frame has left the process, so a client holding the code cannot be handed the token twice; the TTL bounds the wait for a client whose stream was not yet open" },
+      "timeout_s": 900,
+      "lifetime": "ONE event, then the relay closes the stream.",
+      "events": {
+        "authorized": { "description": "The person typed the code on /link and confirmed. The token is delivered here and nowhere else; the client stores it and signs in.", "data": { "$ref": "#/components/schemas/Authorized" }, "closes": true },
+        "expired": { "description": "The code's fifteen minutes ran out — from the relay's own timer (`{error: \"Timeout\"}`) or from the site (`{error: \"Device code expired\"}`).", "data": { "$ref": "#/components/schemas/ErrorData" }, "closes": true },
+        "error": { "description": "The relay could not subscribe (`{error: \"Internal error\"}`).", "data": { "$ref": "#/components/schemas/ErrorData" }, "closes": true }
+      },
+      "reader": { "authorized": "device_authorized", "expired": "stream_error", "error": "stream_error" }
+    },
+    "sync": {
+      "path": "GET /sync/stream?uuid={uuid}&hash={file_hash}&lineage=0",
+      "auth": "`Authorization: Bearer` — checked at the door against GET /me (401 on refusal, 502 when the site does not answer), and again every 5 minutes on the open stream (REVALIDATE_INTERVAL_MS): a refusal then closes it with `error {code: revoked}`.",
+      "query": {
+        "uuid": "required, ≤256: the lineage (`_uuid`).",
+        "hash": "optional, ≤256: the `file_hash` held, so `state.has_update` can be answered.",
+        "lineage": "`0` asks about the caller's own row only — what every stream the mod opens sends (GetSyncSseUrl). Anything else leaves the payload whole, which a mod older than the parameter expects."
+      },
+      "channels": [ "sse:uuid:{uuid}", "sse:translation:{id} — the caller's own row, or the Main's when the caller holds none" ],
+      "stored": null,
+      "timeout_s": 3600,
+      "lifetime": "Long-lived: the client reconnects on end of stream (the hour, a drop) and receives a fresh `state` first.",
+      "events": {
+        "state": { "description": "First frame of every connection, and again whenever ANYBODY publishes into the lineage (`uuid_changed` on the site's side): the body of GET /sync/state, re-read with the caller's scope. Rule 1 of the API applies with a twist a client must implement: with `lineage=0` the lineage fields are ABSENT, and the client KEEPS what a fuller answer established (ApiReaders.ReadSyncState) — absent means unknown, never none.", "data": { "$ref": "urn:ugt:openapi#/components/schemas/SyncStateResponse" } },
+        "translation_updated": { "description": "The row the stream watches moved: an upload, a merge, a vote. Carries the new fingerprint so the client compares it with its own without a round trip.", "data": { "$ref": "#/components/schemas/TranslationUpdated" } },
+        "error": { "description": "`{error: \"Access revoked\", code: \"revoked\"}` when the access was cut while the stream was open — then the relay closes it; `{error: \"Internal error\"}` when the relay could not subscribe.", "data": { "$ref": "#/components/schemas/ErrorData" }, "closes": true }
+      },
+      "reader": { "state": "sync_state", "translation_updated": "translation_updated", "error": "stream_error" },
+      "relay_only": {
+        "uuid_changed": { "description": "Published by the site on `sse:uuid:{uuid}` whenever anybody publishes into the lineage. Never written to a client: the relay re-reads GET /sync/state with the caller's scope and emits a `state`.", "data": { "type": "object", "required": ["uuid"], "properties": { "uuid": { "type": "string" } } } }
+      }
+    },
+    "merge": {
+      "path": "GET /merge-preview/{token}/stream",
+      "path_pattern": "^/merge-preview/([A-Za-z0-9_-]{1,128})/stream$",
+      "auth": "the token in the path (POST /merge-preview/init answered it)",
+      "channel": "sse:merge:{token}",
+      "stored": { "key": "sse:merge:{token}:result", "ttl_s": 120, "delivery": "once, as the device result" },
+      "timeout_s": 900,
+      "lifetime": "ONE event, then the relay closes the stream.",
+      "events": {
+        "merge_completed": { "description": "The page arbitrated. `destination: local` (with `translation_id` and `line_count`, no `file_hash`): the result is collected from GET /merge-preview/{token}/result; otherwise (`translation_id`, `file_hash`, `line_count`) it IS the published translation, downloaded as any other.", "data": { "$ref": "#/components/schemas/MergeCompleted" }, "closes": true },
+        "merge_preview_ended": { "description": "The comparison is over without a result: the page was closed, or the mod let go (DELETE /merge-preview/{token}). Overwrites any stored result. `data: []`.", "data": { "$ref": "#/components/schemas/Empty" }, "closes": true },
+        "error": { "description": "The relay could not subscribe.", "data": { "$ref": "#/components/schemas/ErrorData" }, "closes": true }
+      },
+      "reader": { "merge_completed": "merge_completed", "error": "stream_error" }
+    },
+    "edit": {
+      "path": "GET /edit-session/{mod_key}/stream",
+      "path_pattern": "^/edit-session/([A-Za-z0-9]{64})/stream$",
+      "auth": "the 64-character mod key in the path (POST /edit-session/init answered it; never shown to a browser)",
+      "channel": "sse:edit:{mod_key}",
+      "stored": { "key": "sse:edit:{mod_key}:result", "ttl_s": 900, "delivery": "REPLAYED on every (re)connection, after the subscription is open: the latest `edit_saved` — or `edit_session_ended`, which overwrites it and closes the stream at once. The client dedupes a replayed save on `content_hash`." },
+      "presence": "This connection IS the holder being there: the relay writes `sse:edit:{mod_key}:game` with a token, renews it on every heartbeat (TTL max(45 s, 3 heartbeats)), and releases it on close only if the token is still its own — a reconnecting client opens its new stream before the old one finishes closing. A holder that polls instead of streaming claims presence itself (`GET /edit-session/{key}/state?following=1`).",
+      "timeout_s": 3600,
+      "lifetime": "Long-lived: MANY events over one connection; the client reconnects on end of stream (the hour, a drop) until `edit_session_ended`.",
+      "events": {
+        "edit_saved": { "description": "The browser saved: fetch GET /edit-session/{key}/content and merge it with the live file. Replayed on reconnection (stored); `content_hash` is the dedupe key.", "data": { "$ref": "#/components/schemas/EditSaved" } },
+        "edit_session_ended": { "description": "The page ended the session. Stored in place of the last save, so a replay cannot send the client to a file that is gone. `data: []`.", "data": { "$ref": "#/components/schemas/Empty" }, "closes": true },
+        "browser_left": { "description": "The page's leave beacon fired (close, refresh, navigation): the client starts its grace timer (EditSessions.BrowserGraceSeconds). Not stored — presence also rides the answers to the client's own pushes. `data: []`.", "data": { "$ref": "#/components/schemas/Empty" } },
+        "browser_joined": { "description": "The page (re)signalled presence after having been marked away: the grace timer is cancelled. `data: []`.", "data": { "$ref": "#/components/schemas/Empty" } },
+        "edit_retranslate": { "description": "The page asks the holder to translate ONE line again with the holder's own backend; the answer goes back by POST /edit-session/{key}/retranslation as a proposal. Not stored (a replay would ghost-retranslate): the page re-emits every ~30 s with the SAME `id` while pending, and the client dedupes on it.", "data": { "$ref": "#/components/schemas/EditRetranslate" } },
+        "error": { "description": "The relay could not subscribe.", "data": { "$ref": "#/components/schemas/ErrorData" }, "closes": true }
+      },
+      "reader": { "edit_saved": "edit_saved", "edit_retranslate": "edit_retranslate", "error": "stream_error" }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Authorized": {
+        "type": "object",
+        "required": ["access_token", "token_type", "user"],
+        "properties": {
+          "access_token": { "type": "string", "pattern": "^ugt_[A-Za-z0-9]+$", "description": "The bearer token: stored as config.json's api_token, sent on every authenticated call." },
+          "token_type": { "type": "string", "const": "Bearer" },
+          "user": { "type": "object", "required": ["id", "name"], "properties": { "id": { "type": "integer" }, "name": { "type": "string" } } }
+        }
+      },
+      "ErrorData": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string", "description": "A sentence to show." },
+          "code": { "type": "string", "enum": ["revoked"], "description": "Named only when a client must ACT on it rather than show it." }
+        }
+      },
+      "TranslationUpdated": {
+        "type": "object",
+        "required": ["file_hash", "line_count", "vote_count", "updated_at"],
+        "properties": {
+          "file_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "line_count": { "type": "integer" },
+          "vote_count": { "type": "integer" },
+          "updated_at": { "type": "string" },
+          "content_updated_at": { "type": "string", "description": "Sent by the API upload path; the site's merge paths do not send it." }
+        }
+      },
+      "MergeCompleted": {
+        "type": "object",
+        "required": ["translation_id", "line_count"],
+        "properties": {
+          "translation_id": { "type": "integer" },
+          "destination": { "type": "string", "const": "local", "description": "Present only when the result stays local." },
+          "file_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Present only when the result was published." },
+          "line_count": { "type": "integer" }
+        }
+      },
+      "EditSaved": {
+        "type": "object",
+        "required": ["content_hash", "line_count", "saved_at"],
+        "properties": {
+          "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the session file after the save — the dedupe key." },
+          "line_count": { "type": "integer" },
+          "saved_at": { "type": "string" }
+        }
+      },
+      "EditRetranslate": {
+        "type": "object",
+        "required": ["key", "id"],
+        "properties": {
+          "key": { "type": "string", "description": "The source line to translate again." },
+          "id": { "type": "string", "description": "The page's request id, stable across its retries." }
+        }
+      },
+      "Empty": { "type": "array", "maxItems": 0, "description": "PHP's empty array: `[]`, never `{}`." }
+    }
+  }
+}

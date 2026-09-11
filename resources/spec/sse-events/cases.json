@@ -1,0 +1,349 @@
+{
+  "$comment": "The cases of the streams, in three kinds. `publish`: what the site puts on Redis for a given call (tests/Unit/SsePublisherContractTest.php). `frame`: bytes in the relay's own format and the events a client's parser must yield from them (Core.Checks/SseEventsChecks over Engine/SseStream). `read`: an event's data and what the mod's reader derives from it (same checks, over Engine/ApiReaders). check-spec.py holds every `data` here to the event's schema in sse-events.json.",
+  "conventions": {
+    "publish": "{publisher, args, channel, message, stored?}. `publisher` is a static method of App\\Services\\SsePublisher, `args` its arguments in order; `message` is the JSON published on `channel` (compared decoded); `stored` = {key, ttl_s, same_message: true} when the site also stores it for a client that was not listening, `null` when it does not. `sets` lists plain keys written (the announcement).",
+    "frame": "{stream, text, stop_after_first?, events, retry_ms?, last_event_id?, stop}. `text` is the wire, `events` what the parser yields ({id, event, data} — data compared decoded), `stop` why the parser returned once the text ran out: Delivered (stopped on its one event) or EndOfStream.",
+    "read": "{reader, payload, previous_payload?, input?, expects}. `reader` names the mod's reader; `previous_payload`, for sync_state, is a payload read first into the state the case's payload is then read OVER — that is the sequence the rule is about. `expects` are dotted paths of the derived record; `{\"$is\": ...}` as in api-v1."
+  },
+  "cases": [
+    {
+      "id": "sse-events/publish/device-authorized",
+      "kind": "publish",
+      "publisher": "deviceAuthorized",
+      "args": [ "dEvIcE-code-0001", { "access_token": "ugt_abcDEF123", "token_type": "Bearer", "user": { "id": 7, "name": "alice" } } ],
+      "channel": "sse:device:dEvIcE-code-0001",
+      "message": { "event": "authorized", "data": { "access_token": "ugt_abcDEF123", "token_type": "Bearer", "user": { "id": 7, "name": "alice" } } },
+      "stored": { "key": "sse:device:dEvIcE-code-0001:result", "ttl_s": 120, "same_message": true },
+      "why": "the token is delivered here and nowhere else; stored two minutes for a client whose stream was not yet open, and the relay deletes it once served"
+    },
+    {
+      "id": "sse-events/publish/device-expired",
+      "kind": "publish",
+      "publisher": "deviceExpired",
+      "args": [ "dEvIcE-code-0001" ],
+      "channel": "sse:device:dEvIcE-code-0001",
+      "message": { "event": "expired", "data": { "error": "Device code expired" } },
+      "stored": null,
+      "why": "nothing to store: an expired code has no late client worth answering"
+    },
+    {
+      "id": "sse-events/publish/announcing-a-code",
+      "kind": "publish",
+      "publisher": "expected",
+      "args": [ "device", "dEvIcE-code-0001", 900 ],
+      "channel": null,
+      "message": null,
+      "stored": { "key": "sse:device:dEvIcE-code-0001:pending", "ttl_s": 900, "value": "1" },
+      "sets": { "sse:expected": "1" },
+      "why": "a stream may only open on a code this site issued; the never-expiring marker is what lets the relay and the site deploy in any order"
+    },
+    {
+      "id": "sse-events/publish/translation-updated",
+      "kind": "publish",
+      "publisher": "translationUpdated",
+      "args": [ 31, { "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 2, "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00" } ],
+      "channel": "sse:translation:31",
+      "message": { "event": "translation_updated", "data": { "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 2, "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00" } },
+      "stored": null,
+      "why": "the row the stream watches moved; a client that was not listening learns it from the next `state`, so nothing is stored"
+    },
+    {
+      "id": "sse-events/publish/uuid-changed",
+      "kind": "publish",
+      "publisher": "uuidChanged",
+      "args": [ "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" ],
+      "channel": "sse:uuid:9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b",
+      "message": { "event": "uuid_changed", "data": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "stored": null,
+      "why": "never reaches a client as such: the relay re-reads GET /sync/state with the caller's scope and emits a fresh `state`"
+    },
+    {
+      "id": "sse-events/publish/merge-completed-published",
+      "kind": "publish",
+      "publisher": "mergeCompleted",
+      "args": [ "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", { "translation_id": 31, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 3 } ],
+      "channel": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+      "message": { "event": "merge_completed", "data": { "translation_id": 31, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 3 } },
+      "stored": { "key": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM:result", "ttl_s": 120, "same_message": true },
+      "why": "one answer to one client, delivered once like the device result"
+    },
+    {
+      "id": "sse-events/publish/merge-completed-locally",
+      "kind": "publish",
+      "publisher": "mergeCompleted",
+      "args": [ "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", { "translation_id": 31, "destination": "local", "line_count": 3 } ],
+      "channel": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+      "message": { "event": "merge_completed", "data": { "translation_id": 31, "destination": "local", "line_count": 3 } },
+      "stored": { "key": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM:result", "ttl_s": 120, "same_message": true },
+      "why": "nothing was published: no file_hash, and the client collects the result from the token"
+    },
+    {
+      "id": "sse-events/publish/merge-preview-ended",
+      "kind": "publish",
+      "publisher": "mergePreviewEnded",
+      "args": [ "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM" ],
+      "channel": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+      "message": { "event": "merge_preview_ended", "data": [] },
+      "stored": { "key": "sse:merge:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM:result", "ttl_s": 120, "same_message": true },
+      "why": "stored in place of any result: a replayed merge_completed would send the client to a token that no longer exists"
+    },
+    {
+      "id": "sse-events/publish/edit-saved",
+      "kind": "publish",
+      "publisher": "editSessionSaved",
+      "args": [ "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK", { "content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "line_count": 4, "saved_at": "2026-09-11T14:03:22+00:00" } ],
+      "channel": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+      "message": { "event": "edit_saved", "data": { "content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "line_count": 4, "saved_at": "2026-09-11T14:03:22+00:00" } },
+      "stored": { "key": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK:result", "ttl_s": 900, "same_message": true },
+      "why": "the latest save is replayed to a client that reconnects; it dedupes on content_hash, so a replay of an applied save is a no-op"
+    },
+    {
+      "id": "sse-events/publish/edit-session-ended",
+      "kind": "publish",
+      "publisher": "editSessionEnded",
+      "args": [ "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" ],
+      "channel": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+      "message": { "event": "edit_session_ended", "data": [] },
+      "stored": { "key": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK:result", "ttl_s": 900, "same_message": true },
+      "why": "overwrites the last save: the session and its content endpoint are gone, a replayed edit_saved would 404"
+    },
+    {
+      "id": "sse-events/publish/browser-left",
+      "kind": "publish",
+      "publisher": "editSessionBrowserLeft",
+      "args": [ "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" ],
+      "channel": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+      "message": { "event": "browser_left", "data": [] },
+      "stored": null,
+      "why": "presence is not stored: it also rides the answers to the holder's own pushes"
+    },
+    {
+      "id": "sse-events/publish/browser-joined",
+      "kind": "publish",
+      "publisher": "editSessionBrowserJoined",
+      "args": [ "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" ],
+      "channel": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+      "message": { "event": "browser_joined", "data": [] },
+      "stored": null,
+      "why": "cancels the grace timer a browser_left started"
+    },
+    {
+      "id": "sse-events/publish/edit-retranslate",
+      "kind": "publish",
+      "publisher": "editSessionRetranslate",
+      "args": [ "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK", "Shop", "req-42" ],
+      "channel": "sse:edit:KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+      "message": { "event": "edit_retranslate", "data": { "key": "Shop", "id": "req-42" } },
+      "stored": null,
+      "why": "not stored — a replay would ghost-retranslate; the page re-emits with the same id while pending, and the client dedupes on it"
+    },
+
+    {
+      "id": "sse-events/frame/one-event-then-the-relay-closes",
+      "kind": "frame",
+      "stream": "device",
+      "text": "retry: 3000\n\nid: 1\nevent: authorized\ndata: {\"access_token\":\"ugt_abcDEF123\",\"token_type\":\"Bearer\",\"user\":{\"id\":7,\"name\":\"alice\"}}\n\n",
+      "stop_after_first": true,
+      "retry_ms": 3000,
+      "events": [ { "id": "1", "event": "authorized", "data": { "access_token": "ugt_abcDEF123", "token_type": "Bearer", "user": { "id": 7, "name": "alice" } } } ],
+      "last_event_id": "1",
+      "stop": "Delivered",
+      "why": "the device stream carries exactly one event and is then closed on purpose: a client opened for one must stop on it, or the deliberate close reads as a lost connection over the top of the success"
+    },
+    {
+      "id": "sse-events/frame/heartbeats-are-comments",
+      "kind": "frame",
+      "stream": "sync",
+      "text": "retry: 3000\n\n: heartbeat\n\nid: 1\nevent: state\ndata: {\"exists\":false,\"role\":\"none\",\"translation\":null,\"main\":null,\"branches_count\":0,\"has_update\":false,\"vote\":null,\"accepts_branches\":null}\n\n: heartbeat\n\n: heartbeat\n\n",
+      "retry_ms": 3000,
+      "events": [ { "id": "1", "event": "state", "data": { "exists": false, "role": "none", "translation": null, "main": null, "branches_count": 0, "has_update": false, "vote": null, "accepts_branches": null } } ],
+      "last_event_id": "1",
+      "stop": "EndOfStream",
+      "why": "a comment line keeps the connection alive and yields nothing; a stream that ends after them is an end of stream, which the client reconnects from"
+    },
+    {
+      "id": "sse-events/frame/ids-count-per-connection",
+      "kind": "frame",
+      "stream": "edit",
+      "text": "retry: 3000\n\nid: 1\nevent: edit_saved\ndata: {\"content_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"line_count\":4,\"saved_at\":\"2026-09-11T14:03:22+00:00\"}\n\nid: 2\nevent: browser_left\ndata: []\n\nid: 3\nevent: edit_session_ended\ndata: []\n\n",
+      "retry_ms": 3000,
+      "events": [
+        { "id": "1", "event": "edit_saved", "data": { "content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "line_count": 4, "saved_at": "2026-09-11T14:03:22+00:00" } },
+        { "id": "2", "event": "browser_left", "data": [] },
+        { "id": "3", "event": "edit_session_ended", "data": [] }
+      ],
+      "last_event_id": "3",
+      "stop": "EndOfStream",
+      "why": "ids count from 1 per connection and restart on a reconnect; the last one travels back as Last-Event-ID, which the relay ignores — what a client missed comes from the stored message"
+    },
+    {
+      "id": "sse-events/frame/a-refusal-at-the-door",
+      "kind": "frame",
+      "stream": "sync",
+      "text": "event: error\ndata: {\"error\":\"Invalid or expired token\"}\n\n",
+      "events": [ { "id": null, "event": "error", "data": { "error": "Invalid or expired token" } } ],
+      "last_event_id": null,
+      "stop": "EndOfStream",
+      "why": "no retry line, no id: one frame on an error status, then the relay closes — the status decides whether the client retries (401 does not)"
+    },
+    {
+      "id": "sse-events/frame/access-revoked-mid-stream",
+      "kind": "frame",
+      "stream": "sync",
+      "text": "retry: 3000\n\nid: 1\nevent: state\ndata: {\"exists\":true,\"role\":\"main\"}\n\nid: 2\nevent: error\ndata: {\"error\":\"Access revoked\",\"code\":\"revoked\"}\n\n",
+      "retry_ms": 3000,
+      "events": [
+        { "id": "1", "event": "state", "data": { "exists": true, "role": "main" } },
+        { "id": "2", "event": "error", "data": { "error": "Access revoked", "code": "revoked" } }
+      ],
+      "last_event_id": "2",
+      "stop": "EndOfStream",
+      "why": "named rather than silently closed: a stream that simply ends looks like a network blip and the client reconnects; `code: revoked` is what makes it sign out instead"
+    },
+
+    {
+      "id": "sse-events/read/device-authorized",
+      "kind": "read",
+      "reader": "device_authorized",
+      "payload": { "access_token": "ugt_abcDEF123", "token_type": "Bearer", "user": { "id": 7, "name": "alice" } },
+      "expects": { "AccessToken": "ugt_abcDEF123", "UserName": "alice", "UserId": 7 },
+      "why": "the token goes to config.json as api_token, the name beside it as api_user"
+    },
+    {
+      "id": "sse-events/read/error-revoked",
+      "kind": "read",
+      "reader": "stream_error",
+      "payload": { "error": "Access revoked", "code": "revoked" },
+      "expects": { "Error": "Access revoked", "Code": "revoked", "Revoked": true },
+      "why": "the one error a client ACTS on: it takes the same path as an HTTP 401"
+    },
+    {
+      "id": "sse-events/read/error-plain",
+      "kind": "read",
+      "reader": "stream_error",
+      "payload": { "error": "Internal error" },
+      "expects": { "Error": "Internal error", "Code": null, "Revoked": false },
+      "why": "shown, never acted on: the stream ended and the connection loop decides what that means"
+    },
+    {
+      "id": "sse-events/read/translation-updated",
+      "kind": "read",
+      "reader": "translation_updated",
+      "payload": { "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 2, "vote_count": 5, "updated_at": "2026-09-11T14:03:22+00:00" },
+      "expects": { "FileHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "LineCount": 2, "VoteCount": 5 },
+      "why": "the client compares the hash with its own and decides the direction itself"
+    },
+    {
+      "id": "sse-events/read/merge-completed-published",
+      "kind": "read",
+      "reader": "merge_completed",
+      "payload": { "translation_id": 31, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "line_count": 3 },
+      "expects": { "TranslationId": 31, "FileHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "LineCount": 3, "ToLocal": false },
+      "why": "published: the result IS the online translation, downloaded as any other"
+    },
+    {
+      "id": "sse-events/read/merge-completed-locally",
+      "kind": "read",
+      "reader": "merge_completed",
+      "payload": { "translation_id": 31, "destination": "local", "line_count": 3 },
+      "expects": { "TranslationId": 31, "FileHash": null, "LineCount": 3, "ToLocal": true },
+      "why": "nothing was published: the client collects the arbitrated file from the token and must NOT download the online version over the player's decisions"
+    },
+    {
+      "id": "sse-events/read/edit-saved",
+      "kind": "read",
+      "reader": "edit_saved",
+      "payload": { "content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "line_count": 4, "saved_at": "2026-09-11T14:03:22+00:00" },
+      "expects": { "ContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "LineCount": 4, "SavedAt": "2026-09-11T14:03:22+00:00" },
+      "why": "the hash is the dedupe key of a replayed save"
+    },
+    {
+      "id": "sse-events/read/edit-retranslate",
+      "kind": "read",
+      "reader": "edit_retranslate",
+      "payload": { "key": "Shop", "id": "req-42" },
+      "expects": { "Key": "Shop", "RequestId": "req-42" },
+      "why": "the id is remembered so the answer can be sent back to the page it belongs to, and so a re-emission is ignored"
+    },
+    {
+      "id": "sse-events/read/state-own-main-with-the-lineage",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "alice" },
+      "payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 31, "source_language": "English", "target_language": "French", "type": "human", "notes": "Full run", "resources_url": null, "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00", "accepts_branches": true, "branch_frozen": false },
+        "main": null, "branches_count": 1, "has_update": false,
+        "vote": { "target_id": 31, "count": 0, "user_vote": null, "can_vote": false },
+        "accepts_branches": true, "branches_pending_review": 1, "branches_with_work": 1, "lines_available": 1,
+        "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] }
+      },
+      "expects": { "Checked": true, "AskedAsAccount": true, "Exists": true, "IsOwner": true, "Role": "Main", "SiteId": 31, "Uploader": "alice", "Hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Status": null, "AcceptsBranches": true, "BranchFrozen": false, "BranchesCount": 1, "BranchesPendingReview": 1, "BranchesWithWork": 1, "LinesAvailable": 1, "LinesToReview": 1, "LinesNew.Human": 1, "LinesDiffering.Human": 0, "MainSiteId": null, "SourceLanguage": "English", "Vote.CanVote": false },
+      "why": "the full answer, as the startup call and a stream without lineage=0 deliver it; one's own row is credited to the account, an absent status stays null"
+    },
+    {
+      "id": "sse-events/read/state-own-row-only-keeps-the-lineage",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "alice" },
+      "previous_payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 31, "source_language": "English", "target_language": "French", "type": "human", "status": "complete", "notes": "Full run", "resources_url": null, "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00", "accepts_branches": true, "branch_frozen": false },
+        "main": null, "branches_count": 1, "has_update": false, "vote": null, "accepts_branches": true,
+        "branches_pending_review": 1, "branches_with_work": 1, "lines_available": 1,
+        "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] }
+      },
+      "payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 31, "source_language": "English", "target_language": "French", "type": "human", "status": "complete", "notes": "Full run", "resources_url": null, "line_count": 3, "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "vote_count": 0, "updated_at": "2026-09-11T14:10:00+00:00", "content_updated_at": "2026-09-11T14:10:00+00:00", "accepts_branches": true, "branch_frozen": false },
+        "main": null, "has_update": false, "vote": null, "accepts_branches": true
+      },
+      "expects": { "Hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "Status": "complete", "BranchesCount": 1, "BranchesPendingReview": 1, "BranchesWithWork": 1, "LinesAvailable": 1, "LinesToReview": 1, "LinesNew.Human": 1 },
+      "why": "🔴 the rule the stream imposes: with lineage=0 the lineage half is ABSENT, and absent read as zero wiped the contribution count and the overlay's notice one second after the startup call had filled them — what this payload does not carry is KEPT"
+    },
+    {
+      "id": "sse-events/read/state-holder-of-somebodys-main",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "carol" },
+      "payload": {
+        "exists": true, "role": "none", "translation": null,
+        "main": { "id": 31, "uploader": "alice", "source_language": "English", "target_language": "French", "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00" },
+        "branches_count": 0, "has_update": true,
+        "vote": { "target_id": 31, "count": 0, "user_vote": null, "can_vote": true },
+        "accepts_branches": true
+      },
+      "expects": { "Exists": true, "IsOwner": false, "Role": "None", "SiteId": 31, "Uploader": "alice", "MainUsername": "alice", "MainSiteId": 31, "MainHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "MainLineCount": 2, "SourceLanguage": "English", "AcceptsBranches": true, "Vote.CanVote": true },
+      "why": "holding somebody's lineage without having published into it is a first-class case, and the Main IS this row: MainSiteId is what lets that person merge from the Main instead of replacing their file"
+    },
+    {
+      "id": "sse-events/read/state-own-branch-keeps-its-main",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "bob" },
+      "previous_payload": {
+        "exists": true, "role": "branch",
+        "translation": { "id": 32, "source_language": "English", "target_language": "French", "type": "human", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00", "accepts_branches": true, "branch_frozen": false },
+        "main": { "id": 31, "uploader": "alice", "source_language": "English", "target_language": "French", "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00" },
+        "branches_count": 0, "has_update": false, "vote": null, "accepts_branches": true,
+        "main_missing": false, "main_abandoned": false, "main_ignoring": false, "merged_lines_total": 4
+      },
+      "payload": {
+        "exists": true, "role": "branch",
+        "translation": { "id": 32, "source_language": "English", "target_language": "French", "type": "human", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "vote_count": 0, "updated_at": "2026-09-11T14:03:22+00:00", "content_updated_at": "2026-09-11T14:03:22+00:00", "accepts_branches": true, "branch_frozen": false },
+        "main": null, "has_update": false, "vote": null, "accepts_branches": true
+      },
+      "expects": { "Role": "Branch", "IsOwner": true, "SiteId": 32, "Uploader": "bob", "MainSiteId": 31, "MainUsername": "alice", "MainHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "MainLineCount": 2, "MainMissing": false, "MainAbandoned": false, "MergedLinesTotal": 4 },
+      "why": "a branch's Main belongs to the lineage, so a stream leaves it out; dropping it would take 'Update from Main' and the owner's name off the screen a second after the startup call put them there"
+    },
+    {
+      "id": "sse-events/read/state-nothing-published",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "carol" },
+      "payload": { "exists": false, "role": "none", "translation": null, "main": null, "branches_count": 0, "has_update": false, "vote": null, "accepts_branches": null },
+      "expects": { "Checked": true, "Exists": false, "IsOwner": false, "Role": "None", "SiteId": null, "MainSiteId": null, "AcceptsBranches": null, "Vote": null },
+      "why": "checked, and nothing: the screens stop waiting and offer to publish"
+    }
+  ]
+}
