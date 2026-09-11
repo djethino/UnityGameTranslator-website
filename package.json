@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test": "node --test \"resources/js/rules/**/*.test.js\""
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Translation;
 use App\Services\TranslationService;
+use App\Support\Placeholders;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,6 +39,11 @@ class CorpusTest extends TestCase
             'settings/json_key' => fn (array $in) => TranslationService::sectionKey($in['section']),
             'settings/section_of' => fn (array $in) => TranslationService::sectionOf($in['json_key']),
             'merge/priority_of' => fn (array $in) => TranslationService::priorityOf($in['tag'] ?? null, $in['value'] ?? null),
+            'placeholders/frozen_sequences' => fn (array $in) => Placeholders::frozenSequences($in['source'] ?? ''),
+            'placeholders/accepts_edit' => fn (array $in) => Placeholders::acceptsEdit($in['source'] ?? '', $in['edited'] ?? ''),
+            'placeholders/tokens' => fn (array $in) => Placeholders::tokens($in['text'] ?? ''),
+            'placeholders/invented' => fn (array $in) => Placeholders::invented($in['source'] ?? '', $in['translation'] ?? null),
+            'placeholders/tally' => fn (array $in) => Placeholders::tally($in['text'] ?? ''),
         ];
     }
 

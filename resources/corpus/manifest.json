@@ -5,7 +5,11 @@
     "site": {
       "sync": ["content_hash"],
       "settings": ["all", "json_key", "section_of"],
-      "merge": ["priority_of"]
+      "merge": ["priority_of"],
+      "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
+    },
+    "editor": {
+      "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
     }
   }
 }
