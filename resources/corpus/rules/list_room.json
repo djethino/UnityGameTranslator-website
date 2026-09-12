@@ -6,7 +6,8 @@
     "whole": { "in": { "rows": "int", "row_space": "number", "chrome": "number" }, "out": "number: everything it holds, chrome included" },
     "least": { "in": { "rows": "int", "row_space": "number", "chrome": "number" }, "out": "number: the smallest box still worth showing" },
     "least_measured": { "in": { "whole": "number", "rows": "int", "row_space": "number" }, "out": "number: the same floor, for a caller that measured the whole instead of adding it up" },
-    "least_surface": { "in": { "rows": "int[]", "row_space": "number", "chrome": "number", "around": "number" }, "out": "number: the minimum height the surface holding them must declare" }
+    "least_surface": { "in": { "rows": "int[]", "row_space": "number", "chrome": "number", "around": "number" }, "out": "number: the minimum height the surface holding them must declare" },
+    "share": { "in": { "rows": "int[]", "row_space": "number", "chrome": "number", "available": "number", "of": "int" }, "out": "number: the height list `of` is given, for a layout that cannot be told a ceiling" }
   },
   "cases": [
     { "id": "list_room/whole/rows-and-chrome", "op": "whole",
@@ -41,6 +42,28 @@
       "why": "the window could be shrunk past both floors, so the second list went under the docked bar and covered the Close button" },
     { "id": "list_room/least_surface/one-list", "op": "least_surface",
       "in": { "rows": [1], "row_space": 56, "chrome": 90, "around": 200 }, "out": 346,
-      "why": "a list shorter than the floor costs only what it holds, so a screen is not made to reserve room for rows that do not exist" }
+      "why": "a list shorter than the floor costs only what it holds, so a screen is not made to reserve room for rows that do not exist" },
+
+    { "id": "list_room/share/room-for-both-short", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 900, "of": 0 }, "out": 258,
+      "why": "when everything fits, each stops at its last row: a list given more than it holds draws a gap" },
+    { "id": "list_room/share/room-for-both-long", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 900, "of": 1 }, "out": 538,
+      "why": "and the 62 pixels nobody took stay outside both — they go to the spacer below them" },
+    { "id": "list_room/share/short-one-fits-in-an-equal-part", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 600, "of": 0 }, "out": 258,
+      "why": "🔴 an EQUAL part, not a proportional one: judged proportionally the short list is refused its content BECAUSE it is short, and both lists end up scrolling" },
+    { "id": "list_room/share/and-leaves-the-rest-to-the-long-one", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 600, "of": 1 }, "out": 342,
+      "why": "the room the short one did not need has somewhere useful to go" },
+    { "id": "list_room/share/a-squeezed-list-keeps-its-floor", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 450, "of": 0 }, "out": 202,
+      "why": "proportionally it would get 146 — a heading over nothing, which reads as a defect rather than as a small window" },
+    { "id": "list_room/share/and-what-it-gave-up-is-shared-again", "op": "share",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "available": 450, "of": 1 }, "out": 248,
+      "why": "🔴 without this pass the floors push the total past the room there was, and the screen overflows while claiming to fit" },
+    { "id": "list_room/share/alone-takes-the-surface", "op": "share",
+      "in": { "rows": [3], "row_space": 56, "chrome": 90, "available": 900, "of": 0 }, "out": 900,
+      "why": "nobody to leave it to, and a window enlarged to show more that then draws small does nothing" }
   ]
 }
