@@ -1,0 +1,46 @@
+{
+  "rule": "list_room",
+  "classes": ["ListRooms"],
+  "note": "What a scrolling list states about itself so the layout, and not us, divides the height. Three shapes were tried in each product and each patched the one before: a height written in the panel, a share worked out in proportion to the rows, then that share computed from an ESTIMATE of the available room — settled once, at draw time, inside layout engines that know the real sizes and re-run on every resize. A list now says its whole content (a ceiling, never a wish), the least it can be squeezed to, and nothing else; the surface says what those floors cost it, which is the minimum size it must refuse to go below.",
+  "operations": {
+    "whole": { "in": { "rows": "int", "row_space": "number", "chrome": "number" }, "out": "number: everything it holds, chrome included" },
+    "least": { "in": { "rows": "int", "row_space": "number", "chrome": "number" }, "out": "number: the smallest box still worth showing" },
+    "least_measured": { "in": { "whole": "number", "rows": "int", "row_space": "number" }, "out": "number: the same floor, for a caller that measured the whole instead of adding it up" },
+    "least_surface": { "in": { "rows": "int[]", "row_space": "number", "chrome": "number", "around": "number" }, "out": "number: the minimum height the surface holding them must declare" }
+  },
+  "cases": [
+    { "id": "list_room/whole/rows-and-chrome", "op": "whole",
+      "in": { "rows": 3, "row_space": 56, "chrome": 90 }, "out": 258,
+      "why": "a ceiling: a list handed more than it holds draws a gap under its last row while the list beside it is still scrolling" },
+    { "id": "list_room/whole/empty-asks-for-its-chrome", "op": "whole",
+      "in": { "rows": 0, "row_space": 56, "chrome": 90 }, "out": 90,
+      "why": "a list being refilled holds nothing for a frame, and an empty one is a sentence rather than a scroll area" },
+
+    { "id": "list_room/least/two-rows-and-the-chrome", "op": "least",
+      "in": { "rows": 3, "row_space": 56, "chrome": 90 }, "out": 202,
+      "why": "one row shows that a list exists, two show that it is a list — and a floor counted in rows alone did not cover the heading" },
+    { "id": "list_room/least/never-above-its-own-content", "op": "least",
+      "in": { "rows": 1, "row_space": 56, "chrome": 90 }, "out": 146,
+      "why": "a floor larger than what the list holds is the gap under the last row, arrived at from the other side" },
+    { "id": "list_room/least/a-long-list-falls-to-the-same-floor", "op": "least",
+      "in": { "rows": 8, "row_space": 56, "chrome": 90 }, "out": 202,
+      "why": "how far a list may be squeezed does not depend on how much it holds; who gets cut first does, and that is what the whole says" },
+
+    { "id": "list_room/least_measured/gives-up-the-rows-past-the-floor", "op": "least_measured",
+      "in": { "whole": 258, "rows": 3, "row_space": 56 }, "out": 202,
+      "why": "a measured whole answers the same floor as a declared one — the chrome is whatever it turned out to be, and is never given up" },
+    { "id": "list_room/least_measured/a-short-list-gives-up-nothing", "op": "least_measured",
+      "in": { "whole": 146, "rows": 1, "row_space": 56 }, "out": 146,
+      "why": "a list already shorter than the floor is at its floor; taking a row off it would be taking the list" },
+    { "id": "list_room/least_measured/two-cards-with-unequal-chrome", "op": "least_measured",
+      "in": { "whole": 618, "rows": 8, "row_space": 56 }, "out": 282,
+      "why": "🔴 the reason this exists: the two cards of one window differ by thirty pixels of heading, so one declared figure for both cut the taller list short or padded the shorter one" },
+
+    { "id": "list_room/least_surface/two-lists-and-what-surrounds-them", "op": "least_surface",
+      "in": { "rows": [3, 8], "row_space": 56, "chrome": 90, "around": 200 }, "out": 604,
+      "why": "the window could be shrunk past both floors, so the second list went under the docked bar and covered the Close button" },
+    { "id": "list_room/least_surface/one-list", "op": "least_surface",
+      "in": { "rows": [1], "row_space": 56, "chrome": 90, "around": 200 }, "out": 346,
+      "why": "a list shorter than the floor costs only what it holds, so a screen is not made to reserve room for rows that do not exist" }
+  ]
+}

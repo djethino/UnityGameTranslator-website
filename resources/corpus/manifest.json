@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give"],
+  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give", "list_room"],
   "sides": {
     "site": {
       "sync": ["content_hash"],
