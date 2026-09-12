@@ -1,0 +1,46 @@
+{
+  "rule": "edge_give",
+  "classes": ["EdgeGive"],
+  "note": "The give at the end of a scroll. Stated as LIMITS rather than positions, because it is physics in floating point: a port in another language is right and writes different decimals. Every bound here is a rule somebody reported in words — the edge bouncing once per notch, then trembling, then juddering on uneven frames — and each cost a round trip to find. The site runs a hand-written copy of this model in rubber.js; this file is what keeps the two from drifting apart in silence.",
+  "operations": {
+    "replay": {
+      "in": {
+        "gaps": "int[]: frames between two notches, walked in order and repeated",
+        "frame": "number: how long one frame lasts",
+        "frames": "number[]: an uneven clock, instead of frame",
+        "notches": "int: how many notches to turn",
+        "warmup": "int: notches ignored before measuring — the opening climb is not a state",
+        "settle": "bool: let go at the end and count the frames home"
+      },
+      "out": "worst_fall, band, jolt (pixels), crossings, frames_home, at_rest"
+    }
+  },
+  "cases": [
+    { "id": "edge_give/replay/steady-wheel-holds-the-edge", "op": "replay",
+      "in": { "gaps": [3], "frame": 0.0166666667, "notches": 40, "warmup": 12, "settle": false },
+      "out": { "band": { "at_most": 2 } },
+      "why": "a wheel turned steadily holds one edge open: the band is what says it is HELD rather than bouncing — the shape this replaced swung the full height on every notch, so this reading would have been 0 to 8" },
+
+    { "id": "edge_give/replay/uneven-wheel-does-not-saw", "op": "replay",
+      "in": { "gaps": [2, 1, 3, 2, 1, 2, 4, 1, 2, 3, 1, 2, 2, 3, 1, 2, 1, 3, 2, 2],
+              "frame": 0.0166666667, "notches": 20, "warmup": 4, "settle": false },
+      "out": { "worst_fall": { "at_most": 1.6 } },
+      "why": "a real hand does not deliver a notch every N frames on the dot. If pushing and springing take turns, the edge climbs on the frames a notch lands and falls on the ones none does — measured at 6.9px on an edge that only opens 8, and reported as 'it still trembles'. A fifth of a notch is under a pixel and a half: a held edge breathing, not a shake" },
+
+    { "id": "edge_give/replay/uneven-frames-do-not-judder", "op": "replay",
+      "in": { "gaps": [3], "frames": [0.012, 0.020, 0.014, 0.018, 0.011, 0.023, 0.016, 0.013, 0.021, 0.015],
+              "notches": 40, "warmup": 12, "settle": false },
+      "out": { "jolt": { "at_most": 0.4 } },
+      "why": "frames do not arrive evenly — a window hands back 12ms, then 20, then 14, which is scheduling and not frame rate. A spring solved on those steps moves by an uneven amount each time, and what the eye integrates is the sequence of positions it is SHOWN, on the screen's own even beat. Reported as 'it still trembles a little, very fast'" },
+
+    { "id": "edge_give/replay/comes-home-without-overshooting", "op": "replay",
+      "in": { "gaps": [3], "frame": 0.0166666667, "notches": 4, "warmup": 0, "settle": true },
+      "out": { "crossings": 0, "at_rest": true, "frames_home": { "at_most": 48 } },
+      "why": "critically damped on purpose: a wobble reads as a bug, a single soft return as a material. And it must arrive — a spring that cannot settle keeps a frame callback alive for the life of the window. Inside a second (48 frames at 60Hz) is a ceiling, not a target: the edge is meant to read as damped, the run-out of a free-spinning wheel" },
+
+    { "id": "edge_give/replay/a-stalled-window-does-not-break-it", "op": "replay",
+      "in": { "gaps": [1], "frames": [4.0], "notches": 3, "warmup": 0, "settle": true },
+      "out": { "at_rest": true, "worst_fall": { "at_most": 22 } },
+      "why": "a window that was not drawing — dragged, occluded, the machine asleep — hands back a step of seconds. The integrator is explicit in the stiffness term, so an unclamped step of that size does not merely look wrong, it returns NaN, and a NaN position takes the panel with it" }
+  ]
+}
