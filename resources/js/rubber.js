@@ -67,6 +67,31 @@ const GAIN = 0.18;
  */
 const OMEGA = 30;
 
+/**
+ * 🔴 How fast what is DRAWN follows where the wheel asked the edge to be — and this is the whole of
+ * the smoothness.
+ *
+ * A wheel is discrete and a spring is continuous, so the asked-for edge necessarily climbs on the
+ * frames a notch lands and falls on the frames none does. Measured on the shared model: a sawtooth
+ * of **6.9px on an edge that only opens 8**, i.e. the edge running almost all the way home and back
+ * between two notches. Every position in it is correct, which is why it survived as "it still
+ * trembles, less" long after the bouncing was fixed — no single regime can fix it, because the two
+ * behaviours are both right and they take turns.
+ *
+ * Drawing through a second critically damped spring makes the drawn edge a low-pass filter of the
+ * asked-for one: at this stiffness a sawtooth arriving twenty times a second comes through at about
+ * a hundredth of its size, while a real return — which is slow — passes untouched. Same measurement
+ * after: 0.4px.
+ *
+ * ⚠ Softer than OMEGA on purpose: it has to sit well below the rate a hand turns a wheel, and
+ * stiffening it back up is exactly how the tremble returns. It costs about 190ms on the way home,
+ * which is what buys the rest.
+ *
+ * ⚠ The Manager runs this same model from `EdgeGive` (manager/…/Core/Interaction), held by its own
+ * cases. The two are meant to feel the same — see analyse/deroulants-manager.md.
+ */
+const DRAW_OMEGA = 16;
+
 /** Largest ω·h a substep may carry. Well under the stability limit, so a stalled tab coming back
  *  cannot hand the spring a step it cannot solve. */
 const MAX_STEP = 0.35;
@@ -75,19 +100,26 @@ const MAX_STEP = 0.35;
 const SETTLED = 0.2;
 
 /**
- * 🔴 One state, and it is the PIXELS.
+ * 🔴 Two states, and the distinction is the whole design: where the wheel ASKS the edge to be, and
+ * what is DRAWN. The second follows the first through its own spring — see DRAW_OMEGA.
  *
- * Two earlier shapes were wrong and the simulation said so before the browser could. Holding both an
- * accumulated push and a position let the spring pull one to zero while the other still held the
- * page open, so pushing again mid-return snapped it shut and reopened it. Keeping only the push and
- * deriving the pixels fixed that and broke the feel instead: the spring then worked in a space where
- * a hard flick is worth thousands, so the page hung at full stretch while the number came down, and
- * took most of a second to close.
+ * ⚠ It was one state, the pixels, and that is what trembled. The wheel wrote the drawn position
+ * directly, so the drawn position changed regime on every notch — pushed out on the frames an event
+ * landed, pulled home on the frames none did. Both correct; the alternation is the tremble.
  *
- * The resistance lives in the PUSH instead — each notch is worth less the further out you already
- * are — so the spring can act directly on what the eye is watching.
+ * ⚠ And the two earlier shapes before that are still refused by this one, so do not go back to
+ * either. Holding an accumulated push AND a position let the spring pull one to zero while the other
+ * still held the page open, so pushing again mid-return snapped it shut and reopened it. Keeping
+ * only the push and deriving the pixels broke the feel instead: the spring then worked in a space
+ * where a hard flick is worth thousands, so the page hung at full stretch while the number came down.
+ *
+ * What makes THIS pair work where that pair did not: both of these are in pixels and the second is a
+ * filter of the first, rather than two different quantities each with its own idea of the edge. The
+ * resistance lives in the PUSH — each notch is worth less the further out it already is.
  */
-let y = 0;              // pixels past the edge
+let want = 0;           // where the wheel has asked the edge to be
+let wantVelocity = 0;
+let y = 0;              // pixels past the edge, as DRAWN — a filtered copy of `want`
 let velocity = 0;
 let movers = [];
 let frame = 0;
@@ -105,8 +137,21 @@ const doc = () => document.scrollingElement || document.documentElement;
  * never reaches it.
  */
 function give() {
-    const left = 1 - Math.abs(y) / MAX_PULL;
+    const left = 1 - Math.abs(want) / MAX_PULL;
     return left > 0 ? left * left : 0;
+}
+
+/** One critically damped step toward `target`, substepped so a long frame cannot diverge. */
+function spring(position, speed, target, omega, dt) {
+    const steps = Math.min(8, Math.ceil((omega * dt) / MAX_STEP) || 1);
+    const h = dt / steps;
+
+    for (let i = 0; i < steps; i++) {
+        speed += (-omega * omega * (position - target) - 2 * omega * speed) * h;
+        position += speed * h;
+    }
+
+    return [position, speed];
 }
 
 /**
@@ -136,6 +181,8 @@ function apply() {
 }
 
 function stop() {
+    want = 0;
+    wantVelocity = 0;
     velocity = 0;
     y = 0;
     pushed = false;
@@ -164,26 +211,27 @@ function tick(now) {
      * notched wheel leaves gaps far longer than a frame, so each notch returns at once, with nothing
      * to wait for. Both complaints answered by the same line, and no number to get wrong.
      */
-    if (pushed) {
-        pushed = false;
-        velocity = 0;   // being carried, not travelling: the release starts from rest
-        last = now;
-        apply();
-        return;
-    }
-
     const dt = Math.min((now - last) / 1000, 1 / 30);
     last = now;
 
-    // Critically damped, semi-implicit, substepped: velocity first, then position.
-    const steps = Math.min(8, Math.ceil((OMEGA * dt) / MAX_STEP) || 1);
-    const h = dt / steps;
-    for (let i = 0; i < steps; i++) {
-        velocity += (-OMEGA * OMEGA * y - 2 * OMEGA * velocity) * h;
-        y += velocity * h;
+    // ── where the wheel asks the edge to be ─────────────────────────────────────────────────────
+    if (pushed) {
+        pushed = false;
+        wantVelocity = 0;   // being carried, not travelling: the release starts from rest
+    } else {
+        [want, wantVelocity] = spring(want, wantVelocity, 0, OMEGA, dt);
+        if (Math.abs(want) < SETTLED && Math.abs(wantVelocity) < SETTLED * OMEGA) {
+            want = 0;
+            wantVelocity = 0;
+        }
     }
 
-    if (Math.abs(y) < SETTLED && Math.abs(velocity) < SETTLED * OMEGA) {
+    // ── and what is actually drawn ──────────────────────────────────────────────────────────────
+    // Every frame, whatever the wheel is doing. That is what makes the drawn edge a filter of the
+    // asked-for one rather than a copy of it — see DRAW_OMEGA.
+    [y, velocity] = spring(y, velocity, want, DRAW_OMEGA, dt);
+
+    if (want === 0 && Math.abs(y) < SETTLED && Math.abs(velocity) < SETTLED * DRAW_OMEGA) {
         cancelAnimationFrame(frame);
         stop();
         return;
@@ -239,8 +287,8 @@ function onWheel(event) {
     // deltas in the hundreds, and 500 × 0.18 is ninety pixels through a curve that was supposed to
     // stop at twenty-six. That is the gap that was reported, and the jitter with it — every big
     // event overshot and the spring yanked it back.
-    const next = y - dy * px * GAIN * give();
-    y = Math.max(-MAX_PULL, Math.min(MAX_PULL, next));
+    const next = want - dy * px * GAIN * give();
+    want = Math.max(-MAX_PULL, Math.min(MAX_PULL, next));
     pushed = true;
 
     // ⚠ Not drawn here. A wheel spun freely fires many times between two frames, and writing a
