@@ -84,13 +84,18 @@ const OMEGA = 30;
  * after: 0.4px.
  *
  * ⚠ Softer than OMEGA on purpose: it has to sit well below the rate a hand turns a wheel, and
- * stiffening it back up is exactly how the tremble returns. It costs about 190ms on the way home,
- * which is what buys the rest.
+ * stiffening it back up is exactly how the tremble returns.
+ *
+ * 🔴 **Softened again on 2026-09-12, and the reference is a free-spinning wheel.** A flick of an
+ * unratcheted wheel has a velocity and a long, smooth run-out, and the edge should read as DAMPED
+ * rather than as sprung. Softer buys that, and buys the last of the tremble with it: measured on the
+ * shared model, the worst fall under an uneven wheel went to 0.0px and the per-frame jolt from 0.20
+ * to 0.06. It costs the return, which is past half a second — that is the trade, made on purpose.
  *
  * ⚠ The Manager runs this same model from `EdgeGive` (manager/…/Core/Interaction), held by its own
  * cases. The two are meant to feel the same — see analyse/deroulants-manager.md.
  */
-const DRAW_OMEGA = 16;
+const DRAW_OMEGA = 10;
 
 /**
  * How much of a new frame time is believed at once.
