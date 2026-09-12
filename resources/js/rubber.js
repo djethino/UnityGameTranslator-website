@@ -92,6 +92,21 @@ const OMEGA = 30;
  */
 const DRAW_OMEGA = 16;
 
+/**
+ * How much of a new frame time is believed at once.
+ *
+ * 🔴 **Frames are not even, and integrating on uneven steps is a shake of its own.** A browser hands
+ * back 12ms, then 20, then 14 — scheduling, not frame rate. A spring solved on those steps moves by
+ * an uneven amount each time, and what the eye integrates is the sequence of positions it is SHOWN,
+ * on the screen's own even beat. So the step between two drawn positions is what must be even, and
+ * dividing by the callback's own jitter would be measuring the clock rather than the motion.
+ *
+ * ⚠ Smoothed, not clamped to what arrived: clamping puts the jitter straight back. The simulated
+ * clock drifts a little from the wall, which is invisible over the 300ms this ever runs for. A real
+ * change of cadence (120Hz to 60Hz, a tab moving screens) is followed in about eight frames.
+ */
+const CLOCK_BLEND = 0.2;
+
 /** Largest ω·h a substep may carry. Well under the stability limit, so a stalled tab coming back
  *  cannot hand the spring a step it cannot solve. */
 const MAX_STEP = 0.35;
@@ -119,6 +134,7 @@ const SETTLED = 0.2;
  */
 let want = 0;           // where the wheel has asked the edge to be
 let wantVelocity = 0;
+let clock = 0;          // the smoothed frame time the springs are solved on — see CLOCK_BLEND
 let y = 0;              // pixels past the edge, as DRAWN — a filtered copy of `want`
 let velocity = 0;
 let movers = [];
@@ -185,6 +201,7 @@ function stop() {
     wantVelocity = 0;
     velocity = 0;
     y = 0;
+    clock = 0;
     pushed = false;
     // Handed back completely: the offset is cleared rather than set to zero, so the stylesheet is
     // the only thing describing this element again.
@@ -211,8 +228,13 @@ function tick(now) {
      * notched wheel leaves gaps far longer than a frame, so each notch returns at once, with nothing
      * to wait for. Both complaints answered by the same line, and no number to get wrong.
      */
-    const dt = Math.min((now - last) / 1000, 1 / 30);
+    const arrived = Math.min((now - last) / 1000, 1 / 30);
     last = now;
+
+    // The step the springs are actually solved on — see CLOCK_BLEND. The first frame has nothing to
+    // average with and is believed as it stands.
+    clock = clock === 0 ? arrived : clock + (arrived - clock) * CLOCK_BLEND;
+    const dt = clock;
 
     // ── where the wheel asks the edge to be ─────────────────────────────────────────────────────
     if (pushed) {
