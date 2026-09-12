@@ -1,0 +1,17 @@
+{
+  "$comment": "The confirmation dialog — the first screen written in data (2026-09-12). The code writes three slots at show time (title, message, verb) and decides one thing, the verb's tone (Danger for a destructive act); the document decides everything else.",
+  "name": "Confirm",
+  "size": { "width": 400, "height": 200, "minWidth": 400, "minHeight": 150 },
+  "chrome": { "persist": false, "cardWidth": 360 },
+  "body": [
+    { "kind": "card", "name": "ConfirmCard", "width": 360, "children": [
+      { "kind": "label", "name": "Title", "text": { "bind": "title" }, "role": "Title" },
+      { "kind": "spacer", "name": "TitleGap", "height": 10 },
+      { "kind": "label", "name": "Message", "text": { "bind": "message" }, "role": "Description", "minHeight": "MultiLineSmall" }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "tone": "Secondary", "act": "cancel" },
+    { "kind": "button", "name": "ConfirmBtn", "text": { "bind": "verb" }, "tone": "Primary", "act": "confirm" }
+  ]
+}

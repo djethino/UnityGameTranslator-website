@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ugt:spec:screen",
+  "title": "A screen of the mod, described in data",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "size", "body", "footer"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "name": { "type": "string", "minLength": 1, "description": "Stable identity: the key the window's position and size are remembered under." },
+    "size": {
+      "type": "object", "additionalProperties": false, "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 100 },
+        "height": { "type": "integer", "minimum": 50 },
+        "minWidth": { "type": "integer", "minimum": 100 },
+        "minHeight": { "type": "integer", "minimum": 50 }
+      }
+    },
+    "chrome": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "backdrop": { "type": "boolean", "default": true, "description": "Darken the game behind the window." },
+        "persist": { "type": "boolean", "default": true, "description": "Remember position and size under `name`." },
+        "cardWidth": { "type": "integer", "minimum": 100, "description": "The width the body's cards are laid out for; the window's width minus its margins when absent." }
+      }
+    },
+    "body": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The scrolling part." },
+    "footer": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The fixed row of verbs at the bottom." }
+  },
+  "$defs": {
+    "text": {
+      "description": "Either the words themselves (interface text, translated by the mod's own policy) or a `bind`: a slot the code writes at show time, named by what goes there.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": false, "required": ["bind"], "properties": { "bind": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" } } }
+      ]
+    },
+    "minHeight": {
+      "description": "A named height of the theme, or pixels at the reference resolution.",
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "InputHeight", "MultiLineSmall"] } ]
+    },
+    "node": {
+      "type": "object",
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button"] },
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": { "width": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": { "spacing": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "spacer" } } }, "then": { "required": ["height"], "properties": { "height": { "type": "integer", "minimum": 0 } } } },
+        { "if": { "properties": { "kind": { "const": "label" } } }, "then": {
+            "required": ["text"],
+            "properties": {
+              "text": { "$ref": "#/$defs/text" },
+              "role": { "type": "string", "enum": ["Title", "SectionTitle", "Body", "Description", "Info"], "default": "Body" },
+              "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error"] },
+              "centred": { "type": "boolean" },
+              "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is Dynamic whatever this says: it is written at show time." },
+              "minHeight": { "$ref": "#/$defs/minHeight" }
+            } } },
+        { "if": { "properties": { "kind": { "const": "button" } } }, "then": {
+            "required": ["text", "act"],
+            "properties": {
+              "text": { "$ref": "#/$defs/text" },
+              "tone": { "type": "string", "enum": ["Primary", "Secondary", "Success", "Warning", "Danger", "Link"], "default": "Secondary" },
+              "size": { "type": "string", "enum": ["Normal", "Compact"], "default": "Normal" },
+              "minWidth": { "type": "integer" },
+              "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"] },
+              "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when pressed. Every act named must be handled — a check says so." }
+            } } }
+      ]
+    }
+  }
+}
