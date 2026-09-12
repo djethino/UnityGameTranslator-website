@@ -436,7 +436,16 @@ export function createEngine() {
             // presents the same face for a whole pattern. `bob.twist` ADDS to it rather than
             // replacing it, so a pattern that wants a rotation gets one without having to
             // reproduce the idle behaviour it is built on.
-            roll[c] += IDLE_SPIN * wall * bob.roll;
+            // 🔴 On `driftDt`, never on `wall`, and this is the whole of the scroll coupling the eye
+            // can actually see. The angle used to be `time * IDLE_SPIN + c`, read off the clock that
+            // already carries the surge — so `d(angle)` was `IDLE_SPIN * driftDt`, and this line is
+            // that same derivative. Accumulating on wall time instead cut the roll off from the
+            // surge, from the visitor's chosen speed and from Calm all at once, silently: the private
+            // drift still gets the warped clock, but only inside a sine whose amplitude is a
+            // hundredth, and the spring that follows it integrates on real time, so speeding that
+            // sine up damps it rather than showing it. Reported as "scrolling no longer does
+            // anything to the blobs".
+            roll[c] += IDLE_SPIN * driftDt * bob.roll;
             cloud.update(bob, tune.radius * bob.scale, wall, time, roll[c] + bob.twist,
                          bob.shearX, bob.shearY, perCloud, bob.yaw, bob.grip,
                          magnetism.at(c, hand, aspect, bob, tune.radius * bob.scale));
