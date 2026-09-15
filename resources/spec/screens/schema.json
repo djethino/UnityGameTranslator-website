@@ -39,7 +39,7 @@
     },
     "minHeight": {
       "description": "A named height of the theme, or pixels at the reference resolution.",
-      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall"] } ]
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall", "CodeDisplayHeight"] } ]
     },
     "spacing": {
       "description": "A named spacing of the theme, or pixels.",
@@ -54,13 +54,22 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button"] },
-        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." }
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status"] },
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
+        "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": { "width": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for)." } },
-        { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": {
+              "spacing": { "$ref": "#/$defs/spacing" },
+              "pad": { "$ref": "#/$defs/spacing", "description": "Room inside the row, on all four sides." },
+              "placement": { "type": "string", "enum": ["TopLeft", "TopCenter", "TopRight", "MiddleLeft", "MiddleCenter", "MiddleRight", "BottomLeft", "BottomCenter", "BottomRight"] },
+              "surface": { "type": "string", "enum": ["None", "Card", "Elevated", "Item", "Trough", "Input"], "description": "The background the theme paints under it." },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] },
+              "minHeight": { "$ref": "#/$defs/minHeight" },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "status" } } }, "then": { "properties": { "centred": { "type": "boolean", "default": true } }, "description": "A line the code writes with a tone (Say/Show/Clear) — collapsed while it has nothing to say." } },
         { "if": { "properties": { "kind": { "const": "spacer" } } }, "then": { "required": ["height"], "properties": { "height": { "type": "integer", "minimum": 0 } } } },
         { "if": { "properties": { "kind": { "const": "label" } } }, "then": {
             "required": ["text"],
@@ -83,6 +92,7 @@
               "tone": { "type": "string", "enum": ["Primary", "Secondary", "Success", "Warning", "Danger", "Link"], "default": "Secondary" },
               "size": { "type": "string", "enum": ["Normal", "Compact"], "default": "Normal" },
               "minWidth": { "type": "integer" },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"] },
               "scope": { "$ref": "#/$defs/scope" },
               "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when pressed. Every act named must be handled — a check says so." }

@@ -1,0 +1,24 @@
+{
+  "$comment": "Signing in by device flow: ask for a code, show it, open the website, wait on the stream. The document holds every piece, including the ones that start hidden (the code row, the Open Website button) and the one that hides later (Start Login); which is shown when is the flow's business, in code. The status line is written by the code with a tone as the flow advances.",
+  "name": "Login",
+  "size": { "width": 420, "height": 350, "minWidth": 380, "minHeight": 200 },
+  "chrome": { "cardWidth": 380 },
+  "body": [
+    { "kind": "card", "name": "LoginCard", "width": 380, "children": [
+      { "kind": "label", "name": "Title", "text": "Connect Account", "role": "Title" },
+      { "kind": "spacer", "name": "TitleGap", "height": 10 },
+      { "kind": "label", "name": "Instructions", "text": { "bind": "instructions" }, "role": "Description", "minHeight": "MultiLineSmall" },
+      { "kind": "spacer", "name": "InstructionsGap", "height": 10 },
+      { "kind": "row", "name": "CodeRow", "visible": false, "spacing": 8, "pad": "SmallSpacing", "placement": "MiddleCenter", "surface": "Trough", "fill": "Content", "minHeight": "CodeDisplayHeight", "children": [
+        { "kind": "label", "name": "CodeLabel", "text": { "bind": "code" }, "role": "Code", "policy": "Excluded" },
+        { "kind": "button", "name": "CopyCodeBtn", "text": "Copy", "tone": "Secondary", "minWidth": 60, "policy": "Dynamic", "act": "copy" }
+      ] },
+      { "kind": "button", "name": "OpenWebsiteBtn", "visible": false, "text": "Open Website", "tone": "Primary", "minWidth": 200, "fill": "Stretch", "act": "openWebsite" },
+      { "kind": "status", "name": "Status" },
+      { "kind": "button", "name": "StartLoginBtn", "text": "Start Login", "tone": "Primary", "minWidth": 200, "fill": "Stretch", "act": "start" }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "tone": "Secondary", "act": "cancel" }
+  ]
+}
