@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ugt:spec:screen",
   "title": "A screen of the mod, described in data",
-  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together.",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen).",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "size", "body", "footer"],
@@ -56,12 +56,35 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
-        "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." }
+        "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
+        "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": { "width": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "section" } } }, "then": { "properties": { "minHeight": { "$ref": "#/$defs/minHeight" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A section inside a card: no edge, its own padding." } },
+        { "if": { "properties": { "kind": { "const": "field" } } }, "then": { "properties": {
+              "placeholder": { "type": "string", "description": "Shown while the field is empty." },
+              "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
+              "minHeight": { "$ref": "#/$defs/minHeight" },
+              "minWidth": { "type": "integer" },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] } },
+            "description": "A text field the code reads and writes by name. What is typed is the code's; the field holds nothing else." } },
+        { "if": { "properties": { "kind": { "const": "dropdown" } } }, "then": {
+            "required": ["options", "act"],
+            "properties": {
+              "options": { "type": "string", "enum": ["languages"], "description": "Where the choices come from. Never a list written here: the languages are the catalogue's, the same list in every product." },
+              "width": { "type": "integer" },
+              "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when the choice changes." } } } },
+        { "if": { "properties": { "kind": { "const": "list" } } }, "then": { "properties": {
+              "minHeight": { "type": "integer", "minimum": 0 },
+              "preferredHeight": { "type": "integer", "minimum": 0 },
+              "fill": { "type": "boolean", "default": true, "description": "Takes the spare height as well; false for a list of a settled height." },
+              "spacing": { "type": "integer", "minimum": 0 },
+              "padding": { "type": "integer", "minimum": 0 },
+              "empty": { "type": "string", "description": "The sentence shown while the list holds no row." } },
+            "description": "A scrolling list whose rows the code builds at show time — a form, never a rule: how many rows and what they say is the code's." } },
         { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for)." } },
         { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": {
               "spacing": { "$ref": "#/$defs/spacing" },
@@ -82,6 +105,8 @@
               "centred": { "type": "boolean" },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is written at show time, so it is Dynamic — unless marked Excluded, for a slot that holds a count, a date or somebody's own words, written as they are." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
+              "minWidth": { "type": "integer", "description": "Room to align its words in — a label without one is stretched instead when aligned away from the left." },
+              "align": { "type": "string", "enum": ["TopLeft", "TopCenter", "TopRight", "MiddleLeft", "MiddleCenter", "MiddleRight", "BottomLeft", "BottomCenter", "BottomRight"] },
               "fill": { "type": "string", "enum": ["Content", "Stretch"], "description": "As wide as its words, or the rest of the row." },
               "autoHeight": { "type": "boolean", "description": "A paragraph that wraps grows to what it draws." },
               "italic": { "type": "boolean", "description": "Said only to override the role's own choice (a Hint is italic unless told otherwise)." },
@@ -92,7 +117,7 @@
             "properties": {
               "text": { "$ref": "#/$defs/text" },
               "tone": { "type": "string", "enum": ["Primary", "Secondary", "Success", "Warning", "Danger", "Link"], "default": "Secondary" },
-              "size": { "type": "string", "enum": ["Normal", "Compact"], "default": "Normal" },
+              "size": { "type": "string", "enum": ["Normal", "Compact", "Field"], "default": "Normal", "description": "Field: as tall as the text field it sits beside." },
               "minWidth": { "type": "integer" },
               "fill": { "type": "string", "enum": ["Content", "Stretch"] },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"] },
