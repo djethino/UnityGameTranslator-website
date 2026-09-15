@@ -39,7 +39,16 @@
     },
     "minHeight": {
       "description": "A named height of the theme, or pixels at the reference resolution.",
-      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "InputHeight", "MultiLineSmall"] } ]
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall"] } ]
+    },
+    "spacing": {
+      "description": "A named spacing of the theme, or pixels.",
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["SmallSpacing", "ElementSpacing"] } ]
+    },
+    "scope": {
+      "type": "object", "additionalProperties": false, "required": ["onThisMachine", "yourPublishedCopy"],
+      "description": "Where the verb writes once applied — the two facts EditScope.SideAfter turns into the mark beside the label (Local, Published, Both). Said as facts so that no product invents the mark.",
+      "properties": { "onThisMachine": { "type": "boolean" }, "yourPublishedCopy": { "type": "boolean" } }
     },
     "node": {
       "type": "object",
@@ -50,18 +59,22 @@
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": { "width": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
-        { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
-        { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": { "spacing": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for)." } },
+        { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "spacer" } } }, "then": { "required": ["height"], "properties": { "height": { "type": "integer", "minimum": 0 } } } },
         { "if": { "properties": { "kind": { "const": "label" } } }, "then": {
             "required": ["text"],
             "properties": {
               "text": { "$ref": "#/$defs/text" },
-              "role": { "type": "string", "enum": ["Title", "SectionTitle", "Body", "Description", "Info"], "default": "Body" },
+              "role": { "type": "string", "enum": ["Title", "SectionTitle", "Body", "Description", "Info", "Small", "Hint", "Caption", "Status", "Code"], "default": "Body" },
               "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error"] },
               "centred": { "type": "boolean" },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is Dynamic whatever this says: it is written at show time." },
-              "minHeight": { "$ref": "#/$defs/minHeight" }
+              "minHeight": { "$ref": "#/$defs/minHeight" },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"], "description": "As wide as its words, or the rest of the row." },
+              "autoHeight": { "type": "boolean", "description": "A paragraph that wraps grows to what it draws." },
+              "italic": { "type": "boolean", "description": "Said only to override the role's own choice (a Hint is italic unless told otherwise)." },
+              "bold": { "type": "boolean" }
             } } },
         { "if": { "properties": { "kind": { "const": "button" } } }, "then": {
             "required": ["text", "act"],
@@ -71,6 +84,7 @@
               "size": { "type": "string", "enum": ["Normal", "Compact"], "default": "Normal" },
               "minWidth": { "type": "integer" },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"] },
+              "scope": { "$ref": "#/$defs/scope" },
               "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when pressed. Every act named must be handled — a check says so." }
             } } }
       ]
