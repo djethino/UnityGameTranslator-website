@@ -1,5 +1,5 @@
 {
-  "$comment": "What a first publication needs settled before the upload: the game, confirmed from a search; the source language, the one question here; the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
+  "$comment": "What a first publication needs settled before the upload: the game, confirmed from a search; the source language, a question only until the file states it (strict source detection writes it with the first line); the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
   "name": "New Upload Setup",
   "size": { "width": 500, "height": 600, "minWidth": 500, "minHeight": 400 },
   "chrome": { "cardWidth": 460, "help": "Hover an element to see what it does" },
@@ -30,6 +30,7 @@
       { "kind": "label", "name": "SourceTitle", "text": "2. Source Language (original game language)", "role": "SectionTitle" },
       { "kind": "dropdown", "name": "Source", "options": "languages", "width": 200, "act": "sourceChanged",
         "help": "The language the game is written in. Pick the original text language, not your translation." },
+      { "kind": "label", "name": "SourceSettled", "text": "Settled: this file already holds lines from this language.", "role": "Hint", "visible": false },
       { "kind": "spacer", "name": "SourceGap", "height": 10 },
 
       { "kind": "label", "name": "TargetTitle", "text": "3. Target Language (your translation)", "role": "SectionTitle" },
