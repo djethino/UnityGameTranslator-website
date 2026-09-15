@@ -1,0 +1,22 @@
+{
+  "$comment": "This game's translation as it stood at earlier moments. The document holds the frame: what stays put above the lists (the title, the privacy note, the line saying what the translation holds now), the card the two blocks go into, the help bar and the Close verb. The two blocks — Your backups, Automatic backups — are built by the code into the `List` stack at show time: their rows come from the backups folder, and how the body's height is divided between their two scroll areas is a rule (ListRooms, measured off the laid-out body), which a document never carries. The same goes for the window's floor: it is what the two lists cost at two rows each, measured, so no minHeight is written here. The words the header shows are the socle's (Backups.ScreenTitle, Backups.PrivacyNote, Backups.NowLine), shared with the Manager's window, so they are written by the code rather than copied here.",
+  "name": "Backups",
+  "size": { "width": 640, "height": 620, "minWidth": 560 },
+  "chrome": { "cardWidth": 600, "help": "Hover an element to see what it does" },
+  "header": [
+    { "kind": "card", "name": "BackupsHead", "width": 600, "children": [
+      { "kind": "label", "name": "Title", "text": { "bind": "title" }, "role": "Title" },
+      { "kind": "label", "name": "Privacy", "text": { "bind": "privacy" }, "role": "Caption", "fill": "Stretch" },
+      { "kind": "spacer", "name": "PrivacyGap", "height": 6 },
+      { "kind": "label", "name": "Now", "text": { "bind": "now" }, "role": "Body", "policy": "Excluded", "fill": "Stretch", "bold": true }
+    ] }
+  ],
+  "body": [
+    { "kind": "card", "name": "BackupsCard", "width": 600, "children": [
+      { "kind": "stack", "name": "List", "spacing": 6 }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "CloseBtn", "text": "Close", "tone": "Secondary", "act": "close" }
+  ]
+}

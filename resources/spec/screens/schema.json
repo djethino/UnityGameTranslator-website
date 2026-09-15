@@ -23,9 +23,11 @@
       "properties": {
         "backdrop": { "type": "boolean", "default": true, "description": "Darken the game behind the window." },
         "persist": { "type": "boolean", "default": true, "description": "Remember position and size under `name`." },
-        "cardWidth": { "type": "integer", "minimum": 100, "description": "The width the body's cards are laid out for; the window's width minus its margins when absent." }
+        "cardWidth": { "type": "integer", "minimum": 100, "description": "The width the body's cards are laid out for; the window's width minus its margins when absent." },
+        "help": { "type": "string", "minLength": 1, "description": "The resting sentence of a help bar pinned above the footer, where the explanation of whichever control is hovered is shown. Present, the screen has the bar; absent, it has none. What each control says there is the code's." }
       }
     },
+    "header": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The fixed part between the title bar and the body: what must stay put while the body scrolls — a title, the state somebody reads before choosing a row. Absent for a screen whose body carries its own title." },
     "body": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The scrolling part." },
     "footer": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The fixed row of verbs at the bottom." }
   },
@@ -78,7 +80,7 @@
               "role": { "type": "string", "enum": ["Title", "SectionTitle", "Body", "Description", "Info", "Small", "Hint", "Caption", "Status", "Code"], "default": "Body" },
               "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error"] },
               "centred": { "type": "boolean" },
-              "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is Dynamic whatever this says: it is written at show time." },
+              "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is written at show time, so it is Dynamic — unless marked Excluded, for a slot that holds a count, a date or somebody's own words, written as they are." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "fill": { "type": "string", "enum": ["Content", "Stretch"], "description": "As wide as its words, or the rest of the row." },
               "autoHeight": { "type": "boolean", "description": "A paragraph that wraps grows to what it draws." },
