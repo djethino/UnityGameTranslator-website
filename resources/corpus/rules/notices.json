@@ -51,7 +51,7 @@
       "why": "🔴 the refusal is said before the click; a fork asks for neither the network nor an account and stays open precisely when the other door is shut" },
     { "id": "notices/sync/solo-work-offers-no-branch-and-says-why", "op": "sync",
       "in": { "lines": 40, "local_changes": 3, "exists": true, "is_owner": false, "uploader": "bob", "main_username": "alice", "accepts_branches": false, "signed_in": true, "has_local_changes": true },
-      "out": { "action": "ChooseBranchOrFork", "offers_branch": false, "wall": "@alice works alone on this one and does not take contributions. Your lines are safe: Fork keeps them and publishes them under your own name.", "fork_closed": null },
+      "out": { "action": "ChooseBranchOrFork", "offers_branch": false, "wall": "@alice works alone on this one and does not take contributions. Fork keeps your lines as your own version.", "fork_closed": null },
       "why": "absent rather than greyed: a lineage that refuses contributions is not a 'later', it is a road that does not exist — the wall says which one, in the socle's words" },
     { "id": "notices/sync/ones-own-unsent-settings", "op": "sync",
       "in": { "lines": 40, "exists": true, "is_owner": true, "role": "Main", "signed_in": true, "has_metadata_changes": true },
