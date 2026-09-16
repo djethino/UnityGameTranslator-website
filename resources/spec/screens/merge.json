@@ -1,0 +1,29 @@
+{
+  "name": "Merge Translations",
+  "size": { "width": 650, "height": 500, "minWidth": 650, "minHeight": 400 },
+  "chrome": { "help": "Hover a button to see what it does" },
+  "body": [
+    { "kind": "card", "name": "MergeCard", "stretch": true, "children": [
+      { "kind": "title", "name": "Title", "text": "Merge Conflicts", "scope": { "onThisMachine": true, "yourPublishedCopy": false } },
+      { "kind": "spacer", "name": "TitleGap", "height": 5 },
+      { "kind": "label", "name": "Explanation", "text": "Both you and the server made changes. Choose which version to keep for each conflict:", "role": "Small", "minHeight": "RowHeightMedium", "fill": "Stretch" },
+      { "kind": "spacer", "name": "ExplanationGap", "height": 3 },
+      { "kind": "label", "name": "Summary", "text": { "bind": "summary" }, "policy": "Excluded", "role": "Info", "minHeight": "RowHeightMedium", "fill": "Stretch" },
+      { "kind": "list", "name": "ConflictScroll", "minHeight": 240, "preferredHeight": 240, "spacing": 5 },
+      { "kind": "spacer", "name": "ListGap", "height": 10 },
+      { "kind": "row", "name": "BulkRow", "minHeight": "RowHeightXLarge", "placement": "MiddleCenter", "children": [
+        { "kind": "row", "name": "BulkChoiceHost", "fill": "Content" },
+        { "kind": "button", "name": "ApplyBtn", "text": "Apply Merge", "tone": "Primary", "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "apply",
+          "help": "Save the merged result: non-conflicting changes from both sides plus your choices above" }
+      ] }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "act": "cancel",
+      "help": "Close without changing anything — you can merge later" },
+    { "kind": "button", "name": "ReplaceBtn", "text": "Replace with Server", "tone": "Danger", "minWidth": 130, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "replace",
+      "help": "Throw away ALL your local changes and take the website's version as-is" },
+    { "kind": "button", "name": "ReviewBtn", "text": "Review on Website", "tone": "Link", "minWidth": 115, "scope": { "onThisMachine": false, "yourPublishedCopy": true }, "act": "review",
+      "help": "Open this merge in your browser: bigger screen, search, and line-by-line tools" }
+  ]
+}

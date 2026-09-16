@@ -1,0 +1,57 @@
+{
+  "name": "Element Inspector",
+  "size": { "width": 480, "height": 420, "minWidth": 420, "minHeight": 360 },
+  "chrome": { "cardWidth": 420, "help": "Hover an element to see what it does" },
+  "body": [
+    { "kind": "title", "name": "Title", "text": "Element Inspector", "policy": "Dynamic", "scope": { "onThisMachine": true, "yourPublishedCopy": false } },
+    { "kind": "spacer", "name": "TitleGap", "height": 5 },
+    { "kind": "card", "name": "InspectorCard", "stretch": true, "children": [
+      { "kind": "label", "name": "InstructionsLabel", "text": "Instructions", "role": "SectionTitle" },
+      { "kind": "label", "name": "InstructionsHint", "text": "Hover over any UI element to preview it. Click to select.", "role": "Hint" },
+      { "kind": "spacer", "name": "InstructionsGap", "height": 8 },
+      { "kind": "label", "name": "CameraLabel", "text": "Target", "role": "SectionTitle" },
+      { "kind": "dropdown", "name": "CameraTarget", "options": "code", "popupHeight": 150, "width": 400, "stretch": true, "act": "cameraChanged",
+        "help": "'UI Only' picks on-screen interface text. Choose a camera to pick objects in the game world instead." },
+      { "kind": "spacer", "name": "CameraGap", "height": 8 },
+      { "kind": "label", "name": "HoverSectionLabel", "text": "Hovered", "role": "SectionTitle" },
+      { "kind": "section", "name": "HoverBox", "children": [
+        { "kind": "label", "name": "HoverPathValue", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+      ] },
+      { "kind": "spacer", "name": "HoverGap", "height": 8 },
+      { "kind": "label", "name": "SelectedSectionLabel", "text": "Selected", "role": "SectionTitle" },
+      { "kind": "section", "name": "SelectedBox", "children": [
+        { "kind": "label", "name": "SelectedPathValue", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+      ] },
+      { "kind": "spacer", "name": "SelectedGap", "height": 8 },
+      { "kind": "label", "name": "SpriteInfo", "text": { "bind": "spriteInfo" }, "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
+      { "kind": "spacer", "name": "SpriteGap", "height": 4 },
+      { "kind": "label", "name": "ActionsLabel", "text": "Actions", "role": "SectionTitle" },
+      { "kind": "row", "name": "ExclusionActionRow", "spacing": 5, "minHeight": "ButtonHeight", "children": [
+        { "kind": "button", "name": "ExcludeThisBtn", "text": "Exclude This Element", "tone": "Primary", "fill": "Stretch", "act": "excludeThis",
+          "help": "Never translate this exact element (only this one)" },
+        { "kind": "button", "name": "ExcludePatternBtn", "text": "Exclude Pattern", "fill": "Stretch", "act": "excludePattern",
+          "help": "Never translate ANY element with this name, anywhere in the game (e.g. every chat line)" }
+      ] },
+      { "kind": "row", "name": "ImageActionRow", "spacing": 5, "minHeight": "ButtonHeight", "visible": false, "children": [
+        { "kind": "button", "name": "ExportOriginalBtn", "text": "Export Original", "tone": "Primary", "fill": "Stretch", "act": "exportOriginal",
+          "help": "Save the game's current image to disk as a template you can edit" },
+        { "kind": "button", "name": "MarkReplaceBtn", "text": "Mark for Replace", "fill": "Stretch", "act": "markReplace",
+          "help": "Register this image for replacement: drop your edited version in the images folder and it swaps in-game" }
+      ] },
+      { "kind": "stack", "name": "TextEditRow", "spacing": 4, "fillHeight": true, "visible": false, "children": [
+        { "kind": "label", "name": "TextEditCount", "text": { "bind": "textEditCount" }, "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+        { "kind": "list", "name": "TextEditScroll", "minHeight": 260, "preferredHeight": 260 }
+      ] },
+      { "kind": "row", "name": "ActionRow2", "spacing": 5, "minHeight": "ButtonHeight", "children": [
+        { "kind": "button", "name": "CancelBtn", "text": "Clear Selection", "fill": "Stretch", "act": "clearSelection",
+          "help": "Deselect the current element and keep inspecting. Nothing is changed." }
+      ] },
+      { "kind": "spacer", "name": "StatusGap", "height": 5 },
+      { "kind": "label", "name": "Status", "text": { "bind": "status" }, "role": "Small", "tone": "Plain", "minHeight": "RowHeightSmall" }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "StopBtn", "text": "Stop Inspecting", "tone": "Primary", "act": "stop",
+      "help": "Leave inspect mode and close this window. Element picking stops." }
+  ]
+}

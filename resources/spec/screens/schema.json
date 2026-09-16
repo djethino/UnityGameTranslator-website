@@ -43,7 +43,7 @@
     },
     "minHeight": {
       "description": "A named height of the theme, or pixels at the reference resolution.",
-      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightMedium", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall", "MultiLineMedium", "MultiLineLarge", "CodeDisplayHeight"] } ]
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightMedium", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall", "MultiLineMedium", "MultiLineLarge", "CodeDisplayHeight", "ButtonHeight", "ButtonRowHeight"] } ]
     },
     "spacing": {
       "description": "A named spacing of the theme, or pixels.",
@@ -103,13 +103,16 @@
               "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer" },
-              "fill": { "type": "string", "enum": ["Content", "Stretch"] } },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] },
+              "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "Asked for as the text changes; absent when the code only reads the field when it needs it." } },
             "description": "A text field the code reads and writes by name. What is typed is the code's; the field holds nothing else." } },
         { "if": { "properties": { "kind": { "const": "dropdown" } } }, "then": {
             "required": ["options", "act"],
             "properties": {
-              "options": { "type": "string", "enum": ["languages"], "description": "Where the choices come from. Never a list written here: the languages are the catalogue's, the same list in every product." },
+              "options": { "type": "string", "enum": ["languages", "code"], "description": "Where the choices come from. Never a list written here: the languages are the catalogue's, the same list in every product; `code` means the code sets the choices and the initial one at show time (a list read from the game, a server, a setting)." },
               "width": { "type": "integer" },
+              "stretch": { "type": "boolean", "default": false, "description": "Takes the width of its row instead of its own." },
+              "popupHeight": { "type": "integer", "minimum": 50, "description": "How tall the open list may be." },
               "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when the choice changes." } } } },
         { "if": { "properties": { "kind": { "const": "list" } } }, "then": { "properties": {
               "minHeight": { "type": "integer", "minimum": 0 },
@@ -149,9 +152,8 @@
               "policy": { "type": "string", "enum": ["UiText", "Dynamic", "Excluded"], "description": "Dynamic for a title the code rewrites (a mode announced in the title itself)." } },
             "description": "The screen's title with the three-position scope switch beside it — which copy this screen writes to. On every screen that shows translation lines, without exception; the panel base holds it for the window's resizes, which is why the builder asks the panel to make it." } },
         { "if": { "properties": { "kind": { "const": "checkbox" } } }, "then": {
-            "required": ["text"],
             "properties": {
-              "text": { "type": "string", "minLength": 1 },
+              "text": { "type": "string", "minLength": 1, "description": "Its words. Absent, a bare box whose words are elsewhere on its row — a title and a description beside it." },
               "initial": { "type": "boolean", "default": false },
               "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error", "Info", "Neutral"] },
               "fill": { "type": "string", "enum": ["Content", "Stretch"] },

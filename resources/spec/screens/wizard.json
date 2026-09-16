@@ -1,0 +1,213 @@
+{
+  "name": "Unity Game Translator - Setup",
+  "size": { "width": 520, "height": 500, "minWidth": 520, "minHeight": 400 },
+  "chrome": { "persist": false, "cardWidth": 420, "help": "Hover an element to see what it does" },
+  "body": [
+    { "kind": "stack", "name": "WelcomeStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "WelcomeCard", "children": [
+        { "kind": "label", "name": "WelcomeTitle", "text": "Welcome to Unity Game Translator!", "role": "Title", "policy": "Excluded" },
+        { "kind": "label", "name": "WelcomeDescription", "role": "Description", "minHeight": 140,
+          "text": "This mod automatically translates Unity games using AI.\n\nYou can either:\n• Download community translations from our website\n• Generate translations using AI (local or cloud)\n• Or both!" }
+      ] },
+      { "kind": "row", "name": "WelcomeButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "WelcomeNext", "text": "Get Started →", "tone": "Primary", "minWidth": 160, "act": "welcomeNext" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "OnlineModeStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "OnlineCard", "children": [
+        { "kind": "label", "name": "OnlineTitle", "text": "Online Mode", "role": "Title" },
+        { "kind": "label", "name": "OnlineDescription", "text": "Do you want to enable online features?", "role": "Description" },
+        { "kind": "spacer", "name": "OnlineGap", "height": 10 },
+        { "kind": "section", "name": "OnlineBox", "help": "The mod contacts our website to find translations for your games and tell you about updates. Nothing else is sent.", "children": [
+          { "kind": "row", "name": "OnlineRow", "minHeight": "RowHeightLarge", "children": [
+            { "kind": "checkbox", "name": "OnlineToggle", "act": "onlineChanged" },
+            { "kind": "label", "name": "OnlineTextLabel", "text": "Enable Online Mode", "bold": true, "fill": "Stretch" }
+          ] },
+          { "kind": "label", "name": "OnlineDesc", "text": "• Download community translations\n• Share your translations\n• Check for updates", "role": "Small", "tone": "Secondary", "minHeight": "MultiLineSmall" }
+        ] },
+        { "kind": "spacer", "name": "ChoiceGap", "height": 5 },
+        { "kind": "section", "name": "OfflineBox", "help": "The mod never talks to our website. You can still translate with a local AI. Changeable anytime in Mod Options.", "children": [
+          { "kind": "row", "name": "OfflineRow", "minHeight": "RowHeightLarge", "children": [
+            { "kind": "checkbox", "name": "OfflineToggle", "act": "offlineChanged" },
+            { "kind": "label", "name": "OfflineTextLabel", "text": "Stay Offline", "bold": true, "fill": "Stretch" }
+          ] },
+          { "kind": "label", "name": "OfflineDesc", "text": "• Use only local AI\n• No internet connection\n• Full privacy", "role": "Small", "tone": "Secondary", "minHeight": "MultiLineSmall" }
+        ] }
+      ] },
+      { "kind": "row", "name": "OnlineButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "OnlineBack", "text": "← Back", "act": "onlineBack" },
+        { "kind": "button", "name": "OnlineNext", "text": "Continue →", "tone": "Primary", "act": "onlineNext" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "HotkeyStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "HotkeyCard", "children": [
+        { "kind": "label", "name": "HotkeyTitle", "text": "Settings Hotkey", "role": "Title" },
+        { "kind": "label", "name": "HotkeyDescription", "text": "Choose a keyboard shortcut to open the translator menu", "role": "Description" },
+        { "kind": "spacer", "name": "HotkeyGapAbove", "height": 15 },
+        { "kind": "stack", "name": "HotkeyHost" },
+        { "kind": "spacer", "name": "HotkeyGapBelow", "height": 15 },
+        { "kind": "label", "name": "HotkeyLabel", "text": { "bind": "hotkey" }, "policy": "Excluded", "role": "SectionTitle", "tone": "Accent", "centred": true, "minHeight": "RowHeightXLarge" }
+      ] },
+      { "kind": "row", "name": "HotkeyButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "HotkeyBack", "text": "← Back", "act": "hotkeyBack" },
+        { "kind": "button", "name": "HotkeyNext", "text": "Continue →", "tone": "Primary", "act": "hotkeyNext" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "LanguageSelectionStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "LanguageCard", "children": [
+        { "kind": "label", "name": "LanguageTitle", "text": "Translation Language", "role": "Title" },
+        { "kind": "label", "name": "LanguageDescription", "text": "Choose the language you want games translated to", "role": "Description" },
+        { "kind": "spacer", "name": "LanguageGapAbove", "height": 15 },
+        { "kind": "label", "name": "DetectedLabel", "text": { "bind": "detected" }, "policy": "Excluded", "role": "Small", "italic": true, "centred": true, "minHeight": "RowHeightNormal" },
+        { "kind": "spacer", "name": "DetectedGap", "height": 10 },
+        { "kind": "section", "name": "LanguageSection", "children": [
+          { "kind": "label", "name": "LangLabel", "text": "Translate games to:", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+          { "kind": "dropdown", "name": "TargetLang", "options": "languages", "width": 200, "act": "targetChanged",
+            "help": "Language you want games translated into. The game's original language is detected automatically." }
+        ] },
+        { "kind": "spacer", "name": "LanguageGapBelow", "height": 10 },
+        { "kind": "label", "name": "LanguageHint", "text": "The source language (game's original language) is detected automatically.", "role": "Hint", "centred": true, "minHeight": "RowHeightNormal" }
+      ] },
+      { "kind": "row", "name": "LanguageButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "LanguageBack", "text": "← Back", "act": "languageBack" },
+        { "kind": "button", "name": "LanguageNext", "text": "Continue →", "tone": "Primary", "act": "languageNext" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "TranslationChoiceStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "ChoiceCard", "width": 460, "children": [
+        { "kind": "label", "name": "ChoiceTitle", "text": "Community Translations", "role": "Title" },
+        { "kind": "section", "name": "GameSection", "children": [
+          { "kind": "label", "name": "GameLabel", "text": { "bind": "game" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightNormal" },
+          { "kind": "label", "name": "LocalLabel", "text": { "bind": "localTranslations" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+          { "kind": "label", "name": "AccountStatus", "text": { "bind": "accountStatus" }, "policy": "Excluded", "role": "Caption", "minHeight": "RowHeightSmall" },
+          { "kind": "button", "name": "LoginBtn", "text": "Connect Account (optional)", "tone": "Primary", "minWidth": 200, "act": "login",
+            "help": "Connect a website account so you can upload and share your translations later. Optional; downloading works without one." }
+        ] },
+        { "kind": "spacer", "name": "GameGap", "height": 10 },
+        { "kind": "stack", "name": "TranslationListHost" },
+        { "kind": "label", "name": "ComparisonLabel", "text": { "bind": "comparison" }, "policy": "Excluded", "role": "Small", "centred": true, "minHeight": "RowHeightNormal" },
+        { "kind": "label", "name": "DownloadStatus", "text": { "bind": "downloadStatus" }, "policy": "Excluded", "role": "Small", "centred": true, "minHeight": "RowHeightSmall" },
+        { "kind": "row", "name": "ActionBtnsRow", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "visible": false, "children": [
+          { "kind": "button", "name": "DownloadBtn", "text": "Download", "tone": "Primary", "size": "Compact", "minWidth": 100, "act": "download",
+            "help": "Get the selected community translation and use it in your game" }
+        ] }
+      ] },
+      { "kind": "row", "name": "ChoiceButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "ChoiceBack", "text": "← Back", "act": "choiceBack" },
+        { "kind": "button", "name": "ChoiceNext", "text": "Continue →", "tone": "Primary", "act": "choiceNext" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "AIConfigStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "AICard", "children": [
+        { "kind": "label", "name": "AITitle", "text": "Auto-Translation", "role": "Title" },
+        { "kind": "label", "name": "AIDescription", "text": "How should texts with no translation yet be translated? (can be changed later in Mod Options)", "role": "Description" },
+        { "kind": "spacer", "name": "AIGap", "height": 10 },
+        { "kind": "section", "name": "EnableSection", "children": [
+          { "kind": "row", "name": "EnableRow", "minHeight": "RowHeightLarge", "children": [
+            { "kind": "checkbox", "name": "EnableToggle", "act": "enableChanged",
+              "help": "Automatically translate texts that have no translation yet. Turn off to use only downloaded community translations." },
+            { "kind": "label", "name": "EnableTextLabel", "text": "Enable auto-translation", "bold": true, "fill": "Stretch" }
+          ] }
+        ] },
+        { "kind": "spacer", "name": "EnableGap", "height": 10 },
+        { "kind": "stack", "name": "BackendTypeSection", "spacing": 5, "children": [
+          { "kind": "section", "name": "TypeSection", "children": [
+            { "kind": "label", "name": "TypeLabel", "text": "Type:", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+            { "kind": "dropdown", "name": "WizardType", "options": "code", "popupHeight": 100, "stretch": true, "act": "typeChanged",
+              "help": "Choose the translation backend: a local or cloud AI model, or a translation API such as Google or DeepL." }
+          ] },
+          { "kind": "spacer", "name": "TypeGap", "height": 5 },
+          { "kind": "stack", "name": "LLMSection", "spacing": 5, "children": [
+            { "kind": "section", "name": "UrlSection", "children": [
+              { "kind": "label", "name": "UrlLabel", "text": "Server URL:", "role": "Small", "tone": "Secondary", "policy": "Excluded", "minHeight": "RowHeightSmall" },
+              { "kind": "row", "name": "UrlRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
+                { "kind": "field", "name": "AIUrl", "placeholder": "http://127.0.0.1:11434", "act": "aiUrlChanged",
+                  "help": "Address of your OpenAI-compatible AI server (for example Ollama or LM Studio). Defaults to a local server on port 11434." },
+                { "kind": "button", "name": "TestBtn", "text": "Test", "minWidth": 70, "act": "testAi",
+                  "help": "Check that the AI server responds at the given URL. On success the model list is refreshed automatically." }
+              ] },
+              { "kind": "label", "name": "AIStatus", "text": { "bind": "aiStatus" }, "policy": "Excluded", "role": "Small", "centred": true, "minHeight": "RowHeightNormal" }
+            ] },
+            { "kind": "section", "name": "KeySection", "children": [
+              { "kind": "label", "name": "KeyLabel", "text": "API Key:", "role": "Small", "tone": "Secondary", "policy": "Excluded", "minHeight": "RowHeightSmall" },
+              { "kind": "field", "name": "AIApiKey", "input": "Password", "act": "aiKeyChanged",
+                "help": "API key for the AI server. Leave empty for local servers that do not require authentication." },
+              { "kind": "label", "name": "KeyHint", "text": "Optional for local servers (Ollama, LM Studio)", "role": "Hint" }
+            ] },
+            { "kind": "section", "name": "ModelSection", "children": [
+              { "kind": "label", "name": "ModelLabel", "text": "Model:", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+              { "kind": "row", "name": "ModelRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
+                { "kind": "dropdown", "name": "ModelDropdown", "options": "code", "popupHeight": 200, "stretch": true, "act": "modelChanged",
+                  "help": "AI model used for translation. Use Refresh to load the models available on the server." },
+                { "kind": "button", "name": "RefreshBtn", "text": "Refresh", "minWidth": 70, "act": "refreshModels",
+                  "help": "Query the server for its list of available models and fill the dropdown above." }
+              ] }
+            ] },
+            { "kind": "section", "name": "ContextSection", "children": [
+              { "kind": "label", "name": "ContextLabel", "text": "Game Context (optional):", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+              { "kind": "field", "name": "ContextInput", "placeholder": "e.g., RPG game, fantasy setting", "input": "Multiline", "minHeight": "MultiLineMedium", "act": "contextChanged",
+                "help": "Optional hint about the game (genre, setting, tone) added to AI prompts to improve translation accuracy." }
+            ] }
+          ] },
+          { "kind": "stack", "name": "TransApiSection", "spacing": 5, "children": [
+            { "kind": "section", "name": "ProviderSection", "children": [
+              { "kind": "label", "name": "ProviderLabel", "text": "Provider:", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+              { "kind": "dropdown", "name": "WizardProvider", "options": "code", "popupHeight": 100, "stretch": true, "act": "providerChanged",
+                "help": "Translation API provider to use, Google Translate or DeepL. Each needs its own API key below." }
+            ] },
+            { "kind": "spacer", "name": "ProviderGap", "height": 5 },
+            { "kind": "stack", "name": "GoogleSection", "spacing": 5, "children": [
+              { "kind": "section", "name": "GoogleKeySection", "children": [
+                { "kind": "label", "name": "GoogleKeyLabel", "text": "Google API Key:", "role": "Small", "tone": "Secondary", "policy": "Excluded", "minHeight": "RowHeightSmall" },
+                { "kind": "row", "name": "GoogleKeyRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
+                  { "kind": "field", "name": "GoogleKey", "input": "Password", "act": "googleKeyChanged",
+                    "help": "API key for Google Cloud Translation. Requires a project with the Translation API enabled." },
+                  { "kind": "button", "name": "GoogleTestBtn", "text": "Test", "minWidth": 70, "act": "testGoogle",
+                    "help": "Send a test request to verify the Google Translation API key works." }
+                ] },
+                { "kind": "label", "name": "GoogleStatus", "text": { "bind": "googleStatus" }, "policy": "Excluded", "role": "Small", "centred": true, "minHeight": "RowHeightNormal" }
+              ] },
+              { "kind": "label", "name": "GoogleHint", "text": "Requires Google Cloud API key with Translation API enabled", "role": "Hint" }
+            ] },
+            { "kind": "stack", "name": "DeepLSection", "spacing": 5, "children": [
+              { "kind": "section", "name": "DeepLKeySection", "children": [
+                { "kind": "label", "name": "DeepLKeyLabel", "text": "DeepL API Key:", "role": "Small", "tone": "Secondary", "policy": "Excluded", "minHeight": "RowHeightSmall" },
+                { "kind": "row", "name": "DeepLKeyRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
+                  { "kind": "field", "name": "DeepLKey", "input": "Password", "act": "deeplKeyChanged",
+                    "help": "API key for the DeepL translation API. Free and Pro keys use different endpoints, set below." },
+                  { "kind": "button", "name": "DeepLTestBtn", "text": "Test", "minWidth": 70, "act": "testDeepl",
+                    "help": "Send a test request to verify the DeepL API key and selected plan type work." }
+                ] },
+                { "kind": "label", "name": "DeepLStatus", "text": { "bind": "deeplStatus" }, "policy": "Excluded", "role": "Small", "centred": true, "minHeight": "RowHeightNormal" }
+              ] },
+              { "kind": "checkbox", "name": "DeepLFreeToggle", "text": "Use Free API (api-free.deepl.com)", "tone": "Secondary", "act": "deeplFreeChanged",
+                "help": "Use the free DeepL endpoint (api-free.deepl.com), 500k characters per month. Uncheck for a Pro API key." },
+              { "kind": "label", "name": "DeepLHint", "text": "Free plan: 500k chars/month. Uncheck for Pro API.", "role": "Hint" }
+            ] }
+          ] }
+        ] }
+      ] },
+      { "kind": "row", "name": "AIButtons", "spacing": 14, "padY": 5, "placement": "MiddleCenter", "fill": "Stretch", "minHeight": "ButtonRowHeight", "children": [
+        { "kind": "button", "name": "AIBack", "text": "← Back", "act": "aiBack" },
+        { "kind": "button", "name": "AIFinish", "text": "Finish Setup →", "tone": "Primary", "act": "aiFinish" }
+      ] }
+    ] },
+
+    { "kind": "stack", "name": "CompleteStep", "spacing": "ElementSpacing", "visible": false, "children": [
+      { "kind": "card", "name": "CompleteCard", "children": [
+        { "kind": "label", "name": "CompleteTitle", "text": "Setup Complete!", "role": "Title", "tone": "Success" },
+        { "kind": "spacer", "name": "CompleteGapAbove", "height": 15 },
+        { "kind": "label", "name": "CompleteDescription", "text": { "bind": "completeDescription" }, "policy": "Excluded", "role": "Description", "minHeight": "MultiLineLarge" },
+        { "kind": "spacer", "name": "CompleteGapBelow", "height": 20 },
+        { "kind": "button", "name": "CompleteFinish", "text": "Start Translating!", "tone": "Success", "minWidth": 200, "act": "finish",
+          "help": "Save your setup and close the wizard. The translator starts working in-game right away." }
+      ] }
+    ] }
+  ],
+  "footer": []
+}
