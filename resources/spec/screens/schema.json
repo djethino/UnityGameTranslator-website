@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ugt:spec:screen",
   "title": "A screen of the mod, described in data",
-  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen).",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen).",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "size", "body", "footer"],
@@ -41,7 +41,7 @@
     },
     "minHeight": {
       "description": "A named height of the theme, or pixels at the reference resolution.",
-      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall", "CodeDisplayHeight"] } ]
+      "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "enum": ["RowHeightSmall", "RowHeightMedium", "RowHeightNormal", "RowHeightLarge", "RowHeightXLarge", "InputHeight", "MultiLineSmall", "MultiLineMedium", "MultiLineLarge", "CodeDisplayHeight"] } ]
     },
     "spacing": {
       "description": "A named spacing of the theme, or pixels.",
@@ -56,14 +56,46 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": { "width": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
+        { "if": { "properties": { "kind": { "const": "card" } } }, "then": { "properties": {
+              "width": { "type": "integer" },
+              "surface": { "type": "string", "enum": ["Card", "Elevated"], "default": "Card" },
+              "stretch": { "type": "boolean", "default": false, "description": "Takes the height left in its host — a tab's card, so the tab fills the window." },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "section" } } }, "then": { "properties": { "minHeight": { "$ref": "#/$defs/minHeight" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A section inside a card: no edge, its own padding." } },
+        { "if": { "properties": { "kind": { "const": "tabs" } } }, "then": { "properties": {
+              "children": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" }, "description": "Only `tab` pieces." } },
+            "description": "A row of tabs whose buttons sit where the piece is placed — the header, so they stay put — and whose contents go into the body, one stack per tab, shown one at a time." } },
+        { "if": { "properties": { "kind": { "const": "tab" } } }, "then": {
+            "required": ["text"],
+            "properties": {
+              "text": { "type": "string", "description": "The word on the tab, and the name the code selects it by." },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } },
+            "description": "One tab of a `tabs` piece, and nothing else's child." } },
+        { "if": { "properties": { "kind": { "const": "callout" } } }, "then": {
+            "required": ["tone"],
+            "properties": {
+              "tone": { "type": "string", "enum": ["Success", "Warning", "Error", "Info"] },
+              "direction": { "type": "string", "enum": ["Row", "Stack"], "default": "Row" },
+              "spacing": { "$ref": "#/$defs/spacing" },
+              "pad": { "$ref": "#/$defs/spacing" },
+              "padX": { "$ref": "#/$defs/spacing" }, "padY": { "$ref": "#/$defs/spacing" },
+              "placement": { "type": "string", "enum": ["TopLeft", "TopCenter", "TopRight", "MiddleLeft", "MiddleCenter", "MiddleRight", "BottomLeft", "BottomCenter", "BottomRight"] },
+              "minHeight": { "$ref": "#/$defs/minHeight" },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } },
+            "description": "A tinted box that speaks up — an update available, a warning." } },
+        { "if": { "properties": { "kind": { "const": "collapsible" } } }, "then": {
+            "required": ["title"],
+            "properties": {
+              "title": { "type": "string", "description": "The line somebody clicks to open it." },
+              "expanded": { "type": "boolean", "default": false },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "What unfolds." } },
+            "description": "A block folded under its title until somebody opens it." } },
         { "if": { "properties": { "kind": { "const": "field" } } }, "then": { "properties": {
               "placeholder": { "type": "string", "description": "Shown while the field is empty." },
               "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
@@ -85,10 +117,21 @@
               "padding": { "type": "integer", "minimum": 0 },
               "empty": { "type": "string", "description": "The sentence shown while the list holds no row." } },
             "description": "A scrolling list whose rows the code builds at show time — a form, never a rule: how many rows and what they say is the code's." } },
-        { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": { "spacing": { "$ref": "#/$defs/spacing" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for)." } },
+        { "if": { "properties": { "kind": { "const": "stack" } } }, "then": { "properties": {
+              "spacing": { "$ref": "#/$defs/spacing" },
+              "pad": { "$ref": "#/$defs/spacing" },
+              "padX": { "$ref": "#/$defs/spacing" }, "padY": { "$ref": "#/$defs/spacing" },
+              "surface": { "type": "string", "enum": ["None", "Card", "Elevated", "Item", "Trough", "Input"] },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] },
+              "fillHeight": { "type": "boolean", "default": false, "description": "Takes the spare height as well." },
+              "minHeight": { "$ref": "#/$defs/minHeight" },
+              "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } },
+            "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for, or a component of its own)." } },
         { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": {
               "spacing": { "$ref": "#/$defs/spacing" },
               "pad": { "$ref": "#/$defs/spacing", "description": "Room inside the row, on all four sides." },
+              "padX": { "$ref": "#/$defs/spacing", "description": "Room on the two sides; padY on the top and bottom. Each overrides pad on its axis." },
+              "padY": { "$ref": "#/$defs/spacing" },
               "placement": { "type": "string", "enum": ["TopLeft", "TopCenter", "TopRight", "MiddleLeft", "MiddleCenter", "MiddleRight", "BottomLeft", "BottomCenter", "BottomRight"] },
               "surface": { "type": "string", "enum": ["None", "Card", "Elevated", "Item", "Trough", "Input"], "description": "The background the theme paints under it." },
               "fill": { "type": "string", "enum": ["Content", "Stretch"] },
@@ -101,7 +144,7 @@
             "properties": {
               "text": { "$ref": "#/$defs/text" },
               "role": { "type": "string", "enum": ["Title", "SectionTitle", "Body", "Description", "Info", "Small", "Hint", "Caption", "Status", "Code"], "default": "Body" },
-              "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error"] },
+              "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error", "Info", "Neutral"] },
               "centred": { "type": "boolean" },
               "policy": { "type": "string", "enum": ["UiText", "Excluded", "Dynamic"], "description": "How the mod's own translation treats it. A bound text is written at show time, so it is Dynamic — unless marked Excluded, for a slot that holds a count, a date or somebody's own words, written as they are." },
               "minHeight": { "$ref": "#/$defs/minHeight" },

@@ -1,0 +1,156 @@
+{
+  "name": "Unity Game Translator",
+  "size": { "width": 580, "height": 600, "minWidth": 580, "minHeight": 350 },
+  "chrome": { "cardWidth": 520, "help": "Hover an element to see what it does" },
+  "header": [
+    { "kind": "label", "name": "AccountSectionLabel", "text": "Account", "role": "SectionTitle" },
+    { "kind": "card", "name": "AccountBox", "children": [
+      { "kind": "row", "name": "AccountRow", "minHeight": "RowHeightLarge", "children": [
+        { "kind": "label", "name": "AccountLabel", "text": { "bind": "account" }, "tone": "Secondary", "italic": true, "fill": "Stretch" },
+        { "kind": "button", "name": "LoginLogoutBtn", "text": { "bind": "loginLogout" }, "minWidth": 80, "act": "loginLogout",
+          "help": "An account is only needed to SHARE translations. Downloading and playing work without one." }
+      ] }
+    ] },
+    { "kind": "spacer", "name": "AccountGap", "height": 5 },
+    { "kind": "callout", "name": "ModUpdateBanner", "tone": "Success", "spacing": 8, "padX": 10, "padY": 5, "minHeight": "RowHeightLarge", "visible": false, "children": [
+      { "kind": "label", "name": "ModUpdateLabel", "text": { "bind": "modUpdate" }, "policy": "Excluded", "bold": true, "fill": "Stretch" },
+      { "kind": "button", "name": "ModManagerBtn", "text": { "bind": "modManager" }, "policy": "Excluded", "size": "Compact", "minWidth": 110, "act": "modManager",
+        "help": "The Manager installs and updates the mod for every game on this machine. Opens it when it is already here, otherwise opens the page to get it." },
+      { "kind": "button", "name": "ModUpdateBtn", "text": { "bind": "modUpdateVerb" }, "policy": "Excluded", "tone": "Primary", "size": "Compact", "minWidth": 90, "act": "modUpdate",
+        "help": "Get the newer mod version: downloads it if available, otherwise opens the release page in your browser." }
+    ] },
+    { "kind": "tabs", "name": "Tabs", "children": [
+      { "kind": "tab", "name": "MyTranslationTab", "text": "My Translation",
+        "help": "Your own translation for this game: its sync status, role, and the actions you can take on it.",
+        "children": [
+        { "kind": "card", "name": "MyTranslationCard", "stretch": true, "children": [
+          { "kind": "stack", "name": "LoginCTASection", "spacing": "SmallSpacing", "children": [
+            { "kind": "card", "name": "CTACard", "surface": "Elevated", "children": [
+              { "kind": "label", "name": "CTATitle", "text": "Login to sync your translations", "centred": true, "bold": true, "minHeight": "RowHeightMedium" },
+              { "kind": "label", "name": "CTADesc", "text": "Sync your work across devices and contribute to community translations.", "role": "Description", "minHeight": "RowHeightMedium" },
+              { "kind": "spacer", "name": "CTAGap", "height": 5 },
+              { "kind": "row", "name": "CTABtnRow", "spacing": 0, "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+                { "kind": "button", "name": "CTALoginBtn", "text": "Create Account / Login", "tone": "Success", "minWidth": 200, "act": "ctaLogin",
+                  "help": "An account is only needed to SHARE translations. Downloading and playing work without one." }
+              ] }
+            ] }
+          ] },
+          { "kind": "label", "name": "StatusSectionLabel", "text": "Current Translation", "role": "SectionTitle" },
+          { "kind": "stack", "name": "StatusSection", "children": [
+            { "kind": "stack", "name": "StatusCardHost" },
+            { "kind": "row", "name": "BackupsRow", "spacing": 8, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "label", "name": "BackupsLabel", "text": { "bind": "backups" }, "policy": "Excluded", "role": "Hint", "tone": "Secondary", "fill": "Stretch" },
+              { "kind": "button", "name": "BackupsBtn", "text": "Backups…", "act": "backups",
+                "help": "Your translation as it stood at earlier moments — kept here when something replaces it, and whenever you ask." }
+            ] },
+            { "kind": "stack", "name": "ResourcesLinkSection", "spacing": "SmallSpacing", "padX": 12, "padY": 10, "surface": "Elevated", "visible": false, "children": [
+              { "kind": "label", "name": "ResourcesByLabel", "text": { "bind": "resourcesBy" }, "policy": "Excluded", "role": "Small", "tone": "Plain", "bold": true, "minHeight": "RowHeightSmall" },
+              { "kind": "label", "name": "ResourcesUrlLabel", "text": { "bind": "resourcesUrl" }, "policy": "Excluded", "role": "Hint", "tone": "Accent", "fill": "Stretch", "minHeight": "RowHeightSmall", "autoHeight": true, "align": "TopLeft" },
+              { "kind": "row", "name": "OpenBtnRow", "spacing": 0, "padY": "SmallSpacing", "placement": "MiddleCenter", "minHeight": "RowHeightLarge", "children": [
+                { "kind": "button", "name": "ResourcesOpenBtn", "text": "Open in Browser", "tone": "Link", "minWidth": 140, "fill": "Stretch", "act": "resourcesOpen",
+                  "help": "Open the external link the translation's author attached (custom fonts or images). Not hosted by us." }
+              ] },
+              { "kind": "label", "name": "ResourcesDisclaimer", "text": "Third-party content. We are not responsible for external links.", "role": "Hint", "tone": "Muted", "minHeight": "RowHeightSmall" }
+            ] }
+          ] },
+          { "kind": "spacer", "name": "StatusGap", "height": 5 },
+          { "kind": "stack", "name": "TranslationInfoSection", "children": [
+            { "kind": "label", "name": "TranslationSectionLabel", "text": "Current Translation", "role": "SectionTitle" },
+            { "kind": "section", "name": "TranslationBox", "children": [
+              { "kind": "label", "name": "EntriesLabel", "text": { "bind": "entries" }, "minHeight": "RowHeightNormal" },
+              { "kind": "label", "name": "TargetLabel", "text": { "bind": "target" }, "policy": "Excluded", "tone": "Secondary", "minHeight": "RowHeightNormal" },
+              { "kind": "label", "name": "SourceLabel", "text": { "bind": "source" }, "tone": "Secondary", "minHeight": "RowHeightNormal" },
+              { "kind": "label", "name": "RoleLabel", "text": { "bind": "role" }, "bold": true, "minHeight": "RowHeightNormal" },
+              { "kind": "label", "name": "SyncStatusLabel", "text": { "bind": "syncStatus" }, "bold": true, "minHeight": "RowHeightNormal" },
+              { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "role": "Small" }
+            ] }
+          ] },
+          { "kind": "spacer", "name": "InfoGap", "height": 10 },
+          { "kind": "label", "name": "ActionsSectionLabel", "text": "Actions", "role": "SectionTitle" },
+          { "kind": "section", "name": "ActionsBox", "children": [
+            { "kind": "row", "name": "SyncActionsRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+              { "kind": "button", "name": "UploadBtn", "text": { "bind": "upload" }, "tone": "Primary", "minWidth": 150, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "upload",
+                "help": "Send your local translation to the website so others can use it" },
+              { "kind": "button", "name": "CompareBtn", "text": "Compare", "policy": "Dynamic", "minWidth": 85, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "compare",
+                "help": "Compare your local file with the published version and choose line by line what to publish" }
+            ] },
+            { "kind": "stack", "name": "LineageChoiceSection", "spacing": "SmallSpacing", "children": [
+              { "kind": "row", "name": "BranchRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+                { "kind": "button", "name": "ContributeBtn", "text": "Contribute as Branch", "tone": "Success", "minWidth": 180, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "contribute",
+                  "help": "Your changes are sent to the owner, who can merge them into the main translation" }
+              ] },
+              { "kind": "label", "name": "BranchDesc", "text": { "bind": "branchDesc" }, "role": "Hint", "centred": true },
+              { "kind": "row", "name": "MergeRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+                { "kind": "button", "name": "MergeWithMainBtn", "text": "Merge with Main", "tone": "Success", "minWidth": 150, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "mergeWithMain",
+                  "help": "Bring in what the Main added or corrected. Your own lines are kept, and you review everything before it applies." }
+              ] },
+              { "kind": "label", "name": "MergeDesc", "text": { "bind": "mergeDesc" }, "role": "Hint", "centred": true },
+              { "kind": "row", "name": "DownloadRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+                { "kind": "button", "name": "DownloadLatestBtn", "text": "Take Main's version", "policy": "Excluded", "tone": "Primary", "minWidth": 150, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "downloadLatest",
+                  "help": "Replace your local file with the owner's latest version from the website" }
+              ] },
+              { "kind": "label", "name": "DownloadDesc", "text": { "bind": "downloadDesc" }, "role": "Hint", "centred": true },
+              { "kind": "row", "name": "ForkRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+                { "kind": "button", "name": "CreateIndependentBtn", "text": "Create Independent", "minWidth": 170, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "createIndependent",
+                  "help": "Start your own translation from the file in this game — asks for confirmation first" }
+              ] },
+              { "kind": "label", "name": "ForkDesc", "text": "A copy of this translation as it is now, yours. It keeps the credit to its author, and stops following their updates", "role": "Hint", "centred": true }
+            ] },
+            { "kind": "label", "name": "UploadHintLabel", "text": { "bind": "uploadHint" }, "role": "Hint", "centred": true },
+            { "kind": "row", "name": "RoleActionsRow", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+              { "kind": "button", "name": "ReviewBtn", "text": "Review Branches", "policy": "Dynamic", "tone": "Link", "minWidth": 105, "scope": { "onThisMachine": false, "yourPublishedCopy": true }, "act": "review",
+                "help": "Open the website to accept or reject changes proposed by other players" },
+              { "kind": "button", "name": "EditDetailsBtn", "text": "Edit details", "minWidth": 90, "scope": { "onThisMachine": false, "yourPublishedCopy": true }, "act": "editDetails",
+                "help": "Change the description and the resources link of your published translation, without waiting for new translated lines" },
+              { "kind": "button", "name": "UpdateFromMainBtn", "text": "Merge with Main", "tone": "Success", "minWidth": 120, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "updateFromMain",
+                "help": "Bring in what the original translation added or corrected since your last update. Your own lines are kept, and you review everything before it applies." },
+              { "kind": "button", "name": "ForkBtn", "text": "Fork", "tone": "Danger", "minWidth": 80, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "fork",
+                "help": "Leave the owner's translation and continue on your own — asks for confirmation first" }
+            ] },
+            { "kind": "label", "name": "RoleActionsHint", "text": { "bind": "roleActionsHint" }, "policy": "Excluded", "role": "Hint", "centred": true }
+          ] },
+          { "kind": "stack", "name": "GuidanceSection", "spacing": "SmallSpacing", "children": [
+            { "kind": "card", "name": "GuidanceBox", "surface": "Elevated", "children": [
+              { "kind": "label", "name": "GuidanceLabel", "text": { "bind": "guidance" }, "tone": "Info", "centred": true, "fill": "Stretch", "minHeight": "RowHeightLarge" }
+            ] }
+          ] },
+          { "kind": "collapsible", "name": "Glossary", "title": "What do Main, Branch and Fork mean?", "expanded": false,
+            "help": "Expand a short glossary of the sharing terms Main, Branch and Fork and the line quality tags.",
+            "children": [
+            { "kind": "label", "name": "GlossaryText", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "MultiLineLarge", "align": "TopLeft",
+              "text": "• Main — the reference translation, owned by its creator and public on the website.\n• Branch — your improvements to someone else's Main; they are sent to the owner for review.\n• Fork — your own independent translation: you become the owner and it is no longer linked to the original.\n\nLine quality tags: H = written by a human, V = AI line validated by a human, A = raw AI." }
+          ] }
+        ] }
+      ] },
+      { "kind": "tab", "name": "CommunityTab", "text": "Community",
+        "help": "Translations other players shared for this game. Search and download one to use it.",
+        "children": [
+        { "kind": "card", "name": "CommunityCard", "stretch": true, "children": [
+          { "kind": "label", "name": "CommunitySectionLabel", "text": "Community Translations", "role": "SectionTitle" },
+          { "kind": "stack", "name": "CommunitySection", "spacing": 5, "fillHeight": true, "children": [
+            { "kind": "row", "name": "SearchRow", "minHeight": "RowHeightLarge", "children": [
+              { "kind": "label", "name": "GameLabel", "text": { "bind": "communityGame" }, "tone": "Secondary", "fill": "Stretch" },
+              { "kind": "button", "name": "SearchBtn", "text": "Search", "minWidth": 80, "act": "search",
+                "help": "Search the translations other players shared for this game" }
+            ] },
+            { "kind": "stack", "name": "TranslationListHost", "fillHeight": true },
+            { "kind": "spacer", "name": "ListGap", "height": 5 },
+            { "kind": "row", "name": "CommunityDownloadRow", "spacing": 0, "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
+              { "kind": "button", "name": "DownloadBtn", "text": "Download Selected", "tone": "Success", "minWidth": 160, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "download",
+                "help": "Use the selected translation in your game — the mod asks before replacing anything you changed" }
+            ] }
+          ] }
+        ] }
+      ] }
+    ] }
+  ],
+  "body": [],
+  "footer": [
+    { "kind": "button", "name": "TransParamsBtn", "text": "Translation Tools", "act": "transParams",
+      "help": "Text editors, exclusions, fonts, images and variables" },
+    { "kind": "button", "name": "OptionsBtn", "text": "Mod Options", "act": "options",
+      "help": "General settings: hotkeys, online mode, translation backend" },
+    { "kind": "button", "name": "CloseBtn", "text": "Close", "tone": "Primary", "act": "close",
+      "help": "Close this window. Translation and syncing keep running in the background." }
+  ]
+}
