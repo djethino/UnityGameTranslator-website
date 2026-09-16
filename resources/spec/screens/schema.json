@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ugt:spec:screen",
   "title": "A screen of the mod, described in data",
-  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen); title, checkbox (2026-09-16, for the upload screen); toast, and chrome.titleBar / chrome.pinned (2026-09-16, for the corner notification).",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen); title, checkbox (2026-09-16, for the upload screen); toast, and chrome.titleBar / chrome.pinned (2026-09-16, for the corner notification); slider, sub-tabs (tabs.contentsIn), captioned fields (2026-09-16, for the options and tools screens).",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "size", "body", "footer"],
@@ -58,7 +58,7 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast", "slider"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
@@ -71,8 +71,21 @@
               "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "section" } } }, "then": { "properties": { "minHeight": { "$ref": "#/$defs/minHeight" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A section inside a card: no edge, its own padding." } },
         { "if": { "properties": { "kind": { "const": "tabs" } } }, "then": { "properties": {
+              "rowHeight": { "type": "integer", "minimum": 16, "description": "The buttons' row height; the theme's when absent. Smaller for a row of sub-tabs." },
+              "contentsIn": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "The name of the piece the tabs' contents go into — a tab of another row, for sub-tabs — built earlier in the document. The body when absent." },
               "children": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" }, "description": "Only `tab` pieces." } },
-            "description": "A row of tabs whose buttons sit where the piece is placed — the header, so they stay put — and whose contents go into the body, one stack per tab, shown one at a time." } },
+            "description": "A row of tabs whose buttons sit where the piece is placed — the header, so they stay put — and whose contents go into the body (or into `contentsIn`), one stack per tab, shown one at a time." } },
+        { "if": { "properties": { "kind": { "const": "slider" } } }, "then": {
+            "required": ["caption", "min", "max"],
+            "properties": {
+              "caption": { "type": "string", "minLength": 1, "description": "The words before the slider." },
+              "captionWidth": { "type": "integer", "minimum": 20 },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "wholeNumbers": { "type": "boolean", "default": false },
+              "format": { "type": "string", "enum": ["Percent", "Number"], "default": "Number", "description": "How the value is written beside the knob: Percent draws 0.4 as 40%." },
+              "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "Asked for as the knob moves." } },
+            "description": "A captioned slider the code reads (Value) and sets; its value at show time is the code's." } },
         { "if": { "properties": { "kind": { "const": "tab" } } }, "then": {
             "required": ["text"],
             "properties": {
@@ -100,6 +113,8 @@
             "description": "A block folded under its title until somebody opens it." } },
         { "if": { "properties": { "kind": { "const": "field" } } }, "then": { "properties": {
               "placeholder": { "type": "string", "description": "Shown while the field is empty." },
+              "caption": { "type": "string", "minLength": 1, "description": "Words before the field, on its row; captionWidth is their width." },
+              "captionWidth": { "type": "integer", "minimum": 20 },
               "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer" },
@@ -110,7 +125,9 @@
             "required": ["options", "act"],
             "properties": {
               "options": { "type": "string", "enum": ["languages", "code"], "description": "Where the choices come from. Never a list written here: the languages are the catalogue's, the same list in every product; `code` means the code sets the choices and the initial one at show time (a list read from the game, a server, a setting)." },
+              "first": { "type": "string", "minLength": 1, "description": "A choice placed before the languages — 'auto (Detect)' — for a list whose first answer is not a language." },
               "width": { "type": "integer" },
+              "minHeight": { "$ref": "#/$defs/minHeight" },
               "stretch": { "type": "boolean", "default": false, "description": "Takes the width of its row instead of its own." },
               "popupHeight": { "type": "integer", "minimum": 50, "description": "How tall the open list may be." },
               "act": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "description": "The verb the screen asks its code for when the choice changes." } } } },

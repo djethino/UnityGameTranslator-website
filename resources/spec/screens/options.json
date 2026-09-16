@@ -1,0 +1,390 @@
+{
+  "name": "Mod Options",
+  "size": { "width": 600, "height": 520, "minWidth": 580, "minHeight": 400 },
+  "chrome": { "cardWidth": 540, "help": "Hover an element to see what it does" },
+  "header": [
+    { "kind": "tabs", "name": "Tabs", "children": [
+      { "kind": "tab", "name": "GeneralTab", "text": "General", "help": "Language, mod UI translation, and general behavior", "children": [
+        { "kind": "card", "name": "GeneralCard", "stretch": true, "children": [
+          { "kind": "checkbox", "name": "EnableTranslationsToggle", "text": " Enable Translations",
+            "help": "Turn the mod's translations on or off. When off, the game shows its original text." },
+          { "kind": "spacer", "name": "GeneralGap1", "height": 5 },
+          { "kind": "checkbox", "name": "TranslateModUIToggle", "text": " Translate mod interface", "tone": "Secondary", "act": "translateModUiChanged",
+            "help": "Translate this mod's own buttons and labels into your target language, alongside the game's text." },
+          { "kind": "label", "name": "ModUIHint", "text": "Translate this mod's own buttons and labels", "role": "Hint" },
+          { "kind": "row", "name": "InterfaceFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "label", "name": "InterfaceFontLabel", "text": "Interface font:", "role": "Info", "minWidth": 90 },
+            { "kind": "dropdown", "name": "InterfaceFont", "options": "code", "popupHeight": 250, "width": 260, "act": "interfaceFontChanged",
+              "help": "Font for this mod's interface when it is translated. Only fonts usable by the interface are listed; pick one that supports your target language's characters." }
+          ] },
+          { "kind": "spacer", "name": "GeneralGap2", "height": 10 },
+          { "kind": "label", "name": "NotificationsLabel", "text": "Notification Overlay", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "NotifEnabledToggle", "text": " Show notification overlay", "tone": "Secondary", "act": "notificationsEnabledChanged",
+            "help": "Show small corner messages for sync, updates, and translation activity. Turn off for clean screenshots." },
+          { "kind": "row", "name": "NotifPosRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+            { "kind": "label", "name": "NotifPosLabel", "text": "Position:", "role": "Info", "minWidth": 60 },
+            { "kind": "dropdown", "name": "NotifPosition", "options": "code", "popupHeight": 150, "width": 140, "minHeight": "InputHeight", "act": "notifPositionChanged",
+              "help": "Which screen corner the notification overlay appears in." }
+          ] },
+          { "kind": "spacer", "name": "GeneralGap3", "height": 10 },
+          { "kind": "label", "name": "AdvancedLabel", "text": "Advanced", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "DebugLoggingToggle", "text": " Debug logging", "tone": "Secondary", "act": "debugLoggingChanged",
+            "help": "Write detailed logs to the mod log file. Turn on when reporting an issue, then share the log. Off by default." },
+          { "kind": "checkbox", "name": "DebugAiToggle", "text": " Debug AI translation", "tone": "Secondary", "act": "debugAiChanged",
+            "help": "Log every AI request and response (prompts, raw output, placeholder handling). Verbose — use only to diagnose translation quality." },
+          { "kind": "spacer", "name": "GeneralGap4", "height": 10 },
+          { "kind": "stack", "name": "LanguagesEditableSection", "children": [
+            { "kind": "label", "name": "LangLabel", "text": "Languages", "role": "SectionTitle" },
+            { "kind": "label", "name": "SourceLangLabel", "text": "Source Language:", "role": "Info", "minHeight": "RowHeightSmall" },
+            { "kind": "dropdown", "name": "SourceLang", "options": "languages", "first": "auto (Detect)", "width": 200, "act": "sourceChanged",
+              "help": "The language the game's text is written in. Leave on Auto to detect it automatically." },
+            { "kind": "spacer", "name": "LanguagesGap", "height": 5 },
+            { "kind": "label", "name": "TargetLangLabel", "text": "Target Language:", "role": "Info", "minHeight": "RowHeightSmall" },
+            { "kind": "dropdown", "name": "TargetLang", "options": "languages", "first": "auto (System)", "width": 200, "act": "targetChanged",
+              "help": "The language you want the game translated into. Auto uses your system language." }
+          ] },
+          { "kind": "stack", "name": "LanguagesLockedSection", "visible": false, "children": [
+            { "kind": "label", "name": "LockedHeader", "text": { "bind": "lockedHeader" }, "role": "Small", "tone": "Warning" },
+            { "kind": "row", "name": "SourceRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "label", "name": "SourceLabel", "text": "Source:", "role": "Info", "minWidth": 60 },
+              { "kind": "row", "name": "SourceMark", "spacing": 0 },
+              { "kind": "label", "name": "SourceValue", "text": { "bind": "lockedSource" }, "fill": "Stretch" }
+            ] },
+            { "kind": "row", "name": "TargetRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "label", "name": "TargetLabel", "text": "Target:", "role": "Info", "minWidth": 60 },
+              { "kind": "row", "name": "TargetMark", "spacing": 0 },
+              { "kind": "label", "name": "TargetValue", "text": { "bind": "lockedTarget" }, "fill": "Stretch" }
+            ] }
+          ] },
+          { "kind": "spacer", "name": "GeneralGap5", "height": 15 },
+          { "kind": "label", "name": "InterfaceLabel", "text": "Interface", "role": "SectionTitle" },
+          { "kind": "label", "name": "OpacityLabel", "text": "Window opacity", "role": "SectionTitle" },
+          { "kind": "slider", "name": "OpacityFocused", "caption": "Focused:", "min": 0.4, "max": 1, "format": "Percent", "captionWidth": 70, "act": "opacityFocusedChanged",
+            "help": "How solid the window you are working in is. Lower it to see the game through the one you are using." },
+          { "kind": "slider", "name": "OpacityUnfocused", "caption": "Others:", "min": 0.4, "max": 1, "format": "Percent", "captionWidth": 70, "act": "opacityUnfocusedChanged",
+            "help": "How solid the other windows are. Slightly faded by default, so a second window can stay open without hiding the game." },
+          { "kind": "spacer", "name": "GeneralGap6", "height": 10 },
+          { "kind": "row", "name": "ResetRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "button", "name": "ResetWindowsBtn", "text": "Reset Window Positions", "minWidth": 160, "act": "resetWindows",
+              "help": "Move all mod windows back to their default positions and sizes." },
+            { "kind": "label", "name": "ResetStatus", "text": { "bind": "resetStatus" }, "role": "Small", "fill": "Stretch" }
+          ] },
+          { "kind": "spacer", "name": "GeneralGap7", "height": 15 },
+          { "kind": "label", "name": "HelpFeedbackLabel", "text": "Help & Feedback", "role": "SectionTitle" },
+          { "kind": "row", "name": "HelpFeedbackRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+            { "kind": "button", "name": "ReportBugBtn", "text": "Report a Bug", "minWidth": 110, "act": "reportBug",
+              "help": "Something broken? Open a GitHub issue (a free GitHub account is required)" },
+            { "kind": "button", "name": "DiscussionsBtn", "text": "Discussions", "minWidth": 100, "act": "discussions",
+              "help": "Questions, ideas and feedback — talk with us and other players on GitHub" },
+            { "kind": "button", "name": "OnlineDocsBtn", "text": "Online Docs", "minWidth": 100, "act": "onlineDocs",
+              "help": "The full user guide on the website (in your language)" }
+          ] }
+        ] }
+      ] },
+
+      { "kind": "tab", "name": "HotkeysTab", "text": "Hotkeys", "help": "Keyboard shortcuts for the mod's panels and tools", "children": [
+        { "kind": "card", "name": "HotkeysCard", "stretch": true, "children": [
+          { "kind": "label", "name": "SettingsHotkeyLabel", "text": "Settings Panel", "role": "SectionTitle" },
+          { "kind": "label", "name": "HotkeyHint", "text": "Press the key combination to open/close the settings panel", "role": "Hint" },
+          { "kind": "spacer", "name": "HotkeysGap1", "height": 5 },
+          { "kind": "stack", "name": "SettingsHotkeyHost" },
+          { "kind": "spacer", "name": "HotkeysGap2", "height": 15 },
+          { "kind": "label", "name": "ExtraHotkeysLabel", "text": "Additional Hotkeys", "role": "SectionTitle" },
+          { "kind": "label", "name": "ExtraHotkeysHint", "text": "Optional shortcuts. All disabled by default to avoid conflicts with game controls. Click X to clear a hotkey.", "role": "Hint" },
+          { "kind": "spacer", "name": "HotkeysGap3", "height": 5 },
+          { "kind": "stack", "name": "HkToggleTranslations", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkToggleTranslationsLabel", "text": "Toggle translations", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkToggleTranslationsHint", "text": "Turn all translations on/off (restores original text)", "role": "Hint" },
+            { "kind": "stack", "name": "HkToggleTranslationsHost" }
+          ] },
+          { "kind": "spacer", "name": "HkToggleTranslationsGap", "height": 6 },
+          { "kind": "stack", "name": "HkToggleAI", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkToggleAILabel", "text": "Toggle translation backend", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkToggleAIHint", "text": "Pause/resume live translation - texts already translated stay translated", "role": "Hint" },
+            { "kind": "stack", "name": "HkToggleAIHost" }
+          ] },
+          { "kind": "spacer", "name": "HkToggleAIGap", "height": 6 },
+          { "kind": "stack", "name": "HkToggleImages", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkToggleImagesLabel", "text": "Toggle image replacement", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkToggleImagesHint", "text": "Debug: show original images instead of replacements", "role": "Hint" },
+            { "kind": "stack", "name": "HkToggleImagesHost" }
+          ] },
+          { "kind": "spacer", "name": "HkToggleImagesGap", "height": 6 },
+          { "kind": "stack", "name": "HkToggleFonts", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkToggleFontsLabel", "text": "Toggle font replacement", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkToggleFontsHint", "text": "Debug: show the game's original fonts instead of the mod's replacement fonts", "role": "Hint" },
+            { "kind": "stack", "name": "HkToggleFontsHost" }
+          ] },
+          { "kind": "spacer", "name": "HkToggleFontsGap", "height": 6 },
+          { "kind": "stack", "name": "HkToggleOverlay", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkToggleOverlayLabel", "text": "Toggle notifications", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkToggleOverlayHint", "text": "Show/hide the corner notification overlay (for clean screenshots)", "role": "Hint" },
+            { "kind": "stack", "name": "HkToggleOverlayHost" }
+          ] },
+          { "kind": "spacer", "name": "HkToggleOverlayGap", "height": 6 },
+          { "kind": "spacer", "name": "HotkeysGroupGap1", "height": 10 },
+          { "kind": "stack", "name": "HkOpenInspector", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkOpenInspectorLabel", "text": "Toggle Inspector", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkOpenInspectorHint", "text": "Open/close the element inspector panel", "role": "Hint" },
+            { "kind": "stack", "name": "HkOpenInspectorHost" }
+          ] },
+          { "kind": "spacer", "name": "HkOpenInspectorGap", "height": 6 },
+          { "kind": "stack", "name": "HkOpenUpload", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkOpenUploadLabel", "text": "Toggle Upload", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkOpenUploadHint", "text": "Open/close the translation upload panel", "role": "Hint" },
+            { "kind": "stack", "name": "HkOpenUploadHost" }
+          ] },
+          { "kind": "spacer", "name": "HkOpenUploadGap", "height": 6 },
+          { "kind": "stack", "name": "HkOpenExclusion", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkOpenExclusionLabel", "text": "Toggle Exclusion mode", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkOpenExclusionHint", "text": "Open/close the inspector in exclusion mode", "role": "Hint" },
+            { "kind": "stack", "name": "HkOpenExclusionHost" }
+          ] },
+          { "kind": "spacer", "name": "HkOpenExclusionGap", "height": 6 },
+          { "kind": "stack", "name": "HkOpenTextEditor", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkOpenTextEditorLabel", "text": "Toggle Text editor", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkOpenTextEditorHint", "text": "Open/close the in-game text editor (click UI text to edit)", "role": "Hint" },
+            { "kind": "stack", "name": "HkOpenTextEditorHost" }
+          ] },
+          { "kind": "spacer", "name": "HkOpenTextEditorGap", "height": 6 },
+          { "kind": "spacer", "name": "HotkeysGroupGap2", "height": 10 },
+          { "kind": "stack", "name": "HkForceScan", "spacing": 2, "children": [
+            { "kind": "label", "name": "HkForceScanLabel", "text": "Force scene rescan", "bold": true, "minHeight": "RowHeightSmall" },
+            { "kind": "label", "name": "HkForceScanHint", "text": "Re-scan the current scene (useful after scene glitches)", "role": "Hint" },
+            { "kind": "stack", "name": "HkForceScanHost" }
+          ] },
+          { "kind": "spacer", "name": "HkForceScanGap", "height": 6 }
+        ] }
+      ] },
+
+      { "kind": "tab", "name": "AdaptationTab", "text": "Adaptation", "help": "How the mod behaves alongside the game — set it for this game, and for whether you are playing or translating", "children": [
+        { "kind": "card", "name": "InputCard", "stretch": true, "children": [
+          { "kind": "label", "name": "CaptureLabel", "text": "While a mod window is open", "role": "SectionTitle" },
+          { "kind": "label", "name": "CaptureIntro", "text": "Stop the game from reacting behind the window. Turn one off if it interferes with this game.", "role": "Hint" },
+          { "kind": "spacer", "name": "AdaptationGap1", "height": 5 },
+          { "kind": "checkbox", "name": "CaptureKeyboard", "text": " Take the keyboard", "act": "captureKeyboardChanged",
+            "help": "Keys go to this window only. Without it, typing a translation also walks, shoots or opens the game's menus. Turn it off if the game stops answering the keyboard the way it should." },
+          { "kind": "label", "name": "CaptureKeyboardWhy", "text": { "bind": "captureKeyboardWhy" }, "policy": "Excluded", "role": "Hint", "visible": false },
+          { "kind": "row", "name": "KeyboardFocusRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "spacer", "name": "KeyboardFocusIndent", "height": 20 },
+            { "kind": "checkbox", "name": "CaptureKeyboardFocusOnly", "text": " Only while the mod's interface has focus", "tone": "Secondary", "act": "captureKeyboardFocusChanged",
+              "help": "The game keeps its keyboard until you type in a field or move through this interface with the keyboard. Turn it off if what you type does not reach the mod in this game — the keyboard is then taken the whole time a window is open." }
+          ] },
+          { "kind": "label", "name": "KeyboardFocusHint", "text": "The game keeps its keys until you type or navigate here. If what you type never reaches the mod, turn this one off.", "role": "Hint" },
+          { "kind": "spacer", "name": "AdaptationGap2", "height": 5 },
+          { "kind": "checkbox", "name": "CaptureGameMenus", "text": " Take clicks from the game's menus", "act": "captureGameMenusChanged",
+            "help": "The game's own buttons and menus stop answering the pointer. Clicks inside this window never reach them either way — this is about the rest of the screen." },
+          { "kind": "label", "name": "CaptureGameMenusWhy", "text": { "bind": "captureGameMenusWhy" }, "policy": "Excluded", "role": "Hint", "visible": false },
+          { "kind": "checkbox", "name": "CaptureGameClicks", "text": " Take clicks from the game itself", "act": "captureGameClicksChanged",
+            "help": "The game stops reading clicks for what it does on its own — shooting, interacting, dragging. Without it, clicking beside this window still acts in the game." },
+          { "kind": "label", "name": "CaptureGameClicksWhy", "text": { "bind": "captureGameClicksWhy" }, "policy": "Excluded", "role": "Hint", "visible": false },
+          { "kind": "checkbox", "name": "CaptureMouseAxes", "text": " Take mouse movement", "act": "captureMouseAxesChanged",
+            "help": "Stops the camera turning while you use the window. Mostly matters in first-person games." },
+          { "kind": "label", "name": "CaptureMouseAxesWhy", "text": { "bind": "captureMouseAxesWhy" }, "policy": "Excluded", "role": "Hint", "visible": false },
+          { "kind": "label", "name": "MouseCaptureHint", "text": "To hold the view still while the game's own menus keep working: take mouse movement, and leave the two above off.", "role": "Hint" },
+          { "kind": "spacer", "name": "AdaptationGap3", "height": 15 },
+          { "kind": "label", "name": "PauseLabel", "text": "Freezing the game", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "PauseGameToggle", "text": " Freeze the game while this window is open", "act": "pauseGameChanged",
+            "help": "The game stops on the current frame; hovering and picking still work." },
+          { "kind": "label", "name": "PauseWhy", "text": "Off by default: what it does depends on the game. Some ignore it entirely, others cope badly with being frozen. Try it — nothing is changed permanently.", "role": "Hint", "visible": false },
+          { "kind": "label", "name": "PauseDanger", "text": "Do not use this in a multiplayer game. The game's server does not stop: your character stays exposed and your session can desynchronise. Some anti-cheat systems also treat this as cheating.", "role": "Hint", "tone": "Warning", "visible": false },
+          { "kind": "label", "name": "PauseBlocked", "text": { "bind": "pauseBlocked" }, "policy": "Excluded", "role": "Hint", "visible": false },
+          { "kind": "spacer", "name": "AdaptationGap4", "height": 15 },
+          { "kind": "label", "name": "InputAdvancedLabel", "text": "Advanced", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "DisableEventSystemToggle", "text": " Let the game handle its own interface input", "tone": "Secondary", "act": "eventSystemChanged",
+            "help": "Stop the mod from taking the game's EventSystem. Turn on if the game's own menus stop reacting — losing their hover or their selection cursor — while a mod window is open." },
+          { "kind": "label", "name": "EventSystemHint", "text": "Turn on if the game's menus stop reacting while a mod window is open.", "role": "Hint" }
+        ] }
+      ] },
+
+      { "kind": "tab", "name": "TranslationTab", "text": "Translation", "help": "How untranslated texts get translated: your AI, Google or DeepL", "children": [
+        { "kind": "card", "name": "TranslationCard", "stretch": true, "children": [
+          { "kind": "label", "name": "ManualModeLabel", "text": "Manual Mode", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "CaptureKeysToggle", "text": " Collect texts without translating them", "tone": "Secondary", "act": "captureKeysChanged",
+            "help": "Record every text the game shows into your translation file as empty entries, to translate later. No automatic translation happens." },
+          { "kind": "label", "name": "ManualModeHint", "text": "Every text the game shows is added to your translation file as an empty entry, so you can translate it later (in-game editor or browser)", "role": "Hint" },
+          { "kind": "spacer", "name": "TranslationGap1", "height": 15 },
+          { "kind": "label", "name": "BackendLabel", "text": "Auto-Translation", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "EnableTransBackendToggle", "text": " Enable auto-translation", "act": "backendEnabledChanged",
+            "help": "Automatically translate untranslated texts using the backend below (your AI, Google or DeepL). Turning this off pauses translation and keeps everything below as it is, so you can set it up first and start when you are ready." },
+          { "kind": "stack", "name": "BackendTypeSection", "spacing": 5, "visible": false, "children": [
+            { "kind": "row", "name": "TypeRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+              { "kind": "label", "name": "TypeLabel", "text": "Type:", "role": "Info", "minWidth": 40 },
+              { "kind": "dropdown", "name": "BackendTypeDropdown", "options": "code", "popupHeight": 100, "width": 160, "minHeight": "InputHeight", "act": "backendTypeChanged",
+                "help": "AI: your own model (Ollama, LM Studio, ChatGPT...) with full context. Google / DeepL: classic translation services, needs an API key." }
+            ] },
+            { "kind": "spacer", "name": "TypeGap", "height": 5 },
+            { "kind": "stack", "name": "LLMSection", "spacing": 3, "visible": false, "children": [
+              { "kind": "row", "name": "UrlRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+                { "kind": "label", "name": "UrlLabel", "text": "URL:", "role": "Info", "minWidth": 45, "policy": "Excluded" },
+                { "kind": "field", "name": "AIUrl", "placeholder": "http://127.0.0.1:11434",
+                  "help": "Address of your AI server, for example a local Ollama or LM Studio. Default is http://127.0.0.1:11434." },
+                { "kind": "button", "name": "TestBtn", "text": "Test", "minWidth": 60, "act": "testAi",
+                  "help": "Check that the mod can reach the AI server at the URL above." }
+              ] },
+              { "kind": "label", "name": "TestStatus", "text": { "bind": "aiTestStatus" }, "policy": "Excluded", "role": "Small" },
+              { "kind": "label", "name": "Locality", "text": { "bind": "aiLocality" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "align": "TopLeft", "fill": "Stretch", "autoHeight": true },
+              { "kind": "row", "name": "KeyRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+                { "kind": "label", "name": "KeyLabel", "text": "API Key:", "role": "Info", "minWidth": 55, "policy": "Excluded" },
+                { "kind": "field", "name": "AIApiKey", "input": "Password",
+                  "help": "API key for your AI server, if it needs one. Leave empty for most local servers." }
+              ] },
+              { "kind": "label", "name": "KeyHint", "text": "Optional for local servers (Ollama, LM Studio)", "role": "Hint" },
+              { "kind": "row", "name": "ModelRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+                { "kind": "label", "name": "ModelLabel", "text": "Model:", "role": "Info", "minWidth": 50 },
+                { "kind": "dropdown", "name": "ModelDropdown", "options": "code", "popupHeight": 200, "width": 200, "stretch": true, "act": "modelChanged",
+                  "help": "Which AI model handles the translations. Use Refresh to load the list from your server." },
+                { "kind": "button", "name": "RefreshBtn", "text": "Refresh", "minWidth": 60, "act": "refreshModels",
+                  "help": "Load the list of available models from your AI server." }
+              ] },
+              { "kind": "label", "name": "ModelHint", "text": "Select a model from your server", "role": "Hint" },
+              { "kind": "spacer", "name": "LLMGap1", "height": 5 },
+              { "kind": "label", "name": "ContextLabel", "text": "Game Context (optional):", "role": "Info", "minHeight": "RowHeightSmall" },
+              { "kind": "field", "name": "ContextInput", "placeholder": "e.g., RPG game with medieval setting", "input": "Multiline",
+                "help": "Optional note about the game (genre, setting, tone) to help the AI pick better wording." },
+              { "kind": "label", "name": "ContextHint", "text": "Helps the AI understand game vocabulary", "role": "Hint" },
+              { "kind": "spacer", "name": "LLMGap2", "height": 5 },
+              { "kind": "checkbox", "name": "StrictSourceToggle", "text": " Strict source language detection", "tone": "Secondary",
+                "help": "Skip texts that are not in the source language, so foreign or already-translated text is left alone. AI backend only." },
+              { "kind": "label", "name": "StrictHint", "text": "Skip texts not matching source language (LLM only)", "role": "Hint" },
+              { "kind": "spacer", "name": "LLMGap3", "height": 8 },
+              { "kind": "collapsible", "name": "AiAdvanced", "title": "Advanced", "expanded": false, "children": [
+                { "kind": "label", "name": "AttemptsHint", "text": "How many requests one line may cost at most — used both to repair a broken placeholder and to retranslate a line you did not like", "role": "Hint" },
+                { "kind": "field", "name": "MaxAttempts", "caption": "Attempts:", "placeholder": "3", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Each attempt is a real request to your AI. 1 means never ask twice. Default 3." },
+                { "kind": "spacer", "name": "AdvancedGap1", "height": 8 },
+                { "kind": "label", "name": "TempHint", "text": "Temperature: 0 always gives the same answer for the same line, higher wanders further from it", "role": "Hint" },
+                { "kind": "field", "name": "Temp", "caption": "Translating:", "placeholder": "0", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Ordinary translation. Zero by default so the same line always gets the same translation — the file is cached, shared and merged with other people's." },
+                { "kind": "field", "name": "TempRepair", "caption": "Repairing:", "placeholder": "0.3", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Used when the answer broke a [!v*0]-style marker and has to be asked again. Just above zero: the same request would return the same broken answer." },
+                { "kind": "field", "name": "TempRetrans", "caption": "Retranslating:", "placeholder": "0.8", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Used by the Retranslate button, when you did not like the translation. High on purpose: same instructions, different wording." },
+                { "kind": "spacer", "name": "AdvancedGap2", "height": 8 },
+                { "kind": "label", "name": "SeedHint", "text": "Seed: leave empty unless you want the same run twice. Many servers accept it and ignore it", "role": "Hint" },
+                { "kind": "field", "name": "Seed", "caption": "Translating:", "placeholder": "empty", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Fixed seed for ordinary translation. Empty sends none." },
+                { "kind": "field", "name": "SeedRepair", "caption": "Repairing:", "placeholder": "empty", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Fixed seed when re-asking after a broken marker. Empty sends none." },
+                { "kind": "field", "name": "SeedRetrans", "caption": "Retranslating:", "placeholder": "empty", "captionWidth": 110, "minWidth": 70, "fill": "Content",
+                  "help": "Fixed seed for the Retranslate button. It is offset by the attempt number, so retranslating still varies — a single fixed seed would hand back the answer you just rejected, every time. Empty draws a new one each attempt." }
+              ] }
+            ] },
+            { "kind": "stack", "name": "TranslationApiSection", "spacing": 3, "visible": false, "children": [
+              { "kind": "row", "name": "ProviderRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+                { "kind": "label", "name": "ProviderLabel", "text": "Provider:", "role": "Info", "minWidth": 55 },
+                { "kind": "dropdown", "name": "ProviderDropdown", "options": "code", "popupHeight": 100, "width": 160, "minHeight": "InputHeight", "act": "providerChanged",
+                  "help": "Choose the translation service: Google Translate or DeepL. Each needs its own API key." }
+              ] },
+              { "kind": "spacer", "name": "ProviderGap", "height": 5 },
+              { "kind": "stack", "name": "GoogleSection", "spacing": 3, "visible": false, "children": [
+                { "kind": "row", "name": "GoogleKeyRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+                  { "kind": "label", "name": "GoogleKeyLabel", "text": "API Key:", "role": "Info", "minWidth": 55, "policy": "Excluded" },
+                  { "kind": "field", "name": "GoogleApiKey", "input": "Password",
+                    "help": "Your Google Cloud API key with the Translation API enabled." },
+                  { "kind": "button", "name": "GoogleTestBtn", "text": "Test", "minWidth": 60, "act": "testGoogle",
+                    "help": "Send a test request to check that your Google API key works." }
+                ] },
+                { "kind": "label", "name": "GoogleTestStatus", "text": { "bind": "googleTestStatus" }, "role": "Small" },
+                { "kind": "label", "name": "GoogleHint", "text": "Requires a Google Cloud API key with Translation API enabled", "role": "Hint" }
+              ] },
+              { "kind": "stack", "name": "DeepLSection", "spacing": 3, "visible": false, "children": [
+                { "kind": "row", "name": "DeepLKeyRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+                  { "kind": "label", "name": "DeepLKeyLabel", "text": "API Key:", "role": "Info", "minWidth": 55, "policy": "Excluded" },
+                  { "kind": "field", "name": "DeepLApiKey", "input": "Password",
+                    "help": "Your DeepL API key (Free or Pro)." },
+                  { "kind": "button", "name": "DeepLTestBtn", "text": "Test", "minWidth": 60, "act": "testDeepl",
+                    "help": "Send a test request to check that your DeepL API key works." }
+                ] },
+                { "kind": "label", "name": "DeepLTestStatus", "text": { "bind": "deeplTestStatus" }, "role": "Small" },
+                { "kind": "checkbox", "name": "DeepLFreeToggle", "text": " Use Free API (api-free.deepl.com)", "tone": "Secondary",
+                  "help": "Use the DeepL Free endpoint. Turn off if you have a DeepL Pro key." },
+                { "kind": "label", "name": "DeepLHint", "text": "Uncheck for Pro API (api.deepl.com). Free plan: 500k chars/month", "role": "Hint" }
+              ] }
+            ] },
+            { "kind": "spacer", "name": "RateLimitGap", "height": 10 },
+            { "kind": "row", "name": "RateLimitRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "label", "name": "RateLimitLabel", "text": "Rate limit retry:", "role": "Info", "minWidth": 110 },
+              { "kind": "field", "name": "RateLimitDelay", "placeholder": "3", "input": "Decimal", "minWidth": 50, "fill": "Content",
+                "help": "How long to wait before retrying when the translation service asks the mod to slow down." },
+              { "kind": "label", "name": "RateLimitUnit", "text": "seconds", "role": "Info", "tone": "Muted", "fill": "Stretch" }
+            ] },
+            { "kind": "label", "name": "RateLimitHint", "text": "How long to wait before retrying when the translation service asks to slow down", "role": "Hint" }
+          ] }
+        ] }
+      ] },
+
+      { "kind": "tab", "name": "OnlineTab", "text": "Online", "help": "Website sync, update notifications, and network settings", "children": [
+        { "kind": "card", "name": "OnlineCard", "stretch": true, "children": [
+          { "kind": "checkbox", "name": "OnlineModeToggle", "text": " Enable Online Mode", "act": "onlineModeChanged",
+            "help": "On: the mod contacts our website to find community translations and updates for your games. Off: fully offline, nothing leaves your machine." },
+          { "kind": "spacer", "name": "OnlineGap1", "height": 10 },
+          { "kind": "label", "name": "SyncLabel", "text": "Translation Sync", "role": "SectionTitle" },
+          { "kind": "checkbox", "name": "RealtimeOwnToggle", "text": " Real-time check for your own translation", "tone": "Secondary", "act": "realtimeOwnChanged",
+            "help": "Keeps a connection open so that what you publish from the website, or from another computer, comes back to the game as it happens. Only ever about your own line: contributions you receive and the original you contribute to follow the rhythm below. Nothing is opened when you have published nothing of your own." },
+          { "kind": "label", "name": "RealtimeOwnHint", "text": "Changes you publish from the website or another machine come back straight away, rather than waiting for the next check.", "role": "Hint" },
+          { "kind": "row", "name": "CheckFreqRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+            { "kind": "label", "name": "CheckFreqLabel", "text": "Ask the website every:", "role": "Info", "minWidth": 130 },
+            { "kind": "dropdown", "name": "CheckFrequency", "options": "code", "popupHeight": 150, "width": 200, "minHeight": "InputHeight", "act": "checkFrequencyChanged",
+              "help": "How often the mod asks the website what changed: contributions waiting for your review if you own a translation, the original translation if you contribute to someone else's, and a newer version of the translation you use. Your own line is in here too, unless Real-time check is on. Editing in the browser is a separate, instant channel and is never affected by this setting." }
+          ] },
+          { "kind": "label", "name": "CheckFreqHint", "text": "Contributions you received, a Main that moved, a newer version published — and your own translation when Real-time check is off.", "role": "Hint" },
+          { "kind": "label", "name": "CheckFreqStartupHint", "text": "Every option except Never also checks once when the game starts.", "role": "Hint" },
+          { "kind": "checkbox", "name": "NotifyToggle", "text": " Notify when translation updates available", "tone": "Secondary",
+            "help": "Show a notification when a newer version of a translation is available to download." },
+          { "kind": "checkbox", "name": "AutoDownloadToggle", "text": " Auto-download translation updates (no conflicts)", "tone": "Secondary",
+            "help": "Only applies when you have no local changes — otherwise the mod always asks first" },
+          { "kind": "row", "name": "SettingsDriftRow", "spacing": 5, "minHeight": "RowHeightMedium", "visible": false, "children": [
+            { "kind": "label", "name": "SettingsDriftLabel", "text": { "bind": "settingsDrift" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch" },
+            { "kind": "button", "name": "RestoreSettingsBtn", "text": "Review…", "minWidth": 100, "act": "restoreSettings",
+              "help": "Compare your fonts, exclusions and other file settings with the online version, and choose section by section which ones to take back. Nothing changes until you press Apply." }
+          ] },
+          { "kind": "spacer", "name": "OnlineGap2", "height": 10 },
+          { "kind": "label", "name": "ModUpdatesLabel", "text": "Mod Updates", "role": "SectionTitle" },
+          { "kind": "row", "name": "ModUpdatesRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "checkbox", "name": "ModUpdatesToggle", "text": " Check on startup", "tone": "Secondary", "fill": "Stretch",
+              "help": "Check for a new version of the mod itself when the game starts." },
+            { "kind": "button", "name": "CheckNowBtn", "text": "Check Now", "minWidth": 90, "act": "checkModUpdates",
+              "help": "Check for a new mod version right now." }
+          ] },
+          { "kind": "checkbox", "name": "PrereleaseToggle", "text": " Also notify about beta releases", "tone": "Secondary",
+            "help": "Also get notified about beta (pre-release) mod versions, not just stable ones." },
+          { "kind": "label", "name": "PrereleaseHint", "text": "Betas are early builds for testing new features. Leave off to only hear about stable releases.", "role": "Hint" },
+          { "kind": "label", "name": "ModUpdateStatus", "text": { "bind": "modUpdateStatus" }, "role": "Small" },
+          { "kind": "spacer", "name": "OnlineGap3", "height": 10 },
+          { "kind": "label", "name": "ProxyLabel", "text": "Network / Proxy", "role": "SectionTitle" },
+          { "kind": "label", "name": "ProxyIntro", "text": "Use only if the mod's network calls hang (game intercepts HTTP). Keep Default otherwise.", "role": "Hint" },
+          { "kind": "row", "name": "ProxyModeRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+            { "kind": "label", "name": "ProxyModeLabel", "text": "Mode:", "role": "Info", "minWidth": 80 },
+            { "kind": "dropdown", "name": "ProxyModeDropdown", "options": "code", "popupHeight": 150, "width": 200, "stretch": true, "act": "proxyModeChanged",
+              "help": "How the mod connects to the internet. Keep Default unless the game blocks the mod's network calls." }
+          ] },
+          { "kind": "stack", "name": "ProxyCustomSection", "spacing": 3, "visible": false, "children": [
+            { "kind": "row", "name": "ProxyUrlRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "label", "name": "ProxyUrlLabel", "text": "URL:", "role": "Info", "minWidth": 80 },
+              { "kind": "field", "name": "ProxyUrl", "placeholder": "http://proxy.example.com:8080",
+                "help": "Address of your proxy server, used only in Custom mode." }
+            ] },
+            { "kind": "row", "name": "ProxyUserRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "label", "name": "ProxyUserLabel", "text": "Username:", "role": "Info", "minWidth": 80 },
+              { "kind": "field", "name": "ProxyUser", "placeholder": "(optional)",
+                "help": "Proxy username, if your proxy requires sign-in. Optional." }
+            ] },
+            { "kind": "row", "name": "ProxyPassRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "label", "name": "ProxyPassLabel", "text": "Password:", "role": "Info", "minWidth": 80 },
+              { "kind": "field", "name": "ProxyPass", "placeholder": "(optional)", "input": "Password",
+                "help": "Proxy password, if your proxy requires sign-in. Optional." }
+            ] },
+            { "kind": "checkbox", "name": "ProxyBypassToggle", "text": " Bypass proxy for localhost / private addresses", "tone": "Secondary",
+              "help": "Connect directly to local and private addresses instead of through the proxy." }
+          ] }
+        ] }
+      ] }
+    ] }
+  ],
+  "body": [],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "act": "cancel" },
+    { "kind": "button", "name": "ApplyBtn", "text": "Apply", "policy": "Excluded", "tone": "Primary", "act": "apply" }
+  ]
+}

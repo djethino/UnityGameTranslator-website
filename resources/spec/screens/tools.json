@@ -1,0 +1,174 @@
+{
+  "name": "Translation Tools",
+  "size": { "width": 600, "height": 520, "minWidth": 580, "minHeight": 400 },
+  "chrome": { "cardWidth": 540, "help": "Hover an element to see what it does" },
+  "header": [
+    { "kind": "tabs", "name": "Tabs", "children": [
+      { "kind": "tab", "name": "ToolsTab", "text": "Tools", "help": "Text editors (in-game and browser) and text detection settings", "children": [
+        { "kind": "card", "name": "ToolsCard", "stretch": true, "children": [
+          { "kind": "label", "name": "TextEditorLabel", "text": "Text Editor", "role": "SectionTitle" },
+          { "kind": "label", "name": "TextEditorHint", "text": "Click on any text in-game to edit its translation or retranslate it with AI.", "role": "Hint" },
+          { "kind": "button", "name": "TextEditorBtn", "text": "Start Text Editor", "tone": "Primary", "minWidth": 500, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "textEditor",
+            "help": "Pick any text on screen to fix its translation without leaving the game" },
+          { "kind": "spacer", "name": "TextEditorGap", "height": 15 },
+          { "kind": "label", "name": "BrowserEditorLabel", "text": "Browser Editor", "role": "SectionTitle" },
+          { "kind": "label", "name": "BrowserEditorHint", "text": "Edit your translation file comfortably in your browser while playing — no account needed, nothing is published. Each save is applied in-game automatically.", "role": "Hint" },
+          { "kind": "button", "name": "BrowserEditorBtn", "text": "Edit in browser", "policy": "Dynamic", "tone": "Primary", "minWidth": 500, "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "browserEditor",
+            "help": "Open your translation in a browser editor: search, filters, and every save applied in-game live" },
+          { "kind": "label", "name": "BrowserEditorStatus", "text": { "bind": "browserEditorStatus" }, "policy": "Excluded", "role": "Hint" },
+          { "kind": "spacer", "name": "BrowserEditorGap", "height": 15 },
+          { "kind": "label", "name": "DetectionLabel", "text": "Detection", "role": "SectionTitle" },
+          { "kind": "label", "name": "DetectionHint", "text": "Control how the mod detects special text patterns. Disable if causing issues with your game.", "role": "Hint" },
+          { "kind": "checkbox", "name": "TypewritingToggle", "text": "Typewriting detection", "act": "typewritingChanged",
+            "help": "Detects text that appears letter by letter, like dialogues, and waits for it to settle before translating. Disable if it causes issues." },
+          { "kind": "label", "name": "TypewritingHint", "text": "Text that appears letter by letter (dialogues, cutscenes). Waits for the text to stabilize before translating.", "role": "Hint" },
+          { "kind": "checkbox", "name": "ConcatToggle", "text": "Procedural text detection", "act": "concatChanged",
+            "help": "Detects text assembled in parts, like tooltips or item stats, and translates each part for better cache reuse. Disable if it causes issues." },
+          { "kind": "label", "name": "ConcatHint", "text": "Text built in multiple steps (tooltips, item stats). Translates each part separately for better cache reuse.", "role": "Hint" }
+        ] }
+      ] },
+      { "kind": "tab", "name": "ExclusionsTab", "text": "Exclusions", "help": "Prevent specific texts or UI elements from being translated", "children": [
+        { "kind": "card", "name": "ExclusionsCard", "stretch": true, "children": [
+          { "kind": "label", "name": "ExclusionsLabel", "text": "UI Exclusions", "role": "SectionTitle" },
+          { "kind": "label", "name": "ExclusionsHint", "text": "Exclude UI elements from translation (chat windows, player names, etc.). Exclusions are shared when you upload your translation.", "role": "Hint" },
+          { "kind": "spacer", "name": "ExclusionsGap1", "height": 10 },
+          { "kind": "button", "name": "InspectorBtn", "text": "Start Inspector Mode", "tone": "Primary", "minWidth": 500, "act": "startInspector",
+            "help": "Closes this panel so you can click UI elements in-game to exclude them from translation." },
+          { "kind": "label", "name": "ExclInspectorHint", "text": "Click on UI elements to exclude them", "role": "Hint" },
+          { "kind": "spacer", "name": "ExclusionsGap2", "height": 10 },
+          { "kind": "label", "name": "ExclManualLabel", "text": "Add pattern manually:", "role": "Small" },
+          { "kind": "row", "name": "ExclAddRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+            { "kind": "field", "name": "PatternInput", "placeholder": "e.g., **/ChatPanel/**",
+              "help": "Type a hierarchy path pattern to exclude. Use ** for any depth and * for a single level." },
+            { "kind": "button", "name": "ExclAddBtn", "text": "Add", "minWidth": 60, "act": "addPattern",
+              "help": "Adds the typed pattern to the exclusion list. Takes effect on Apply." }
+          ] },
+          { "kind": "label", "name": "ExclPatternHint", "text": "Use ** for any depth, * for single level", "role": "Hint" },
+          { "kind": "spacer", "name": "ExclusionsGap3", "height": 10 },
+          { "kind": "label", "name": "ExclFindLabel", "text": "Find by text content:", "role": "Small" },
+          { "kind": "row", "name": "ExclFindRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+            { "kind": "field", "name": "FindValueInput", "placeholder": "Enter text visible in-game...",
+              "help": "Type text visible in-game to locate the UI element that shows it, then exclude it." },
+            { "kind": "button", "name": "ExclFindBtn", "text": "Find", "minWidth": 60, "act": "findByValue",
+              "help": "Searches the scene for UI components displaying the entered text." }
+          ] },
+          { "kind": "label", "name": "ExclFindHint", "text": "Find which UI component displays this text, then exclude it", "role": "Hint" },
+          { "kind": "list", "name": "FindResultsScroll", "minHeight": 0, "preferredHeight": 80, "fill": false, "empty": "No UI component found with this text.", "visible": false },
+          { "kind": "spacer", "name": "ExclusionsGap4", "height": 10 },
+          { "kind": "label", "name": "ExclListLabel", "text": "Current Exclusions:", "role": "Small" },
+          { "kind": "list", "name": "ExclusionsScroll", "minHeight": 200, "preferredHeight": 200, "empty": "No exclusions defined" },
+          { "kind": "label", "name": "ExclusionsStatus", "text": { "bind": "exclusionsStatus" }, "role": "Small" }
+        ] }
+      ] },
+      { "kind": "tab", "name": "FontsTab", "text": "Fonts", "help": "Replace the game's fonts when they can't display your language's characters" },
+      { "kind": "tab", "name": "ImagesTab", "text": "Images", "help": "Replace images that contain baked-in text", "children": [
+        { "kind": "card", "name": "ImagesCard", "stretch": true, "children": [
+          { "kind": "label", "name": "ImagesLabel", "text": "Bitmap Replacements", "role": "SectionTitle" },
+          { "kind": "label", "name": "ImagesHint", "text": "Replace images that contain text (bitmap text) with translated versions. Use the inspector to select images, export originals as templates, then import your translated PNG files.", "role": "Hint" },
+          { "kind": "spacer", "name": "ImagesGap1", "height": 5 },
+          { "kind": "checkbox", "name": "EnableImageReplacementToggle", "text": "Enable image replacement (uncheck to debug with original images)", "act": "imageReplacementChanged",
+            "help": "Swaps images that contain baked-in text for your translated versions. Uncheck to debug with the original images." },
+          { "kind": "spacer", "name": "ImagesGap2", "height": 5 },
+          { "kind": "button", "name": "ImageInspectorBtn", "text": "Start Image Inspector", "tone": "Primary", "minWidth": 500, "act": "imageInspector",
+            "help": "Closes this panel so you can click images in-game to mark them for replacement." },
+          { "kind": "label", "name": "ImageInspectorHint", "text": "Click on images in the game to mark them for replacement", "role": "Hint" },
+          { "kind": "spacer", "name": "ImagesGap3", "height": 8 },
+          { "kind": "label", "name": "ImagesListLabel", "text": "Current Replacements:", "role": "Small", "bold": true },
+          { "kind": "list", "name": "ImagesScroll", "minHeight": 200, "preferredHeight": 200, "empty": "No images marked for replacement yet.\nUse the Image Inspector to select images." },
+          { "kind": "spacer", "name": "ImagesGap4", "height": 5 },
+          { "kind": "row", "name": "ApplyRow", "spacing": 5, "minHeight": "ButtonHeight", "children": [
+            { "kind": "button", "name": "ApplyAllBtn", "text": "Load All Replacements", "tone": "Primary", "fill": "Stretch", "act": "loadAll",
+              "help": "Reloads your edited PNG files from disk and applies them in-game. Use after editing the exported templates." }
+          ] },
+          { "kind": "label", "name": "ImagesStatus", "text": { "bind": "imagesStatus" }, "role": "Small" }
+        ] }
+      ] },
+      { "kind": "tab", "name": "VariablesTab", "text": "Variables", "help": "Protect dynamic values (numbers, names) inside translated texts", "children": [
+        { "kind": "card", "name": "VariablesCard", "stretch": true, "children": [
+          { "kind": "label", "name": "VarsLabel", "text": "Game Variables", "role": "SectionTitle" },
+          { "kind": "label", "name": "VarsHint", "text": "Capture dynamic game values (player name, clan name, etc.) so translations can be reused regardless of the actual value. Variables are replaced with placeholders before translation.", "role": "Hint" },
+          { "kind": "spacer", "name": "VarsGap1", "height": 8 },
+          { "kind": "label", "name": "CaptureLabel", "text": "Capture Variable", "role": "SectionTitle" },
+          { "kind": "label", "name": "CaptureHint", "text": "Enter the current value of a game variable (e.g. your character name) to find it in memory.", "role": "Hint" },
+          { "kind": "row", "name": "CaptureRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "field", "name": "ScanValueInput", "placeholder": "Enter value to search...",
+              "help": "Type the current value of a game variable, like your character name, to find it in memory." },
+            { "kind": "button", "name": "ScanBtn", "text": "Scan", "tone": "Primary", "minWidth": 70, "act": "scan",
+              "help": "Searches game memory for the entered value so it can be turned into a reusable placeholder." }
+          ] },
+          { "kind": "spacer", "name": "VarsGap2", "height": 5 },
+          { "kind": "list", "name": "ScanResultsScroll", "minHeight": 80, "preferredHeight": 100, "fill": false, "empty": "No matching fields found in game memory.", "visible": false },
+          { "kind": "spacer", "name": "VarsGap3", "height": 8 },
+          { "kind": "label", "name": "VarsListLabel", "text": "Defined Variables:", "role": "Small", "bold": true },
+          { "kind": "list", "name": "VarsScroll", "minHeight": 200, "preferredHeight": 200 },
+          { "kind": "spacer", "name": "VarsGap4", "height": 5 },
+          { "kind": "label", "name": "VarsStatus", "text": { "bind": "varsStatus" }, "role": "Small" }
+        ] }
+      ] }
+    ] },
+    { "kind": "stack", "name": "FontsSubTabHost", "children": [
+      { "kind": "tabs", "name": "FontsSubTabs", "rowHeight": 26, "contentsIn": "FontsTab", "children": [
+        { "kind": "tab", "name": "FontsGlobalTab", "text": "Global", "help": "Global font settings for every detected font, including fallbacks and sharpness.", "children": [
+          { "kind": "card", "name": "FontsCard", "stretch": true, "children": [
+            { "kind": "label", "name": "FontsLabel", "text": "Font Management", "role": "SectionTitle" },
+            { "kind": "label", "name": "FontsHint", "text": "Configure translation for detected fonts. Add fallback fonts for non-Latin scripts (Hindi, Arabic, Chinese, etc.). Settings are saved with translations.", "role": "Hint" },
+            { "kind": "spacer", "name": "FontsGap1", "height": 5 },
+            { "kind": "checkbox", "name": "EnableFontReplacementToggle", "text": "Enable font replacement (uncheck to debug with original fonts)", "act": "fontReplacementChanged",
+              "help": "Replaces game fonts so your language's characters display correctly. Uncheck to debug with the original fonts." },
+            { "kind": "row", "name": "FontSharpnessRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+              { "kind": "label", "name": "FontSharpnessLabel", "text": "Font sharpness:", "role": "Small", "minWidth": 100 },
+              { "kind": "dropdown", "name": "FontSharpness", "options": "code", "width": 140, "popupHeight": 150, "act": "sharpnessChanged",
+                "help": "How finely replacement fonts are rendered. Higher = crisper when the translation scales text up, but uses more video memory. 'Auto' is a safe default. Text size is unchanged. Takes effect on the next font rebuild." }
+            ] },
+            { "kind": "spacer", "name": "FontsGap2", "height": 10 },
+            { "kind": "row", "name": "RefreshRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "button", "name": "RefreshFontsBtn", "text": "Refresh List", "minWidth": 100, "act": "refreshFonts",
+                "help": "Rescans the game for fonts currently in use and updates the list below." },
+              { "kind": "label", "name": "FontsStatus", "text": { "bind": "fontsStatus" }, "role": "Small", "fill": "Stretch" }
+            ] },
+            { "kind": "spacer", "name": "FontsGap3", "height": 10 },
+            { "kind": "label", "name": "FontsListLabel", "text": "Detected Fonts:", "role": "Small" },
+            { "kind": "list", "name": "FontsScroll", "minHeight": 180, "preferredHeight": 180, "empty": "No fonts detected yet. Play the game to detect fonts." }
+          ] }
+        ] },
+        { "kind": "tab", "name": "FontsOverridesTab", "text": "Overrides", "help": "Per-element rules that override the font size for specific UI elements.", "children": [
+          { "kind": "card", "name": "OverridesCard", "stretch": true, "children": [
+            { "kind": "label", "name": "OverridesLabel", "text": "Font Overrides", "role": "SectionTitle" },
+            { "kind": "label", "name": "OverridesHint", "text": "Override font size for specific UI elements. Use inspector, search, or manual pattern.", "role": "Hint" },
+            { "kind": "spacer", "name": "OverridesGap1", "height": 5 },
+            { "kind": "button", "name": "FontOverrideInspectorBtn", "text": "Inspect Element", "tone": "Primary", "minWidth": 500, "act": "overrideInspector",
+              "help": "Closes this panel so you can click a UI element in-game to create a font override for it." },
+            { "kind": "label", "name": "OverrideInspectorHint", "text": "Click on a UI element to create an override for it", "role": "Hint" },
+            { "kind": "spacer", "name": "OverridesGap2", "height": 5 },
+            { "kind": "label", "name": "OverrideFindLabel", "text": "Find by text content:", "role": "Small" },
+            { "kind": "row", "name": "FindOverrideRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "field", "name": "FindOverrideInput", "placeholder": "Enter text visible in-game...",
+                "help": "Type text visible in-game to locate the UI element that shows it, then create an override." },
+              { "kind": "button", "name": "FindOverrideBtn", "text": "Find", "minWidth": 60, "act": "findOverride",
+                "help": "Searches the scene for UI components displaying the entered text." }
+            ] },
+            { "kind": "list", "name": "OverrideFindResults", "minHeight": 0, "preferredHeight": 80, "fill": false, "empty": "No UI component found with this text.", "visible": false },
+            { "kind": "spacer", "name": "OverridesGap3", "height": 5 },
+            { "kind": "label", "name": "OverrideManualLabel", "text": "Add pattern manually:", "role": "Small" },
+            { "kind": "row", "name": "AddOverrideRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+              { "kind": "field", "name": "ManualOverrideInput", "placeholder": "path:**/TablePanel/**",
+                "help": "Type a rule to match elements. Prefix with path:, font:, or text: to match by hierarchy, font name, or content." },
+              { "kind": "button", "name": "AddOverrideBtn", "text": "Add", "minWidth": 60, "act": "addOverride",
+                "help": "Adds the typed pattern as a new override rule. Takes effect on Apply." }
+            ] },
+            { "kind": "label", "name": "OverridePatternHint", "text": "Prefixes: path: (hierarchy), font: (name), text: (content)", "role": "Hint" },
+            { "kind": "spacer", "name": "OverridesGap4", "height": 5 },
+            { "kind": "label", "name": "OverridesCount", "text": { "bind": "overridesCount" }, "policy": "Excluded", "role": "Small", "tone": "Muted" },
+            { "kind": "list", "name": "OverridesScroll", "minHeight": 200, "preferredHeight": 200 },
+            { "kind": "label", "name": "OverrideStatus", "text": { "bind": "overrideStatus" }, "role": "Small" }
+          ] }
+        ] }
+      ] }
+    ] }
+  ],
+  "body": [],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "act": "cancel" },
+    { "kind": "button", "name": "ApplyBtn", "text": "Apply", "policy": "Dynamic", "tone": "Primary", "act": "apply" }
+  ]
+}
