@@ -47,12 +47,12 @@
             { "kind": "label", "name": "LockedHeader", "text": { "bind": "lockedHeader" }, "role": "Small", "tone": "Warning" },
             { "kind": "row", "name": "SourceRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
               { "kind": "label", "name": "SourceLabel", "text": "Source:", "role": "Info", "minWidth": 60 },
-              { "kind": "row", "name": "SourceMark", "spacing": 0 },
+              { "kind": "row", "name": "SourceMark", "spacing": 0, "pad": 0, "fill": "Content" },
               { "kind": "label", "name": "SourceValue", "text": { "bind": "lockedSource" }, "fill": "Stretch" }
             ] },
             { "kind": "row", "name": "TargetRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
               { "kind": "label", "name": "TargetLabel", "text": "Target:", "role": "Info", "minWidth": 60 },
-              { "kind": "row", "name": "TargetMark", "spacing": 0 },
+              { "kind": "row", "name": "TargetMark", "spacing": 0, "pad": 0, "fill": "Content" },
               { "kind": "label", "name": "TargetValue", "text": { "bind": "lockedTarget" }, "fill": "Stretch" }
             ] }
           ] },
