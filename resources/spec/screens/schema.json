@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ugt:spec:screen",
   "title": "A screen of the mod, described in data",
-  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen); title, checkbox (2026-09-16, for the upload screen).",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen); title, checkbox (2026-09-16, for the upload screen); toast, and chrome.titleBar / chrome.pinned (2026-09-16, for the corner notification).",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "size", "body", "footer"],
@@ -24,7 +24,9 @@
         "backdrop": { "type": "boolean", "default": true, "description": "Darken the game behind the window." },
         "persist": { "type": "boolean", "default": true, "description": "Remember position and size under `name`." },
         "cardWidth": { "type": "integer", "minimum": 100, "description": "The width the body's cards are laid out for; the window's width minus its margins when absent." },
-        "help": { "type": "string", "minLength": 1, "description": "The resting sentence of a help bar pinned above the footer, where the explanation of whichever control is hovered is shown. Present, the screen has the bar; absent, it has none. What each control says there is the code's." }
+        "help": { "type": "string", "minLength": 1, "description": "The resting sentence of a help bar pinned above the footer, where the explanation of whichever control is hovered is shown. Present, the screen has the bar; absent, it has none. What each control says there is the code's." },
+        "titleBar": { "type": "boolean", "default": true, "description": "The bar with the screen's name and its close button. Off for a corner notification." },
+        "pinned": { "type": "boolean", "default": false, "description": "Hangs from a screen corner chosen at run time (a setting) instead of being centred: never dragged or resized by hand." }
       }
     },
     "header": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "The fixed part between the title bar and the body: what must stay put while the body scrolls — a title, the state somebody reads before choosing a row. Absent for a screen whose body carries its own title." },
@@ -56,7 +58,7 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
@@ -138,6 +140,7 @@
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "status" } } }, "then": { "properties": { "centred": { "type": "boolean", "default": true } }, "description": "A line the code writes with a tone (Say/Show/Clear) — collapsed while it has nothing to say." } },
+        { "if": { "properties": { "kind": { "const": "toast" } } }, "then": { "properties": {}, "description": "A short-lived message the code shows with a tone and takes away after its time — a hotkey's feedback. Hidden until shown." } },
         { "if": { "properties": { "kind": { "const": "title" } } }, "then": {
             "required": ["text", "scope"],
             "properties": {
@@ -170,6 +173,7 @@
               "fill": { "type": "string", "enum": ["Content", "Stretch"], "description": "As wide as its words, or the rest of the row." },
               "autoHeight": { "type": "boolean", "description": "A paragraph that wraps grows to what it draws." },
               "italic": { "type": "boolean", "description": "Said only to override the role's own choice (a Hint is italic unless told otherwise)." },
+              "wrap": { "type": "boolean", "default": true, "description": "False keeps the text on one line, overflowing rather than folding — a name, a tag, a mark." },
               "bold": { "type": "boolean" }
             } } },
         { "if": { "properties": { "kind": { "const": "button" } } }, "then": {

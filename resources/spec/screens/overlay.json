@@ -1,0 +1,47 @@
+{
+  "name": "StatusOverlay",
+  "size": { "width": 350, "height": 180, "minWidth": 350, "minHeight": 50 },
+  "chrome": { "backdrop": false, "persist": false, "titleBar": false, "pinned": true },
+  "body": [
+    { "kind": "stack", "name": "OverlayStack", "spacing": 5, "pad": 5, "children": [
+      { "kind": "callout", "name": "ModUpdateBox", "tone": "Success", "direction": "Stack", "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "ModUpdateLabel", "text": { "bind": "modUpdate" }, "policy": "Excluded", "bold": true },
+        { "kind": "label", "name": "ModManagerHint", "text": "Or let the Manager keep it up to date", "role": "Small" },
+        { "kind": "row", "name": "ModBtnRow", "spacing": 5, "children": [
+          { "kind": "button", "name": "ModDownloadBtn", "text": { "bind": "modDownload" }, "policy": "Excluded", "tone": "Primary", "size": "Compact", "minWidth": 80, "act": "modDownload" },
+          { "kind": "button", "name": "ModManagerBtn", "text": { "bind": "modManager" }, "policy": "Excluded", "size": "Compact", "minWidth": 100, "act": "modManager" },
+          { "kind": "button", "name": "ModIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 60, "act": "modIgnore" }
+        ] }
+      ] },
+      { "kind": "callout", "name": "SyncBox", "tone": "Warning", "direction": "Stack", "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "SyncLabel", "text": { "bind": "sync" }, "policy": "Excluded", "bold": true },
+        { "kind": "row", "name": "SyncBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "SyncBranchBtn", "text": "Branch", "tone": "Success", "size": "Compact", "minWidth": 65, "act": "syncBranch" },
+          { "kind": "button", "name": "SyncForkBtn", "text": "Fork", "tone": "Danger", "size": "Compact", "minWidth": 55, "act": "syncFork" },
+          { "kind": "button", "name": "SyncActionBtn", "text": { "bind": "syncAction" }, "policy": "Excluded", "tone": "Primary", "size": "Compact", "minWidth": 75, "act": "syncAction" },
+          { "kind": "button", "name": "SyncCompareBtn", "text": { "bind": "syncCompare" }, "policy": "Excluded", "size": "Compact", "minWidth": 75, "act": "syncCompare" },
+          { "kind": "button", "name": "SyncSettingsBtn", "text": "Settings", "size": "Compact", "minWidth": 65, "act": "syncSettings" },
+          { "kind": "button", "name": "SyncIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "syncIgnore" }
+        ] },
+        { "kind": "label", "name": "SyncHintLabel", "text": { "bind": "syncHint" }, "policy": "Excluded", "role": "Hint" }
+      ] },
+      { "kind": "callout", "name": "WebNotifBox", "tone": "Info", "direction": "Stack", "spacing": 4, "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "WebNotifTitle", "text": { "bind": "webNotif" }, "policy": "Excluded", "bold": true },
+        { "kind": "row", "name": "WebNotifActions", "spacing": 8, "placement": "MiddleRight", "fill": "Stretch", "minHeight": "RowHeightNormal", "children": [
+          { "kind": "button", "name": "WebNotifViewBtn", "text": "View", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "webNotifView" },
+          { "kind": "button", "name": "WebNotifDismissBtn", "text": "Dismiss", "size": "Compact", "minWidth": 70, "act": "webNotifDismiss" }
+        ] }
+      ] },
+      { "kind": "callout", "name": "AIBox", "tone": "Info", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "minHeight": "MultiLineSmall", "visible": false, "children": [
+        { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "minHeight": "RowHeightSmall" },
+        { "kind": "label", "name": "AIQueueLabel", "text": { "bind": "aiQueue" }, "policy": "Excluded", "role": "Small" }
+      ] },
+      { "kind": "row", "name": "ConnectionBox", "spacing": 5, "padX": 8, "padY": 0, "placement": "MiddleRight", "minHeight": "RowHeightSmall", "visible": false, "children": [
+        { "kind": "label", "name": "ConnectionLabel", "text": { "bind": "connection" }, "policy": "Excluded", "role": "Small", "align": "MiddleRight" },
+        { "kind": "label", "name": "ConnectionDot", "text": "●", "policy": "Excluded", "role": "Small", "align": "MiddleRight", "minWidth": 12, "wrap": false }
+      ] },
+      { "kind": "toast", "name": "ToastBox" }
+    ] }
+  ],
+  "footer": []
+}
