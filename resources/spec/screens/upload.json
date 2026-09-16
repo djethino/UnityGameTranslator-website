@@ -1,0 +1,38 @@
+{
+  "name": "Upload Translation",
+  "size": { "width": 450, "height": 420, "minWidth": 450, "minHeight": 300 },
+  "chrome": { "help": "Hover an element to see what it does" },
+  "body": [
+    { "kind": "card", "name": "UploadCard", "children": [
+      { "kind": "title", "name": "TitleLabel", "text": "Upload Translation", "policy": "Dynamic", "scope": { "onThisMachine": true, "yourPublishedCopy": true } },
+      { "kind": "spacer", "name": "TitleGap", "height": 5 },
+      { "kind": "section", "name": "InfoBox", "children": [
+        { "kind": "label", "name": "EntriesLabel", "text": { "bind": "entries" } },
+        { "kind": "label", "name": "GameLabel", "text": { "bind": "game" }, "policy": "Excluded", "role": "Info" },
+        { "kind": "label", "name": "ModeInfoLabel", "text": { "bind": "modeInfo" }, "policy": "Excluded", "role": "Small", "italic": true, "fill": "Stretch", "align": "TopLeft" }
+      ] },
+      { "kind": "spacer", "name": "InfoGap", "height": 10 },
+      { "kind": "section", "name": "StatusBox", "children": [
+        { "kind": "checkbox", "name": "StatusToggle", "text": "Mark this translation as complete",
+          "help": "Your own declaration that this translation is finished. Players see it on the listing, and it is what separates a translation you can play with from one still being written." },
+        { "kind": "label", "name": "StatusInherited", "text": { "bind": "statusInherited" }, "role": "Small" },
+        { "kind": "checkbox", "name": "AcceptBranchesToggle", "text": "Let others contribute to this translation",
+          "help": "A contribution is a copy of your work with someone else's changes, sent to you to accept or not. Leave this off to work alone — others can still publish their own version of it." }
+      ] },
+      { "kind": "label", "name": "NotesLabel", "text": "Notes (optional):", "role": "Small" },
+      { "kind": "field", "name": "NotesInput", "placeholder": "Add any notes about this translation...", "minHeight": "MultiLineSmall",
+        "help": "Shown to other players on the website next to your translation" },
+      { "kind": "label", "name": "UrlLabel", "text": "Resources URL (optional):", "role": "Small" },
+      { "kind": "field", "name": "ResourcesUrlInput", "placeholder": "https://... (link to fonts/images)",
+        "help": "Optional public link to the fonts and images pack players need for text to render correctly. Shown to anyone who downloads this translation." },
+      { "kind": "label", "name": "UrlHint", "text": "External link to custom fonts or replacement images. Not hosted by us.", "role": "Hint" },
+      { "kind": "status", "name": "Status" }
+    ] }
+  ],
+  "footer": [
+    { "kind": "button", "name": "CancelBtn", "text": "Cancel", "act": "cancel" },
+    { "kind": "button", "name": "BackBtn", "text": "← Back", "act": "back", "visible": false },
+    { "kind": "button", "name": "UploadBtn", "text": "Upload", "policy": "Dynamic", "tone": "Primary", "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "upload",
+      "help": "Publish this translation online so others can find and download it for this game" }
+  ]
+}

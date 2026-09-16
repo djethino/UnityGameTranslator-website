@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ugt:spec:screen",
   "title": "A screen of the mod, described in data",
-  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen).",
+  "description": "What a window of the mod is made of, in the closed vocabulary of UI/Components — so that a Core on another engine draws the same screen from the same document with its own interpreter (UniverseLib here, Godot's Control tree there). A document says the SHAPE: what is where, what it is named, what it says, and what it asks for. It never says a rule: what a label shows or whether a button is offered is decided in code, from the facts, and written into the screen by its `bind` names. ⚠ The vocabulary is closed on purpose (`kind`): a kind added here is a widget every interpreter has to draw — added in this enum, in Engine/ScreenDocument.Kinds and in every builder, together. Kinds: card, stack, row, spacer, label, button, status (2026-09-12/15); section, field, dropdown, list and `help` on any piece (2026-09-15, for the upload setup screen); tabs, tab, callout, collapsible (2026-09-16, for the main screen); title, checkbox (2026-09-16, for the upload screen).",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "size", "body", "footer"],
@@ -56,7 +56,7 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
@@ -138,6 +138,23 @@
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
         { "if": { "properties": { "kind": { "const": "status" } } }, "then": { "properties": { "centred": { "type": "boolean", "default": true } }, "description": "A line the code writes with a tone (Say/Show/Clear) — collapsed while it has nothing to say." } },
+        { "if": { "properties": { "kind": { "const": "title" } } }, "then": {
+            "required": ["text", "scope"],
+            "properties": {
+              "text": { "$ref": "#/$defs/text" },
+              "scope": { "$ref": "#/$defs/scope" },
+              "policy": { "type": "string", "enum": ["UiText", "Dynamic", "Excluded"], "description": "Dynamic for a title the code rewrites (a mode announced in the title itself)." } },
+            "description": "The screen's title with the three-position scope switch beside it — which copy this screen writes to. On every screen that shows translation lines, without exception; the panel base holds it for the window's resizes, which is why the builder asks the panel to make it." } },
+        { "if": { "properties": { "kind": { "const": "checkbox" } } }, "then": {
+            "required": ["text"],
+            "properties": {
+              "text": { "type": "string", "minLength": 1 },
+              "initial": { "type": "boolean", "default": false },
+              "tone": { "type": "string", "enum": ["Plain", "Secondary", "Muted", "Accent", "Success", "Warning", "Error", "Info", "Neutral"] },
+              "fill": { "type": "string", "enum": ["Content", "Stretch"] },
+              "policy": { "type": "string", "enum": ["UiText", "Excluded"] },
+              "act": { "type": "string", "minLength": 1, "description": "Asked for when the box is ticked or unticked; absent when the code only reads the box." } },
+            "description": "A box with its words. The code reads it (IsOn) or is told when it changes (act)." } },
         { "if": { "properties": { "kind": { "const": "spacer" } } }, "then": { "required": ["height"], "properties": { "height": { "type": "integer", "minimum": 0 } } } },
         { "if": { "properties": { "kind": { "const": "label" } } }, "then": {
             "required": ["text"],
