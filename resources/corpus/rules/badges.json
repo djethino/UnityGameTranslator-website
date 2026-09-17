@@ -22,6 +22,13 @@
         "branch_frozen": "bool: the Main still exists and has closed its contributions"
       },
       "out": "the whole strip, in order: [{kind, text, tone, tip}]"
+    },
+    "in_listing": {
+      "in": {
+        "installed": "bool: this lineage is the one the game holds",
+        "yours_is_main": "true when the reader leads this lineage, false when they hold a branch of it, null when they hold nothing in it or the site has not said yet"
+      },
+      "out": "the row's chips about the reader, in order: [{kind, text, tone, tip}] — installed first, then their side"
     }
   },
   "cases": [
@@ -559,6 +566,45 @@
           "tip": "How many times it has been taken from the site." }
       ],
       "why": "THE order, and it is the case that guards it: publication first because it decides what every button means, then who you are in the lineage, then whether you are up to date, then what the file is made of, then what the world made of it"
+    },
+    {
+      "id": "badges/in_listing/somebody-elses-row",
+      "op": "in_listing",
+      "in": { "installed": false, "yours_is_main": null },
+      "out": [],
+      "why": "a row the reader holds nothing in, and does not have installed, says nothing about them — and 'not said yet' is the same silence, never a claim"
+    },
+    {
+      "id": "badges/in_listing/installed-and-not-yours",
+      "op": "in_listing",
+      "in": { "installed": true, "yours_is_main": null },
+      "out": [
+        { "kind": "Installed", "text": "Installed", "tone": "Notice",
+          "tip": "The translation this game holds right now." }
+      ],
+      "why": "somebody else's translation, downloaded and in use: the one fact a list of candidates must state is which one is already here"
+    },
+    {
+      "id": "badges/in_listing/installed-and-led",
+      "op": "in_listing",
+      "in": { "installed": true, "yours_is_main": true },
+      "out": [
+        { "kind": "Installed", "text": "Installed", "tone": "Notice",
+          "tip": "The translation this game holds right now." },
+        { "kind": "Role", "text": "Main (you)", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
+      ],
+      "why": "what is on this machine first, then who you are — the order For reads in; '(you)' because on a list of other people's work a bare 'Main' would describe the row, not the reader"
+    },
+    {
+      "id": "badges/in_listing/a-branch-held-elsewhere",
+      "op": "in_listing",
+      "in": { "installed": false, "yours_is_main": false },
+      "out": [
+        { "kind": "Role", "text": "Branch (you)", "tone": "Attention",
+          "tip": "You hold a contribution to this translation. Its author decides what they keep." }
+      ],
+      "why": "a reader may contribute to several translations of one game; the row of a lineage they contribute to says so even when another one is installed — Attention, as the Branch chip is everywhere, because it is the one worth spotting"
     }
   ]
 }

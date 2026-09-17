@@ -659,6 +659,7 @@
           "vote_count": 0, "download_count": 0, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "updated_at": { "$is": "iso8601" }
         } ] }
       },
+      "read": { "reader": "my_translations", "expects": { "Success": true, "Rows.Count": 1, "Rows.0.IsMain": true, "Rows.0.FileUuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
       "why": "a whole library in one call, with what waits on each row — fifty calls to check-uuid would starve the account's budget"
     },
     {
@@ -666,6 +667,7 @@
       "setup": "lineage",
       "request": { "method": "GET", "path": "/me/translations", "as": "bob" },
       "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.branch.id" }, "role": "branch", "branches_count": null, "branches_with_work": null, "lines_waiting": null, "main_missing": false, "main_abandoned": false, "accepts_branches": true, "branch_frozen": false } ] } },
+      "read": { "reader": "my_translations", "expects": { "Rows.Count": 1, "Rows.0.IsMain": false } },
       "why": "null on the side the question does not apply to — 'not a branch' is not 'fine', and 'not a Main' is not 'nothing waits'"
     },
     {
