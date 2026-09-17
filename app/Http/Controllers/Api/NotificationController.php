@@ -74,14 +74,19 @@ class NotificationController extends Controller
             // places where somebody is most likely to be mid-session and least likely to go and
             // look it up. A summary that says nothing is worse than none: it costs a glance and
             // returns nothing.
+            //
+            // ⚠ Plain words, and the SAME words the mod's status card uses for the same wall
+            // (common/Uploads.cs, Walls.BranchFrozen / Walls.MainMissing): the fact, then the way
+            // out. "hung from is gone" and "carry on" read as riddles to a player whose fourth
+            // language this is — and a notification is read in a corner, mid-game, in one glance.
             'branches_closed' => sprintf(
-                '@%s no longer takes contributions on %s (%s). Publish your own version to carry on.',
-                $data['owner_username'] ?? '?',
+                '%s (%s): @%s no longer accepts contributions. Fork keeps your lines as your own version.',
                 $data['game_name'] ?? '?',
                 $data['target_language'] ?? '?',
+                $data['owner_username'] ?? '?',
             ),
             'branch_orphaned' => sprintf(
-                'The %s translation your contribution hung from is gone (%s). You can publish yours.',
+                '%s (%s): the translation you contributed to was removed by its author. Fork keeps your lines as your own version.',
                 $data['game_name'] ?? '?',
                 $data['target_language'] ?? '?',
             ),

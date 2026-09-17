@@ -26,7 +26,7 @@
         { "kind": "label", "name": "SyncHintLabel", "text": { "bind": "syncHint" }, "policy": "Excluded", "role": "Hint" }
       ] },
       { "kind": "callout", "name": "WebNotifBox", "tone": "Info", "direction": "Stack", "spacing": 4, "padX": 8, "padY": 5, "visible": false, "children": [
-        { "kind": "label", "name": "WebNotifTitle", "text": { "bind": "webNotif" }, "policy": "Excluded", "bold": true },
+        { "kind": "label", "name": "WebNotifTitle", "text": { "bind": "webNotif" }, "policy": "Excluded", "bold": true, "autoHeight": true },
         { "kind": "row", "name": "WebNotifActions", "spacing": 8, "placement": "MiddleRight", "fill": "Stretch", "minHeight": "RowHeightNormal", "children": [
           { "kind": "button", "name": "WebNotifViewBtn", "text": "View", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "webNotifView" },
           { "kind": "button", "name": "WebNotifDismissBtn", "text": "Dismiss", "size": "Compact", "minWidth": 70, "act": "webNotifDismiss" }
