@@ -1067,6 +1067,17 @@ document.addEventListener('alpine:init', () => {
             });
 
             this.settingsRowsReady = this.hasSettingsRows;
+
+            // 🔴 Defaults, as the lines have them: a disputed setting is taken from the side being
+            // OFFERED — the file on a publish, the site's copy when only the site moved — unless a
+            // choice already stands. Left blank, an exclusion added a minute earlier waited for a
+            // click nothing asked for, and a publish "in full" would have carried nothing of it.
+            const offered = this.sourceIds()[0];
+            for (const row of this.settingsRows) {
+                if (row.id in this.settingsPick) continue;
+                if (this.rowIsDisputed(row)) this.settingsPick = { ...this.settingsPick, [row.id]: offered };
+            }
+
             this.settingsOpen = this.settingsDifferenceCount() > 0;
         },
 

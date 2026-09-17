@@ -176,6 +176,23 @@ class MergePreviewFlowTest extends TestCase
             ->assertOk()->assertSee('catOnlyOnTarget: false', false);
     }
 
+    /**
+     * Ending a comparison lands on the translation's own page. It redirected to a route that
+     * only exists under /admin, and no test ended one, so the exception waited for a person.
+     */
+    public function test_ending_a_comparison_lands_on_the_translations_page(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT);
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT)->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $this->actingAs($user)
+            ->post(route('translations.merge-preview.end', $translation))
+            ->assertRedirect(route('translations.dashboard', $translation));
+        $this->assertNull(session('merge_preview_token'), 'the comparison is over');
+    }
+
     public function test_settings_endpoint_serves_both_sides_as_comparable_rows(): void
     {
         $user = User::factory()->create()->refresh();

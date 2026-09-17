@@ -1235,7 +1235,13 @@ class TranslationController extends Controller
 
         $request->session()->forget(['merge_preview_token', 'merge_preview_translation_id']);
 
-        return redirect()->route('translations.show', $translation)
+        // Back to the translation's own page: the owner's dashboard for one's own row, the public
+        // view for a comparison taken on somebody else's (a branch against its Main).
+        // ⚠ `translations.show` never existed outside /admin — an ended comparison threw a
+        // RouteNotFoundException for as long as no test ended one (2026-09-17).
+        $own = $request->user() !== null && (int) $translation->user_id === (int) $request->user()->id;
+
+        return redirect()->route($own ? 'translations.dashboard' : 'translations.view', $translation)
             ->with('success', __('merge_preview.ended'));
     }
 
