@@ -18,5 +18,49 @@
   ],
   "footer": [
     { "kind": "button", "name": "CloseBtn", "text": "Close", "tone": "Secondary", "act": "close" }
+  ],
+  "templates": [
+    { "kind": "spacer", "name": "GroupGap", "height": 12 },
+    { "kind": "stack", "name": "Group", "spacing": 4, "padLeft": 6, "padRight": 8, "padTop": 8, "padBottom": 8, "surface": "Elevated", "children": [
+      { "kind": "row", "name": "Heading", "spacing": 8, "minHeight": "SectionTitleHeight", "children": [
+        { "kind": "label", "name": "Text", "text": { "bind": "heading" }, "role": "SectionTitle", "minWidth": 190 },
+        { "kind": "label", "name": "Note", "text": { "bind": "note" }, "policy": "Excluded", "role": "Caption", "align": "MiddleRight", "fill": "Stretch" }
+      ] },
+      { "kind": "label", "name": "Empty", "text": { "bind": "empty" }, "role": "Caption", "fill": "Stretch", "visible": false },
+      { "kind": "list", "name": "Rows", "minHeight": 0, "fill": false, "spacing": 4, "visible": false },
+      { "kind": "row", "name": "SaveRow", "spacing": 8, "minHeight": "RowHeightNormal", "placement": "MiddleRight", "visible": false, "children": [
+        { "kind": "button", "name": "SaveBtn", "text": "Backup", "tone": "Primary", "act": "save" }
+      ] }
+    ] },
+    { "kind": "stack", "name": "EntryText", "spacing": 1, "children": [
+      { "kind": "label", "name": "Facts", "text": { "bind": "facts" }, "policy": "Excluded", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+      { "kind": "row", "name": "Languages", "spacing": 4, "minHeight": "RowHeightSmall", "visible": false, "children": [
+        { "kind": "stack", "name": "From", "fill": "Content", "visible": false },
+        { "kind": "label", "name": "To", "text": "→", "role": "Caption", "tone": "Secondary", "policy": "Excluded" },
+        { "kind": "stack", "name": "Into", "fill": "Content", "visible": false }
+      ] },
+      { "kind": "label", "name": "Foreign", "text": { "bind": "foreign" }, "role": "Caption", "tone": "Warning", "fill": "Stretch", "visible": false },
+      { "kind": "label", "name": "Why", "text": { "bind": "why" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch", "visible": false }
+    ] },
+    { "kind": "row", "name": "Entry", "spacing": 8, "padX": 4, "padY": 6, "surface": "Item", "children": [
+      { "kind": "stack", "name": "TextHost" },
+      { "kind": "row", "name": "Verbs", "spacing": 4, "placement": "MiddleRight", "fill": "Content", "minHeight": "RowHeightSmall", "children": [
+        { "kind": "button", "name": "Restore", "text": "Restore", "act": "restore",
+          "help": "Puts this backup into the game. What is there now is backed up first, so this can be walked back." },
+        { "kind": "button", "name": "Rename", "text": "Rename", "act": "rename", "visible": false,
+          "help": "Ten dated rows are not a choice. A name is what makes one of them findable." },
+        { "kind": "button", "name": "Delete", "text": "Delete", "act": "delete", "visible": false,
+          "help": "Deletes this backup and frees a slot. Nothing else is touched." },
+        { "kind": "button", "name": "Keep", "text": "Keep", "act": "keep", "visible": false }
+      ] }
+    ] },
+    { "kind": "stack", "name": "EntryRenaming", "spacing": 4, "padX": 4, "padY": 6, "surface": "Item", "children": [
+      { "kind": "stack", "name": "TextHost" },
+      { "kind": "row", "name": "RenameRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
+        { "kind": "field", "name": "Label", "placeholder": "What is this one?", "minHeight": "InputHeight", "minWidth": 160 },
+        { "kind": "button", "name": "Cancel", "text": "Cancel", "size": "Field", "minWidth": 70, "act": "cancel" },
+        { "kind": "button", "name": "Ok", "text": "Save", "tone": "Primary", "size": "Field", "minWidth": 70, "act": "ok" }
+      ] }
+    ] }
   ]
 }

@@ -25,5 +25,30 @@
       "help": "Throw away ALL your local changes and take the website's version as-is" },
     { "kind": "button", "name": "ReviewBtn", "text": "Review on Website", "tone": "Link", "minWidth": 115, "scope": { "onThisMachine": false, "yourPublishedCopy": true }, "act": "review",
       "help": "Open this merge in your browser: bigger screen, search, and line-by-line tools" }
+  ],
+  "templates": [
+    { "kind": "stack", "name": "ConflictRow", "spacing": 3, "minHeight": "MultiLineMedium", "children": [
+      { "kind": "label", "name": "Key", "text": { "bind": "key" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall" },
+      { "kind": "row", "name": "Values", "spacing": 10, "minHeight": "CodeDisplayHeight", "fill": "Stretch", "children": [
+        { "kind": "stack", "name": "Local", "spacing": 2, "children": [
+          { "kind": "row", "name": "LocalHead", "spacing": 6, "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
+            { "kind": "label", "name": "LocalLabel", "text": "Local:", "role": "Small", "tone": "Secondary" },
+            { "kind": "chip", "name": "LocalChip", "visible": false }
+          ] },
+          { "kind": "label", "name": "LocalValue", "text": { "bind": "local" }, "policy": "Excluded", "role": "Small", "tone": "Accent", "fill": "Stretch" }
+        ] },
+        { "kind": "stack", "name": "Remote", "spacing": 2, "children": [
+          { "kind": "row", "name": "RemoteHead", "spacing": 6, "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
+            { "kind": "label", "name": "RemoteLabel", "text": "Server:", "role": "Small", "tone": "Secondary" },
+            { "kind": "chip", "name": "RemoteChip", "visible": false }
+          ] },
+          { "kind": "label", "name": "RemoteValue", "text": { "bind": "remote" }, "policy": "Excluded", "role": "Small", "tone": "Success", "fill": "Stretch" }
+        ] }
+      ] },
+      { "kind": "row", "name": "Choices", "spacing": 10, "minHeight": "RowHeightMedium", "fill": "Stretch", "children": [
+        { "kind": "choice", "name": "Choice", "options": ["Use Local", "Use Server"], "spacing": 10, "minWidth": 100, "act": "chosen" }
+      ] }
+    ] },
+    { "kind": "choice", "name": "BulkChoice", "options": ["Keep My Changes", "Take Server"], "spacing": 10, "act": "chosen" }
   ]
 }

@@ -1,0 +1,38 @@
+{
+  "$comment": "The status card: what the translation this game holds IS, at the top of the main screen's 'Current Translation' section. A part, not a screen — one template, 'Card', that StatusCard instantiates into the host main.json leaves for it (StatusCardHost). The document says the shape: identity row, the strip of chips, the details line, the quality bar with its stage and key, the notice under them, the one sentence of the mode, what contributions hold, the vote row. What each line shows, which rows are visible and in which tone is decided in code from the standing (StatusCards.Secondary / StatusCards.Notice in the socle). A section rather than a card: it sits among sections, so it takes their padding and no edge.",
+  "name": "StatusCard",
+  "part": true,
+  "templates": [
+    { "kind": "stack", "name": "Card", "spacing": "ElementSpacing", "pad": "SectionPadding", "children": [
+      { "kind": "row", "name": "IdentityRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightMedium", "children": [
+        { "kind": "row", "name": "IdentityMarks", "spacing": 4, "pad": 0, "fill": "Content", "minHeight": "RowHeightSmall" },
+        { "kind": "label", "name": "IdentityLabel", "text": { "bind": "identity" }, "policy": "Excluded", "bold": true, "fill": "Stretch" }
+      ] },
+      { "kind": "stack", "name": "BadgeHost" },
+      { "kind": "row", "name": "StatusRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightSmall", "children": [
+        { "kind": "label", "name": "DetailsLabel", "text": { "bind": "details" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch" }
+      ] },
+      { "kind": "row", "name": "QualityRow", "spacing": 0, "pad": 0, "minHeight": 14, "visible": false },
+      { "kind": "row", "name": "StageRow", "spacing": 0, "pad": 0, "minHeight": "RowHeightSmall", "placement": "MiddleRight", "visible": false, "children": [
+        { "kind": "label", "name": "QualityLabel", "text": { "bind": "stage" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "align": "MiddleRight", "fill": "Stretch" }
+      ] },
+      { "kind": "row", "name": "LegendRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightSmall", "visible": false, "children": [
+        { "kind": "label", "name": "QualityLegend", "text": { "bind": "legend" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "align": "TopLeft", "fill": "Stretch" }
+      ] },
+      { "kind": "row", "name": "EmptyRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightMedium", "visible": false, "children": [
+        { "kind": "label", "name": "EmptyLabel", "text": { "bind": "notice" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "fill": "Stretch" },
+        { "kind": "button", "name": "EmptyBtn", "text": { "bind": "noticeVerb" }, "policy": "Excluded", "minWidth": 120, "act": "manage" },
+        { "kind": "button", "name": "DismissBtn", "text": "Dismiss", "minWidth": 90, "visible": false, "act": "dismiss" }
+      ] },
+      { "kind": "row", "name": "ModeRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightMedium", "visible": false, "children": [
+        { "kind": "label", "name": "SecondaryLabel", "text": { "bind": "secondary" }, "role": "Small", "tone": "Muted" }
+      ] },
+      { "kind": "stack", "name": "Contributions", "spacing": 2, "minHeight": "RowHeightSmall", "visible": false },
+      { "kind": "row", "name": "VoteRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightMedium", "visible": false, "children": [
+        { "kind": "label", "name": "VoteTitle", "text": "Votes", "role": "Hint", "italic": false, "tone": "Secondary", "minWidth": 40 },
+        { "kind": "row", "name": "VoteHost", "spacing": 0, "pad": 0, "fill": "Content", "minWidth": 90 },
+        { "kind": "label", "name": "VoteHint", "text": { "bind": "voteHint" }, "role": "Hint", "italic": false, "tone": "Muted", "fill": "Stretch" }
+      ] }
+    ] }
+  ]
+}

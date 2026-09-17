@@ -170,5 +170,75 @@
   "footer": [
     { "kind": "button", "name": "CancelBtn", "text": "Cancel", "act": "cancel" },
     { "kind": "button", "name": "ApplyBtn", "text": "Apply", "policy": "Dynamic", "tone": "Primary", "act": "apply" }
+  ],
+  "templates": [
+    { "kind": "row", "name": "FindResult", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
+      { "kind": "label", "name": "Path", "text": { "bind": "path" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "label", "name": "Engine", "text": { "bind": "engine" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 60, "align": "MiddleRight" },
+      { "kind": "button", "name": "PickBtn", "text": "+", "minWidth": 30, "act": "pick" }
+    ] },
+    { "kind": "row", "name": "ExclusionRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "label", "name": "PatternLabel", "text": { "bind": "pattern" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight", "visible": false },
+      { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo", "visible": false },
+      { "kind": "button", "name": "DeleteBtn", "text": "X", "minWidth": 30, "act": "delete" }
+    ] },
+    { "kind": "row", "name": "RemovedOverrideRow", "spacing": 5, "padX": 5, "padY": 8, "surface": "Card", "minHeight": "RowHeightNormal", "children": [
+      { "kind": "label", "name": "MatchLabel", "text": { "bind": "match" }, "policy": "Excluded", "role": "Small", "tone": "Muted", "fill": "Stretch" },
+      { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight" },
+      { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo" }
+    ] },
+    { "kind": "stack", "name": "OverrideRow", "spacing": 3, "surface": "Card", "minHeight": "MultiLineMedium", "children": [
+      { "kind": "row", "name": "TopRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+        { "kind": "label", "name": "MatchLabel", "text": "Match:", "role": "Small", "policy": "Excluded", "minWidth": 45 },
+        { "kind": "field", "name": "MatchInput", "placeholder": "path:*Pattern*", "act": "matchChanged" },
+        { "kind": "button", "name": "DeleteBtn", "text": "X", "tone": "Danger", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "delete" }
+      ] },
+      { "kind": "slider", "name": "OverrideSize", "caption": "Size:", "min": 0, "max": 3, "format": "PercentOrDefault", "captionWidth": 35, "act": "sizeChanged" },
+      { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+        { "kind": "label", "name": "RtlLabel", "text": "RTL alignment:", "role": "Small", "policy": "Excluded", "minWidth": 95 },
+        { "kind": "dropdown", "name": "OverrideRtl", "options": "code", "width": 150, "act": "rtlChanged" }
+      ] }
+    ] },
+    { "kind": "stack", "name": "FontRow", "spacing": 3, "pad": 5, "surface": "Card", "minHeight": 55, "children": [
+      { "kind": "row", "name": "HeaderRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+        { "kind": "label", "name": "FontLabel", "text": { "bind": "font" }, "policy": "Excluded", "tone": "Plain", "fill": "Stretch" },
+        { "kind": "label", "name": "SceneCount", "text": { "bind": "sceneCount" }, "policy": "Excluded", "role": "Small", "minWidth": 70, "visible": false },
+        { "kind": "button", "name": "IdentifyBtn", "text": "?", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "identify" },
+        { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged" }
+      ] },
+      { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+        { "kind": "checkbox", "name": "RtlMirrorToggle", "text": "Mirror alignment (RTL)", "act": "rtlChanged",
+          "help": "Right-to-left text flips left-aligned components to right-aligned, following the reading direction. Turn off to keep the game's own alignment when its layout was built around one side." }
+      ] },
+      { "kind": "row", "name": "FallbackRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+        { "kind": "label", "name": "FallbackLabel", "text": "Fallback:", "role": "Small", "policy": "Excluded", "minWidth": 55 },
+        { "kind": "dropdown", "name": "Fallback", "options": "code", "width": 350, "popupHeight": 250, "act": "fallbackChanged" },
+        { "kind": "label", "name": "NoFontsLabel", "text": "(no fonts available)", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false }
+      ] },
+      { "kind": "label", "name": "NoFallbackLabel", "text": "Fallback not supported for this font type", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false },
+      { "kind": "row", "name": "ScaleRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+        { "kind": "slider", "name": "Scale", "caption": "Size:", "min": 0.01, "max": 2, "format": "Percent", "captionWidth": 55, "act": "scaleChanged" },
+        { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false }
+      ] }
+    ] },
+    { "kind": "row", "name": "ImageRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
+        { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "bold": true, "fill": "Stretch" },
+        { "kind": "label", "name": "Status", "text": { "bind": "status" }, "policy": "Excluded", "role": "Caption", "fill": "Stretch" }
+      ] },
+      { "kind": "button", "name": "RemoveBtn", "text": "X", "minWidth": 30, "act": "remove" }
+    ] },
+    { "kind": "row", "name": "ScanCandidate", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
+      { "kind": "label", "name": "Label", "text": { "bind": "label" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "button", "name": "AddBtn", "text": "+", "minWidth": 30, "act": "add" }
+    ] },
+    { "kind": "row", "name": "VariableRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
+        { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "bold": true, "fill": "Stretch" },
+        { "kind": "label", "name": "Detail", "text": { "bind": "detail" }, "policy": "Excluded", "role": "Caption", "fill": "Stretch" }
+      ] },
+      { "kind": "button", "name": "RemoveBtn", "text": "X", "minWidth": 30, "act": "remove" }
+    ] }
   ]
 }

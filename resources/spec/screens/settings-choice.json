@@ -17,5 +17,14 @@
     { "kind": "button", "name": "CancelBtn", "text": "Keep mine", "tone": "Secondary", "act": "cancel" },
     { "kind": "button", "name": "CompareBtn", "text": "Compare", "tone": "Secondary", "scope": { "onThisMachine": true, "yourPublishedCopy": false }, "act": "compare" },
     { "kind": "button", "name": "ApplyBtn", "text": "Apply", "tone": "Primary", "act": "apply" }
+  ],
+  "templates": [
+    { "kind": "row", "name": "SectionRow", "spacing": 8, "padX": 10, "padY": 6, "placement": "MiddleLeft", "surface": "Elevated", "minHeight": "RowHeightLarge", "children": [
+      { "kind": "checkbox", "name": "Toggle", "initial": true },
+      { "kind": "stack", "name": "Info", "spacing": 2, "children": [
+        { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall" },
+        { "kind": "label", "name": "Desc", "text": { "bind": "description" }, "policy": "Excluded", "role": "Hint", "italic": false }
+      ] }
+    ] }
   ]
 }

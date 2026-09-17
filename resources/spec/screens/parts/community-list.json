@@ -1,0 +1,30 @@
+{
+  "$comment": "The community list: the translations the website holds for this game, one row each, with the one the player picks. A part held by two screens — the main screen's Community tab and the wizard's translation step — instantiated by TranslationList into the host each leaves for it (TranslationListHost). 'Status' and 'Rows' are placed once, one under the other; 'Row' once per translation shown, 'More' when the search found more than the list draws, 'Rank' before the player's own row when it fell below the cut. What a row says (author, marks, facts, note), whether its composition bar is drawn and which row is the player's own are decided in code from what the server sent.",
+  "name": "CommunityList",
+  "part": true,
+  "templates": [
+    { "kind": "label", "name": "Status", "text": { "bind": "status" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
+    { "kind": "list", "name": "Rows", "minHeight": 200, "preferredHeight": 200, "fill": true, "spacing": 5, "padding": 5 },
+    { "kind": "label", "name": "More", "text": { "bind": "more" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "centred": true, "fill": "Stretch", "minHeight": "RowHeightSmall" },
+    { "kind": "label", "name": "Rank", "text": { "bind": "rank" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+    { "kind": "row", "name": "Row", "spacing": 8, "padLeft": 0, "padRight": 10, "padY": 8, "placement": "TopLeft", "surface": "Item", "children": [
+      { "kind": "stack", "name": "Accent", "fill": "Content", "minWidth": 3, "fillHeight": true },
+      { "kind": "checkbox", "name": "Select", "act": "select" },
+      { "kind": "stack", "name": "Info", "spacing": 3, "children": [
+        { "kind": "row", "name": "Pair", "spacing": 6, "pad": 0, "minHeight": "RowHeightSmall", "children": [
+          { "kind": "stack", "name": "From", "fill": "Content" },
+          { "kind": "label", "name": "Arrow", "text": "→", "policy": "Excluded", "tone": "Muted", "minHeight": "RowHeightSmall", "visible": false },
+          { "kind": "stack", "name": "Into", "fill": "Content" }
+        ] },
+        { "kind": "label", "name": "Title", "text": { "bind": "title" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall", "visible": false },
+        { "kind": "label", "name": "Author", "text": { "bind": "author" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Secondary", "minHeight": "RowHeightSmall" },
+        { "kind": "label", "name": "Origin", "text": { "bind": "origin" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "minHeight": "RowHeightSmall", "visible": false },
+        { "kind": "label", "name": "Details", "text": { "bind": "details" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Secondary", "minHeight": "RowHeightSmall" },
+        { "kind": "stack", "name": "Composition", "visible": false },
+        { "kind": "label", "name": "Facts", "text": { "bind": "facts" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Muted", "minHeight": "RowHeightSmall", "visible": false },
+        { "kind": "label", "name": "Note", "text": { "bind": "note" }, "policy": "Excluded", "role": "Hint", "italic": true, "tone": "Secondary", "minHeight": "RowHeightSmall", "visible": false }
+      ] },
+      { "kind": "stack", "name": "Votes", "fill": "Content" }
+    ] }
+  ]
+}

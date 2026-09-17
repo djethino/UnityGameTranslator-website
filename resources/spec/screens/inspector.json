@@ -53,5 +53,22 @@
   "footer": [
     { "kind": "button", "name": "StopBtn", "text": "Stop Inspecting", "tone": "Primary", "act": "stop",
       "help": "Leave inspect mode and close this window. Element picking stops." }
+  ],
+  "templates": [
+    { "kind": "stack", "name": "TextEditEntry", "spacing": 3, "surface": "Card", "children": [
+      { "kind": "row", "name": "KeyRow", "spacing": 6, "placement": "TopLeft", "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
+        { "kind": "chip", "name": "Tag" },
+        { "kind": "label", "name": "Key", "text": { "bind": "key" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall" }
+      ] },
+      { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
+      { "kind": "field", "name": "TranslationInput", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false },
+      { "kind": "label", "name": "Preview", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+      { "kind": "row", "name": "BtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
+        { "kind": "button", "name": "SaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "policy": "Excluded", "act": "save" },
+        { "kind": "button", "name": "RetranslateBtn", "text": "Retranslate (AI)", "tone": "Primary", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "retranslate" },
+        { "kind": "button", "name": "RevertBtn", "text": "Revert", "size": "Compact", "minWidth": 70, "policy": "Excluded", "act": "revert",
+          "help": "Put the field back to what the translation file holds, discarding what you typed or what the AI proposed." }
+      ] }
+    ] }
   ]
 }
