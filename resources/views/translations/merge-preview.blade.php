@@ -698,7 +698,10 @@ document.addEventListener('alpine:init', () => {
         // new lines HIDDEN. Those are the lines somebody opened it to fetch.
         filters: {
             catNew: true,
-            catOnlyOnTarget: false,
+            // Shown from the start when both sides moved (the mod says so): the lines the other
+            // side added are what somebody opened this to see, and hidden they read as "no
+            // differences" beside a count that included them.
+            catOnlyOnTarget: {{ ($showBoth ?? false) ? 'true' : 'false' }},
             catDiffering: true,
             catSame: false,
             // Tag filters (HVASM) - all enabled by default

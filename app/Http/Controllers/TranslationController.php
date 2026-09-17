@@ -920,6 +920,10 @@ class TranslationController extends Controller
                 'merge_preview_only' => !$wasAlreadyLoggedIn,
                 'merge_preview_translation_id' => $translation->id,
                 'merge_preview_token' => $mergeToken->token,
+                // Both sides moved: the mod says so, and the page then opens with what the
+                // other side holds alone SHOWN — those are the lines somebody opened it to see,
+                // and hidden by default they read as "no differences" over a count of nine.
+                'merge_preview_both' => $request->boolean('both'),
             ]);
 
             // One-time login: the token can no longer authenticate, but the
@@ -998,11 +1002,16 @@ class TranslationController extends Controller
         // to mean "remove it from my file".
         $toLocal = $session?->isLocalDestination() ?? false;
 
+        // Both sides moved since the last sync: what only the target holds is shown from the
+        // start, as it is part of what has to be looked at before deciding.
+        $showBoth = (bool) session('merge_preview_both', false);
+
         return view('translations.merge-preview', compact(
             'translation',
             'hasTokenContent',
             'tokenError',
-            'toLocal'
+            'toLocal',
+            'showBoth'
         ));
     }
 

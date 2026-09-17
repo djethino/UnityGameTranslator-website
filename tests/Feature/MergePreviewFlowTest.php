@@ -152,6 +152,30 @@ class MergePreviewFlowTest extends TestCase
         $this->assertSame(self::ONLINE_CONTENT, $json['online']);
     }
 
+    /**
+     * Both sides moved since the last sync: the mod says so on the URL it opens, and the page
+     * then starts with the lines only the other side holds SHOWN. Hidden by default, they read
+     * as "no differences" beside a count that included them.
+     */
+    public function test_both_sides_moved_shows_the_targets_own_lines_from_the_start(): void
+    {
+        $user = User::factory()->create()->refresh();
+        $translation = $this->makeTranslation($user, self::ONLINE_CONTENT);
+
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT)->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}&both=1")->assertStatus(303);
+        $this->assertTrue(session('merge_preview_both'));
+        $this->get(route('translations.merge-preview', $translation))
+            ->assertOk()->assertSee('catOnlyOnTarget: true', false);
+
+        // Without the word, the publishing comparison keeps its default: those lines are hidden.
+        $token = $this->initMergePreview($user, $translation, self::LOCAL_CONTENT)->json('token');
+        $this->get("/translations/{$translation->id}/merge-preview?token={$token}")->assertStatus(303);
+        $this->assertFalse(session('merge_preview_both'));
+        $this->get(route('translations.merge-preview', $translation))
+            ->assertOk()->assertSee('catOnlyOnTarget: false', false);
+    }
+
     public function test_settings_endpoint_serves_both_sides_as_comparable_rows(): void
     {
         $user = User::factory()->create()->refresh();
