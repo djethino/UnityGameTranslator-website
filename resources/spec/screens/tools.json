@@ -66,9 +66,14 @@
           { "kind": "label", "name": "FailuresHint", "text": "Every attempt broke a placeholder, so the line was left untranslated. Fix one of the proposals, write your own, skip the line, or exclude the element that shows it.", "role": "Hint" },
           { "kind": "list", "name": "FailuresScroll", "minHeight": 0, "preferredHeight": 60, "fill": false, "empty": "No failed lines this session" },
           { "kind": "stack", "name": "FailureEditor", "spacing": 4, "visible": false, "children": [
-            { "kind": "label", "name": "FailTextLabel", "text": "Game text:", "role": "Small" },
-            { "kind": "list", "name": "SourceScroll", "minHeight": 0, "preferredHeight": 60, "fill": false },
-            { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" },
+            { "kind": "splitter", "name": "ListSplit", "help": "Drag to give the list above or the text below more room. Back to automatic when the window closes." },
+            { "kind": "collapsible", "name": "GameText", "title": "Game text", "expanded": true,
+              "help": "The line as the game shows it, tags and placeholders included. Fold it to give the field the room.",
+              "children": [
+              { "kind": "list", "name": "SourceScroll", "minHeight": 0, "preferredHeight": 60, "fill": false },
+              { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" }
+            ] },
+            { "kind": "splitter", "name": "TextSplit", "help": "Drag to give the game text or the proposal more room. Back to automatic when the window closes." },
             { "kind": "collapsible", "name": "Proposals", "title": "What the AI proposed", "expanded": true,
               "help": "The AI's answers, one at a time, and why each was refused. Folds once you write or use one; open it again to use another.",
               "children": [

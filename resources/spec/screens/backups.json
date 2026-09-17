@@ -20,7 +20,7 @@
     { "kind": "button", "name": "CloseBtn", "text": "Close", "tone": "Secondary", "act": "close" }
   ],
   "templates": [
-    { "kind": "spacer", "name": "GroupGap", "height": 12 },
+    { "kind": "splitter", "name": "GroupGap", "help": "Drag to give one list more room than the other. Back to automatic when the window closes." },
     { "kind": "stack", "name": "Group", "spacing": 4, "padLeft": 6, "padRight": 8, "padTop": 8, "padBottom": 8, "surface": "Elevated", "children": [
       { "kind": "row", "name": "Heading", "spacing": 8, "minHeight": "SectionTitleHeight", "children": [
         { "kind": "label", "name": "Text", "text": { "bind": "heading" }, "role": "SectionTitle", "minWidth": 190 },

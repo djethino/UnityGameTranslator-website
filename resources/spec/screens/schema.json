@@ -63,7 +63,7 @@
       "type": "object",
       "required": ["kind", "name"],
       "properties": {
-        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast", "slider", "choice", "chip"] },
+        "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast", "slider", "choice", "chip", "splitter"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
@@ -199,6 +199,7 @@
               "act": { "type": "string", "minLength": 1, "description": "Asked for when the box is ticked or unticked; absent when the code only reads the box." } },
             "description": "A box with its words. The code reads it (IsOn) or is told when it changes (act)." } },
         { "if": { "properties": { "kind": { "const": "spacer" } } }, "then": { "required": ["height"], "properties": { "height": { "type": "integer", "minimum": 0 } } } },
+        { "if": { "properties": { "kind": { "const": "splitter" } } }, "then": { "description": "A bar between two scroll areas that share a body: dragged, it moves height from one to the other, until the window closes." } },
         { "if": { "properties": { "kind": { "const": "label" } } }, "then": {
             "required": ["text"],
             "properties": {
