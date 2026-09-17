@@ -1121,12 +1121,13 @@
           "unread": { "type": "integer" },
           "items": { "type": "array", "maxItems": 5, "items": {
             "type": "object",
-            "required": ["id", "type", "text", "url"],
+            "required": ["id", "type", "text", "url", "uuid"],
             "properties": {
               "id": { "type": "string", "description": "The notification's uuid." },
               "type": { "$ref": "#/components/schemas/NotificationType" },
               "text": { "type": "string", "description": "Pre-rendered English." },
-              "url": { "type": ["string", "null"] }
+              "url": { "type": ["string", "null"] },
+              "uuid": { "type": ["string", "null"], "description": "The lineage this is about, when it is about one (a contribution sent, closed or orphaned); null otherwise. A client holding that lineage answers it on its own screen rather than on the site." }
             }
           } }
         }

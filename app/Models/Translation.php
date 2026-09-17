@@ -1469,7 +1469,9 @@ class Translation extends Model
             ->with('user', 'game')
             ->get()
             ->each(function (self $branch) {
-                $branch->user?->notify(new \App\Notifications\BranchOrphaned($branch));
+                // Whose translation it was: the one word that tells this lineage from another of
+                // the same game in the contributor's list, and the Main is gone by the time it is read.
+                $branch->user?->notify(new \App\Notifications\BranchOrphaned($branch, $this->user?->name));
             });
     }
 

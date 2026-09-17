@@ -675,8 +675,8 @@
       "setup": "lineage",
       "prelude": [ { "request": { "method": "POST", "path": "/translations", "as": "carol", "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Inventory": { "v": "Inventaire", "t": "H" } } } } } } ],
       "request": { "method": "GET", "path": "/me/notifications", "as": "alice" },
-      "response": { "status": 200, "body": { "unread": 1, "items": [ { "id": { "$is": "string" }, "type": "branch_submitted", "text": { "$contains": "contribution(s) to review on your Sample Game translation (French)" }, "url": { "$contains": "/translations/9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b/merge" } } ] } },
-      "read": { "reader": "notifications", "expects": { "Unread": 1, "Items.0.Type": "branch_submitted" } },
+      "response": { "status": 200, "body": { "unread": 1, "items": [ { "id": { "$is": "string" }, "type": "branch_submitted", "text": { "$contains": "contribution(s) to review on your Sample Game translation (French)" }, "url": { "$contains": "/translations/9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b/merge" }, "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } ] } },
+      "read": { "reader": "notifications", "expects": { "Unread": 1, "Items.0.Type": "branch_submitted", "Items.0.Uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
       "why": "pre-rendered English for an overlay, with the page that answers it"
     },
     {

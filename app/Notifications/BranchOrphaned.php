@@ -21,6 +21,7 @@ class BranchOrphaned extends Notification
 {
     public function __construct(
         private readonly Translation $branch,
+        private readonly ?string $ownerUsername = null,
     ) {
     }
 
@@ -35,6 +36,7 @@ class BranchOrphaned extends Notification
             'type' => 'branch_orphaned',
             'translation_id' => $this->branch->id,
             'uuid' => $this->branch->file_uuid,
+            'owner_username' => $this->ownerUsername,
             'game_name' => $this->branch->game?->name,
             'target_language' => $this->branch->target_language,
         ];
