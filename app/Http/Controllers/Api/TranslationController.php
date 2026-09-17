@@ -902,10 +902,18 @@ class TranslationController extends Controller
             return response('', 304)->header('ETag', $etag);
         }
 
+        // ⚠ An author fetching their OWN file is not a download: the mod reads it back to count
+        // what changed on the site since the game last synced, and the Manager to compare. Counted,
+        // every such look would add a download to the catalogue's figure for a file nobody took.
+        $ownWork = $request->user() !== null && $request->user()->id === $translation->user_id;
+
         // Increment download counter
-        $translation->incrementDownloads();
+        if (!$ownWork) {
+            $translation->incrementDownloads();
+        }
 
         // Track download for analytics
+        if (!$ownWork) {
         try {
             $userAgent = $request->userAgent() ?? 'UnityGameTranslator';
             $ip = $request->ip() ?? '0.0.0.0';
@@ -931,6 +939,7 @@ class TranslationController extends Controller
             ]);
         } catch (\Exception $e) {
             report($e);
+        }
         }
 
         // Get validated file path (prevents path traversal)
