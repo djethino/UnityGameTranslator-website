@@ -11,13 +11,14 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * An author fetching their OWN file is not a download.
+ * "Downloads" counts takes, not fetches.
  *
- * The mod reads a published copy back to count what changed on the site since the game last
- * synced, and the Manager to compare — both signed in as the file's author. Counted, every such
- * look added a download to the catalogue's figure for a file nobody took, and the figure is one
- * of the things the catalogue is measured on. Anybody else fetching it is a download, signed in
- * or not.
+ * Two fetches are not takes. An author reading their OWN file back — the mod counts what changed
+ * on the site since the game last synced, the Manager compares — and a client refreshing a lineage
+ * it already holds, which says so with `update=1`. Counted, every such fetch added a download to
+ * the catalogue's figure for a file nobody took, and that figure is one of the things the
+ * catalogue is ranked on. Anybody else fetching it for the first time is a download, signed in or
+ * not; a client that predates the flag is counted as before.
  */
 class OwnDownloadNotCountedTest extends TestCase
 {
@@ -78,5 +79,19 @@ class OwnDownloadNotCountedTest extends TestCase
             ->assertOk();
 
         $this->assertSame(2, $translation->fresh()->download_count);
+    }
+
+    public function test_refreshing_a_held_copy_is_not_counted(): void
+    {
+        $author = User::factory()->create();
+        $reader = User::factory()->create();
+        $translation = $this->makeTranslation($author);
+
+        $this->getJson("/api/v1/translations/{$translation->id}/download?update=1", $this->headers($reader))
+            ->assertOk();
+        $this->getJson("/api/v1/translations/{$translation->id}/download?update=1")
+            ->assertOk();
+
+        $this->assertSame(0, $translation->fresh()->download_count);
     }
 }

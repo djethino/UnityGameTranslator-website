@@ -154,13 +154,14 @@
         "tags": ["catalogue"],
         "operationId": "downloadTranslation",
         "summary": "The translation file itself, as published.",
-        "description": "The body is the file (`spec/translation-file`), served as an attachment; `ETag` is `\"<file_hash>\"` and `If-None-Match` with it answers 304. Counted as a download. A branch answers only to its author and to its Main's owner. Not gzip-compressed by this route: the site compresses responses once, at its edge, for clients that can inflate.",
+        "description": "The body is the file (`spec/translation-file`), served as an attachment; `ETag` is `\"<file_hash>\"` and `If-None-Match` with it answers 304. Counted as a download — a TAKE, the first time a player fetches this lineage — unless the caller already holds the lineage and says so (`update=1`), or is the file's own author: those are not what the figure on the site counts. A branch answers only to its author and to its Main's owner. Not gzip-compressed by this route: the site compresses responses once, at its edge, for clients that can inflate.",
         "security": [{}, { "bearer": [] }],
         "x-auth": "optional — needed to read one's own branch",
         "x-throttle": "30/min per IP",
         "parameters": [
           { "$ref": "#/components/parameters/TranslationId" },
-          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "`\"<file_hash>\"` of the copy held." }
+          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "`\"<file_hash>\"` of the copy held." },
+          { "name": "update", "in": "query", "schema": { "type": "string", "enum": ["1"] }, "description": "The caller already holds this lineage and is refreshing its copy: not counted as a download. Absent on a first take, and on clients that predate it — counted as before." }
         ],
         "responses": {
           "200": { "description": "The file.", "headers": { "ETag": { "$ref": "#/components/headers/FileETag" }, "Content-Disposition": { "schema": { "type": "string", "const": "attachment; filename=\"translations.json\"" } }, "Cache-Control": { "description": "Written `private, max-age=3600`; serialised in the framework's order.", "schema": { "type": "string", "const": "max-age=3600, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationFile" } } } },

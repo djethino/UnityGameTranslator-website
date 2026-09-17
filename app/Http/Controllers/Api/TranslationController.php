@@ -902,17 +902,22 @@ class TranslationController extends Controller
             return response('', 304)->header('ETag', $etag);
         }
 
-        // ⚠ An author fetching their OWN file is not a download: the mod reads it back to count
-        // what changed on the site since the game last synced, and the Manager to compare. Counted,
-        // every such look would add a download to the catalogue's figure for a file nobody took.
+        // 🔴 **"Downloads" counts TAKES: players who fetched this lineage, not the times a copy
+        // was refreshed.** Two fetches are not takes. An author reading their OWN file back — the
+        // mod counts what changed on the site since the game last synced, the Manager compares —
+        // and a client refreshing a lineage it already holds, which says so (`update=1`). Counted,
+        // a translation published often gained a download from every player following it, and
+        // the figure the catalogue ranks on no longer said how many had taken it. A refresh is
+        // still worth knowing about, for the site's own eyes: it goes to analytics under its own
+        // route. A client that predates the flag says nothing and is counted as before.
         $ownWork = $request->user() !== null && $request->user()->id === $translation->user_id;
+        $refresh = $request->query('update') === '1';
 
-        // Increment download counter
-        if (!$ownWork) {
+        if (!$ownWork && !$refresh) {
             $translation->incrementDownloads();
         }
 
-        // Track download for analytics
+        // Track it for analytics: a take on the download route, a refresh on its own.
         if (!$ownWork) {
         try {
             $userAgent = $request->userAgent() ?? 'UnityGameTranslator';
@@ -925,7 +930,7 @@ class TranslationController extends Controller
             $client = \App\Support\ClientAgent::ours($userAgent);
 
             AnalyticsEvent::create([
-                'route' => 'api.translations.download',
+                'route' => $refresh ? 'api.translations.refresh' : 'api.translations.download',
                 'game_id' => $translation->game_id,
                 'country' => null,
                 'referrer_domain' => 'mod', // Mark as mod download

@@ -390,6 +390,17 @@
       "why": "the mod sends the hash it holds, quoted, and is spared the body"
     },
     {
+      "id": "api-v1/download/refreshing-a-held-copy",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/download?update=1" },
+      "response": {
+        "status": 200,
+        "headers": { "ETag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"" },
+        "body": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } }
+      },
+      "why": "the same file, and not a download: the player already took this lineage and is only bringing their copy up to date — 'downloads' on the site counts players who took it, not the times they refreshed"
+    },
+    {
       "id": "api-v1/download/branch-refused-to-a-stranger",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/translations/{{translations.branch.id}}/download" },
