@@ -32,6 +32,13 @@
           { "kind": "button", "name": "WebNotifDismissBtn", "text": "Dismiss", "size": "Compact", "minWidth": 70, "act": "webNotifDismiss" }
         ] }
       ] },
+      { "kind": "callout", "name": "FailuresBox", "tone": "Warning", "direction": "Stack", "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "FailuresLabel", "text": { "bind": "failures" }, "policy": "Excluded", "bold": true },
+        { "kind": "row", "name": "FailuresBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "FailuresFixBtn", "text": { "bind": "failuresFix" }, "policy": "Excluded", "tone": "Primary", "size": "Compact", "minWidth": 75, "act": "failuresFix" },
+          { "kind": "button", "name": "FailuresIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "failuresIgnore" }
+        ] }
+      ] },
       { "kind": "callout", "name": "AIBox", "tone": "Info", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "minHeight": "MultiLineSmall", "visible": false, "children": [
         { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "minHeight": "RowHeightSmall" },
         { "kind": "label", "name": "AIQueueLabel", "text": { "bind": "aiQueue" }, "policy": "Excluded", "role": "Small" }

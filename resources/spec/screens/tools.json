@@ -60,6 +60,38 @@
           { "kind": "label", "name": "ExclusionsStatus", "text": { "bind": "exclusionsStatus" }, "role": "Small" }
         ] }
       ] },
+      { "kind": "tab", "name": "FailuresTab", "text": "Failures", "help": "Lines the AI could not translate this session, to settle one by one", "children": [
+        { "kind": "card", "name": "FailuresCard", "stretch": true, "children": [
+          { "kind": "label", "name": "FailuresLabel", "text": "AI failures", "role": "SectionTitle" },
+          { "kind": "label", "name": "FailuresHint", "text": "Every attempt broke a placeholder, so the line was left untranslated. Fix one of the proposals, write your own, skip the line, or exclude the element that shows it.", "role": "Hint" },
+          { "kind": "spacer", "name": "FailuresGap1", "height": 10 },
+          { "kind": "list", "name": "FailuresScroll", "minHeight": 120, "preferredHeight": 120, "empty": "No failed lines this session" },
+          { "kind": "spacer", "name": "FailuresGap2", "height": 10 },
+          { "kind": "stack", "name": "FailureEditor", "spacing": 5, "visible": false, "children": [
+            { "kind": "label", "name": "FailKey", "text": { "bind": "failKey" }, "policy": "Excluded", "role": "Small", "bold": true, "fill": "Stretch" },
+            { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" },
+            { "kind": "label", "name": "FailAttemptsLabel", "text": "What the AI proposed:", "role": "Small" },
+            { "kind": "list", "name": "AttemptsScroll", "minHeight": 120, "preferredHeight": 160, "empty": "No proposal kept" },
+            { "kind": "field", "name": "FailInput", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false,
+              "help": "The translation to keep. Use copies a proposal here so you can correct it." },
+            { "kind": "row", "name": "FailBtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "button", "name": "FailSaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "act": "failSave",
+                "help": "Writes what the field holds as a human translation. Every placeholder must be there." },
+              { "kind": "button", "name": "FailRetranslateBtn", "text": "Retranslate (AI)", "tone": "Primary", "size": "Compact", "minWidth": 110, "act": "failRetranslate",
+                "help": "Asks the AI again, with the same attempts as before." },
+              { "kind": "button", "name": "FailSkipBtn", "text": "Skip (S)", "size": "Compact", "minWidth": 70, "act": "failSkip",
+                "help": "Keeps the game's own text and stops asking — until the game changes this text." }
+            ] },
+            { "kind": "row", "name": "FailExcludeRow", "spacing": 4, "minHeight": "RowHeightNormal", "visible": false, "children": [
+              { "kind": "button", "name": "FailExcludeElementBtn", "text": "Exclude element", "size": "Compact", "minWidth": 110, "act": "failExcludeElement",
+                "help": "Excludes the UI element that showed this text, whatever it says later. Listed in Exclusions, applied on Apply." },
+              { "kind": "button", "name": "FailExcludePatternBtn", "text": "Exclude pattern", "size": "Compact", "minWidth": 110, "act": "failExcludePattern",
+                "help": "Excludes every element with this name, at any depth. Listed in Exclusions, applied on Apply." }
+            ] }
+          ] },
+          { "kind": "label", "name": "FailStatus", "text": { "bind": "failStatus" }, "role": "Small" }
+        ] }
+      ] },
       { "kind": "tab", "name": "FontsTab", "text": "Fonts", "help": "Replace the game's fonts when they can't display your language's characters" },
       { "kind": "tab", "name": "ImagesTab", "text": "Images", "help": "Replace images that contain baked-in text", "children": [
         { "kind": "card", "name": "ImagesCard", "stretch": true, "children": [
@@ -182,6 +214,18 @@
       { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight", "visible": false },
       { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo", "visible": false },
       { "kind": "button", "name": "DeleteBtn", "text": "X", "minWidth": 30, "act": "delete" }
+    ] },
+    { "kind": "row", "name": "FailureRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "act": "pick", "children": [
+      { "kind": "label", "name": "Source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "wrap": false, "fill": "Stretch" },
+      { "kind": "label", "name": "Attempts", "text": { "bind": "attempts" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 80, "align": "MiddleRight" }
+    ] },
+    { "kind": "stack", "name": "AttemptRow", "spacing": 3, "pad": 5, "surface": "Card", "children": [
+      { "kind": "label", "name": "Value", "text": { "bind": "value" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "row", "name": "Bottom", "spacing": 5, "minHeight": "RowHeightSmall", "children": [
+        { "kind": "label", "name": "Errors", "text": { "bind": "errors" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "fill": "Stretch" },
+        { "kind": "button", "name": "UseBtn", "text": "Use", "size": "Compact", "minWidth": 50, "act": "use",
+          "help": "Copies this proposal into the field, to correct and save." }
+      ] }
     ] },
     { "kind": "row", "name": "RemovedOverrideRow", "spacing": 5, "padX": 5, "padY": 8, "surface": "Card", "minHeight": "RowHeightNormal", "children": [
       { "kind": "label", "name": "MatchLabel", "text": { "bind": "match" }, "policy": "Excluded", "role": "Small", "tone": "Muted", "fill": "Stretch" },

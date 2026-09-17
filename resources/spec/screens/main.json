@@ -62,7 +62,12 @@
               { "kind": "label", "name": "SourceLabel", "text": { "bind": "source" }, "tone": "Secondary", "minHeight": "RowHeightNormal" },
               { "kind": "label", "name": "RoleLabel", "text": { "bind": "role" }, "bold": true, "minHeight": "RowHeightNormal" },
               { "kind": "label", "name": "SyncStatusLabel", "text": { "bind": "syncStatus" }, "bold": true, "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "role": "Small" }
+              { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "role": "Small" },
+              { "kind": "row", "name": "FailuresRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+                { "kind": "label", "name": "FailuresLabel", "text": { "bind": "failures" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "fill": "Stretch" },
+                { "kind": "button", "name": "FixBtn", "text": { "bind": "failuresFix" }, "policy": "Excluded", "size": "Compact", "minWidth": 70, "act": "fix",
+                  "help": "Open Translation Tools on the Failures tab, where each line can be fixed, skipped or excluded." }
+              ] }
             ] }
           ] },
           { "kind": "spacer", "name": "InfoGap", "height": 10 },
