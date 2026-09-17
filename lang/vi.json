@@ -160,7 +160,7 @@
     "upload.new_info": "Mới: Bản dịch đầu tiên cho file này",
     "upload.file_json": "File bản dịch (JSON)",
     "upload.drag_drop": "Kéo thả translations.json vào đây",
-    "upload.max_size": "Tối đa 100MB",
+    "upload.max_size": "Tối đa 64MB",
     "upload.source_language": "Ngôn ngữ nguồn",
     "upload.target_language": "Ngôn ngữ đích",
     "upload.select": "Chọn...",

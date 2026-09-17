@@ -38,7 +38,7 @@ class TranslationController extends Controller
             // contributor is turned away by a decision its author never knowingly took.
             'accepts_branches' => 'nullable|boolean',
             'notes' => 'nullable|string|max:1000',
-            'file' => 'required|file|mimes:json|max:102400', // 100MB max
+            'file' => 'required|file|mimes:json|max:65536', // 64 MB, in kilobytes — the socle's limit
             'game_source' => 'required_without:game_id|string|in:igdb,rawg',
             'game_external_id' => 'required_without:game_id|integer',
             // ⚠ No image field any more: the picture on a game's card comes from the source the

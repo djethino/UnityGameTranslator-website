@@ -160,7 +160,7 @@
     "upload.new_info": "नया: इस फ़ाइल के लिए पहला अनुवाद",
     "upload.file_json": "अनुवाद फ़ाइल (JSON)",
     "upload.drag_drop": "अपनी translations.json यहां ड्रैग और ड्रॉप करें",
-    "upload.max_size": "अधिकतम 100MB",
+    "upload.max_size": "अधिकतम 64MB",
     "upload.source_language": "स्रोत भाषा",
     "upload.target_language": "लक्ष्य भाषा",
     "upload.select": "चुनें...",

@@ -28,17 +28,21 @@ use Symfony\Component\HttpFoundation\Response;
 class DecodeGzipRequest
 {
     /**
-     * Maximum decompressed size (100 MB).
+     * Maximum decompressed size (64 MB) — the socle's `Limits.TranslationFileBytes`, held to it
+     * by `check-limits.py`.
      *
-     * Even Baldur's Gate 3 (largest RPG ever) = ~40 MB JSON; 100 MB gives 2.5x margin for any
+     * Even Baldur's Gate 3 (largest RPG ever) = ~40 MB JSON; 64 MB gives 1.6x margin for any
      * realistic translation file. `store()` caps `content` at the same figure.
      *
-     * ⚠ Sized against the server's memory, not only against the files: a decode that stops at the
-     * cap still allocates about TWICE the cap while it runs (measured: a 200 MB bomb refused at a
-     * 100 MB cap peaks at +214 MB). Production runs with `memory_limit = 512M`, which leaves room;
-     * on a 128 MB host this figure would have to come down to ~48 MB.
+     * 🔴 Sized against the server's MEMORY, not only against the files. Inflating is the cheap
+     * half (a decode that stops at the cap allocates about twice the cap while it runs); what
+     * follows is not: the body is decoded, then the content parsed into arrays, and the whole
+     * request peaks at about 5.2× the file (measured 2026-09-17: 60 MB → 328 MB, 90 MB → 468 MB
+     * above the framework). Production runs with `memory_limit = 512M`: the former 100 MB cap
+     * was a promise it could not keep past ~70 MB, answered by a 500 rather than by the
+     * "too large" a client can say beforehand. Raising this means raising that memory first.
      */
-    private const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
+    private const MAX_DECOMPRESSED_SIZE = 64 * 1024 * 1024;
 
     /**
      * Maximum size of the body as it arrives (16 MB).

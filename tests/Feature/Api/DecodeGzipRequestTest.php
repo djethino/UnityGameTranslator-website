@@ -66,10 +66,10 @@ class DecodeGzipRequestTest extends TestCase
             ->assertStatus(413)
             ->assertJsonPath('error', 'Payload too large');
 
-        // A decode that stops at a 100 MB cap costs about twice the cap; one that ran to the end
+        // A decode that stops at a 64 MB cap costs about twice the cap; one that ran to the end
         // would have cost the 200 MB claimed plus the buffer, and on a bigger claim, everything.
         $this->assertLessThan(
-            300 * self::MB,
+            200 * self::MB,
             memory_get_peak_usage(true) - $before,
             'the decode ran past the cap'
         );

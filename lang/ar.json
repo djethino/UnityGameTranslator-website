@@ -160,7 +160,7 @@
     "upload.new_info": "جديد: أول ترجمة لهذا الملف",
     "upload.file_json": "ملف الترجمة (JSON)",
     "upload.drag_drop": "اسحب وأفلت ملف translations.json هنا",
-    "upload.max_size": "الحد الأقصى 100 ميجابايت",
+    "upload.max_size": "الحد الأقصى 64 ميجابايت",
     "upload.source_language": "اللغة المصدر",
     "upload.target_language": "اللغة الهدف",
     "upload.select": "اختر...",

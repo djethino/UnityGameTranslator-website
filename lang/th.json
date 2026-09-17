@@ -160,7 +160,7 @@
     "upload.new_info": "ใหม่: การแปลแรกสำหรับไฟล์นี้",
     "upload.file_json": "ไฟล์การแปล (JSON)",
     "upload.drag_drop": "ลากและวางไฟล์ translations.json ที่นี่",
-    "upload.max_size": "ขนาดสูงสุด 100MB",
+    "upload.max_size": "ขนาดสูงสุด 64MB",
     "upload.source_language": "ภาษาต้นฉบับ",
     "upload.target_language": "ภาษาเป้าหมาย",
     "upload.select": "เลือก...",

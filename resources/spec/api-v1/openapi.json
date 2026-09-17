@@ -935,7 +935,7 @@
           "source_language": { "$ref": "#/components/schemas/LanguageName" },
           "target_language": { "$ref": "#/components/schemas/LanguageName" },
           "status": { "$ref": "#/components/schemas/Status", "description": "Main only; a branch inherits. Absent keeps the row's, `in_progress` on a new one." },
-          "content": { "type": "string", "minLength": 2, "maxLength": 104857600, "description": "The translation file, serialised as a JSON string." },
+          "content": { "type": "string", "minLength": 2, "maxLength": 67108864, "description": "The translation file, serialised as a JSON string." },
           "notes": { "type": ["string", "null"], "maxLength": 1000 },
           "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s) URL where the file's assets (image replacements) are downloaded from." },
           "accepts_branches": { "type": ["boolean", "null"], "description": "Main only, written only when sent. Null: no opinion (a branch, or an older mod)." },

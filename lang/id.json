@@ -160,7 +160,7 @@
     "upload.new_info": "Baru: Terjemahan pertama untuk file ini",
     "upload.file_json": "File Terjemahan (JSON)",
     "upload.drag_drop": "Seret & letakkan translations.json di sini",
-    "upload.max_size": "Maks 100MB",
+    "upload.max_size": "Maks 64MB",
     "upload.source_language": "Bahasa Sumber",
     "upload.target_language": "Bahasa Target",
     "upload.select": "Pilih...",

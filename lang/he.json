@@ -160,7 +160,7 @@
     "upload.new_info": "חדש: תרגום ראשון לקובץ הזה",
     "upload.file_json": "קובץ תרגום (JSON)",
     "upload.drag_drop": "גררו את קובץ translations.json לכאן",
-    "upload.max_size": "מקסימום 100MB",
+    "upload.max_size": "מקסימום 64MB",
     "upload.source_language": "שפת מקור",
     "upload.target_language": "שפת יעד",
     "upload.select": "בחרו...",

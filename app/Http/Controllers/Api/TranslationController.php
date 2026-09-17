@@ -1061,8 +1061,8 @@ class TranslationController extends Controller
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             // 'type' is now auto-calculated from HVASM stats
             'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
-            // max aligned with DecodeGzipRequest::MAX_DECOMPRESSED_SIZE (100 MB)
-            'content' => 'required|string|min:2|max:104857600',
+            // max aligned with DecodeGzipRequest::MAX_DECOMPRESSED_SIZE (64 MB)
+            'content' => 'required|string|min:2|max:67108864',
             'notes' => 'nullable|string|max:1000',
             'resources_url' => 'nullable|string|max:2048|url:http,https',
 

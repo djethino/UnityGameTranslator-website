@@ -160,7 +160,7 @@
     "upload.new_info": "Nieuw: Eerste vertaling voor dit bestand",
     "upload.file_json": "Vertaalbestand (JSON)",
     "upload.drag_drop": "Sleep je translations.json hier",
-    "upload.max_size": "Max 100MB",
+    "upload.max_size": "Max 64MB",
     "upload.source_language": "Brontaal",
     "upload.target_language": "Doeltaal",
     "upload.select": "Selecteer...",
