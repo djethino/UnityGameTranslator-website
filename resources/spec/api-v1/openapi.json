@@ -411,7 +411,7 @@
         "tags": ["merge-preview"],
         "operationId": "mergePreviewInit",
         "summary": "Send the local file for a comparison arbitrated in the browser.",
-        "description": "`destination: server` (default) publishes the arbitrated result as the translation — allowed on one's own row only (403 otherwise). `destination: local` hands the result back to the game through `GET /merge-preview/{token}/result` and writes nothing on the site — allowed on any translation the caller could download, which is how a branch compares itself with its Main. `local_content` carries the lines only (`{key: {v, t, i?}}`), never the `_` metadata. The token lives 15 minutes, then 120 once the browser has used it.",
+        "description": "`destination: server` (default) publishes the arbitrated result as the translation — allowed on one's own row only (403 otherwise). `destination: local` hands the result back to the game through `GET /merge-preview/{token}/result` and writes nothing on the site — allowed on any translation the caller could download, which is how a branch compares itself with its Main. `local_content` is the file as the mod would upload it — the lines and the `_` settings sections the page compares (fonts, exclusions, variables…); never the sync stamps. The token lives 15 minutes, then 120 once the browser has used it.",
         "security": [{ "bearer": [] }],
         "x-throttle": "10/min per token",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MergePreviewInitBody" } } } },
@@ -1157,7 +1157,7 @@
         "required": ["translation_id", "local_content"],
         "properties": {
           "translation_id": { "type": "integer", "description": "Must exist." },
-          "local_content": { "type": "object", "description": "The local lines only: `{key: {v, t, i?}}`, no `_` key.", "additionalProperties": { "$ref": "#/components/schemas/Line" } },
+          "local_content": { "allOf": [{ "$ref": "#/components/schemas/TranslationFile" }], "description": "The local file as the mod would upload it: the lines `{key: {v, t, i?}}` and the `_` settings sections; never the sync stamps." },
           "destination": { "$ref": "#/components/schemas/MergeDestination", "description": "Default `server`." }
         }
       },

@@ -204,7 +204,9 @@
             </div>
             <p class="text-xs text-gray-500 mt-2">
                 {{ __('merge_preview.local_file') }} <span class="text-gray-600">/</span> {{ __('merge_preview.online_version') }}
-                &bull; {{ __('merge_preview.settings_differ') }}
+                {{-- "Not compared here" is the web flow's truth only: the mod flow leaves its
+                     file on the server and the block below compares setting by setting. --}}
+                <span x-show="!settingsRowsReady" x-cloak>&bull; {{ __('merge_preview.settings_differ') }}</span>
             </p>
 
             {{-- Setting by setting, when both sides are known.
