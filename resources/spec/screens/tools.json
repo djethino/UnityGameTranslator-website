@@ -64,15 +64,23 @@
         { "kind": "card", "name": "FailuresCard", "stretch": true, "children": [
           { "kind": "label", "name": "FailuresLabel", "text": "AI failures", "role": "SectionTitle" },
           { "kind": "label", "name": "FailuresHint", "text": "Every attempt broke a placeholder, so the line was left untranslated. Fix one of the proposals, write your own, skip the line, or exclude the element that shows it.", "role": "Hint" },
-          { "kind": "spacer", "name": "FailuresGap1", "height": 10 },
-          { "kind": "list", "name": "FailuresScroll", "minHeight": 120, "preferredHeight": 120, "empty": "No failed lines this session" },
-          { "kind": "spacer", "name": "FailuresGap2", "height": 10 },
-          { "kind": "stack", "name": "FailureEditor", "spacing": 5, "visible": false, "children": [
-            { "kind": "label", "name": "FailKey", "text": { "bind": "failKey" }, "policy": "Excluded", "role": "Small", "bold": true, "fill": "Stretch" },
+          { "kind": "list", "name": "FailuresScroll", "minHeight": 0, "preferredHeight": 60, "fill": false, "empty": "No failed lines this session" },
+          { "kind": "stack", "name": "FailureEditor", "spacing": 4, "visible": false, "children": [
+            { "kind": "label", "name": "FailTextLabel", "text": "Game text:", "role": "Small" },
+            { "kind": "list", "name": "SourceScroll", "minHeight": 0, "preferredHeight": 60, "fill": false },
             { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" },
-            { "kind": "label", "name": "FailAttemptsLabel", "text": "What the AI proposed:", "role": "Small" },
-            { "kind": "list", "name": "AttemptsScroll", "minHeight": 120, "preferredHeight": 160, "empty": "No proposal kept" },
-            { "kind": "field", "name": "FailInput", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false,
+            { "kind": "row", "name": "AttemptPager", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "label", "name": "FailAttemptsLabel", "text": "What the AI proposed:", "role": "Small", "fill": "Stretch" },
+              { "kind": "button", "name": "PrevAttemptBtn", "text": "←", "size": "Compact", "minWidth": 30, "act": "prevAttempt",
+                "help": "The previous proposal." },
+              { "kind": "label", "name": "AttemptIndex", "text": { "bind": "attemptIndex" }, "policy": "Excluded", "role": "Small", "wrap": false, "minWidth": 40, "align": "MiddleCenter" },
+              { "kind": "button", "name": "NextAttemptBtn", "text": "→", "size": "Compact", "minWidth": 30, "act": "nextAttempt",
+                "help": "The next proposal." },
+              { "kind": "button", "name": "UseAttemptBtn", "text": "Use", "size": "Compact", "minWidth": 50, "act": "useAttempt",
+                "help": "Copies this proposal into the field, to correct and save." }
+            ] },
+            { "kind": "list", "name": "AttemptScroll", "minHeight": 0, "preferredHeight": 60, "fill": false },
+            { "kind": "field", "name": "FailInput", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 60, "richText": false,
               "help": "The translation to keep. Use copies a proposal here so you can correct it." },
             { "kind": "row", "name": "FailBtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "children": [
               { "kind": "button", "name": "FailSaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "act": "failSave",
@@ -216,16 +224,15 @@
       { "kind": "button", "name": "DeleteBtn", "text": "X", "minWidth": 30, "act": "delete" }
     ] },
     { "kind": "row", "name": "FailureRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "act": "pick", "children": [
-      { "kind": "label", "name": "Source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "wrap": false, "fill": "Stretch" },
+      { "kind": "label", "name": "Source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "wrap": false, "richText": false, "fill": "Stretch" },
       { "kind": "label", "name": "Attempts", "text": { "bind": "attempts" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 80, "align": "MiddleRight" }
     ] },
-    { "kind": "stack", "name": "AttemptRow", "spacing": 3, "pad": 5, "surface": "Card", "children": [
-      { "kind": "label", "name": "Value", "text": { "bind": "value" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
-      { "kind": "row", "name": "Bottom", "spacing": 5, "minHeight": "RowHeightSmall", "children": [
-        { "kind": "label", "name": "Errors", "text": { "bind": "errors" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "fill": "Stretch" },
-        { "kind": "button", "name": "UseBtn", "text": "Use", "size": "Compact", "minWidth": 50, "act": "use",
-          "help": "Copies this proposal into the field, to correct and save." }
-      ] }
+    { "kind": "stack", "name": "TextRow", "pad": 4, "fill": "Stretch", "children": [
+      { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" }
+    ] },
+    { "kind": "stack", "name": "AttemptText", "spacing": 3, "pad": 4, "fill": "Stretch", "children": [
+      { "kind": "label", "name": "Value", "text": { "bind": "value" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
+      { "kind": "label", "name": "Errors", "text": { "bind": "errors" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "richText": false, "fill": "Stretch" }
     ] },
     { "kind": "row", "name": "RemovedOverrideRow", "spacing": 5, "padX": 5, "padY": 8, "surface": "Card", "minHeight": "RowHeightNormal", "children": [
       { "kind": "label", "name": "MatchLabel", "text": { "bind": "match" }, "policy": "Excluded", "role": "Small", "tone": "Muted", "fill": "Stretch" },
