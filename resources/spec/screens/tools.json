@@ -89,6 +89,7 @@
               { "kind": "label", "name": "FailErrors", "text": { "bind": "failErrors" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "richText": false, "fill": "Stretch" },
               { "kind": "list", "name": "AttemptScroll", "minHeight": 0, "preferredHeight": 60, "fill": false }
             ] },
+            { "kind": "splitter", "name": "FieldSplit", "help": "Drag to give the proposal or the field more room. Back to automatic when the window closes." },
             { "kind": "field", "name": "FailInput", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 90, "richText": false,
               "help": "The translation to keep. Use copies a proposal here so you can correct it. Every placeholder of the game text must be there; the line below says which one is not." },
             { "kind": "label", "name": "FailInputCheck", "text": { "bind": "failInputCheck" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "richText": false, "fill": "Stretch", "visible": false },
