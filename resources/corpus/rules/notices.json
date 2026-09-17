@@ -4,7 +4,7 @@
   "note": "What a screen says, unasked, about a translation — the corner notification, whole: whether it shows, what it says, what its one button does, and, when somebody else's lineage is offered the choice between contributing and forking, which door is open and why the other is not. Most urgent first: a conflict, a version waiting on the site, one waiting upstream, this machine's unsent lines, its unsent settings, contributions waiting on a Main. A username travels apart from the sentence; a wall already names somebody and is written as it is.",
   "operations": {
     "sync": {
-      "in": "the fact sheets of standing/from (with lines_changed: how many lines the published copy changed, null until the client counted), plus what is waiting: waiting_for_account, has_local_changes, has_metadata_changes, has_server_update, needs_merge, has_main_update (bools), branches_pending_review (int)",
+      "in": "the fact sheets of standing/from (with lines_changed: how many lines the published copy changed, and lines_changed_here: how many lines here differ from it — both null until the client counted, and the mod's own local_changes stands in for the second), plus what is waiting: waiting_for_account, has_local_changes, has_metadata_changes, has_server_update, needs_merge, has_main_update (bools), branches_pending_review (int)",
       "out": "{show, message, mention, action, verb, offers_branch, branch_closed, fork_closed, wall} — compared on the keys the case names"
     }
   },
@@ -22,9 +22,9 @@
       "out": { "show": true, "message": "Changed here (3) and on the site. Sync needed.", "mention": null, "action": "Sync", "verb": "Sync" },
       "why": "both sides moved: this one always speaks up, and first; how many lines here is known, how many there is not yet" },
     { "id": "notices/sync/a-conflict-on-ones-own-with-the-count", "op": "sync",
-      "in": { "lines": 40, "local_changes": 3, "exists": true, "is_owner": true, "role": "Main", "signed_in": true, "needs_merge": true, "has_local_changes": true, "lines_changed": 5 },
-      "out": { "message": "Changed here (3) and on the site (5 lines). Sync needed." },
-      "why": "what changes, on both sides, before deciding — the site only says that it moved, the client counted from the copy it fetched" },
+      "in": { "lines": 40, "local_changes": 4, "exists": true, "is_owner": true, "role": "Main", "signed_in": true, "needs_merge": true, "has_local_changes": true, "lines_changed": 3, "lines_changed_here": 2 },
+      "out": { "message": "Changed here (2) and on the site (3). Sync needed." },
+      "why": "what changes, on both sides, before deciding — the site only says that it moved, the client counted from the copy it fetched; four lines changed here since the sync, but two of them the site also has, identically, so two differ — the same numbers the comparison page will show" },
     { "id": "notices/sync/a-conflict-on-somebody-elses", "op": "sync",
       "in": { "lines": 40, "local_changes": 3, "exists": true, "is_owner": false, "uploader": "bob", "needs_merge": true, "has_local_changes": true },
       "out": { "message": "Sync needed — translation updated by", "mention": "bob", "action": "Sync" },
