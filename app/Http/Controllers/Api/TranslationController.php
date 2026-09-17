@@ -558,15 +558,9 @@ class TranslationController extends Controller
 
                     // Where a fork came from. The site has credited this since the origin_* columns
                     // were added and the mod credited nobody, so the same file named its source in
-                    // a browser and looked home-grown in the game it came from.
-                    //
-                    // ⚠ The line count is the SNAPSHOT taken at the fork and never recomputed — the
-                    // original keeps growing, so asking again would answer a different question.
-                    // Null when the account is gone: the credit stands without a name.
-                    'origin' => $t->hasOrigin() ? [
-                        'author' => $t->originAuthor?->name,
-                        'lines' => $t->origin_resolved_lines,
-                    ] : null,
+                    // a browser and looked home-grown in the game it came from. One mapper for
+                    // every answer about a row: Translation::originBlock.
+                    'origin' => $t->originBlock(),
                     'type' => $t->type,
                     'notes' => $t->notes,
                     'resources_url' => $t->getEffectiveResourcesUrl(),
@@ -807,6 +801,10 @@ class TranslationController extends Controller
                     'status' => $ownTranslation->status,
                     'notes' => $ownTranslation->notes,
                     'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
+                    // Additive. The listing credited a fork's source and the caller's own row did
+                    // not, so the status card in the game showed a bare "Main" where the site's
+                    // page said "Forked from @x" about the very same file.
+                    'origin' => $ownTranslation->originBlock(),
                     // 🔴 The row's OWN link, beside the effective one above — two different
                     // questions that had one answer.
                     //
@@ -1314,6 +1312,9 @@ class TranslationController extends Controller
                     'line_count' => $existingTranslation->line_count,
                     'role' => $service->getRole($existingTranslation->visibility),
                     'web_url' => url("/games/{$game->slug}"),
+                    // Additive: what the row is, so the client need not wait for the next state
+                    // event to credit a fork's source on its card.
+                    'origin' => $existingTranslation->originBlock(),
                 ],
             ], 200);
         }
@@ -1393,6 +1394,10 @@ class TranslationController extends Controller
                 'line_count' => $translation->line_count,
                 'role' => $service->getRole($visibility),
                 'web_url' => url("/games/{$game->slug}"),
+                // Additive: the origin as the site RECORDED it — a pointer the caller could not
+                // have held was dropped above, and the client learns that here rather than by
+                // showing a credit the site never accepted.
+                'origin' => $translation->originBlock(),
             ],
         ], 201);
     }

@@ -302,6 +302,37 @@
       "why": "🔴 the rule the stream imposes: with lineage=0 the lineage half is ABSENT, and absent read as zero wiped the contribution count and the overlay's notice one second after the startup call had filled them — what this payload does not carry is KEPT"
     },
     {
+      "id": "sse-events/read/state-own-fork-credits-its-origin",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "dave" },
+      "payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 40, "source_language": "English", "target_language": "French", "type": "human", "status": "in_progress", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "vote_count": 0, "updated_at": "2026-09-17T20:00:00+00:00", "content_updated_at": "2026-09-17T20:00:00+00:00", "accepts_branches": false, "branch_frozen": false, "origin": { "author": "alice", "lines": 2 } },
+        "main": null, "has_update": false, "vote": null, "accepts_branches": false
+      },
+      "expects": { "Role": "Main", "Status": "in_progress", "Origin": "present", "Origin.Author": "alice", "Origin.Lines": 2 },
+      "why": "a fork's own row credits its source: the card says 'Forked from @alice' as the site's page does, and 'Still writing' from the status the stream now carries"
+    },
+    {
+      "id": "sse-events/read/state-own-fork-keeps-its-origin-when-absent",
+      "kind": "read",
+      "reader": "sync_state",
+      "input": { "account": "dave" },
+      "previous_payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 40, "source_language": "English", "target_language": "French", "type": "human", "status": "in_progress", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "vote_count": 0, "updated_at": "2026-09-17T20:00:00+00:00", "content_updated_at": "2026-09-17T20:00:00+00:00", "accepts_branches": false, "branch_frozen": false, "origin": { "author": "alice", "lines": 2 } },
+        "main": null, "has_update": false, "vote": null, "accepts_branches": false
+      },
+      "payload": {
+        "exists": true, "role": "main",
+        "translation": { "id": 40, "source_language": "English", "target_language": "French", "type": "human", "status": "in_progress", "notes": null, "resources_url": null, "line_count": 4, "file_hash": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f", "vote_count": 0, "updated_at": "2026-09-17T20:05:00+00:00", "content_updated_at": "2026-09-17T20:05:00+00:00", "accepts_branches": false, "branch_frozen": false },
+        "main": null, "has_update": false, "vote": null, "accepts_branches": false
+      },
+      "expects": { "Hash": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f", "Origin": "present", "Origin.Author": "alice", "Origin.Lines": 2 },
+      "why": "rule 1 of the stream: a payload from an older site that does not carry the key leaves what the fuller answer established — absent is unknown, never 'started from nobody'"
+    },
+    {
       "id": "sse-events/read/state-holder-of-somebodys-main",
       "kind": "read",
       "reader": "sync_state",

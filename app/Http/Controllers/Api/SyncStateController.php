@@ -117,11 +117,17 @@ class SyncStateController extends Controller
                 'source_language' => $ownTranslation->source_language,
                 'target_language' => $ownTranslation->target_language,
                 'type' => $ownTranslation->type,
+                // 🔴 The author's own word, which check-uuid has always carried and this answer
+                // left out — and this is the answer the game reads at startup, so the card
+                // never showed "Still writing" beside the site's "In progress" (2026-09-17).
+                'status' => $ownTranslation->status,
                 'notes' => $ownTranslation->notes,
                 'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
                 'line_count' => $ownTranslation->line_count,
                 'file_hash' => $ownTranslation->file_hash,
                 'vote_count' => $ownTranslation->vote_count,
+                // Where a fork came from, as the listing says it (Translation::originBlock).
+                'origin' => $ownTranslation->originBlock(),
                 'updated_at' => $ownTranslation->updated_at->toIso8601String(),
                 'content_updated_at' => $ownTranslation->contentChangedAt()->toIso8601String(),
 

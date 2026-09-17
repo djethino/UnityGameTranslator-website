@@ -1,7 +1,7 @@
 {
   "$comment": "The contract cases of API v1. The site REPLAYS each one (tests/Feature/ApiContractTest.php: build `setup`, send `request`, compare `response`); the mod READS each response body (Core.Checks: feed `response.body` to the reader named in `read`, compare what it derives); check-spec.py holds every request and response body to openapi.json. One file, three executors — see spec/README.md.",
   "conventions": {
-    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, status?, accepts_branches?, notes?, resources_url?, file_hash, lines, vote_count?}}, votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
+    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, origin?, origin_lines?, status?, accepts_branches?, notes?, resources_url?, file_hash, lines, vote_count?}} (`origin` names the row a fork was taken from — the site fills origin_* and leaves parent_id null, as its two fork paths do), votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
     "request": "{method, path, as?, query?, headers?, body?, body_encoding?}. `as` names a user of the setup: the site sends a fresh token of theirs. `{{a.b.c}}` in path, query and header strings is a setup value (`translations.main.id`) or a `capture` of the prelude. In a body, {\"$ref\": \"translations.main.id\"} is the same thing as a JSON value and {\"$json\": {...}} is that object serialised as a string (the upload's `content`).",
     "prelude": "Requests sent before the one under test, in order; `capture: {name: \"header:ETag\" | \"body:token\"}` keeps a value for `{{name}}`. Site only.",
     "request_valid": "false when the request body is one the route must REFUSE: check-spec.py then requires the schema to refuse it too.",
@@ -41,6 +41,24 @@
           "game": "g", "user": "bob", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "branch", "parent": "main",
           "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
+        }
+      }
+    },
+    "forked": {
+      "users": { "alice": { "name": "alice" }, "dave": { "name": "dave" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" } }
+        },
+        "fork": {
+          "game": "g", "user": "dave", "uuid": "f0f0f0f0-1111-4222-8333-444444444444", "visibility": "public", "origin": "main", "origin_lines": 2,
+          "status": "in_progress", "accepts_branches": false,
+          "file_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "lines": { "Shop": { "v": "Magasin", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
         }
       }
     },
@@ -212,14 +230,29 @@
             "id": { "$ref": "translations.main.id" }, "source_language": "English", "target_language": "French", "type": "human",
             "status": "complete", "notes": "Full run", "resources_url": null, "resources_url_own": null,
             "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }
+            "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" },
+            "origin": null
           },
           "branches_count": 1,
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false }
         }
       },
-      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Main", "BranchesCount": 1, "BranchesWithWork": 1, "LinesAvailable": 1, "LinesToReview": 1, "LinesNew.Human": 1, "LinesDiffering.Human": 0, "LinesOffered": null, "AcceptsBranches": true, "BranchFrozen": false, "MainMissing": null, "ExistingTranslation.Status": "complete", "ExistingTranslation.OwnResourcesUrl": null, "Vote.CanVote": false, "Vote.Count": 0 } },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Main", "BranchesCount": 1, "BranchesWithWork": 1, "LinesAvailable": 1, "LinesToReview": 1, "LinesNew.Human": 1, "LinesDiffering.Human": 0, "LinesOffered": null, "AcceptsBranches": true, "BranchFrozen": false, "MainMissing": null, "ExistingTranslation.Origin": null, "ExistingTranslation.Status": "complete", "ExistingTranslation.OwnResourcesUrl": null, "Vote.CanVote": false, "Vote.Count": 0 } },
       "why": "the Main learns what its contributions HOLD, not how many people took the file: one branch, one new hand-written line to review"
+    },
+    {
+      "id": "api-v1/check-uuid/own-fork-credits-its-origin",
+      "setup": "forked",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "dave", "query": { "uuid": "f0f0f0f0-1111-4222-8333-444444444444" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "main",
+          "translation": { "id": { "$ref": "translations.fork.id" }, "status": "in_progress", "origin": { "author": "alice", "lines": 2 } }
+        }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Main", "ExistingTranslation.Origin": "present", "ExistingTranslation.Origin.Author": "alice", "ExistingTranslation.Origin.Lines": 2 } },
+      "why": "the role stays `main` — a Fork IS a Main — and the origin block says the rest; the reader keeps the author and the snapshot apart"
     },
     {
       "id": "api-v1/check-uuid/own-branch",
@@ -296,7 +329,7 @@
         "status": 200,
         "body": {
           "exists": true, "role": "main",
-          "translation": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "accepts_branches": true, "branch_frozen": false, "notes": "Full run", "resources_url": null, "type": "human", "line_count": 2 },
+          "translation": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "accepts_branches": true, "branch_frozen": false, "notes": "Full run", "resources_url": null, "type": "human", "status": "complete", "line_count": 2, "origin": null },
           "main": null,
           "branches_count": 1, "has_update": false,
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false },
@@ -305,7 +338,20 @@
           "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] }
         }
       },
-      "why": "check-uuid and check in one payload, as the sync stream's `state` event carries it; `branches_pending_review` is `branches_with_work`, deliberately"
+      "why": "check-uuid and check in one payload, as the sync stream's `state` event carries it; `branches_pending_review` is `branches_with_work`, deliberately — and the row carries `status`, since this is the answer a game reads at startup and the card showed no 'Still writing' beside the site's 'In progress' without it"
+    },
+    {
+      "id": "api-v1/sync-state/own-fork-credits-its-origin",
+      "setup": "forked",
+      "request": { "method": "GET", "path": "/sync/state", "as": "dave", "query": { "uuid": "f0f0f0f0-1111-4222-8333-444444444444", "lineage": "0" } },
+      "response": {
+        "status": 200,
+        "body": {
+          "exists": true, "role": "main",
+          "translation": { "id": { "$ref": "translations.fork.id" }, "status": "in_progress", "origin": { "author": "alice", "lines": 2 } }
+        }
+      },
+      "why": "a fork is a Main that took somebody's work off on its own, and its own row says whose: the card in the game credits the source the way the site's page does, instead of a bare Main"
     },
     {
       "id": "api-v1/sync-state/own-row-only",

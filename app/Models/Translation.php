@@ -687,10 +687,18 @@ class Translation extends Model
     /**
      * A Fork is a Main translation that was derived from another Main.
      * (Not a branch - branches are contributions to someone else's Main)
+     *
+     * 🔴 **Read from the origin, never from `parent_id`.** `parent_id` is the BRANCH link — the
+     * Main a contribution hangs from — and both paths that make a fork set it to null (a branch
+     * promoted on the site, an upload declaring `forked_from_id`). Reading it here labelled every
+     * real fork "Main" on the list of one's own translations while the dashboard, the game page,
+     * the API and the two clients credited "Forked from @x" from `origin_*` (2026-09-17). One
+     * fact, one rule: {@see hasOrigin}, which also excludes a fork of one's own work — nobody is
+     * credited for their own lines.
      */
     public function isFork(): bool
     {
-        return $this->parent_id !== null && $this->isMain();
+        return $this->hasOrigin() && $this->isMain();
     }
 
     public function incrementDownloads()
@@ -1285,6 +1293,26 @@ class Translation extends Model
     {
         return $this->origin_user_id !== null
             && (int) $this->origin_user_id !== (int) $this->user_id;
+    }
+
+    /**
+     * Where a fork came from, as every API answer describes it (`Origin` in the contract): the
+     * author's name read live so a rename follows, null when the account is gone — the credit
+     * stands without a name — and the line count as the SNAPSHOT taken at the fork, never
+     * recomputed. Null when this translation started from nobody's work.
+     *
+     * One mapper: the listing, the caller's own row (`check-uuid`, `sync/state`) and the upload
+     * answer all say it through here, so the same file cannot name its source in one answer and
+     * look home-grown in the next.
+     *
+     * @return array{author: string|null, lines: int|null}|null
+     */
+    public function originBlock(): ?array
+    {
+        return $this->hasOrigin() ? [
+            'author' => $this->originAuthor?->name,
+            'lines' => $this->origin_resolved_lines,
+        ] : null;
     }
 
     /**

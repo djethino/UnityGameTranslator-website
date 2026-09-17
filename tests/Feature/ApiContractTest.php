@@ -195,6 +195,11 @@ class ApiContractTest extends TestCase
                 'game_id' => $this->refs["games.{$spec['game']}.id"],
                 'user_id' => $this->refs["users.{$spec['user']}.id"],
                 'parent_id' => isset($spec['parent']) ? $this->refs["translations.{$spec['parent']}.id"] : null,
+                // A fork: `origin` names the row it was taken from, `origin_lines` the snapshot.
+                // parent_id stays null, as both real fork paths leave it.
+                'origin_translation_id' => isset($spec['origin']) ? $this->refs["translations.{$spec['origin']}.id"] : null,
+                'origin_user_id' => isset($spec['origin']) ? $this->refs["translations.{$spec['origin']}"]->user_id : null,
+                'origin_resolved_lines' => isset($spec['origin']) ? ($spec['origin_lines'] ?? null) : null,
                 'file_uuid' => $spec['uuid'],
                 'visibility' => $spec['visibility'],
                 'status' => $spec['status'] ?? 'in_progress',

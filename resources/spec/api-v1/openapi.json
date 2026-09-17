@@ -779,7 +779,8 @@
           "line_count": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
-          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where this row came from when it is a fork of somebody else's work — the same block the listing carries; null when it started from nobody's. Absent on an older site." }
         }
       },
       "MainRow": {
@@ -877,6 +878,7 @@
           "source_language": { "$ref": "#/components/schemas/LanguageName" },
           "target_language": { "$ref": "#/components/schemas/LanguageName" },
           "type": { "$ref": "#/components/schemas/TranslationType" },
+          "status": { "$ref": "#/components/schemas/Status", "description": "Additive (2026-09-17). The author's own word, as `check-uuid` carries it: this is the answer a game reads at startup, so a card can only show it from here. Absent on an older site, and a client then shows nothing." },
           "notes": { "type": ["string", "null"] },
           "resources_url": { "type": ["string", "null"] },
           "line_count": { "type": "integer" },
@@ -885,7 +887,8 @@
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "accepts_branches": { "type": "boolean", "description": "The lineage's decision: own on a Main, the Main's on a branch." },
-          "branch_frozen": { "type": "boolean" }
+          "branch_frozen": { "type": "boolean" },
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. As on `OwnRow`. A client keeps what it held when the key is absent." }
         }
       },
       "CheckResponse": {
@@ -957,7 +960,8 @@
               "file_hash": { "$ref": "#/components/schemas/FileHash", "description": "What the file records as `_source.hash`." },
               "line_count": { "type": "integer" },
               "role": { "type": "string", "enum": ["main", "branch"], "description": "What the row became." },
-              "web_url": { "type": "string", "description": "The game's page on the site." }
+              "web_url": { "type": "string", "description": "The game's page on the site." },
+              "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. The origin as the site RECORDED it — a `forked_from_*` pointer the caller could not have held is dropped, and this is where the client learns that. Null when none." }
             }
           }
         }

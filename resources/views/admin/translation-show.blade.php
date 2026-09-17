@@ -110,13 +110,20 @@
                     </div>
                 @endif
 
-                @if($translation->isFork() && $translation->parent)
+                {{-- Read from the origin, like everywhere else: `parent` is the branch link, and a
+                     fork's is null. The source row is looked up by its id and may be gone — the
+                     credit stands either way, the link only when there is a page to open. --}}
+                @if($translation->hasOrigin())
+                    @php $originRow = \App\Models\Translation::find($translation->origin_translation_id); @endphp
                     <div class="mt-4 p-3 bg-purple-900/30 border border-purple-700 rounded">
                         <p class="text-purple-300 text-sm">
-                            <i class="fas fa-code-branch mr-1"></i>
-                            <a href="{{ route('admin.translations.show', $translation->parent) }}" class="hover:text-purple-200 underline underline-offset-2">
-                                {{ __('translation.forked_from', ['author' => $translation->parent->user->name ?? '[Deleted]']) }}
-                            </a>
+                            @if($originRow)
+                                <a href="{{ route('admin.translations.show', $originRow) }}" class="hover:text-purple-200 underline underline-offset-2">
+                                    <x-translation-origin :translation="$translation" class="text-purple-300 text-sm" />
+                                </a>
+                            @else
+                                <x-translation-origin :translation="$translation" class="text-purple-300 text-sm" />
+                            @endif
                         </p>
                     </div>
                 @endif

@@ -82,6 +82,90 @@ class ForkOriginTest extends TestCase
         return $t->refresh();
     }
 
+    /**
+     * 🔴 **One rule for "this is a fork", and it is the origin.** `parent_id` is the branch link
+     * and both fork paths leave it null, so a rule reading it labelled every real fork "Main" on
+     * the list of one's own translations while every other surface credited "Forked from @x".
+     * And a fork of one's OWN Main is not a fork to anybody: nobody is credited for their own
+     * lines, so the role stays Main and no origin block is sent.
+     */
+    public function test_a_fork_is_told_by_its_origin_and_never_by_its_parent(): void
+    {
+        $author = User::factory()->create();
+        $source = $this->original($author);
+
+        $this->upload(User::factory()->create(), ['forked_from_id' => $source->id])->assertSuccessful();
+        $fork = Translation::latest('id')->first();
+
+        $this->assertNull($fork->parent_id);
+        $this->assertTrue($fork->isFork());
+        $this->assertSame(['author' => $author->name, 'lines' => null], $fork->originBlock());
+
+        // The author forking their own work: origin columns filled, and still not a fork.
+        // Built directly — the site refuses a second lineage of one's own for the same game
+        // and pair at upload, so this row can only come from an older path or a promotion.
+        $own = new Translation();
+        $own->forceFill([
+            'game_id' => $source->game_id,
+            'user_id' => $author->id,
+            'source_language' => 'English',
+            'target_language' => 'French',
+            'file_path' => 'translations/not-read-by-these-tests.json',
+            'file_uuid' => 'own-fork-uuid',
+            'visibility' => 'public',
+            'file_hash' => 'own-fork-hash',
+            'origin_translation_id' => $source->id,
+            'origin_user_id' => $author->id,
+            'origin_resolved_lines' => 10,
+        ])->save();
+        $own->refresh();
+
+        $this->assertSame($source->id, $own->origin_translation_id);
+        $this->assertFalse($own->hasOrigin());
+        $this->assertFalse($own->isFork());
+        $this->assertNull($own->originBlock());
+
+        // A branch hangs from its Main by parent_id and is not a fork either.
+        $branch = $this->branchOf($source, User::factory()->create());
+        $this->assertFalse($branch->isFork());
+    }
+
+    /**
+     * The caller's own row says where it came from on every answer that describes it — the
+     * startup answer included, which is the one the card in the game reads. The listing already
+     * did; the own row did not, and the same file read "Forked from @x" in a browser and a bare
+     * "Main" in the game.
+     */
+    public function test_the_own_row_credits_a_fork_source_on_every_answer(): void
+    {
+        $author = User::factory()->create(['name' => 'origin-author']);
+        $source = $this->original($author);
+        $forker = User::factory()->create();
+
+        $upload = $this->upload($forker, ['forked_from_id' => $source->id, 'forked_from_lines' => 3000])
+            ->assertSuccessful();
+        $this->assertSame(['author' => 'origin-author', 'lines' => 3000], $upload->json('translation.origin'));
+
+        $fork = Translation::latest('id')->first();
+        $token = ApiToken::createForUser($forker, 'test')->plain_token;
+        $headers = ['Authorization' => 'Bearer ' . $token];
+
+        $check = $this->withHeaders($headers)->getJson('/api/v1/translations/check-uuid?uuid=' . $fork->file_uuid)
+            ->assertOk();
+        $this->assertSame(['author' => 'origin-author', 'lines' => 3000], $check->json('translation.origin'));
+
+        $state = $this->withHeaders($headers)->getJson('/api/v1/sync/state?uuid=' . $fork->file_uuid)
+            ->assertOk();
+        $this->assertSame(['author' => 'origin-author', 'lines' => 3000], $state->json('translation.origin'));
+        $this->assertSame('in_progress', $state->json('translation.status'));
+
+        // And a translation started from nobody's work says so, rather than saying nothing.
+        $own = $this->withHeaders(['Authorization' => 'Bearer ' . ApiToken::createForUser($author, 'test')->plain_token])
+            ->getJson('/api/v1/sync/state?uuid=' . $source->file_uuid)->assertOk();
+        $this->assertArrayHasKey('origin', $own->json('translation'));
+        $this->assertNull($own->json('translation.origin'));
+    }
+
     public function test_a_fork_records_who_it_came_from(): void
     {
         $author = User::factory()->create();
