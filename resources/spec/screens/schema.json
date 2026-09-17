@@ -121,6 +121,7 @@
               "caption": { "type": "string", "minLength": 1, "description": "Words before the field, on its row; captionWidth is their width." },
               "captionWidth": { "type": "integer", "minimum": 20 },
               "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
+              "scroll": { "type": "boolean", "default": false, "description": "A Multiline field that keeps its height and scrolls inside it, instead of growing with what it holds." },
               "richText": { "type": "boolean", "default": true, "description": "False keeps markup as characters — the file's exact text, being edited." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer" },
