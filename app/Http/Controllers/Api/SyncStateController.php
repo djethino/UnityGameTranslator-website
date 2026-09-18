@@ -128,6 +128,7 @@ class SyncStateController extends Controller
                 'vote_count' => $ownTranslation->vote_count,
                 // Where a fork came from, as the listing says it (Translation::originBlock).
                 'origin' => $ownTranslation->originBlock(),
+                'download_count' => $ownTranslation->download_count,
                 'updated_at' => $ownTranslation->updated_at->toIso8601String(),
                 'content_updated_at' => $ownTranslation->contentChangedAt()->toIso8601String(),
 

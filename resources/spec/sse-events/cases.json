@@ -308,10 +308,10 @@
       "input": { "account": "dave" },
       "payload": {
         "exists": true, "role": "main",
-        "translation": { "id": 40, "source_language": "English", "target_language": "French", "type": "human", "status": "in_progress", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "vote_count": 0, "updated_at": "2026-09-17T20:00:00+00:00", "content_updated_at": "2026-09-17T20:00:00+00:00", "accepts_branches": false, "branch_frozen": false, "origin": { "author": "alice", "lines": 2 } },
+        "translation": { "id": 40, "source_language": "English", "target_language": "French", "type": "human", "status": "in_progress", "notes": null, "resources_url": null, "line_count": 3, "file_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "vote_count": 0, "updated_at": "2026-09-17T20:00:00+00:00", "content_updated_at": "2026-09-17T20:00:00+00:00", "accepts_branches": false, "branch_frozen": false, "origin": { "author": "alice", "lines": 2 }, "download_count": 3 },
         "main": null, "has_update": false, "vote": null, "accepts_branches": false
       },
-      "expects": { "Role": "Main", "Status": "in_progress", "Origin": "present", "Origin.Author": "alice", "Origin.Lines": 2 },
+      "expects": { "Role": "Main", "Status": "in_progress", "Origin": "present", "Origin.Author": "alice", "Origin.Lines": 2, "DownloadCount": 3 },
       "why": "a fork's own row credits its source: the card says 'Forked from @alice' as the site's page does, and 'Still writing' from the status the stream now carries"
     },
     {

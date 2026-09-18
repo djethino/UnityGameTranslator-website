@@ -780,7 +780,8 @@
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
-          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where this row came from when it is a fork of somebody else's work — the same block the listing carries; null when it started from nobody's. Absent on an older site." }
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where this row came from when it is a fork of somebody else's work — the same block the listing carries; null when it started from nobody's. Absent on an older site." },
+          "download_count": { "type": "integer", "description": "Additive. The site's tally, as the listing carries it, so the card in the game can say it without a second call. Absent on an older site, which reads as unknown, never as zero." }
         }
       },
       "MainRow": {
@@ -888,7 +889,8 @@
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "accepts_branches": { "type": "boolean", "description": "The lineage's decision: own on a Main, the Main's on a branch." },
           "branch_frozen": { "type": "boolean" },
-          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. As on `OwnRow`. A client keeps what it held when the key is absent." }
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. As on `OwnRow`. A client keeps what it held when the key is absent." },
+          "download_count": { "type": "integer", "description": "Additive. As on `OwnRow`." }
         }
       },
       "CheckResponse": {

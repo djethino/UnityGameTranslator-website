@@ -805,6 +805,8 @@ class TranslationController extends Controller
                     // not, so the status card in the game showed a bare "Main" where the site's
                     // page said "Forked from @x" about the very same file.
                     'origin' => $ownTranslation->originBlock(),
+                    // Additive, as the listing carries it: the card in the game says it too.
+                    'download_count' => $ownTranslation->download_count,
                     // 🔴 The row's OWN link, beside the effective one above — two different
                     // questions that had one answer.
                     //

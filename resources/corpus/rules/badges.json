@@ -19,7 +19,8 @@
         "origin": "{author, lines} when this was forked from another translation",
         "main_owner": "who leads this lineage, to name them in the Not yours tip",
         "main_abandoned": "bool: the Main is still there and its owner erased their account",
-        "branch_frozen": "bool: the Main still exists and has closed its contributions"
+        "branch_frozen": "bool: the Main still exists and has closed its contributions",
+        "capture_only": "bool: captured lines and not one translated — one chip in place of the stage and the completeness"
       },
       "out": "the whole strip, in order: [{kind, text, tone, tip}]"
     },
@@ -393,6 +394,20 @@
           "tip": "Its author takes contributions: your work can be sent to them for review." }
       ],
       "why": "no publication guard: it carried one and that imported a question about YOUR standing into a fact about the LINEAGE — the person holding a downloaded translation is exactly the one who needs to know whether their corrections can be sent back"
+    },
+    {
+      "id": "badges/for/capture-only-is-a-chip-of-its-own",
+      "op": "for",
+      "in": { "publication": "Published", "is_main": true, "completeness": 0.0, "capture_only": true },
+      "out": [
+        { "kind": "Publication", "text": "Published", "tone": "Plain",
+          "tip": "This translation is on the site. Publishing again updates it." },
+        { "kind": "Role", "text": "Main", "tone": "Plain",
+          "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
+        { "kind": "CaptureOnly", "text": "Capture only", "tone": "Quiet",
+          "tip": "This file only contains captured text, no translations yet." }
+      ],
+      "why": "nothing translated is not a translation at zero: no stage to judge, no '0% translated' to grade it by — the site said it by hand in three views, the two clients said nothing"
     },
     {
       "id": "badges/for/review-fully-read",

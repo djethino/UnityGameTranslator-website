@@ -231,7 +231,7 @@
             "status": "complete", "notes": "Full run", "resources_url": null, "resources_url_own": null,
             "line_count": 2, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" },
-            "origin": null
+            "origin": null, "download_count": 0
           },
           "branches_count": 1,
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false }
@@ -329,7 +329,7 @@
         "status": 200,
         "body": {
           "exists": true, "role": "main",
-          "translation": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "accepts_branches": true, "branch_frozen": false, "notes": "Full run", "resources_url": null, "type": "human", "status": "complete", "line_count": 2, "origin": null },
+          "translation": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "vote_count": 0, "accepts_branches": true, "branch_frozen": false, "notes": "Full run", "resources_url": null, "type": "human", "status": "complete", "line_count": 2, "origin": null, "download_count": 0 },
           "main": null,
           "branches_count": 1, "has_update": false,
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": false },
