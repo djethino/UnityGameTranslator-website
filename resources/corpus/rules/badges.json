@@ -217,7 +217,7 @@
         { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Origin", "text": "Forked from @alice", "tone": "Quiet",
-          "tip": "Started from @alice's work, 3120 lines of it at the time. It has been a separate translation ever since." }
+          "tip": "Started from @alice's work, 3,120 lines of it at the time. It has been a separate translation ever since." }
       ],
       "why": "a fork reads as a Main in every other respect, so nothing else in the strip can tell one apart from a translation somebody wrote from scratch — and quiet, because it is a credit and not a warning"
     },
@@ -564,7 +564,7 @@
         { "kind": "BranchesWaiting", "text": "2 waiting", "tone": "Good",
           "tip": "2 contributions you have not been through, holding 57 lines to take." },
         { "kind": "Origin", "text": "Forked from @alice", "tone": "Quiet",
-          "tip": "Started from @alice's work, 3120 lines of it at the time. It has been a separate translation ever since." },
+          "tip": "Started from @alice's work, 3,120 lines of it at the time. It has been a separate translation ever since." },
         { "kind": "Sync", "text": "Unpublished changes", "tone": "Attention",
           "tip": "You have changes here that the published version does not have." },
         { "kind": "Finished", "text": "Finished", "tone": "Good",
