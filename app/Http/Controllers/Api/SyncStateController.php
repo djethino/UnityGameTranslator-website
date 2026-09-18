@@ -188,7 +188,11 @@ class SyncStateController extends Controller
                 // A Main publishing every ten minutes signals the lineage every time, and each
                 // signal would tell every contributor connected that upstream moved. That belongs
                 // to the rhythm they chose, not to the second it happened.
-                $main = $publicTranslation?->loadMissing('user:id,name');
+                // 🔴 `account_deleted_at` IN the column list: `main_abandoned` below reads
+                // isDeletedAccount() on this very load, and a user loaded as id+name has no such
+                // column — so the flag said false for every erased owner, on this answer alone,
+                // while check-uuid said true (2026-09-18). The stream is the answer a game reads.
+                $main = $publicTranslation?->loadMissing('user:id,name,account_deleted_at');
 
                 // 🔴 **What became of the Main, told without being asked for** (2026-08-20).
                 //
@@ -241,10 +245,14 @@ class SyncStateController extends Controller
         }
 
         // Check if Main exists with this UUID (user would become branch)
-        $mainTranslation = $publicTranslation?->loadMissing('user:id,name');
+        $mainTranslation = $publicTranslation?->loadMissing('user:id,name,account_deleted_at');
 
         if ($mainTranslation) {
             $state['exists'] = true;
+            // As check-uuid tells a holder: the Main is there and nobody is behind it. A
+            // contribution sent into it is refused; the card offering "Contribute" has to know
+            // from the answer the game reads at startup, not from the refusal.
+            $state['main_abandoned'] = (bool) $mainTranslation->user?->isDeletedAccount();
             $state['main'] = [
                 'id' => $mainTranslation->id,
                 'uploader' => $mainTranslation->user->name,

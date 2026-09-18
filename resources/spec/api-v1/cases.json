@@ -526,6 +526,27 @@
       "why": "a refusal is a refusal, never a quiet substitution: turning it into a fork would change the file's uuid from a server that cannot see that file"
     },
     {
+      "id": "api-v1/check-uuid/holder-is-told-the-mains-owner-is-gone",
+      "setup": "abandoned",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "carol", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": {
+        "status": 200,
+        "body": { "exists": true, "role": "none", "main_abandoned": true, "main": { "id": { "$ref": "translations.main.id" } } }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": false, "Role": "None", "MainAbandoned": true } },
+      "why": "🔴 read off the Main's owner as loaded for this answer: loaded as id+name, the owner had no erased-at column and the flag said false for every erased account, while the upload two lines later was refused for that very reason"
+    },
+    {
+      "id": "api-v1/sync-state/holder-is-told-the-mains-owner-is-gone",
+      "setup": "abandoned",
+      "request": { "method": "GET", "path": "/sync/state", "as": "carol", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": {
+        "status": 200,
+        "body": { "exists": true, "role": "none", "main_abandoned": true, "main": { "id": { "$ref": "translations.main.id" }, "uploader": "alice" } }
+      },
+      "why": "same fact on the answer a game reads at startup, which loaded the owner the same short way"
+    },
+    {
       "id": "api-v1/upload/refused-the-mains-owner-is-gone",
       "setup": "abandoned",
       "request": {

@@ -829,7 +829,9 @@ class TranslationController extends Controller
         }
 
         // Check if a Main exists with this UUID (user would become branch)
-        $mainTranslation = $publicTranslation?->loadMissing('user:id,name');
+        // ⚠ `account_deleted_at` in the list: `main_abandoned` below reads isDeletedAccount()
+        // on this load, and a user loaded as id+name answered false for every erased owner.
+        $mainTranslation = $publicTranslation?->loadMissing('user:id,name,account_deleted_at');
 
         if ($mainTranslation) {
             // Main exists, user would become a branch if they upload

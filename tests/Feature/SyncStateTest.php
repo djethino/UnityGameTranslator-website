@@ -255,6 +255,30 @@ class SyncStateTest extends TestCase
         );
     }
 
+    /**
+     * 🔴 The other way a lineage loses its head: the Main is there, its owner's account is not.
+     * The flag is read off the owner as loaded for this answer, and a user loaded as id+name
+     * carried no erased-at column — so it said false for every erased owner, on this answer
+     * alone, while check-uuid said true. A game reads THIS answer at startup.
+     */
+    public function test_a_contribution_learns_its_main_has_no_owner_any_more(): void
+    {
+        $uuid = (string) \Illuminate\Support\Str::uuid();
+        [$mainOwner] = $this->makeUserWithToken();
+        [$contributor, $token] = $this->makeUserWithToken();
+
+        $this->makeTranslation($mainOwner, $uuid, 'public', 'main-hash');
+        $this->makeTranslation($contributor, $uuid, 'branch', 'branch-hash');
+
+        $this->assertFalse($this->state($token, $uuid, 'branch-hash')['main_abandoned']);
+
+        $mainOwner->forceFill(['account_deleted_at' => now()])->save();
+
+        $state = $this->state($token, $uuid, 'branch-hash');
+        $this->assertTrue($state['main_abandoned'], 'the owner erased their account');
+        $this->assertFalse($state['main_missing'], 'the Main itself is still there');
+    }
+
     /** It belongs to the lineage, so a stream leaves it out like the rest. */
     public function test_what_became_of_the_main_is_not_on_a_stream(): void
     {

@@ -866,7 +866,7 @@
           "lines_available": { "type": "integer", "description": "Additive, Main with lineage." },
           "lines_waiting": { "$ref": "#/components/schemas/LinesWaiting" },
           "main_missing": { "type": "boolean", "description": "Additive, branch with lineage." },
-          "main_abandoned": { "type": "boolean", "description": "Additive, branch with lineage." },
+          "main_abandoned": { "type": "boolean", "description": "Additive, branch with lineage — and on a holder's answer (`role` none), as `check-uuid` tells it: the Main is there, its owner's account is not." },
           "main_ignoring": { "type": "boolean", "description": "Additive, branch with lineage." },
           "merged_lines_total": { "type": ["integer", "null"], "description": "Additive, branch with lineage." }
         }
