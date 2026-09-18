@@ -99,7 +99,7 @@
                 { "kind": "button", "name": "CreateIndependentBtn", "text": "Fork", "minWidth": 170, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "createIndependent",
                   "help": "Start your own translation from the file in this game — asks for confirmation first" }
               ] },
-              { "kind": "label", "name": "ForkDesc", "text": "A copy of this translation as it is now, yours. It keeps the credit to its author, and stops following their updates", "role": "Hint", "centred": true }
+              { "kind": "label", "name": "ForkDesc", "text": { "bind": "forkDesc" }, "role": "Hint", "centred": true }
             ] },
             { "kind": "label", "name": "UploadHintLabel", "text": { "bind": "uploadHint" }, "role": "Hint", "centred": true },
             { "kind": "row", "name": "RoleActionsRow", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
