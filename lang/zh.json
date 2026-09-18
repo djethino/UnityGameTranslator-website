@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "还有 :count 行待校对",
     "progress.stage.machine": "机器翻译",
     "progress.stage.started": "已开始校对",
-    "progress.stage.advanced": "校对进展良好",
+    "progress.stage.advanced": "校对进行中",
     "progress.stage.reviewed": "已全面校对",
     "progress.stage_hint": "已由人工阅读的比例：:percent%",
     "progress.quality_distribution": "质量分布",

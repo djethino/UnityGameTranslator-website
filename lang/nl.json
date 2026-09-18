@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "nog :count regels na te kijken",
     "progress.stage.machine": "Machinevertaling",
     "progress.stage.started": "Nakijken begonnen",
-    "progress.stage.advanced": "Nakijken ver gevorderd",
+    "progress.stage.advanced": "Bezig met nakijken",
     "progress.stage.reviewed": "Volledig nagekeken",
     "progress.stage_hint": "Deel van het bestand dat een mens heeft gelezen: :percent%",
     "progress.quality_distribution": "Kwaliteitsverdeling",

@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "เหลือ :count บรรทัดให้ตรวจทาน",
     "progress.stage.machine": "แปลด้วยเครื่อง",
     "progress.stage.started": "เริ่มตรวจทานแล้ว",
-    "progress.stage.advanced": "ตรวจทานคืบหน้ามาก",
+    "progress.stage.advanced": "กำลังตรวจทาน",
     "progress.stage.reviewed": "ตรวจทานครบถ้วน",
     "progress.stage_hint": "สัดส่วนของไฟล์ที่มีคนอ่านแล้ว: :percent%",
     "progress.quality_distribution": "การกระจายคุณภาพ",

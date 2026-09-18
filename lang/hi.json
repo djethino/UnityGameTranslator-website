@@ -1132,7 +1132,7 @@
     "progress.left_to_review": ":count पंक्तियाँ समीक्षा हेतु शेष",
     "progress.stage.machine": "मशीनी अनुवाद",
     "progress.stage.started": "समीक्षा शुरू",
-    "progress.stage.advanced": "समीक्षा काफ़ी आगे",
+    "progress.stage.advanced": "समीक्षा जारी",
     "progress.stage.reviewed": "पूरी तरह समीक्षित",
     "progress.stage_hint": "फ़ाइल का वह भाग जो किसी व्यक्ति ने पढ़ा: :percent%",
     "progress.quality_distribution": "क्वालिटी वितरण",

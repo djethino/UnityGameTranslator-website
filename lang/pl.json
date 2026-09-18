@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "pozostało :count wierszy do sprawdzenia",
     "progress.stage.machine": "Tłumaczenie maszynowe",
     "progress.stage.started": "Korekta rozpoczęta",
-    "progress.stage.advanced": "Korekta zaawansowana",
+    "progress.stage.advanced": "Korekta w toku",
     "progress.stage.reviewed": "W pełni sprawdzone",
     "progress.stage_hint": "Część pliku przeczytana przez człowieka: :percent%",
     "progress.quality_distribution": "Rozkład jakości",

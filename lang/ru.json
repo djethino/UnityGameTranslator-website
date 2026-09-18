@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "осталось вычитать строк: :count",
     "progress.stage.machine": "Машинный перевод",
     "progress.stage.started": "Вычитка начата",
-    "progress.stage.advanced": "Вычитка продвинулась",
+    "progress.stage.advanced": "Вычитка выполняется",
     "progress.stage.reviewed": "Полностью вычитан",
     "progress.stage_hint": "Доля файла, прочитанная человеком: :percent%",
     "progress.quality_distribution": "Распределение качества",

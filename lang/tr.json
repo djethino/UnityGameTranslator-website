@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "gözden geçirilecek :count satır",
     "progress.stage.machine": "Makine çevirisi",
     "progress.stage.started": "Gözden geçirme başladı",
-    "progress.stage.advanced": "Gözden geçirme ilerledi",
+    "progress.stage.advanced": "Gözden geçirme sürüyor",
     "progress.stage.reviewed": "Tamamen gözden geçirildi",
     "progress.stage_hint": "Bir insanın okuduğu dosya oranı: %:percent",
     "progress.quality_distribution": "Kalite Dağılımı",

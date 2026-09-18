@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "còn :count dòng cần rà soát",
     "progress.stage.machine": "Dịch máy",
     "progress.stage.started": "Đã bắt đầu rà soát",
-    "progress.stage.advanced": "Rà soát đã tiến xa",
+    "progress.stage.advanced": "Đang rà soát",
     "progress.stage.reviewed": "Đã rà soát toàn bộ",
     "progress.stage_hint": "Phần tệp đã được người đọc: :percent%",
     "progress.quality_distribution": "Phân bố chất lượng",

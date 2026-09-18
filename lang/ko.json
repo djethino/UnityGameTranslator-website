@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "검토할 :count줄 남음",
     "progress.stage.machine": "기계 번역",
     "progress.stage.started": "검토 시작",
-    "progress.stage.advanced": "검토 상당 부분 진행",
+    "progress.stage.advanced": "검토 진행 중",
     "progress.stage.reviewed": "전체 검토 완료",
     "progress.stage_hint": "사람이 읽은 비율: :percent%",
     "progress.quality_distribution": "품질 분포",

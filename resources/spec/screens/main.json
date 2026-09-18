@@ -38,6 +38,12 @@
           { "kind": "label", "name": "StatusSectionLabel", "text": "Current Translation", "role": "SectionTitle" },
           { "kind": "stack", "name": "StatusSection", "children": [
             { "kind": "stack", "name": "StatusCardHost" },
+            { "kind": "label", "name": "NoTranslationLabel", "text": { "bind": "noTranslation" }, "tone": "Secondary", "fill": "Stretch", "minHeight": "MultiLineMedium", "help": "This game holds no translation yet. Take one from Community, or let the mod write one as you play." },
+            { "kind": "row", "name": "FailuresRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+              { "kind": "label", "name": "FailuresLabel", "text": { "bind": "failures" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "fill": "Stretch" },
+              { "kind": "button", "name": "FixBtn", "text": { "bind": "failuresFix" }, "policy": "Excluded", "size": "Compact", "minWidth": 70, "act": "fix",
+                "help": "Open Translation Tools on the Failures tab, where each line can be fixed, skipped or excluded." }
+            ] },
             { "kind": "row", "name": "BackupsRow", "spacing": 8, "minHeight": "RowHeightNormal", "children": [
               { "kind": "label", "name": "BackupsLabel", "text": { "bind": "backups" }, "policy": "Excluded", "role": "Hint", "tone": "Secondary", "fill": "Stretch" },
               { "kind": "button", "name": "BackupsBtn", "text": "Backups…", "act": "backups",
@@ -51,23 +57,6 @@
                   "help": "Open the external link the translation's author attached (custom fonts or images). Not hosted by us." }
               ] },
               { "kind": "label", "name": "ResourcesDisclaimer", "text": "Third-party content. We are not responsible for external links.", "role": "Hint", "tone": "Muted", "minHeight": "RowHeightSmall" }
-            ] }
-          ] },
-          { "kind": "spacer", "name": "StatusGap", "height": 5 },
-          { "kind": "stack", "name": "TranslationInfoSection", "children": [
-            { "kind": "label", "name": "TranslationSectionLabel", "text": "Current Translation", "role": "SectionTitle" },
-            { "kind": "section", "name": "TranslationBox", "children": [
-              { "kind": "label", "name": "EntriesLabel", "text": { "bind": "entries" }, "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "TargetLabel", "text": { "bind": "target" }, "policy": "Excluded", "tone": "Secondary", "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "SourceLabel", "text": { "bind": "source" }, "tone": "Secondary", "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "RoleLabel", "text": { "bind": "role" }, "bold": true, "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "SyncStatusLabel", "text": { "bind": "syncStatus" }, "bold": true, "minHeight": "RowHeightNormal" },
-              { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "role": "Small" },
-              { "kind": "row", "name": "FailuresRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
-                { "kind": "label", "name": "FailuresLabel", "text": { "bind": "failures" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "fill": "Stretch" },
-                { "kind": "button", "name": "FixBtn", "text": { "bind": "failuresFix" }, "policy": "Excluded", "size": "Compact", "minWidth": 70, "act": "fix",
-                  "help": "Open Translation Tools on the Failures tab, where each line can be fixed, skipped or excluded." }
-              ] }
             ] }
           ] },
           { "kind": "spacer", "name": "InfoGap", "height": 10 },
@@ -113,11 +102,6 @@
                 "help": "Leave the owner's translation and continue on your own — asks for confirmation first" }
             ] },
             { "kind": "label", "name": "RoleActionsHint", "text": { "bind": "roleActionsHint" }, "policy": "Excluded", "role": "Hint", "centred": true }
-          ] },
-          { "kind": "stack", "name": "GuidanceSection", "spacing": "SmallSpacing", "children": [
-            { "kind": "card", "name": "GuidanceBox", "surface": "Elevated", "children": [
-              { "kind": "label", "name": "GuidanceLabel", "text": { "bind": "guidance" }, "tone": "Info", "centred": true, "fill": "Stretch", "minHeight": "RowHeightLarge" }
-            ] }
           ] },
           { "kind": "collapsible", "name": "Glossary", "title": "What do Main, Branch and Fork mean?", "expanded": false,
             "help": "Expand a short glossary of the sharing terms Main, Branch and Fork and the line quality tags.",

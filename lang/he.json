@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "נותרו :count שורות להגהה",
     "progress.stage.machine": "תרגום מכונה",
     "progress.stage.started": "ההגהה החלה",
-    "progress.stage.advanced": "ההגהה מתקדמת",
+    "progress.stage.advanced": "ההגהה מתבצעת",
     "progress.stage.reviewed": "עברה הגהה מלאה",
     "progress.stage_hint": "החלק מהקובץ שאדם קרא: :percent%",
     "progress.quality_distribution": "התפלגות איכות",

@@ -1132,7 +1132,7 @@
     "progress.left_to_review": ":count lines left to review",
     "progress.stage.machine": "Machine translation",
     "progress.stage.started": "Review started",
-    "progress.stage.advanced": "Review well under way",
+    "progress.stage.advanced": "Review in progress",
     "progress.stage.reviewed": "Fully reviewed",
     "progress.stage_hint": "Share of the file a human has read: :percent%",
     "progress.quality_distribution": "Quality Distribution",

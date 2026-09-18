@@ -1132,7 +1132,7 @@
     "progress.left_to_review": ":count líneas por revisar",
     "progress.stage.machine": "Traducción automática",
     "progress.stage.started": "Revisión iniciada",
-    "progress.stage.advanced": "Revisión avanzada",
+    "progress.stage.advanced": "Revisión en curso",
     "progress.stage.reviewed": "Revisada por completo",
     "progress.stage_hint": "Parte del archivo revisada por una persona: :percent %",
     "progress.quality_distribution": "Distribución de calidad",

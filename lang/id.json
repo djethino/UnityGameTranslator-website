@@ -1132,7 +1132,7 @@
     "progress.left_to_review": ":count baris menunggu ditinjau",
     "progress.stage.machine": "Terjemahan mesin",
     "progress.stage.started": "Peninjauan dimulai",
-    "progress.stage.advanced": "Peninjauan lanjut",
+    "progress.stage.advanced": "Peninjauan berlangsung",
     "progress.stage.reviewed": "Ditinjau seluruhnya",
     "progress.stage_hint": "Bagian berkas yang dibaca manusia: :percent%",
     "progress.quality_distribution": "Distribusi Kualitas",

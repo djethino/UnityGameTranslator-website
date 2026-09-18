@@ -1132,7 +1132,7 @@
     "progress.left_to_review": ":count lignes à relire",
     "progress.stage.machine": "Traduction machine",
     "progress.stage.started": "Relecture entamée",
-    "progress.stage.advanced": "Relecture avancée",
+    "progress.stage.advanced": "Relecture en cours",
     "progress.stage.reviewed": "Entièrement relue",
     "progress.stage_hint": "Part du fichier relue par un humain : :percent %",
     "progress.quality_distribution": "Distribution qualité",

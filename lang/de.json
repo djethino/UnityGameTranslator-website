@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "noch :count Zeilen zu prüfen",
     "progress.stage.machine": "Maschinelle Übersetzung",
     "progress.stage.started": "Prüfung begonnen",
-    "progress.stage.advanced": "Prüfung weit fortgeschritten",
+    "progress.stage.advanced": "Prüfung läuft",
     "progress.stage.reviewed": "Vollständig geprüft",
     "progress.stage_hint": "Von einem Menschen gelesener Anteil: :percent %",
     "progress.quality_distribution": "Qualitätsverteilung",

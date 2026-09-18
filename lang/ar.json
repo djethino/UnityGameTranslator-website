@@ -1132,7 +1132,7 @@
     "progress.left_to_review": "بقي :count سطرًا للمراجعة",
     "progress.stage.machine": "ترجمة آلية",
     "progress.stage.started": "بدأت المراجعة",
-    "progress.stage.advanced": "المراجعة متقدمة",
+    "progress.stage.advanced": "المراجعة جارية",
     "progress.stage.reviewed": "مراجَعة بالكامل",
     "progress.stage_hint": "نسبة الملف التي قرأها إنسان: :percent%",
     "progress.quality_distribution": "توزيع الجودة",
