@@ -1623,21 +1623,23 @@
 
                 <!-- Main/Branch/Fork -->
                 <div class="grid md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-purple-500">
+                    {{-- The three roles in the colours and icons the role chip uses everywhere
+                         else on the site: Main and Fork blue (a Fork is a Main), Branch amber. --}}
+                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
                         <h4 class="font-semibold text-white mb-2">
-                            <i class="fas fa-crown text-purple-400 mr-2"></i>Main
+                            <i class="fas fa-star text-blue-400 mr-2"></i>Main
                         </h4>
                         <p class="text-sm text-gray-300">{{ __('docs.collaboration.main_desc') }}</p>
                     </div>
-                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
+                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-amber-500">
                         <h4 class="font-semibold text-white mb-2">
-                            <i class="fas fa-code-branch text-blue-400 mr-2"></i>Branch
+                            <i class="fas fa-code-branch text-amber-400 mr-2"></i>Branch
                         </h4>
                         <p class="text-sm text-gray-300">{{ __('docs.collaboration.branch_desc') }}</p>
                     </div>
-                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-green-500">
+                    <div class="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
                         <h4 class="font-semibold text-white mb-2">
-                            <i class="fas fa-code-fork text-green-400 mr-2"></i>Fork
+                            <i class="fas fa-code-branch text-blue-400 mr-2"></i>Fork
                         </h4>
                         <p class="text-sm text-gray-300">{{ __('docs.collaboration.fork_desc') }}</p>
                     </div>

@@ -468,9 +468,9 @@ function showAutoDetected(data) {
         reviewSection.classList.remove('hidden');
     } else {
         detectionMessage = `
-            <div class="bg-purple-900/30 border border-purple-700 rounded-lg p-4">
-                <p class="text-purple-300 mb-2">
-                    <span class="bg-purple-600 px-2 py-1 rounded text-sm mr-2"><i class="fas fa-code-branch mr-1"></i> Branch</span>
+            <div class="bg-amber-900/20 border border-amber-700/60 rounded-lg p-4">
+                <p class="text-amber-300 mb-2">
+                    <span class="bg-amber-900/60 text-amber-200 px-2 py-1 rounded text-sm mr-2"><i class="fas fa-code-branch mr-1"></i> Branch</span>
                     {{ __('upload.become_branch') }}
                 </p>
                 <p class="text-gray-400 text-sm">{{ __('upload.branch_description') }}</p>

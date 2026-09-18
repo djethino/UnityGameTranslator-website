@@ -30,8 +30,9 @@
      */
     $role = $translation->isBranch()
         ? ['branch', 'fa-code-branch', 'bg-amber-900/60 text-amber-200', 'text-amber-300']
+        // A Fork IS a Main, so it wears the Main's colour; the icon and the word say the rest.
         : ($translation->isFork()
-            ? ['fork', 'fa-code-branch', 'bg-indigo-900/60 text-indigo-200', 'text-indigo-300']
+            ? ['fork', 'fa-code-branch', 'bg-blue-900/60 text-blue-200', 'text-blue-300']
             // Blue, as the shared rule colours it (Badges: Notice): leading a lineage is at
             // least as worth seeing as contributing to one, and grey read as less.
             : ['main', 'fa-star', 'bg-blue-900/60 text-blue-200', 'text-blue-300']);

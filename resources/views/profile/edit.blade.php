@@ -367,11 +367,9 @@
                                 {{ $own->game->name ?? '—' }}
                                 <span class="text-gray-500">· {{ $own->target_language }}</span>
                             </span>
-                            {{-- The words this site already uses for the two roles, everywhere
-                                 else. A second pair here would be the same fact under two names. --}}
-                            <span class="shrink-0 {{ $own->lineageRole() === 'main' ? 'text-purple-300' : 'text-gray-400' }}">
-                                {{ $own->lineageRole() === 'main' ? __('translation.role_main') : __('translation.role_branch') }}
-                            </span>
+                            {{-- The one component that says a role: the same word and the same
+                                 colour as every other screen. --}}
+                            <x-translation-role :translation="$own" plain class="shrink-0" />
                         </li>
                     @endforeach
                 </ul>

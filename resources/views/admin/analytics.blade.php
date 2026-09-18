@@ -705,14 +705,12 @@
         @if($recentUploads->isNotEmpty())
             <div class="space-y-3">
                 @foreach($recentUploads as $translation)
-                    @php $isMain = $translation->lineageRole() === 'main'; @endphp
                     <div class="flex justify-between items-center bg-gray-750 rounded p-3"
                          @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
                         <div class="min-w-0">
                             <p class="font-medium truncate">
-                                <span class="{{ $isMain ? 'text-purple-300' : 'text-gray-400' }}" title="{{ $isMain ? 'Published' : 'A contribution to somebody else\'s Main' }}">
-                                    <i class="fas {{ $isMain ? 'fa-star' : 'fa-code-branch' }} text-xs mr-1"></i>{{ $isMain ? 'Main' : 'Branch' }}
-                                </span>
+                                {{-- The one component that says a role, in the one colour per role. --}}
+                                <x-translation-role :translation="$translation" plain class="text-xs" />
                                 <span class="text-gray-500 mx-1">·</span>{{ $translation->game->name ?? 'Unknown' }}
                             </p>
                             <p class="text-sm text-gray-400 truncate">
