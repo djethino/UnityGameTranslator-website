@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "لا يمكن الحفظ: صحّح العناصر النائبة أولاً",
     "merge.broken_placeholder_lines": "سطر(أسطر) بعنصر نائب معطّل",
     "merge.broken_placeholder_hint": "في اللعبة، تغيب القيمة أو يظهر العنصر النائب كما هو.",
+    "merge.placeholder_repaired": "تم التصحيح",
+    "merge.placeholder_repaired_hint": "تم تصحيح العنصر النائب. يبقى السطر في القائمة حتى الحفظ.",
     "merge.tag_changes": "تغيير(ات) الوسم",
     "merge.click_to_change_tag": "انقر لتغيير الوسم",
     "merge.change_tag_to": "تغيير الوسم إلى:",

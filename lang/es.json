@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "No se puede guardar: corrige primero los marcadores",
     "merge.broken_placeholder_lines": "línea(s) con un marcador roto",
     "merge.broken_placeholder_hint": "En el juego, el valor falta o el marcador se muestra tal cual.",
+    "merge.placeholder_repaired": "Corregido",
+    "merge.placeholder_repaired_hint": "Marcador corregido. La línea sigue en la lista hasta que guardes.",
     "merge.tag_changes": "cambio(s) de etiqueta",
     "merge.click_to_change_tag": "Clic para cambiar etiqueta",
     "merge.change_tag_to": "Cambiar etiqueta a:",

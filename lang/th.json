@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "บันทึกไม่ได้: แก้ไขตัวยึดตำแหน่งก่อน",
     "merge.broken_placeholder_lines": "บรรทัดที่ตัวยึดตำแหน่งเสียหาย",
     "merge.broken_placeholder_hint": "ในเกม ค่าจะหายไปหรือตัวยึดตำแหน่งจะแสดงตามตัวอักษร",
+    "merge.placeholder_repaired": "แก้ไขแล้ว",
+    "merge.placeholder_repaired_hint": "แก้ไขตัวยึดตำแหน่งแล้ว บรรทัดจะยังอยู่ในรายการจนกว่าจะบันทึก",
     "merge.tag_changes": "การเปลี่ยนแท็ก",
     "merge.click_to_change_tag": "คลิกเพื่อเปลี่ยนแท็ก",
     "merge.change_tag_to": "เปลี่ยนแท็กเป็น:",

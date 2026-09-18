@@ -91,6 +91,13 @@
                       :title="placeholderWarningTitle(key)">
                     <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholders') }}
                 </span>
+                {{-- Broken on file, whole in the pending edit: the row stays where the broken
+                     filter listed it, and says so, until the save moves it out. --}}
+                <span x-show="isRepairedUnsaved(key)" x-cloak
+                      class="inline-block mb-1 px-1.5 py-0.5 rounded bg-green-900/60 text-green-300 text-xs"
+                      title="{{ __('merge.placeholder_repaired_hint') }}">
+                    <i class="fas fa-check mr-1"></i>{{ __('merge.placeholder_repaired') }}
+                </span>
             @endif
             <span class="editor-text" x-safe-html="valueHtmlOf(key, '{{ $side }}')"></span>
         </span>

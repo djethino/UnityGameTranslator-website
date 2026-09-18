@@ -630,6 +630,12 @@
                                                 :title="placeholderWarningTitle(key)">
                                                 <i class="fas fa-exclamation-triangle mr-1"></i>{{ __('merge.placeholders') }}
                                             </span>
+                                            {{-- Broken on file, whole in the pending edit (see components/editor/side-cells). --}}
+                                            <span x-show="isRepairedUnsaved(key)" x-cloak
+                                                class="inline-block mb-1 px-1.5 py-0.5 rounded bg-green-900/60 text-green-300 text-xs"
+                                                title="{{ __('merge.placeholder_repaired_hint') }}">
+                                                <i class="fas fa-check mr-1"></i>{{ __('merge.placeholder_repaired') }}
+                                            </span>
                                             <span class="editor-text" x-show="isEdited(key)" x-safe-html="highlightValue(editedValues[key])"></span>
                                             <span class="editor-text" x-show="!isEdited(key)" x-safe-html="mainValueHtml(key)"></span>
                                         </span>

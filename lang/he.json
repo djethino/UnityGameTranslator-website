@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "לא ניתן לשמור: יש לתקן קודם את מצייני המיקום",
     "merge.broken_placeholder_lines": "שורה(ות) עם מציין מיקום שבור",
     "merge.broken_placeholder_hint": "במשחק הערך חסר או שמציין המיקום מוצג כפי שהוא.",
+    "merge.placeholder_repaired": "תוקן",
+    "merge.placeholder_repaired_hint": "מציין המיקום תוקן. השורה נשארת ברשימה עד לשמירה.",
     "merge.tag_changes": "שינוי(י) תווית",
     "merge.click_to_change_tag": "לחצו לשינוי התווית",
     "merge.change_tag_to": "שינוי התווית ל:",

@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Kaydedilemiyor: önce yer tutucuları düzeltin",
     "merge.broken_placeholder_lines": "satırda bozuk yer tutucu var",
     "merge.broken_placeholder_hint": "Oyunda değer eksik kalır veya yer tutucu olduğu gibi görünür.",
+    "merge.placeholder_repaired": "Düzeltildi",
+    "merge.placeholder_repaired_hint": "Yer tutucu düzeltildi. Satır, kaydedene kadar listede kalır.",
     "merge.tag_changes": "etiket değişikliği",
     "merge.click_to_change_tag": "Etiketi değiştirmek için tıklayın",
     "merge.change_tag_to": "Etiketi şu şekilde değiştir:",

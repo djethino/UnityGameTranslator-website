@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "सेव नहीं कर सकते: पहले प्लेसहोल्डर ठीक करें",
     "merge.broken_placeholder_lines": "पंक्तियों में टूटा प्लेसहोल्डर",
     "merge.broken_placeholder_hint": "गेम में मान गायब रहेगा या प्लेसहोल्डर जैसा है वैसा दिखेगा।",
+    "merge.placeholder_repaired": "ठीक किया गया",
+    "merge.placeholder_repaired_hint": "प्लेसहोल्डर ठीक किया गया। सेव करने तक पंक्ति सूची में रहेगी।",
     "merge.tag_changes": "टैग बदलाव",
     "merge.click_to_change_tag": "टैग बदलने के लिए क्लिक करें",
     "merge.change_tag_to": "टैग बदलें:",

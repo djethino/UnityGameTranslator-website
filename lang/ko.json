@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "저장할 수 없음: 먼저 플레이스홀더를 수정하세요",
     "merge.broken_placeholder_lines": "개 행에 손상된 플레이스홀더가 있음",
     "merge.broken_placeholder_hint": "게임에서 값이 빠지거나 플레이스홀더가 그대로 표시됩니다.",
+    "merge.placeholder_repaired": "수정됨",
+    "merge.placeholder_repaired_hint": "플레이스홀더를 수정했습니다. 저장할 때까지 행이 목록에 남아 있습니다.",
     "merge.tag_changes": "개 태그 변경",
     "merge.click_to_change_tag": "클릭하여 태그 변경",
     "merge.change_tag_to": "태그 변경:",

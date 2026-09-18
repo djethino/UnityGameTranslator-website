@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Не удаётся сохранить: сначала исправьте плейсхолдеры",
     "merge.broken_placeholder_lines": "строка(и) с повреждённым плейсхолдером",
     "merge.broken_placeholder_hint": "В игре значение отсутствует или плейсхолдер отображается как есть.",
+    "merge.placeholder_repaired": "Исправлено",
+    "merge.placeholder_repaired_hint": "Плейсхолдер исправлен. Строка остаётся в списке до сохранения.",
     "merge.tag_changes": "изменение(й) меток",
     "merge.click_to_change_tag": "Нажмите для смены метки",
     "merge.change_tag_to": "Сменить метку на:",

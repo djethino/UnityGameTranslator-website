@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "无法保存：请先修正占位符",
     "merge.broken_placeholder_lines": "行的占位符已损坏",
     "merge.broken_placeholder_hint": "在游戏中，该值会缺失，或占位符按原样显示。",
+    "merge.placeholder_repaired": "已修正",
+    "merge.placeholder_repaired_hint": "占位符已修正。该行会保留在列表中，直到保存。",
     "merge.tag_changes": "处标签更改",
     "merge.click_to_change_tag": "点击更改标签",
     "merge.change_tag_to": "更改标签为：",

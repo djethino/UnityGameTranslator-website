@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "保存できません：先にプレースホルダーを修正してください",
     "merge.broken_placeholder_lines": "件の行でプレースホルダーが壊れています",
     "merge.broken_placeholder_hint": "ゲーム内では値が表示されないか、プレースホルダーがそのまま表示されます。",
+    "merge.placeholder_repaired": "修正済み",
+    "merge.placeholder_repaired_hint": "プレースホルダーを修正しました。保存するまで行は一覧に残ります。",
     "merge.tag_changes": "件のタグ変更",
     "merge.click_to_change_tag": "クリックでタグを変更",
     "merge.change_tag_to": "タグを変更：",

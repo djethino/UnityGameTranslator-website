@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Impossible d'enregistrer : corrigez d'abord les placeholders",
     "merge.broken_placeholder_lines": "ligne(s) avec un placeholder cassé",
     "merge.broken_placeholder_hint": "En jeu, la valeur manque ou le marqueur s'affiche tel quel.",
+    "merge.placeholder_repaired": "Corrigé",
+    "merge.placeholder_repaired_hint": "Placeholder corrigé. La ligne reste dans la liste jusqu'à l'enregistrement.",
     "merge.tag_changes": "changement(s) de tag",
     "merge.click_to_change_tag": "Cliquer pour changer le tag",
     "merge.change_tag_to": "Changer le tag en :",

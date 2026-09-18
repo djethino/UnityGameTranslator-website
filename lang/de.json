@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Speichern nicht möglich: zuerst die Platzhalter korrigieren",
     "merge.broken_placeholder_lines": "Zeile(n) mit defektem Platzhalter",
     "merge.broken_placeholder_hint": "Im Spiel fehlt der Wert, oder der Platzhalter wird unverändert angezeigt.",
+    "merge.placeholder_repaired": "Korrigiert",
+    "merge.placeholder_repaired_hint": "Platzhalter korrigiert. Die Zeile bleibt bis zum Speichern in der Liste.",
     "merge.tag_changes": "Kennzeichen-Änderung(en)",
     "merge.click_to_change_tag": "Klicken, um das Kennzeichen zu ändern",
     "merge.change_tag_to": "Kennzeichen ändern zu:",

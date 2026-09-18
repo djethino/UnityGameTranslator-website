@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Cannot save: fix the placeholders first",
     "merge.broken_placeholder_lines": "line(s) with a broken placeholder",
     "merge.broken_placeholder_hint": "In-game, the value is missing or the token shows as is.",
+    "merge.placeholder_repaired": "Fixed",
+    "merge.placeholder_repaired_hint": "Placeholder fixed. Kept in the list until you save.",
     "merge.tag_changes": "tag change(s)",
     "merge.click_to_change_tag": "Click to change tag",
     "merge.change_tag_to": "Change tag to:",

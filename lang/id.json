@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Tidak bisa menyimpan: perbaiki placeholder dulu",
     "merge.broken_placeholder_lines": "baris dengan placeholder rusak",
     "merge.broken_placeholder_hint": "Di dalam game, nilainya hilang atau placeholder tampil apa adanya.",
+    "merge.placeholder_repaired": "Diperbaiki",
+    "merge.placeholder_repaired_hint": "Placeholder sudah diperbaiki. Baris tetap ada di daftar sampai disimpan.",
     "merge.tag_changes": "perubahan tag",
     "merge.click_to_change_tag": "Klik untuk mengubah tag",
     "merge.change_tag_to": "Ubah tag menjadi:",

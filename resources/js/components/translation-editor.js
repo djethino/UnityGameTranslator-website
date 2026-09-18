@@ -130,6 +130,9 @@ export function editorCore(config) {
     // member: a reactive Map would make each verdict a dependency of everything that read it.
     const placeholderVerdicts = new Map();
 
+    /** Same, for the value ON FILE: what the broken-placeholder filter keeps listed after a fix. */
+    const storedVerdicts = new Map();
+
     return {
         // ── Workbench mode (see editor-workbench.js) ──────────────────────
         ...editorWorkbench(),
@@ -1009,10 +1012,16 @@ export function editorCore(config) {
             // on the bar. Combined with them, an unchecked A would hide broken A lines while the
             // banner still said 88, and the number on the box would not be the rows below it.
             // The search stays: looking for a word among the broken lines is the point of it.
+            // 🔴 And a row broken ON FILE stays listed once fixed, until the save (user,
+            // 2026-09-18): judged on the edited value alone, the row vanished the moment it was
+            // repaired, the next broken one took its place, and the fix read as not taken. The
+            // same rule the tag filter has had all along — stored OR previewed keeps the row —
+            // with a "Fixed" mark in place of the warning (isRepairedUnsaved). The banner still
+            // counts what is left to fix.
             const brokenOnly = this.filters.brokenOnly === true;
             const keys = this.allKeys.filter(key => {
                 if (brokenOnly) {
-                    if (!this.hasPlaceholderWarning(key)) return false;
+                    if (!this.hasPlaceholderWarning(key) && !this.wasBrokenOnFile(key)) return false;
                 } else if (!this.rowPassesFilters(key)) {
                     return false;
                 }
@@ -1469,6 +1478,29 @@ export function editorCore(config) {
         /** The row breaks a placeholder of its source. Silent on one set aside: nothing goes. */
         hasPlaceholderWarning(key) {
             return this.placeholderProblemsOf(key).length > 0;
+        },
+
+        /**
+         * The row's value ON FILE breaks a placeholder — whatever is being typed into it now.
+         * Cached by value, like placeholderProblemsOf: the file's value moves only on a save,
+         * and the verdict moves with it.
+         */
+        wasBrokenOnFile(key) {
+            if (this.isDeleted(key)) return false;
+            if (this.entryOnFile(key) === undefined) return false;
+            const value = this.storedValue(key);
+            if (typeof value !== 'string') return false;
+
+            const known = storedVerdicts.get(key);
+            if (known && known.value === value) return known.problems.length > 0;
+            const problems = editProblems(key, value);
+            storedVerdicts.set(key, { value, problems });
+            return problems.length > 0;
+        },
+
+        /** Broken on file, whole in the pending edit: fixed, and not yet saved. */
+        isRepairedUnsaved(key) {
+            return this.editIsHeld(key) && this.wasBrokenOnFile(key) && !this.hasPlaceholderWarning(key);
         },
 
         /** The badge's tooltip: every problem of the row, one per line, in the page's words. */

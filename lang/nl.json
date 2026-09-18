@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Opslaan niet mogelijk: corrigeer eerst de placeholders",
     "merge.broken_placeholder_lines": "regel(s) met een kapotte placeholder",
     "merge.broken_placeholder_hint": "In de game ontbreekt de waarde of wordt de placeholder letterlijk weergegeven.",
+    "merge.placeholder_repaired": "Gecorrigeerd",
+    "merge.placeholder_repaired_hint": "Placeholder gecorrigeerd. De regel blijft in de lijst tot je opslaat.",
     "merge.tag_changes": "labelwijziging(en)",
     "merge.click_to_change_tag": "Klik om het label te wijzigen",
     "merge.change_tag_to": "Label wijzigen naar:",

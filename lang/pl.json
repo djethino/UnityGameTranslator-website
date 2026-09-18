@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Nie można zapisać: najpierw popraw symbole zastępcze",
     "merge.broken_placeholder_lines": "wiersz(e) z uszkodzonym symbolem zastępczym",
     "merge.broken_placeholder_hint": "W grze brakuje wartości albo symbol wyświetla się dosłownie.",
+    "merge.placeholder_repaired": "Poprawiono",
+    "merge.placeholder_repaired_hint": "Symbol zastępczy poprawiony. Wiersz pozostaje na liście do czasu zapisania.",
     "merge.tag_changes": "zmiana(-y) znacznika",
     "merge.click_to_change_tag": "Kliknij, aby zmienić znacznik",
     "merge.change_tag_to": "Zmień znacznik na:",

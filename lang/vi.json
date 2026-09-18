@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Không thể lưu: hãy sửa phần giữ chỗ trước",
     "merge.broken_placeholder_lines": "dòng có phần giữ chỗ bị hỏng",
     "merge.broken_placeholder_hint": "Trong game, giá trị bị thiếu hoặc phần giữ chỗ hiển thị nguyên dạng.",
+    "merge.placeholder_repaired": "Đã sửa",
+    "merge.placeholder_repaired_hint": "Đã sửa phần giữ chỗ. Dòng vẫn nằm trong danh sách cho đến khi lưu.",
     "merge.tag_changes": "thay đổi nhãn",
     "merge.click_to_change_tag": "Nhấp để đổi nhãn",
     "merge.change_tag_to": "Đổi nhãn thành:",

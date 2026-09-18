@@ -794,6 +794,8 @@
     "merge.placeholder_blocked": "Impossibile salvare: correggi prima i segnaposto",
     "merge.broken_placeholder_lines": "riga/e con un segnaposto non valido",
     "merge.broken_placeholder_hint": "Nel gioco il valore manca o il segnaposto viene mostrato così com'è.",
+    "merge.placeholder_repaired": "Corretto",
+    "merge.placeholder_repaired_hint": "Segnaposto corretto. La riga resta nell'elenco finché non salvi.",
     "merge.tag_changes": "modifica/e di etichetta",
     "merge.click_to_change_tag": "Clicca per cambiare etichetta",
     "merge.change_tag_to": "Cambia etichetta in:",
