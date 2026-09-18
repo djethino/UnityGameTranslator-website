@@ -70,7 +70,8 @@
             { "kind": "collapsible", "name": "GameText", "title": "Game text", "expanded": true,
               "help": "The line as the game shows it, tags and placeholders included. Fold it to give the field the room.",
               "children": [
-              { "kind": "list", "name": "SourceScroll", "minHeight": 0, "preferredHeight": 60, "fill": false },
+              { "kind": "field", "name": "SourceText", "input": "Multiline", "scroll": true, "readOnly": true, "richText": false, "minHeight": 60, "fill": "Stretch",
+                "help": "Select any part of it to copy — a placeholder the translation has to keep, for instance. It cannot be typed into." },
               { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" }
             ] },
             { "kind": "splitter", "name": "TextSplit", "help": "Drag to give the game text or the proposal more room. Back to automatic when the window closes." },

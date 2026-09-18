@@ -122,6 +122,7 @@
               "captionWidth": { "type": "integer", "minimum": 20 },
               "input": { "type": "string", "enum": ["Text", "Password", "Integer", "Decimal", "Multiline"], "default": "Text" },
               "scroll": { "type": "boolean", "default": false, "description": "A Multiline field that keeps its height and scrolls inside it, instead of growing with what it holds." },
+              "readOnly": { "type": "boolean", "default": false, "description": "A field that can be selected and copied but never typed into: text the code shows and the person needs to take characters out of. It is not a disabled field — a disabled one cannot be selected either." },
               "richText": { "type": "boolean", "default": true, "description": "False keeps markup as characters — the file's exact text, being edited." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer" },
