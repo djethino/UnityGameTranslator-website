@@ -83,6 +83,45 @@ class BranchAcceptanceTest extends TestCase
         $this->assertSame('public', $ownership['visibility']);
     }
 
+    /**
+     * The Main is there, its owner's account is not: nobody will review this branch. The API said
+     * it and the two clients showed it; the contributor's own list and dashboard here said
+     * nothing, and kept naming a reviewer who was gone.
+     */
+    public function test_a_contributor_is_told_the_mains_owner_is_gone(): void
+    {
+        $owner = User::factory()->create();
+        $main = $this->main($owner, open: true);
+        $contributor = User::factory()->create();
+
+        $branch = new Translation();
+        $branch->forceFill([
+            'game_id' => $main->game_id,
+            'user_id' => $contributor->id,
+            'parent_id' => $main->id,
+            'source_language' => 'English',
+            'target_language' => 'French',
+            'file_path' => 'translations/branch.json',
+            'file_uuid' => $main->file_uuid,
+            'visibility' => 'branch',
+            'line_count' => 3,
+        ])->save();
+
+        $this->assertFalse($branch->refresh()->mainIsAbandoned());
+        $this->actingAs($contributor)->get(route('translations.mine'))
+            ->assertOk()->assertDontSee(__('translation.no_owner'));
+
+        $owner->forceFill(['account_deleted_at' => now()])->save();
+
+        $this->assertTrue($branch->refresh()->mainIsAbandoned());
+        $this->assertFalse($branch->isOrphanBranch(), 'the Main itself is still there');
+
+        $this->actingAs($contributor)->get(route('translations.mine'))
+            ->assertOk()->assertSee(__('translation.no_owner'));
+        $this->actingAs($contributor)->get(route('translations.dashboard', $branch))
+            ->assertOk()->assertSee(__('dashboard.main_abandoned_title'));
+    }
+
     public function test_a_branch_is_frozen_once_its_main_closes(): void
     {
         $owner = User::factory()->create();

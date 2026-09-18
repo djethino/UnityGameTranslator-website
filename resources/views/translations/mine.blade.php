@@ -216,7 +216,15 @@
                              ("Main closed"), and the same reading: worth noticing, not an error.
                              Nothing is broken, the work is still its author's, and the way on is
                              one screen away. --}}
-                        @if($translation->isFrozenBranch())
+                        {{-- The other way a branch loses its reviewer: the Main is there, its owner's
+                             account is not. Same words as the shared chip the mod and the Manager show
+                             ("No owner"), in the tone they give it. Said before "Main closed": an
+                             erased owner may also have closed, and the erasure is the whole story. --}}
+                        @if($translation->mainIsAbandoned())
+                            <span class="text-red-300 text-sm" title="{{ __('my_translations.main_abandoned_tip') }}">
+                                <i class="fas fa-user-slash"></i> {{ __('translation.no_owner') }}
+                            </span>
+                        @elseif($translation->isFrozenBranch())
                             <span class="text-amber-300 text-sm" title="{{ __('my_translations.branch_frozen_tip') }}">
                                 <i class="fas fa-lock"></i> {{ __('my_translations.branch_frozen') }}
                             </span>

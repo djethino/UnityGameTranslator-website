@@ -305,6 +305,18 @@
         </div>
         @endif
 
+        {{-- The Main is there, its owner's account is not. Same shape and same place as the two
+             walls below, because it is the same dead end reached by another road: nobody will
+             review this branch, and the way on is the fork section. --}}
+        @if($translation->mainIsAbandoned())
+        <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-white mb-2">
+                <i class="fas fa-user-slash mr-2 text-red-400"></i>{{ __('dashboard.main_abandoned_title') }}
+            </h2>
+            <p class="text-red-200 text-sm">{{ __('dashboard.main_abandoned_body') }}</p>
+        </div>
+        @endif
+
         {{-- 🔴 The Main closed after this branch was made. Said before the fork section rather
              than instead of it: that section is an opportunity somebody may take; this is a fact
              they have to know, because nothing they do as a branch can work any more. --}}

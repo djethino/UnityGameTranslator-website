@@ -1670,6 +1670,23 @@ class Translation extends Model
     }
 
     /**
+     * A branch whose Main is still there and whose owner's account is not. Nobody will ever
+     * review it — the same dead end as an orphan, reached by a different road: the Main stays
+     * published and stays good to play. The API has said it (`main_abandoned`) and the mod and
+     * the Manager show it; the contributor's own pages here said nothing (2026-09-18).
+     */
+    public function mainIsAbandoned(): bool
+    {
+        if (!$this->isBranch()) {
+            return false;
+        }
+
+        $main = $this->getMain();
+
+        return $main !== null && (bool) $main->user?->isDeletedAccount();
+    }
+
+    /**
      * A branch whose Main is still there but has left the public listings — the thirty-day rule
      * on a file that translates nothing.
      *
