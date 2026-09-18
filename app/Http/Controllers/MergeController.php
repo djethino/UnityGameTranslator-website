@@ -616,10 +616,15 @@ class MergeController extends Controller
             : null;
 
         // Preserve query parameters (sort, search, page, filters, branches)
+        //
+        // ⚠ `w` is the sitting: the page keeps how it was being read (filters, search, sort,
+        // pinned column) under that id, and reads it back from the URL. Dropped here, the save's
+        // own redirect reset every filter the person had set.
         $queryParams = $request->only([
             'mode', 'sort', 'dir', 'search', 'scope', 'page',
             'branches', 'new_keys', 'difference',
             'human', 'validated', 'ai', 'skipped', 'mod_ui',
+            'w',
         ]);
 
         $redirect = redirect()

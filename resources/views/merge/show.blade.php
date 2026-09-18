@@ -731,6 +731,12 @@
                      that was open with the previous script when this shipped. --}}
                 <input type="hidden" id="settingsJson" name="settings_json" value="">
                 <input type="hidden" id="publicationJson" name="publication_json" value="">
+                {{-- 🔴 Which sitting this is, carried across the reload the save causes — the
+                     same reason the branch form above carries it. Saving posts and the server
+                     redirects back here: a fresh page is a fresh sitting, and the filters, the
+                     search, the sort and the pinned column were all gone the moment the work
+                     was saved (2026-09-18). --}}
+                <input type="hidden" name="w" :value="workSession">
 
                 {{-- The grid's sideways scroll, brought within reach: the real bar is at the
                      bottom of six thousand rows, this one rides with the save bar. --}}

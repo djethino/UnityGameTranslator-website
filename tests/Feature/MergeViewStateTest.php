@@ -184,6 +184,21 @@ class MergeViewStateTest extends TestCase
         $this->assertSame('https://example.com/pack', $main->resources_url);
     }
 
+    /**
+     * The page keeps how it is being read — filters, search, sort, pinned column — under a
+     * sitting id it reads back from the URL. The save posts and the server redirects back:
+     * without the id on the way back, every filter was reset by the very act of saving.
+     */
+    public function test_saving_carries_the_sitting_back_to_the_page(): void
+    {
+        [$owner, $uuid] = $this->makeMergeView();
+
+        $this->actingAs($owner)->post(route('translations.merge.apply', ['uuid' => $uuid]), [
+            'w' => 'abc123xyz',
+            'publication_json' => json_encode(['notes' => 'Reworded.']),
+        ])->assertRedirect(route('translations.merge', ['uuid' => $uuid, 'w' => 'abc123xyz']));
+    }
+
     public function test_a_merge_never_takes_whether_a_translation_is_finished(): void
     {
         // Finished descends from the Main to its contributions and never travels back. The
