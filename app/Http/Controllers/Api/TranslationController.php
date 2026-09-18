@@ -638,6 +638,8 @@ class TranslationController extends Controller
             $translation->line_count,
             $translation->vote_count,
             $uploader,
+            // Answered below, so covered here: a renamed origin author is a changed answer.
+            json_encode($translation->originBlock()),
         ])), 0, 32) . '"';
 
         // Check If-None-Match header for 304 response
@@ -657,6 +659,10 @@ class TranslationController extends Controller
             // on the public game pages. A branch never reaches this line — isReadableBy above
             // answers 403 to anyone but its author and the Main owner.
             'uploader' => $uploader,
+            // Additive. Where the published work came from, for the one call somebody with no
+            // account makes about the file they installed: the game's card credited nobody
+            // while the Manager, reading the listing, credited the source (2026-09-18).
+            'origin' => $translation->originBlock(),
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),
@@ -853,6 +859,9 @@ class TranslationController extends Controller
                 'main' => [
                     'id' => $mainTranslation->id,
                     'uploader' => $mainTranslation->user->name,
+                    // Additive: the Main's origin, as the listing says it. The file held IS this
+                    // Main, so its provenance is the held file's.
+                    'origin' => $mainTranslation->originBlock(),
                     'source_language' => $mainTranslation->source_language,
                     'target_language' => $mainTranslation->target_language,
                     'line_count' => $mainTranslation->line_count,

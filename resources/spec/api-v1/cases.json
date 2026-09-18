@@ -255,6 +255,38 @@
       "why": "the role stays `main` — a Fork IS a Main — and the origin block says the rest; the reader keeps the author and the snapshot apart"
     },
     {
+      "id": "api-v1/check-uuid/holder-of-a-fork-is-told-its-origin",
+      "setup": "forked",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "alice", "query": { "uuid": "f0f0f0f0-1111-4222-8333-444444444444" } },
+      "response": {
+        "status": 200,
+        "body": { "exists": true, "role": "none", "main": { "id": { "$ref": "translations.fork.id" }, "uploader": "dave", "origin": { "author": "alice", "lines": 2 } } }
+      },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": false, "Role": "None", "OriginalTranslation.Origin": "present", "OriginalTranslation.Origin.Author": "alice", "OriginalTranslation.Origin.Lines": 2 } },
+      "why": "the file a holder runs IS this Main, so its provenance is the held file's: the game's card credited nobody while the Manager, reading the listing, credited the source"
+    },
+    {
+      "id": "api-v1/sync-state/holder-of-a-fork-is-told-its-origin",
+      "setup": "forked",
+      "request": { "method": "GET", "path": "/sync/state", "as": "alice", "query": { "uuid": "f0f0f0f0-1111-4222-8333-444444444444" } },
+      "response": {
+        "status": 200,
+        "body": { "exists": true, "role": "none", "main": { "id": { "$ref": "translations.fork.id" }, "uploader": "dave", "origin": { "author": "alice", "lines": 2 } } }
+      },
+      "why": "same fact on the answer a game reads at startup"
+    },
+    {
+      "id": "api-v1/check/anonymous-is-told-the-origin",
+      "setup": "forked",
+      "request": { "method": "GET", "path": "/translations/{{translations.fork.id}}/check" },
+      "response": {
+        "status": 200,
+        "body": { "id": { "$ref": "translations.fork.id" }, "uploader": "dave", "origin": { "author": "alice", "lines": 2 } }
+      },
+      "read": { "reader": "check", "expects": { "Uploader": "dave", "Origin": "present", "Origin.Author": "alice", "Origin.Lines": 2 } },
+      "why": "the one call somebody with no account makes about the file they installed; whose work it started from is part of knowing whose work they run"
+    },
+    {
       "id": "api-v1/check-uuid/own-branch",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/translations/check-uuid", "as": "bob", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },

@@ -796,7 +796,8 @@
           "line_count": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash", "description": "On `sync/state`; not on `check-uuid`." },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
-          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
+          "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where the Main came from, as the listing says it — the file a holder runs IS this Main. Absent on an older site." }
         }
       },
       "CheckUuidResponse": {
@@ -904,7 +905,8 @@
           "vote_count": { "type": "integer" },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
-          "has_update": { "type": "boolean", "description": "Present when `hash` was sent: `file_hash !== hash`. Clients compare the hashes themselves anyway." }
+          "has_update": { "type": "boolean", "description": "Present when `hash` was sent: `file_hash !== hash`. Clients compare the hashes themselves anyway." },
+          "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where the published work came from, for the one call somebody with no account makes about the file they installed. Absent on an older site." }
         }
       },
       "BranchesResponse": {

@@ -256,6 +256,8 @@ class SyncStateController extends Controller
             $state['main'] = [
                 'id' => $mainTranslation->id,
                 'uploader' => $mainTranslation->user->name,
+                // Additive: the Main's origin, as check-uuid tells a holder.
+                'origin' => $mainTranslation->originBlock(),
                 'source_language' => $mainTranslation->source_language,
                 'target_language' => $mainTranslation->target_language,
                 'line_count' => $mainTranslation->line_count,
