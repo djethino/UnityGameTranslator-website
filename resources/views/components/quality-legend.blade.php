@@ -45,17 +45,26 @@
      * a fifth of fifty lines or of six thousand. Neither answers alone, and the three products had
      * settled on opposite halves: this key showed counts, the mod and the Manager showed shares.
      *
-     * ⚠ The LAST entry takes what is left rather than its own rounding, which is the mod's rule and
-     * exists for the same reason: a key adding up to 99 invites the reader to look for the one that
-     * is missing.
+     * ⚠ The LAST entry holding anything takes what is left rather than its own rounding — the rule
+     * the socle holds in `Composition.Shares` (common/src/.../Composition.cs), which the mod and the
+     * Manager call and this PHP cannot; it is copied here and must stay identical. A key adding up
+     * to 99 or 101 invites the reader to look for the one that is wrong.
      */
     $total = array_sum(array_column($shown, 'count'));
     $running = 0;
 
+    // The absorber is the last entry HOLDING something, as in the socle: the first three are
+    // drawn even empty, and an empty last one absorbing could go below zero (1/8 and 7/8 round to
+    // 13 and 88, leaving -1 for an empty AI).
+    $lastFull = -1;
     foreach ($shown as $i => $entry) {
-        $percent = $total < 1
+        if ($entry['count'] > 0) $lastFull = $i;
+    }
+
+    foreach ($shown as $i => $entry) {
+        $percent = $total < 1 || $entry['count'] < 1
             ? 0
-            : ($i === count($shown) - 1 ? 100 - $running : (int) round($entry['count'] * 100 / $total));
+            : ($i === $lastFull ? 100 - $running : (int) round($entry['count'] * 100 / $total));
         $running += $percent;
         $shown[$i]['percent'] = $percent;
     }
