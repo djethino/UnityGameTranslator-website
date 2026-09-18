@@ -123,8 +123,9 @@
                  they work and tells them what to do next. A file with nothing translated yet
                  has no stage at all, which is what its author needs to hear instead of 0.0/3. --}}
             <div class="flex items-center gap-2">
+                {{-- The stage component says "Capture only" itself on a file with nothing translated. --}}
+                <x-review-stage :translation="$translation" />
                 @if($translation->effective_lines > 0)
-                    <x-review-stage :translation="$translation" />
                     @if($translation->ai_count > 0)
                         <span class="text-xs text-gray-400">
                             {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
@@ -132,10 +133,6 @@
                     @endif
                     <x-translation-completeness :translation="$translation" />
                     <x-game-coverage :translation="$translation" />
-                @else
-                    <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
-                        <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
-                    </span>
                 @endif
             </div>
         </div>

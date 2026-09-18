@@ -15,7 +15,11 @@
     wants the number.
 --}}
 @php
-    $stage = $translation->reviewStage();
+    // Nothing translated: one pill in place of the stage, as the shared rule (`Badges`,
+    // corpus `badges/for/capture-only-is-a-chip-of-its-own`) has it. Three views used to write
+    // this pill by hand around this component, each a little differently.
+    $captureOnly = $translation->isCaptureOnly();
+    $stage = $captureOnly ? null : $translation->reviewStage();
     $coverage = $translation->reviewCoverage();
 
     $tone = match ($stage) {
@@ -27,7 +31,12 @@
     };
 @endphp
 
-@if($stage)
+@if($captureOnly)
+    <span {{ $attributes->merge(['class' => 'px-2 py-0.5 rounded text-xs bg-gray-700 text-gray-300']) }}
+        title="{{ __('progress.capture_only_desc') }}">
+        <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
+    </span>
+@elseif($stage)
     <span {{ $attributes->merge(['class' => 'px-2 py-0.5 rounded text-xs ' . $tone]) }}
         title="{{ __('progress.stage_hint', ['percent' => round($coverage * 100)]) }}">
         {{ __('progress.stage.' . $stage) }}

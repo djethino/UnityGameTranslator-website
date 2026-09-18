@@ -240,13 +240,7 @@
                                      and "Human" demanded that more than half be TYPED by hand —
                                      a measure of method, when the reader is asking whether
                                      anyone has read the thing. --}}
-                                @if($translation->effective_lines === 0 && ($translation->capture_count ?? 0) > 0)
-                                    <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" title="{{ __('progress.capture_only_desc') }}">
-                                        <i class="fas fa-camera"></i> {{ __('progress.capture_only') }}
-                                    </span>
-                                @else
-                                    <x-review-stage :translation="$translation" class="px-2 py-1" />
-                                @endif
+                                <x-review-stage :translation="$translation" class="px-2 py-1" />
 
                                 <x-translation-completeness :translation="$translation" class="px-2 py-1" />
 

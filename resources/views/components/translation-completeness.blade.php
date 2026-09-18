@@ -23,7 +23,9 @@
     $pending = $translation->capture_count;
 @endphp
 
-@if($percent !== null && $percent < 100)
+{{-- Silent on a capture-only file, whose pill says it: "0% translated" would grade a file
+     that is not a translation at all. --}}
+@if($percent !== null && $percent < 100 && !$translation->isCaptureOnly())
     <span {{ $attributes->merge(['class' => 'px-2 py-0.5 rounded text-xs bg-amber-900/50 text-amber-300']) }}
         title="{{ __('progress.completeness_hint', ['pending' => number_format($pending)]) }}">
         <i class="fas fa-hourglass-half mr-1"></i>{{ __('progress.completeness', ['percent' => $percent]) }}

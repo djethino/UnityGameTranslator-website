@@ -300,8 +300,9 @@
                              same order and same wording as the dashboard, so one screen does not
                              describe a file differently from the next. --}}
                         <div class="flex items-center gap-2 mb-1">
+                            {{-- The stage component says "Capture only" itself on a file with nothing translated. --}}
+                            <x-review-stage :translation="$translation" />
                             @if($translation->effective_lines > 0)
-                                <x-review-stage :translation="$translation" />
                                 @if($translation->ai_count > 0)
                                     <span class="text-xs text-gray-400">
                                         {{ __('progress.left_to_review', ['count' => number_format($translation->ai_count)]) }}
@@ -310,10 +311,6 @@
                                 <x-translation-completeness :translation="$translation" />
                                 <x-game-coverage :translation="$translation"
                                     :game-max="$gameMaxes[$translation->game_id] ?? null" />
-                            @else
-                                <span class="text-xs text-gray-400" title="{{ __('progress.capture_only_desc') }}">
-                                    <i class="fas fa-camera mr-1"></i>{{ __('progress.capture_only') }}
-                                </span>
                             @endif
                         </div>
                         <x-progress-bar :translation="$translation" />
