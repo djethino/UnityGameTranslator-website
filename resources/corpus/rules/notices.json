@@ -80,6 +80,18 @@
     { "id": "notices/sync/a-conflict-outranks-unsent-lines", "op": "sync",
       "in": { "lines": 40, "local_changes": 3, "exists": true, "is_owner": true, "role": "Main", "signed_in": true, "needs_merge": true, "has_local_changes": true, "branches_pending_review": 2 },
       "out": { "action": "Sync" },
-      "why": "most urgent first: work at risk before work waiting" }
+      "why": "most urgent first: work at risk before work waiting" },
+    { "id": "notices/sync/never-published-offers-to-share", "op": "sync",
+      "in": { "lines": 120, "exists": false, "signed_in": true, "never_published": true },
+      "out": { "show": true, "message": "120 line(s) here, not published yet.", "action": "Upload", "verb": "Upload" },
+      "why": "🔴 the one state with NO row on the site: every other branch compares two sides and this one has a single side, so each of them asked 'does it exist on the server' and fell silent — a translation could grow for a hundred hours unmentioned" },
+    { "id": "notices/sync/never-published-with-no-account-leads-to-the-sign-in", "op": "sync",
+      "in": { "lines": 120, "exists": false, "signed_in": false, "never_published": true },
+      "out": { "show": true, "message": "120 line(s) here, not published yet.", "action": "SignIn", "verb": "Sign in" },
+      "why": "publishing needs an account, and the person most likely to sit on unpublished work is the one who never made one: a door rather than the wall ClosedReason would have raised" },
+    { "id": "notices/sync/never-published-says-nothing-until-the-caller-judges-it-worth-it", "op": "sync",
+      "in": { "lines": 120, "exists": false, "signed_in": true },
+      "out": { "show": false, "action": "None" },
+      "why": "having no row on the site is not a reason to interrupt anybody; whether there is enough here is measured by the caller (Quality.Completeness against TranslationFloor) and arrives as the flag" }
   ]
 }
