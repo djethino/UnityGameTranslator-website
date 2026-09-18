@@ -329,6 +329,20 @@
         </div>
         @endif
 
+        {{-- 🔴 **Not a wall: something to do.** Amber where the three above are red, because
+             nothing here is closed — the Main moved on and this contribution was built before it.
+             Said only when no wall is up, and the act is named where it happens: Merge with Main,
+             in the game. --}}
+        @if($translation->mainHasMovedSinceMerge() && !$translation->isFrozenBranch()
+            && !$translation->mainIsAbandoned() && !$translation->isOrphanBranch())
+        <div class="bg-amber-900/20 border border-amber-700 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-white mb-2">
+                <i class="fas fa-arrow-up mr-2 text-amber-400"></i>{{ __('translation.main_moved') }}
+            </h2>
+            <p class="text-amber-200 text-sm">{{ __('translation.main_moved_body') }}</p>
+        </div>
+        @endif
+
         {{-- The Main was deleted outright. Same shape and same place as the block above, because it
              is the same kind of fact: nothing done as a branch can work any more. What differs is
              what became of the translation — closed is not gone. --}}

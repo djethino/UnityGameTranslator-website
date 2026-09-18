@@ -43,6 +43,7 @@ class Translation extends Model
         'file_hash',
         // The same content without the lineage identifier — see computeContentHash().
         'content_hash',
+        'merged_main_hash',
         'font_config',
         'settings_summary',
     ];
@@ -1675,6 +1676,31 @@ class Translation extends Model
      * published and stays good to play. The API has said it (`main_abandoned`) and the mod and
      * the Manager show it; the contributor's own pages here said nothing (2026-09-18).
      */
+    /**
+     * The Main has published since this branch last merged from it.
+     *
+     * 🔴 **The game's rule, to the letter** (`TranslatorUIManager.HasMainUpdate`): the hash the
+     * branch last merged against the Main's current one, and NEVER this file's content against
+     * the Main's — a branch differs from its Main permanently, that is what being one means, so
+     * comparing content would say "behind" for ever.
+     *
+     * ⚠ Unknown on either side answers false: a branch uploaded before the column existed, or one
+     * that never merged, is not "behind" — it is unmeasured, and a guess printed as a fact is
+     * worse than a silence. Said on the card; the act itself is Merge with Main, in the game.
+     */
+    public function mainHasMovedSinceMerge(): bool
+    {
+        if (!$this->isBranch() || !$this->merged_main_hash) {
+            return false;
+        }
+
+        $main = $this->getMain();
+
+        return $main !== null
+            && $main->file_hash !== null
+            && !hash_equals($main->file_hash, $this->merged_main_hash);
+    }
+
     public function mainIsAbandoned(): bool
     {
         if (!$this->isBranch()) {

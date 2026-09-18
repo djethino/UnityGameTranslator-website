@@ -126,6 +126,20 @@ class TranslationService
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
             'content_hash' => $this->computeContentHash($json),
+
+            // 🔴 **Where a branch stood against its Main when it was sent** — `_source.main_hash`,
+            // written by the mod at every merge from the Main and carried inside the file, so no
+            // field had to be added to the upload for the site to read it. It is what tells a
+            // contributor their work was built before the Main moved on, which the game and the
+            // Manager both say and this site could not (2026-09-18).
+            //
+            // ⚠ Null on a Main, on a branch that never merged, and on a file written by a mod
+            // older than the field. Unknown is not "behind": nothing is said on a null.
+            'merged_main_hash' => is_array($json['_source'] ?? null)
+                && is_string($json['_source']['main_hash'] ?? null)
+                && preg_match('/^[0-9a-f]{64}$/', $json['_source']['main_hash'])
+                    ? $json['_source']['main_hash']
+                    : null,
             'font_config' => $this->extractFontConfig($json),
             'settings_summary' => $this->extractSettingsSummary($json),
             'normalized_content' => $content,

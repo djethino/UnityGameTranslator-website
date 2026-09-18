@@ -1226,6 +1226,8 @@
     "translation.accepts_contributions": "Przyjmuje wkłady",
     "translation.accepts_contributions_hint": "Możesz wysłać swoje zmiany autorowi, który decyduje, co z nich zachowa.",
     "translation.no_owner": "Bez właściciela",
+    "translation.main_moved": "Main zaktualizowany",
+    "translation.main_moved_body": "Main opublikował zmiany od twojego ostatniego scalenia. Merge with Main wykonuje się w grze.",
     "translation.no_owner_hint": "Konto stojące za tym tłumaczeniem zostało usunięte. Tłumaczenie pozostaje dostępne, ale wkłady nie mogą już być rozpatrywane. Nadal możesz opublikować własną wersję.",
     "translation.solo_work": "Praca samodzielna",
     "translation.solo_work_hint": "Autor pracuje samodzielnie. Nadal możesz opublikować własną wersję tego tłumaczenia.",

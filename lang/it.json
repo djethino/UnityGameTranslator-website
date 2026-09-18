@@ -1226,6 +1226,8 @@
     "translation.accepts_contributions": "Accetta contributi",
     "translation.accepts_contributions_hint": "Puoi inviare le tue modifiche a chi la cura, che decide cosa tenere.",
     "translation.no_owner": "Senza proprietario",
+    "translation.main_moved": "Main aggiornato",
+    "translation.main_moved_body": "Il Main ha pubblicato dopo la tua ultima fusione. Merge with Main si fa nel gioco.",
     "translation.no_owner_hint": "L'account dietro questa traduzione è stato eliminato. Resta disponibile, ma nessun contributo può più essere esaminato. Puoi comunque pubblicare la tua versione.",
     "translation.solo_work": "Lavoro in solitaria",
     "translation.solo_work_hint": "Chi la cura lavora da solo. Puoi comunque pubblicare la tua versione di questa traduzione.",

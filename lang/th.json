@@ -1226,6 +1226,8 @@
     "translation.accepts_contributions": "รับการมีส่วนร่วม",
     "translation.accepts_contributions_hint": "คุณส่งสิ่งที่คุณแก้ไขให้ผู้เขียนได้ และผู้เขียนเป็นคนเลือกว่าจะเก็บอะไรไว้",
     "translation.no_owner": "ไม่มีเจ้าของ",
+    "translation.main_moved": "Main อัปเดตแล้ว",
+    "translation.main_moved_body": "Main เผยแพร่เพิ่มหลังจากที่คุณรวมครั้งล่าสุด ทำ Merge with Main ได้ในเกม",
     "translation.no_owner_hint": "บัญชีเจ้าของการแปลนี้ถูกลบแล้ว การแปลยังใช้ได้ แต่ไม่สามารถพิจารณาการมีส่วนร่วมได้อีก คุณยังเผยแพร่เวอร์ชันของคุณเองได้",
     "translation.solo_work": "ทำงานคนเดียว",
     "translation.solo_work_hint": "ผู้เขียนทำงานคนเดียว คุณยังเผยแพร่เวอร์ชันของคุณเองสำหรับคำแปลนี้ได้",

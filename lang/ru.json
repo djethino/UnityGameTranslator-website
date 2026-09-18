@@ -1226,6 +1226,8 @@
     "translation.accepts_contributions": "Принимает вклады",
     "translation.accepts_contributions_hint": "Вы можете отправить свои изменения автору — он решает, что оставить.",
     "translation.no_owner": "Без владельца",
+    "translation.main_moved": "Main обновлён",
+    "translation.main_moved_body": "Main опубликовал изменения после вашего последнего слияния. Merge with Main выполняется в игре.",
     "translation.no_owner_hint": "Учётная запись, которой принадлежал этот перевод, удалена. Перевод остаётся доступным, но вклады больше нельзя рассмотреть. Вы всё равно можете опубликовать собственную версию.",
     "translation.solo_work": "Работа в одиночку",
     "translation.solo_work_hint": "Автор работает один. Вы всё равно можете опубликовать собственную версию этого перевода.",

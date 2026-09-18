@@ -228,6 +228,15 @@
                             <span class="text-amber-300 text-sm" title="{{ __('my_translations.branch_frozen_tip') }}">
                                 <i class="fas fa-lock"></i> {{ __('my_translations.branch_frozen') }}
                             </span>
+                        {{-- The Main published since this branch last merged from it: the same fact
+                             the game shows as a corner notice and the Manager on the game's card,
+                             from the same hash the mod writes into the file. Last of the chain
+                             because a wall outranks it — nobody merges from a Main that is gone,
+                             ownerless or closed. The act itself stays in the game. --}}
+                        @elseif($translation->mainHasMovedSinceMerge())
+                            <span class="text-amber-300 text-sm" title="{{ __('translation.main_moved_body') }}">
+                                <i class="fas fa-arrow-up"></i> {{ __('translation.main_moved') }}
+                            </span>
                         @endif
 
                         {{-- Through the component, like the chip beside it. Written out here, this

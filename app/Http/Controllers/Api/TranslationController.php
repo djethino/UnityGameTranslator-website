@@ -1289,6 +1289,7 @@ class TranslationController extends Controller
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'content_hash' => $parsed['content_hash'],
+                'merged_main_hash' => $parsed['merged_main_hash'],
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
             ]);
@@ -1371,6 +1372,7 @@ class TranslationController extends Controller
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
             'content_hash' => $parsed['content_hash'],
+            'merged_main_hash' => $parsed['merged_main_hash'],
             'font_config' => $parsed['font_config'],
             'settings_summary' => $parsed['settings_summary'],
         ]);
