@@ -1,5 +1,5 @@
 {
-  "$comment": "The community list: the translations the website holds for this game, one row each, with the one the player picks. A part held by two screens — the main screen's Community tab and the wizard's translation step — instantiated by TranslationList into the host each leaves for it (TranslationListHost). 'Status' and 'Rows' are placed once, one under the other; 'Row' once per translation shown, 'More' when the search found more than the list draws, 'Rank' before the player's own row when it fell below the cut. What a row says (author, marks, chips, facts, note), whether its composition bar is drawn, which row is the one this game holds and what the reader is to each lineage (their own library, read once) are decided in code from what the server sent. A row is chosen by pressing it anywhere, or its box.",
+  "$comment": "The community list: the translations the website holds for this game, one row each, with the one the player picks. A part held by two screens — the main screen's Community tab and the wizard's translation step — instantiated by TranslationList into the host each leaves for it (TranslationListHost). 'Status' and 'Rows' are placed once, one under the other; 'Row' once per translation shown, 'More' when the search found more than the list draws, 'Rank' before the player's own row when it fell below the cut. What a row says (author, chips, facts, note), whether its composition bar is drawn, which row is the one this game holds and what the reader is to each lineage (their own library, read once) are decided in code from what the server sent. A row is chosen by pressing it anywhere, or its box.",
   "name": "CommunityList",
   "part": true,
   "templates": [
@@ -15,8 +15,7 @@
           { "kind": "stack", "name": "From", "fill": "Content" },
           { "kind": "label", "name": "Arrow", "text": "→", "policy": "Excluded", "tone": "Muted", "minHeight": "RowHeightSmall", "visible": false },
           { "kind": "stack", "name": "Into", "fill": "Content" },
-          { "kind": "label", "name": "Title", "text": { "bind": "title" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall", "visible": false },
-          { "kind": "stack", "name": "Marks", "fill": "Content" }
+          { "kind": "label", "name": "Title", "text": { "bind": "title" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall", "visible": false }
         ] },
         { "kind": "label", "name": "Author", "text": { "bind": "author" }, "policy": "Excluded", "role": "Hint", "italic": false, "tone": "Secondary", "minHeight": "RowHeightSmall" },
         { "kind": "stack", "name": "Badges", "spacing": 0 },
