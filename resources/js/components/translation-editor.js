@@ -302,7 +302,10 @@ export function editorCore(config) {
         placeholderLabels: { ...(config.placeholderLabels ?? {}) },
 
         // ── Search / filters / sort (persisted across refreshes) ─────────
-        filters: { ...config.filters },
+        // 🔴 brokenOnly declared HERE, whatever the page lists: restoreUiState only puts back
+        // the filters the object already has, and no page listed this one — it is set by the
+        // banner — so it was the one filter a reload never brought back (2026-09-18).
+        filters: { brokenOnly: false, ...config.filters },
         searchQuery: '',
         // Debounced copy actually used by the filtering pipeline: on large
         // RPG files (tens of thousands of keys) re-filtering on every
