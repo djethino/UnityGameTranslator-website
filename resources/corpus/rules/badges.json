@@ -50,7 +50,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
       ],
       "why": "a published Main with nothing else known wears two chips and no more — an unknown declaration shows nothing rather than a guess, since an older server saying nothing is not the same as saying 'still writing'"
@@ -160,7 +160,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "BranchesWaiting", "text": "2 waiting", "tone": "Good",
           "tip": "2 contributions you have not been through, holding 57 lines to take." }
@@ -174,7 +174,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "BranchesWaiting", "text": "1 waiting", "tone": "Good",
           "tip": "1 contribution you have not been through, holding 1 line to take." }
@@ -188,7 +188,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "BranchesWaiting", "text": "3 waiting", "tone": "Good",
           "tip": "3 contributions you have not been through." }
@@ -202,7 +202,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
       ],
       "why": "a screen with nothing to say says nothing rather than announcing a zero"
@@ -214,7 +214,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Origin", "text": "Forked from @alice", "tone": "Quiet",
           "tip": "Started from @alice's work, 3120 lines of it at the time. It has been a separate translation ever since." }
@@ -228,7 +228,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Origin", "text": "Forked from @bob", "tone": "Quiet",
           "tip": "Started from @bob's work. It has been a separate translation ever since." }
@@ -242,7 +242,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Origin", "text": "Forked from a removed account", "tone": "Quiet",
           "tip": "Started from work whose account is no longer on the site. It has been a separate translation ever since." }
@@ -256,7 +256,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Sync", "text": "Up to date", "tone": "Good",
           "tip": "This file and the published version hold the same content." }
@@ -270,7 +270,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Sync", "text": "Update available", "tone": "Notice",
           "tip": "The published version has moved on. Nothing of yours is at risk — you have no unpublished changes here." }
@@ -284,7 +284,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Sync", "text": "Unpublished changes", "tone": "Attention",
           "tip": "You have changes here that the published version does not have." }
@@ -298,7 +298,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Sync", "text": "Conflict", "tone": "Attention",
           "tip": "Both this file and the published one have moved. Settling that is done line by line." }
@@ -312,7 +312,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Finished", "text": "Finished", "tone": "Good",
           "tip": "Its author says this translation is finished." }
@@ -326,7 +326,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Finished", "text": "Still writing", "tone": "Quiet",
           "tip": "Its author is still working on this one." }
@@ -350,7 +350,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Contributions", "text": "Accepts contributions", "tone": "Quiet",
           "tip": "Its author takes contributions: your work can be sent to them for review." }
@@ -364,7 +364,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Contributions", "text": "Solo work", "tone": "Quiet",
           "tip": "Its author works alone on this one. You can still publish your own version of it." }
@@ -402,7 +402,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "CaptureOnly", "text": "Capture only", "tone": "Quiet",
           "tip": "This file only contains captured text, no translations yet." }
@@ -416,7 +416,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "ReviewStage", "text": "Fully reviewed", "tone": "Good",
           "tip": "How much of this file a human has settled." }
@@ -430,7 +430,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "ReviewStage", "text": "Review in progress", "tone": "Notice",
           "tip": "How much of this file a human has settled." }
@@ -444,7 +444,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "ReviewStage", "text": "Review started", "tone": "Quiet",
           "tip": "How much of this file a human has settled." }
@@ -458,7 +458,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "ReviewStage", "text": "Machine translation", "tone": "Quiet",
           "tip": "How much of this file a human has settled." }
@@ -472,7 +472,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Completeness", "text": "90% translated", "tone": "Attention",
           "tip": "Share of the lines this file has met in game that are actually translated." }
@@ -498,7 +498,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
       ],
       "why": "silent at 100% like the website: a number is worth showing when it says something, and 'everything it met is translated' is the ordinary state"
@@ -510,7 +510,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
       ],
       "why": "'0 votes' reads as a verdict on the translation; the absence of the chip reads as nobody having voted, which is what is true"
@@ -522,7 +522,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Votes", "text": "1 vote", "tone": "Plain",
           "tip": "What players thought of it on the site." },
@@ -538,7 +538,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "Votes", "text": "12 votes", "tone": "Plain",
           "tip": "What players thought of it on the site." },
@@ -559,7 +559,7 @@
       "out": [
         { "kind": "Publication", "text": "Published", "tone": "Plain",
           "tip": "This translation is on the site. Publishing again updates it." },
-        { "kind": "Role", "text": "Main", "tone": "Plain",
+        { "kind": "Role", "text": "Main", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." },
         { "kind": "BranchesWaiting", "text": "2 waiting", "tone": "Good",
           "tip": "2 contributions you have not been through, holding 57 lines to take." },
@@ -606,7 +606,7 @@
       "out": [
         { "kind": "Installed", "text": "Installed", "tone": "Notice",
           "tip": "The translation this game holds right now." },
-        { "kind": "Role", "text": "Main (you)", "tone": "Plain",
+        { "kind": "Role", "text": "Main (you)", "tone": "Notice",
           "tip": "You lead this lineage. Contributions arrive as branches for you to take or leave." }
       ],
       "why": "what is on this machine first, then who you are — the order For reads in; '(you)' because on a list of other people's work a bare 'Main' would describe the row, not the reader"

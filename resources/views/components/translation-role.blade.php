@@ -10,7 +10,8 @@
      *
      * A branch is the one worth spotting: it is not public, only its Main can see it, and acting
      * on it is not the same act as acting on something the whole site can read. Hence the colour
-     * on the branch and the quiet grey on the ordinary case.
+     * on the branch. The Main was quiet grey until 2026-09-18, and read as LESS than the branch
+     * beside it — leading a lineage is at least as worth seeing, so it has its colour too.
      *
      * 🔴 **The one place the role is written.** It used to be written three times: here, by hand in
      * my-translations (purple fork, grey branch, nothing for a Main) and by hand in the dashboard
@@ -31,7 +32,9 @@
         ? ['branch', 'fa-code-branch', 'bg-amber-900/60 text-amber-200', 'text-amber-300']
         : ($translation->isFork()
             ? ['fork', 'fa-code-branch', 'bg-indigo-900/60 text-indigo-200', 'text-indigo-300']
-            : ['main', 'fa-star', 'bg-gray-700 text-gray-300', 'text-gray-400']);
+            // Blue, as the shared rule colours it (Badges: Notice): leading a lineage is at
+            // least as worth seeing as contributing to one, and grey read as less.
+            : ['main', 'fa-star', 'bg-blue-900/60 text-blue-200', 'text-blue-300']);
 
     [$key, $icon, $chipColour, $plainColour] = $role;
 @endphp
