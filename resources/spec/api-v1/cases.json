@@ -732,7 +732,7 @@
           "id": { "$ref": "translations.main.id" }, "game": { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" },
           "file_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "role": "main", "branches_count": 1,
           "branches_with_work": 1, "lines_available": 1, "lines_waiting": { "review": 1, "take": 1, "new": { "H": 1 }, "differing": [] },
-          "main_missing": null, "main_abandoned": null, "accepts_branches": true, "branch_frozen": null,
+          "main_missing": null, "main_abandoned": null, "accepts_branches": true, "branch_frozen": null, "main_ignoring": null,
           "source_language": "English", "target_language": "French", "line_count": 2, "type": "human", "status": "complete",
           "vote_count": 0, "download_count": 0, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "updated_at": { "$is": "iso8601" }
         } ] }
@@ -744,7 +744,7 @@
       "id": "api-v1/me-translations/a-contributors-library",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/me/translations", "as": "bob" },
-      "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.branch.id" }, "role": "branch", "branches_count": null, "branches_with_work": null, "lines_waiting": null, "main_missing": false, "main_abandoned": false, "accepts_branches": true, "branch_frozen": false } ] } },
+      "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.branch.id" }, "role": "branch", "branches_count": null, "branches_with_work": null, "lines_waiting": null, "main_missing": false, "main_abandoned": false, "accepts_branches": true, "branch_frozen": false, "main_ignoring": false } ] } },
       "read": { "reader": "my_translations", "expects": { "Rows.Count": 1, "Rows.0.IsMain": false } },
       "why": "null on the side the question does not apply to — 'not a branch' is not 'fine', and 'not a Main' is not 'nothing waits'"
     },

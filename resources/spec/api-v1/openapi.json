@@ -1108,6 +1108,7 @@
               "main_abandoned": { "type": ["boolean", "null"] },
               "accepts_branches": { "type": "boolean", "description": "The lineage's decision, on either side." },
               "branch_frozen": { "type": ["boolean", "null"], "description": "Branch: its Main closed since. False on an orphan — nobody refused them. Null on a Main." },
+              "main_ignoring": { "type": ["boolean", "null"], "description": "Additive. Branch: the Main was told of it and has worked on its translation since without taking any of it in — as `check-uuid` says it. Null on a Main." },
               "source_language": { "$ref": "#/components/schemas/LanguageName" },
               "target_language": { "$ref": "#/components/schemas/LanguageName" },
               "line_count": { "type": "integer" },

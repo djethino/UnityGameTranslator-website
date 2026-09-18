@@ -159,6 +159,11 @@ class UserController extends Controller
                     'branch_frozen' => $role === 'branch'
                         ? $withMain->has($t->file_uuid) && !($mains[$t->file_uuid] ?? false)
                         : null,
+                    // The judgement check-uuid already carries, on the library too: the Manager
+                    // reads the library and had no way to say what the mod's card and this site's
+                    // own list both say (2026-09-18). Per row: a branch asks three small queries,
+                    // and a library holds a handful of them.
+                    'main_ignoring' => $role === 'branch' ? $t->mainIgnoresContributions() : null,
                     'source_language' => $t->source_language,
                     'target_language' => $t->target_language,
                     'line_count' => $t->line_count,
