@@ -19,7 +19,9 @@
         <p class="text-amber-200 font-medium">{{ __('merge.stale_title') }}</p>
         <p class="text-amber-100/80">{{ __('merge.stale_body') }}</p>
     </div>
-    <button type="button" @click="window.location.reload()"
+    {{-- ⚠ A method of the core, never `window.location.reload()` here: the CSP build of Alpine
+         refuses a call on a global and the button did nothing. --}}
+    <button type="button" @click="reloadPage()"
             class="shrink-0 px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium transition">
         {{ __('merge.stale_reload') }}
     </button>

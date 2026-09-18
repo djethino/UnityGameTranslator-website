@@ -212,6 +212,16 @@ export function editorCore(config) {
          * ⚠ Stops asking once it knows: the message stays until the page is reloaded, and asking
          * again could only say the same thing.
          */
+        /**
+         * The stale banner's way out. A method rather than `window.location.reload()` in the
+         * template: this site runs the CSP build of Alpine, whose parser refuses a call on a
+         * global — the button did nothing, and said nothing (2026-09-18). Reloading is safe
+         * here: the sitting's pending work is kept under its own id, and the page reads it back.
+         */
+        reloadPage() {
+            window.location.reload();
+        },
+
         checkFreshness() {
             const url = this.freshnessUrl();
 
