@@ -79,6 +79,7 @@
               { "kind": "button", "name": "CompareBtn", "text": "Compare", "policy": "Dynamic", "minWidth": 85, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "compare",
                 "help": "Compare your local file with the published version and choose line by line what to publish" }
             ] },
+            { "kind": "label", "name": "UploadHintLabel", "text": { "bind": "uploadHint" }, "role": "Hint", "centred": true },
             { "kind": "stack", "name": "LineageChoiceSection", "spacing": "SmallSpacing", "children": [
               { "kind": "row", "name": "BranchRow", "spacing": "SmallSpacing", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
                 { "kind": "button", "name": "ContributeBtn", "text": "Contribute as Branch", "tone": "Success", "minWidth": 180, "scope": { "onThisMachine": true, "yourPublishedCopy": true }, "act": "contribute",
@@ -101,7 +102,6 @@
               ] },
               { "kind": "label", "name": "ForkDesc", "text": { "bind": "forkDesc" }, "role": "Hint", "centred": true }
             ] },
-            { "kind": "label", "name": "UploadHintLabel", "text": { "bind": "uploadHint" }, "role": "Hint", "centred": true },
             { "kind": "row", "name": "RoleActionsRow", "minHeight": "RowHeightLarge", "placement": "MiddleCenter", "children": [
               { "kind": "button", "name": "ReviewBtn", "text": "Review Branches", "policy": "Dynamic", "tone": "Link", "minWidth": 105, "scope": { "onThisMachine": false, "yourPublishedCopy": true }, "act": "review",
                 "help": "Open the website to accept or reject changes proposed by other players" },
