@@ -8,6 +8,7 @@
   "x-secrets": "api_token, ai_api_key, google_api_key, deepl_api_key, proxy_password are stored as `ENCRYPTED:` + base64(IV ‖ AES-256-CBC), keyed to the machine (common/Secrets: PBKDF2-SHA1 100 000 iterations over MachineName_UserName_Platform_UGT_v3, salt SHA-256 of MachineName_UserName_UGT_SALT). A value WITHOUT the prefix is read in the clear and re-encrypted at the next save — how a secret saved by an older version keeps working. A value with the prefix that does not decrypt on this machine reads as no secret, never as corruption. The Manager encrypts with the same scheme so the mod can read what it wrote.",
   "x-migrations": [
     { "from": "ollama_url", "to": "ai_url", "how": "copied; the old key is dropped" },
+    { "from": "ai_url whose HOST is localhost", "to": "the same address with 127.0.0.1", "how": "at every read, not versioned, by the mod and the Manager alike (common/Endpoints.Canonical): the host compared whole, everything else kept as typed. Silent on purpose — the address worked, only its spelling changes" },
     { "from": "enable_ollama", "to": "enable_ai", "how": "copied" },
     { "from": "debug_ollama", "to": "debug_ai", "how": "copied" },
     { "from": "model", "to": "ai_model", "how": "copied when ai_model is empty" },
@@ -21,7 +22,7 @@
   ],
   "properties": {
     "translation_backend": { "type": "string", "enum": ["llm", "google", "deepl", "none"], "default": "none", "x-writer": "both", "description": "WHICH service translates — never WHETHER (that is enable_ai). ⚠ The Manager's own 'capture' choice is written here as `none` with capture_keys_only true; the mod never sees 'capture'." },
-    "ai_url": { "type": "string", "default": "http://127.0.0.1:11434", "x-writer": "both", "description": "OpenAI-compatible server. ONE spelling of local, 127.0.0.1, never localhost (common/Endpoints)." },
+    "ai_url": { "type": "string", "default": "http://127.0.0.1:11434", "x-writer": "both", "not": { "pattern": "^([A-Za-z][A-Za-z0-9+.-]*://)?([^/?#@]*@)?[Ll][Oo][Cc][Aa][Ll][Hh][Oo][Ss][Tt](:|/|\\?|#|$)" }, "description": "OpenAI-compatible server. ONE spelling of local, 127.0.0.1, never localhost (common/Endpoints). The pattern refuses a HOST named localhost only — localhost.com or a path saying it are other things. An older file carrying it is respelled at every read (Endpoints.Canonical)." },
     "ai_model": { "type": "string", "default": "", "x-writer": "both" },
     "target_language": { "type": "string", "default": "auto", "x-writer": "both", "description": "A catalogue NAME (French), never an ISO code; `auto` is a MODE resolved against the machine's system language and settled by the translation's first line. The Manager writes it only when the game has none (OnlyIfAbsent), and never `auto`." },
     "source_language": { "type": "string", "default": "auto", "x-writer": "mod", "description": "The language the game's own text is in. `auto` = unknown. The Manager writes it on ONE path only — taking a published translation, whose pair its author stated — and never from a list of settings: a wrong guess is an instruction to the model, and with strict_source_language it retires lines for good." },

@@ -44,6 +44,22 @@
       "why": "the first shape of the file, from before the backend choice: the four keys are renamed, and AI on means the backend is llm"
     },
     {
+      "id": "config/localhost-is-respelled-at-every-read",
+      "document": { "config_version": 3, "translation_backend": "llm", "enable_ai": true, "ai_url": "http://localhost:1234/v1" },
+      "written": false,
+      "read": { "ai_url": "http://127.0.0.1:1234/v1" },
+      "manager": { "Values.AiUrl": "http://127.0.0.1:1234/v1" },
+      "why": "a file from before the single spelling: the host alone becomes 127.0.0.1, port and path kept, whatever server answers there — and not versioned, since somebody can type it again tomorrow"
+    },
+    {
+      "id": "config/a-host-named-like-localhost-is-another-machine",
+      "document": { "config_version": 3, "translation_backend": "llm", "enable_ai": true, "ai_url": "https://localhost.example.com/v1" },
+      "written": true,
+      "read": { "ai_url": "https://localhost.example.com/v1" },
+      "manager": { "Values.AiUrl": "https://localhost.example.com/v1" },
+      "why": "the host is compared whole: a name that merely begins with localhost is somebody else's server, and rewriting it would send the game's text to this machine instead"
+    },
+    {
       "id": "config/before-v1-mod-ui-false-goes-back-to-undecided",
       "document": { "config_version": 0, "translate_mod_ui": false },
       "written": false,
