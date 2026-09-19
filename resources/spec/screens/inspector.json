@@ -25,6 +25,8 @@
       { "kind": "spacer", "name": "SelectedGap", "height": 8 },
       { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
         "help": "The image the game draws on the selected element. This is what Export Original saves." },
+      { "kind": "row", "name": "SlotStrip", "spacing": 4, "visible": false,
+        "help": "This object carries several images. Click one to work on it" },
       { "kind": "spacer", "name": "PreviewGap", "height": 4 },
       { "kind": "label", "name": "SpriteInfo", "text": { "bind": "spriteInfo" }, "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
       { "kind": "spacer", "name": "SpriteGap", "height": 4 },
@@ -58,6 +60,10 @@
       "help": "Leave inspect mode and close this window. Element picking stops." }
   ],
   "templates": [
+    { "kind": "stack", "name": "SlotChoice", "spacing": 2, "act": "pickSlot", "pad": 3, "minWidth": 64, "fill": "Content", "children": [
+      { "kind": "image", "name": "SlotImage", "height": 44 },
+      { "kind": "label", "name": "SlotName", "text": { "bind": "slotName" }, "policy": "Excluded", "role": "Caption", "centred": true, "wrap": false, "minHeight": "RowHeightSmall" }
+    ] },
     { "kind": "stack", "name": "TextEditEntry", "spacing": 3, "surface": "Card", "children": [
       { "kind": "row", "name": "KeyRow", "spacing": 6, "placement": "TopLeft", "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
         { "kind": "chip", "name": "Tag" },

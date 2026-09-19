@@ -156,6 +156,7 @@
               "fillHeight": { "type": "boolean", "default": false, "description": "Takes the spare height as well." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer", "minimum": 0, "description": "The least width it keeps — a stripe, a host that must hold a widget of a known width." },
+              "act": { "type": "string", "minLength": 1, "description": "Asked for when the stack is pressed anywhere its own controls do not take — the same as a row's, for a block whose pieces are stacked: a picture with its caption under it, one of several to choose from. It lights on hover and dips on press like a control." },
               "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } },
             "description": "A vertical stack. Without children it is a HOST the code fills at show time (rows built from what the screen is shown for, or a component of its own)." } },
         { "if": { "properties": { "kind": { "const": "row" } } }, "then": { "properties": {
