@@ -23,6 +23,9 @@
         { "kind": "label", "name": "SelectedPathValue", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
       { "kind": "spacer", "name": "SelectedGap", "height": 8 },
+      { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
+        "help": "The image the game draws on the selected element. This is what Export Original saves." },
+      { "kind": "spacer", "name": "PreviewGap", "height": 4 },
       { "kind": "label", "name": "SpriteInfo", "text": { "bind": "spriteInfo" }, "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
       { "kind": "spacer", "name": "SpriteGap", "height": 4 },
       { "kind": "label", "name": "ActionsLabel", "text": "Actions", "role": "SectionTitle" },
@@ -34,7 +37,7 @@
       ] },
       { "kind": "row", "name": "ImageActionRow", "spacing": 5, "minHeight": "ButtonHeight", "visible": false, "children": [
         { "kind": "button", "name": "ExportOriginalBtn", "text": "Export Original", "tone": "Primary", "fill": "Stretch", "act": "exportOriginal",
-          "help": "Save the game's current image to disk as a template you can edit" },
+          "help": "Save the game's current image to disk as a template you can edit. It is registered for replacement at the same time" },
         { "kind": "button", "name": "MarkReplaceBtn", "text": "Mark for Replace", "fill": "Stretch", "act": "markReplace",
           "help": "Register this image for replacement: drop your edited version in the images folder and it swaps in-game" }
       ] },
