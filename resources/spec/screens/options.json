@@ -379,6 +379,52 @@
               "help": "Connect directly to local and private addresses instead of through the proxy." }
           ] }
         ] }
+      ] },
+
+      { "kind": "tab", "name": "AboutTab", "text": "About",
+        "help": "What this mod is, who made it, and what it is built on", "children": [
+        { "kind": "card", "name": "AboutCard", "stretch": true, "children": [
+          { "kind": "image", "name": "AboutIcon", "height": 64,
+            "help": "UnityGameTranslator's own mark, shared with the website and UGT Manager" },
+          { "kind": "label", "name": "AboutTitle", "text": "UnityGameTranslator", "role": "Title", "centred": true },
+          { "kind": "label", "name": "AboutVersion", "text": "Version", "role": "Caption", "tone": "Muted", "centred": true, "policy": "Dynamic" },
+          { "kind": "spacer", "name": "AboutGap1", "height": 10 },
+          { "kind": "label", "name": "AboutWhat", "role": "Small", "tone": "Secondary",
+            "text": "Translates Unity games as you play, and lets players share what they translate. Free software under AGPL-3.0. It collects nothing about you: no telemetry, no identifier — and it contacts our website only while Online Mode is on." },
+          { "kind": "spacer", "name": "AboutGap2", "height": 14 },
+
+          { "kind": "label", "name": "EcosystemTitle", "text": "The UGT Ecosystem", "role": "SectionTitle", "tone": "Accent" },
+          { "kind": "label", "name": "EcosystemWhat", "text": "Three programs and the data they share.", "role": "Small", "tone": "Secondary" },
+          { "kind": "spacer", "name": "AboutGap3", "height": 6 },
+          { "kind": "label", "name": "EcoModWhat", "role": "Small", "tone": "Secondary",
+            "text": "UGT Mod — this one. Captures the game's text, translates it, and shows the result." },
+          { "kind": "button", "name": "SourceBtn", "text": "Source code", "act": "aboutSource",
+            "help": "Opens this mod's repository in your browser" },
+          { "kind": "spacer", "name": "AboutGap4", "height": 8 },
+          { "kind": "label", "name": "EcoManagerWhat", "role": "Small", "tone": "Secondary",
+            "text": "UGT Manager — finds your Unity games, sets them up, and looks after their translations." },
+          { "kind": "button", "name": "ManagerBtn", "text": "Get UGT Manager", "act": "aboutManager",
+            "help": "Opens the Manager's page in your browser" },
+          { "kind": "spacer", "name": "AboutGap5", "height": 8 },
+          { "kind": "label", "name": "EcoSiteWhat", "role": "Small", "tone": "Secondary",
+            "text": "UGT Website — where translations are published, compared and improved together." },
+          { "kind": "button", "name": "WebsiteBtn", "text": "Open the website", "act": "aboutWebsite",
+            "help": "Opens the UGT website in your browser" },
+          { "kind": "spacer", "name": "AboutGap6", "height": 14 },
+
+          { "kind": "label", "name": "ThanksTitle", "text": "Made possible by", "role": "SectionTitle", "tone": "Accent" },
+          { "kind": "label", "name": "ThanksWhat", "text": "None of these owes us anything. Please consider supporting them.", "role": "Small", "tone": "Secondary" },
+          { "kind": "spacer", "name": "AboutGap7", "height": 6 },
+          { "kind": "label", "name": "ThanksList", "role": "Small", "tone": "Secondary",
+            "text": "BepInEx (LGPL-2.1) and MelonLoader (Apache-2.0) — the mod loaders that let this run inside a game.\nUniverseLib (LGPL-2.1) — the in-game interface you are looking at.\nHarmony (MIT) — how the game's own text reaches us.\nNewtonsoft.Json (MIT) — reads and writes the translation files.\nRichTextKit (Apache-2.0), ICU and the Unicode Character Database — how text is shaped and split into words in every script." },
+          { "kind": "spacer", "name": "AboutGap8", "height": 16 },
+
+          { "kind": "image", "name": "PublisherLogo", "height": 52,
+            "help": "ASymptOmatik Games — the studio behind UnityGameTranslator" },
+          { "kind": "spacer", "name": "AboutGap9", "height": 8 },
+          { "kind": "button", "name": "StudioBtn", "text": "ASymptOmatik Games", "act": "aboutStudio",
+            "help": "Opens asymptomatikgames.com in your browser" }
+        ] }
       ] }
     ] }
   ],
