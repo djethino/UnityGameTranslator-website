@@ -1341,6 +1341,15 @@ export function editorCore(config) {
             return text ? directionOf(text) : null;
         },
 
+        /**
+         * A line with its placeholders isolated and no search marks — for where a line is shown
+         * outside the grid (the source key in the edit window), through x-safe-html like every
+         * other line, so it gets its own direction too.
+         */
+        lineHtml(text) {
+            return this._render(text, false);
+        },
+
         /** Highlight helpers honoring the search scope. */
         highlightValue(text) {
             return this._render(text, this.searchScope !== 'keys');

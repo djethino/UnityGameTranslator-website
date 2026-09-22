@@ -190,7 +190,9 @@
                                        x-text="row.mineValue"></a>
                                 </template>
                                 <template x-if="!isWebLink(row.mineValue)">
-                                    <span class="editor-text break-words" x-text="row.mineValue"></span>
+                                    {{-- x-safe-html like the other side's cell, so it takes its own
+                                         writing direction from its content (js/rules/direction.js) --}}
+                                    <span class="editor-text break-words" x-safe-html="escapeHtml(row.mineValue)"></span>
                                 </template>
                             @endisset
                         </td>

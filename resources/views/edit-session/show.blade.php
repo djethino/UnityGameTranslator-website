@@ -488,7 +488,7 @@
                 {{-- Always with its line breaks, never subject to the display switch: this is the
                          reference you match while typing, and a translation is expected to keep the
                          original's breaks. The textarea below has always kept them. --}}
-                    <p class="text-sm text-gray-400 font-mono mt-1 break-words whitespace-pre-wrap" x-text="editModal.key"></p>
+                    <p class="text-sm text-gray-400 font-mono mt-1 break-words whitespace-pre-wrap" x-safe-html="lineHtml(editModal.key)"></p>
             </div>
             <div class="px-6 py-4">
                 {{-- x-model must target a TOP-LEVEL property: the Alpine CSP
