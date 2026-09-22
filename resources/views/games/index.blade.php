@@ -102,44 +102,53 @@
                 :empty="__('games.source_language') . ': ' . __('games.all')" />
         </div>
 
-        {{-- Games somebody has declared finished. A filter and not a sort, because it answers yes
-             or no — but a QUIET one, and never on by default.
+        {{-- The two quiet boxes, STACKED rather than side by side.
 
-             It hides most of the catalogue for a reason that is weaker than it looks: "finished"
-             is a declaration, and a translation still under way at ninety percent is a game you
-             can play through. Nobody knows that share — the total text of a game is unknowable —
-             so the filter cannot be presented as the difference between playable and not. Small,
-             last, and explained on hover. --}}
-        <label class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer whitespace-nowrap"
-            title="{{ __('games.filter.completed_hint') }}">
-            {{-- An unchecked box sends nothing at all, so without this the filter could be
-                 turned on but never off --}}
-            <input type="hidden" name="completed" value="0">
-            <input type="checkbox" name="completed" value="1" {{ $completedOnly ? 'checked' : '' }}
-                class="rounded bg-gray-700 border-gray-600 text-gray-500">
-            <span>{{ __('games.filter.completed') }}</span>
-        </label>
+             They are the same kind of control — a yes/no that narrows or widens the list, small,
+             grey, never on by default — so one column reads as one thing. And two `text-xs` lines
+             are shorter than the selects beside them, so the pair costs no height at all while
+             halving the width it used to take, which is what was pushing the sort group onto a
+             second row (the same crowding the search field's own comment above fought). --}}
+        <div class="flex flex-col gap-1">
+            {{-- Games somebody has declared finished. A filter and not a sort, because it answers
+                 yes or no — but a QUIET one, and never on by default.
 
-        {{-- Games marked for adults only. The same quiet shape as the box above, and the mirror
-             of it: this one WIDENS the list instead of narrowing it.
-
-             Only drawn when the catalogue holds such a game — a control that cannot change the
-             page is noise, and on a site holding none, this would be the only place the word
-             appears, which would say something untrue about what is served here.
-
-             "games", never "content": what is adult is the game somebody translated, not the
-             file served from here. --}}
-        @if($anyAdult)
+                 It hides most of the catalogue for a reason that is weaker than it looks:
+                 "finished" is a declaration, and a translation still under way at ninety percent
+                 is a game you can play through. Nobody knows that share — the total text of a
+                 game is unknowable — so the filter cannot be presented as the difference between
+                 playable and not. Small, last, and explained on hover. --}}
             <label class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer whitespace-nowrap"
-                title="{{ __('games.filter.adult_hint') }}">
+                title="{{ __('games.filter.completed_hint') }}">
                 {{-- An unchecked box sends nothing at all, so without this the filter could be
                      turned on but never off --}}
-                <input type="hidden" name="adult" value="0">
-                <input type="checkbox" name="adult" value="1" {{ $showAdult ? 'checked' : '' }}
+                <input type="hidden" name="completed" value="0">
+                <input type="checkbox" name="completed" value="1" {{ $completedOnly ? 'checked' : '' }}
                     class="rounded bg-gray-700 border-gray-600 text-gray-500">
-                <span>{{ __('games.filter.adult') }}</span>
+                <span>{{ __('games.filter.completed') }}</span>
             </label>
-        @endif
+
+            {{-- Games marked for adults only. The same quiet shape as the box above, and the
+                 mirror of it: this one WIDENS the list instead of narrowing it.
+
+                 Only drawn when the catalogue holds such a game — a control that cannot change
+                 the page is noise, and on a site holding none, this would be the only place the
+                 word appears, which would say something untrue about what is served here.
+
+                 "games", never "content": what is adult is the game somebody translated, not the
+                 file served from here. --}}
+            @if($anyAdult)
+                <label class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer whitespace-nowrap"
+                    title="{{ __('games.filter.adult_hint') }}">
+                    {{-- An unchecked box sends nothing at all, so without this the filter could be
+                         turned on but never off --}}
+                    <input type="hidden" name="adult" value="0">
+                    <input type="checkbox" name="adult" value="1" {{ $showAdult ? 'checked' : '' }}
+                        class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                    <span>{{ __('games.filter.adult') }}</span>
+                </label>
+            @endif
+        </div>
 
         {{-- What follows only reorders — the border says so without a heading --}}
         <div class="flex flex-wrap items-center gap-3 md:border-l md:border-gray-700 md:pl-3">
