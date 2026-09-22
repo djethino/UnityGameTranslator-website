@@ -222,9 +222,16 @@ class GameSearchService
     }
 
     /**
-     * Search IGDB (Twitch) API
+     * One Apicalypse query against IGDB, or an empty array — the single place that talks to it.
+     *
+     * ⚠ **Public for the same reason as steamApp()**: App\Services\AdultRating asks IGDB a
+     * different question (a game's `themes`) and must not carry a second copy of the token dance,
+     * which is cached and would otherwise be requested twice as often.
+     *
+     * ⚠ `$body` is Apicalypse, not SQL, and it is NOT escaped here — a caller building one from
+     * user input passes it through escapeIGDBQuery() first, as searchIGDB does.
      */
-    private function searchIGDB(string $query, int $limit): array
+    public function igdb(string $endpoint, string $body): array
     {
         try {
             $token = $this->getTwitchToken();
@@ -232,27 +239,37 @@ class GameSearchService
                 return [];
             }
 
-            $clientId = config('services.twitch.client_id');
+            $response = Http::withHeaders([
+                'Client-ID' => config('services.twitch.client_id'),
+                'Authorization' => 'Bearer ' . $token,
+                'Accept' => 'application/json',
+            ])->withBody($body, 'text/plain')->post('https://api.igdb.com/v4/' . $endpoint);
 
+            if (!$response->successful()) {
+                Log::warning('IGDB API error', ['status' => $response->status(), 'endpoint' => $endpoint]);
+                return [];
+            }
+
+            return $response->json() ?: [];
+
+        } catch (\Exception $e) {
+            Log::error('IGDB error', ['error' => $e->getMessage(), 'endpoint' => $endpoint]);
+            return [];
+        }
+    }
+
+    /**
+     * Search IGDB (Twitch) API
+     */
+    private function searchIGDB(string $query, int $limit): array
+    {
+        try {
             // Escape query to prevent IGDB query injection
             $safeQuery = $this->escapeIGDBQuery($query);
             // Ensure limit is a valid integer
             $safeLimit = max(1, min(50, (int) $limit));
 
-            $response = Http::withHeaders([
-                'Client-ID' => $clientId,
-                'Authorization' => 'Bearer ' . $token,
-            ])->withBody(
-                "search \"{$safeQuery}\"; fields id,name,cover.url; limit {$safeLimit};",
-                'text/plain'
-            )->post('https://api.igdb.com/v4/games');
-
-            if (!$response->successful()) {
-                Log::warning('IGDB API error', ['status' => $response->status()]);
-                return [];
-            }
-
-            $games = $response->json();
+            $games = $this->igdb('games', "search \"{$safeQuery}\"; fields id,name,cover.url; limit {$safeLimit};");
 
             return collect($games)->map(function ($game) {
                 $imageUrl = null;
@@ -400,7 +417,7 @@ class GameSearchService
      */
     public function getGameFromSteam(string $steamId): ?array
     {
-        $game = $this->askSteam($steamId);
+        $game = $this->steamApp($steamId);
 
         if ($game === null) {
             return null;
@@ -411,7 +428,7 @@ class GameSearchService
             : '';
 
         if ($fullGameId !== '' && $fullGameId !== $steamId) {
-            $full = $this->askSteam($fullGameId);
+            $full = $this->steamApp($fullGameId);
 
             return [
                 // ⚠ If Steam does not answer for the full game (it is delisted, or the store is
@@ -435,8 +452,14 @@ class GameSearchService
 
     /**
      * What the store says about one app id, or null.
+     *
+     * ⚠ **Public because this is the only place that knows how to ask Steam.** App\Services\
+     * AdultRating needs the same answer for a different question (`content_descriptors`), and
+     * copying five lines of HTTP beside this one is how two callers end up disagreeing about what
+     * a refusal means — `success: false` here covers a delisted app as much as a wrong id, and
+     * that reading must stay in one place.
      */
-    private function askSteam(string $steamId): ?array
+    public function steamApp(string $steamId): ?array
     {
         try {
             $response = Http::timeout(5)->get('https://store.steampowered.com/api/appdetails', [
@@ -506,28 +529,15 @@ class GameSearchService
     private function getGameFromIGDB(int $id): ?array
     {
         try {
-            $token = $this->getTwitchToken();
-            if (!$token) {
-                return null;
-            }
-
-            $clientId = config('services.twitch.client_id');
-
             // Use intval() for defense-in-depth even though $id is type-hinted int
             $safeId = intval($id);
-            $response = Http::withHeaders([
-                'Client-ID' => $clientId,
-                'Authorization' => 'Bearer ' . $token,
-            ])->withBody(
-                "where id = {$safeId}; fields id,name,cover.url;",
-                'text/plain'
-            )->post('https://api.igdb.com/v4/games');
+            $rows = $this->igdb('games', "where id = {$safeId}; fields id,name,cover.url;");
 
-            if (!$response->successful() || empty($response->json())) {
+            if (empty($rows)) {
                 return null;
             }
 
-            $game = $response->json()[0];
+            $game = $rows[0];
             $imageUrl = null;
             if (isset($game['cover']['url'])) {
                 $imageUrl = 'https:' . str_replace('t_thumb', 't_cover_big', $game['cover']['url']);

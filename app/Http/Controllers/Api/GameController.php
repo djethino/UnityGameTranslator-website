@@ -41,6 +41,20 @@ class GameController extends Controller
         $query = Game::withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->whereHas('translations', fn ($q) => $q->publiclyListed());
 
+        // Games marked for adults only are left out of BROWSING, never out of a lookup.
+        //
+        // 🔴 **Discovery and access are not the same act.** Asking by `steam_id` is a caller that
+        // already has the game installed in front of it — the mod and the Manager only ever ask
+        // that way — and hiding a translation from somebody already playing the game would be
+        // absurd. Everything else here is browsing, so it follows the site's default.
+        //
+        // ⚠ Additive, and off unless asked: `include_adult` absent means "not asked for", never
+        // "refused" (the rule the whole v1 contract follows). There is no session on this route,
+        // so the parameter is the only way to say it.
+        if (!$request->filled('steam_id') && !$request->boolean('include_adult')) {
+            $query->notAdult();
+        }
+
         // Search by Steam ID (exact match) — a demo's own id reaches the game it is a demo of.
         if ($request->filled('steam_id')) {
             $query->answeringToSteamId($request->steam_id);

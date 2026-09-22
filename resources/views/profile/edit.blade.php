@@ -111,6 +111,22 @@
                 <p class="text-xs text-gray-500 mt-1">{{ __('profile.game_language_hint') }}</p>
             </div>
 
+            {{-- Games marked for adults only. The catalogue carries the same box, where it answers
+                 "for this visit"; this one answers "on every machine I sign in on", which is why
+                 it lives here and not only there. Off by default, like the catalogue's. --}}
+            <div class="mb-6">
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                    {{-- An unchecked box sends nothing at all, so without this the setting could
+                         be turned on but never off --}}
+                    <input type="hidden" name="show_adult_games" value="0">
+                    <input type="checkbox" name="show_adult_games" value="1"
+                        {{ old('show_adult_games', $user->show_adult_games) ? 'checked' : '' }}
+                        class="rounded bg-gray-700 border-gray-600 text-purple-600">
+                    <span>{{ __('profile.show_adult_games') }}</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">{{ __('profile.show_adult_games_hint') }}</p>
+            </div>
+
             <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition">
                 <i class="fas fa-save mr-2"></i> {{ __('profile.save') }}
             </button>

@@ -48,6 +48,7 @@ class WebUploadGameCardTest extends TestCase
     public function test_the_card_carries_what_the_source_says_not_what_the_form_said(): void
     {
         $this->mock(GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGame')->with(777, 'igdb')->andReturn([
                 'id' => 777,
                 'name' => 'The Real Title',
@@ -69,6 +70,7 @@ class WebUploadGameCardTest extends TestCase
     public function test_when_the_source_is_silent_the_title_is_kept_and_the_cover_is_not(): void
     {
         $this->mock(GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGame')->andReturn(null);
         });
 
@@ -87,6 +89,7 @@ class WebUploadGameCardTest extends TestCase
         $existing = Game::create(['name' => 'Known Game', 'igdb_id' => 777]);
 
         $this->mock(GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGame')->andReturn(null);
         });
 

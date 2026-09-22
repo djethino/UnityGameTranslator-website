@@ -125,6 +125,16 @@ class ProfileController extends Controller
             'locale' => $request->locale,
         ]);
 
+        // Show games marked for adults only, on every machine this account signs in on.
+        //
+        // ⚠ Written through forceFill: it decides what somebody is shown, so it must never be
+        // reachable by a mass assignment (the column is out of User's $fillable for that reason).
+        // ⚠ And the browsing session is cleared rather than set to match: the account is the
+        // durable answer, the session is "for this visit". Leaving an old session value behind
+        // would keep overriding the setting that was just changed.
+        $user->forceFill(['show_adult_games' => $request->boolean('show_adult_games')])->save();
+        session()->forget(\App\Services\AdultVisibility::SESSION_KEY);
+
         // ⚠ Through the service rather than in the update above, although it is a column on this
         // very model: the title-bar selector falls back to the session, so an account writing the
         // column alone would leave the two disagreeing. Clearing the preference here — empty means
@@ -176,6 +186,12 @@ class ProfileController extends Controller
                 'provider' => $user->provider,
                 'created_at' => $user->created_at->toIso8601String(),
                 'locale' => $user->locale,
+
+                // ⚠ A durable record that this account asked to see games marked for adults only.
+                // It is a preference like the others in shape, and unlike them in nature: it says
+                // something about a person. An export that left it out would be describing the
+                // account while keeping the one line somebody might want to check.
+                'show_adult_games' => (bool) $user->show_adult_games,
             ],
 
             // 🔴 **The most sensitive thing we hold, and it was not in here.** Every sign-in, every

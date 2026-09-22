@@ -47,6 +47,7 @@
                 <th class="px-4 py-3 text-left">Steam id</th>
                 <th class="px-4 py-3 text-left">Translations</th>
                 <th class="px-4 py-3 text-left">Resolved by</th>
+                <th class="px-4 py-3 text-left">Adults only</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-700">
@@ -75,10 +76,38 @@
                             </button>
                         </form>
                     </td>
+                    {{-- The only place a game comes OUT of the mark. Three buttons rather than a
+                         toggle, because "nothing" is a real answer and a different one from "no":
+                         clearing hands the game back to the stores and the contributors, where
+                         "no" pins it here for ever. The state says which source decided. --}}
+                    <td class="px-4 py-3">
+                        <p class="text-xs mb-1 {{ $game->adult ? 'text-amber-400' : 'text-gray-500' }}">
+                            {{ $game->adult ? 'yes' : 'no' }}
+                            <span class="text-gray-500">
+                                &middot; {{ $game->adultSource() ?? ($game->adult_checked_at ? 'nothing found' : 'never checked') }}
+                            </span>
+                        </p>
+                        @php
+                            $override = match ($game->adult_override) {
+                                true => 'yes',
+                                false => 'no',
+                                default => 'clear',
+                            };
+                        @endphp
+                        <form action="{{ route('admin.games.adult', $game->id) }}" method="POST" class="flex gap-1">
+                            @csrf
+                            @foreach(['yes' => 'Mark', 'no' => 'Unmark', 'clear' => 'Clear'] as $value => $label)
+                                <button type="submit" name="adult" value="{{ $value }}"
+                                    class="px-2 py-1 rounded text-xs {{ $override === $value ? 'bg-gray-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300' }}">
+                                    {{ $label }}
+                                </button>
+                            @endforeach
+                        </form>
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">No game matches.</td>
+                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">No game matches.</td>
                 </tr>
             @endforelse
         </tbody>

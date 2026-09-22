@@ -27,6 +27,20 @@ class HomeController extends Controller
         // Translation::scopeFinished
         $completed = $published()->finished()->count();
 
+        // Games marked for adults only stay out of the three lists below, unless this visitor
+        // asked for them — the same rule as the catalogue (App\Services\AdultVisibility).
+        //
+        // ⚠ **The counters above are NOT filtered, and that is deliberate.** They say what the
+        // project holds, which does not change with who is reading; and the game count already
+        // answers a different question from the catalogue's (published-and-holding-lines here,
+        // publiclyListed there), so the two were never equal to begin with. What a reader would
+        // notice is a LIST showing something the filter is meant to keep out — not a total.
+        $showAdult = \App\Services\AdultVisibility::allowed();
+        $hideAdult = fn ($query) => $query->unless(
+            $showAdult,
+            fn ($q) => $q->whereHas('game', fn ($g) => $g->notAdult())
+        );
+
         $stats = [
             'games' => Game::whereHas('translations', fn ($query) => $query
                 ->where('visibility', 'public')->withTranslatedLines())->count(),
@@ -49,6 +63,7 @@ class HomeController extends Controller
         $finished = Translation::with(['game', 'user'])
             ->where('visibility', 'public')
             ->withTranslatedLines()
+            ->tap($hideAdult)
             ->finished()
             // When it was last actually worked on, not when it was first published: a translation
             // declared finished years ago and touched last week is the more recent piece of news.
@@ -67,6 +82,7 @@ class HomeController extends Controller
             // Nothing is hidden from its author — the grace period keeps it in the listings and
             // in their own screens — but the front page is where it has least business being.
             ->withTranslatedLines()
+            ->tap($hideAdult)
             ->whereKeyNot($finished->modelKeys() ?: [0])
             ->latest()
             ->take(3)
@@ -93,6 +109,7 @@ class HomeController extends Controller
             ->whereHas('translations', function ($query) {
                 $query->where('visibility', 'public')->withTranslatedLines();
             })
+            ->unless($showAdult, fn ($query) => $query->notAdult())
             ->orderByDesc('downloads_total')
             // A tie goes to the game people have worked on more: equal draw, more hands on it
             ->orderByDesc('translations_count')

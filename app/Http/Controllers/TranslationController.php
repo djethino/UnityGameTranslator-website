@@ -1575,10 +1575,18 @@ class TranslationController extends Controller
         }
 
         // Create new game with external ID
-        return Game::create([
+        $created = Game::create([
             'name' => $name,
             $idField => $externalId,
             'image_url' => $imageUrl,
         ]);
+
+        // 🔴 **Rated before it can ever be listed**, the same rule as the upload API's own path
+        // (Api\TranslationController::resolveGame). A card created here carries no Steam id — it
+        // came from an IGDB or RAWG pick in the publish form — so the judgment falls to IGDB's
+        // themes, which is exactly what App\Services\AdultRating keeps as its fallback.
+        app(\App\Services\AdultRating::class)->rate($created);
+
+        return $created;
     }
 }

@@ -26,6 +26,18 @@ class Game extends Model
         'rawg_id',
         'steam_id',
         'image_url',
+
+        // ⚠ No `adult*` column here, on purpose. They decide whether a game is shown at all, so
+        // none of them may ever be set by a mass assignment from a request: they are written by
+        // App\Services\AdultRating, by the declaration route and by /admin, each explicitly.
+    ];
+
+    protected $casts = [
+        'adult' => 'boolean',
+        'adult_detected' => 'boolean',
+        'adult_override' => 'boolean',
+        'adult_checked_at' => 'datetime',
+        'adult_declared_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -58,6 +70,82 @@ class Game extends Model
                 $game->latin_search = \App\Support\LatinSearch::for($game->name);
             }
         });
+
+        // Is this game for adults only — the answer every listing filters on, derived here so it
+        // can never drift from the three columns that decide it. Same mechanism as latin_search
+        // above, and the same reason: a value computed at read time cannot be indexed, and this
+        // one is read by the catalogue, the front page and the API on every request.
+        //
+        // 🔴 **A monotone OR, with one exception: the admin.** Detection and a contributor's
+        // declaration can only ever RAISE the flag; only `adult_override` can lower it. That is
+        // what makes two contributors unable to contradict each other — and what lets a
+        // declaration rescue a game detection missed, since "the store said nothing" is not "the
+        // store said no" (a game whose adult content ships as a separate DLC says nothing).
+        static::saving(fn ($game) => $game->refreshAdult());
+    }
+
+    /**
+     * Recompute the derived answer from the three columns that decide it.
+     *
+     * ⚠ **Public because `saveQuietly()` does not fire the hook above.** A quiet save unsets the
+     * event dispatcher, so a backfill that must not re-timestamp the catalogue — the trap this
+     * project has paid for — would write the inputs and leave `adult` stale. Calling this first is
+     * what keeps ONE definition of the rule instead of a second copy in a command.
+     */
+    public function refreshAdult(): void
+    {
+        $this->adult = $this->adult_override !== null
+            ? (bool) $this->adult_override
+            : ((bool) $this->adult_detected || $this->adult_declared_at !== null);
+    }
+
+    /**
+     * Games nobody has to opt in to see. ⚠ Reads the derived column, so it says exactly what
+     * `saving` decided — never re-derive the rule here, it would be a second place to get wrong.
+     */
+    public function scopeNotAdult($query)
+    {
+        return $query->where('adult', false);
+    }
+
+    /**
+     * Who says this game is for adults only, or null when it is not — 'steam', 'steam_dlc',
+     * 'igdb', 'contributor' or 'admin'.
+     *
+     * ⚠ **This is the CITATION, not the authority.** Authority is settled in `saving` above, where
+     * the admin wins. What a reader needs on the page is the most checkable source that justifies
+     * the mark: "according to Steam" can be verified in one click, "an admin decided" cannot. So
+     * an admin override that merely agrees with the store still cites the store, and 'admin'
+     * appears only when nothing else justifies the mark.
+     */
+    public function adultSource(): ?string
+    {
+        if (!$this->adult) {
+            return null;
+        }
+
+        if ($this->adult_detected && $this->adult_detected_source) {
+            return $this->adult_detected_source;
+        }
+
+        if ($this->adult_declared_at !== null) {
+            return 'contributor';
+        }
+
+        return 'admin';
+    }
+
+    /**
+     * The same answer as adultSource(), in the words a reader is shown — 'steam', 'igdb',
+     * 'contributor' or 'admin'.
+     *
+     * ⚠ 'steam_dlc' folds into 'steam' here on purpose: the store said it either way, and "it was
+     * the add-on that carried the descriptor" is a detail of HOW we asked, which belongs on the
+     * admin screen and not on a game's page.
+     */
+    public function adultCitation(): ?string
+    {
+        return $this->adultSource() === 'steam_dlc' ? 'steam' : $this->adultSource();
     }
 
     public function translations()

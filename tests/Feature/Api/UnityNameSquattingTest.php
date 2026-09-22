@@ -172,6 +172,7 @@ class UnityNameSquattingTest extends TestCase
         // ⚠ The external lookup is stubbed, and it has to be: it needs credentials and a network,
         // so a test that let it fail would exercise the fallback and prove nothing about the guard.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('findGame')->andReturn([
                 'name' => 'Lonestar: The Game',
                 'steam_id' => '707070',
@@ -247,6 +248,7 @@ class UnityNameSquattingTest extends TestCase
         // declared — so the FIRST publisher chose the key and every later one was refused. And a
         // key is never overwritten, so a bad one locks the real product name out for good.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('findGame')->andReturn([
                 'name' => 'A Well Known Game',
                 'steam_id' => '901001',

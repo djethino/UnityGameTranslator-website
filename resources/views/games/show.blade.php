@@ -101,6 +101,35 @@
         <div class="min-w-0">
             <h1 class="glitch-text text-2xl sm:text-3xl font-bold break-words">{{ $game->name }}</h1>
             <p class="text-gray-400 mt-1 text-sm sm:text-base">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
+
+            {{-- One slot, two states: what is known about the game, or the way to say it when
+                 nothing is. It sits under the title because that is where somebody looks to find
+                 out what this game is — and because a mark and the act of marking answer the same
+                 question and must not be in two places.
+
+                 The mark NAMES ITS SOURCE. "according to Steam" can be checked in one click;
+                 without it the sentence would read as a judgement passed here, which it is not. --}}
+            @if($game->adult)
+                <p class="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-gray-700/70 text-xs text-gray-300">
+                    <i class="fas fa-circle-exclamation text-amber-400"></i>
+                    <span>{{ __('games.adult.mark') }}</span>
+                    <span class="text-gray-500">&middot; {{ __('games.adult.source_' . $game->adultCitation()) }}</span>
+                </p>
+            @elseif($mayDeclareAdult)
+                <details class="mt-2">
+                    <summary class="text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer">
+                        {{ __('games.adult.declare_open') }}
+                    </summary>
+                    <form method="POST" action="{{ route('games.adult', $game) }}" class="mt-2 max-w-md">
+                        @csrf
+                        <p class="text-xs text-gray-400">{{ __('games.adult.declare_hint') }}</p>
+                        <button type="submit"
+                            class="mt-2 px-3 py-1.5 text-xs rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200 transition">
+                            {{ __('games.adult.declare') }}
+                        </button>
+                    </form>
+                </details>
+            @endif
         </div>
     </div>
     @auth

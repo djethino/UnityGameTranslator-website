@@ -274,6 +274,44 @@ class AdminController extends Controller
         return back()->with('success', "Updated what {$game->name} is resolved by.");
     }
 
+    /**
+     * The only word that can say a game is NOT for adults only.
+     *
+     * Detection and a contributor's declaration can only raise the flag (App\Models\Game derives
+     * the answer); this is the one place it comes down. Three values, and "nothing" is one of
+     * them: clearing the override hands the game back to whatever the stores and the contributors
+     * say, which is what to do once a wrong declaration has been dealt with rather than pinning
+     * the answer here for ever.
+     */
+    public function setGameAdult(Request $request, Game $game)
+    {
+        $request->validate([
+            'adult' => 'required|in:yes,no,clear',
+        ]);
+
+        $before = ['adult' => $game->adult, 'override' => $game->adult_override];
+
+        $game->adult_override = match ($request->adult) {
+            'yes' => true,
+            'no' => false,
+            'clear' => null,
+        };
+
+        // ⚠ save(), not saveQuietly(): the derived answer comes from the model's saving hook, and
+        // a quiet save silences it (see Game::refreshAdult). Timestamps stand — an admin deciding
+        // what a game is IS a change to that game, unlike a backfill.
+        $game->save();
+
+        AuditLog::log('game.adult_override', auth()->id(), 'game', $game->id, [
+            'before' => $before,
+            'after' => ['adult' => $game->adult, 'override' => $game->adult_override],
+        ]);
+
+        return back()->with('success', $game->adult
+            ? "{$game->name} is marked for adults only."
+            : "{$game->name} is not marked for adults only.");
+    }
+
     public function banUser(Request $request, User $user)
     {
         if ($user->isAdmin()) {

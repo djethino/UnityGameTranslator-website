@@ -153,6 +153,17 @@ class TranslationController extends Controller
             $query->whereIn('game_id', $gameIds);
         }
 
+        // 🔴 **Only the browse is filtered.** With a game filter above, the caller already has
+        // that game — the mod and the Manager never ask any other way — and hiding its translation
+        // from somebody playing it would be absurd. Without one, this is every published
+        // translation, which is a listing like the catalogue's and follows the same default.
+        //
+        // ⚠ Additive and off unless asked, like every other v1 field: `include_adult` absent means
+        // "not asked for", never "refused". No session exists on this route.
+        if ($gameIds === null && !$request->boolean('include_adult')) {
+            $query->whereHas('game', fn ($q) => $q->notAdult());
+        }
+
         // Filter by target language (full name, e.g., "French")
         if ($request->filled('lang')) {
             $query->where('target_language', $request->lang);
@@ -1573,6 +1584,11 @@ class TranslationController extends Controller
                 // without, and the product name a machine reads.
                 if ($resolvedSteamId && !$known->steam_id) {
                     $known->update(['steam_id' => $resolvedSteamId]);
+
+                    // The card can now be asked about at the store, and it could not before: a
+                    // game rated on its name alone was judged by IGDB, which misses most of what
+                    // Steam states outright. See App\Services\AdultRating.
+                    app(\App\Services\AdultRating::class)->rate($known);
                 }
 
                 $this->rememberUnityNames($known, $gameName, $company);
@@ -1599,18 +1615,31 @@ class TranslationController extends Controller
 
             $this->rememberDemoId($created, $externalGame);
 
+            // 🔴 **Rated before it can ever be listed.** A card is created by the upload that
+            // publishes the first translation of a game, so this is the only moment between the
+            // game not existing and it appearing in the catalogue. A nightly pass would leave a
+            // window of up to a day where a game marked for adults only is shown to everyone.
+            app(\App\Services\AdultRating::class)->rate($created);
+
             return $created;
         }
 
         // Fallback: Create basic game entry without external data. Here the two names are the same
         // string, and they are still both recorded: a display name can be edited afterwards, and
         // the lookup must go on working when it is.
-        return Game::create([
+        $bare = Game::create([
             'name' => $gameName,
             'unity_name' => $gameName,
             'unity_company' => $company,
             'steam_id' => $steamId,
         ]);
+
+        // Rated here too, and it matters most here: this is the branch for a game no store knows
+        // by name. It usually finds nothing — which is the honest answer, and what leaves the
+        // declaration on the game's page as the only way to mark it.
+        app(\App\Services\AdultRating::class)->rate($bare);
+
+        return $bare;
     }
 
     /**

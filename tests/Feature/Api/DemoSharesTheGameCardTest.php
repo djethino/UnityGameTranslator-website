@@ -194,6 +194,7 @@ class DemoSharesTheGameCardTest extends TestCase
         // answered on 2026-09-04 for app 4428690: the demo redirected to 4400300, and the id that
         // was asked comes back as `demo_steam_id`.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('findGame')->andReturn([
                 'name' => "Hauntmates: Director's Cut",
                 'steam_id' => '4400300',
@@ -228,6 +229,7 @@ class DemoSharesTheGameCardTest extends TestCase
         // first upload that carries one. From a demo, that used to make the DEMO's app id the
         // card's own — and every later player of the full game then resolved nothing.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGameFromSteam')->with('4428690')->andReturn([
                 'name' => 'Hauntmates',
                 'steam_id' => '4400300',
@@ -253,6 +255,7 @@ class DemoSharesTheGameCardTest extends TestCase
         // ⚠ The guard above must not change the ordinary case, nor refuse the upload when the store
         // says nothing at all — a card without an id gets the one it was handed, as before.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGameFromSteam')->andReturn(null);
         });
 
@@ -272,6 +275,7 @@ class DemoSharesTheGameCardTest extends TestCase
         // 🔴 The point of recording the id: the resolution stops at the database. A stub that
         // FAILS if called is the only way to state that — a passing stub would prove nothing.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldNotReceive('findGame');
         });
 
@@ -288,6 +292,7 @@ class DemoSharesTheGameCardTest extends TestCase
         $this->published($full);
 
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGameFromSteam')->once()->with('4428690')->andReturn([
                 'name' => 'Hauntmates',
                 'steam_id' => '4400300',
@@ -315,6 +320,7 @@ class DemoSharesTheGameCardTest extends TestCase
         // because nobody has published for them. Without remembering the negative, every one of
         // them would call Steam on every launch.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGameFromSteam')->once()->andReturn([
                 'name' => 'Some Game',
                 'steam_id' => '1234567',
@@ -336,6 +342,7 @@ class DemoSharesTheGameCardTest extends TestCase
         $this->published($full);
 
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldNotReceive('getGameFromSteam');
         });
 

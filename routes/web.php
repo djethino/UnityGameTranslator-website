@@ -227,6 +227,14 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         Route::delete('/profile/connections', [ConnectionsController::class, 'destroyMany'])->name('profile.connections.destroy-many');
         Route::delete('/profile/browsers', [ConnectionsController::class, 'signOutOtherBrowsers'])->name('profile.browsers.destroy');
 
+        // Saying a game is for adults only when no store does.
+        //
+        // ⚠ Behind the account AND behind having published a translation of that game — the check
+        // is in the controller. It is the one act here that only ever ADDS: nothing on this route
+        // can un-mark a game, which is what makes two contributors unable to contradict each other.
+        Route::post('/games/{game}/adult', [GameController::class, 'declareAdult'])
+            ->middleware('throttle:10,1')->name('games.adult');
+
         // Reports
         Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');
 
@@ -277,6 +285,11 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         // admin route addresses its subject by id for the same reason.
         Route::post('/games/{game:id}/names', [AdminController::class, 'updateGameNames'])
             ->name('games.names');
+
+        // The only door that can say a game is NOT for adults only — everything else can merely
+        // raise the flag. Same `{game:id}` reasoning as above.
+        Route::post('/games/{game:id}/adult', [AdminController::class, 'setGameAdult'])
+            ->name('games.adult');
 
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');

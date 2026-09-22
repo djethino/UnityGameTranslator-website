@@ -60,6 +60,16 @@ Schedule::command('catalog:refresh')->dailyAt('04:30');
 // when a version starts to spread. One request an hour to a public endpoint costs nothing.
 Schedule::command('releases:refresh')->hourly();
 
+// Which games are for adults only, asked of Steam and then IGDB.
+//
+// A new game is rated by the upload that creates it, so nothing here is what keeps the catalogue
+// right on the day something is published. This is for what changes afterwards and tells nobody:
+// a descriptor added to a store page, an 18+ DLC published months after the game, a game delisted.
+//
+// ⚠ A bounded pass, not the whole catalogue: the store allows about 200 requests per 5 minutes and
+// one game can cost several (its DLC are asked about too). Daily, it comes round.
+Schedule::command('games:rate-adult')->dailyAt('04:45');
+
 // Being delisted is computed on every query, so nothing here decides anything: the state is
 // already true the moment the thirtieth day passes. What no code can do on its own is say so —
 // there is no event when a date is crossed — and the banners only reach somebody who came back

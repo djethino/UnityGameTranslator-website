@@ -63,7 +63,8 @@
           { "name": "game", "in": "query", "schema": { "type": "string" }, "description": "Slug or numeric id of a game." },
           { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Name as read off the game folder (`unity_name`, exact) or a loose match on the display name." },
           { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Target language." },
-          { "name": "source_lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Source language." }
+          { "name": "source_lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Source language." },
+          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return translations of games marked for adults only. Applies ONLY to a call with no game filter, which is a browse; a call carrying `steam_id`, `game` or `q` names the game the caller already has and is never filtered." }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
@@ -236,12 +237,14 @@
         "tags": ["catalogue"],
         "operationId": "listGames",
         "summary": "Games holding at least one published translation, most translated first (50 at most).",
+        "description": "Games marked for adults only are left out unless `include_adult` asks for them — a browse follows the site's own default. A lookup by `steam_id` is not a browse and is never filtered.",
         "security": [],
         "x-throttle": "60/min per IP",
         "parameters": [
           { "name": "steam_id", "in": "query", "schema": { "type": "string" } },
           { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Loose match on the display name or its latin handle." },
-          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Only games with a published translation into this language." }
+          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Only games with a published translation into this language." },
+          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return games marked for adults only. Applies ONLY to a browse; a call carrying `steam_id` names the game the caller already has and is never filtered." }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GamesResponse" } } } },

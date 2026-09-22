@@ -161,6 +161,7 @@ class EmptyTranslationGraceTest extends TestCase
         // The card is described by the game source, asked server-side; this test is about the
         // empty-file question, so the source simply does not answer and the form title is kept.
         $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGame')->andReturn(null);
         });
         $payload = [

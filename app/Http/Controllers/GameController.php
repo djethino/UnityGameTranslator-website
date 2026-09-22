@@ -63,6 +63,28 @@ class GameController extends Controller
                 ->where('visibility', 'public')->withTranslatedLines()->finished());
         }
 
+        // Games marked for adults only — left out unless asked for, and the asking is remembered
+        // for the browsing session (App\Services\AdultVisibility says why it is not a cookie).
+        //
+        // ⚠ The box sends its state on every submission, hidden field included, so the session
+        // follows the page. A bare /games carries nothing and leaves the session alone, which is
+        // what makes a link shared to somebody else land them on their own setting rather than on
+        // the sender's.
+        if ($request->has('adult')) {
+            \App\Services\AdultVisibility::remember($request->boolean('adult'));
+        }
+
+        $showAdult = \App\Services\AdultVisibility::allowed();
+        $query->unless($showAdult, fn ($q) => $q->notAdult());
+
+        // Is there anything for that box to do? A control that cannot change the page is noise —
+        // and on a site that holds no such game, the word would be the only place it appears at
+        // all, which says something untrue about what is served here.
+        //
+        // Asked of the whole catalogue and not of this page: a filter that came and went as one
+        // narrowed by language would read as a glitch.
+        $anyAdult = Game::where('adult', true)->whereHas('translations', $listed)->exists();
+
         // The language the visitor is most likely looking for: the one they filtered on, then
         // the one they told us they PLAY in, and only failing both the one they are reading the
         // site in.
@@ -171,7 +193,9 @@ class GameController extends Controller
             'highlightLanguage',
             'languageFirst',
             'sort',
-            'completedOnly'
+            'completedOnly',
+            'showAdult',
+            'anyAdult'
         ));
     }
 
@@ -355,10 +379,59 @@ class GameController extends Controller
         $targetLanguages = $game->translations()->publiclyListed()->distinct()->pluck('target_language')->sort();
         $sourceLanguages = $game->translations()->publiclyListed()->distinct()->pluck('source_language')->sort();
 
+        // May the person reading this say the game is for adults only? Only somebody who published
+        // a translation of it, and only while nothing says so yet — a control that cannot change
+        // anything does not appear (see declareAdult for why it is reserved that way).
+        $mayDeclareAdult = !$game->adult
+            && auth()->check()
+            && $game->translations()->where('user_id', auth()->id())->exists();
+
         return view('games.show', compact('gameMaxResolved', 'publicTranslationCount',
             'game', 'translationGroups', 'targetLanguages', 'sourceLanguages',
             'highlightLanguage',
-            'languageFirst'));
+            'languageFirst', 'mayDeclareAdult'));
+    }
+
+    /**
+     * Say that this game is for adults only, when no store does.
+     *
+     * 🔴 **It can only ever ADD.** There is no way back through this route — only an admin can
+     * un-mark a game. That asymmetry is what makes the whole design work without arbitration: two
+     * contributors can never contradict each other, because not declaring is not a declaration
+     * that a game is all-ages. And it lets somebody rescue what detection missed, which happens
+     * for a real reason (a game whose adult content ships as a separate DLC says nothing about
+     * itself — see App\Services\AdultRating).
+     *
+     * ⚠ **Reserved to somebody who published a translation of THIS game.** A visitor passing by is
+     * not in a position to take a game out of everyone's listings, and an account is not enough:
+     * the guard is having done work on it.
+     */
+    public function declareAdult(Game $game)
+    {
+        $user = auth()->user();
+
+        if (!$game->translations()->where('user_id', $user->id)->exists()) {
+            abort(403);
+        }
+
+        // Already marked — by the store, by somebody else, or by this same person clicking twice.
+        // Nothing to add, and saying so beats writing a second, later declaration over the first.
+        if ($game->adult) {
+            return back()->with('success', __('games.adult.already'));
+        }
+
+        $game->adult_declared_by = $user->id;
+        $game->adult_declared_at = now();
+        $game->save();
+
+        // Traced, because a declaration takes a game out of the default listings for everybody and
+        // is undone by an admin only: whoever looks at a surprising mark must be able to see who
+        // put it there without re-deriving it.
+        \App\Models\AuditLog::log('game.adult_declared', $user->id, 'game', $game->id, [
+            'game' => $game->name,
+        ]);
+
+        return back()->with('success', __('games.adult.declared'));
     }
 
     public function search(Request $request)

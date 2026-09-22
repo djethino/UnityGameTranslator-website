@@ -120,6 +120,27 @@
             <span>{{ __('games.filter.completed') }}</span>
         </label>
 
+        {{-- Games marked for adults only. The same quiet shape as the box above, and the mirror
+             of it: this one WIDENS the list instead of narrowing it.
+
+             Only drawn when the catalogue holds such a game — a control that cannot change the
+             page is noise, and on a site holding none, this would be the only place the word
+             appears, which would say something untrue about what is served here.
+
+             "games", never "content": what is adult is the game somebody translated, not the
+             file served from here. --}}
+        @if($anyAdult)
+            <label class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition cursor-pointer whitespace-nowrap"
+                title="{{ __('games.filter.adult_hint') }}">
+                {{-- An unchecked box sends nothing at all, so without this the filter could be
+                     turned on but never off --}}
+                <input type="hidden" name="adult" value="0">
+                <input type="checkbox" name="adult" value="1" {{ $showAdult ? 'checked' : '' }}
+                    class="rounded bg-gray-700 border-gray-600 text-gray-500">
+                <span>{{ __('games.filter.adult') }}</span>
+            </label>
+        @endif
+
         {{-- What follows only reorders — the border says so without a heading --}}
         <div class="flex flex-wrap items-center gap-3 md:border-l md:border-gray-700 md:pl-3">
             <select name="sort" aria-label="{{ __('games.sort_by') }}"
