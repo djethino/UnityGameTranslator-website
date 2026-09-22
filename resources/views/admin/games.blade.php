@@ -129,11 +129,19 @@
             @forelse($games as $game)
                 <tr class="hover:bg-gray-750">
                     {{-- The cover, like the translations screen: a title alone makes every row
-                         look the same, and this list is read by scanning it. --}}
-                    <td class="py-3 px-4">
+                         look the same, and this list is read by scanning it.
+
+                         ⚠ A floor on the width: the ids beside it never wrap, so the table took
+                         the room from here, and a one-word title ran under the next column. --}}
+                    <td class="py-3 px-4 min-w-[13rem]">
                         <div class="flex items-center gap-3">
                             @if($game->image_url)
-                                <img src="{{ $game->image_url }}" alt="" class="w-10 h-14 object-cover rounded flex-shrink-0">
+                                {{-- Opens full size, so the cover in place can be compared with the
+                                     one a store proposes below it. --}}
+                                <a href="{{ \App\Support\StoreLinks::image($game->image_url) }}" target="_blank" rel="noopener noreferrer"
+                                   class="flex-shrink-0" title="Current cover — open full size">
+                                    <img src="{{ $game->image_url }}" alt="" class="w-10 h-14 object-cover rounded">
+                                </a>
                             @else
                                 <div class="w-10 h-14 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-gamepad text-gray-500"></i>
@@ -149,13 +157,34 @@
                              column; out here the column widens to fit it, as a table cell does. --}}
                         @include('admin.partials.game-proposals', ['game' => $game, 'field' => 'image_url'])
                     </td>
-                    {{-- Each id on its own line, and what a store proposes for it right under it:
-                         the admin reads what changes where it changes. --}}
+                    {{-- Each store on its own block: its name in a column of its own, the id the
+                         card holds, then what that store proposes indented UNDER that id.
+
+                         ⚠ Written as two plain lines before, a proposal for IGDB sat right under
+                         the Steam id and read as a second Steam id — asked on 2026-09-22 why the
+                         screen proposed "another Steam id" for a game whose Steam id was right. --}}
                     <td class="py-3 px-4 text-sm whitespace-nowrap">
-                        <div class="text-gray-400"><span class="text-gray-500">Steam</span> {{ $game->steam_id ?: '—' }}</div>
-                        @include('admin.partials.game-proposals', ['game' => $game, 'field' => 'steam_id'])
-                        <div class="text-gray-400 mt-1"><span class="text-gray-500">IGDB</span> {{ $game->igdb_id ?: '—' }}</div>
-                        @include('admin.partials.game-proposals', ['game' => $game, 'field' => 'igdb_id'])
+                        @foreach(['steam_id' => 'Steam', 'igdb_id' => 'IGDB'] as $idField => $storeName)
+                            <div class="{{ $loop->first ? '' : 'mt-2' }}">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="w-10 text-gray-500">{{ $storeName }}</span>
+                                    @php $current = $game->{$idField}; @endphp
+                                    @if($idField === 'steam_id' && ($steamPage = \App\Support\StoreLinks::steam($current)))
+                                        {{-- The id already there opens too: checking what the card
+                                             holds is the first thing to do before adding to it. --}}
+                                        <a href="{{ $steamPage }}" target="_blank" rel="noopener noreferrer"
+                                           class="text-gray-300 hover:text-white underline decoration-dotted"
+                                           title="Open this Steam page">{{ $current }}
+                                            <i class="fas fa-arrow-up-right-from-square text-[0.6rem] ml-0.5"></i></a>
+                                    @else
+                                        <span class="text-gray-400">{{ $current ?: '—' }}</span>
+                                    @endif
+                                </div>
+                                <div class="pl-12">
+                                    @include('admin.partials.game-proposals', ['game' => $game, 'field' => $idField])
+                                </div>
+                            </div>
+                        @endforeach
                     </td>
                     <td class="py-3 px-4 text-gray-400">{{ $game->translations_count }}</td>
                     <td class="py-3 px-4">
@@ -164,7 +193,7 @@
                             @csrf
                             <input type="text" name="unity_name" value="{{ $game->unity_name }}"
                                 placeholder="Unity name"
-                                class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-48">
+                                class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-40">
                             <input type="text" name="unity_company" value="{{ $game->unity_company }}"
                                 placeholder="Company"
                                 class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-40">

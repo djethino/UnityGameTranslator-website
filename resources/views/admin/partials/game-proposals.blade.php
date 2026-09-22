@@ -29,19 +29,31 @@
             <i class="fas fa-triangle-exclamation text-amber-400" title="Cannot be applied here"></i>
         @endif
 
+        {{-- Every proposal opens where it came from, in a new tab: an id nobody can check is an id
+             nobody should accept, and "Inari" names three different games on Steam. --}}
         @if($field === 'image_url')
             {{-- The picture IS the label: it sits in the narrow title column, where "Steam cover"
                  written out pushed Reject across the next column. --}}
             <span class="text-emerald-300">&rarr;</span>
-            <img src="{{ $proposal->value }}" alt="{{ $sourceName($proposal->source) }} cover"
-                title="{{ $sourceName($proposal->source) }} cover" class="h-6 rounded">
+            <a href="{{ $proposal->link }}" target="_blank" rel="noopener noreferrer"
+               title="{{ $sourceName($proposal->source) }} cover — open full size">
+                <img src="{{ $proposal->value }}" alt="{{ $sourceName($proposal->source) }} cover" class="h-6 rounded">
+            </a>
         @else
-            <span class="text-emerald-300">&rarr; {{ $proposal->value }}</span>
+            <span class="text-emerald-300">&rarr;</span>
+            @if($proposal->link)
+                <a href="{{ $proposal->link }}" target="_blank" rel="noopener noreferrer"
+                   class="text-emerald-300 hover:text-emerald-200 underline decoration-dotted"
+                   title="Open this {{ $sourceName($proposal->source) }} page">{{ $proposal->value }}
+                    <i class="fas fa-arrow-up-right-from-square text-[0.6rem] ml-0.5"></i></a>
+            @else
+                <span class="text-emerald-300">{{ $proposal->value }}</span>
+            @endif
             @if($proposal->detail)
-                {{-- The store's name for the game is what the admin decides on — but a long one
-                     widened the whole table. Cut, and whole on hover. --}}
-                <span class="text-gray-500 max-w-[11rem] truncate"
-                    title="{{ $sourceName($proposal->source) }}: {{ $proposal->detail }}">{{ $sourceName($proposal->source) }}: {{ $proposal->detail }}</span>
+                {{-- What the store calls it — the line already sits under its store's name, so
+                     the store is not repeated. Cut when long (it widened the whole table), whole
+                     on hover. --}}
+                <span class="text-gray-500 max-w-[8rem] truncate" title="{{ $proposal->detail }}">&ldquo;{{ $proposal->detail }}&rdquo;</span>
             @endif
         @endif
 

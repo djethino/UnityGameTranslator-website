@@ -58,6 +58,29 @@ class StoreProposalsTest extends TestCase
             'only the EXACT title is proposed — the soundtrack is a neighbour');
     }
 
+    public function test_every_proposal_carries_the_page_to_check_it_on(): void
+    {
+        $game = Game::create(['name' => 'Aviassembly']);
+
+        $this->storesKnow(
+            [['id' => '2660460', 'name' => 'Aviassembly']],
+            [
+                ['id' => 291217, 'name' => 'Aviassembly', 'url' => 'https://www.igdb.com/games/aviassembly'],
+                // Same title, an address that is not IGDB's: the proposal stays, the link does not.
+                ['id' => 999, 'name' => 'Aviassembly', 'url' => 'javascript:alert(1)'],
+            ]
+        );
+
+        app(StoreProposals::class)->check($game);
+
+        $this->assertSame('https://store.steampowered.com/app/2660460/',
+            GameProposal::where('field', 'steam_id')->value('link'));
+        $this->assertSame('https://www.igdb.com/games/aviassembly',
+            GameProposal::where('field', 'igdb_id')->where('value', '291217')->value('link'));
+        $this->assertNull(GameProposal::where('field', 'igdb_id')->where('value', '999')->value('link'),
+            'a link a store answered is held to the shape it must have before it reaches an href');
+    }
+
     public function test_a_value_already_on_the_card_is_never_asked_about(): void
     {
         $game = Game::create(['name' => 'A Game', 'steam_id' => '111', 'igdb_id' => 222, 'image_url' => 'https://images.igdb.com/cover.jpg']);
@@ -248,10 +271,13 @@ class StoreProposalsTest extends TestCase
 
         $this->actingAs($this->admin());
 
+        // The value, what the store calls the game, and the page to check it on — an id nobody can
+        // open is an id nobody should accept.
         $this->get(route('admin.games'))
             ->assertOk()
             ->assertSee('2056210')
-            ->assertSee('Steam: LONESTAR');
+            ->assertSee('LONESTAR')
+            ->assertSee('https://store.steampowered.com/app/2056210/', false);
 
         $this->get(route('admin.games', ['proposals' => 'pending']))
             ->assertSee('LoneStar')

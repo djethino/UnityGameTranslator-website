@@ -52,6 +52,12 @@ return new class extends Migration
             $table->string('source', 16);
             $table->string('detail', 255)->nullable();
 
+            // Where the admin checks it before accepting: the store page of that id, or the image
+            // itself. ⚠ Asked for on 2026-09-22 — three candidates named "Inari" cannot be told
+            // apart without opening them. Stored rather than rebuilt, because an IGDB page is
+            // addressed by a slug the id alone does not give.
+            $table->string('link', 500)->nullable();
+
             // Another card already carries this value — see the class comment.
             $table->unsignedBigInteger('conflict_game_id')->nullable();
 

@@ -24,6 +24,7 @@ class GameProposal extends Model
         'value',
         'source',
         'detail',
+        'link',
         'conflict_game_id',
         'state',
     ];

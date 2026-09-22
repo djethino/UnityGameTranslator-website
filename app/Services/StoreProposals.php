@@ -7,6 +7,7 @@ use App\Models\Game;
 use App\Models\GameProposal;
 use App\Models\User;
 use App\Support\GameNaming;
+use App\Support\StoreLinks;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -101,7 +102,7 @@ class StoreProposals
 
         if (!$game->steam_id) {
             foreach ($this->exactMatches($this->stores->steamSearch($game->name), $game->name) as $hit) {
-                $new += $this->propose($game, 'steam_id', $hit['id'], 'steam', $hit['name']);
+                $new += $this->propose($game, 'steam_id', $hit['id'], 'steam', $hit['name'], StoreLinks::steam($hit['id']));
             }
         }
 
@@ -111,11 +112,17 @@ class StoreProposals
             // A title in another script escapes to nothing: there is nothing to ask IGDB then,
             // and an empty search would answer with whatever it likes.
             if (trim($safe) !== '') {
-                $rows = $this->stores->igdb('games', 'search "' . $safe . '"; fields id,name; limit 10;');
-                $hits = array_map(fn ($row) => ['id' => (string) ($row['id'] ?? ''), 'name' => (string) ($row['name'] ?? '')], $rows);
+                // `url` too: an IGDB page is addressed by a slug, so the id alone gives the admin
+                // nothing to open.
+                $rows = $this->stores->igdb('games', 'search "' . $safe . '"; fields id,name,url; limit 10;');
+                $hits = array_map(fn ($row) => [
+                    'id' => (string) ($row['id'] ?? ''),
+                    'name' => (string) ($row['name'] ?? ''),
+                    'url' => $row['url'] ?? null,
+                ], $rows);
 
                 foreach ($this->exactMatches($hits, $game->name) as $hit) {
-                    $new += $this->propose($game, 'igdb_id', $hit['id'], 'igdb', $hit['name']);
+                    $new += $this->propose($game, 'igdb_id', $hit['id'], 'igdb', $hit['name'], StoreLinks::igdb($hit['url']));
                 }
             }
         }
@@ -124,7 +131,7 @@ class StoreProposals
             $header = $this->stores->steamApp($game->steam_id)['header_image'] ?? null;
 
             if ($header) {
-                $new += $this->propose($game, 'image_url', $header, 'steam', null);
+                $new += $this->propose($game, 'image_url', $header, 'steam', null, StoreLinks::image($header));
             }
         }
 
@@ -216,7 +223,7 @@ class StoreProposals
      * and stops; so does one already applied. A pending one only has its store name and conflict
      * refreshed — the answer is the same, the circumstances may not be.
      */
-    private function propose(Game $game, string $field, string $value, string $source, ?string $detail): int
+    private function propose(Game $game, string $field, string $value, string $source, ?string $detail, ?string $link): int
     {
         $holder = $this->holderOf($field, $value, $game->id);
 
@@ -228,6 +235,7 @@ class StoreProposals
         if ($existing) {
             if ($existing->state === GameProposal::Pending) {
                 $existing->detail = $detail;
+                $existing->link = $link;
                 $existing->conflict_game_id = $holder?->id;
                 $existing->save();
             }
@@ -241,6 +249,7 @@ class StoreProposals
             'value' => $value,
             'source' => $source,
             'detail' => $detail,
+            'link' => $link,
             'conflict_game_id' => $holder?->id,
             'state' => GameProposal::Pending,
         ]);
