@@ -338,53 +338,36 @@ class AdminController extends Controller
     }
 
     /**
-     * Corrects the pair a game is resolved by.
+     * Forget the name a game carries on disk, so the next upload records it again.
      *
-     * ⚠ **Emptying is a real answer, and the main one.** A key taken wrongly must be removable so
-     * the next honest upload can record the right one — clearing it is what unlocks a game, since
-     * nothing overwrites a value that is there.
-     *
-     * ⚠ Refused when another game already answers to that name, exactly as an upload is: an admin
-     * correcting one game must not silently break another's lookups.
+     * 🔴 **Clearing is the only act, and that is a decision** (user, 2026-09-22: "ce ne sera jamais
+     * rempli par un humain"). The value comes from the game's own files (`<Game>_Data/app.info`),
+     * which an admin does not have: typing it would be guessing, and a wrong key files other
+     * people's uploads under the wrong card. What an admin CAN know is that a stored key is wrong —
+     * taken by mistake, or squatted — and since nothing ever overwrites a value that is there,
+     * emptying it is what lets the next honest upload record the right one. The screen used to
+     * offer free text; it was never used to write a value (no trace of it in the audit log).
      */
-    public function updateGameNames(Request $request, Game $game)
+    public function clearGameNames(Game $game)
     {
-        $request->validate([
-            'unity_name' => 'nullable|string|max:255',
-            'unity_company' => 'nullable|string|max:255',
-        ]);
-
-        $name = $request->filled('unity_name') ? trim($request->unity_name) : null;
-
-        if ($name !== null) {
-            $taken = Game::where('id', '!=', $game->id)
-                ->where(fn ($q) => $q->where('unity_name', $name)
-                                     ->orWhereRaw('LOWER(name) = ?', [strtolower($name)]))
-                ->first();
-
-            if ($taken) {
-                return back()->with('error',
-                    "\"{$name}\" is what {$taken->name} is already resolved by.");
-            }
+        if ($game->unity_name === null && $game->unity_company === null) {
+            return back();
         }
 
         $before = ['unity_name' => $game->unity_name, 'unity_company' => $game->unity_company];
 
+        // ⚠ Not a change to the game as players see it, so no date moves: saveQuietly() alone
+        // still writes updated_at, and listings sorted by freshness would reshuffle.
         $game->timestamps = false;
-        $game->unity_name = $name;
-        $game->unity_company = $request->filled('unity_company')
-            ? trim($request->unity_company)
-            : null;
+        $game->unity_name = null;
+        $game->unity_company = null;
         $game->saveQuietly();
 
         // What a machine resolves by is worth a trace: it decides where other people's uploads are
         // filed, and a change here is invisible everywhere else.
-        AuditLog::log('game.names_updated', auth()->id(), 'game', $game->id, [
-            'before' => $before,
-            'after' => ['unity_name' => $game->unity_name, 'unity_company' => $game->unity_company],
-        ]);
+        AuditLog::log('game.names_cleared', auth()->id(), 'game', $game->id, ['before' => $before]);
 
-        return back()->with('success', "Updated what {$game->name} is resolved by.");
+        return back()->with('success', "Cleared the name on disk of {$game->name}. The next upload from a copy without a Steam id will record it again.");
     }
 
     /**

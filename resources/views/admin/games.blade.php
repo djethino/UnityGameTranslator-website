@@ -16,14 +16,16 @@
     door and nothing could repair one already stored.
 --}}
 <div class="bg-gray-800 border-l-4 border-blue-500 rounded p-4 mb-6 text-sm text-gray-300">
+    {{-- Two facts, each one a thing the admin acts on: what the column is for, and why Clear is
+         the only thing to do with it. The mechanics (app.info, never overwritten) are in
+         AdminController::clearGameNames, not on the screen. --}}
     <p class="mb-1">
-        <strong class="text-white">Unity name</strong> is what a game calls itself on disk
-        (<code class="text-gray-400">&lt;Game&gt;_Data/app.info</code>), sent by the mod and the
-        Manager when they publish. Copies with no Steam id are resolved by it.
+        <strong class="text-white">Name on disk</strong> is the name a game gives itself in its own
+        files. A copy without a Steam id (GOG, Epic, a disc) finds this card with it.
     </p>
     <p>
-        Clearing it lets the next upload record the right one — nothing overwrites a value that is
-        already there. It is never shown to players.
+        It is recorded by the first upload from such a copy. If it is wrong, clear it: the next
+        upload records it again.
     </p>
 </div>
 
@@ -35,15 +37,15 @@
     @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
     <div class="flex-1 min-w-[240px]">
         <label class="block text-sm text-gray-400 mb-1">Search</label>
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, Unity name or Steam id..."
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, name on disk or Steam id..."
             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
     </div>
     <div>
-        <label class="block text-sm text-gray-400 mb-1">Unity name</label>
+        <label class="block text-sm text-gray-400 mb-1">Name on disk</label>
         <select name="naming" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
             <option value="">All</option>
-            <option value="missing" {{ request('naming') === 'missing' ? 'selected' : '' }}>Missing</option>
-            <option value="set" {{ request('naming') === 'set' ? 'selected' : '' }}>Set</option>
+            <option value="set" {{ request('naming') === 'set' ? 'selected' : '' }}>Recorded</option>
+            <option value="missing" {{ request('naming') === 'missing' ? 'selected' : '' }}>Not recorded</option>
         </select>
     </div>
     <div>
@@ -120,7 +122,7 @@
                 <x-admin.sortable-th column="name" label="Game" default="" />
                 <th class="text-left py-3 px-4">Store ids</th>
                 <x-admin.sortable-th column="translations_count" label="Translations" default="" />
-                <th class="text-left py-3 px-4">Resolved by</th>
+                <th class="text-left py-3 px-4">Name on disk</th>
                 <x-admin.sortable-th column="adult_checked_at" label="Adults only" default="" />
                 <x-admin.sortable-th column="created_at" label="Added" default="" />
             </tr>
@@ -187,21 +189,32 @@
                         @endforeach
                     </td>
                     <td class="py-3 px-4 text-gray-400">{{ $game->translations_count }}</td>
-                    <td class="py-3 px-4">
-                        <form action="{{ route('admin.games.names', $game->id) }}" method="POST"
-                              class="flex flex-wrap gap-2 items-center">
-                            @csrf
-                            <input type="text" name="unity_name" value="{{ $game->unity_name }}"
-                                placeholder="Unity name"
-                                class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-40">
-                            <input type="text" name="unity_company" value="{{ $game->unity_company }}"
-                                placeholder="Company"
-                                class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-40">
-                            <button type="submit"
-                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded">
-                                Save
-                            </button>
-                        </form>
+                    {{-- Shown, never typed: the value comes from the game's own files, which an
+                         admin does not have (decided 2026-09-22). The one act is Clear, and it is
+                         only drawn when there is something to clear.
+
+                         ⚠ No "missing" warning per row: a copy without a Steam id may still find
+                         this card by its display name, so "cannot be found" would be a claim
+                         nothing here can prove. --}}
+                    <td class="py-3 px-4 text-sm">
+                        @if($game->unity_name || $game->unity_company)
+                            <div class="flex items-center gap-2 whitespace-nowrap">
+                                <span class="text-gray-300">{{ $game->unity_name ?? '—' }}</span>
+                                @if($game->unity_company)
+                                    <span class="text-gray-500">&middot; {{ $game->unity_company }}</span>
+                                @endif
+                            </div>
+                            <form action="{{ route('admin.games.names.clear', $game->id) }}" method="POST" class="mt-1"
+                                  data-confirm="Clear the name on disk of {{ $game->name }}? The next upload from a copy without a Steam id will record it again.">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                    Clear
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-gray-500">—</span>
+                        @endif
                     </td>
                     {{-- The only place a game comes OUT of the mark. Three buttons rather than a
                          toggle, because "nothing" is a real answer and a different one from "no":

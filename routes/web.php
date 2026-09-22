@@ -283,8 +283,10 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         // ⚠ `{game:id}`, not the slug the model binds by everywhere else: a slug follows the
         // display name, and this screen exists to repair games whose naming is wrong. Every other
         // admin route addresses its subject by id for the same reason.
-        Route::post('/games/{game:id}/names', [AdminController::class, 'updateGameNames'])
-            ->name('games.names');
+        // Forget the name a game carries on disk — the only act on it here: the value comes from
+        // the game's files, which an admin does not have (AdminController::clearGameNames).
+        Route::delete('/games/{game:id}/names', [AdminController::class, 'clearGameNames'])
+            ->name('games.names.clear');
 
         // The only door that can say a game is NOT for adults only — everything else can merely
         // raise the flag. Same `{game:id}` reasoning as above.

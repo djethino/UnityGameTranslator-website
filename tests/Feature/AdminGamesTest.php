@@ -17,8 +17,9 @@ use Tests\TestCase;
  * — and none of them could correct a value already stored. "Never overwrite" made a key taken by
  * mistake, or on purpose, final short of raw SQL.
  *
- * ⚠ Clearing is the main act here, not an afterthought: emptying the field is what unlocks a game,
- * since nothing overwrites a value that is there.
+ * ⚠ **Clearing is the only act** (decided 2026-09-22): the value comes from the game's own files,
+ * which an admin does not have. Emptying it is what unlocks a game, since nothing overwrites a
+ * value that is there; typing one would be guessing.
  */
 class AdminGamesTest extends TestCase
 {
@@ -32,14 +33,15 @@ class AdminGamesTest extends TestCase
     public function test_the_screen_is_closed_to_everybody_else(): void
     {
         $game = Game::create(['name' => 'Some Game']);
+        $game->update(['unity_name' => 'SomeKey']);
 
         $this->get('/admin/games')->assertRedirect();
 
         $this->actingAs(User::factory()->create())
-            ->post("/admin/games/{$game->id}/names", ['unity_name' => 'Whatever'])
+            ->delete("/admin/games/{$game->id}/names")
             ->assertStatus(403);
 
-        $this->assertNull($game->fresh()->unity_name);
+        $this->assertSame('SomeKey', $game->fresh()->unity_name);
     }
 
     public function test_an_admin_can_clear_a_key_that_was_taken_wrongly(): void
@@ -48,7 +50,7 @@ class AdminGamesTest extends TestCase
         $game->update(['unity_name' => 'WrongKey', 'unity_company' => 'Wrong Studio']);
 
         $this->actingAs($this->admin())
-            ->post("/admin/games/{$game->id}/names", ['unity_name' => '', 'unity_company' => ''])
+            ->delete("/admin/games/{$game->id}/names")
             ->assertRedirect();
 
         $game->refresh();
@@ -57,37 +59,50 @@ class AdminGamesTest extends TestCase
         $this->assertNull($game->unity_company);
     }
 
-    public function test_an_admin_cannot_break_another_game_by_repairing_one(): void
+    public function test_no_name_can_be_typed_in_here(): void
     {
-        $held = Game::create(['name' => 'Held Title', 'steam_id' => '990002']);
-        $held->update(['unity_name' => 'HeldKey']);
-
-        $other = Game::create(['name' => 'Other Game']);
+        // The value lives in the game's files; an admin writing one would be guessing, and a wrong
+        // key files other people's uploads under the wrong card. There is no door for it at all.
+        $game = Game::create(['name' => 'Other Game']);
 
         $this->actingAs($this->admin())
-            ->post("/admin/games/{$other->id}/names", ['unity_name' => 'HeldKey'])
-            ->assertRedirect()
-            ->assertSessionHas('error');
+            ->post("/admin/games/{$game->id}/names", ['unity_name' => 'Typed', 'unity_company' => 'Typed'])
+            ->assertStatus(405);
 
-        $this->assertNull($other->fresh()->unity_name);
-        $this->assertSame('HeldKey', $held->fresh()->unity_name, 'the holder keeps it');
+        $this->assertNull($game->fresh()->unity_name);
     }
 
-    public function test_repairing_a_game_leaves_a_trace_and_moves_no_date(): void
+    public function test_the_screen_shows_the_name_and_offers_clear_only_when_there_is_one(): void
+    {
+        $named = Game::create(['name' => 'Named Game']);
+        $named->update(['unity_name' => 'NamedKey', 'unity_company' => 'Named Studio']);
+        Game::create(['name' => 'Unnamed Game']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.games'))
+            ->assertOk()
+            ->assertSee('NamedKey')
+            ->assertSee('Named Studio')
+            ->assertSee(route('admin.games.names.clear', $named->id), false)
+            ->assertDontSee('name="unity_name"', false);
+    }
+
+    public function test_clearing_leaves_a_trace_and_moves_no_date(): void
     {
         $game = Game::create(['name' => 'Traced Game']);
-        $was = $game->updated_at;
+        $game->update(['unity_name' => 'TracedKey']);
+        $was = $game->fresh()->updated_at;
 
         $this->travel(2)->days();
 
         $this->actingAs($this->admin())
-            ->post("/admin/games/{$game->id}/names", ['unity_name' => 'TracedKey'])
+            ->delete("/admin/games/{$game->id}/names")
             ->assertRedirect();
 
         // What a machine resolves by decides where other people's uploads are filed, so a change
         // here is worth a trace — it is invisible everywhere else.
         $this->assertTrue(
-            AuditLog::where('action', 'game.names_updated')->where('entity_id', $game->id)->exists()
+            AuditLog::where('action', 'game.names_cleared')->where('entity_id', $game->id)->exists()
         );
 
         // ⚠ And it must not re-date the catalogue: saveQuietly() silences events and still writes
