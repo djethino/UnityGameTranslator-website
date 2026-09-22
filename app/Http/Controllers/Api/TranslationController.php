@@ -121,19 +121,17 @@ class TranslationController extends Controller
             // answer about several games at once.
             $exact = Game::where('unity_name', $request->q)->pluck('id');
 
-            $search = $this->escapeLike($request->q);
-
             // 🔴 **A union, never a short-circuit.** `unity_name` is declared by whoever published,
             // so letting a match on it REPLACE the ordinary search handed one account the power to
             // hide every other candidate behind a name it had chosen. Added to them, it can only
             // ever widen the answer — and the caller picks by display name (GameNames in the
             // socle), or is told the answer covers several games.
             //
-            // ⚠ The latin handle is in the same half, and for the same reason: it is generated, so
-            // it may help somebody FIND a game and never decide which one they meant.
-            $matching = Game::where(function ($q) use ($search, $exact) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
+            // ⚠ The latin handle is in the title half (Game::scopeTitleMatches), and for the same
+            // reason: it is generated, so it may help somebody FIND a game and never decide which
+            // one they meant.
+            $matching = Game::where(function ($q) use ($request, $exact) {
+                $q->titleMatches($request->q);
 
                 if ($exact->isNotEmpty()) {
                     $q->orWhereIn('id', $exact);

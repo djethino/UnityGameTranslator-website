@@ -61,14 +61,8 @@ class GameController extends Controller
         }
         // Search by name
         elseif ($request->filled('q')) {
-            $search = $this->escapeLike($request->q);
-
-            // ⚠ The latin handle beside the title, so a game written in another script can be
-            // reached from a keyboard. Never displayed — see App\Support\LatinSearch.
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
-            });
+            // Title in its own script or in latin letters — Game::scopeTitleMatches.
+            $query->titleMatches($request->q);
         }
 
         // Filter by games that have translations in a specific language

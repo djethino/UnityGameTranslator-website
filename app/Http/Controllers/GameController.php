@@ -29,14 +29,8 @@ class GameController extends Controller
 
         // Search by game name
         if ($request->filled('q')) {
-            $search = $this->escapeLike($request->q);
-
-            // ⚠ The latin handle beside the title, so a game written in another script can be
-            // reached from a keyboard. Never displayed — see App\Support\LatinSearch.
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%');
-            });
+            // Title in its own script or in latin letters — the one rule every search box uses.
+            $query->titleMatches($request->q);
         }
 
         // Filter by target language — among the listed translations: a game whose only file in that
@@ -442,10 +436,8 @@ class GameController extends Controller
             return response()->json([]);
         }
 
-        $search = $this->escapeLike($query);
-        $games = Game::where('name', 'like', '%' . $search . '%')
-            // Same reason as the listing above: typing "longyin" has to reach 龙胤立志传.
-            ->orWhere('latin_search', 'like', '%' . mb_strtolower($search) . '%')
+        // Typing "longyin" has to reach 龙胤立志传 — Game::scopeTitleMatches.
+        $games = Game::titleMatches($query)
             ->limit(10)
             ->get(['id', 'name', 'slug']);
 

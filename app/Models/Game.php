@@ -109,6 +109,31 @@ class Game extends Model
     }
 
     /**
+     * Games whose title contains what a person typed — in its own script, or in latin letters.
+     *
+     * 🔴 **The one definition of "search a game by its title", for every search box.** It was
+     * written out in each controller, and three of them forgot the second half: the admin screens
+     * could not find 龙胤立志传 from "longyin" while the public catalogue could (reported
+     * 2026-09-23). The latin handle is what lets a keyboard reach a title written in another script
+     * — see App\Support\LatinSearch, which stores both "long yin li zhi zhuan" and "longyinlizhizhuan"
+     * so either spelling works.
+     *
+     * ⚠ Takes the RAW term and escapes it here (App\Support\Like): a caller that escaped first
+     * would escape twice, and a search for "a_b" would stop finding "a_b".
+     *
+     * ⚠ Wrapped in its own group, so a caller can OR other columns beside it (the admin searches
+     * Unity names and Steam ids too) without the two halves leaking into its other conditions.
+     */
+    public function scopeTitleMatches($query, string $term)
+    {
+        $escaped = \App\Support\Like::escape($term);
+
+        return $query->where(fn ($q) => $q
+            ->where('name', 'like', '%' . $escaped . '%')
+            ->orWhere('latin_search', 'like', '%' . mb_strtolower($escaped) . '%'));
+    }
+
+    /**
      * Games nobody has to opt in to see. ⚠ Reads the derived column, so it says exactly what
      * `saving` decided — never re-derive the rule here, it would be a second place to get wrong.
      */

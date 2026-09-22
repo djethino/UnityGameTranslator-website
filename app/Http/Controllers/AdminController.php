@@ -212,8 +212,11 @@ class AdminController extends Controller
         if ($request->filled('search')) {
             $search = $this->escapeLike($request->search);
 
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
+            // The title the way every search box reads it — its own script or latin letters, so
+            // "longyin" finds 龙胤立志传 here as it does on the public catalogue — plus what only
+            // this screen searches: the name on disk and the Steam id.
+            $query->where(function ($q) use ($request, $search) {
+                $q->titleMatches($request->search)
                     ->orWhere('unity_name', 'like', '%' . $search . '%')
                     ->orWhere('steam_id', 'like', '%' . $search . '%');
             });
@@ -440,12 +443,13 @@ class AdminController extends Controller
     {
         $query = Translation::with(['game', 'user']);
 
-        // Search by game name or user name
+        // Search by game title (its own script or latin letters, like every search box —
+        // Game::scopeTitleMatches) or by the name of whoever published it.
         if ($request->filled('search')) {
             $search = $this->escapeLike($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('game', fn($g) => $g->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            $query->where(function ($q) use ($request, $search) {
+                $q->whereHas('game', fn ($g) => $g->titleMatches($request->search))
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
             });
         }
 

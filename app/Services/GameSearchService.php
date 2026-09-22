@@ -96,9 +96,11 @@ class GameSearchService
      */
     public function searchLocal(string $query, int $limit = 5): array
     {
-        $search = \App\Support\Like::escape($query);
-
-        return Game::where('name', 'like', '%' . $search . '%')
+        // ⚠ By title in its own script OR in latin letters (Game::scopeTitleMatches). This is the
+        // search behind the publish form: without the latin half, somebody publishing for
+        // 龙胤立志传 who typed "longyin" did not find the card and was steered towards the external
+        // sources — the first step towards a second card for the same game.
+        return Game::titleMatches($query)
             ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->limit($limit)
             ->get()

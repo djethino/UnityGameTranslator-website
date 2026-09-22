@@ -102,6 +102,50 @@ class LatinSearchTest extends TestCase
         }
     }
 
+    public function test_every_search_box_reaches_it_from_a_keyboard(): void
+    {
+        // 🔴 Reported on 2026-09-23: the public catalogue found 龙胤立志传 from "longyin" and the
+        // admin screens did not. Each box had written the search out for itself, and three had
+        // left the latin half out. They now share Game::scopeTitleMatches — this holds all of them
+        // to it, so the next box that forgets is caught here rather than by somebody searching.
+        $game = $this->makeGame('龙胤立志传');
+
+        $path = 'translations/latin-search-' . uniqid() . '.json';
+        Storage::disk('local')->put($path, json_encode(['Hello' => ['v' => 'Bonjour', 't' => 'H']]));
+
+        (new Translation())->forceFill([
+            'game_id' => $game->id,
+            'user_id' => User::factory()->create()->id,
+            'source_language' => 'Chinese',
+            'target_language' => 'French',
+            'visibility' => 'public',
+            'file_uuid' => (string) Str::uuid(),
+            'file_path' => $path,
+            'file_hash' => 'hash-' . uniqid(),
+            'line_count' => 1,
+            'human_count' => 1,
+        ])->save();
+
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        foreach (['longyin', 'long yin'] as $typed) {
+            $this->get(route('games.index', ['q' => $typed]))
+                ->assertOk()->assertSee('龙胤立志传', false);
+
+            $this->getJson(route('games.search', ['q' => $typed]))
+                ->assertOk()->assertJsonFragment(['name' => '龙胤立志传']);
+
+            $this->assertSame('龙胤立志传', app(\App\Services\GameSearchService::class)->searchLocal($typed)[0]['name'] ?? null,
+                "the publish form's search reaches it from '{$typed}'");
+
+            $this->actingAs($admin)->get(route('admin.games', ['search' => $typed]))
+                ->assertOk()->assertSee('龙胤立志传', false);
+
+            $this->actingAs($admin)->get(route('admin.translations.index', ['search' => $typed]))
+                ->assertOk()->assertSee('龙胤立志传', false);
+        }
+    }
+
     public function test_the_handle_never_decides_who_a_translation_belongs_to(): void
     {
         // 🔴 The line that must not be crossed. A generated string may help somebody FIND a game;
