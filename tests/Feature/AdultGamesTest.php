@@ -380,6 +380,22 @@ class AdultGamesTest extends TestCase
         $this->assertEquals($declaredAt, $game->adult_declared_at);
     }
 
+    public function test_the_admin_screen_says_which_source_decided(): void
+    {
+        $this->game(['name' => 'A Marked Game', 'adult_detected' => true, 'adult_detected_source' => 'steam_dlc']);
+        $this->game(['name' => 'An Unasked Game']);
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get(route('admin.games'))
+            ->assertOk()
+            ->assertSee('steam_dlc')
+            ->assertSee('never checked')
+            ->assertSee('Unmark')
+            ->assertSee('Clear');
+    }
+
     public function test_an_admin_can_take_the_mark_off_and_put_it_back(): void
     {
         $author = User::factory()->create();
