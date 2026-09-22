@@ -734,9 +734,9 @@
       "id": "api-v1/games/search-answers-the-local-catalogue-first",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/games/search", "as": "alice", "query": { "steam_id": "367520" } },
-      "response": { "status": 200, "body": { "count": 1, "games": [ { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "steam_id": "367520", "image_url": null, "source": "local", "translations_count": 2 } ] } },
+      "response": { "status": 200, "body": { "count": 1, "games": [ { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "steam_id": "367520", "image_url": null, "source": "local", "translations_count": 1 } ] } },
       "read": { "reader": "games_external", "expects": { "Count": 1, "Games.0.Source": "local", "Games.0.Name": "Sample Game" } },
-      "why": "the catalogue before any external quota; a game already known is answered without a store call"
+      "why": "the catalogue before any external quota; a game already known is answered without a store call. Its count is the catalogue's: the Main, not the branch beside it"
     },
     {
       "id": "api-v1/me/who-this-token-is",

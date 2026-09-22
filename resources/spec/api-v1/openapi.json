@@ -1035,7 +1035,7 @@
             "properties": {
               "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" },
               "steam_id": { "type": ["string", "null"] }, "image_url": { "type": ["string", "null"] },
-              "translations_count": { "type": "integer", "description": "Published translations only." }
+              "translations_count": { "type": "integer", "description": "The translations the catalogue lists: public, never a branch, and holding a translated line once past the grace period an empty file is given." }
             }
           } }
         }
@@ -1054,7 +1054,7 @@
               "steam_id": { "type": ["string", "integer", "null"] },
               "image_url": { "type": ["string", "null"] },
               "source": { "$ref": "#/components/schemas/GameSource" },
-              "translations_count": { "type": "integer", "description": "`local` hits only." }
+              "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." }
             }
           } }
         }

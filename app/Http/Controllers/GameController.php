@@ -18,9 +18,14 @@ class GameController extends Controller
         // publiclyListed and not just 'public': a file published without a single translated
         // line leaves the catalogue after its grace period, and a game whose only translation is
         // one of those has nothing to offer here either.
-        $query = Game::whereHas('translations', fn ($q) => $q->publiclyListed())
-            ->withCount('translations')
-            ->withSum('translations', 'download_count');
+        //
+        // 🔴 And the COUNT and the SUM on the card with it, from the same rule: the card of a game
+        // with one listed translation beside a delisted one said "2", its page then showed one.
+        // The count used to take every row — delisted files, and branches too.
+        $listed = fn ($q) => $q->publiclyListed();
+        $query = Game::whereHas('translations', $listed)
+            ->withCount(['translations' => $listed])
+            ->withSum(['translations' => $listed], 'download_count');
 
         // Search by game name
         if ($request->filled('q')) {
@@ -34,17 +39,19 @@ class GameController extends Controller
             });
         }
 
-        // Filter by target language
+        // Filter by target language — among the listed translations: a game whose only file in that
+        // language has left the catalogue has nothing to offer in it (the dropdown below already
+        // does not offer the language; a URL could still ask for it)
         if ($request->filled('target')) {
             $query->whereHas('translations', function ($q) use ($request) {
-                $q->where('target_language', $request->target);
+                $q->publiclyListed()->where('target_language', $request->target);
             });
         }
 
-        // Filter by source language
+        // Filter by source language, same rule
         if ($request->filled('source')) {
             $query->whereHas('translations', function ($q) use ($request) {
-                $q->where('source_language', $request->source);
+                $q->publiclyListed()->where('source_language', $request->source);
             });
         }
 
@@ -91,7 +98,7 @@ class GameController extends Controller
         // other languages, then the rest.
         $languageScope = match ($request->input('sort', 'name')) {
             'finished' => fn ($q) => $q->where('visibility', 'public')->withTranslatedLines()->finished(),
-            default => fn ($q) => $q->where('visibility', 'public'),
+            default => fn ($q) => $q->publiclyListed(),
         };
 
         if ($highlightLanguage && $languageFirst) {
@@ -109,7 +116,7 @@ class GameController extends Controller
             'translations' => $query->orderByDesc('translations_count'),
             'new' => $query->orderByDesc('created_at'),
             'updated' => $query->withMax(
-                ['translations as last_content_update' => fn ($q) => $q->where('visibility', 'public')],
+                ['translations as last_content_update' => fn ($q) => $q->publiclyListed()],
                 'content_updated_at'
             )->orderByDesc('last_content_update'),
             // Where the front page's finished list continues. Without it, "see more" under a

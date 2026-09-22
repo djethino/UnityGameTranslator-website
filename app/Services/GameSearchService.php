@@ -41,7 +41,7 @@ class GameSearchService
         if ($steamId) {
             // First check if we have it locally
             $localBySteam = Game::answeringToSteamId($steamId)
-                ->withCount('translations')
+                ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
                 ->first();
             if ($localBySteam) {
                 // Add at beginning if not already present
@@ -88,14 +88,18 @@ class GameSearchService
     }
 
     /**
-     * Search local database for games
+     * Search local database for games.
+     *
+     * ⚠ `translations_count` is what the catalogue shows for the game, so it follows the
+     * catalogue's rule (Translation::scopePubliclyListed): it used to count every row, branches
+     * and delisted files included, and weighted the match score with them.
      */
     public function searchLocal(string $query, int $limit = 5): array
     {
         $search = \App\Support\Like::escape($query);
 
         return Game::where('name', 'like', '%' . $search . '%')
-            ->withCount('translations')
+            ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->limit($limit)
             ->get()
             ->map(function ($game) {

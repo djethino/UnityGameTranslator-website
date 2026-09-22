@@ -117,6 +117,37 @@ class EmptyTranslationGraceTest extends TestCase
     }
 
     /**
+     * A game keeping ONE listed translation beside a delisted one counts one — everywhere a count
+     * of its translations is shown.
+     *
+     * The game stayed in the catalogue (it still has something to offer), and that is exactly what
+     * hid the defect: the filter used the rule, the count on the card did not, so the card said
+     * "2" and the game page then showed one. The mod's catalogue, the language filter and the game
+     * search each counted their own way; they are held together here.
+     */
+    public function test_a_delisted_translation_is_counted_nowhere(): void
+    {
+        $this->makeTranslation(['capture_count' => 0, 'ai_count' => 400]);
+        $this->makeTranslation(['target_language' => 'Persian']);
+
+        $this->get(route('games.index'))->assertOk()->assertViewHas('games',
+            fn ($games) => $games->firstWhere('slug', 'grace-game')?->translations_count === 1);
+
+        // the delisted file's language finds nothing, even asked for by URL
+        $this->get(route('games.index', ['target' => 'Persian']))->assertOk()->assertViewHas('games',
+            fn ($games) => $games->firstWhere('slug', 'grace-game') === null);
+
+        $this->getJson('/api/v1/games?q=Grace')->assertOk()
+            ->assertJsonPath('games.0.slug', 'grace-game')
+            ->assertJsonPath('games.0.translations_count', 1);
+
+        $this->getJson('/api/v1/games?lang=Persian')->assertOk()->assertJsonPath('count', 0);
+
+        $local = app(\App\Services\GameSearchService::class)->searchLocal('Grace');
+        $this->assertSame(1, $local[0]['translations_count']);
+    }
+
+    /**
      * The other end of the same problem: not publishing it in the first place.
      *
      * Refusing outright would be wrong — capture mode is legitimate work and its author may have
