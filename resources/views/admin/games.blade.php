@@ -112,19 +112,20 @@
     <table class="w-full">
         <thead class="bg-gray-750 text-gray-400 text-sm">
             <tr>
-                {{-- `default=""` and not a column name: asked for nothing, this list keeps the
-                     order it exists for — games with no Unity name first — so NO header may light
-                     up. Naming one would claim the list is sorted by it.
+                {{-- Every header names the controller's default — last updated first — so the
+                     arrow shown is the order applied: the component decides per header which one
+                     is active when nothing was asked.
 
-                     ⚠ The empty string, never `null`: Blade's @props fills a prop that is null
-                     with its declared default (`$x = $x ?? $default`), so `:default="null"` here
-                     silently resolved to `created_at` and lit the "Added" arrow up. --}}
-                <x-admin.sortable-th column="name" label="Game" default="" />
+                     ⚠ Never `:default="null"` to mean "none": Blade's @props fills a prop that is
+                     null with its declared default (`$x = $x ?? $default`), which silently lit up
+                     the component's own default column instead. --}}
+                <x-admin.sortable-th column="name" label="Game" default="last_update" />
                 <th class="text-left py-3 px-4">Store ids</th>
-                <x-admin.sortable-th column="translations_count" label="Translations" default="" />
+                <x-admin.sortable-th column="translations_count" label="Translations" default="last_update" />
                 <th class="text-left py-3 px-4">Name on disk</th>
-                <x-admin.sortable-th column="adult_checked_at" label="Adults only" default="" />
-                <x-admin.sortable-th column="created_at" label="Added" default="" />
+                <x-admin.sortable-th column="adult_checked_at" label="Adults only" default="last_update" />
+                <x-admin.sortable-th column="last_update" label="Updated" default="last_update" />
+                <x-admin.sortable-th column="created_at" label="Added" default="last_update" />
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-700">
@@ -244,13 +245,18 @@
                             @endforeach
                         </form>
                     </td>
+                    {{-- When one of its translations last changed — the "Updated" of the
+                         translations screen, read across the game. None yet: "—". --}}
+                    <td class="py-3 px-4 text-gray-400 text-sm whitespace-nowrap">
+                        {{ $game->last_update?->format('M d, Y') ?? '—' }}
+                    </td>
                     <td class="py-3 px-4 text-gray-400 text-sm whitespace-nowrap">
                         {{ $game->created_at->format('M d, Y') }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="py-8 text-center text-gray-500">No game matches.</td>
+                    <td colspan="7" class="py-8 text-center text-gray-500">No game matches.</td>
                 </tr>
             @endforelse
         </tbody>

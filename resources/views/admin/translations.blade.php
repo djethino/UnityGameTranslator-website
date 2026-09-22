@@ -79,11 +79,14 @@
                     <th class="text-left py-3 px-4">{{ __('games.target_language') }}</th>
                     <th class="text-left py-3 px-4">{{ __('admin.uploader') }}</th>
                     <th class="text-left py-3 px-4">{{ __('admin.composition') }}</th>
-                    <x-admin.sortable-th column="line_count" :label="__('my_translations.lines')" />
-                    <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" />
-                    <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" />
-                    <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" />
-                    <x-admin.sortable-th column="content_updated_at" :label="__('admin.updated_at')" />
+                    {{-- Every header names the controller's default (last updated first): the
+                         component lights the column that is sorted when nothing was asked, and
+                         each header decides that for itself. --}}
+                    <x-admin.sortable-th column="line_count" :label="__('my_translations.lines')" default="content_updated_at" />
+                    <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" default="content_updated_at" />
+                    <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" default="content_updated_at" />
+                    <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" default="content_updated_at" />
+                    <x-admin.sortable-th column="content_updated_at" :label="__('admin.updated_at')" default="content_updated_at" />
                     <th class="text-right py-3 px-4">{{ __('admin.actions') }}</th>
                 </tr>
             </thead>

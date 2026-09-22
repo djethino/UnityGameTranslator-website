@@ -87,6 +87,57 @@ class AdminGamesTest extends TestCase
             ->assertDontSee('name="unity_name"', false);
     }
 
+    private function translationOf(Game $game, string $contentUpdatedAt): void
+    {
+        $path = 'translations/order-' . uniqid() . '.json';
+        \Illuminate\Support\Facades\Storage::disk('local')->put($path, json_encode(['Hi' => ['v' => 'Salut', 't' => 'H']]));
+
+        $translation = new \App\Models\Translation();
+        $translation->forceFill([
+            'game_id' => $game->id,
+            'user_id' => User::factory()->create()->id,
+            'source_language' => 'English',
+            'target_language' => 'French',
+            'visibility' => 'public',
+            'file_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'file_path' => $path,
+            'file_hash' => 'hash-' . uniqid(),
+            'line_count' => 1,
+            'human_count' => 1,
+        ])->save();
+
+        // ⚠ Written AFTER the save and around the model: Translation's `saving` hook sets
+        // content_updated_at to now() whenever file_hash changes — which it does on creation — so a
+        // date passed in the fill is overwritten and every row ends up "updated just now".
+        \App\Models\Translation::whereKey($translation->id)->update(['content_updated_at' => $contentUpdatedAt]);
+    }
+
+    public function test_both_admin_lists_show_what_moved_last_first(): void
+    {
+        // Asked on 2026-09-23: an admin comes to look at what moved lately. "Updated" is when the
+        // CONTENT last changed (content_updated_at), never updated_at, which a vote writes.
+        $old = Game::create(['name' => 'Aaa Quiet Game']);
+        $fresh = Game::create(['name' => 'Zzz Busy Game']);
+        $never = Game::create(['name' => 'Mmm Empty Game']);
+
+        $this->translationOf($old, now()->subMonths(3)->toDateTimeString());
+        $this->translationOf($fresh, now()->subHour()->toDateTimeString());
+
+        $this->actingAs($this->admin());
+
+        // Games: by the last change of any of their translations; a game with none comes last.
+        $this->get(route('admin.games'))
+            ->assertOk()
+            ->assertSeeInOrder(['Zzz Busy Game', 'Aaa Quiet Game', 'Mmm Empty Game']);
+
+        // Translations: the same default, on their own "Updated".
+        $this->get(route('admin.translations.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Zzz Busy Game', 'Aaa Quiet Game']);
+
+        $this->assertNotNull($never->id);
+    }
+
     public function test_clearing_leaves_a_trace_and_moves_no_date(): void
     {
         $game = Game::create(['name' => 'Traced Game']);

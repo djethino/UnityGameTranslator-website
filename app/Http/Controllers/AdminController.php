@@ -200,12 +200,21 @@ class AdminController extends Controller
      * value at the door, and none could correct one already stored. A key taken by mistake — or on
      * purpose — was final short of raw SQL, and "never overwrite" made it so by design.
      *
-     * ⚠ Ordered by what is most likely to need looking at: games carrying no machine name at all
-     * come first, then the rest by name. A catalogue is read here to be corrected, not browsed.
+     * ⚠ Ordered by what moved last (user, 2026-09-23), like the translations screen. It used to put
+     * games with no name on disk first — which made sense while an admin could type one; since that
+     * was removed (the value comes from the game's files, never from a person), the order no longer
+     * pointed at anything to do.
      */
     public function games(Request $request)
     {
-        $query = Game::withCount('translations');
+        // When a game last changed is when one of its translations last changed — the same date
+        // the translations screen calls "Updated" (content_updated_at, never updated_at, which a
+        // vote or a download writes). COALESCE for rows written before that column existed, as
+        // there. A game with no translation has no such date and sorts last.
+        $query = Game::withCount('translations')
+            ->addSelect(['last_update' => \App\Models\Translation::selectRaw('MAX(COALESCE(content_updated_at, updated_at))')
+                ->whereColumn('translations.game_id', 'games.id')])
+            ->withCasts(['last_update' => 'datetime']);
 
         // `search`, like the users and translations screens — the three are read one after the
         // other and a parameter named differently on one of them is a needless thing to remember.
@@ -244,18 +253,15 @@ class AdminController extends Controller
         $query->with(['proposals' => fn ($q) => $q->pending()->with('conflictGame:id,name,slug')]);
 
         // Sorting (whitelisted columns to prevent SQL injection), same shape as the two screens
-        // beside this one.
-        //
-        // ⚠ **No default column, and that is deliberate.** Asked for nothing, this list keeps the
-        // order it has always had: games with no Unity name FIRST, then by title. That order is
-        // the screen's purpose — it puts what needs repairing where the eye lands — and a plain
-        // "sort by name" default would quietly throw it away. The headers override it on demand.
-        $sortable = ['name', 'translations_count', 'created_at', 'adult_checked_at'];
-        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : null;
+        // beside this one. Default: last updated first — the view's headers name the same default.
+        $sortable = ['name', 'translations_count', 'created_at', 'adult_checked_at', 'last_update'];
+        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'last_update';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
 
-        if ($sort === null) {
-            $query->orderByRaw('unity_name IS NULL DESC')->orderBy('name');
+        if ($sort === 'last_update') {
+            // A game with no translation has no date: last whichever way the column is sorted,
+            // rather than first in ascending order where it would read as the oldest activity.
+            $query->orderByRaw('last_update IS NULL')->orderBy('last_update', $dir)->orderBy('name');
         } elseif ($sort === 'adult_checked_at') {
             // Never asked about comes first whichever way the column is sorted: it is the state
             // that can make a listing wrong right now, where an old check is merely stale.
@@ -479,8 +485,11 @@ class AdminController extends Controller
         }
 
         // Sorting (whitelisted columns to prevent SQL injection)
+        // Default: last updated first (user, 2026-09-23) — what an admin comes to look at is what
+        // moved lately, not what was first published long ago. The view's headers name the same
+        // default, so the arrow shown is the order applied.
         $sortable = ['created_at', 'content_updated_at', 'download_count', 'vote_count', 'line_count'];
-        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
+        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'content_updated_at';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
 
         // ⚠ content_updated_at, never updated_at: increment('vote_count') and
