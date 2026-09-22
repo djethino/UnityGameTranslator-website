@@ -205,8 +205,10 @@ class AdminController extends Controller
     {
         $query = Game::withCount('translations');
 
-        if ($request->filled('q')) {
-            $search = $this->escapeLike($request->q);
+        // `search`, like the users and translations screens — the three are read one after the
+        // other and a parameter named differently on one of them is a needless thing to remember.
+        if ($request->filled('search')) {
+            $search = $this->escapeLike($request->search);
 
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
@@ -215,11 +217,41 @@ class AdminController extends Controller
             });
         }
 
-        $games = $query
-            ->orderByRaw('unity_name IS NULL DESC')
-            ->orderBy('name')
-            ->paginate(30)
-            ->withQueryString();
+        // Marked for adults only, or not. Reads the derived column, like every other listing.
+        if ($request->filled('adult')) {
+            $query->where('adult', $request->adult === 'yes');
+        }
+
+        // The pair this screen exists to repair: a game nothing resolves by name, against one
+        // that carries a key somebody declared.
+        if ($request->input('naming') === 'missing') {
+            $query->whereNull('unity_name');
+        } elseif ($request->input('naming') === 'set') {
+            $query->whereNotNull('unity_name');
+        }
+
+        // Sorting (whitelisted columns to prevent SQL injection), same shape as the two screens
+        // beside this one.
+        //
+        // ⚠ **No default column, and that is deliberate.** Asked for nothing, this list keeps the
+        // order it has always had: games with no Unity name FIRST, then by title. That order is
+        // the screen's purpose — it puts what needs repairing where the eye lands — and a plain
+        // "sort by name" default would quietly throw it away. The headers override it on demand.
+        $sortable = ['name', 'translations_count', 'created_at', 'adult_checked_at'];
+        $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : null;
+        $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === null) {
+            $query->orderByRaw('unity_name IS NULL DESC')->orderBy('name');
+        } elseif ($sort === 'adult_checked_at') {
+            // Never asked about comes first whichever way the column is sorted: it is the state
+            // that can make a listing wrong right now, where an old check is merely stale.
+            $query->orderByRaw('adult_checked_at IS NULL DESC')->orderBy('adult_checked_at', $dir);
+        } else {
+            $query->orderBy($sort, $dir);
+        }
+
+        $games = $query->paginate(30)->withQueryString();
 
         return view('admin.games', compact('games'));
     }

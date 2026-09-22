@@ -27,40 +27,86 @@
     </p>
 </div>
 
+{{-- Filters --}}
 <form action="{{ route('admin.games') }}" method="GET"
       class="bg-gray-800 rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
+    {{-- A filter must not silently undo the column somebody clicked --}}
+    @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+    @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
     <div class="flex-1 min-w-[240px]">
         <label class="block text-sm text-gray-400 mb-1">Search</label>
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Title, Unity name or Steam id..."
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, Unity name or Steam id..."
             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
     </div>
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">Unity name</label>
+        <select name="naming" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
+            <option value="">All</option>
+            <option value="missing" {{ request('naming') === 'missing' ? 'selected' : '' }}>Missing</option>
+            <option value="set" {{ request('naming') === 'set' ? 'selected' : '' }}>Set</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">Adults only</label>
+        <select name="adult" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
+            <option value="">All</option>
+            <option value="yes" {{ request('adult') === 'yes' ? 'selected' : '' }}>Marked</option>
+            <option value="no" {{ request('adult') === 'no' ? 'selected' : '' }}>Not marked</option>
+        </select>
+    </div>
+    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
         <i class="fas fa-search mr-1"></i> Search
     </button>
+    @if(request()->hasAny(['search', 'naming', 'adult']))
+        <a href="{{ route('admin.games') }}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">
+            <i class="fas fa-times mr-1"></i> Clear
+        </a>
+    @endif
 </form>
 
-<div class="bg-gray-800 rounded-lg overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+{{-- Results --}}
+<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-750 text-gray-400 text-sm">
             <tr>
-                <th class="px-4 py-3 text-left">Game</th>
-                <th class="px-4 py-3 text-left">Steam id</th>
-                <th class="px-4 py-3 text-left">Translations</th>
-                <th class="px-4 py-3 text-left">Resolved by</th>
-                <th class="px-4 py-3 text-left">Adults only</th>
+                {{-- `default=""` and not a column name: asked for nothing, this list keeps the
+                     order it exists for — games with no Unity name first — so NO header may light
+                     up. Naming one would claim the list is sorted by it.
+
+                     ⚠ The empty string, never `null`: Blade's @props fills a prop that is null
+                     with its declared default (`$x = $x ?? $default`), so `:default="null"` here
+                     silently resolved to `created_at` and lit the "Added" arrow up. --}}
+                <x-admin.sortable-th column="name" label="Game" default="" />
+                <th class="text-left py-3 px-4">Steam id</th>
+                <x-admin.sortable-th column="translations_count" label="Translations" default="" />
+                <th class="text-left py-3 px-4">Resolved by</th>
+                <x-admin.sortable-th column="adult_checked_at" label="Adults only" default="" />
+                <x-admin.sortable-th column="created_at" label="Added" default="" />
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-700">
             @forelse($games as $game)
                 <tr class="hover:bg-gray-750">
-                    <td class="px-4 py-3">
-                        <a href="{{ route('games.show', $game->slug) }}" class="text-white hover:text-blue-400">
-                            {{ $game->name }}
-                        </a>
+                    {{-- The cover, like the translations screen: a title alone makes every row
+                         look the same, and this list is read by scanning it. --}}
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-3">
+                            @if($game->image_url)
+                                <img src="{{ $game->image_url }}" alt="" class="w-10 h-14 object-cover rounded flex-shrink-0">
+                            @else
+                                <div class="w-10 h-14 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-gamepad text-gray-500"></i>
+                                </div>
+                            @endif
+                            <a href="{{ route('games.show', $game->slug) }}" class="font-medium text-white hover:text-purple-400">
+                                {{ $game->name }}
+                            </a>
+                        </div>
                     </td>
-                    <td class="px-4 py-3 text-gray-400">{{ $game->steam_id ?: '—' }}</td>
-                    <td class="px-4 py-3 text-gray-400">{{ $game->translations_count }}</td>
-                    <td class="px-4 py-3">
+                    <td class="py-3 px-4 text-gray-400">{{ $game->steam_id ?: '—' }}</td>
+                    <td class="py-3 px-4 text-gray-400">{{ $game->translations_count }}</td>
+                    <td class="py-3 px-4">
                         <form action="{{ route('admin.games.names', $game->id) }}" method="POST"
                               class="flex flex-wrap gap-2 items-center">
                             @csrf
@@ -80,7 +126,7 @@
                          toggle, because "nothing" is a real answer and a different one from "no":
                          clearing hands the game back to the stores and the contributors, where
                          "no" pins it here for ever. The state says which source decided. --}}
-                    <td class="px-4 py-3">
+                    <td class="py-3 px-4">
                         <p class="text-xs mb-1 {{ $game->adult ? 'text-amber-400' : 'text-gray-500' }}">
                             {{ $game->adult ? 'yes' : 'no' }}
                             <span class="text-gray-500">
@@ -104,17 +150,23 @@
                             @endforeach
                         </form>
                     </td>
+                    <td class="py-3 px-4 text-gray-400 text-sm whitespace-nowrap">
+                        {{ $game->created_at->format('M d, Y') }}
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">No game matches.</td>
+                    <td colspan="6" class="py-8 text-center text-gray-500">No game matches.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
-<div class="mt-6">
-    {{ $games->links() }}
-</div>
+@if($games->hasPages())
+    <div class="mt-6">
+        {{ $games->links() }}
+    </div>
+@endif
 @endsection

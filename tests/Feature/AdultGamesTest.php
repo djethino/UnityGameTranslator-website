@@ -396,6 +396,35 @@ class AdultGamesTest extends TestCase
             ->assertSee('Clear');
     }
 
+    public function test_the_admin_screen_filters_and_sorts(): void
+    {
+        $this->game(['name' => 'A Marked Game', 'adult_override' => true]);
+        $this->game(['name' => 'An Ordinary Game', 'unity_name' => 'OrdinaryGame']);
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $this->actingAs($admin);
+
+        $this->get(route('admin.games', ['adult' => 'yes']))
+            ->assertSee('A Marked Game')->assertDontSee('An Ordinary Game');
+
+        $this->get(route('admin.games', ['adult' => 'no']))
+            ->assertSee('An Ordinary Game')->assertDontSee('A Marked Game');
+
+        // The pair this screen exists to repair.
+        $this->get(route('admin.games', ['naming' => 'missing']))
+            ->assertSee('A Marked Game')->assertDontSee('An Ordinary Game');
+
+        $this->get(route('admin.games', ['naming' => 'set']))
+            ->assertSee('An Ordinary Game')->assertDontSee('A Marked Game');
+
+        // A sort the headers offer, and one they do not: an unknown column must fall back to the
+        // screen's own order rather than reach the database.
+        $this->get(route('admin.games', ['sort' => 'name', 'dir' => 'asc']))->assertOk();
+        $this->get(route('admin.games', ['sort' => 'adult_checked_at', 'dir' => 'desc']))->assertOk();
+        $this->get(route('admin.games', ['sort' => 'id; drop table games', 'dir' => 'asc']))->assertOk();
+    }
+
     public function test_an_admin_can_take_the_mark_off_and_put_it_back(): void
     {
         $author = User::factory()->create();
