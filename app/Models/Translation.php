@@ -1286,7 +1286,27 @@ class Translation extends Model
     public function publicForks()
     {
         return $this->hasMany(self::class, 'origin_translation_id')
-            ->where('visibility', 'public');
+            ->where('visibility', 'public')
+            ->takenUpByOthers();
+    }
+
+    /**
+     * Forks made by somebody other than the author of what they started from — the SQL twin of
+     * {@see hasOrigin}, seen from the original's side.
+     *
+     * 🔴 **One rule, both sides.** hasOrigin already refused to credit an author for their own
+     * lines on the FORK ("forked from @themselves"), while the ORIGINAL still listed them under
+     * "Taken up independently by @themselves" — an author who restarted their own work in a new
+     * lineage read, on the old one, as if somebody else had picked it up. A fork of one's own work
+     * is a restart, not a take-up: it is left out wherever forks are credited or counted.
+     *
+     * ⚠ An origin whose author's account is gone (origin_user_id null) is somebody else's by
+     * definition, and stays in.
+     */
+    public function scopeTakenUpByOthers($query)
+    {
+        return $query->where(fn ($q) => $q->whereNull('origin_user_id')
+            ->orWhereColumn('user_id', '<>', 'origin_user_id'));
     }
 
     /** Was this one started from somebody else's work? */

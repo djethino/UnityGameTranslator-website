@@ -101,9 +101,10 @@ class ForkOriginTest extends TestCase
         $this->assertTrue($fork->isFork());
         $this->assertSame(['author' => $author->name, 'lines' => null], $fork->originBlock());
 
-        // The author forking their own work: origin columns filled, and still not a fork.
-        // Built directly — the site refuses a second lineage of one's own for the same game
-        // and pair at upload, so this row can only come from an older path or a promotion.
+        // The author forking their own work: origin columns filled, and still not a fork. It does
+        // happen — the site refuses only an IDENTICAL copy of one's own file, not a restart of it
+        // in a new lineage — so both sides must read it the same way: no "forked from" on this
+        // row, and no "taken up by" on the original (Translation::scopeTakenUpByOthers).
         $own = new Translation();
         $own->forceFill([
             'game_id' => $source->game_id,
@@ -124,6 +125,13 @@ class ForkOriginTest extends TestCase
         $this->assertFalse($own->hasOrigin());
         $this->assertFalse($own->isFork());
         $this->assertNull($own->originBlock());
+
+        // ...and the original does not list its author as having taken it up, while the fork by
+        // somebody else above is listed
+        $taken = $source->publicForks()->pluck('id');
+        $this->assertFalse($taken->contains($own->id));
+        $this->assertTrue($taken->contains($fork->id));
+        $this->assertSame(1, \App\Services\Lineages::standing()->firstWhere('id', $source->id)?->forks);
 
         // A branch hangs from its Main by parent_id and is not a fork either.
         $branch = $this->branchOf($source, User::factory()->create());

@@ -47,7 +47,9 @@ class Lineages
         // ⚠ Forks are counted through `origin_translation_id`, never `parent_id`: a fork leaves the
         // lineage and takes a new uuid, so grouping by parent loses it entirely — the mistake that
         // once made a "Community Forks" list show branches instead.
-        $forks = DB::table('translations')
+        // And only forks made by somebody else (Translation::scopeTakenUpByOthers): an author
+        // restarting their own work in a new lineage has drawn nobody.
+        $forks = Translation::query()->takenUpByOthers()->toBase()
             ->whereNotNull('origin_translation_id')
             ->where('visibility', 'public')
             ->selectRaw('origin_translation_id, COUNT(*) as forks')
