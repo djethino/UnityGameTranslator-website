@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Game;
+use App\Support\GameNaming;
 
 /**
  * Is this game for adults only — asked of the stores, never guessed from a title.
@@ -168,17 +169,20 @@ class AdultRating
             return false;
         }
 
-        $safe = preg_replace('/[^a-zA-Z0-9\s\-\'\.,:!?]/', '', $name);
+        $safe = GameSearchService::escapeIGDBQuery($name);
 
         if (trim($safe) === '') {
             return false;
         }
 
         $rows = $this->games->igdb('games', 'search "' . $safe . '"; fields name,themes; limit 5;');
-        $wanted = $this->plainly($name);
+
+        // Case, punctuation and spacing differ between our card and IGDB's ("Love N Life" against
+        // "Love n Life") and neither makes it another game — the project's one normalizer says so.
+        $wanted = GameNaming::flatten($name);
 
         foreach ($rows as $row) {
-            if ($this->plainly($row['name'] ?? '') === $wanted) {
+            if (GameNaming::flatten($row['name'] ?? '') === $wanted) {
                 return $this->hasEroticTheme($row);
             }
         }
@@ -191,15 +195,5 @@ class AdultRating
         $themes = $row['themes'] ?? [];
 
         return is_array($themes) && in_array(self::IgdbErotic, array_map('intval', $themes), true);
-    }
-
-    /**
-     * A title reduced to what two spellings of the same game share — case, punctuation and spacing
-     * differ between our card and IGDB's ("Love N Life: Happy Student" against
-     * "Love n Life: Happy Student"), and neither difference makes it another game.
-     */
-    private function plainly(string $name): string
-    {
-        return preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($name)) ?? '';
     }
 }

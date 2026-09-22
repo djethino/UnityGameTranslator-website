@@ -9,6 +9,7 @@ use App\Models\AnalyticsGame;
 use App\Models\Announcement;
 use App\Models\AuditLog;
 use App\Models\Game;
+use App\Models\GameProposal;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Services\TranslationService;
@@ -17,6 +18,7 @@ use App\Services\CatalogStore;
 use App\Services\KnownReleases;
 use App\Services\Lineages;
 use App\Services\LiveEditCapacity;
+use App\Services\StoreProposals;
 use App\Services\VersionInventory;
 use App\Support\AnalyticsPeriods;
 use Carbon\Carbon;
@@ -230,6 +232,14 @@ class AdminController extends Controller
             $query->whereNotNull('unity_name');
         }
 
+        // Only the cards a store has something to propose for — what `Apply (N)` would change.
+        if ($request->input('proposals') === 'pending') {
+            $query->whereHas('proposals', fn ($q) => $q->pending());
+        }
+
+        // Every row shows its own proposals, so they come with the page rather than one query a row.
+        $query->with(['proposals' => fn ($q) => $q->pending()->with('conflictGame:id,name,slug')]);
+
         // Sorting (whitelisted columns to prevent SQL injection), same shape as the two screens
         // beside this one.
         //
@@ -253,7 +263,78 @@ class AdminController extends Controller
 
         $games = $query->paginate(30)->withQueryString();
 
-        return view('admin.games', compact('games'));
+        // Said on the buttons themselves: how many cards the stores were never asked about, and
+        // how many proposals wait across the whole catalogue — not just this page.
+        $neverChecked = Game::whereNull('stores_checked_at')->count();
+        $pendingProposals = GameProposal::pending()->count();
+
+        return view('admin.games', compact('games', 'neverChecked', 'pendingProposals'));
+    }
+
+    /**
+     * Ask the stores what the game cards lack, and file what they say as proposals.
+     *
+     * Nothing is written into a card here — see App\Services\StoreProposals for why a title match
+     * is never trusted without an admin.
+     */
+    public function checkGameStores(StoreProposals $proposals)
+    {
+        $result = $proposals->checkDue();
+
+        $message = "Asked the stores about {$result['checked']} game(s): {$result['proposed']} new proposal(s).";
+
+        if ($result['left'] > 0) {
+            $message .= " {$result['left']} not reached yet — check again to go on.";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Accept the proposals that were ticked.
+     *
+     * ⚠ **All checked before any is written.** Two ticked for the same field of the same card
+     * would have the second silently overwrite the first; one decided or taken elsewhere since the
+     * page was drawn would half-apply the batch. So the whole selection is judged first, and it is
+     * refused whole with the reason when any of it cannot go through.
+     */
+    public function applyGameProposals(Request $request, StoreProposals $service)
+    {
+        $request->validate([
+            'proposals' => 'required|array|min:1',
+            'proposals.*' => 'integer',
+        ]);
+
+        $proposals = GameProposal::with('game')->whereIn('id', $request->proposals)->get();
+
+        $twice = $proposals->groupBy(fn ($p) => $p->game_id . '|' . $p->field)->filter(fn ($g) => $g->count() > 1);
+        if ($twice->isNotEmpty()) {
+            $names = $twice->map(fn ($g) => $g->first()->game->name . ' (' . $g->first()->field . ')')->implode(', ');
+
+            return back()->with('error', "Two values ticked for the same field: {$names}. Keep one.");
+        }
+
+        $blocked = $proposals->reject(fn ($p) => $p->isApplicable());
+        if ($blocked->isNotEmpty()) {
+            return back()->with('error', 'Some of these can no longer be applied: '
+                . $blocked->map(fn ($p) => $p->game->name . ' (' . $p->field . ')')->implode(', ') . '. Nothing was written.');
+        }
+
+        foreach ($proposals as $proposal) {
+            $service->apply($proposal, auth()->user());
+        }
+
+        return back()->with('success', "Applied {$proposals->count()} proposal(s).");
+    }
+
+    /**
+     * Refuse one proposal for good — the same value is never proposed again for that card.
+     */
+    public function rejectGameProposal(GameProposal $proposal, StoreProposals $service)
+    {
+        $service->reject($proposal, auth()->user());
+
+        return back()->with('success', "Rejected — {$proposal->value} will not be proposed again for {$proposal->game->name}.");
     }
 
     /**

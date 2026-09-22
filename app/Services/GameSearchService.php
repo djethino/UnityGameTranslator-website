@@ -213,8 +213,18 @@ class GameSearchService
     /**
      * Escape special characters for IGDB query language
      * Prevents injection attacks via search queries
+     *
+     * ⚠ Public so that every caller building an Apicalypse body from a title goes through the
+     * same allowlist (App\Services\AdultRating, App\Services\StoreProposals). A second copy of the
+     * pattern is a second place to get the escaping wrong.
+     *
+     * ⚠ It keeps latin characters only, so a title written in another script comes out EMPTY —
+     * callers must treat that as "nothing to ask", never send an empty search.
+     *
+     * ⚠ Static because it is a pure function: called on an instance, a test that stubs this
+     * service would have to stub the escaping too, and a stub of an escape proves nothing.
      */
-    private function escapeIGDBQuery(string $query): string
+    public static function escapeIGDBQuery(string $query): string
     {
         // Allowlist approach: only keep safe characters for IGDB search
         // IGDB query language uses ; for statement end, " for strings, | for OR, etc.
@@ -483,6 +493,39 @@ class GameSearchService
         } catch (\Exception $e) {
             Log::warning('Steam API error', ['error' => $e->getMessage()]);
             return null;
+        }
+    }
+
+    /**
+     * What the store's own search answers for a title — `[{id, name}, ...]`, or an empty array.
+     *
+     * ⚠ Loose by nature: it answers with add-ons, sequels and neighbours. A caller that means to
+     * attach an id to a card must keep only an EXACT title match (App\Services\StoreProposals),
+     * and even then an admin accepts it — a title is a guess, an id is a fact.
+     */
+    public function steamSearch(string $term): array
+    {
+        try {
+            $response = Http::timeout(5)->get('https://store.steampowered.com/api/storesearch/', [
+                'term' => $term,
+                'cc' => 'us',
+                'l' => 'en',
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('Steam search error', ['status' => $response->status()]);
+                return [];
+            }
+
+            return collect($response->json('items') ?? [])
+                ->map(fn ($item) => ['id' => (string) ($item['id'] ?? ''), 'name' => (string) ($item['name'] ?? '')])
+                ->filter(fn ($item) => $item['id'] !== '' && $item['name'] !== '')
+                ->values()
+                ->all();
+
+        } catch (\Exception $e) {
+            Log::warning('Steam search error', ['error' => $e->getMessage()]);
+            return [];
         }
     }
 

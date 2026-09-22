@@ -91,8 +91,13 @@ class GameNaming
      * 🔴 **Letters and digits of ANY script.** `[^a-z0-9]` empties a title written in another
      * alphabet, which is how this shipped broken: 龙胤立志传 flattened to nothing, ペルソナ5 to "5",
      * Метро 2033 to "2033".
+     *
+     * ⚠ Public because matching a card against a store's answer asks the same question
+     * (App\Services\AdultRating, App\Services\StoreProposals): "Love N Life" and "Love n Life",
+     * "LoneStar" and "LONESTAR" are one title. A second normalizer beside this one is how two
+     * paths end up disagreeing about whether two names are the same game.
      */
-    private static function flatten(string $value): string
+    public static function flatten(string $value): string
     {
         return preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($value));
     }

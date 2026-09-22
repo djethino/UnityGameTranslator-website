@@ -38,7 +38,16 @@ class Game extends Model
         'adult_override' => 'boolean',
         'adult_checked_at' => 'datetime',
         'adult_declared_at' => 'datetime',
+        'stores_checked_at' => 'datetime',
     ];
+
+    /**
+     * What the stores proposed for this card — see App\Models\GameProposal.
+     */
+    public function proposals()
+    {
+        return $this->hasMany(GameProposal::class);
+    }
 
     protected static function boot()
     {

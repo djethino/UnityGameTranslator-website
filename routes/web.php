@@ -291,6 +291,15 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         Route::post('/games/{game:id}/adult', [AdminController::class, 'setGameAdult'])
             ->name('games.adult');
 
+        // What the stores can tell a card that lacks it — PROPOSED, never written: a title match
+        // is a guess, and only an admin turns it into a fact. See App\Services\StoreProposals.
+        Route::post('/games/check-stores', [AdminController::class, 'checkGameStores'])
+            ->name('games.check-stores');
+        Route::post('/games/proposals/apply', [AdminController::class, 'applyGameProposals'])
+            ->name('games.proposals.apply');
+        Route::post('/games/proposals/{proposal}/reject', [AdminController::class, 'rejectGameProposal'])
+            ->name('games.proposals.reject');
+
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
         Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');

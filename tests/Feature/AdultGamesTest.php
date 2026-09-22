@@ -114,6 +114,31 @@ class AdultGamesTest extends TestCase
         $this->assertTrue($game->refresh()->adult);
     }
 
+    public function test_an_admin_unmark_survives_every_later_detection(): void
+    {
+        // Asked on 2026-09-22: "si j'ai déjà changé une fois après une modération, il ne faut pas
+        // que ça me le repropose à chaque fois". Detection keeps running — nightly, and on every
+        // new Steam id — and the store keeps saying "adults only". The admin's word stands.
+        Http::fake([
+            'store.steampowered.com/*' => Http::response([
+                '777' => ['success' => true, 'data' => [
+                    'name' => 'A Game',
+                    'content_descriptors' => ['ids' => [1, 3, 4, 5]],
+                ]],
+            ]),
+        ]);
+
+        $game = $this->game(['name' => 'A Game', 'steam_id' => '777', 'adult_override' => false]);
+
+        foreach ([false, true, false] as $quiet) {
+            app(AdultRating::class)->rate($game, quiet: $quiet);
+            $game->refresh();
+
+            $this->assertTrue($game->adult_detected, 'detection still reads the store');
+            $this->assertFalse($game->adult, 'and never overrules the admin');
+        }
+    }
+
     public function test_the_mark_cites_the_store_rather_than_the_admin_who_agreed_with_it(): void
     {
         $game = $this->game([
