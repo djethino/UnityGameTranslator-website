@@ -21,7 +21,7 @@
 <div class="mb-4 space-y-2" x-ref="searchBar">
     <div class="flex gap-2">
         <div class="relative flex-1">
-            <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
+            <input type="text" x-model="searchQuery" :dir="textDirection(searchQuery)" @keydown.enter.prevent="onSearchEnter($event)"
                 placeholder="{{ __('merge.search_placeholder') }}"
                 class="w-full px-4 py-2 pl-10 pr-32 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -61,7 +61,7 @@
              Applies to the editable column, which is the only one it could apply to. --}}
         <div x-show="replaceOpen" x-cloak class="flex gap-2">
             <div class="relative flex-1">
-                <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
+                <input type="text" x-model="replaceValue" :dir="textDirection(replaceValue)" @keydown.enter.prevent="replaceCurrent()"
                     placeholder="{{ __('merge.replace_with') }}"
                     class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
                 <i class="fas fa-right-left absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>

@@ -496,6 +496,7 @@
                 <textarea
                     id="editModalTextarea"
                     x-model="editModalValue"
+                    :dir="textDirection(editModalValue)"
                     class="w-full h-48 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-y"
                     placeholder="{{ __('merge_preview.enter_translation') }}"
                 ></textarea>

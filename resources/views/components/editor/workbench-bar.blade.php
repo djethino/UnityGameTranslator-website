@@ -59,7 +59,7 @@
     <div class="flex flex-wrap items-center gap-2 shrink-0">
     <div class="relative shrink-0">
         <i class="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
-        <input type="text" x-model="searchQuery"
+        <input type="text" x-model="searchQuery" :dir="textDirection(searchQuery)"
                @keydown.enter.prevent="onSearchEnter($event)"
                placeholder="{{ __('merge.search_placeholder') }}"
                class="w-40 focus:w-64 transition-all bg-gray-800 border border-gray-700 rounded pl-7 pr-2 py-1
@@ -90,7 +90,7 @@
     </button>
     <template x-if="replaceOpen">
         <div class="flex items-center gap-1 shrink-0">
-            <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
+            <input type="text" x-model="replaceValue" :dir="textDirection(replaceValue)" @keydown.enter.prevent="replaceCurrent()"
                    placeholder="{{ __('merge.replace_with') }}"
                    class="w-40 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white text-xs
                           placeholder-gray-500 focus:outline-none focus:border-purple-500">

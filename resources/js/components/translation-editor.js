@@ -24,7 +24,8 @@ import { editorHScroll } from './editor-hscroll.js';
 import { editorOffScreen } from './editor-offscreen.js';
 import { editorMetadata } from './editor-metadata.js';
 import { editorPin } from './editor-pin.js';
-import { editProblems } from '../rules/placeholders.js';
+import { editProblems, frozenSpans } from '../rules/placeholders.js';
+import { directionOf, markupSpans } from '../rules/direction.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -1278,25 +1279,71 @@ export function editorCore(config) {
         },
 
         _highlight(text) {
+            return this._render(text, true);
+        },
+
+        /**
+         * A line as HTML: escaped, search matches in <mark>, and every placeholder sequence and
+         * markup tag wrapped in <bdi dir="ltr">.
+         *
+         * 🔴 The <bdi> is what keeps a right-to-left line readable. `[!v*0]` and `<color=#…>` are
+         * Latin characters: inside an Arabic line they split it into runs the browser reorders,
+         * and their own brackets get mirrored ("[v*0!]"). As isolated islands they stay whole and
+         * the line keeps its order. Its DIRECTION is set by x-safe-html from the content
+         * (rules/direction.js) — here only the islands.
+         *
+         * Search marks may start or end inside an island, so the text is cut at every boundary of
+         * both and each piece opens or closes what it needs: <mark> always nests INSIDE <bdi>.
+         */
+        _render(text, withSearch) {
             const value = String(text ?? '');
-            const query = this._debouncedQuery.toLowerCase().trim();
-            if (!query) return this.escapeHtml(value);
-            const lower = value.toLowerCase();
-            let html = '';
-            let pos = 0;
-            let idx = lower.indexOf(query);
-            while (idx !== -1) {
-                html += this.escapeHtml(value.slice(pos, idx))
-                    + '<mark class="search-mark">' + this.escapeHtml(value.slice(idx, idx + query.length)) + '</mark>';
-                pos = idx + query.length;
-                idx = lower.indexOf(query, pos);
+            const query = withSearch ? this._debouncedQuery.toLowerCase().trim() : '';
+
+            const islands = [];
+            for (const span of [...frozenSpans(value), ...markupSpans(value)].sort((a, b) => a.start - b.start)) {
+                const last = islands[islands.length - 1];
+                if (last && span.start <= last.end) last.end = Math.max(last.end, span.end);
+                else islands.push({ ...span });
             }
-            return html + this.escapeHtml(value.slice(pos));
+            const marks = [];
+            if (query) {
+                const lower = value.toLowerCase();
+                for (let idx = lower.indexOf(query); idx !== -1; idx = lower.indexOf(query, idx + query.length)) {
+                    marks.push({ start: idx, end: idx + query.length });
+                }
+            }
+            if (islands.length === 0 && marks.length === 0) return this.escapeHtml(value);
+
+            const cuts = new Set([0, value.length]);
+            for (const span of [...islands, ...marks]) { cuts.add(span.start); cuts.add(span.end); }
+            const points = [...cuts].sort((a, b) => a - b);
+            const covers = (list, at) => list.some(span => at >= span.start && at < span.end);
+
+            let html = '';
+            let inIsland = false;
+            for (let i = 0; i < points.length - 1; i++) {
+                const from = points[i];
+                const island = covers(islands, from);
+                if (island !== inIsland) { html += island ? '<bdi dir="ltr">' : '</bdi>'; inIsland = island; }
+                const piece = this.escapeHtml(value.slice(from, points[i + 1]));
+                html += covers(marks, from) ? '<mark class="search-mark">' + piece + '</mark>' : piece;
+            }
+            if (inIsland) html += '</bdi>';
+            return html;
+        },
+
+        /**
+         * Which way a text reads, for the inputs a person types in (rules/direction.js), updated
+         * as they type. ⚠ Null while empty: the input then shows its placeholder, written in the
+         * site's language, which must keep the page's direction — Alpine drops the attribute.
+         */
+        textDirection(text) {
+            return text ? directionOf(text) : null;
         },
 
         /** Highlight helpers honoring the search scope. */
         highlightValue(text) {
-            return this.searchScope === 'keys' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
+            return this._render(text, this.searchScope !== 'keys');
         },
 
         // ── Difference highlighting ───────────────────────────────────────
@@ -1393,7 +1440,7 @@ export function editorCore(config) {
         },
 
         highlightKey(text) {
-            return this.searchScope === 'values' ? this.escapeHtml(String(text ?? '')) : this._highlight(text);
+            return this._render(text, this.searchScope !== 'values');
         },
 
         // ── Replace (single-row only, on purpose) ─────────────────────────

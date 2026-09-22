@@ -10,7 +10,7 @@
     class="fixed top-2 left-1/2 -translate-x-1/2 z-30 bg-gray-800/95 backdrop-blur border border-gray-600 rounded-lg shadow-xl p-2 space-y-2">
     <div class="flex items-center gap-2">
         <div class="relative">
-            <input type="text" x-model="searchQuery" @keydown.enter.prevent="onSearchEnter($event)"
+            <input type="text" x-model="searchQuery" :dir="textDirection(searchQuery)" @keydown.enter.prevent="onSearchEnter($event)"
                 placeholder="{{ __('merge.search_placeholder') }}"
                 class="w-64 px-3 py-1.5 pl-8 bg-gray-900 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
             <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
@@ -30,7 +30,7 @@
         </button>
     </div>
     <div x-show="replaceOpen" class="flex items-center gap-2">
-        <input type="text" x-model="replaceValue" @keydown.enter.prevent="replaceCurrent()"
+        <input type="text" x-model="replaceValue" :dir="textDirection(replaceValue)" @keydown.enter.prevent="replaceCurrent()"
             placeholder="{{ __('merge.replace_with') }}"
             class="w-64 px-3 py-1.5 bg-gray-900 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
         <button type="button" @click="replaceCurrent()" :disabled="replaceDisabled"

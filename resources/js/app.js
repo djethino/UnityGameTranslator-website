@@ -103,10 +103,21 @@ Alpine.data('editorTextMode', () => ({
 // x-html is prohibited by the Alpine CSP build. The editors need to inject
 // their own search-highlight markup, so x-safe-html provides the same
 // semantics restricted to OUR trusted helpers: translation-editor.js
-// escapes every character of the content and only adds <mark> tags.
+// escapes every character of the content and only adds <mark> and <bdi> tags.
+//
+// 🔴 It also gives each text ITS OWN direction, from its content, with the mod's
+// rule (rules/direction.js). Every line of a game passes through here, and a
+// table mixes an English key with an Arabic value: taking the page's direction
+// (the site's interface language) showed one of the two backwards whatever the
+// language chosen. Set on every update, 'ltr' included, so a text shown in a
+// right-to-left interface is not left to inherit it.
+import { directionOf } from './rules/direction.js';
 Alpine.directive('safe-html', (el, { expression }, { evaluateLater, effect }) => {
     const getHtml = evaluateLater(expression);
-    effect(() => getHtml(html => { el.innerHTML = html; }));
+    effect(() => getHtml(html => {
+        el.innerHTML = html;
+        el.dir = directionOf(el.textContent);
+    }));
 });
 
 window.Alpine = Alpine;

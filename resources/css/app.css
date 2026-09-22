@@ -124,6 +124,14 @@
  * push the others off screen. Nothing is broken that fits. */
 .editor-text { overflow-wrap: anywhere; }
 
+/* Each line aligned to its OWN start, whatever the page's direction: an Arabic value to the
+ * right of its cell, the English key beside it to the left — also when the site itself is shown
+ * in Arabic. The direction is set by x-safe-html from the content (js/rules/direction.js); a block
+ * is what text-align: start needs to follow it. SPANS only: the read-only grid carries the class
+ * on its <td>, and a block cell would leave the table. Nothing sits after the text in its cell
+ * (the badges come before it, the answer mark is positioned), so the block changes no layout. */
+span.editor-text[dir] { display: block; text-align: start; }
+
 /* The key column keeps a floor of its own, now that the rule above took away the
  * accidental one it had.
  *

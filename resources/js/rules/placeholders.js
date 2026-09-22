@@ -42,7 +42,22 @@ export function tally(text) {
  */
 export function frozenSequences(source) {
     const sequences = [];
-    if (!source) return sequences;
+    for (const { start, end } of frozenSpans(source)) {
+        const sequence = source.slice(start, end);
+        if (!sequences.includes(sequence)) sequences.push(sequence);
+    }
+    return sequences;
+}
+
+/**
+ * Where each frozen sequence sits — every occurrence, in order, as [start, end) offsets. What
+ * `frozenSequences` is built on, exposed for the editor's display: a sequence is shown as ONE
+ * left-to-right island inside a right-to-left line, so "{[!v*0]}" keeps its braces the right way
+ * round instead of having them mirrored around the token.
+ */
+export function frozenSpans(source) {
+    const spans = [];
+    if (!source) return spans;
     for (const match of source.matchAll(TOKEN)) {
         let start = match.index;
         let end = match.index + match[0].length;
@@ -53,10 +68,9 @@ export function frozenSequences(source) {
             start--;
             end++;
         }
-        const sequence = source.slice(start, end);
-        if (!sequences.includes(sequence)) sequences.push(sequence);
+        spans.push({ start, end });
     }
-    return sequences;
+    return spans;
 }
 
 /** An opening bracket and the closing one that answers it. */
