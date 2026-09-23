@@ -155,14 +155,24 @@
       "document": { "config_version": 3, "ai_max_attempts": 50, "ai_temperature": 5.0, "ai_temperature_retranslate": -1.0 },
       "written": true,
       "read": { "ai_max_attempts": 50, "AttemptsAllowed": 10, "TemperatureNormal": 2.0, "TemperatureRetranslate": 0.0 },
-      "why": "every unit above 1 is a real request to a real backend; the file is kept as written and the usable number is what the mod sends"
+      "manager": { "Ai.AttemptsAllowed": 10, "Ai.TemperatureNormal": 2.0, "Ai.TemperatureRetranslate": 0.0 },
+      "why": "every unit above 1 is a real request to a real backend; the file is kept as written and the usable number is what the mod sends — and what the Manager sends when it answers the browser editor for this game"
     },
     {
       "id": "config/zero-attempts-still-asks-once",
       "document": { "config_version": 3, "ai_max_attempts": 0 },
       "written": true,
       "read": { "AttemptsAllowed": 1 },
+      "manager": { "Ai.AttemptsAllowed": 1 },
       "why": "a line is asked for at least once, whatever the file says"
+    },
+    {
+      "id": "config/the-settings-a-retranslation-is-asked-with",
+      "document": { "config_version": 3, "enable_ai": true, "translation_backend": "llm", "ai_model": "gemma3", "ai_seed_retranslate": 7, "strict_source_language": true },
+      "written": true,
+      "read": { "IsTranslationEnabled": true, "AttemptsAllowed": 3, "TemperatureRepair": 0.3, "TemperatureRetranslate": 0.8 },
+      "manager": { "Ai.IsTranslationEnabled": true, "Ai.BackendLabel": "gemma3", "Ai.AttemptsAllowed": 3, "Ai.TemperatureRepair": 0.3, "Ai.TemperatureRetranslate": 0.8, "Ai.SeedRetranslate": 7, "Ai.StrictSourceLanguage": true },
+      "why": "the Manager answers the browser editor's Retranslate while the game is closed, with THIS game's settings: an absent key reads as the mod's default, so the line is asked exactly as the game would ask it"
     },
     {
       "id": "config/target-language-is-a-name",

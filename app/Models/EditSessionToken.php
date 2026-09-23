@@ -330,6 +330,9 @@ class EditSessionToken extends Model
 
     public function pushRetranslation(string $id, string $key, ?string $value, string $outcome): void
     {
+        // Answered: a holder that polls must not be handed the same request again.
+        $this->forgetRetranslateRequest($id);
+
         $pending = $this->pendingRetranslations();
 
         // Same request answered twice (the browser re-emits while waiting):
@@ -364,6 +367,73 @@ class EditSessionToken extends Model
         $pending = Cache::get($this->retranslationCacheKey(), []);
 
         return is_array($pending) ? $pending : [];
+    }
+
+    /**
+     * Per-line retranslations the PAGE has asked for, waiting for a holder that follows the
+     * session by polling — the Manager, which answers the Retranslate button while the game is
+     * closed. The mod receives the same request over its SSE stream and never reads these.
+     *
+     * ⚠ Stored because a poll cannot receive an event: without this, the request only ever
+     * existed on a stream the Manager does not hold, and its Retranslate could not be offered.
+     *
+     * ⚠ Bounded three ways, because the page can write here and a holder spends its own backend —
+     * possibly a paid key — on each entry: one entry per request id (the page re-emits every ~30 s
+     * with the same id, which refreshes it rather than adding one), at most RETRANSLATE_REQUEST_MAX,
+     * and a lifetime equal to how long the page waits before giving up on a row. The holder applies
+     * the rest of the guards (the line must be in ITS file; one call per id and per line), which
+     * are the socle's PageRetranslations.
+     *
+     * ⚠ Read-modify-write on the cache, not atomic: two requests landing in the same instant can
+     * lose one. The page's re-emission puts it back within 30 s — the same answer the SSE path
+     * already gives to an event lost in a reconnection gap.
+     */
+    private const RETRANSLATE_REQUEST_TTL_SECONDS = 180;
+    private const RETRANSLATE_REQUEST_MAX = 20;
+
+    private function retranslateRequestCacheKey(): string
+    {
+        return "edit-session:{$this->id}:retranslate-requests";
+    }
+
+    public function pushRetranslateRequest(string $id, string $key): void
+    {
+        $pending = array_values(array_filter(
+            $this->pendingRetranslateRequests(),
+            fn ($item) => ($item['id'] ?? null) !== $id
+        ));
+
+        $pending[] = ['id' => $id, 'key' => $key];
+
+        if (count($pending) > self::RETRANSLATE_REQUEST_MAX) {
+            $pending = array_slice($pending, -self::RETRANSLATE_REQUEST_MAX);
+        }
+
+        Cache::put($this->retranslateRequestCacheKey(), $pending, self::RETRANSLATE_REQUEST_TTL_SECONDS);
+    }
+
+    /** What the page is waiting on, WITHOUT consuming it — the holder dedupes on the id. */
+    public function pendingRetranslateRequests(): array
+    {
+        $pending = Cache::get($this->retranslateRequestCacheKey(), []);
+
+        return is_array($pending) ? $pending : [];
+    }
+
+    private function forgetRetranslateRequest(string $id): void
+    {
+        $pending = $this->pendingRetranslateRequests();
+        $kept = array_values(array_filter($pending, fn ($item) => ($item['id'] ?? null) !== $id));
+
+        if (count($kept) === count($pending)) {
+            return;
+        }
+
+        if ($kept === []) {
+            Cache::forget($this->retranslateRequestCacheKey());
+        } else {
+            Cache::put($this->retranslateRequestCacheKey(), $kept, self::RETRANSLATE_REQUEST_TTL_SECONDS);
+        }
     }
 
     /** End of the inactivity window, counted from now. */

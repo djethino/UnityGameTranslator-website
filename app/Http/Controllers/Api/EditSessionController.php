@@ -172,6 +172,11 @@ class EditSessionController extends Controller
             'browser_left' => $session->browser_left_at !== null,
             // Edits saved in the browser that this side has not fetched yet.
             'pending_changes' => $session->pending_changes,
+            // Per-line retranslations the page asked for and nobody answered yet. The Manager
+            // polls and cannot receive the SSE event the mod gets, so they wait here; served
+            // without being consumed, the holder dedupes on `id`. Always empty for a session
+            // the game holds — it has the stream.
+            'retranslate_requests' => $session->pendingRetranslateRequests(),
         ]);
     }
 

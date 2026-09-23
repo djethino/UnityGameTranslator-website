@@ -905,7 +905,7 @@
       "setup": "lineage",
       "prelude": [ { "request": { "method": "POST", "path": "/edit-session/init", "body": { "content": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } } } }, "capture": { "key": "body:mod_key" } } ],
       "request": { "method": "GET", "path": "/edit-session/{{key}}/state" },
-      "response": { "status": 200, "body": { "content_hash": { "$is": "file_hash" }, "expires_at": { "$is": "iso8601" }, "browser_seen_seconds_ago": null, "browser_left": false, "pending_changes": 0 } },
+      "response": { "status": 200, "body": { "content_hash": { "$is": "file_hash" }, "expires_at": { "$is": "iso8601" }, "browser_seen_seconds_ago": null, "browser_left": false, "pending_changes": 0, "retranslate_requests": [] } },
       "read": { "reader": "edit_session_state", "expects": { "Exists": true, "PendingChanges": 0 } },
       "why": "a few dozen bytes: the file is fetched only once the hash says it is worth fetching"
     },

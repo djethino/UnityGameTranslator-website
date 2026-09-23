@@ -442,6 +442,57 @@ class EditSessionFlowTest extends TestCase
         $this->postJson('/edit-session-retranslate', ['key' => '_uuid', 'id' => 'req-2'])->assertStatus(422);
     }
 
+    public function test_retranslate_waits_for_a_manager_that_polls(): void
+    {
+        // The Manager holds the session while the game is closed: it follows by polling and can
+        // never receive the SSE event the mod gets, so the request has to wait for its next poll.
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'ai_available' => true,
+            'ai_model' => 'gemma3',
+            'holder' => 'manager',
+        ])->assertOk();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $state = fn () => $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')->assertOk();
+        $this->assertSame([], $state()->json('retranslate_requests'));
+
+        // The page re-emits every ~30 s with the same id: one entry, refreshed, never two.
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-1'])->assertOk();
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-1'])->assertOk();
+        $this->assertSame([['id' => 'req-1', 'key' => 'Hello']], $state()->json('retranslate_requests'));
+
+        // Served without being consumed: a poll that fails midway must not lose the request.
+        $this->assertCount(1, $state()->json('retranslate_requests'));
+
+        // The answer takes it off the list — and reaches the page as a proposal.
+        $this->postJson('/api/v1/edit-session/' . $session->mod_key . '/retranslation', [
+            'id' => 'req-1', 'key' => 'Hello', 'value' => 'Salut', 'outcome' => 'replaced',
+        ])->assertOk();
+        $this->assertSame([], $state()->json('retranslate_requests'));
+        $this->get('/edit-session-state')->assertOk()->assertJsonPath('retranslations.0.value', 'Salut');
+    }
+
+    public function test_a_session_the_game_holds_keeps_retranslate_requests_on_its_stream(): void
+    {
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => self::CONTENT,
+            'game_name' => 'Test Game',
+            'ai_available' => true,
+        ])->assertOk();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->postJson('/edit-session-retranslate', ['key' => 'Hello', 'id' => 'req-1'])->assertOk();
+
+        // The mod has the stream; nothing is stored for a poll that will never come.
+        $this->getJson('/api/v1/edit-session/' . $session->mod_key . '/state')
+            ->assertOk()
+            ->assertJsonPath('retranslate_requests', []);
+    }
+
     public function test_mod_side_state_reports_saves_without_moving_the_file(): void
     {
         $this->initSession();

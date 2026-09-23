@@ -154,11 +154,15 @@ class EditSessionController extends Controller
     }
 
     /**
-     * Ask the mod to re-translate one entry with ITS OWN AI backend.
-     * The site holds no AI credential: the request travels over the
-     * session's SSE channel and the translation runs on the player's
-     * machine, coming back through the normal mod → session push.
-     * Fire-and-forget: the mod ignores keys absent from its file.
+     * Ask the holder to re-translate one entry with ITS OWN AI backend.
+     * The site holds no AI credential: the translation runs on the player's
+     * machine and comes back as a proposal (POST .../retranslation).
+     *
+     * The mod receives the request over the session's SSE channel. The
+     * Manager follows the session by polling and cannot receive an event,
+     * so for a session it holds the request is also kept for its next poll
+     * (pendingRetranslateRequests). Either way the holder ignores a key
+     * absent from its file.
      *
      * POST /edit-session-retranslate (AJAX)
      */
@@ -188,7 +192,11 @@ class EditSessionController extends Controller
             return response()->json(['error' => 'Invalid key.'], 422);
         }
 
-        SsePublisher::editSessionRetranslate($session->mod_key, $key, $request->input('id'));
+        if ($session->heldByManager()) {
+            $session->pushRetranslateRequest($request->input('id'), $key);
+        } else {
+            SsePublisher::editSessionRetranslate($session->mod_key, $key, $request->input('id'));
+        }
 
         return response()->json(['requested' => true]);
     }

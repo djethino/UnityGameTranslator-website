@@ -1281,7 +1281,16 @@
           "expires_at": { "$ref": "#/components/schemas/Iso8601" },
           "browser_seen_seconds_ago": { "type": ["integer", "null"] },
           "browser_left": { "type": "boolean" },
-          "pending_changes": { "type": "integer", "description": "Saves the browser made that no holder has fetched. Until one does, the session is the only place that work exists." }
+          "pending_changes": { "type": "integer", "description": "Saves the browser made that no holder has fetched. Until one does, the session is the only place that work exists." },
+          "retranslate_requests": { "type": "array", "items": { "$ref": "#/components/schemas/EditRetranslateRequest" }, "description": "Per-line retranslations the page asked for and nobody has answered yet, for a holder that polls (the Manager) and so never receives the `edit_retranslate` event. Served without being consumed — the holder dedupes on `id` — and taken off once POST .../retranslation carries that id. Always empty for a session the game holds: it has the stream. Absent = not asked." }
+        }
+      },
+      "EditRetranslateRequest": {
+        "type": "object",
+        "required": ["id", "key"],
+        "properties": {
+          "id": { "type": "string", "maxLength": 64, "description": "The page's request id, stable across its re-emissions; the answer carries it back." },
+          "key": { "type": "string", "maxLength": 10000, "description": "The line asked for, as keyed in the file. ⚠ Chosen by whoever holds the page: a holder answers only a line of its own file (socle: PageRetranslations)." }
         }
       },
       "EditSessionKeepAliveResponse": {
