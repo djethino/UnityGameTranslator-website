@@ -43,6 +43,7 @@
         { "kind": "label", "name": "UnreachableLabel", "text": "Cannot reach the translation server", "bold": true },
         { "kind": "label", "name": "UnreachableCause", "text": { "bind": "unreachableCause" }, "policy": "Excluded", "role": "Small", "autoHeight": true },
         { "kind": "row", "name": "UnreachableBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "UnreachableSettingsBtn", "text": "Settings", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "unreachableSettings" },
           { "kind": "button", "name": "UnreachableIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "unreachableIgnore" }
         ] }
       ] },
