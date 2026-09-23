@@ -453,7 +453,7 @@
     "docs.editing.live_edit_alt": "La página de edición en vivo del navegador con búsqueda, filtros, barra de calidad y la tabla de traducción",
     "docs.editing.live_edit_caption": "El editor en vivo: barra de calidad, filtros, buscar y reemplazar, y acciones por línea",
     "docs.editing.retranslate_title": "Retraducir con TU IA",
-    "docs.editing.retranslate_desc": "Si hay un backend de IA configurado en el mod, aparece un botón de varita en cada línea. El sitio web solo LLAMA a tu mod: la petición viaja por el canal de la sesión, tu mod traduce con la configuración local que TÚ estableciste (tu backend, tu modelo, tu clave), y solo regresa el texto traducido. Ninguna clave de API ni configuración de LLM se intercambia o almacena jamás en el sitio web: todo lo personal se queda en tu máquina.",
+    "docs.editing.retranslate_desc": "Si la traducción IA está configurada para el juego, aparece un botón de varita en cada línea. El sitio web solo le ENVÍA UNA PETICIÓN a tu máquina: el mod responde mientras juegas, y el Manager responde cuando el juego está cerrado. Los dos traducen con los ajustes de IA del juego (tu backend, tu modelo, tu clave), y solo regresa el texto traducido. Ninguna clave de API ni ningún ajuste de IA se envía jamás al sitio web ni se guarda en él. Todo lo personal se queda en tu máquina.",
     "docs.editing.lifecycle_title": "Duración de la sesión",
     "docs.editing.lifecycle_desc": "Una sesión solo termina cuando cierras la página del navegador o sales del juego, nunca por un temporizador. Juega durante horas y vuelve a editar cuando quieras. Cuando la sesión termina, su archivo temporal se elimina del servidor.",
     "docs.editing.web_edit_title": "Editar una traducción publicada",

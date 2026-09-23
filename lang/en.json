@@ -453,7 +453,7 @@
     "docs.editing.live_edit_alt": "The browser live edit page with search, filters, quality bar and the translation table",
     "docs.editing.live_edit_caption": "The live editor: quality bar, filters, search & replace, and per-line actions",
     "docs.editing.retranslate_title": "Re-translate with YOUR AI",
-    "docs.editing.retranslate_desc": "If an AI backend is configured in the mod, a wand button appears on each line. The website only CALLS your mod: the request travels over the session channel, your mod translates with the local configuration YOU set up (your backend, your model, your key), and only the translated text comes back. No API key or LLM configuration is ever exchanged or stored on the website — everything personal stays on your machine.",
+    "docs.editing.retranslate_desc": "If AI translation is set up for the game, a wand button appears on each line. The website only CALLS your machine: the mod answers while you play, and the Manager answers while the game is closed. Either one translates with the game's own AI settings (your backend, your model, your key), and only the translated text comes back. No API key or AI setting is ever sent to the website or stored there. Everything personal stays on your machine.",
     "docs.editing.lifecycle_title": "Session lifetime",
     "docs.editing.lifecycle_desc": "A session only ends when you close the browser page or quit the game — never on a timer. Play for hours and come back to edit whenever you want. When the session ends, its temporary file is deleted from the server.",
     "docs.editing.web_edit_title": "Editing a published translation",

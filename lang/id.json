@@ -453,7 +453,7 @@
     "docs.editing.live_edit_alt": "Halaman sunting langsung peramban dengan pencarian, filter, bilah kualitas dan tabel terjemahan",
     "docs.editing.live_edit_caption": "Editor langsung: bilah kualitas, filter, cari & ganti, dan tindakan per baris",
     "docs.editing.retranslate_title": "Terjemahkan ulang dengan AI ANDA",
-    "docs.editing.retranslate_desc": "Jika backend AI dikonfigurasi di mod, tombol tongkat muncul pada setiap baris. Situs web hanya MEMANGGIL mod-mu: permintaan lewat kanal sesi, mod-mu menerjemahkan dengan konfigurasi lokal yang KAMU siapkan (backend-mu, model-mu, kunci-mu), dan hanya teks hasil terjemahan yang kembali. Tidak ada kunci API atau konfigurasi LLM yang pernah dipertukarkan atau disimpan di situs web — semua yang bersifat pribadi tetap di mesinmu.",
+    "docs.editing.retranslate_desc": "Jika terjemahan AI sudah diatur untuk game ini, tombol tongkat muncul pada setiap baris. Situs web hanya MENGIRIM PERMINTAAN ke mesinmu: mod menjawab selama kamu bermain, dan Manager menjawab saat game tertutup. Keduanya menerjemahkan dengan pengaturan AI milik game itu (backend-mu, model-mu, kunci-mu), dan hanya teks hasil terjemahan yang kembali. Kunci API atau pengaturan AI tidak pernah dikirim ke situs web atau disimpan di sana. Semua yang bersifat pribadi tetap di mesinmu.",
     "docs.editing.lifecycle_title": "Masa berlaku sesi",
     "docs.editing.lifecycle_desc": "Sesi hanya berakhir saat kamu menutup halaman peramban atau keluar dari game – tidak pernah karena pengatur waktu. Bermainlah berjam-jam dan kembalilah untuk menyunting kapan pun kamu mau. Saat sesi berakhir, berkas sementaranya dihapus dari server.",
     "docs.editing.web_edit_title": "Menyunting terjemahan yang dipublikasikan",

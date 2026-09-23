@@ -453,7 +453,7 @@
     "docs.editing.live_edit_alt": "Arama, filtreler, kalite çubuğu ve çeviri tablosu içeren tarayıcı canlı düzenleme sayfası",
     "docs.editing.live_edit_caption": "Canlı düzenleyici: kalite çubuğu, filtreler, arama ve değiştirme ve satır başına eylemler",
     "docs.editing.retranslate_title": "KENDİ yapay zekânızla yeniden çevirin",
-    "docs.editing.retranslate_desc": "Modda bir yapay zekâ arka ucu yapılandırılmışsa, her satırda bir değnek düğmesi görünür. Web sitesi yalnızca modunuzu ÇAĞIRIR: istek oturum kanalından geçer, modunuz SİZİN kurduğunuz yerel yapılandırmayla (kendi arka ucunuz, kendi modeliniz, kendi anahtarınız) çevirir ve geri dönen yalnızca çevrilmiş metindir. Hiçbir API anahtarı veya LLM yapılandırması web sitesiyle paylaşılmaz ya da orada saklanmaz — kişisel olan her şey kendi makinenizde kalır.",
+    "docs.editing.retranslate_desc": "Oyun için yapay zekâ çevirisi ayarlanmışsa, her satırda bir değnek düğmesi görünür. Web sitesi yalnızca makinenize bir İSTEK gönderir: siz oynarken mod yanıt verir, oyun kapalıyken de Manager yanıt verir. İkisi de oyunun kendi yapay zekâ ayarlarıyla (kendi arka ucunuz, kendi modeliniz, kendi anahtarınız) çevirir ve geri yalnızca çevrilmiş metin döner. Hiçbir API anahtarı ya da yapay zekâ ayarı web sitesine gönderilmez ve orada saklanmaz. Kişisel olan her şey kendi makinenizde kalır.",
     "docs.editing.lifecycle_title": "Oturum süresi",
     "docs.editing.lifecycle_desc": "Bir oturum yalnızca tarayıcı sayfasını kapattığınızda veya oyundan çıktığınızda sona erer – asla bir zamanlayıcıyla değil. Saatlerce oynayın ve istediğiniz zaman düzenlemeye geri dönün. Oturum sona erdiğinde, geçici dosyası sunucudan silinir.",
     "docs.editing.web_edit_title": "Yayınlanmış bir çeviriyi düzenleme",

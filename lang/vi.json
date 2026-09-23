@@ -453,7 +453,7 @@
     "docs.editing.live_edit_alt": "Trang chỉnh sửa trực tiếp trên trình duyệt với tìm kiếm, bộ lọc, thanh chất lượng và bảng dịch",
     "docs.editing.live_edit_caption": "Trình chỉnh sửa trực tiếp: thanh chất lượng, bộ lọc, tìm kiếm & thay thế, và các thao tác theo từng dòng",
     "docs.editing.retranslate_title": "Dịch lại bằng AI CỦA BẠN",
-    "docs.editing.retranslate_desc": "Nếu một backend AI được cấu hình trong mod, một nút đũa thần xuất hiện trên mỗi dòng. Trang web chỉ GỌI mod của bạn: yêu cầu đi qua kênh phiên làm việc, mod của bạn dịch bằng cấu hình cục bộ do CHÍNH BẠN thiết lập (backend của bạn, mô hình của bạn, khóa của bạn), và chỉ có văn bản đã dịch quay về. Không khóa API hay cấu hình LLM nào từng được trao đổi hay lưu trên trang web — mọi thứ riêng tư đều ở lại trên máy của bạn.",
+    "docs.editing.retranslate_desc": "Nếu dịch AI đã được thiết lập cho game, một nút đũa thần sẽ xuất hiện trên mỗi dòng. Trang web chỉ GỬI YÊU CẦU tới máy của bạn: mod trả lời khi bạn đang chơi, còn Manager trả lời khi game đã đóng. Cả hai đều dịch bằng cài đặt AI của chính game đó (backend của bạn, mô hình của bạn, khóa của bạn), và chỉ có văn bản đã dịch được gửi về. Không có khóa API hay cài đặt AI nào được gửi lên trang web hoặc lưu trên đó. Mọi thứ riêng tư đều ở lại trên máy của bạn.",
     "docs.editing.lifecycle_title": "Thời gian tồn tại của phiên",
     "docs.editing.lifecycle_desc": "Một phiên chỉ kết thúc khi bạn đóng trang trình duyệt hoặc thoát game – không bao giờ theo bộ đếm thời gian. Chơi hàng giờ và quay lại chỉnh sửa bất cứ khi nào bạn muốn. Khi phiên kết thúc, tệp tạm của phiên sẽ bị xóa khỏi máy chủ.",
     "docs.editing.web_edit_title": "Chỉnh sửa một bản dịch đã công bố",
