@@ -56,6 +56,25 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\PublicCacheHeaders::class,
         ]);
 
+        // 🔴 A translation's keys and values travel BYTE FOR BYTE through the editors' routes.
+        // The key IS the game's text, and game text routinely ends in line breaks: trimmed on the
+        // way in, a key names a line that does not exist — a save or an arbitration lands beside
+        // the real line, and a retranslation is refused by the holder as "not in the file".
+        // TrimStrings is global, so these routes opt out of it. The mod and the Manager gzip most
+        // bodies, which TrimStrings never saw (DecodeGzipRequest runs after it); the pages post
+        // plain JSON, and so does the mod's retranslation answer. The merge view's own form
+        // already dodged it through selections_json (MergeController::apply).
+        $middleware->trimStrings(except: [
+            fn (\Illuminate\Http\Request $request) => $request->is(
+                'edit-session-save',
+                'edit-session-retranslate',
+                'api/v1/edit-session/*',
+                'api/v1/merge-preview/*',
+                'translations/*/merge-preview',
+                'translations/*/merge-preview/local',
+            ),
+        ]);
+
         // Decode gzip-compressed API requests from Unity mod
         $middleware->prependToGroup('api', [
             \App\Http\Middleware\DecodeGzipRequest::class,

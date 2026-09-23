@@ -475,6 +475,34 @@ class EditSessionFlowTest extends TestCase
         $this->get('/edit-session-state')->assertOk()->assertJsonPath('retranslations.0.value', 'Salut');
     }
 
+    public function test_a_line_whose_key_ends_in_line_breaks_travels_intact(): void
+    {
+        // Game text routinely ends in line breaks, and the key IS the text. A key that loses them
+        // on the way names a line that does not exist: a save lands beside the real one, and a
+        // retranslation is refused by the holder as "not in the file".
+        $content = self::CONTENT + ["Credits\n\n" => ['v' => 'Crédits', 't' => 'A']];
+
+        $this->postJson('/api/v1/edit-session/init', [
+            'content' => $content,
+            'holder' => 'manager',
+            'ai_available' => true,
+        ])->assertOk();
+        $session = EditSessionToken::first();
+        $this->openInBrowser($session);
+
+        $this->postJson('/edit-session-retranslate', ['key' => "Credits\n\n", 'id' => 'req-1'])->assertOk();
+        $this->assertSame("Credits\n\n", $session->pendingRetranslateRequests()[0]['key'] ?? null,
+            'the request must name the line exactly as the file keys it');
+
+        $this->postJson('/edit-session-save', [
+            'selections' => [['key' => "Credits\n\n", 'value' => "Générique\n\n", 'tag' => 'H', 'source' => 'manual']],
+        ])->assertOk();
+
+        $stored = json_decode(file_get_contents($session->getContentFilePath()), true);
+        $this->assertSame("Générique\n\n", $stored["Credits\n\n"]['v'] ?? null, 'the save lands on the line itself, value intact');
+        $this->assertArrayNotHasKey('Credits', $stored, 'and never beside it under a trimmed key');
+    }
+
     public function test_a_session_the_game_holds_keeps_retranslate_requests_on_its_stream(): void
     {
         $this->postJson('/api/v1/edit-session/init', [

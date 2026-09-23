@@ -150,6 +150,28 @@ class MergePreviewLocalFlowTest extends TestCase
         $this->assertSame('Bonjour du serveur', $result['Hello']['v']);
     }
 
+    public function test_a_line_whose_key_ends_in_line_breaks_is_arbitrated_in_place(): void
+    {
+        // Game text routinely ends in line breaks, and the key IS the text: a key trimmed on the
+        // way names a line that does not exist, and the choice lands beside the real one.
+        $mainOwner = User::factory()->create()->refresh();
+        $contributor = User::factory()->create()->refresh();
+        $main = $this->makeTranslation($mainOwner, self::ONLINE + ["Credits\n\n" => ['v' => "Générique\n\n", 't' => 'H']]);
+
+        $token = $this->init($contributor, $main, self::LOCAL + ["Credits\n\n" => ['v' => "Crédits\n\n", 't' => 'H']])->json('token');
+        $this->get("/translations/{$main->id}/merge-preview?token={$token}")->assertStatus(303);
+
+        $this->postJson(route('translations.merge-preview.apply-local', $main), [
+            'selections' => [
+                ['key' => "Credits\n\n", 'value' => "Générique\n\n", 'tag' => 'H', 'source' => 'online'],
+            ],
+        ]);
+
+        $result = json_decode(Storage::disk('local')->get(MergePreviewToken::CONTENT_DIR . '/' . $token . '.json'), true);
+        $this->assertSame("Générique\n\n", $result["Credits\n\n"]['v'] ?? null, 'the choice lands on the line itself, value intact');
+        $this->assertArrayNotHasKey('Credits', $result, 'and never beside it under a trimmed key');
+    }
+
     public function test_the_local_result_keeps_the_players_own_metadata(): void
     {
         $mainOwner = User::factory()->create()->refresh();
