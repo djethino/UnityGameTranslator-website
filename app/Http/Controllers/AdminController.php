@@ -133,7 +133,7 @@ class AdminController extends Controller
             // 2026-08-27, so every translation taken down on a report left its content on disk —
             // on the one path where the content is the reason for the removal.
             $translation = $report->translation;
-            app(TranslationService::class)->deleteTranslation($translation);
+            app(TranslationService::class)->deleteTranslation($translation, TranslationService::DELETED_BY_REPORT);
 
             return redirect()->route('admin.reports')
                 ->with('success', 'Translation deleted.');
@@ -563,7 +563,7 @@ class AdminController extends Controller
     {
         $gameName = $translation->game->name;
 
-        app(TranslationService::class)->deleteTranslation($translation);
+        app(TranslationService::class)->deleteTranslation($translation, TranslationService::DELETED_BY_ADMIN);
 
         return redirect()->route('admin.translations.index')
             ->with('success', "Translation for {$gameName} deleted.");

@@ -334,7 +334,7 @@ class ProfileController extends Controller
                 $service = app(TranslationService::class);
 
                 foreach ($user->translations as $translation) {
-                    $service->deleteTranslation($translation);
+                    $service->deleteTranslation($translation, TranslationService::DELETED_WITH_ACCOUNT);
                 }
             }
 

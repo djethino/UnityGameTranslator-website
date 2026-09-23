@@ -598,7 +598,10 @@ class TranslationController extends Controller
         // Row and file together, through the one method that does both. Forks and branches keep
         // theirs: parent_id is "on delete set null", so this orphans contributions rather than
         // destroying work that is not ours.
-        $service->deleteTranslation($translation);
+        // This page is open to its author AND to an admin: the trace says which one it was.
+        $service->deleteTranslation($translation, $translation->user_id === $user->id
+            ? TranslationService::DELETED_BY_AUTHOR
+            : TranslationService::DELETED_BY_ADMIN);
 
         return redirect()->route('translations.mine')
             ->with('success', 'Translation deleted successfully!');

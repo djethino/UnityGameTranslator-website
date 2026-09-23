@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Report;
 use App\Models\Translation;
 use App\Models\User;
+use App\Services\TranslationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -48,6 +50,23 @@ class TranslationFileCleanupTest extends TestCase
         return $translation;
     }
 
+    /**
+     * 🔴 And it leaves a trace saying who and how. A translation vanished and nothing could tell
+     * its author from an admin, a report or an account deletion (2026-09-23).
+     */
+    private function assertDeletionTraced(int $translationId, string $how, int $byUserId, int $ownerId): void
+    {
+        $entry = AuditLog::where('action', AuditLog::ACTION_TRANSLATION_DELETE)
+            ->where('entity_id', $translationId)
+            ->first();
+
+        $this->assertNotNull($entry, 'the deletion is traced');
+        $this->assertSame($how, $entry->metadata['how']);
+        $this->assertSame($byUserId, $entry->user_id, 'by whom');
+        $this->assertSame($ownerId, $entry->metadata['owner_id'], 'whose it was');
+        $this->assertSame('Cleanup Game', $entry->metadata['game']);
+    }
+
     public function test_an_author_deleting_their_own_translation_removes_the_file(): void
     {
         $author = User::factory()->create();
@@ -57,6 +76,20 @@ class TranslationFileCleanupTest extends TestCase
         $this->actingAs($author)->delete("/translations/{$translation->id}");
 
         $this->assertFalse(Storage::disk('local')->exists($path));
+        $this->assertDeletionTraced($translation->id, TranslationService::DELETED_BY_AUTHOR, $author->id, $author->id);
+    }
+
+    public function test_an_admin_deleting_from_the_translations_page_is_told_apart_from_its_author(): void
+    {
+        // The same page is open to both; the trace must not credit the author with an admin's act.
+        $admin = User::factory()->create(['is_admin' => true]);
+        $owner = User::factory()->create();
+        $translation = $this->makeTranslationWithFile($owner);
+
+        $this->actingAs($admin)->delete("/translations/{$translation->id}");
+
+        $this->assertNull($translation->fresh());
+        $this->assertDeletionTraced($translation->id, TranslationService::DELETED_BY_ADMIN, $admin->id, $owner->id);
     }
 
     /** 🔴 The one that was wrong: taken down on a report, and the content stayed on disk. */
@@ -80,6 +113,7 @@ class TranslationFileCleanupTest extends TestCase
 
         $this->assertNull($translation->fresh());
         $this->assertFalse(Storage::disk('local')->exists($path));
+        $this->assertDeletionTraced($translation->id, TranslationService::DELETED_BY_REPORT, $admin->id, $translation->user_id);
     }
 
     public function test_an_admin_deleting_a_translation_removes_the_file(): void
@@ -91,6 +125,7 @@ class TranslationFileCleanupTest extends TestCase
         $this->actingAs($admin)->delete("/admin/translations/{$translation->id}");
 
         $this->assertFalse(Storage::disk('local')->exists($path));
+        $this->assertDeletionTraced($translation->id, TranslationService::DELETED_BY_ADMIN, $admin->id, $translation->user_id);
     }
 
     public function test_erasing_an_account_with_its_translations_removes_the_files(): void
@@ -105,5 +140,6 @@ class TranslationFileCleanupTest extends TestCase
         ]);
 
         $this->assertFalse(Storage::disk('local')->exists($path));
+        $this->assertDeletionTraced($translation->id, TranslationService::DELETED_WITH_ACCOUNT, $user->id, $user->id);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Translation;
 use Illuminate\Support\Facades\Storage;
 
@@ -1394,12 +1395,43 @@ class TranslationService
      *
      * ⚠ Branches keep their own rows and their own files. `parent_id` is "on delete set null", so
      * removing a Main orphans its contributions rather than destroying work that is not ours.
+     *
+     * 🔴 **Traced, and the caller must say how** (2026-09-23). A translation vanished from the site
+     * and nothing could tell whether its author, an admin, a report or an account deletion had
+     * removed it: no deletion was ever logged, though `AuditLog::ACTION_TRANSLATION_DELETE` had
+     * existed from the start. `$how` is required so that a caller added later cannot delete
+     * without saying which of these it is. The row is logged BEFORE it goes: afterwards there is
+     * nothing left to describe.
+     *
+     * @param string $how one of the DELETED_BY_* constants
      */
-    public function deleteTranslation(Translation $translation): void
+    public function deleteTranslation(Translation $translation, string $how): void
     {
+        AuditLog::log(AuditLog::ACTION_TRANSLATION_DELETE, auth()->id(), 'Translation', $translation->id, [
+            'how' => $how,
+            'owner_id' => $translation->user_id,
+            'game' => $translation->game?->name,
+            'visibility' => $translation->visibility,
+            'file_uuid' => $translation->file_uuid,
+            'target_language' => $translation->target_language,
+            'line_count' => $translation->line_count,
+        ]);
+
         $this->deleteFile($translation->file_path);
         $translation->delete();
     }
+
+    /** Its author, from its page on the site. */
+    public const DELETED_BY_AUTHOR = 'author';
+
+    /** An admin, from the translation's page or the admin list. */
+    public const DELETED_BY_ADMIN = 'admin';
+
+    /** An admin, handling a report on it. */
+    public const DELETED_BY_REPORT = 'report';
+
+    /** Its author deleted their account and asked for their translations to go with it. */
+    public const DELETED_WITH_ACCOUNT = 'account_deleted';
 
     /**
      * Delete translation file from disk.
