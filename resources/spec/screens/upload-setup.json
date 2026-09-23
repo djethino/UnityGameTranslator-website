@@ -1,5 +1,5 @@
 {
-  "$comment": "What a first publication needs settled before the upload: the game, confirmed from a search; the source language, a question only until the file states it (strict source detection writes it with the first line); the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
+  "$comment": "What a first publication needs settled before the upload: the game, confirmed from a search; the source language, a question only until the file states it (strict source detection writes it with the first line); the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears), and the 'Adults only' box under the game — shown ticked and locked with its source when the game is classified, open when the upload will add the game and nothing classified it, absent otherwise (the site says which, GET /games/adult). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
   "name": "New Upload Setup",
   "size": { "width": 500, "height": 600, "minWidth": 500, "minHeight": 400 },
   "chrome": { "cardWidth": 460, "help": "Hover an element to see what it does" },
@@ -15,6 +15,9 @@
           { "kind": "label", "name": "GameName", "text": { "bind": "game" }, "role": "Body", "fill": "Stretch", "bold": true },
           { "kind": "label", "name": "GameSource", "text": { "bind": "gameSource" }, "role": "Small", "policy": "Excluded", "minWidth": 100, "align": "MiddleRight", "italic": true }
         ] },
+        { "kind": "checkbox", "name": "AdultBox", "text": "Adults only", "visible": false,
+          "help": "Tick it if this game is for adults only. You can say so only when your upload adds the game to the website and no store has classified it." },
+        { "kind": "label", "name": "AdultNote", "text": { "bind": "adultNote" }, "role": "Hint", "visible": false },
         { "kind": "row", "name": "SearchRow", "spacing": 5, "minHeight": "RowHeightLarge", "children": [
           { "kind": "field", "name": "GameSearchInput", "placeholder": "Search for a game...", "minHeight": "InputHeight",
             "help": "Type a game title to find it in the catalog and online databases. Use this if the detected game is wrong or missing." },

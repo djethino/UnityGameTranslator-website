@@ -272,6 +272,27 @@
         }
       }
     },
+    "/games/adult": {
+      "get": {
+        "tags": ["catalogue"],
+        "operationId": "gameAdultRating",
+        "summary": "Before publishing: is the picked game for adults only, and may this publication say so?",
+        "description": "Takes the two fields the upload sends and resolves them the way the upload will (the site's GameResolver), so the answer and the upload cannot disagree. `known`: a card already answers — its mark as it stands, `declarable: false`, since its first publisher already had their say. Otherwise the stores are asked on the spot (Steam content descriptor 3 on the app or its DLC, IGDB theme 42 as a fallback), nothing is created, and `declarable` is true only when they found nothing. `source` is the word a reader is shown: `steam`, `igdb`, `contributor` (the author of its first translation) or `admin`, null when not marked. Costs external quota, hence the account.",
+        "security": [{ "bearer": [] }],
+        "x-throttle": "60/min per token",
+        "parameters": [
+          { "name": "steam_id", "in": "query", "schema": { "type": "string", "maxLength": 32 }, "description": "Required without `game_name`." },
+          { "name": "game_name", "in": "query", "schema": { "type": "string", "maxLength": 255 }, "description": "Required without `steam_id`." }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameAdultRating" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Banned" },
+          "422": { "$ref": "#/components/responses/ValidationFailed" },
+          "429": { "$ref": "#/components/responses/TooMany" }
+        }
+      }
+    },
     "/games/{game}": {
       "get": {
         "tags": ["catalogue"],
@@ -949,6 +970,7 @@
           "notes": { "type": ["string", "null"], "maxLength": 1000 },
           "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s) URL where the file's assets (image replacements) are downloaded from." },
           "accepts_branches": { "type": ["boolean", "null"], "description": "Main only, written only when sent. Null: no opinion (a branch, or an older mod)." },
+          "adult_declared": { "type": ["boolean", "null"], "description": "Additive. The first publisher says the game is for adults only. Applied ONLY when this upload creates the game's card — the moment `GET /games/adult` answered `declarable: true` — and ignored otherwise, never refused: the mark is about the game, and later translators of it have no say." },
           "forked_from_id": { "type": ["integer", "null"], "description": "A fork's origin: the translation it was taken from. Verified — the caller must have been able to hold it — and dropped whole otherwise, never refused." },
           "forked_from_hash": { "oneOf": [{ "$ref": "#/components/schemas/FileHash" }, { "type": "null" }], "description": "The version taken." },
           "forked_from_lines": { "type": ["integer", "null"], "minimum": 0, "description": "How many lines the origin held at the fork — a snapshot, as declared." }
@@ -1060,6 +1082,17 @@
               "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." }
             }
           } }
+        }
+      },
+      "GameAdultRating": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["known", "adult", "source", "declarable"],
+        "properties": {
+          "known": { "type": "boolean", "description": "A card already answers to what was sent: the upload will land on it, not create one." },
+          "adult": { "type": "boolean" },
+          "source": { "enum": ["steam", "igdb", "contributor", "admin", null], "description": "Who says so, in the words a reader is shown; null when nobody does." },
+          "declarable": { "type": "boolean", "description": "The publish screen offers the 'Adults only' box: the upload will create the game and the stores found nothing." }
         }
       },
       "GameShowResponse": {

@@ -227,13 +227,12 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         Route::delete('/profile/connections', [ConnectionsController::class, 'destroyMany'])->name('profile.connections.destroy-many');
         Route::delete('/profile/browsers', [ConnectionsController::class, 'signOutOtherBrowsers'])->name('profile.browsers.destroy');
 
-        // Saying a game is for adults only when no store does.
-        //
-        // ⚠ Behind the account AND behind having published a translation of that game — the check
-        // is in the controller. It is the one act here that only ever ADDS: nothing on this route
-        // can un-mark a game, which is what makes two contributors unable to contradict each other.
-        Route::post('/games/{game}/adult', [GameController::class, 'declareAdult'])
-            ->middleware('throttle:10,1')->name('games.adult');
+        // Taking back one's own "adults only" declaration. The declaring is done by the upload that
+        // creates the game, from the mod or the Manager — never here (Game::declareAdultBy). Only
+        // the declarer passes the check, in the controller: the stores' mark and an admin's word
+        // are nobody else's to undo.
+        Route::delete('/games/{game}/adult', [GameController::class, 'withdrawAdult'])
+            ->middleware('throttle:10,1')->name('games.adult.withdraw');
 
         // Reports
         Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');

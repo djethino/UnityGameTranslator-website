@@ -373,59 +373,37 @@ class GameController extends Controller
         $targetLanguages = $game->translations()->publiclyListed()->distinct()->pluck('target_language')->sort();
         $sourceLanguages = $game->translations()->publiclyListed()->distinct()->pluck('source_language')->sort();
 
-        // May the person reading this say the game is for adults only? Only somebody who published
-        // a translation of it, and only while nothing says so yet — a control that cannot change
-        // anything does not appear (see declareAdult for why it is reserved that way).
-        $mayDeclareAdult = !$game->adult
-            && auth()->check()
-            && $game->translations()->where('user_id', auth()->id())->exists();
+        // May the person reading this take the "adults only" declaration back? Only the one who
+        // made it — see withdrawAdult.
+        $mayWithdrawAdult = $game->adultDeclarationIsBy(auth()->id());
 
         return view('games.show', compact('gameMaxResolved', 'publicTranslationCount',
             'game', 'translationGroups', 'targetLanguages', 'sourceLanguages',
             'highlightLanguage',
-            'languageFirst', 'mayDeclareAdult'));
+            'languageFirst', 'mayWithdrawAdult'));
     }
 
     /**
-     * Say that this game is for adults only, when no store does.
+     * Take back one's own "adults only" declaration.
      *
-     * 🔴 **It can only ever ADD.** There is no way back through this route — only an admin can
-     * un-mark a game. That asymmetry is what makes the whole design work without arbitration: two
-     * contributors can never contradict each other, because not declaring is not a declaration
-     * that a game is all-ages. And it lets somebody rescue what detection missed, which happens
-     * for a real reason (a game whose adult content ships as a separate DLC says nothing about
-     * itself — see App\Services\AdultRating).
-     *
-     * ⚠ **Reserved to somebody who published a translation of THIS game.** A visitor passing by is
-     * not in a position to take a game out of everyone's listings, and an account is not enough:
-     * the guard is having done work on it.
+     * 🔴 **The declaring is not here any more** (2026-09-23). It was a button open to every
+     * translator of the game, after the fact — while the agreed rule was the FIRST publisher, at
+     * the moment their upload creates the game (Game::declareAdultBy, analyse/
+     * adult-declaration-at-publish.md). What stays is the way out for that one person: somebody who
+     * ticked the box to see what it does gets out of it alone, and nobody else — another
+     * translator, a visitor — can lower a mark that is not theirs. Above them, an admin.
      */
-    public function declareAdult(Game $game)
+    public function withdrawAdult(Game $game)
     {
-        $user = auth()->user();
+        $userId = auth()->id();
 
-        if (!$game->translations()->where('user_id', $user->id)->exists()) {
+        if (!$game->adultDeclarationIsBy($userId)) {
             abort(403);
         }
 
-        // Already marked — by the store, by somebody else, or by this same person clicking twice.
-        // Nothing to add, and saying so beats writing a second, later declaration over the first.
-        if ($game->adult) {
-            return back()->with('success', __('games.adult.already'));
-        }
+        $game->withdrawAdultDeclaration($userId);
 
-        $game->adult_declared_by = $user->id;
-        $game->adult_declared_at = now();
-        $game->save();
-
-        // Traced, because a declaration takes a game out of the default listings for everybody and
-        // is undone by an admin only: whoever looks at a surprising mark must be able to see who
-        // put it there without re-deriving it.
-        \App\Models\AuditLog::log('game.adult_declared', $user->id, 'game', $game->id, [
-            'game' => $game->name,
-        ]);
-
-        return back()->with('success', __('games.adult.declared'));
+        return back()->with('success', __('games.adult.withdrawn'));
     }
 
     public function search(Request $request)

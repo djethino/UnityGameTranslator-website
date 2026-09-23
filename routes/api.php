@@ -28,6 +28,11 @@ Route::prefix('v1')->group(function () {
     Route::get('games/search', [GameController::class, 'search'])
         ->middleware(['auth.api', 'check.banned.api', 'throttle:60,1']);
 
+    // Asked by a publish screen for the game picked, before the upload that may create it: is it
+    // for adults only, and may this publication say so. Same guard as search — it asks the stores.
+    Route::get('games/adult', [GameController::class, 'adult'])
+        ->middleware(['auth.api', 'check.banned.api', 'throttle:60,1']);
+
     // ===========================================
     // PUBLIC ENDPOINTS (anonymous users)
     // Can: browse, download translations

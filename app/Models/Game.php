@@ -29,7 +29,8 @@ class Game extends Model
 
         // ⚠ No `adult*` column here, on purpose. They decide whether a game is shown at all, so
         // none of them may ever be set by a mass assignment from a request: they are written by
-        // App\Services\AdultRating, by the declaration route and by /admin, each explicitly.
+        // App\Services\AdultRating, by declareAdultBy() / withdrawAdultDeclaration() and by
+        // /admin, each explicitly.
     ];
 
     protected $casts = [
@@ -180,6 +181,48 @@ class Game extends Model
     public function adultCitation(): ?string
     {
         return $this->adultSource() === 'steam_dlc' ? 'steam' : $this->adultSource();
+    }
+
+    /**
+     * The first publisher says this game is for adults only.
+     *
+     * 🔴 **Called by ONE path: the upload that creates the card** (Api\TranslationController::store,
+     * `adult_declared`). A game's mark is a fact about the game and many people translate one game;
+     * giving each of them the say is giving any of them the power to take it out of everyone's
+     * listings. It used to be a button on the game's page open to every translator of it — the rule
+     * agreed was the first publisher (analyse/adult-declaration-at-publish.md).
+     *
+     * ⚠ Traced: it takes a game out of the default listings for everybody, and whoever looks at a
+     * surprising mark must see who put it there without re-deriving it.
+     */
+    public function declareAdultBy(int $userId): void
+    {
+        $this->adult_declared_by = $userId;
+        $this->adult_declared_at = now();
+        $this->save();
+
+        AuditLog::log('game.adult_declared', $userId, 'game', $this->id, ['game' => $this->name]);
+    }
+
+    /**
+     * Whether this person may take back the declaration on this game: only the one who made it.
+     * Somebody who ticked the box to see what it does gets out of it alone — the stores' mark and an
+     * admin's word are not theirs to undo, and never were.
+     */
+    public function adultDeclarationIsBy(?int $userId): bool
+    {
+        return $userId !== null && $this->adult_declared_at !== null
+            && (int) $this->adult_declared_by === $userId;
+    }
+
+    /** Take the declaration back. The caller has checked adultDeclarationIsBy(). */
+    public function withdrawAdultDeclaration(int $userId): void
+    {
+        $this->adult_declared_by = null;
+        $this->adult_declared_at = null;
+        $this->save();
+
+        AuditLog::log('game.adult_declaration_withdrawn', $userId, 'game', $this->id, ['game' => $this->name]);
     }
 
     public function translations()

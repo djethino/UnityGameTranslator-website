@@ -376,33 +376,130 @@ class AdultGamesTest extends TestCase
 
     // ---------------------------------------------------------------- declaring
 
-    public function test_only_somebody_who_published_a_translation_of_that_game_may_declare(): void
+    /** Publish from a client, as the mod and the Manager do, under this account. */
+    private function publishAs(User $user, array $fields): \Illuminate\Testing\TestResponse
     {
-        $author = User::factory()->create();
-        $game = $this->listedGame(['name' => 'A Game'], $author);
+        $token = \App\Models\ApiToken::createForUser($user, 'test')->plain_token;
 
-        $stranger = User::factory()->create();
-        $this->actingAs($stranger)->post(route('games.adult', $game))->assertForbidden();
-        $this->assertFalse($game->refresh()->adult);
-
-        $this->actingAs($author)->post(route('games.adult', $game))->assertRedirect();
-        $this->assertTrue($game->refresh()->adult);
-        $this->assertSame($author->id, $game->adult_declared_by);
+        return $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->postJson('/api/v1/translations', array_merge([
+                'source_language' => 'English',
+                'target_language' => 'French',
+                'content' => json_encode([
+                    '_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'Hello ' . uniqid() => ['v' => 'Bonjour', 't' => 'H'],
+                ]),
+            ], $fields));
     }
 
-    public function test_a_contributor_has_no_way_back(): void
+    private function storesKnowNothing(): void
+    {
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $this->storesSayNothingAboutAdultContent($mock);
+            $mock->shouldReceive('findGame')->andReturnNull();
+        });
+    }
+
+    public function test_the_first_publisher_declares_when_their_upload_creates_the_game(): void
+    {
+        $this->storesKnowNothing();
+        $first = User::factory()->create();
+
+        $this->publishAs($first, ['game_name' => 'A Game Nobody Knows', 'adult_declared' => true])
+            ->assertSuccessful();
+
+        $game = Game::where('name', 'A Game Nobody Knows')->firstOrFail();
+        $this->assertTrue($game->adult);
+        $this->assertSame($first->id, $game->adult_declared_by);
+        $this->assertSame('contributor', $game->adultCitation());
+    }
+
+    public function test_a_later_translator_cannot_declare_a_game_that_already_exists(): void
+    {
+        // 🔴 The rule is about the GAME, and many people translate one game: the say belongs to
+        // the first publisher alone. Sent for a game that exists, the field is ignored.
+        $this->storesKnowNothing();
+        $game = $this->listedGame(['name' => 'An Existing Game']);
+
+        $this->publishAs(User::factory()->create(), ['game_name' => 'An Existing Game', 'adult_declared' => true])
+            ->assertSuccessful();
+
+        $this->assertFalse($game->refresh()->adult);
+        $this->assertNull($game->adult_declared_at);
+    }
+
+    public function test_nobody_declares_from_the_site_any_more(): void
     {
         $author = User::factory()->create();
         $game = $this->listedGame(['name' => 'A Game'], $author);
 
-        $this->actingAs($author)->post(route('games.adult', $game));
+        $this->actingAs($author)->post('/games/' . $game->slug . '/adult')->assertStatus(405);
+        $this->assertFalse($game->refresh()->adult);
+    }
+
+    public function test_only_the_declarer_may_take_it_back(): void
+    {
+        $this->storesKnowNothing();
+        $first = User::factory()->create();
+        $this->publishAs($first, ['game_name' => 'A Declared Game', 'adult_declared' => true])->assertSuccessful();
+        $game = Game::where('name', 'A Declared Game')->firstOrFail();
+
+        // Another translator of the same game, and a passer-by: not theirs to undo.
+        $other = User::factory()->create();
+        $this->actingAs($other)->delete(route('games.adult.withdraw', $game))->assertForbidden();
         $this->assertTrue($game->refresh()->adult);
 
-        // Posting again changes nothing and overwrites nobody: there is no "undeclare" anywhere.
-        $declaredAt = $game->adult_declared_at;
-        $this->actingAs($author)->post(route('games.adult', $game))->assertRedirect();
-        $this->assertTrue($game->refresh()->adult);
-        $this->assertEquals($declaredAt, $game->adult_declared_at);
+        $this->actingAs($first)->delete(route('games.adult.withdraw', $game))->assertRedirect();
+        $this->assertFalse($game->refresh()->adult);
+        $this->assertNull($game->adult_declared_by);
+    }
+
+    public function test_the_declarer_cannot_lower_a_mark_the_stores_gave(): void
+    {
+        // Withdrawing takes back one's OWN word; the store's stays.
+        $first = User::factory()->create();
+        $game = $this->listedGame(['name' => 'A Store Game', 'adult_detected' => true, 'adult_detected_source' => 'steam']);
+        $game->declareAdultBy($first->id);
+
+        $this->actingAs($first)->delete(route('games.adult.withdraw', $game))->assertRedirect();
+        $this->assertTrue($game->refresh()->adult, 'Steam still says so');
+    }
+
+    public function test_the_publish_screen_is_told_whether_it_may_ask(): void
+    {
+        $this->storesKnowNothing();
+        $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+        $asked = fn (array $q) => $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/games/adult?' . http_build_query($q));
+
+        // A game nobody has published, and the stores find nothing: the box is offered.
+        $asked(['game_name' => 'Brand New Game'])->assertOk()
+            ->assertExactJson(['known' => false, 'adult' => false, 'source' => null, 'declarable' => true]);
+
+        // A game already on the site: its state, and no box.
+        $this->listedGame(['name' => 'Already Here', 'adult_override' => true]);
+        $asked(['game_name' => 'Already Here'])->assertOk()
+            ->assertExactJson(['known' => true, 'adult' => true, 'source' => 'admin', 'declarable' => false]);
+
+        // Nobody signed in: not asked at all — the question costs the stores' quota.
+        $this->withHeaders(['Authorization' => ''])->getJson('/api/v1/games/adult?game_name=X')->assertUnauthorized();
+    }
+
+    public function test_the_publish_screen_hears_what_the_stores_say_before_the_game_exists(): void
+    {
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('findGame')->andReturn(['name' => 'A Store Title', 'steam_id' => '3149980']);
+            $mock->shouldReceive('steamApp')->with('3149980')->andReturn(['content_descriptors' => ['ids' => [1, 3]]]);
+            $mock->shouldReceive('igdb')->andReturn([]);
+        });
+        $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/games/adult?game_name=StoreTitle&steam_id=3149980')
+            ->assertOk()
+            ->assertExactJson(['known' => false, 'adult' => true, 'source' => 'steam', 'declarable' => false]);
+
+        $this->assertSame(0, Game::count(), 'asking creates nothing');
     }
 
     public function test_the_admin_screen_says_which_source_decided(): void
@@ -454,7 +551,7 @@ class AdultGamesTest extends TestCase
     {
         $author = User::factory()->create();
         $game = $this->listedGame(['name' => 'A Game'], $author);
-        $this->actingAs($author)->post(route('games.adult', $game));
+        $game->declareAdultBy($author->id);
         $this->assertTrue($game->refresh()->adult);
 
         $admin = User::factory()->create();

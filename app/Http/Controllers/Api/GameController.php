@@ -117,6 +117,69 @@ class GameController extends Controller
     }
 
     /**
+     * Is the game a first publication names for adults only, and may this publication say so?
+     *
+     * GET /api/v1/games/adult?steam_id=…&game_name=…  — the same two fields the upload sends.
+     *
+     * 🔴 **Asked BEFORE the upload, for the game picked** (analyse/adult-declaration-at-publish.md).
+     * Games are created by the upload that publishes their first translation, from the mod or the
+     * Manager — so the one moment a publisher can be told "this game is classified for adults" or be
+     * asked about it is on their publish screen, never on a site page they may never visit.
+     *
+     * - `known`: a card already answers to it (App\Services\GameResolver, the resolver the upload
+     *   itself uses — so the screen and the upload cannot disagree). Its mark is shown as it stands
+     *   and nobody declares anything: the first publisher already had their say.
+     * - otherwise the stores are asked on the spot (App\Services\AdultRating::judge) and
+     *   `declarable` says the box is offered — true only when they found nothing.
+     *
+     * ⚠ The verdict of an unknown game is cached for a day: judging costs one store call plus up to
+     * ten for its DLC, against a limit of 200 per five minutes, and a screen opened twice asks twice.
+     */
+    public function adult(Request $request, \App\Services\GameResolver $resolver, \App\Services\AdultRating $rating): JsonResponse
+    {
+        $request->validate([
+            'steam_id' => 'nullable|required_without:game_name|string|max:32',
+            'game_name' => 'nullable|required_without:steam_id|string|max:255',
+        ]);
+
+        $steamId = $request->filled('steam_id') ? (string) $request->steam_id : null;
+        $gameName = $request->filled('game_name') ? (string) $request->game_name : null;
+
+        $found = $resolver->locate($steamId, $gameName);
+
+        if ($found['game']) {
+            $game = $found['game'];
+
+            return response()->json([
+                'known' => true,
+                'adult' => (bool) $game->adult,
+                'source' => $game->adultCitation(),
+                'declarable' => false,
+            ]);
+        }
+
+        $external = $found['external'];
+        $judgedSteamId = $external['steam_id'] ?? $steamId;
+        $judgedName = $external['name'] ?? $gameName;
+
+        // Wrapped, because Cache::remember does not keep a null — and "nothing found" is the
+        // answer most worth not asking twice.
+        $verdict = \Illuminate\Support\Facades\Cache::remember(
+            'adult-judge:' . sha1(json_encode([$judgedSteamId, $judgedName])),
+            now()->addDay(),
+            fn () => ['v' => $rating->judge($judgedSteamId, null, $judgedName)]
+        )['v'];
+
+        return response()->json([
+            'known' => false,
+            'adult' => $verdict !== null,
+            // The words a reader is shown, as on a card: the add-on detail is how we asked.
+            'source' => $verdict === 'steam_dlc' ? 'steam' : $verdict,
+            'declarable' => $verdict === null,
+        ]);
+    }
+
+    /**
      * Get a specific game with its translations.
      *
      * GET /api/v1/games/{game}

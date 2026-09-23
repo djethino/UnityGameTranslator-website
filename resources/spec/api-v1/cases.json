@@ -114,6 +114,17 @@
   },
   "cases": [
     {
+      "id": "api-v1/games/adult/known-game",
+      "why": "A game already on the site is answered from its card, with no box to offer: its first publisher already had their say, and later translators have none. No store is asked — resolved by the Steam id, as the upload would be.",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/games/adult", "as": "carol", "query": { "steam_id": "367520", "game_name": "Sample Game" } },
+      "response": {
+        "status": 200,
+        "body": { "known": true, "adult": false, "source": null, "declarable": false }
+      },
+      "read": { "reader": "game_adult", "expects": { "Known": true, "Adult": false, "Source": null, "Declarable": false } }
+    },
+    {
       "id": "api-v1/search/by-steam-id",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520", "lang": "French" } },

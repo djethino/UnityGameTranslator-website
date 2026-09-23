@@ -1089,6 +1089,10 @@ class TranslationController extends Controller
             // Null from a branch — the mod sends nothing there, because the decision belongs to
             // the Main. Applied below only where the row being written IS a Main.
             'accepts_branches' => 'nullable|boolean',
+
+            // The first publisher saying the game is for adults only. Read only when this upload
+            // creates the game — see where it is applied.
+            'adult_declared' => 'nullable|boolean',
         ]);
 
         // Parse and validate content (includes normalization)
@@ -1232,6 +1236,17 @@ class TranslationController extends Controller
             $game = $this->findOrCreateGame($request);
             if (!$game) {
                 return response()->json(['error' => 'Could not find or create game'], 422);
+            }
+
+            // 🔴 **Declared by the publication that creates the game, and by no other.** A game's
+            // adult mark is a fact about the GAME, and many people translate one game: letting each
+            // of them set it is letting any of them take it out of everyone's listings. The one
+            // publisher with a say is the first, at the one moment the card is born — which is when
+            // the publish screen showed them the box (GET games/adult answered `known: false`).
+            // Sent for a game that already existed, it is ignored: the screen offered no box.
+            // Above it, the stores and an admin (App\Models\Game::refreshAdult).
+            if ($game->wasRecentlyCreated && $request->boolean('adult_declared')) {
+                $game->declareAdultBy($userId);
             }
         }
 
@@ -1519,63 +1534,42 @@ class TranslationController extends Controller
         $gameName = $request->filled('game_name') ? $request->game_name : null;
         $company = $request->filled('game_company') ? $request->game_company : null;
 
-        // Try by Steam ID first — the card's own id, or an id recorded as also being this game
-        // (a demo's). See Game::scopeAnsweringToSteamId.
-        if ($steamId) {
-            $game = Game::answeringToSteamId($steamId)->first();
-            if ($game) {
-                $this->rememberUnityNames($game, $gameName, $company);
-                return $game;
-            }
+        // 🔴 **Which card, asked of the one resolver the publish screens ask too** (GET
+        // games/adult). Its four steps and their order are documented there and here below; what
+        // stays here is what the upload WRITES on the way — never done by a mere question.
+        //
+        // - by Steam id — the card's own, or one recorded as also being this game (a demo's);
+        // - 🔴 by the DISPLAY name before the declared one, and that order is a guard: `unity_name`
+        //   is a string a caller states about itself, so resolving on it first let an account send
+        //   any name and be sent to the game holding it (see rememberUnityNames, the other half);
+        // - by the name the machine reads, which is what other machines will search with;
+        // - 🔴 by what the stores answer — one game is one card wherever the copy came from. Asking
+        //   IGDB turns "LONESTAR" into "Lonestar: The Game", and creating on that answer without
+        //   looking again gave the same game a second entry. ⚠ Searched on what the resolution
+        //   ANSWERED, not on what the caller sent — that is the whole point of having asked.
+        $found = app(\App\Services\GameResolver::class)->locate($steamId, $gameName);
+        $externalGame = $found['external'];
+
+        if ($found['via'] === 'steam') {
+            $this->rememberUnityNames($found['game'], $gameName, $company);
+            return $found['game'];
         }
 
-        // 🔴 **The DISPLAY name before the declared one, and that order is a guard.** The display
-        // name comes from IGDB or from the upload that created the game; `unity_name` is a string a
-        // caller states about itself. Resolving on the declared one first let an account send any
-        // name and be sent to the game holding it — see rememberUnityNames for the other half.
-        if ($gameName) {
-            $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
-            if ($game) {
-                $this->attachSteamId($game, $steamId);
-                $this->rememberUnityNames($game, $gameName, $company);
-                return $game;
-            }
+        if ($found['via'] === 'name' || $found['via'] === 'unity') {
+            $this->attachSteamId($found['game'], $steamId);
+            $this->rememberUnityNames($found['game'], $gameName, $company);
+            return $found['game'];
         }
 
-        // Then by the name the machine reads, which is what other machines will search with.
-        if ($gameName) {
-            $game = Game::where('unity_name', $gameName)->first();
-            if ($game) {
-                $this->attachSteamId($game, $steamId);
-                $this->rememberUnityNames($game, $gameName, $company);
-                return $game;
-            }
-        }
-
-        // Game not found - try to get details from external APIs
+        // Game not found - the stores' answer is what a new card is made from
         if (!$gameName) {
             return null;
         }
 
-        $gameSearchService = app(GameSearchService::class);
-        $externalGame = $gameSearchService->findGame($steamId, $gameName);
-
         if ($externalGame) {
             $title = $externalGame['name'] ?? $gameName;
             $resolvedSteamId = $externalGame['steam_id'] ?? $steamId;
-
-            // 🔴 **One game is one card, wherever the copy came from** — Steam, GOG, Epic, a disc.
-            // Asking IGDB is what turns "LONESTAR" into "Lonestar: The Game", and creating on that
-            // answer without looking again is how the same game gets a second entry: the first was
-            // published from a Steam copy and carries its id, this one arrives from a store that
-            // has none, and nothing in the lookups above could match the two.
-            //
-            // ⚠ Searched on what the resolution ANSWERED, not on what the caller sent — that is
-            // the whole point of having asked.
-            $known = Game::query()
-                ->when($resolvedSteamId, fn ($q) => $q->answeringToSteamId($resolvedSteamId))
-                ->when(!$resolvedSteamId, fn ($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($title)]))
-                ->first();
+            $known = $found['game'];
 
             if ($known) {
                 // The copy in hand may know something the card does not: an id it was created
@@ -1634,7 +1628,7 @@ class TranslationController extends Controller
 
         // Rated here too, and it matters most here: this is the branch for a game no store knows
         // by name. It usually finds nothing — which is the honest answer, and what leaves the
-        // declaration on the game's page as the only way to mark it.
+        // first publisher's declaration (`adult_declared`, applied by store()) as the way to mark it.
         app(\App\Services\AdultRating::class)->rate($bare);
 
         return $bare;
