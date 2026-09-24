@@ -232,6 +232,14 @@ class TranslationService
                 'type' => $settings['type'] ?? null,
                 'scale' => $settings['scale'] ?? 1.0,
             ];
+            // Carried only when the file has them: Translation::isDeliberateFontSetting reads this
+            // column, and without these it judged size and RTL choices on a copy that had dropped
+            // them — an automatic scale counted as a choice, a "keep" alignment as nothing.
+            foreach (['size_percent', 'scale_auto', 'rtl_alignment'] as $field) {
+                if (array_key_exists($field, $settings)) {
+                    $config[$fontName][$field] = $settings[$field];
+                }
+            }
         }
 
         return !empty($config) ? $config : null;
@@ -393,6 +401,10 @@ class TranslationService
             if (is_numeric($scale) && abs((float) $scale - 1.0) > 0.001) {
                 $parts[] = 'size: ' . round((float) $scale * 100) . '%';
             }
+            $rtl = $this->asLabel($settings['rtl_alignment'] ?? null);
+            if ($rtl !== null) {
+                $parts[] = 'RTL alignment: ' . $rtl;
+            }
 
             $entries['fonts:' . $label] = [
                 'section' => 'fonts',
@@ -427,6 +439,10 @@ class TranslationService
             }
             if (($rule['enabled'] ?? true) == false) {
                 $parts[] = 'disabled';
+            }
+            $rtl = $this->asLabel($rule['rtl_alignment'] ?? null);
+            if ($rtl !== null) {
+                $parts[] = 'RTL alignment: ' . $rtl;
             }
 
             $entries['font_rules:' . $match] = [

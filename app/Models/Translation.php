@@ -499,6 +499,12 @@ class Translation extends Model
             return true;
         }
 
+        // The mod writes it only when somebody moved it off the default (mirror), so its
+        // presence alone is a decision — same answer as the mod's TranslationSettings.IsDeliberate.
+        if (!empty($settings['rtl_alignment']) && is_string($settings['rtl_alignment'])) {
+            return true;
+        }
+
         // Size is the subtle one. "scale" is the MATERIALIZED product — the automatic
         // design-scale times the deliberate percent — so a font the mod rescaled on its own
         // carries a scale != 1 that nobody chose. Only "size_percent" records the human choice.

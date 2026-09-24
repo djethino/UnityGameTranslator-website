@@ -91,6 +91,38 @@ class ComparableSettingsTest extends TestCase
         $this->assertStringContainsString('140%', $entries['fonts:Title']['value']);
     }
 
+    public function test_an_rtl_alignment_choice_is_a_setting_and_is_compared(): void
+    {
+        // The mod writes rtl_alignment only when somebody moved it off the default (mirror).
+        // Unseen here, two files differing only by it compared equal and a merge dropped it.
+        $keep = $this->service->extractComparableSettings([
+            '_fonts' => ['Body' => ['enabled' => true, 'scale' => 1.0, 'rtl_alignment' => 'keep']],
+            '_font_overrides' => [['match' => 'Button*', 'rtl_alignment' => 'mirror']],
+        ]);
+        $default = $this->service->extractComparableSettings([
+            '_fonts' => ['Body' => ['enabled' => true, 'scale' => 1.0]],
+            '_font_overrides' => [['match' => 'Button*']],
+        ]);
+
+        $this->assertArrayHasKey('fonts:Body', $keep);
+        $this->assertStringContainsString('keep', $keep['fonts:Body']['value']);
+        $this->assertArrayNotHasKey('fonts:Body', $default);
+        $this->assertNotSame($default['font_rules:Button*']['value'], $keep['font_rules:Button*']['value']);
+    }
+
+    public function test_the_font_column_keeps_what_the_deliberate_test_reads(): void
+    {
+        $config = $this->service->extractFontConfig([
+            '_fonts' => [
+                'Body' => ['enabled' => true, 'scale' => 1.0, 'rtl_alignment' => 'keep'],
+                'Auto' => ['enabled' => true, 'scale' => 1.3, 'scale_auto' => true, 'size_percent' => 1.0],
+            ],
+        ]);
+
+        $this->assertTrue(\App\Models\Translation::isDeliberateFontSetting($config['Body']));
+        $this->assertFalse(\App\Models\Translation::isDeliberateFontSetting($config['Auto']));
+    }
+
     public function test_a_font_rule_keeps_its_identity_when_another_is_inserted_above(): void
     {
         $before = $this->service->extractComparableSettings([
