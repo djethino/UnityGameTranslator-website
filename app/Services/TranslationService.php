@@ -246,6 +246,21 @@ class TranslationService
     }
 
     /**
+     * An RTL alignment choice as the mod spells it — "mirror" or "keep" — or null for anything
+     * else, which the mod itself reads as the default. A page must not show a value the game
+     * would not act on.
+     */
+    public static function rtlAlignment(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+        $value = strtolower(trim($value));
+
+        return in_array($value, ['mirror', 'keep'], true) ? $value : null;
+    }
+
+    /**
      * Summarize the translation settings that travel in the file alongside the
      * lines but are NOT lines: font overrides, image replacements, exclusions,
      * variables and game settings. Fonts have their own column (font_config).
@@ -281,6 +296,8 @@ class TranslationService
                     : null,
                 // Absent means enabled: the mod only writes the key when false
                 'enabled' => ($rule['enabled'] ?? true) == true,
+                // Absent means "inherit from the font"; the mod writes mirror or keep
+                'rtl_alignment' => self::rtlAlignment($rule['rtl_alignment'] ?? null),
             ];
         });
         if ($overrides) {

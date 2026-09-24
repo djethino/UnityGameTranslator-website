@@ -80,6 +80,12 @@
                                 {{ __('fonts.scale') }} &times;{{ number_format($settings['scale'], 1) }}
                             </span>
                         @endif
+                        {{-- On a font, mirroring is the default: only the opt-out is a setting --}}
+                        @if(\App\Services\TranslationService::rtlAlignment($settings['rtl_alignment'] ?? null) === 'keep')
+                            <span class="bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded text-xs flex-shrink-0" title="{{ __('fonts.rtl_tooltip') }}">
+                                {{ __('fonts.rtl_keep') }}
+                            </span>
+                        @endif
                         @if(!($settings['enabled'] ?? true))
                             <span class="bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
                                 <i class="fas fa-ban mr-1"></i>{{ __('fonts.disabled') }}
@@ -114,6 +120,12 @@
                         @if(!empty($rule['size_multiplier']))
                             <span class="bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded text-xs flex-shrink-0">
                                 {{ __('fonts.scale') }} &times;{{ number_format($rule['size_multiplier'], 1) }}
+                            </span>
+                        @endif
+                        {{-- On a rule, both are settings: absent means "inherit from the font" --}}
+                        @if(($rule['rtl_alignment'] ?? null) !== null)
+                            <span class="bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded text-xs flex-shrink-0" title="{{ __('fonts.rtl_tooltip') }}">
+                                {{ $rule['rtl_alignment'] === 'keep' ? __('fonts.rtl_keep') : __('fonts.rtl_mirror') }}
                             </span>
                         @endif
                         @if(!($rule['enabled'] ?? true))

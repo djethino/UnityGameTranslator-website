@@ -110,6 +110,22 @@ class ComparableSettingsTest extends TestCase
         $this->assertNotSame($default['font_rules:Button*']['value'], $keep['font_rules:Button*']['value']);
     }
 
+    public function test_the_rule_summary_carries_only_an_alignment_the_mod_acts_on(): void
+    {
+        $summary = $this->service->extractSettingsSummary([
+            '_font_overrides' => [
+                ['match' => 'A*', 'rtl_alignment' => 'Keep'],
+                ['match' => 'B*', 'rtl_alignment' => 'sideways'],
+                ['match' => 'C*'],
+            ],
+        ]);
+
+        $items = $summary['font_overrides']['items'];
+        $this->assertSame('keep', $items[0]['rtl_alignment']);
+        $this->assertNull($items[1]['rtl_alignment']);
+        $this->assertNull($items[2]['rtl_alignment']);
+    }
+
     public function test_the_font_column_keeps_what_the_deliberate_test_reads(): void
     {
         $config = $this->service->extractFontConfig([
