@@ -12,6 +12,7 @@
     "tokens": { "in": { "text": "string" }, "out": "list: every placeholder in order, repeats included" },
     "invented": { "in": { "source": "string", "translation": "string?" }, "out": "list: the tokens the answer carries that the source never had, once each" },
     "tally": { "in": { "text": "string" }, "out": "object: token → how many times it appears" },
+    "length_at": { "in": { "text": "string", "index": "int" }, "out": "int: the length of the placeholder starting at index, 0 when none does" },
     "max_attempts": { "in": {}, "out": "int: how many times a text is sent before it is left untranslated" }
   },
   "cases": [
@@ -242,6 +243,17 @@
     { "id": "placeholders/tally/empty", "op": "tally",
       "in": { "text": "" }, "out": {},
       "why": "nothing to count" },
+
+    { "id": "placeholders/length_at/where-one-starts", "op": "length_at",
+      "in": { "text": "ab [!STR*12] cd", "index": 3 }, "out": 9,
+      "why": "a scanner walking a text jumps over a placeholder whole, measured by the grammar rather than by a length somebody picked" },
+    { "id": "placeholders/length_at/a-line-break", "op": "length_at",
+      "in": { "text": "[!nl]", "index": 0 }, "out": 5, "why": "the fourth family, which carries no number" },
+    { "id": "placeholders/length_at/what-merely-looks-like-one", "op": "length_at",
+      "in": { "text": "[!note] cd", "index": 0 }, "out": 0,
+      "why": "a game's own \"[!note]\" is text: the right-to-left composer used to protect anything from \"[!\" to \"]\" within 32 characters" },
+    { "id": "placeholders/length_at/before-one", "op": "length_at",
+      "in": { "text": "ab [!v*0]", "index": 0 }, "out": 0, "why": "only a placeholder that starts exactly there" },
 
     { "id": "placeholders/max_attempts/three", "op": "max_attempts",
       "in": {}, "out": 3,
