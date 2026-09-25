@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unitygametranslator.asymptomatikgames.com/spec/texts-seen/schema.json",
+  "title": "texts-seen.json — what text systems a game showed while UGT Mod ran",
+  "description": "Written by UGT Mod in its data folder (beside config.json), read by UGT Manager. A set that only grows while the game runs, rewritten when it does. It says what the game SHOWED; what the game merely CONTAINS is read from its files by the Manager and is not written here. Vocabulary: common/src/TextSystems.cs.",
+  "type": "object",
+  "required": ["format", "systems"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1,
+      "description": "TextSystems.Format. A reader meeting a higher number reads what it knows and names the rest."
+    },
+    "systems": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "The systems met. input-* are input fields, whose own text is what the player typed.",
+      "items": {
+        "enum": ["tmp", "tmp-legacy", "ui-text", "textmesh", "tk2d", "ngui", "ui-toolkit", "input-tmp", "input-ui-text"]
+      }
+    },
+    "other": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Text components the mod handles generically and knows by type name only (none of the systems above).",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "mod_version": {
+      "type": "string",
+      "description": "The UGT Mod that wrote the file: an older one may not have known every system."
+    }
+  }
+}

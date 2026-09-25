@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "id": "texts-seen/tmp-with-its-input-field",
+      "document": { "format": 1, "systems": ["tmp", "input-tmp"], "mod_version": "0.13.7" },
+      "written": true,
+      "manager": { "line": "TextMesh Pro · input fields: TextMesh Pro" },
+      "why": "the question this file exists for: does this game show a TextMesh Pro input field"
+    },
+    {
+      "id": "texts-seen/several-and-a-generic-one",
+      "document": { "format": 1, "systems": ["ui-text", "tmp", "input-ui-text"], "other": ["SuperTextMesh"] },
+      "written": true,
+      "manager": { "line": "TextMesh Pro, UI Text, SuperTextMesh · input fields: UI Text" },
+      "why": "shown in the socle's order whatever the file's order; a generic component by its name, after the known ones"
+    },
+    {
+      "id": "texts-seen/nothing-met-yet",
+      "document": { "format": 1, "systems": [] },
+      "written": true,
+      "manager": { "line": "" },
+      "why": "a game started with the mod before any text appeared: known to show nothing yet, which is not the same as never having run"
+    },
+    {
+      "id": "texts-seen/a-newer-mods-word",
+      "document": { "format": 1, "systems": ["tmp", "rich-3d"] },
+      "written": false,
+      "manager": { "line": "TextMesh Pro, rich-3d" },
+      "why": "a word a newer mod writes is outside this schema, and the reader names it rather than dropping it"
+    },
+    {
+      "id": "texts-seen/no-format",
+      "document": { "systems": ["tmp"] },
+      "written": false,
+      "manager": { "line": "TextMesh Pro" },
+      "why": "format is required of a writer; a reader does not refuse the systems over it"
+    }
+  ]
+}
