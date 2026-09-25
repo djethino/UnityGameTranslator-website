@@ -95,7 +95,7 @@
       "match": "qwen3.8:27b",
       "runner": "ollama",
       "role": "reference",
-      "note": "What the mod is developed against. 16.1 GB. Followed every instruction, never asked twice. The only one here that refuses both a foreign language and an invented one.",
+      "note": "What UGT Mod is developed against. 16.1 GB. Followed every instruction, never asked twice. The only one here that refuses both a foreign language and an invented one.",
       "pull": "qwen3.8:27b",
       "download_gb": 17.7,
       "min_vram_gb": 24,
@@ -377,7 +377,7 @@
       "match": "gpt-oss",
       "runner": "ollama",
       "role": "tested",
-      "note": "Reasons before answering, so every line costs noticeably more time. Not offered for download either: the smaller build is a 14 GB download and the other 65 GB, both beyond the cards this tool is aimed at."
+      "note": "Reasons before answering, so every line costs noticeably more time. Not offered for download either: the smaller build is a 14 GB download and the other 65 GB, both beyond the graphics cards UGT Mod is aimed at."
     }
   ]
 }
