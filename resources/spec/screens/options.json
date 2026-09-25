@@ -248,6 +248,12 @@
                 "help": "Skip texts that are not in the source language, so foreign or already-translated text is left alone. AI backend only." },
               { "kind": "label", "name": "StrictHint", "text": "Skip texts not matching source language (LLM only)", "role": "Hint" },
               { "kind": "spacer", "name": "LLMGap3", "height": 8 },
+              { "kind": "checkbox", "name": "UnloadOnExitToggle", "text": " Unload the model when the game closes", "tone": "Secondary",
+                "help": "Frees the graphics card for the next game. Works with Ollama, LM Studio and llama.cpp. vLLM keeps its model until you stop it." },
+              { "kind": "checkbox", "name": "KeepLoadedToggle", "text": " Keep the model loaded while playing", "tone": "Secondary",
+                "help": "No reload after a quiet moment. The model uses graphics card memory for the whole session. If the game crashes, it stays loaded until you restart the server." },
+              { "kind": "label", "name": "ModelMemoryHint", "text": "Local servers only. Keeping it loaded matters for Ollama, which unloads an idle model after 5 minutes", "role": "Hint" },
+              { "kind": "spacer", "name": "LLMGap4", "height": 8 },
               { "kind": "collapsible", "name": "AiAdvanced", "title": "Advanced", "expanded": false, "children": [
                 { "kind": "label", "name": "AttemptsHint", "text": "How many requests one line may cost at most — used both to repair a broken placeholder and to retranslate a line you did not like", "role": "Hint" },
                 { "kind": "field", "name": "MaxAttempts", "caption": "Attempts:", "placeholder": "3", "captionWidth": 110, "minWidth": 70, "fill": "Content",
