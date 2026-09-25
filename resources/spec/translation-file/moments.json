@@ -88,7 +88,7 @@
         { "write": {} }
       ],
       "expect": { "source_hash": "h3", "site_id": 12, "local_changes": 0, "ancestor": { "Play": { "v": "Jouer", "t": "H" }, "New": { "v": "Nouveau", "t": "A" } } },
-      "held_by": ["mod"],
+      "held_by": ["mod", "manager"],
       "why": "what was just sent IS what the site now holds: the ancestor is the local file as sent, the hash is the one the site answered, nothing is left to publish"
     },
     {
@@ -98,7 +98,7 @@
         { "upload": { "hash": "h3", "site_id": null } }
       ],
       "expect": { "source_hash": "h3", "site_id": 12 },
-      "held_by": ["mod"],
+      "held_by": ["mod", "manager"],
       "why": "an answer that names no row is not a row lost"
     },
     {
