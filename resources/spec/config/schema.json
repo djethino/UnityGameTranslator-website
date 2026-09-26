@@ -36,6 +36,7 @@
     "normalize_numbers": { "type": "boolean", "default": true, "x-writer": "mod" },
     "debug": { "type": "boolean", "default": false, "x-writer": "mod" },
     "debug_ai": { "type": "boolean", "default": false, "x-writer": "mod" },
+    "debug_text_trace": { "type": "boolean", "default": false, "x-writer": "mod", "description": "Record every text the game writes, and what the mod does with it, to a file beside the translation. Local only; the cases the routing corpus replays." },
     "preload_model": { "type": "boolean", "default": true, "x-writer": "mod" },
     "ai_api_key": { "type": ["string", "null"], "default": null, "x-writer": "both", "x-secret": true },
     "google_api_key": { "type": ["string", "null"], "default": null, "x-writer": "both", "x-secret": true },

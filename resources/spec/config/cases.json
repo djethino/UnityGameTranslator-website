@@ -6,7 +6,7 @@
       "document": {
         "translation_backend": "none", "ai_url": "http://127.0.0.1:11434", "ai_model": "", "target_language": "auto", "source_language": "auto",
         "strict_source_language": false, "game_context": "", "timeout_ms": 300000, "enable_ai": false, "cache_new_translations": true,
-        "normalize_numbers": true, "debug": false, "debug_ai": false, "preload_model": true, "ai_api_key": null, "google_api_key": null,
+        "normalize_numbers": true, "debug": false, "debug_ai": false, "debug_text_trace": false, "preload_model": true, "ai_api_key": null, "google_api_key": null,
         "deepl_api_key": null, "deepl_use_free": true, "rate_limit_retry_delay": 3.0, "ai_max_attempts": 3, "ai_temperature": 0.0,
         "ai_temperature_repair": 0.3, "ai_temperature_retranslate": 0.8, "ai_seed": null, "ai_seed_repair": null, "ai_seed_retranslate": null,
         "max_text_detection_latency_seconds": 1.0, "config_version": 3, "capture_keys_only": false, "translate_mod_ui": null, "interface_font": null,

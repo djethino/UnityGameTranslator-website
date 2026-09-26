@@ -32,6 +32,8 @@
             "help": "Write detailed logs to the mod log file. Turn on when reporting an issue, then share the log. Off by default." },
           { "kind": "checkbox", "name": "DebugAiToggle", "text": " Debug AI translation", "tone": "Secondary", "act": "debugAiChanged",
             "help": "Log every AI request and response (prompts, raw output, placeholder handling). Verbose — use only to diagnose translation quality." },
+          { "kind": "checkbox", "name": "TextTraceToggle", "text": " Record text writes", "tone": "Secondary", "act": "textTraceChanged",
+            "help": "Save every text the game writes, and what the mod shows instead, to a file in the mod folder. Stays on this computer. Turn on to report a text that shows wrong, then share the file." },
           { "kind": "spacer", "name": "GeneralGap4", "height": 10 },
           { "kind": "stack", "name": "LanguagesEditableSection", "children": [
             { "kind": "label", "name": "LangLabel", "text": "Languages", "role": "SectionTitle" },
