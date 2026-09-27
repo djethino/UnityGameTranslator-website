@@ -34,8 +34,8 @@
           { "kind": "row", "name": "PackPathRow", "spacing": 5, "minHeight": "InputHeight", "children": [
             { "kind": "field", "name": "PackPathInput", "placeholder": "Full path of a .ugtpack file",
               "help": "Paste the full path of a .ugtpack file anywhere on this computer." },
-            { "kind": "button", "name": "PackAddBtn", "text": "Add", "minWidth": 60, "act": "addPackPath",
-              "help": "Reads the pack and lists what it would add. Takes effect on Apply." }
+            { "kind": "button", "name": "PackAddBtn", "text": "Open", "minWidth": 60, "act": "addPackPath",
+              "help": "Opens the pack and lists what it holds. Nothing is installed until Apply." }
           ] },
           { "kind": "label", "name": "PackNotes", "text": { "bind": "packNotes" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "visible": false },
           { "kind": "list", "name": "PackOffersScroll", "minHeight": 0, "preferredHeight": 160, "fill": false, "empty": "Nothing to add.", "visible": false },
@@ -252,8 +252,8 @@
   "templates": [
     { "kind": "row", "name": "PackFileRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
       { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
-      { "kind": "button", "name": "AddBtn", "text": "Add", "minWidth": 50, "act": "add",
-        "help": "Reads this pack and lists what it would add. Takes effect on Apply." }
+      { "kind": "button", "name": "AddBtn", "text": "Open", "minWidth": 50, "act": "add",
+        "help": "Opens this pack and lists what it holds. Nothing is installed until Apply." }
     ] },
     { "kind": "row", "name": "PackOfferRow", "spacing": 5, "padX": 6, "padY": 3, "minHeight": "RowHeightNormal", "children": [
       { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
