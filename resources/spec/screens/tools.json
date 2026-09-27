@@ -29,7 +29,13 @@
         { "kind": "card", "name": "PacksCard", "children": [
           { "kind": "label", "name": "PacksLabel", "text": "Asset Packs", "role": "SectionTitle" },
           { "kind": "label", "name": "PacksHint", "text": "Fonts and replacement images shared as a .ugtpack file. Put packs in the packs folder, or paste the full path of one.", "role": "Hint" },
-          { "kind": "label", "name": "PacksFolder", "text": { "bind": "packsFolder" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary" },
+          { "kind": "row", "name": "PacksFolderRow", "spacing": 5, "minHeight": "ButtonHeight", "children": [
+            { "kind": "label", "name": "PacksFolder", "text": { "bind": "packsFolder" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch" },
+            { "kind": "button", "name": "PacksOpenFolderBtn", "text": "Open folder", "minWidth": 90, "act": "openPacksFolder",
+              "help": "Opens the packs folder on this computer, to drop .ugtpack files into it." },
+            { "kind": "button", "name": "PacksRefreshBtn", "text": "Refresh", "minWidth": 70, "act": "refreshPacks",
+              "help": "Reads the packs folder again, for packs added while the game runs." }
+          ] },
           { "kind": "list", "name": "PacksFolderScroll", "minHeight": 0, "preferredHeight": 80, "fill": false, "empty": "No .ugtpack file in the packs folder." },
           { "kind": "row", "name": "PackPathRow", "spacing": 5, "minHeight": "InputHeight", "children": [
             { "kind": "field", "name": "PackPathInput", "placeholder": "Full path of a .ugtpack file",
