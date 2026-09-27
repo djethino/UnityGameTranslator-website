@@ -60,7 +60,7 @@
           { "kind": "label", "name": "ExclusionsStatus", "text": { "bind": "exclusionsStatus" }, "role": "Small" }
         ] }
       ] },
-      { "kind": "tab", "name": "FailuresTab", "text": "Failures", "help": "Lines the AI could not translate this session, to settle one by one", "children": [
+      { "kind": "tab", "name": "FailuresTab", "text": "Failures", "help": "Lines left untranslated, to settle one by one", "children": [
         { "kind": "card", "name": "FailuresCard", "stretch": true, "children": [
           { "kind": "label", "name": "FailuresLabel", "text": "AI failures", "role": "SectionTitle" },
           { "kind": "label", "name": "FailuresHint", "text": "Every attempt broke a placeholder, so the line was left untranslated. Fix one of the proposals, write your own, skip the line, or exclude the element that shows it.", "role": "Hint" },
@@ -109,7 +109,13 @@
                 "help": "Excludes every element with this name, at any depth. Listed in Exclusions, applied on Apply." }
             ] }
           ] },
-          { "kind": "label", "name": "FailStatus", "text": { "bind": "failStatus" }, "role": "Small" }
+          { "kind": "label", "name": "FailStatus", "text": { "bind": "failStatus" }, "role": "Small" },
+          { "kind": "stack", "name": "HeldSection", "spacing": 4, "visible": false, "children": [
+            { "kind": "spacer", "name": "HeldGap", "height": 8 },
+            { "kind": "label", "name": "HeldLabel", "text": "Held texts", "role": "SectionTitle" },
+            { "kind": "label", "name": "HeldHint", "text": "These elements show the start of a longer line, then write the rest. The start is not sent to the AI there. Remove one if it is a complete text.", "role": "Hint" },
+            { "kind": "list", "name": "HeldScroll", "minHeight": 0, "preferredHeight": 60, "fill": false }
+          ] }
         ] }
       ] },
       { "kind": "tab", "name": "FontsTab", "text": "Fonts", "help": "Replace the game's fonts when they can't display your language's characters" },
@@ -238,6 +244,16 @@
     { "kind": "row", "name": "FailureRow", "spacing": 8, "padX": 6, "padY": 5, "surface": "Item", "minHeight": "RowHeightNormal", "act": "pick", "children": [
       { "kind": "label", "name": "Source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
       { "kind": "label", "name": "Attempts", "text": { "bind": "attempts" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "wrap": false, "minWidth": 80, "align": "MiddleRight" }
+    ] },
+    { "kind": "row", "name": "HeldRow", "spacing": 5, "padX": 6, "padY": 3, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
+        { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
+        { "kind": "label", "name": "Element", "text": { "bind": "element" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch" }
+      ] },
+      { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight", "visible": false },
+      { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo", "visible": false },
+      { "kind": "button", "name": "DeleteBtn", "text": "X", "minWidth": 30, "act": "delete",
+        "help": "Sends this text to the AI again on this element. Applied on Apply." }
     ] },
     { "kind": "stack", "name": "TextRow", "pad": 4, "fill": "Stretch", "children": [
       { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" }
