@@ -25,6 +25,26 @@
           { "kind": "checkbox", "name": "ConcatToggle", "text": "Procedural text detection", "act": "concatChanged",
             "help": "Detects text assembled in parts, like tooltips or item stats, and translates each part for better cache reuse. Disable if it causes issues." },
           { "kind": "label", "name": "ConcatHint", "text": "Text built in multiple steps (tooltips, item stats). Translates each part separately for better cache reuse.", "role": "Hint" }
+        ] },
+        { "kind": "card", "name": "PacksCard", "children": [
+          { "kind": "label", "name": "PacksLabel", "text": "Asset Packs", "role": "SectionTitle" },
+          { "kind": "label", "name": "PacksHint", "text": "Fonts and replacement images shared as a .ugtpack file. Put packs in the packs folder, or paste the full path of one.", "role": "Hint" },
+          { "kind": "label", "name": "PacksFolder", "text": { "bind": "packsFolder" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary" },
+          { "kind": "list", "name": "PacksFolderScroll", "minHeight": 0, "preferredHeight": 80, "fill": false, "empty": "No .ugtpack file in the packs folder." },
+          { "kind": "row", "name": "PackPathRow", "spacing": 5, "minHeight": "InputHeight", "children": [
+            { "kind": "field", "name": "PackPathInput", "placeholder": "Full path of a .ugtpack file",
+              "help": "Paste the full path of a .ugtpack file anywhere on this computer." },
+            { "kind": "button", "name": "PackAddBtn", "text": "Add", "minWidth": 60, "act": "addPackPath",
+              "help": "Reads the pack and lists what it would add. Takes effect on Apply." }
+          ] },
+          { "kind": "label", "name": "PackNotes", "text": { "bind": "packNotes" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "visible": false },
+          { "kind": "list", "name": "PackOffersScroll", "minHeight": 0, "preferredHeight": 160, "fill": false, "empty": "Nothing to add.", "visible": false },
+          { "kind": "row", "name": "PackSummaryRow", "spacing": 5, "minHeight": "ButtonHeight", "visible": false, "children": [
+            { "kind": "label", "name": "PackSummary", "text": { "bind": "packSummary" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+            { "kind": "button", "name": "PackUndoBtn", "text": "Undo", "minWidth": 60, "act": "clearPacks",
+              "help": "Clears this list. Nothing in the game is changed." }
+          ] },
+          { "kind": "label", "name": "PacksStatus", "text": { "bind": "packsStatus" }, "role": "Small" }
         ] }
       ] },
       { "kind": "tab", "name": "ExclusionsTab", "text": "Exclusions", "help": "Prevent specific texts or UI elements from being translated", "children": [
@@ -230,6 +250,23 @@
     { "kind": "button", "name": "ApplyBtn", "text": "Apply", "policy": "Dynamic", "tone": "Primary", "act": "apply" }
   ],
   "templates": [
+    { "kind": "row", "name": "PackFileRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
+      { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "button", "name": "AddBtn", "text": "Add", "minWidth": 50, "act": "add",
+        "help": "Reads this pack and lists what it would add. Takes effect on Apply." }
+    ] },
+    { "kind": "row", "name": "PackOfferRow", "spacing": 5, "padX": 6, "padY": 3, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
+        { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
+        { "kind": "label", "name": "From", "text": { "bind": "from" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch" }
+      ] },
+      { "kind": "label", "name": "State", "text": { "bind": "state" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 110, "align": "MiddleRight" },
+      { "kind": "checkbox", "name": "ReplaceToggle", "text": "Replace", "act": "replaceChanged", "visible": false,
+        "help": "This game already has a different file or setting for it. The current one is backed up first." }
+    ] },
+    { "kind": "row", "name": "PackRefusedRow", "spacing": 5, "padX": 6, "padY": 2, "minHeight": "RowHeightSmall", "children": [
+      { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "richText": false, "fill": "Stretch" }
+    ] },
     { "kind": "row", "name": "FindResult", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
       { "kind": "label", "name": "Path", "text": { "bind": "path" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
       { "kind": "label", "name": "Engine", "text": { "bind": "engine" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 60, "align": "MiddleRight" },
