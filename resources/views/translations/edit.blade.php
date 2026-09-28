@@ -89,11 +89,11 @@
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.status') }}</label>
             <div class="flex gap-4">
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="status" value="in_progress" {{ $translation->status == 'in_progress' ? 'checked' : '' }} class="mr-2 text-purple-600">
+                    <input type="radio" name="status" value="in_progress" {{ old('status', $translation->status) == 'in_progress' ? 'checked' : '' }} class="mr-2 text-purple-600">
                     <span><i class="fas fa-clock text-yellow-400 mr-1"></i> {{ __('translation.in_progress') }}</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="status" value="complete" {{ $translation->status == 'complete' ? 'checked' : '' }} class="mr-2 text-purple-600">
+                    <input type="radio" name="status" value="complete" {{ old('status', $translation->status) == 'complete' ? 'checked' : '' }} class="mr-2 text-purple-600">
                     <span><i class="fas fa-check text-green-400 mr-1"></i> {{ __('translation.complete') }}</span>
                 </label>
             </div>
@@ -135,14 +135,14 @@
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.notes') }}</label>
             <textarea name="notes" rows="3" maxlength="1000"
                 placeholder="{{ __('upload.notes_placeholder') }}"
-                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">{{ $translation->notes }}</textarea>
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">{{ old('notes', $translation->notes) }}</textarea>
         </div>
 
         <!-- Resources URL -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('upload.resources_url') }}</label>
             <input type="url" name="resources_url" maxlength="2048"
-                value="{{ $translation->resources_url }}"
+                value="{{ old('resources_url', $translation->resources_url) }}"
                 placeholder="{{ __('upload.resources_url_placeholder') }}"
                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500">
             <p class="text-xs text-gray-500 mt-1">{{ __('upload.resources_url_hint') }}</p>
