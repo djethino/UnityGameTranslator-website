@@ -13,7 +13,7 @@
         "translate_localization_fallback": false, "first_run_completed": false, "online_mode": false, "enable_translations": true,
         "enable_image_replacement": true, "enable_font_replacement": true, "capture_keyboard": true, "capture_keyboard_focus_only": true,
         "capture_game_menus": false, "capture_game_clicks": false, "capture_mouse_axes": false, "pause_game": false,
-        "panel_opacity_focused": 1.0, "panel_opacity_unfocused": 0.75, "max_font_atlas_size": 0, "settings_hotkey": "F10",
+        "panel_opacity_focused": 1.0, "panel_opacity_unfocused": 0.75, "max_font_atlas_size": 0, "settings_hotkey": "Shift+F10",
         "toggle_translations_hotkey": "", "toggle_ai_hotkey": "", "toggle_images_hotkey": "", "toggle_fonts_hotkey": "", "toggle_overlay_hotkey": "",
         "open_inspector_hotkey": "", "open_upload_hotkey": "", "open_exclusion_mode_hotkey": "", "open_text_editor_hotkey": "", "force_scan_hotkey": "",
         "api_token": null, "api_user": null, "api_token_server": null, "api_base_url": null, "website_base_url": null, "sse_base_url": null,
@@ -24,7 +24,7 @@
       "input": { "system_language": "French" },
       "written": true,
       "read": { "translation_backend": "none", "enable_ai": false, "IsTranslationEnabled": false, "config_version": 3, "TargetLanguage": "French", "SourceLanguage": null, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": true, "AttemptsAllowed": 3, "TemperatureNormal": 0.0 },
-      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": "F10", "AutoTranslate": false, "Values.TargetLanguage": "auto", "Values.TranslationBackend": "none", "Values.Channel": "stable", "Values.AiApiKey": null },
+      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": "Shift+F10", "AutoTranslate": false, "Values.TargetLanguage": "auto", "Values.TranslationBackend": "none", "Values.Channel": "stable", "Values.AiApiKey": null },
       "why": "the current written form, every key present: a Core must produce this shape. ⚠ The Manager reads it as a CONFIGURED game — the hotkey the mod wrote by default counts as a key the game carries — and `auto` as a mode of its own (follow the system), never as a language nor as 'nothing said'"
     },
     {
@@ -32,7 +32,7 @@
       "document": {},
       "input": { "system_language": "French" },
       "written": true,
-      "read": { "translation_backend": "none", "enable_ai": false, "ai_url": "http://127.0.0.1:11434", "target_language": "auto", "TargetLanguage": "French", "config_version": 3, "timeout_ms": 300000, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": false, "settings_hotkey": "F10" },
+      "read": { "translation_backend": "none", "enable_ai": false, "ai_url": "http://127.0.0.1:11434", "target_language": "auto", "TargetLanguage": "French", "config_version": 3, "timeout_ms": 300000, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": false, "settings_hotkey": "Shift+F10" },
       "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": null, "AutoTranslate": null, "Values.TargetLanguage": null, "Values.TranslationBackend": null, "Values.Channel": null },
       "why": "every key has a default, so an empty file is a valid file. ⚠ A file that says nothing about `sync` is an EXISTING file that predates the stream switch, so it is read as having declined it (realtime false), where a fresh install writes true"
     },

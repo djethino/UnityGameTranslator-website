@@ -2145,7 +2145,7 @@ c = 0.8 → 1.0</pre>
   "source_language": "auto",
   "target_language": "auto",
   "game_context": "",
-  "settings_hotkey": "F10",
+  "settings_hotkey": "Shift+F10",
   "online_mode": true,
   "sync": {
     "update_check_frequency": "auto",
@@ -2193,7 +2193,7 @@ c = 0.8 → 1.0</pre>
                             </tr>
                             <tr class="border-t border-gray-700">
                                 <td class="px-4 py-2"><code class="text-purple-300">settings_hotkey</code></td>
-                                <td class="px-4 py-2"><code>"F10"</code></td>
+                                <td class="px-4 py-2"><code>"Shift+F10"</code></td>
                                 <td class="px-4 py-2">{{ __('docs.config_hotkey') }}</td>
                             </tr>
                             <tr class="border-t border-gray-700">
