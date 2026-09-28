@@ -49,10 +49,12 @@
       ] },
       { "kind": "callout", "name": "FontConversionBox", "tone": "Info", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
         { "kind": "label", "name": "FontConversionLabel", "text": { "bind": "fontConversion" }, "policy": "Excluded", "minHeight": "RowHeightSmall" },
+        { "kind": "progress", "name": "FontConversionBar", "tone": "Info" },
         { "kind": "label", "name": "FontConversionProgress", "text": { "bind": "fontConversionProgress" }, "policy": "Excluded", "role": "Small" }
       ] },
       { "kind": "callout", "name": "AIBox", "tone": "Info", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "minHeight": "MultiLineSmall", "visible": false, "children": [
         { "kind": "label", "name": "AIStatusLabel", "text": { "bind": "aiStatus" }, "policy": "Excluded", "minHeight": "RowHeightSmall" },
+        { "kind": "progress", "name": "AIQueueBar", "tone": "Info", "visible": false },
         { "kind": "label", "name": "AIQueueLabel", "text": { "bind": "aiQueue" }, "policy": "Excluded", "role": "Small" }
       ] },
       { "kind": "row", "name": "ConnectionBox", "spacing": 5, "padX": 8, "padY": 0, "placement": "MiddleRight", "minHeight": "RowHeightSmall", "visible": false, "children": [

@@ -180,6 +180,7 @@
             { "kind": "button", "name": "ScanBtn", "text": "Scan", "tone": "Primary", "minWidth": 70, "act": "scan",
               "help": "Searches game memory for the entered value so it can be turned into a reusable placeholder." }
           ] },
+          { "kind": "progress", "name": "ScanBar", "tone": "Info", "visible": false },
           { "kind": "spacer", "name": "VarsGap2", "height": 5 },
           { "kind": "list", "name": "ScanResultsScroll", "minHeight": 80, "preferredHeight": 100, "fill": false, "empty": "No matching fields found in game memory.", "visible": false },
           { "kind": "spacer", "name": "VarsGap3", "height": 8 },
