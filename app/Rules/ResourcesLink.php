@@ -20,9 +20,18 @@ class ResourcesLink implements ValidationRule
 {
     /** Programs, installers and scripts, on every system a game runs on. */
     public const PROGRAM_EXTENSIONS = [
-        'exe', 'msi', 'msix', 'msixbundle', 'appx', 'appxbundle', 'com', 'scr', 'pif', 'cpl', 'dll', 'sys',
-        'bat', 'cmd', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse', 'wsf', 'wsh', 'hta', 'msc', 'reg', 'lnk', 'jar',
-        'sh', 'run', 'bin', 'appimage', 'deb', 'rpm', 'dmg', 'pkg', 'app', 'command', 'apk',
+        // Windows
+        'exe', 'msi', 'msp', 'msix', 'msixbundle', 'appx', 'appxbundle', 'application', 'appref-ms',
+        'com', 'scr', 'pif', 'cpl', 'dll', 'sys', 'bat', 'cmd', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse',
+        'wsf', 'wsh', 'hta', 'msc', 'reg', 'lnk', 'jar',
+        // macOS
+        'dmg', 'pkg', 'mpkg', 'app', 'command', 'scpt', 'applescript', 'workflow',
+        // Linux, Steam Deck
+        'sh', 'run', 'bin', 'appimage', 'deb', 'rpm', 'desktop',
+        // Scripts a double-click runs once their interpreter is installed
+        'py', 'pl', 'rb',
+        // Android
+        'apk',
     ];
 
     public function validate(string $attribute, mixed $value, Closure $fail): void

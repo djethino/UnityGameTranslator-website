@@ -19,6 +19,11 @@ class ResourcesLinkTest extends TestCase
         $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/files/Install%20Fonts.MSI'));
         $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/download.php?file=patch.bat'));
         $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/get?f[]=a.png&f[]=run.ps1'));
+
+        // Every system a game runs on: macOS installers and scripts, Linux and Steam Deck launchers.
+        foreach (['fonts.dmg', 'Fonts.pkg', 'install.command', 'setup.scpt', 'install.sh', 'Fonts.AppImage', 'fonts.desktop', 'patch.py'] as $file) {
+            $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/' . $file), $file);
+        }
     }
 
     public function test_fonts_images_packs_and_pages_pass(): void
