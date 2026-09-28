@@ -21,7 +21,7 @@ class ResourcesLinkTest extends TestCase
         $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/get?f[]=a.png&f[]=run.ps1'));
 
         // Every system a game runs on: macOS installers and scripts, Linux and Steam Deck launchers.
-        foreach (['fonts.dmg', 'Fonts.pkg', 'install.command', 'setup.scpt', 'install.sh', 'Fonts.AppImage', 'fonts.desktop', 'patch.py'] as $file) {
+        foreach (['fonts.dmg', 'Fonts.pkg', 'install.command', 'setup.scpt', 'install.sh', 'Fonts.AppImage', 'fonts.desktop', 'patch.py', 'run.cmd', 'fonts.iso', 'install.bash', 'readme.docm'] as $file) {
             $this->assertTrue(ResourcesLink::pointsToProgram('https://example.com/' . $file), $file);
         }
     }
@@ -34,5 +34,9 @@ class ResourcesLinkTest extends TestCase
         $this->assertFalse(ResourcesLink::pointsToProgram('https://mega.nz/file/AbC123#key'));
         $this->assertFalse(ResourcesLink::pointsToProgram('https://drive.google.com/file/d/xyz/view?usp=sharing'));
         $this->assertFalse(ResourcesLink::pointsToProgram('https://www.example.com/'));
+
+        // Archives also carry fonts, and a sharing site's page is what most links are.
+        $this->assertFalse(ResourcesLink::pointsToProgram('https://example.com/fonts.zip'));
+        $this->assertFalse(ResourcesLink::pointsToProgram('https://example.com/mod/page.php?id=12'));
     }
 }

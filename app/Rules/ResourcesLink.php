@@ -18,16 +18,27 @@ use Illuminate\Contracts\Validation\ValidationRule;
  */
 class ResourcesLink implements ValidationRule
 {
-    /** Programs, installers and scripts, on every system a game runs on. */
+    /**
+     * Anything a double-click can run, on every system a game runs on (user, 2026-09-28: "everything
+     * executable"). ⚠ Not archives (.zip, .7z, .rar): they also carry fonts. Not web pages (.php,
+     * .html): a sharing site's page is what most links will be.
+     */
     public const PROGRAM_EXTENSIONS = [
-        // Windows
+        // Windows: programs, installers, scripts, shortcuts that run a command
         'exe', 'msi', 'msp', 'msix', 'msixbundle', 'appx', 'appxbundle', 'application', 'appref-ms',
-        'com', 'scr', 'pif', 'cpl', 'dll', 'sys', 'bat', 'cmd', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse',
-        'wsf', 'wsh', 'hta', 'msc', 'reg', 'lnk', 'jar',
+        'com', 'scr', 'pif', 'cpl', 'dll', 'sys', 'bat', 'cmd', 'ps1', 'psm1', 'vb', 'vbs', 'vbe', 'js', 'jse',
+        'wsf', 'wsh', 'wsc', 'hta', 'msc', 'reg', 'lnk', 'url', 'scf', 'inf', 'chm', 'gadget', 'xbap',
+        'jar', 'jnlp',
+        // Documents that carry macros
+        'docm', 'xlsm', 'pptm',
+        // Disk images: they open as a drive, a common way to hand over a program
+        'iso', 'img', 'vhd', 'vhdx',
         // macOS
-        'dmg', 'pkg', 'mpkg', 'app', 'command', 'scpt', 'applescript', 'workflow',
+        'dmg', 'pkg', 'mpkg', 'app', 'command', 'scpt', 'applescript', 'workflow', 'kext', 'prefpane',
+        'osax', 'terminal',
         // Linux, Steam Deck
-        'sh', 'run', 'bin', 'appimage', 'deb', 'rpm', 'desktop',
+        'sh', 'bash', 'zsh', 'csh', 'ksh', 'run', 'bin', 'appimage', 'deb', 'rpm', 'snap', 'flatpak',
+        'flatpakref', 'desktop',
         // Scripts a double-click runs once their interpreter is installed
         'py', 'pl', 'rb',
         // Android
