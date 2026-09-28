@@ -687,6 +687,14 @@
       "why": "only what was sent is written, and the content date does not move: a better wording is not a release"
     },
     {
+      "id": "api-v1/details/a-link-to-a-program",
+      "setup": "lineage",
+      "request": { "method": "PATCH", "path": "/translations/{{translations.main.id}}/details", "as": "alice", "body": { "resources_url": "https://files.example.com/download.php?file=Setup.EXE" } },
+      "response": { "status": 422, "body": { "message": { "$is": "string" }, "errors": { "resources_url": [ { "$is": "string" } ] } } },
+      "read": { "reader": "details", "expects": { "Success": false } },
+      "why": "the link leads to fonts, images or a .ugtpack — never straight to a program, named in the path or in a query value, whatever its case"
+    },
+    {
       "id": "api-v1/details/status-refused-on-a-branch",
       "setup": "lineage",
       "request": { "method": "PATCH", "path": "/translations/{{translations.branch.id}}/details", "as": "bob", "body": { "status": "in_progress" } },

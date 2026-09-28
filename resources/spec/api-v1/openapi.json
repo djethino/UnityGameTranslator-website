@@ -968,7 +968,7 @@
           "status": { "$ref": "#/components/schemas/Status", "description": "Main only; a branch inherits. Absent keeps the row's, `in_progress` on a new one." },
           "content": { "type": "string", "minLength": 2, "maxLength": 67108864, "description": "The translation file, serialised as a JSON string." },
           "notes": { "type": ["string", "null"], "maxLength": 1000 },
-          "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s) URL where the file's assets (image replacements) are downloaded from." },
+          "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s) URL where the file's assets (image replacements) are downloaded from. 422 when the address names a program (an executable, installer or script extension in its path or a query value)." },
           "accepts_branches": { "type": ["boolean", "null"], "description": "Main only, written only when sent. Null: no opinion (a branch, or an older mod)." },
           "adult_declared": { "type": ["boolean", "null"], "description": "Additive. The first publisher says the game is for adults only. Applied ONLY when this upload creates the game's card — the moment `GET /games/adult` answered `declarable: true` — and ignored otherwise, never refused: the mark is about the game, and later translators of it have no say." },
           "forked_from_id": { "type": ["integer", "null"], "description": "A fork's origin: the translation it was taken from. Verified — the caller must have been able to hold it — and dropped whole otherwise, never refused." },
@@ -1019,7 +1019,7 @@
         "type": "object",
         "properties": {
           "notes": { "type": ["string", "null"], "maxLength": 1000 },
-          "resources_url": { "type": ["string", "null"], "maxLength": 2048 },
+          "resources_url": { "type": ["string", "null"], "maxLength": 2048, "description": "http(s). 422 when the address names a program (an executable, installer or script extension in its path or a query value)." },
           "status": { "$ref": "#/components/schemas/Status", "description": "Main only; 422 on a branch." },
           "accepts_branches": { "type": ["boolean", "null"], "description": "Main only; ignored on a branch. Closing a Main notifies its branches." }
         }

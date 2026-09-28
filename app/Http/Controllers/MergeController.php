@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Notifications\BranchMerged;
+use App\Rules\ResourcesLink;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
@@ -492,6 +493,9 @@ class MergeController extends Controller
             $url = trim($publication['resources_url']);
             if ($url === '') {
                 $main->resources_url = null;
+            } elseif (ResourcesLink::pointsToProgram($url)) {
+                // The same guard as every other place the link is written (App\Rules\ResourcesLink).
+                return back()->withErrors(['error' => __('upload.resources_url_program')]);
             } elseif (filter_var($url, FILTER_VALIDATE_URL)
                       && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)
                       && mb_strlen($url) <= 2048) {

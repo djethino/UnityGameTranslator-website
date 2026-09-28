@@ -12,6 +12,7 @@ use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
+use App\Rules\ResourcesLink;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -548,7 +549,8 @@ class TranslationController extends Controller
         $request->validate([
             'status' => $isBranch ? 'prohibited' : 'required|in:in_progress,complete',
             'notes' => 'nullable|string|max:1000',
-            'resources_url' => 'nullable|string|max:2048|url',
+            // http(s) only, as the API asks: a bare `url` also let other schemes through.
+            'resources_url' => ['nullable', 'string', 'max:2048', 'url:http,https', new ResourcesLink],
             'accepts_branches' => $isBranch ? 'prohibited' : 'nullable|boolean',
         ]);
 

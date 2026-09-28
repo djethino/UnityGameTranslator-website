@@ -25,7 +25,7 @@
       { "kind": "label", "name": "UrlLabel", "text": "Resources URL (optional):", "role": "Small" },
       { "kind": "field", "name": "ResourcesUrlInput", "placeholder": "https://... (link to fonts/images)",
         "help": "Optional public link to the fonts and images pack players need for text to render correctly. Shown to anyone who downloads this translation." },
-      { "kind": "label", "name": "UrlHint", "text": "External link to custom fonts or replacement images. Not hosted by us.", "role": "Hint" },
+      { "kind": "label", "name": "UrlHint", "text": "Link to fonts, images or a .ugtpack file, never a program. Not hosted by UnityGameTranslator.", "role": "Hint" },
       { "kind": "status", "name": "Status" }
     ] }
   ],

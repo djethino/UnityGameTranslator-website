@@ -54,9 +54,9 @@
               { "kind": "label", "name": "ResourcesUrlLabel", "text": { "bind": "resourcesUrl" }, "policy": "Excluded", "role": "Hint", "tone": "Accent", "fill": "Stretch", "minHeight": "RowHeightSmall", "autoHeight": true, "align": "TopLeft" },
               { "kind": "row", "name": "OpenBtnRow", "spacing": 0, "padY": "SmallSpacing", "placement": "MiddleCenter", "minHeight": "RowHeightLarge", "children": [
                 { "kind": "button", "name": "ResourcesOpenBtn", "text": "Open in Browser", "tone": "Link", "minWidth": 140, "fill": "Stretch", "act": "resourcesOpen",
-                  "help": "Open the external link the translation's author attached (custom fonts or images). Not hosted by us." }
+                  "help": "Opens the link the translation's author added for custom fonts or images. Third-party site." }
               ] },
-              { "kind": "label", "name": "ResourcesDisclaimer", "text": "Third-party content. We are not responsible for external links.", "role": "Hint", "tone": "Muted", "minHeight": "RowHeightSmall" }
+              { "kind": "label", "name": "ResourcesDisclaimer", "text": "Third-party link, not checked by UnityGameTranslator. Download only fonts, images or .ugtpack files. Never run a program from it.", "role": "Hint", "tone": "Muted", "minHeight": "RowHeightSmall", "autoHeight": true, "align": "TopLeft" }
             ] }
           ] },
           { "kind": "spacer", "name": "InfoGap", "height": 10 },

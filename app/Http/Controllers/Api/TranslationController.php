@@ -15,6 +15,7 @@ use App\Services\CatalogStore;
 use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
+use App\Rules\ResourcesLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -1084,7 +1085,7 @@ class TranslationController extends Controller
             // max aligned with DecodeGzipRequest::MAX_DECOMPRESSED_SIZE (64 MB)
             'content' => 'required|string|min:2|max:67108864',
             'notes' => 'nullable|string|max:1000',
-            'resources_url' => 'nullable|string|max:2048|url:http,https',
+            'resources_url' => ['nullable', 'string', 'max:2048', 'url:http,https', new ResourcesLink],
 
             // Null from a branch — the mod sends nothing there, because the decision belongs to
             // the Main. Applied below only where the row being written IS a Main.
@@ -1866,7 +1867,7 @@ class TranslationController extends Controller
         // Same limits as store(), so one field cannot be accepted here and refused there.
         $request->validate([
             'notes' => 'nullable|string|max:1000',
-            'resources_url' => 'nullable|string|max:2048|url:http,https',
+            'resources_url' => ['nullable', 'string', 'max:2048', 'url:http,https', new ResourcesLink],
             'status' => 'nullable|in:in_progress,complete',
             'accepts_branches' => 'nullable|boolean',
         ]);
