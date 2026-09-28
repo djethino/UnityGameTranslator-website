@@ -63,7 +63,8 @@ class ResourcesLink implements ValidationRule
             return false;
         }
 
-        $names = [rawurldecode($parts['path'] ?? '')];
+        $path = rawurldecode($parts['path'] ?? '');
+        $names = self::isRepositoryPage(strtolower($parts['host'] ?? ''), $path) ? [] : [$path];
 
         if (isset($parts['query'])) {
             parse_str($parts['query'], $query);
@@ -82,5 +83,33 @@ class ResourcesLink implements ValidationRule
         }
 
         return false;
+    }
+
+    /** Where source code is hosted: a repository's name is not a file, whatever dot it carries. */
+    private const CODE_HOSTS = ['github.com', 'gitlab.com', 'codeberg.org', 'bitbucket.org', 'gitea.com', 'git.sr.ht'];
+
+    /**
+     * The page of a repository — github.com/mrdoob/three.js, codeberg.org/user/tools.app — rather
+     * than a file in it. Measured on 2026-09-28: those were refused for their ".js" and ".app".
+     *
+     * ⚠ Only the page: a file inside (releases/download/…, raw/…, blob/…/install.sh) has more
+     * segments and is read as usual. GitLab nests projects in groups at any depth, and every one of
+     * its file addresses goes through "/-/", so a GitLab path without it is a project page.
+     */
+    private static function isRepositoryPage(string $host, string $path): bool
+    {
+        $host = preg_replace('/^www\./', '', $host);
+        if (! in_array($host, self::CODE_HOSTS, true)) {
+            return false;
+        }
+
+        $segments = array_values(array_filter(explode('/', $path), fn ($s) => $s !== ''));
+
+        if ($host === 'gitlab.com') {
+            return ! str_contains($path, '/-/');
+        }
+
+        // git.sr.ht puts the owner behind "~": ~user/repo is the same two segments.
+        return count($segments) === 2;
     }
 }
