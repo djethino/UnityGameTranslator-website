@@ -65,11 +65,8 @@
           { "kind": "row", "name": "ExportRow", "spacing": 10, "minHeight": "ButtonHeight", "children": [
             { "kind": "button", "name": "ExportBtn", "text": "Export", "minWidth": 90, "act": "exportPack",
               "help": "Writes a new .ugtpack file, named with today's date and time. Earlier exports are kept." },
-            { "kind": "label", "name": "ExportSummary", "text": { "bind": "exportSummary" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch" }
-          ] },
-          { "kind": "row", "name": "ExportDoneRow", "spacing": 10, "minHeight": "ButtonHeight", "visible": false, "children": [
-            { "kind": "label", "name": "ExportStatus", "text": { "bind": "exportStatus" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
-            { "kind": "button", "name": "ExportShowBtn", "text": "Show in folder", "minWidth": 110, "act": "showExport",
+            { "kind": "label", "name": "ExportSummary", "text": { "bind": "exportSummary" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch" },
+            { "kind": "button", "name": "ExportShowBtn", "text": "Show in folder", "minWidth": 110, "act": "showExport", "visible": false,
               "help": "Opens the folder the pack was saved in." }
           ] }
         ] }
