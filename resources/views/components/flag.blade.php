@@ -23,8 +23,13 @@
 @if ($drawn)
     {{-- A file fetched once for the whole site, not an SVG written into the page — see
          CatalogStore::flagSvg. Decorative (alt=""): whatever shows it names the language or the
-         locale in words. Lazy, so a flag in a closed menu is not fetched until it opens. --}}
-    <img src="{{ $src }}" alt="" loading="lazy" decoding="async"
+         locale in words.
+
+         ⚠ Neither loading="lazy" nor decoding="async" (removed 2026-09-30): with them Firefox paints
+         the page first and the flags after, one by one, even from the cache — they visibly popped
+         in on every page where they used to be there at once. A cached flag must arrive with the
+         first paint. --}}
+    <img src="{{ $src }}" alt=""
          width="{{ round($height * $drawn['width'] / max($drawn['height'], 1)) }}"
          height="{{ $height }}"
          {{ $attributes->merge(['class' => 'inline-block align-middle rounded-[1px] shrink-0']) }}>

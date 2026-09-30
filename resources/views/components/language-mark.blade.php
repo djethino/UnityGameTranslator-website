@@ -38,9 +38,9 @@
         @if ($flag)
             {{-- A file the browser fetches once for the whole site, not an SVG written into the page:
                  see CatalogStore::flagSvg for what that cost. Decorative (alt=""): the language is
-                 named by the title above and, where needed, by the tag beside it. Lazy, so a flag
-                 inside a closed menu is not fetched until the menu opens. --}}
-            <img src="{{ $flagUrl }}" alt="" loading="lazy" decoding="async"
+                 named by the title above and, where needed, by the tag beside it. Not lazy, not
+                 async: a cached flag must arrive with the first paint (see x-flag). --}}
+            <img src="{{ $flagUrl }}" alt=""
                  width="{{ round($height * $flag['width'] / max($flag['height'], 1)) }}"
                  height="{{ $height }}"
                  class="rounded-[1px]">
