@@ -181,7 +181,7 @@ class AdminController extends Controller
         }
 
         // Sorting (whitelisted columns, including aggregates)
-        $sortable = ['created_at', 'translations_count', 'downloads_sum', 'last_mod_activity'];
+        $sortable = ['created_at', 'translations_count', 'downloads_sum', 'last_mod_activity', 'name', 'provider'];
         $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
         // Tie-break, as on the games screen: equal counts must not swap between pages.
@@ -558,7 +558,8 @@ class AdminController extends Controller
         // Default: last updated first (user, 2026-09-23) — what an admin comes to look at is what
         // moved lately, not what was first published long ago. The view's headers name the same
         // default, so the arrow shown is the order applied.
-        $sortable = ['created_at', 'content_updated_at', 'download_count', 'vote_count', 'line_count'];
+        $sortable = ['created_at', 'content_updated_at', 'download_count', 'vote_count', 'line_count',
+            'game', 'target_language', 'uploader', 'human_share'];
         $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'content_updated_at';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
 
@@ -572,6 +573,19 @@ class AdminController extends Controller
         // above, so it is safe to interpolate here.
         if ($sort === 'content_updated_at') {
             $query->orderByRaw("COALESCE(content_updated_at, updated_at) $dir");
+        } elseif ($sort === 'game') {
+            $query->orderBy(Game::select('name')->whereColumn('games.id', 'translations.game_id'), $dir);
+        } elseif ($sort === 'uploader') {
+            // A translation whose account row is gone ("[Deleted]") has no name: last either way.
+            $uploader = User::select('name')->whereColumn('users.id', 'translations.user_id');
+            $query->orderByRaw('(' . $uploader->toSql() . ') IS NULL')
+                ->orderBy($uploader, $dir);
+        } elseif ($sort === 'human_share') {
+            // The "X% human" the Composition column shows: H + V over every line the bar draws
+            // (Translation::qualityShares). A file with no line at all shows "—" and sorts last.
+            $share = '(human_count + validated_count) / NULLIF(human_count + validated_count + ai_count'
+                . ' + COALESCE(capture_count, 0) + COALESCE(skipped_count, 0), 0)';
+            $query->orderByRaw("$share IS NULL")->orderByRaw("$share $dir");
         } else {
             $query->orderBy($sort, $dir);
         }

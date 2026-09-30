@@ -52,8 +52,10 @@
     <table class="w-full">
         <thead class="bg-gray-700">
             <tr>
-                <th class="px-4 py-3 text-left">User</th>
-                <th class="px-4 py-3 text-left">Provider</th>
+                {{-- Every column that holds an order is sortable (asked 2026-09-30). Status is not:
+                     it is a state with a filter of its own above, not a ranking. --}}
+                <x-admin.sortable-th column="name" label="User" first="asc" />
+                <x-admin.sortable-th column="provider" label="Provider" first="asc" />
                 <x-admin.sortable-th column="translations_count" label="Translations" align="center" />
                 <x-admin.sortable-th column="downloads_sum" label="Downloads" align="center" />
                 <x-admin.sortable-th column="last_mod_activity" label="Last mod activity" />

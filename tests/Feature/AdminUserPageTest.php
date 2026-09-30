@@ -156,6 +156,42 @@ class AdminUserPageTest extends TestCase
             ->assertSee('?sort=download_count&amp;dir=desc', false);
     }
 
+    public function test_the_translations_list_sorts_on_every_column_that_holds_an_order(): void
+    {
+        // Asked 2026-09-30: the game names could not be sorted. Names, language and the human
+        // share the Composition column shows.
+        $zed = User::factory()->create(['name' => 'Zed Uploader']);
+        $amy = User::factory()->create(['name' => 'Amy Uploader']);
+
+        $mostlyHuman = $this->translation($zed, Game::create(['name' => 'Alpha Game']));
+        $mostlyHuman->forceFill(['human_count' => 9, 'ai_count' => 1, 'target_language' => 'German'])->save();
+        $mostlyAi = $this->translation($amy, Game::create(['name' => 'Beta Game']));
+        $mostlyAi->forceFill(['human_count' => 1, 'ai_count' => 9, 'target_language' => 'Arabic'])->save();
+
+        $admin = $this->admin();
+        $list = fn (array $query) => $this->actingAs($admin)->get(route('admin.translations.index', $query))->assertOk();
+
+        $list(['sort' => 'game', 'dir' => 'asc'])->assertSeeInOrder(['Alpha Game', 'Beta Game']);
+        $list(['sort' => 'game', 'dir' => 'desc'])->assertSeeInOrder(['Beta Game', 'Alpha Game']);
+        $list(['sort' => 'uploader', 'dir' => 'asc'])->assertSeeInOrder(['Amy Uploader', 'Zed Uploader']);
+        $list(['sort' => 'target_language', 'dir' => 'asc'])->assertSeeInOrder(['Beta Game', 'Alpha Game']);
+        $list(['sort' => 'human_share', 'dir' => 'desc'])->assertSeeInOrder(['Alpha Game', 'Beta Game']);
+        $list(['sort' => 'human_share', 'dir' => 'asc'])->assertSeeInOrder(['Beta Game', 'Alpha Game']);
+    }
+
+    public function test_the_users_list_sorts_on_the_name(): void
+    {
+        User::factory()->create(['name' => 'Zulu Person']);
+        User::factory()->create(['name' => 'Alpha Person']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.users', ['sort' => 'name', 'dir' => 'asc']))
+            ->assertOk()
+            ->assertSeeInOrder(['Alpha Person', 'Zulu Person']);
+
+        $this->get(route('admin.users', ['sort' => 'provider', 'dir' => 'asc']))->assertOk();
+    }
+
     public function test_an_igdb_id_opens_the_games_igdb_page(): void
     {
         // IGDB's short address is the id in base 36 under /g/ — checked by hand: 1942 lands on

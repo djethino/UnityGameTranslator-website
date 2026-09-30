@@ -75,10 +75,12 @@
         <table class="w-full">
             <thead class="bg-gray-750 text-gray-400 text-sm">
                 <tr>
-                    <th class="text-left py-3 px-4">{{ __('admin.game') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('games.target_language') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('admin.uploader') }}</th>
-                    <th class="text-left py-3 px-4">{{ __('admin.composition') }}</th>
+                    {{-- Every column that holds an order is sortable (asked 2026-09-30); names open
+                         on A-Z, Composition on the most human first — the "X% human" it shows. --}}
+                    <x-admin.sortable-th column="game" :label="__('admin.game')" default="content_updated_at" first="asc" />
+                    <x-admin.sortable-th column="target_language" :label="__('games.target_language')" default="content_updated_at" first="asc" />
+                    <x-admin.sortable-th column="uploader" :label="__('admin.uploader')" default="content_updated_at" first="asc" />
+                    <x-admin.sortable-th column="human_share" :label="__('admin.composition')" default="content_updated_at" />
                     {{-- Every header names the controller's default (last updated first): the
                          component lights the column that is sorted when nothing was asked, and
                          each header decides that for itself. --}}
