@@ -448,9 +448,15 @@
         // is why the link promises "recently translated games" and not "these, continued".
         ['latest', $latestTranslations, 'home.latest_translations', 'fa-clock',
             ['sort' => 'updated'], 'home.see_all_recent_games', false],
+        // Carried on after being published (HomeController): dated by the last change, and the
+        // catalogue's "last content change" is exactly its continuation.
+        ['updated', $updated, 'home.recently_updated', 'fa-pen',
+            ['sort' => 'updated'], 'home.see_all_updated_games', true],
     ] as [$slug, $list, $heading, $icon, $params, $linkLabel, $byContentDate])
         @if($list->count() > 0)
-        <div class="mb-12">
+        {{-- data-home-list names which list this is — the only way to tell them apart from the
+             outside, since they share their markup (HomeRecentlyUpdatedTest reads it). --}}
+        <div class="mb-12" data-home-list="{{ $slug }}">
             <div class="flex items-baseline justify-between gap-4 mb-6">
                 <h2 class="glitch-text text-2xl font-bold text-white flex items-center">
                     <i class="fas {{ $icon }} text-purple-400 mr-2"></i>

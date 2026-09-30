@@ -88,6 +88,28 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
+        // What was WORKED ON lately, after it was first published (asked 2026-09-30). The list
+        // above is ordered on publication, so a translation published in the spring and carried
+        // on yesterday appeared nowhere on the front page — which is exactly the sign of a living
+        // project, and what somebody following a game comes back for.
+        //
+        // ⚠ "Updated" is the model's own rule (hasBeenUpdatedSincePublication: more than a minute
+        // after publication), applied in PHP to a small sample rather than restated in SQL — date
+        // arithmetic differs between MariaDB and SQLite, and a second copy of the rule is a second
+        // place for it to drift. Never a card already shown above.
+        $updated = Translation::with(['game', 'user'])
+            ->where('visibility', 'public')
+            ->withTranslatedLines()
+            ->tap($hideAdult)
+            ->whereKeyNot(array_merge($finished->modelKeys(), $latestTranslations->modelKeys()) ?: [0])
+            ->whereNotNull('content_updated_at')
+            ->orderByDesc('content_updated_at')
+            ->take(12)
+            ->get()
+            ->filter(fn (Translation $t) => $t->hasBeenUpdatedSincePublication())
+            ->take(3)
+            ->values();
+
         // Popular means downloaded, not translated the most times.
         //
         // The section was ordered by how many translations a game had, which is a measure of the
@@ -125,6 +147,6 @@ class HomeController extends Controller
             $game->language_states = $languageStates[$game->id] ?? [];
         }
 
-        return view('home', compact('stats', 'finished', 'latestTranslations', 'popularGames'));
+        return view('home', compact('stats', 'finished', 'latestTranslations', 'updated', 'popularGames'));
     }
 }
