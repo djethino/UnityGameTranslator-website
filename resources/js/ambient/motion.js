@@ -55,9 +55,11 @@ export const GLITCH_LEVELS = {
  * answers "at all", because a tunnel rushing at you is not a stronger version of a drifting field,
  * it is a different proposition. Nobody wants a milder one; they want it or they do not.
  *
- * ⚠ Off by default, including for somebody who has never opened this screen. Everything else here
- * starts on and can be turned down; this starts off and has to be turned on, because it is the only
- * figure that moves toward the reader rather than about the page.
+ * ⚠ ON by default again (user, 2026-09-30) — it was made opt-in on 2026-09-01 (`d34357d`), and
+ * the user wants it seen without having to find the setting. It stays OFF when the system asks for
+ * reduced motion (REDUCED_DEFAULTS below): it is the only figure that moves toward the reader rather
+ * than about the page, which is exactly what that setting is about. A choice made on this screen
+ * still wins either way.
  */
 export const TUNNEL_LEVELS = {
     off: { allowed: false },
@@ -71,7 +73,7 @@ export const TUNNEL_LEVELS = {
  * broken — so the field keeps drifting slowly and it is the glitches, the only part that rewrites
  * what somebody is reading, that stop.
  */
-const DEFAULTS = { background: 'normal', glitch: 'normal', tunnel: 'off' };
+const DEFAULTS = { background: 'normal', glitch: 'normal', tunnel: 'on' };
 const REDUCED_DEFAULTS = { background: 'slow', glitch: 'off', tunnel: 'off' };
 
 /**
