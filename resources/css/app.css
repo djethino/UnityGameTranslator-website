@@ -419,8 +419,13 @@ span.editor-text[dir] { display: block; text-align: start; }
     inset: 0;
     border: 2px solid rgba(250, 204, 21, 0.6);
     pointer-events: none;
-    /* Above the frozen columns, which sit at 10 in the body and 30 in the header */
-    z-index: 40;
+    /* Above the frozen cells of the body (10), and below everything that floats over the grid.
+     *
+     * ⚠ Nothing around the grid makes a stacking context, so this number is compared with the
+     * WHOLE PAGE's: it was 40, level with the site's top bar and above the floating search (30), so
+     * the frame of the row being searched was drawn over both (reported 2026-09-30). Under the
+     * header (30) is right too: a row only goes under the header when it scrolls beneath it. */
+    z-index: 20;
 }
 .current-match-row .search-mark { background-color: rgb(251 146 60); color: rgb(17 24 39); }
 
