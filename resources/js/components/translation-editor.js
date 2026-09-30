@@ -26,6 +26,7 @@ import { editorMetadata } from './editor-metadata.js';
 import { editorPin } from './editor-pin.js';
 import { editProblems, frozenSpans } from '../rules/placeholders.js';
 import { directionOf, markupSpans } from '../rules/direction.js';
+import { snapToGraphemes } from '../rules/graphemes.js';
 
 /**
  * Normalize line endings to Unix format (\n). Order matters: \r\n first,
@@ -1315,7 +1316,7 @@ export function editorCore(config) {
             if (query) {
                 const lower = value.toLowerCase();
                 for (let idx = lower.indexOf(query); idx !== -1; idx = lower.indexOf(query, idx + query.length)) {
-                    marks.push({ start: idx, end: idx + query.length });
+                    marks.push(snapToGraphemes(value, idx, idx + query.length));
                 }
             }
             if (islands.length === 0 && marks.length === 0) return this.escapeHtml(value);
