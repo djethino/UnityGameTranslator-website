@@ -226,7 +226,7 @@
             { "kind": "spacer", "name": "FontsGap2", "height": 10 },
             { "kind": "row", "name": "RefreshRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
               { "kind": "button", "name": "RefreshFontsBtn", "text": "Refresh List", "minWidth": 100, "act": "refreshFonts",
-                "help": "Rescans the game for fonts currently in use and updates the list below." },
+                "help": "Rescans the fonts the game uses and the fonts folder. A font file added now works in TextMeshPro text right away, in other text after a restart." },
               { "kind": "label", "name": "FontsStatus", "text": { "bind": "fontsStatus" }, "role": "Small", "fill": "Stretch" }
             ] },
             { "kind": "spacer", "name": "FontsGap3", "height": 10 },
