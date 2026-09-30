@@ -27,6 +27,14 @@
         It is recorded by the first upload from such a copy. If it is wrong, clear it: the next
         upload records it again.
     </p>
+    {{-- Asked 2026-09-30: "je me demandais ce qu'étaient les propositions" — the button's tooltip
+         was the only place that said it. --}}
+    <p class="mt-3">
+        <strong class="text-white">Proposals</strong> come from <strong class="text-white">Check stores</strong>:
+        a Steam or IGDB id the card lacks, found by its exact title, or a cover from the Steam page of its id.
+        Each one is in a green frame, under the value it would fill. Nothing is written until you tick it
+        and click Apply. Reject hides that value for good.
+    </p>
 </div>
 
 {{-- Filters --}}

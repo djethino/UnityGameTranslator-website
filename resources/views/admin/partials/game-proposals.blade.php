@@ -20,6 +20,12 @@
     {{-- One line per proposal, never wrapped: a "Reject" pushed alone onto the next line reads
          as belonging to the proposal below. The table scrolls sideways instead. --}}
     <div class="mt-1 flex items-center gap-2 text-xs whitespace-nowrap">
+        {{-- The proposal itself — tick, arrow, new value — in a frame of its own, so it stands out
+             from what the card already holds (asked 2026-09-30: a proposed cover under the current
+             one showed only a green arrow). Reject stays outside: it acts on the proposal, it is
+             not part of it. Amber when it cannot be applied, like its warning sign. --}}
+        <span class="inline-flex items-center gap-2 rounded border px-1.5 py-0.5
+            {{ $proposal->isApplicable() ? 'border-emerald-600/70 bg-emerald-900/30' : 'border-amber-600/60 bg-amber-900/20' }}">
         @if($proposal->isApplicable())
             <input type="checkbox" name="proposals[]" value="{{ $proposal->id }}" form="apply-proposals"
                 @checked($tickedByDefault)
@@ -62,6 +68,7 @@
                 already on <a href="{{ route('games.show', $proposal->conflictGame->slug) }}" class="underline hover:text-amber-300">{{ $proposal->conflictGame->name }}</a>
             </span>
         @endif
+        </span>
 
         <form method="POST" action="{{ route('admin.games.proposals.reject', $proposal) }}" class="inline">
             @csrf
