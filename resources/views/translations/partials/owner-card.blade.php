@@ -6,15 +6,19 @@
        $titleUrl  where the title leads — the author's dashboard, or the admin inspection screen
        $hideMain  true in a list of one's own work, where leading a lineage is the ordinary case
        $gameMaxes from OwnerTranslations::gameMaxes(), for the coverage badge --}}
-                <div class="flex items-center gap-4">
+                {{-- flex-1 min-w-0, here and on the text column: the card takes all the room up to
+                     its buttons. Sized by its content, it made every progress bar (w-full) as wide
+                     as the longest line of counts and dates above it, so each card's bar had its
+                     own length (reported 2026-09-30). The cover and the icon keep their size. --}}
+                <div class="flex items-center gap-4 flex-1 min-w-0">
                     @if($translation->game->image_url)
-                        <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded">
+                        <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded flex-shrink-0">
                     @else
-                        <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
+                        <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
                             <i class="fas fa-gamepad text-gray-500"></i>
                         </div>
                     @endif
-                    <div>
+                    <div class="flex-1 min-w-0">
                         <a href="{{ $titleUrl }}" class="text-lg font-semibold hover:text-purple-400">
                             {{ $translation->game->name }}
                         </a>

@@ -177,12 +177,19 @@
         </form>
     @endif
 
-    <div class="space-y-4">
+    {{-- One grid for the whole list, and each card takes its two columns (subgrid): the column of
+         buttons is as wide as the card with the most of them, so every card's text column — and its
+         progress bar — has the same width. A Main has one button more than a branch, and sized card
+         by card the bars stopped at a different place on each.
+
+         ⚠ One column on a phone: five buttons beside the text left it a few letters wide. There the
+         buttons go under the text, and every card is the full width anyway. --}}
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-y-4">
         @foreach($translations as $translation)
             {{-- Anchored so the banners above can lead to the card they are talking about,
                  rather than leaving the reader to find it in a list of twenty. --}}
             <div id="translation-{{ $translation->id }}"
-                 class="bg-gray-800 rounded-lg p-5 border border-gray-700 flex justify-between items-center scroll-mt-24">
+                 class="grid gap-4 sm:col-span-2 sm:grid-cols-subgrid items-center bg-gray-800 rounded-lg p-5 border border-gray-700 scroll-mt-24">
                 {{-- What the file is and where it stands — shared with the admin's page for an account.
                      Only the links and the actions beside it differ. --}}
                 @include('translations.partials.owner-card', [
@@ -190,7 +197,7 @@
                     'hideMain' => true,
                 ])
                 @php $branchCount = $branchCounts[$translation->file_uuid] ?? 0; @endphp
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2 sm:justify-end">
                     {{-- Correcting one's own lines is not a Main privilege: a branch
                          author edits their work from the site like anyone else, without
                          the game running. Only the MERGE view below stays Main-only,

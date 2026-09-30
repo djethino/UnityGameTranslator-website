@@ -87,11 +87,12 @@
         @endif
     </div>
 
-    <div class="space-y-4">
+    {{-- One grid, each card on its two columns: same buttons column, same bar width (see mine). --}}
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-y-4">
         @foreach($translations as $translation)
             <div id="translation-{{ $translation->id }}"
-                 class="bg-gray-800 rounded-lg p-5 border border-gray-700 flex justify-between items-center gap-4 scroll-mt-24">
-                <div>
+                 class="grid gap-4 sm:col-span-2 sm:grid-cols-subgrid items-center bg-gray-800 rounded-lg p-5 border border-gray-700 scroll-mt-24">
+                <div class="min-w-0">
                     @include('translations.partials.owner-card', [
                         'titleUrl' => route('admin.translations.show', $translation),
                         'hideMain' => false,
@@ -129,7 +130,7 @@
 
                 {{-- The admin translation screens' own actions, the same three as on the Translations
                      list — never a second way in. Delete comes back to this page. --}}
-                <div class="flex gap-2 flex-shrink-0">
+                <div class="flex flex-wrap gap-2 sm:justify-end">
                     <a href="{{ route('admin.translations.show', $translation) }}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded" title="{{ __('admin.view_json') }}">
                         <i class="fas fa-eye"></i>
                     </a>
