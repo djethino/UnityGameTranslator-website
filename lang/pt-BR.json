@@ -1181,7 +1181,7 @@
     "errors.expired": "A página esperou tempo demais",
     "errors.expired_message": "Recarregue-a e repita a última ação: nada foi enviado.",
     "games.how_to_play_title": "Jogar com esta tradução",
-    "games.how_to_play_step1": "Instale o mod: gratuito, de código aberto e compatível com o carregador de mods que o jogo já usa.",
+    "games.how_to_play_step1": "Instale o mod com o Manager: ele encontra seus jogos e instala o mod e o Mod Loader de que cada um precisa. Gratuito e de código aberto.",
     "games.how_to_play_step2": "Inicie o jogo. O mod o reconhece e oferece esta tradução sozinho — não há nada para copiar à mão.",
     "games.how_to_play_manual": "O botão Baixar acima é para quem prefere colocar o arquivo por conta própria, ou lê-lo fora do jogo.",
     "docs.algorithms.completeness_title": "Completude",

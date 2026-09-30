@@ -1181,7 +1181,7 @@
     "errors.expired": "Trang đã chờ quá lâu",
     "errors.expired_message": "Hãy tải lại và làm lại thao tác cuối – chưa có gì được gửi đi.",
     "games.how_to_play_title": "Chơi với bản dịch này",
-    "games.how_to_play_step1": "Cài bản mod – miễn phí, mã nguồn mở, và chạy với trình nạp mod mà game vốn đã dùng.",
+    "games.how_to_play_step1": "Cài mod bằng Manager: nó tìm các game của bạn rồi cài mod cùng Mod Loader mà mỗi game cần. Miễn phí, mã nguồn mở.",
     "games.how_to_play_step2": "Khởi động game. Bản mod nhận ra nó và tự đề nghị bản dịch này – không phải chép tay gì cả.",
     "games.how_to_play_manual": "Nút Tải xuống ở trên dành cho ai thích tự đặt tập tin vào chỗ của nó, hoặc muốn đọc nó ngoài game.",
     "docs.algorithms.completeness_title": "Mức hoàn thiện",

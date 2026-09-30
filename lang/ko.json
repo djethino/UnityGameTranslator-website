@@ -1181,7 +1181,7 @@
     "errors.expired": "페이지가 너무 오래 기다렸습니다",
     "errors.expired_message": "다시 불러온 뒤 마지막 동작을 되풀이해 주세요. 전송된 것은 없습니다.",
     "games.how_to_play_title": "이 번역으로 플레이하기",
-    "games.how_to_play_step1": "모드를 설치합니다. 무료이고 공개 소스이며, 게임이 이미 쓰는 모드 로더에서 그대로 작동합니다.",
+    "games.how_to_play_step1": "Manager로 모드를 설치합니다. 게임을 찾아서 각 게임에 필요한 모드 로더와 모드를 설치해 줍니다. 무료이고 공개 소스입니다.",
     "games.how_to_play_step2": "게임을 실행합니다. 모드가 게임을 알아보고 이 번역을 직접 제안합니다. 손으로 옮길 것은 없습니다.",
     "games.how_to_play_manual": "위의 내려받기 단추는 파일을 직접 넣고 싶거나, 게임 밖에서 내용을 읽고 싶은 분을 위한 것입니다.",
     "docs.algorithms.completeness_title": "완성도",

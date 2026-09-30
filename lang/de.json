@@ -1181,7 +1181,7 @@
     "errors.expired": "Die Seite hat zu lange gewartet",
     "errors.expired_message": "Lade sie neu und wiederhole deine letzte Aktion – nichts wurde gesendet.",
     "games.how_to_play_title": "Mit dieser Übersetzung spielen",
-    "games.how_to_play_step1": "Installiere die Mod – kostenlos, quelloffen, und passend zum Mod-Loader, den das Spiel ohnehin nutzt.",
+    "games.how_to_play_step1": "Installiere die Mod mit dem Manager: Er findet deine Spiele und installiert die Mod und den Mod-Loader, den jedes davon braucht. Kostenlos und quelloffen.",
     "games.how_to_play_step2": "Starte das Spiel. Die Mod erkennt es und bietet diese Übersetzung von selbst an – nichts von Hand zu kopieren.",
     "games.how_to_play_manual": "Der Herunterladen-Knopf oben ist für alle, die die Datei lieber selbst ablegen oder außerhalb des Spiels lesen wollen.",
     "docs.algorithms.completeness_title": "Vollständigkeit",

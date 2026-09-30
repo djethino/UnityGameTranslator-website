@@ -1181,7 +1181,7 @@
     "errors.expired": "The page waited too long",
     "errors.expired_message": "Load it again and redo your last action — nothing was sent.",
     "games.how_to_play_title": "Playing with this translation",
-    "games.how_to_play_step1": "Install the mod — free, open source, and it works with the mod loader the game already uses.",
+    "games.how_to_play_step1": "Install the mod with the Manager: it finds your games and installs the mod and the mod loader each one needs. Free and open source.",
     "games.how_to_play_step2": "Launch the game. The mod recognises it and offers this translation itself — nothing to copy by hand.",
     "games.how_to_play_manual": "The Download button above is for people who prefer to place the file themselves, or to read it outside the game.",
     "docs.algorithms.completeness_title": "Completeness",

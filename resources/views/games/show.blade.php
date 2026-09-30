@@ -625,15 +625,20 @@
                 <span>{{ __('games.how_to_play_step2') }}</span>
             </li>
         </ol>
+        {{-- 🔴 The Manager first, and the coloured one (user, 2026-09-30) — the order and the words
+             of the home page and the footer: it is the way in we recommend to somebody who just
+             wants to play (it finds the game and installs the loader and the mod), and a game page
+             is where that person arrives. Installing by hand keeps its own button beside it.
+
+             ⚠ Each button goes exactly where the same label goes in the footer. One act, one
+             destination: the same words leading to two places is the trap this project keeps a
+             rule about. --}}
         <div class="flex flex-wrap gap-3">
-            <a href="{{ route('docs') }}#quick-start" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-                <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
+            <a href="{{ route('docs') }}#install-manager" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-screwdriver-wrench mr-2"></i>{{ __('footer.download_manager') }}
             </a>
-            {{-- ⚠ Points at the Manager, not at the by-hand procedure it used to open. Somebody on a
-                 game page who has decided to play it in their language wants the shortest way in,
-                 and the fork itself is one click away in Quick start beside this button. --}}
-            <a href="{{ route('docs') }}#install-manager" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                <i class="fas fa-book mr-2"></i>{{ __('docs.nav.install_manager') }}
+            <a href="{{ route('docs') }}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-download mr-2"></i>{{ __('footer.download_mod') }}
             </a>
         </div>
         <p class="text-sm text-gray-500 mt-4">{{ __('games.how_to_play_manual') }}</p>

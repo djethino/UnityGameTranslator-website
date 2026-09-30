@@ -1181,7 +1181,7 @@
     "errors.expired": "ページが待ちすぎました",
     "errors.expired_message": "読み込み直して、最後の操作をやり直してください。何も送信されていません。",
     "games.how_to_play_title": "この翻訳で遊ぶには",
-    "games.how_to_play_step1": "Mod を導入します。無料・オープンソースで、そのゲームがすでに使っている Mod ローダーで動きます。",
+    "games.how_to_play_step1": "Manager で Mod を導入します。ゲームを見つけて、それぞれに必要な Mod ローダーと Mod 本体をインストールします。無料・オープンソースです。",
     "games.how_to_play_step2": "ゲームを起動します。Mod がゲームを認識し、この翻訳を自分から提案します。手作業でコピーする必要はありません。",
     "games.how_to_play_manual": "上のダウンロードボタンは、ファイルを自分で配置したい人や、ゲームの外で中身を読みたい人のためのものです。",
     "docs.algorithms.completeness_title": "完成度",

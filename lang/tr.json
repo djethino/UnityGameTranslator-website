@@ -1181,7 +1181,7 @@
     "errors.expired": "Sayfa fazla bekledi",
     "errors.expired_message": "Sayfayı yeniden yükleyip son işleminizi tekrarlayın – hiçbir şey gönderilmedi.",
     "games.how_to_play_title": "Bu çeviriyle oynamak",
-    "games.how_to_play_step1": "Modu kurun – ücretsiz, açık kaynak ve oyunun zaten kullandığı mod yükleyicisiyle çalışır.",
+    "games.how_to_play_step1": "Modu Manager ile kurun: oyunlarınızı bulur, her birinin ihtiyaç duyduğu mod yükleyiciyi ve modu kurar. Ücretsiz ve açık kaynak.",
     "games.how_to_play_step2": "Oyunu başlatın. Mod oyunu tanır ve bu çeviriyi kendisi önerir – elle kopyalanacak bir şey yok.",
     "games.how_to_play_manual": "Yukarıdaki İndir düğmesi, dosyayı kendi eliyle yerleştirmeyi ya da oyun dışında okumayı yeğleyenler içindir.",
     "docs.algorithms.completeness_title": "Tamamlanmışlık",

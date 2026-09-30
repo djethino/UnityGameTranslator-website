@@ -1181,7 +1181,7 @@
     "errors.expired": "页面等待太久了",
     "errors.expired_message": "请重新加载并重做上一步操作——什么都没有发送出去。",
     "games.how_to_play_title": "使用这份翻译游玩",
-    "games.how_to_play_step1": "安装这个模组：免费、开源，并且能配合游戏已经在用的模组加载器运行。",
+    "games.how_to_play_step1": "用 Manager 安装模组：它会找到你的游戏，并安装每个游戏所需的模组加载器和模组。免费、开源。",
     "games.how_to_play_step2": "启动游戏。模组会认出它，并主动向你提供这份翻译——不需要手动复制任何东西。",
     "games.how_to_play_manual": "上方的下载按钮，是给愿意自己放置文件、或想在游戏之外查看内容的人用的。",
     "docs.algorithms.completeness_title": "完成度",

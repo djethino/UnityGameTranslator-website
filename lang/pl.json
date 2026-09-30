@@ -1181,7 +1181,7 @@
     "errors.expired": "Strona czekała zbyt długo",
     "errors.expired_message": "Odśwież ją i powtórz ostatnią czynność – nic nie zostało wysłane.",
     "games.how_to_play_title": "Granie z tym tłumaczeniem",
-    "games.how_to_play_step1": "Zainstaluj moda – jest darmowy, otwarty i działa z loaderem, którego gra już używa.",
+    "games.how_to_play_step1": "Zainstaluj moda za pomocą Managera: znajdzie twoje gry i zainstaluje moda oraz loader modów, którego każda z nich potrzebuje. Darmowy i otwarty.",
     "games.how_to_play_step2": "Uruchom grę. Mod ją rozpozna i sam zaproponuje to tłumaczenie – nic nie trzeba kopiować ręcznie.",
     "games.how_to_play_manual": "Przycisk Pobierz powyżej jest dla tych, którzy wolą sami umieścić plik albo przejrzeć go poza grą.",
     "docs.algorithms.completeness_title": "Kompletność",
