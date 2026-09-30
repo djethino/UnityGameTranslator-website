@@ -106,6 +106,23 @@
     </form>
 </div>
 
+{{-- Check stores lands here with this filter on, so the proposals are never on a page nobody is
+     looking at. Said above the list, with the way back to every game: a narrowed list that does
+     not say so reads as games having disappeared. Only this filter is dropped — the search and
+     the order stay. --}}
+@if(request('proposals') === 'pending')
+    <div class="bg-gray-800 border-l-4 border-emerald-500 rounded p-3 mb-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+        <span class="text-gray-300">
+            <i class="fas fa-filter mr-1 text-emerald-400"></i>
+            Only games with pending proposals ({{ $games->total() }}).
+        </span>
+        <a href="{{ route('admin.games', collect(request()->query())->except(['proposals', 'page'])->all()) }}"
+           class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded">
+            Show all games
+        </a>
+    </div>
+@endif
+
 {{-- Results --}}
 <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">

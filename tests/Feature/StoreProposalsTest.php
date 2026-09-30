@@ -283,4 +283,37 @@ class StoreProposalsTest extends TestCase
             ->assertSee('LoneStar')
             ->assertDontSee('Nothing To Propose');
     }
+
+    public function test_checking_the_stores_lands_on_the_cards_with_something_to_decide(): void
+    {
+        // With thirty games a page, the proposals landed wherever the admin had been — often on a
+        // page nobody was looking at (asked on 2026-09-30).
+        Game::create(['name' => 'LoneStar']);
+        $this->storesKnow([['id' => '2056210', 'name' => 'LONESTAR']]);
+
+        $from = route('admin.games', ['search' => 'Lone', 'sort' => 'name', 'dir' => 'asc', 'page' => 3]);
+
+        $this->actingAs($this->admin())
+            ->from($from)
+            ->post(route('admin.games.check-stores'))
+            ->assertRedirect(route('admin.games', ['search' => 'Lone', 'sort' => 'name', 'dir' => 'asc', 'proposals' => 'pending']));
+
+        // And the filtered list says so, with the way back to every game — the rest kept.
+        $this->get(route('admin.games', ['search' => 'Lone', 'proposals' => 'pending']))
+            ->assertSee('Only games with pending proposals')
+            ->assertSee(route('admin.games', ['search' => 'Lone']), false);
+    }
+
+    public function test_with_nothing_proposed_the_admin_stays_where_they_were(): void
+    {
+        Game::create(['name' => 'LoneStar']);
+        $this->storesKnow([]);
+
+        $from = route('admin.games', ['page' => 2]);
+
+        $this->actingAs($this->admin())
+            ->from($from)
+            ->post(route('admin.games.check-stores'))
+            ->assertRedirect($from);
+    }
 }

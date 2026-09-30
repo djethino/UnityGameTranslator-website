@@ -337,6 +337,18 @@ class AdminController extends Controller
             $message .= " {$result['left']} not reached yet — check again to go on.";
         }
 
+        // Back on the cards that have something to decide, not on the page the admin was on:
+        // with thirty games a page, what the stores just proposed was often on a page nobody was
+        // looking at. The admin's other filters and order are kept; only the page is dropped,
+        // since it counted rows of the unfiltered list.
+        if (GameProposal::pending()->exists()) {
+            parse_str((string) parse_url(url()->previous(), PHP_URL_QUERY), $query);
+            unset($query['page']);
+            $query['proposals'] = 'pending';
+
+            return redirect()->route('admin.games', $query)->with('success', $message);
+        }
+
         return back()->with('success', $message);
     }
 
