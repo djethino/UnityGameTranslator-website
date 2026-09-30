@@ -166,7 +166,7 @@
                      ⚠ Never `:default="null"` to mean "none": Blade's @props fills a prop that is
                      null with its declared default (`$x = $x ?? $default`), which silently lit up
                      the component's own default column instead. --}}
-                <x-admin.sortable-th column="name" label="Game" default="last_update" />
+                <x-admin.sortable-th column="name" label="Game" default="last_update" first="asc" />
                 <th class="text-left py-3 px-4">Store ids</th>
                 <x-admin.sortable-th column="translations_count" label="Translations" default="last_update" />
                 <th class="text-left py-3 px-4">Name on disk</th>

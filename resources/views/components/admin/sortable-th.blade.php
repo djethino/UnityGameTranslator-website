@@ -1,9 +1,17 @@
-@props(['column', 'label', 'default' => 'created_at', 'align' => 'left'])
+@props(['column', 'label', 'default' => 'created_at', 'align' => 'left', 'first' => 'desc'])
 @php
+    // `first` is the direction a column opens on — what somebody clicking it wants to see first
+    // (asked 2026-09-30). A date or a count opens on the latest or the most, "Adults only" on the
+    // marked games: `desc`, the default. A name opens on A-Z: `first="asc"`. Clicking again
+    // turns it the other way, as every file list and mail client does.
+    //
+    // ⚠ Every column used to open on `asc`, so "Joined" showed the oldest accounts first and
+    // needed a second click on every visit.
     $currentSort = request('sort', $default);
     $currentDir = request('dir', 'desc');
     $isActive = $currentSort === $column;
-    $nextDir = ($isActive && $currentDir === 'asc') ? 'desc' : 'asc';
+    $other = $first === 'asc' ? 'desc' : 'asc';
+    $nextDir = ($isActive && $currentDir === $first) ? $other : $first;
     $icon = !$isActive
         ? 'fa-sort text-gray-600'
         : ($currentDir === 'asc' ? 'fa-sort-up text-purple-400' : 'fa-sort-down text-purple-400');

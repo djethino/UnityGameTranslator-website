@@ -129,6 +129,33 @@ class AdminUserPageTest extends TestCase
             ->assertSeeInOrder(['Marked Game', 'Plain Game']);
     }
 
+    public function test_a_column_opens_on_what_one_wants_to_see_first(): void
+    {
+        // A date or a count opens on the latest or the most, a name on A-Z; the second click
+        // turns it (asked 2026-09-30: "Joined" opened on the oldest accounts).
+        $admin = $this->admin();
+        Game::create(['name' => 'Any Game']);
+
+        $this->actingAs($admin)->get(route('admin.users'))
+            ->assertSee('?sort=translations_count&amp;dir=desc', false)
+            // "Joined" is the screen's default, already shown latest first: the click turns it.
+            ->assertSee('?sort=created_at&amp;dir=asc', false);
+
+        $this->actingAs($admin)->get(route('admin.users', ['sort' => 'created_at', 'dir' => 'asc']))
+            ->assertSee('?sort=created_at&amp;dir=desc', false);
+
+        $this->actingAs($admin)->get(route('admin.games'))
+            ->assertSee('?sort=name&amp;dir=asc', false)
+            ->assertSee('?sort=adult_checked_at&amp;dir=desc', false)
+            ->assertSee('?sort=created_at&amp;dir=desc', false);
+
+        $this->actingAs($admin)->get(route('admin.games', ['sort' => 'name', 'dir' => 'asc']))
+            ->assertSee('?sort=name&amp;dir=desc', false);
+
+        $this->actingAs($admin)->get(route('admin.translations.index'))
+            ->assertSee('?sort=download_count&amp;dir=desc', false);
+    }
+
     public function test_an_igdb_id_opens_the_games_igdb_page(): void
     {
         // IGDB's short address is the id in base 36 under /g/ — checked by hand: 1942 lands on
