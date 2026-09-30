@@ -51,7 +51,18 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports'));
+        // The two sections that used to be buttons in the header, now cards like the others — each
+        // with the one figure worth reading before opening it. Today's visitors are counted live in
+        // SQL, as the analytics screen counts them (the day is not aggregated yet).
+        $today = now()->toDateString();
+        $visitorsToday = AnalyticsEvent::uniqueVisitorsOn($today);
+        $pageViewsToday = AnalyticsEvent::whereDate('created_at', $today)->count();
+        $banner = Announcement::currentBanner();
+
+        return view('admin.dashboard', compact(
+            'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
+            'visitorsToday', 'pageViewsToday', 'banner'
+        ));
     }
 
     public function announcements()
