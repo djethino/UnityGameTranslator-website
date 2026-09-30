@@ -49,15 +49,15 @@
                             <x-translation-role :translation="$report->translation" />
                         </div>
                         <p class="text-sm text-gray-400 mb-2">
-                            Translation by {{ $report->translation->user->name }}
+                            Translation by <x-admin.user-link :user="$report->translation->user" />
                         </p>
                         <p class="text-gray-300 mb-3">{{ $report->reason }}</p>
                         <p class="text-sm text-gray-500">
-                            Reported by {{ $report->reporter->name }} • {{ $report->created_at->diffForHumans() }}
+                            Reported by <x-admin.user-link :user="$report->reporter" /> • {{ $report->created_at->diffForHumans() }}
                         </p>
                         @if($report->reviewer)
                             <p class="text-sm text-gray-500 mt-1">
-                                Reviewed by {{ $report->reviewer->name }} • {{ $report->reviewed_at->diffForHumans() }}
+                                Reviewed by <x-admin.user-link :user="$report->reviewer" /> • {{ $report->reviewed_at->diffForHumans() }}
                             </p>
                             @if($report->admin_notes)
                                 <p class="text-sm text-gray-400 mt-1 italic">Notes: {{ $report->admin_notes }}</p>

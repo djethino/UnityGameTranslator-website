@@ -21,6 +21,7 @@ use App\Services\LiveEditCapacity;
 use App\Services\StoreProposals;
 use App\Services\VersionInventory;
 use App\Support\AnalyticsPeriods;
+use App\Support\OwnerTranslations;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
@@ -182,7 +183,8 @@ class AdminController extends Controller
         $sortable = ['created_at', 'translations_count', 'downloads_sum', 'last_mod_activity'];
         $sort = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
         $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sort, $dir);
+        // Tie-break, as on the games screen: equal counts must not swap between pages.
+        $query->orderBy($sort, $dir)->orderBy('users.id', $dir);
 
         $users = $query->paginate(20)->appends($request->query());
 
@@ -190,6 +192,34 @@ class AdminController extends Controller
         $providers = User::whereNotNull('provider')->distinct()->orderBy('provider')->pluck('provider');
 
         return view('admin.users', compact('users', 'providers'));
+    }
+
+    /**
+     * One account and every translation it holds — the admin's reading of its "My translations".
+     *
+     * 🔴 **The same list, not a lookalike** (OwnerTranslations, translations.partials.owner-card):
+     * same order, same cards, same counts, so what an admin reads here is what that author reads
+     * at home. Only the links and the actions differ — they are the admin translation screens'
+     * own (inspect, edit, delete), never a second way in.
+     *
+     * Branches included, as on every admin translation screen: that reach is this route's
+     * middleware, and Translation::isReadableBy stays untouched.
+     */
+    public function showUser(Request $request, User $user)
+    {
+        $user->loadMax('apiTokens as last_mod_activity', 'last_used_at');
+
+        $sort = OwnerTranslations::sortOf($request->input('sort'));
+        $translations = OwnerTranslations::of($user, $sort);
+        $branchCounts = OwnerTranslations::waitingBranches($translations);
+        $gameMaxes = OwnerTranslations::gameMaxes($translations);
+
+        // The three roles, read exactly as the chip on each card reads them (x-translation-role:
+        // branch, else fork, else main), so the totals add up to the chips below.
+        $role = fn ($t) => $t->isBranch() ? 'Branch' : ($t->isFork() ? 'Fork' : 'Main');
+        $roles = array_merge(['Main' => 0, 'Fork' => 0, 'Branch' => 0], $translations->countBy($role)->all());
+
+        return view('admin.user-show', compact('user', 'sort', 'translations', 'branchCounts', 'gameMaxes', 'roles'));
     }
 
     /**
@@ -261,14 +291,25 @@ class AdminController extends Controller
         if ($sort === 'last_update') {
             // A game with no translation has no date: last whichever way the column is sorted,
             // rather than first in ascending order where it would read as the oldest activity.
-            $query->orderByRaw('last_update IS NULL')->orderBy('last_update', $dir)->orderBy('name');
+            $query->orderByRaw('last_update IS NULL')->orderBy('last_update', $dir);
         } elseif ($sort === 'adult_checked_at') {
-            // Never asked about comes first whichever way the column is sorted: it is the state
-            // that can make a listing wrong right now, where an old check is merely stale.
-            $query->orderByRaw('adult_checked_at IS NULL DESC')->orderBy('adult_checked_at', $dir);
+            // 🔴 Sorted on what the column SHOWS — yes or no — before anything else. It used to sort
+            // on the date of the last check alone, which the column never displays, so every
+            // direction read as shuffled rows of "no · nothing found". Descending puts the marked
+            // games first. Inside each half, never asked about comes first whichever way the
+            // column is sorted: it is the state that can make a listing wrong right now, where an
+            // old check is merely stale.
+            $query->orderBy('adult', $dir)
+                ->orderByRaw('adult_checked_at IS NULL DESC')
+                ->orderBy('adult_checked_at', $dir);
         } else {
             $query->orderBy($sort, $dir);
         }
+
+        // ⚠ A tie-break on every column: many games share a count (one translation) or a day, and
+        // without one the database orders equal rows as it likes — a game could appear on two
+        // pages, or on none.
+        $query->orderBy('name')->orderBy('games.id');
 
         $games = $query->paginate(30)->withQueryString();
 
@@ -506,6 +547,9 @@ class AdminController extends Controller
             $query->orderBy($sort, $dir);
         }
 
+        // Tie-break, as on the games screen: equal counts must not swap between pages.
+        $query->orderBy('translations.id', $dir);
+
         $translations = $query->paginate(20)->appends($request->query());
         $games = Game::orderBy('name')->get();
         $languages = CatalogStore::languageNames();
@@ -559,13 +603,18 @@ class AdminController extends Controller
         return Storage::disk('local')->download($translation->file_path, 'translations.json');
     }
 
-    public function destroyTranslation(Translation $translation)
+    public function destroyTranslation(Request $request, Translation $translation)
     {
         $gameName = $translation->game->name;
+        $ownerId = $translation->user_id;
 
         app(TranslationService::class)->deleteTranslation($translation, TranslationService::DELETED_BY_ADMIN);
 
-        return redirect()->route('admin.translations.index')
+        // Deleted from an account's page, the admin stays on that page — it is where they were
+        // working through that person's translations. Anywhere else, the list.
+        $toOwner = $request->input('return') === 'user' && $ownerId !== null;
+
+        return redirect()->route($toOwner ? 'admin.users.show' : 'admin.translations.index', $toOwner ? $ownerId : [])
             ->with('success', "Translation for {$gameName} deleted.");
     }
 

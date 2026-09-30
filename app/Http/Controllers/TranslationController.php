@@ -13,6 +13,7 @@ use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use App\Rules\ResourcesLink;
+use App\Support\OwnerTranslations;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -415,52 +416,12 @@ class TranslationController extends Controller
 
     public function myTranslations(Request $request)
     {
-        // Sorting, same vocabulary as the games list — with one option that only makes sense on
-        // your own files: what is left to read. That is the list an author actually works from.
-        //
-        // Default is "recently worked on" rather than "recently uploaded": the reason to open
-        // this page is to carry on, and the file you touched last is the one you carry on with.
-        // It reads content_updated_at, never updated_at — a vote or a download on someone's
-        // translation must not float it back to the top as if its author had just worked on it.
-        $sort = $request->input('sort', 'updated');
-
-        $query = auth()->user()->translations()->with(['game', 'forks']);
-
-        match ($sort) {
-            'new' => $query->orderByDesc('created_at'),
-            'downloads' => $query->orderByDesc('download_count'),
-            'review' => $query->orderByDesc('ai_count'),
-            'game' => $query->orderBy(
-                Game::select('name')->whereColumn('games.id', 'translations.game_id')
-            ),
-            default => $query->orderByRaw('COALESCE(content_updated_at, updated_at) DESC'),
-        };
-
-        // Two files differing only by language must not swap places between page loads, and
-        // sorting by game puts a game's languages in an order anyone can predict.
-        $translations = $query->orderBy('target_language')->orderByDesc('id')->get();
-
-        // Load unreviewed branch counts for Main translations (single query)
-        // A branch needs merging if: never reviewed OR modified since last review
-        $branchCounts = [];
-        $mainUuids = $translations->filter(fn($t) => $t->isMain())->pluck('file_uuid')->unique();
-        if ($mainUuids->isNotEmpty()) {
-            $branchCounts = Translation::whereIn('file_uuid', $mainUuids)
-                ->where('visibility', 'branch')
-                ->where(function ($q) {
-                    $q->whereNull('reviewed_hash')
-                      ->orWhereColumn('file_hash', '!=', 'reviewed_hash');
-                })
-                ->selectRaw('file_uuid, COUNT(*) as count')
-                ->groupBy('file_uuid')
-                ->pluck('count', 'file_uuid')
-                ->toArray();
-        }
-
-        // How far the furthest translation of each listed game reaches, asked once for the whole
-        // page: the coverage badge needs it, and the model would otherwise run its own MAX per
-        // card.
-        $gameMaxes = Translation::maxResolvedLinesByGame($translations->pluck('game_id'));
+        // The list, its order and its counts are shared with the admin's page for an account — see
+        // OwnerTranslations.
+        $sort = OwnerTranslations::sortOf($request->input('sort'));
+        $translations = OwnerTranslations::of(auth()->user(), $sort);
+        $branchCounts = OwnerTranslations::waitingBranches($translations);
+        $gameMaxes = OwnerTranslations::gameMaxes($translations);
 
         // The two things this page must say out loud, computed here so the view asks nothing of
         // the database. Both are addressed to the author and appear NOWHERE public: a translation

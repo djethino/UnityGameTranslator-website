@@ -171,13 +171,18 @@
                             <div class="{{ $loop->first ? '' : 'mt-2' }}">
                                 <div class="flex items-baseline gap-2">
                                     <span class="w-10 text-gray-500">{{ $storeName }}</span>
-                                    @php $current = $game->{$idField}; @endphp
-                                    @if($idField === 'steam_id' && ($steamPage = \App\Support\StoreLinks::steam($current)))
+                                    @php
+                                        $current = $game->{$idField};
+                                        $storePage = $idField === 'steam_id'
+                                            ? \App\Support\StoreLinks::steam($current)
+                                            : \App\Support\StoreLinks::igdbId($current === null ? null : (string) $current);
+                                    @endphp
+                                    @if($storePage)
                                         {{-- The id already there opens too: checking what the card
                                              holds is the first thing to do before adding to it. --}}
-                                        <a href="{{ $steamPage }}" target="_blank" rel="noopener noreferrer"
+                                        <a href="{{ $storePage }}" target="_blank" rel="noopener noreferrer"
                                            class="text-gray-300 hover:text-white underline decoration-dotted"
-                                           title="Open this Steam page">{{ $current }}
+                                           title="Open this {{ $storeName }} page">{{ $current }}
                                             <i class="fas fa-arrow-up-right-from-square text-[0.6rem] ml-0.5"></i></a>
                                     @else
                                         <span class="text-gray-400">{{ $current ?: '—' }}</span>

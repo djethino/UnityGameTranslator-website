@@ -73,7 +73,7 @@
                             <x-avatar :user="$user" :size="32" />
                             <div>
                                 <div class="font-medium">
-                                    {{ $user->name }}
+                                    <x-admin.user-link :user="$user" />
                                     @if($user->isAdmin())
                                         <span class="text-xs bg-yellow-600 px-1.5 py-0.5 rounded ml-1">Admin</span>
                                     @endif

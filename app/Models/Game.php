@@ -50,6 +50,18 @@ class Game extends Model
         return $this->hasMany(GameProposal::class);
     }
 
+    /**
+     * The game's page on each store this card holds an id for, keyed by the store's name. Empty
+     * when it holds none.
+     */
+    public function storePages(): array
+    {
+        return array_filter([
+            'Steam' => \App\Support\StoreLinks::steam($this->steam_id === null ? null : (string) $this->steam_id),
+            'IGDB' => \App\Support\StoreLinks::igdbId($this->igdb_id === null ? null : (string) $this->igdb_id),
+        ]);
+    }
+
     protected static function boot()
     {
         parent::boot();

@@ -302,6 +302,9 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
             ->name('games.proposals.reject');
 
         Route::get('/users', [AdminController::class, 'users'])->name('users');
+        // One account's translations, as its author sees them on "My translations" — branches
+        // included, under the same rule as the translation screens below.
+        Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
         Route::post('/users/{user}/ban', [AdminController::class, 'banUser'])->name('users.ban');
         Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
         Route::get('/announcements', [AdminController::class, 'announcements'])->name('announcements');

@@ -85,7 +85,9 @@
                 <div>
                     <p class="font-medium">{{ $report->translation->game->name }}</p>
                     <p class="text-sm text-gray-400">
-                        {{ __('admin.reported_by', ['user' => $report->reporter->name]) }} • {{ $report->created_at->diffForHumans() }}
+                        {{-- The name is escaped here and the sentence is ours, so the link can go
+                             inside it without letting a name write markup. --}}
+                        {!! __('admin.reported_by', ['user' => '<a href="' . e(route('admin.users.show', $report->reporter)) . '" class="hover:text-purple-400 hover:underline">' . e($report->reporter->name) . '</a>']) !!} • {{ $report->created_at->diffForHumans() }}
                     </p>
                     <p class="text-sm text-gray-500 mt-1">{{ Str::limit($report->reason, 100) }}</p>
                 </div>

@@ -22,12 +22,25 @@ final class StoreLinks
     }
 
     /**
-     * An IGDB page as IGDB itself gave it (`url` on a game), or null when it is not one. An IGDB
-     * page is addressed by a slug, so an id alone cannot be turned into one.
+     * An IGDB page as IGDB itself gave it (`url` on a game), or null when it is not one.
      */
     public static function igdb(?string $url): ?string
     {
         return $url !== null && str_starts_with($url, 'https://www.igdb.com/games/') ? $url : null;
+    }
+
+    /**
+     * The IGDB page of a game id, or null when the id is not one.
+     *
+     * An IGDB page is addressed by a slug a card does not keep, but IGDB answers its own short
+     * address — the id in base 36 under `/g/` — with a redirect to that page (checked 2026-09-30:
+     * `/g/1hy`, id 1942, lands on `/games/the-witcher-3-wild-hunt`).
+     */
+    public static function igdbId(?string $id): ?string
+    {
+        return $id !== null && ctype_digit($id) && $id !== '0'
+            ? 'https://www.igdb.com/g/' . base_convert($id, 10, 36)
+            : null;
     }
 
     /**

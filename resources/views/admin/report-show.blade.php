@@ -31,7 +31,7 @@
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Uploaded by</p>
-                <p class="font-medium">{{ $report->translation->user->name }}</p>
+                <p class="font-medium"><x-admin.user-link :user="$report->translation->user" /></p>
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Upload Date</p>
@@ -79,7 +79,7 @@
 
         <div class="mb-4">
             <p class="text-gray-400 text-sm">Reported by</p>
-            <p class="font-medium">{{ $report->reporter->name }} ({{ $report->reporter->email }})</p>
+            <p class="font-medium"><x-admin.user-link :user="$report->reporter" /> ({{ $report->reporter->email }})</p>
         </div>
 
         <div class="mb-4">
@@ -129,7 +129,7 @@
                 </span>
             </p>
             <p class="text-gray-300 mt-2">
-                <span class="font-medium">Reviewed by:</span> {{ $report->reviewer->name }}
+                <span class="font-medium">Reviewed by:</span> <x-admin.user-link :user="$report->reviewer" />
             </p>
             <p class="text-gray-300 mt-2">
                 <span class="font-medium">Reviewed on:</span> {{ $report->reviewed_at->format('M d, Y H:i') }}

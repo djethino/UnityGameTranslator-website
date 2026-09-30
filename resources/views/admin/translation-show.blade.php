@@ -53,7 +53,7 @@
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('admin.uploader') }}</p>
-                        <p class="font-medium">{{ $translation->user->name ?? '[Deleted]' }}</p>
+                        <p class="font-medium"><x-admin.user-link :user="$translation->user" /></p>
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">{{ __('my_translations.lines') }}</p>

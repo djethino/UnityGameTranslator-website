@@ -121,7 +121,7 @@
                             </span>
                         </td>
                         <td class="py-3 px-4">
-                            <span class="text-gray-300">{{ $translation->user->name ?? '[Deleted]' }}</span>
+                            <x-admin.user-link :user="$translation->user" class="text-gray-300" />
                         </td>
                         <td class="py-3 px-4">
                             {{-- The same bar as everywhere else. This column used to draw its own,

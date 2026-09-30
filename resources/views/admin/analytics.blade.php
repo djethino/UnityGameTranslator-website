@@ -714,7 +714,7 @@
                                 <span class="text-gray-500 mx-1">·</span>{{ $translation->game->name ?? 'Unknown' }}
                             </p>
                             <p class="text-sm text-gray-400 truncate">
-                                by {{ $translation->user->name ?? '[Deleted]' }}
+                                by <x-admin.user-link :user="$translation->user" />
                                 • {{ $translation->source_language }} → {{ $translation->target_language }}
                             </p>
                         </div>
@@ -789,7 +789,7 @@
                                 <td class="py-2 pr-4">
                                     <span class="text-gray-200">{{ $line->game->name ?? 'Unknown' }}</span>
                                     <span class="block text-xs text-gray-500">
-                                        by {{ $line->user->name ?? '[Deleted]' }}
+                                        by <x-admin.user-link :user="$line->user" />
                                         • {{ $line->source_language }} → {{ $line->target_language }}
                                         @unless($line->accepts_branches)
                                             {{-- ⚠ Worth saying, because it changes what "waiting"

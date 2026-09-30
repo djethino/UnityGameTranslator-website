@@ -14,6 +14,9 @@
     $seoDescription = $targetLanguages->isEmpty()
         ? __('seo.game_description_nolang', ['game' => $game->name])
         : __('seo.game_description', ['game' => $game->name, 'languages' => $seoComboLanguages->take(5)->implode(', ')]);
+
+    // Shown under the title, and told to search engines as the same game (`sameAs`).
+    $storePages = $game->storePages();
 @endphp
 
 @section('title', $targetLanguages->isEmpty()
@@ -35,6 +38,9 @@
     "image": "{{ $game->image_url ?? '' }}",
     "description": {!! json_encode($seoDescription, JSON_UNESCAPED_UNICODE) !!},
     "url": "{{ route('games.show', $game) }}",
+@if($storePages)
+    "sameAs": {!! json_encode(array_values($storePages), JSON_UNESCAPED_SLASHES) !!},
+@endif
     "offers": {
         "@@type": "Offer",
         "price": "0",
@@ -101,6 +107,22 @@
         <div class="min-w-0">
             <h1 class="glitch-text text-2xl sm:text-3xl font-bold break-words">{{ $game->name }}</h1>
             <p class="text-gray-400 mt-1 text-sm sm:text-base">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
+
+            {{-- The game's pages on the stores the card knows it by — to check it is the right game,
+                 and to find out more about it. Store names only: they read the same in every
+                 language. Nothing is drawn for a store the card has no id for. --}}
+            @if($storePages)
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                    @foreach($storePages as $store => $page)
+                        <a href="{{ $page }}" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-gray-700/70 text-gray-300 hover:bg-gray-600 hover:text-white transition">
+                            @if($store === 'Steam')<i class="fab fa-steam"></i>@endif
+                            {{ $store }}
+                            <i class="fas fa-arrow-up-right-from-square text-[0.6rem] text-gray-500"></i>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
 
             {{-- What is known about the game, under the title because that is where somebody looks
                  to find out what this game is.
