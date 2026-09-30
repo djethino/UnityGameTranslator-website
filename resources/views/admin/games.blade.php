@@ -87,19 +87,41 @@
      CSP build, whose parser refuses methods and arrow functions inside an attribute — written
      inline, it threw, and the button kept saying "Apply" over twenty ticked boxes. --}}
 <div class="flex flex-wrap items-center justify-between gap-3 mb-3" x-data="proposalApply">
-    <form action="{{ route('admin.games.check-stores') }}" method="POST">
+    {{-- It goes out to Steam and IGDB for every card due and answers when they all have, so it
+         can take a while: the button says it is working and cannot be pressed twice — the same
+         motif as Refresh on the analytics catalogue card (x-admin.refresh-catalogues). --}}
+    <form action="{{ route('admin.games.check-stores') }}" method="POST"
+          x-data="{ running: false }" @submit="running = true">
         @csrf
-        <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        <button type="submit" :disabled="running"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-wait transition"
             title="Asks Steam and IGDB what the cards lack. Nothing is written until you apply it.">
-            <i class="fas fa-store mr-1"></i> Check stores{{ $neverChecked > 0 ? " ({$neverChecked})" : '' }}
+            <span x-show="!running"><i class="fas fa-store mr-1"></i> Check stores{{ $neverChecked > 0 ? " ({$neverChecked})" : '' }}</span>
+            <span x-show="running" x-cloak><i class="fas fa-rotate fa-spin mr-1"></i> Checking stores…</span>
         </button>
     </form>
     <form id="apply-proposals" action="{{ route('admin.games.proposals.apply') }}" method="POST"
           class="flex items-center gap-3">
         @csrf
-        <span class="text-sm text-gray-400">{{ $pendingProposals }} pending</span>
+        {{-- Two different counts side by side, so each names what it counts (asked 2026-09-30:
+             "8 pending" beside "Apply (3)" read as a contradiction). This one is every proposal
+             awaiting Apply or Reject, across the catalogue; the button's is the ticked boxes — only
+             a lone candidate for a field comes ticked. Leads to those games unless already there. --}}
+        @if($pendingProposals > 0)
+            @php
+                $pendingLabel = $pendingProposals . ' ' . Str::plural('proposal', $pendingProposals)
+                    . ' on ' . $pendingGames . ' ' . Str::plural('game', $pendingGames);
+            @endphp
+            @if(request('proposals') === 'pending')
+                <span class="text-sm text-gray-400">{{ $pendingLabel }}</span>
+            @else
+                <a href="{{ route('admin.games', array_merge(collect(request()->query())->except('page')->all(), ['proposals' => 'pending'])) }}"
+                   class="text-sm text-gray-400 hover:text-white underline decoration-dotted"
+                   title="Show only these games">{{ $pendingLabel }}</a>
+            @endif
+        @endif
         {{-- The norm: greyed and without a number when nothing waits. --}}
-        <button type="submit" :disabled="none"
+        <button type="submit" :disabled="none" title="Writes the ticked proposals into the cards"
             class="px-4 py-2 rounded text-white transition bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed">
             <span x-text="label">Apply</span>
         </button>

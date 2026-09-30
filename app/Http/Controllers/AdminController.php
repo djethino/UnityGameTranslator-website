@@ -317,8 +317,9 @@ class AdminController extends Controller
         // how many proposals wait across the whole catalogue — not just this page.
         $neverChecked = Game::whereNull('stores_checked_at')->count();
         $pendingProposals = GameProposal::pending()->count();
+        $pendingGames = GameProposal::pending()->distinct()->count('game_id');
 
-        return view('admin.games', compact('games', 'neverChecked', 'pendingProposals'));
+        return view('admin.games', compact('games', 'neverChecked', 'pendingProposals', 'pendingGames'));
     }
 
     /**
