@@ -11,7 +11,7 @@
      line, only meaningful where rows are ordered by publication). --}}
 @php
     $divide = $divide ?? false;
-    $columns = $data['band'] ? 5 : 4;
+    $columns = $data['band'] ? 6 : 5;
     // Bars are scaled against their own table — see the note in VersionInventory.
     $peak = $data['peaks'][$scale] ?? 1;
     // ⚠ Only a version can be "not in releases". Saying it of a loader would answer a question
@@ -33,7 +33,8 @@
             @if ($data['band'])
                 <col>
             @endif
-            <col class="w-36">
+            <col class="w-28">
+            <col class="w-24">
             <col class="w-24">
         </colgroup>
         <thead>
@@ -46,7 +47,10 @@
                 @if ($data['band'])
                     <th class="py-2 pr-4 font-medium">Activity</th>
                 @endif
-                <th class="py-2 pr-4 font-medium text-right whitespace-nowrap">Copies<span class="text-gray-600"> (busiest day)</span></th>
+                {{-- Copies on two days, and both matter (asked 2026-09-30): what it once reached, and
+                     what is running now. "Last day" sits beside "Last seen", which says when that was. --}}
+                <th class="py-2 pr-4 font-medium text-right whitespace-nowrap" title="Copies that called on the busiest day of the span">Busiest day</th>
+                <th class="py-2 pr-4 font-medium text-right whitespace-nowrap" title="Copies that called on the last day with a call">Last day</th>
                 <th class="py-2 font-medium text-right">Last seen</th>
             </tr>
         </thead>

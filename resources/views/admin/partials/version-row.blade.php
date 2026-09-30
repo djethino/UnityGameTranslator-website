@@ -84,13 +84,23 @@
             {{-- ⚠ Segments share the width instead of taking a fixed one: 30 days and 52 weeks do
                  not draw the same number of bars, and a fixed width left the band ending in the
                  middle of its own column — which reads as data stopping, not as layout. --}}
-            <span class="flex items-end gap-px h-7 w-full" title="{{ $line['days_in_span'] }} day(s) with a call">
-                @foreach ($line['segments'] as $copies)
+            {{-- ⚠ Each bar says what it is (asked 2026-09-30): its day — its week past 90 days — and
+                 the copies it stands for. The band as a whole only carried "N day(s) with a call",
+                 so hovering any bar answered a different question from the one its height asks. --}}
+            <span class="flex items-end gap-px h-7 w-full">
+                @foreach ($line['segments'] as $segment)
                     @php
+                        $copies = $segment['copies'];
                         $height = $copies > 0 ? max(40, (int) round($copies / max(1, $peak) * 100)) : 14;
+                        $when = $segment['from'] === $segment['to']
+                            ? \Carbon\Carbon::parse($segment['from'])->format('M d')
+                            : \Carbon\Carbon::parse($segment['from'])->format('M d') . ' – ' . \Carbon\Carbon::parse($segment['to'])->format('M d');
+                        $what = $copies === 0 ? 'no call'
+                            : $copies . ' ' . \Illuminate\Support\Str::plural('copy', $copies)
+                              . ($segment['from'] === $segment['to'] ? '' : ' on the busiest day');
                     @endphp
                     <span class="flex-1 min-w-[2px] {{ $copies > 0 ? 'bg-cyan-500' : 'bg-gray-600/60' }} rounded-sm"
-                          style="height: {{ $height }}%"></span>
+                          style="height: {{ $height }}%" title="{{ $when }}: {{ $what }}"></span>
                 @endforeach
             </span>
             @if ($data['weekly'])
@@ -102,6 +112,16 @@
     <td class="py-2 pr-4 text-right">
         @if ($line['copies'] > 0)
             <span class="text-gray-200">{{ number_format($line['copies']) }}</span>
+        @else
+            <span class="text-gray-600">—</span>
+        @endif
+    </td>
+
+    {{-- The copies of the last day that saw a call in the span — what is running now. Its date is
+         the "Last seen" beside it; on hover too. --}}
+    <td class="py-2 pr-4 text-right">
+        @if ($line['last_day'])
+            <span class="text-gray-200" title="{{ $line['last_day']['date'] }}">{{ number_format($line['last_day']['copies']) }}</span>
         @else
             <span class="text-gray-600">—</span>
         @endif

@@ -319,6 +319,42 @@ class ClientUsageTest extends TestCase
         $this->assertSame(2, $line['days_in_span']);
     }
 
+    public function test_the_last_day_and_each_bar_say_their_own_copies(): void
+    {
+        // Busiest two days ago, fewer yesterday: "what is running now" is yesterday's 3, not the 9.
+        ClientUsageDaily::insert([
+            ['date' => now()->subDays(2)->toDateString(), 'product' => 'mod', 'version' => '0.11.1',
+             'variant' => 'BepInEx5', 'installs' => 9],
+            ['date' => now()->subDay()->toDateString(), 'product' => 'mod', 'version' => '0.11.1',
+             'variant' => 'BepInEx5', 'installs' => 3],
+        ]);
+
+        $line = collect(VersionInventory::forSpan(30)['mod']['versions'])->firstWhere('name', '0.11.1');
+
+        $this->assertSame(9, $line['copies']);
+        $this->assertSame(['date' => now()->subDay()->toDateString(), 'copies' => 3], $line['last_day']);
+
+        // Daily bars: each one is a single day, with that day's own number.
+        $byDay = collect($line['segments'])->keyBy('from');
+        $this->assertSame(9, $byDay[now()->subDays(2)->toDateString()]['copies']);
+        $this->assertSame(3, $byDay[now()->subDay()->toDateString()]['copies']);
+        $this->assertSame(0, $byDay[now()->toDateString()]['copies']);
+        $this->assertSame(now()->toDateString(), collect($line['segments'])->last()['to']);
+    }
+
+    public function test_a_weekly_bar_never_ends_after_today(): void
+    {
+        ClientUsageDaily::insert([
+            ['date' => now()->toDateString(), 'product' => 'mod', 'version' => '0.11.1',
+             'variant' => 'BepInEx5', 'installs' => 1],
+        ]);
+        $line = collect(VersionInventory::forSpan(365)['mod']['versions'])->firstWhere('name', '0.11.1');
+
+        $last = collect($line['segments'])->last();
+        $this->assertSame(now()->toDateString(), $last['from']);
+        $this->assertSame(now()->toDateString(), $last['to'], 'the last week ran into days that have not happened');
+    }
+
     /**
      * 🔴 **The register is written beside the count, not by a job.** Without this, "since when / until
      * when" would only be as fresh as the last nightly run — and the screen would invite breaking an

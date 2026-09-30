@@ -215,6 +215,12 @@ class VersionInventory
     {
         $segments = self::segments($series, $slots);
 
+        // The most recent day inside the span that saw a call — what is running NOW, beside the
+        // busiest day, which says what it once reached (asked 2026-09-30).
+        $days = array_keys($series);
+        sort($days);
+        $lastDay = end($days) ?: null;
+
         return [
             'name' => $name,
             'published_at' => $release?->published_at,
@@ -223,6 +229,7 @@ class VersionInventory
             'last_seen' => $seen['last_seen'] ?? null,
             // The busiest single day of the span, never the days added up.
             'copies' => $series === [] ? 0 : max($series),
+            'last_day' => $lastDay === null ? null : ['date' => (string) $lastDay, 'copies' => $series[$lastDay]],
             'days_in_span' => count($series),
             'segments' => $segments,
             'active' => $series !== [],
@@ -290,9 +297,14 @@ class VersionInventory
     }
 
     /**
-     * Copies per segment, 0 where nothing called.
+     * Each segment of the band: the days it covers, and the busiest of them — 0 where nothing called.
      *
      * The zeroes are the information: a band that stops halfway is a version that died halfway.
+     *
+     * ⚠ The dates travel with the figure so each bar can say what it is (asked 2026-09-30): the band
+     * only carried one tooltip, "N day(s) with a call", so hovering a bar never gave its own number.
+     *
+     * @return list<array{from: string, to: string, copies: int}>
      */
     private static function segments(array $series, array $slots): array
     {
@@ -314,7 +326,13 @@ class VersionInventory
                 $total = max($total, $series[$day] ?? 0);
             }
 
-            $segments[] = $total;
+            // The last weekly segment starts today (segmentStarts): its end is today, not six days
+            // that have not happened.
+            $segments[] = [
+                'from' => $start->format('Y-m-d'),
+                'to' => min($start->addDays($step - 1), CarbonImmutable::now()->startOfDay())->format('Y-m-d'),
+                'copies' => $total,
+            ];
         }
 
         return $segments;
