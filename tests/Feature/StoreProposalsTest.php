@@ -304,6 +304,21 @@ class StoreProposalsTest extends TestCase
             ->assertSee(route('admin.games', ['search' => 'Lone']), false);
     }
 
+    public function test_a_second_check_says_what_is_still_waiting_not_only_what_is_new(): void
+    {
+        // The second click finds the same value again and writes nothing — "0 new" alone read as
+        // "the stores found nothing" beside proposals waiting on screen (asked 2026-09-30).
+        Game::create(['name' => 'LoneStar']);
+        $this->storesKnow([['id' => '2056210', 'name' => 'LONESTAR']]);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->post(route('admin.games.check-stores'))
+            ->assertSessionHas('success', 'Asked the stores about 1 game: 1 new proposal. 1 proposal waiting on 1 game.');
+
+        $this->actingAs($admin)->post(route('admin.games.check-stores'))
+            ->assertSessionHas('success', 'Asked the stores about 1 game: nothing new. 1 proposal waiting on 1 game.');
+    }
+
     public function test_with_nothing_proposed_the_admin_stays_where_they_were(): void
     {
         Game::create(['name' => 'LoneStar']);
