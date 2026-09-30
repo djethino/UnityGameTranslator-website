@@ -316,6 +316,7 @@
     "admin.no_banner": "Geen banner",
     "admin.banner_since": "Banner zichtbaar sinds :date",
     "admin.manage_announcements": "Aankondigingen beheren",
+    "admin.proposals_waiting": ":count openstaand voorstel|:count openstaande voorstellen",
     "admin.recent_reports": "Recente rapporten",
     "admin.reported_by": "Gerapporteerd door :user",
     "admin.review": "Beoordelen",

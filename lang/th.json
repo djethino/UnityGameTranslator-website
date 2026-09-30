@@ -316,6 +316,7 @@
     "admin.no_banner": "ไม่มีแบนเนอร์",
     "admin.banner_since": "แสดงแบนเนอร์ตั้งแต่ :date",
     "admin.manage_announcements": "จัดการประกาศ",
+    "admin.proposals_waiting": "ข้อเสนอที่รอดำเนินการ :count รายการ",
     "admin.recent_reports": "รายงานล่าสุด",
     "admin.reported_by": "รายงานโดย :user",
     "admin.review": "ตรวจสอบ",

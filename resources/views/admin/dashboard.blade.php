@@ -11,14 +11,60 @@
     <h1 class="text-3xl font-bold"><i class="fas fa-shield-alt mr-2"></i> {{ __('admin.dashboard') }}</h1>
 </div>
 
+{{-- 🔴 Ordered by what the admin actually opens (user, 2026-09-30): Analytics, Games — adult marks
+     to check, store ids and covers to complete — and Reports when there are any. That is the first
+     row. The second holds what is opened now and then. Categories were considered and left out:
+     six cards need an order, not headings.
+
+     Each card of the first row says what WAITS, not only how much there is: proposals to decide on
+     Games, reports to review — and the Reports card stands out only when it has one. --}}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-200 font-semibold">{{ __('admin.pending_reports') }}</p>
-                <p class="text-3xl font-bold text-yellow-400">{{ $pendingReports }}</p>
+                <p class="text-gray-200 font-semibold">{{ __('admin.visitors_today') }}</p>
+                <p class="text-3xl font-bold text-purple-400">{{ number_format($visitorsToday) }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ trans_choice('admin.page_views', $pageViewsToday, ['count' => number_format($pageViewsToday)]) }}</p>
             </div>
-            <i class="fas fa-flag text-4xl text-yellow-400 opacity-50"></i>
+            <i class="fas fa-chart-line text-4xl text-purple-400 opacity-50"></i>
+        </div>
+        <a href="{{ route('admin.analytics') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+            {{ __('admin.view_analytics') }} <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
+    {{--
+        The one place a name a machine declared can be corrected. Every guard around unity_name
+        refuses a bad value at the door; none of them could repair one already stored.
+    --}}
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-200 font-semibold">{{ __('nav.games') }}</p>
+                <p class="text-3xl font-bold text-yellow-400">{{ $totalGames }}</p>
+                {{-- Leads straight to the games that have something to decide, as Check stores does. --}}
+                @if($pendingProposals > 0)
+                    <a href="{{ route('admin.games', ['proposals' => 'pending']) }}"
+                       class="text-sm text-emerald-300 hover:text-emerald-200 underline decoration-dotted mt-1 inline-block">
+                        {{ trans_choice('admin.proposals_waiting', $pendingProposals, ['count' => $pendingProposals]) }}
+                    </a>
+                @endif
+            </div>
+            <i class="fas fa-gamepad text-4xl text-yellow-400 opacity-50"></i>
+        </div>
+        <a href="{{ route('admin.games') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+            {{ __('admin.manage_games') }} <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
+    {{-- Stands out only when something waits: a yellow zero every day teaches the eye to skip it. --}}
+    <div class="bg-gray-800 rounded-lg p-6 border flex flex-col {{ $pendingReports > 0 ? 'border-yellow-500/70' : 'border-gray-700' }}">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-200 font-semibold">{{ __('admin.pending_reports') }}</p>
+                <p class="text-3xl font-bold {{ $pendingReports > 0 ? 'text-yellow-400' : 'text-gray-500' }}">{{ $pendingReports }}</p>
+            </div>
+            <i class="fas fa-flag text-4xl opacity-50 {{ $pendingReports > 0 ? 'text-yellow-400' : 'text-gray-500' }}"></i>
         </div>
         <a href="{{ route('admin.reports') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
             {{ __('admin.view_all') }} <i class="fas fa-arrow-right ml-1"></i>
@@ -51,40 +97,6 @@
         </div>
         <a href="{{ route('admin.users') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
             {{ __('admin.manage_users') }} <i class="fas fa-arrow-right ml-1"></i>
-        </a>
-    </div>
-
-    {{-- Second row: the catalogue and the site itself — what an admin looks after rather than
-         answers to. --}}
-
-    {{--
-        The one place a name a machine declared can be corrected. Every guard around unity_name
-        refuses a bad value at the door; none of them could repair one already stored.
-    --}}
-    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-200 font-semibold">{{ __('nav.games') }}</p>
-                <p class="text-3xl font-bold text-yellow-400">{{ $totalGames }}</p>
-            </div>
-            <i class="fas fa-gamepad text-4xl text-yellow-400 opacity-50"></i>
-        </div>
-        <a href="{{ route('admin.games') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
-            {{ __('admin.manage_games') }} <i class="fas fa-arrow-right ml-1"></i>
-        </a>
-    </div>
-
-    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-200 font-semibold">{{ __('admin.visitors_today') }}</p>
-                <p class="text-3xl font-bold text-purple-400">{{ number_format($visitorsToday) }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ trans_choice('admin.page_views', $pageViewsToday, ['count' => number_format($pageViewsToday)]) }}</p>
-            </div>
-            <i class="fas fa-chart-line text-4xl text-purple-400 opacity-50"></i>
-        </div>
-        <a href="{{ route('admin.analytics') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
-            {{ __('admin.view_analytics') }} <i class="fas fa-arrow-right ml-1"></i>
         </a>
     </div>
 

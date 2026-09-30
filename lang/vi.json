@@ -316,6 +316,7 @@
     "admin.no_banner": "Không có banner",
     "admin.banner_since": "Banner hiển thị từ :date",
     "admin.manage_announcements": "Quản lý thông báo",
+    "admin.proposals_waiting": ":count đề xuất chờ xử lý",
     "admin.recent_reports": "Báo cáo gần đây",
     "admin.reported_by": "Báo cáo bởi :user",
     "admin.review": "Xem xét",

@@ -316,6 +316,7 @@
     "admin.no_banner": "कोई बैनर नहीं",
     "admin.banner_since": ":date से बैनर दिख रहा है",
     "admin.manage_announcements": "घोषणाएं प्रबंधित करें",
+    "admin.proposals_waiting": ":count लंबित सुझाव|:count लंबित सुझाव",
     "admin.recent_reports": "हाल की रिपोर्ट्स",
     "admin.reported_by": ":user द्वारा रिपोर्ट किया गया",
     "admin.review": "समीक्षा करें",

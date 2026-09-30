@@ -316,6 +316,7 @@
     "admin.no_banner": "バナーなし",
     "admin.banner_since": ":date からバナー表示中",
     "admin.manage_announcements": "お知らせ管理",
+    "admin.proposals_waiting": "保留中の提案 :count 件",
     "admin.recent_reports": "最近の報告",
     "admin.reported_by": ":userが報告",
     "admin.review": "確認",

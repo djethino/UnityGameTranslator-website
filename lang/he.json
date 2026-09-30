@@ -316,6 +316,7 @@
     "admin.no_banner": "אין באנר",
     "admin.banner_since": "באנר מוצג מאז :date",
     "admin.manage_announcements": "ניהול הודעות",
+    "admin.proposals_waiting": "הצעה אחת ממתינה|:count הצעות ממתינות",
     "admin.recent_reports": "דיווחים אחרונים",
     "admin.reported_by": "דווח על ידי :user",
     "admin.review": "סקירה",

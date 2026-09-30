@@ -316,6 +316,7 @@
     "admin.no_banner": "Banner yok",
     "admin.banner_since": "Banner :date tarihinden beri gösteriliyor",
     "admin.manage_announcements": "Duyuruları yönet",
+    "admin.proposals_waiting": ":count bekleyen öneri",
     "admin.recent_reports": "Son bildirimler",
     "admin.reported_by": ":user tarafından bildirildi",
     "admin.review": "İncele",

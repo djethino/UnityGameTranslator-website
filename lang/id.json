@@ -316,6 +316,7 @@
     "admin.no_banner": "Tidak ada banner",
     "admin.banner_since": "Banner tampil sejak :date",
     "admin.manage_announcements": "Kelola pengumuman",
+    "admin.proposals_waiting": ":count usulan tertunda",
     "admin.recent_reports": "Laporan Terbaru",
     "admin.reported_by": "Dilaporkan oleh :user",
     "admin.review": "Tinjau",

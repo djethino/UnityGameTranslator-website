@@ -59,9 +59,13 @@ class AdminController extends Controller
         $pageViewsToday = AnalyticsEvent::whereDate('created_at', $today)->count();
         $banner = Announcement::currentBanner();
 
+        // What waits on the games screen: the store proposals nobody has decided yet — the same
+        // count its own header shows.
+        $pendingProposals = GameProposal::pending()->count();
+
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
-            'visitorsToday', 'pageViewsToday', 'banner'
+            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals'
         ));
     }
 

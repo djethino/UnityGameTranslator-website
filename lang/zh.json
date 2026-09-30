@@ -316,6 +316,7 @@
     "admin.no_banner": "无横幅",
     "admin.banner_since": "自 :date 起显示横幅",
     "admin.manage_announcements": "公告管理",
+    "admin.proposals_waiting": ":count 条待处理建议",
     "admin.recent_reports": "最近举报",
     "admin.reported_by": ":user 举报",
     "admin.review": "审核",

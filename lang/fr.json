@@ -316,6 +316,7 @@
     "admin.no_banner": "Aucun bandeau",
     "admin.banner_since": "Bandeau affiché depuis le :date",
     "admin.manage_announcements": "Gérer les annonces",
+    "admin.proposals_waiting": ":count proposition en attente|:count propositions en attente",
     "admin.recent_reports": "Signalements récents",
     "admin.reported_by": "Signalé par :user",
     "admin.review": "Examiner",

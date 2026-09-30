@@ -316,6 +316,7 @@
     "admin.no_banner": "배너 없음",
     "admin.banner_since": ":date부터 배너 표시 중",
     "admin.manage_announcements": "공지 관리",
+    "admin.proposals_waiting": "대기 중인 제안 :count개",
     "admin.recent_reports": "최근 신고",
     "admin.reported_by": ":user님이 신고",
     "admin.review": "검토",

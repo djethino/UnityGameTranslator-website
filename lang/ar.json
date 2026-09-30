@@ -316,6 +316,7 @@
     "admin.no_banner": "لا توجد لافتة",
     "admin.banner_since": "اللافتة معروضة منذ :date",
     "admin.manage_announcements": "إدارة الإعلانات",
+    "admin.proposals_waiting": "لا مقترحات معلقة|مقترح واحد معلق|مقترحان معلقان|:count مقترحات معلقة|:count مقترحًا معلقًا|:count مقترح معلق",
     "admin.recent_reports": "البلاغات الأخيرة",
     "admin.reported_by": "أبلغ عنه :user",
     "admin.review": "مراجعة",

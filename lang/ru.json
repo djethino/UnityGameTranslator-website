@@ -316,6 +316,7 @@
     "admin.no_banner": "Нет баннера",
     "admin.banner_since": "Баннер показан с :date",
     "admin.manage_announcements": "Управление объявлениями",
+    "admin.proposals_waiting": ":count ожидающее предложение|:count ожидающих предложения|:count ожидающих предложений",
     "admin.recent_reports": "Недавние жалобы",
     "admin.reported_by": "Жалоба от :user",
     "admin.review": "Рассмотреть",

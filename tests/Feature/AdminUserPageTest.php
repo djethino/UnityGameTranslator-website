@@ -192,6 +192,22 @@ class AdminUserPageTest extends TestCase
         $this->get(route('admin.users', ['sort' => 'provider', 'dir' => 'asc']))->assertOk();
     }
 
+    public function test_the_dashboard_says_what_waits_on_the_games_screen(): void
+    {
+        $game = Game::create(['name' => 'Proposed Game']);
+        \App\Models\GameProposal::create([
+            'game_id' => $game->id, 'field' => 'steam_id', 'value' => '2056210', 'source' => 'steam',
+            'state' => \App\Models\GameProposal::Pending,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('1 proposal waiting')
+            ->assertSee(route('admin.games', ['proposals' => 'pending']), false)
+            ->assertSeeInOrder(['Visitors today', 'Games', 'Pending Reports', 'Total Translations', 'Users', 'Announcements']);
+    }
+
     public function test_an_igdb_id_opens_the_games_igdb_page(): void
     {
         // IGDB's short address is the id in base 36 under /g/ — checked by hand: 1942 lands on

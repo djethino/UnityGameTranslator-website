@@ -316,6 +316,7 @@
     "admin.no_banner": "Brak banera",
     "admin.banner_since": "Baner widoczny od :date",
     "admin.manage_announcements": "Zarządzaj ogłoszeniami",
+    "admin.proposals_waiting": ":count oczekująca propozycja|:count oczekujące propozycje|:count oczekujących propozycji",
     "admin.recent_reports": "Ostatnie zgłoszenia",
     "admin.reported_by": "Zgłoszone przez :user",
     "admin.review": "Przejrzyj",

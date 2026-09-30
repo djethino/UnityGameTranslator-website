@@ -316,6 +316,7 @@
     "admin.no_banner": "Kein Banner",
     "admin.banner_since": "Banner seit :date aktiv",
     "admin.manage_announcements": "Ankündigungen verwalten",
+    "admin.proposals_waiting": ":count ausstehender Vorschlag|:count ausstehende Vorschläge",
     "admin.recent_reports": "Aktuelle Meldungen",
     "admin.reported_by": "Gemeldet von :user",
     "admin.review": "Prüfen",

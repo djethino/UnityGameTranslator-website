@@ -316,6 +316,7 @@
     "admin.no_banner": "Nenhum banner",
     "admin.banner_since": "Banner exibido desde :date",
     "admin.manage_announcements": "Gerenciar anúncios",
+    "admin.proposals_waiting": ":count proposta pendente|:count propostas pendentes",
     "admin.recent_reports": "Denúncias recentes",
     "admin.reported_by": "Denunciado por :user",
     "admin.review": "Revisar",
