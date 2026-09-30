@@ -86,7 +86,11 @@
            change your username?" on a button labelled "Rapide". See App\Support\LanguageBank. --}}
       data-lang-bank="{{ \App\Support\LanguageBank::version() }}"
       @if(request()->routeIs('admin.*') || View::hasSection('quiet-screen')) data-no-glitch @endif>
-    <nav class="bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
+    {{-- data-site-bar: it rides along and steps aside while the reader goes down the page, and
+         comes back the moment they scroll up (user, 2026-09-30) — resources/js/site-bar.js, which
+         also says why it stays put in some cases. z-40: above the page's own sticky bars, below the
+         editors' full-screen grid and the modals. --}}
+    <nav data-site-bar class="site-bar sticky top-0 z-40 bg-gray-800 border-b border-gray-700" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <!-- Logo + Desktop Nav -->
@@ -543,5 +547,11 @@
             document.getElementById('cookie-banner').classList.add('hidden');
         });
     </script>
+
+    {{-- 🔴 A page's own scripts, after everything they may reach for. This stack was pushed to and
+         never printed: the documentation's `@push('scripts')` — its phone menu among it — had never
+         once run, on any page, since it was written (found 2026-09-30, with the button doing
+         nothing). A push to a stack the layout does not print fails without a sound. --}}
+    @stack('scripts')
 </body>
 </html>

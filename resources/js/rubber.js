@@ -7,8 +7,8 @@
  * acknowledgement that anything happened. That is where this runs, and only there.
  *
  * ── What moves: the content, and only the content ──────────────────────────────────────────────
- * 🔴 `<main>` alone. The bar and the footer scroll with the page like everything else — they are not
- * pinned — they are simply not part of the bounce.
+ * 🔴 `<main>` alone. The footer scrolls with the page; the top bar is sticky and steps aside on its
+ * own (site-bar.js). Neither is part of the bounce.
  *
  * ⚠ Moving them was the first version and it looked broken. At the top of a page the bar IS the top,
  * so sliding it down opened a band of bare background above it: not an edge giving, a header coming

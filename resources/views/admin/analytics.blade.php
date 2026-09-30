@@ -201,7 +201,7 @@
 
      ⚠ `top-0` with a background and a full-bleed shadow: a sticky bar with a transparent background
      lets the page scroll through its own text. --}}
-<div class="sticky top-0 z-30 -mx-4 px-4 mt-8 mb-3 py-2 bg-gray-900/95 backdrop-blur
+<div class="sticky top-[var(--site-bar-offset,0px)] transition-[top] duration-200 z-30 -mx-4 px-4 mt-8 mb-3 py-2 bg-gray-900/95 backdrop-blur
             border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center"
      id="period-bar">
     <h2 class="text-lg font-semibold text-gray-300">

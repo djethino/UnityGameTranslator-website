@@ -7,7 +7,7 @@
      without this the user would have to scroll back up for every query
      tweak or replacement. Same Alpine state as the main bar. --}}
 <div x-show="searchBarOffscreen && (hasQuery || replaceOpen)" x-cloak
-    class="fixed top-2 left-1/2 -translate-x-1/2 z-30 bg-gray-800/95 backdrop-blur border border-gray-600 rounded-lg shadow-xl p-2 space-y-2">
+    class="fixed top-[calc(var(--site-bar-offset,0px)+0.5rem)] transition-[top] duration-200 left-1/2 -translate-x-1/2 z-30 bg-gray-800/95 backdrop-blur border border-gray-600 rounded-lg shadow-xl p-2 space-y-2">
     <div class="flex items-center gap-2">
         <div class="relative">
             <input type="text" x-model="searchQuery" :dir="textDirection(searchQuery)" @keydown.enter.prevent="onSearchEnter($event)"

@@ -9,9 +9,15 @@
     /* Sidebar navigation */
     .docs-sidebar {
         position: sticky;
-        top: 2rem;
-        max-height: calc(100vh - 4rem);
+        /* Below the site's top bar when it is on screen, and up to 2rem from the edge when it has
+           stepped aside (resources/js/site-bar.js). */
+        top: calc(var(--site-bar-offset, 0px) + 2rem);
+        max-height: calc(100vh - 4rem - var(--site-bar-offset, 0px));
         overflow-y: auto;
+        transition: top 200ms ease-out, max-height 200ms ease-out;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .docs-sidebar, .docs-section-bar { transition: none; }
     }
     .docs-sidebar::-webkit-scrollbar {
         width: 4px;
@@ -188,7 +194,17 @@
     }
     /* Mobile sidebar */
     @media (max-width: 1023px) {
+        /* The section bar rides under the site's top bar; anchors land below both (app.css). */
+        :root { --page-bar-height: 2.75rem; }
+        .docs-section-bar {
+            top: var(--site-bar-offset, 0px);
+            transition: top 200ms ease-out;
+        }
         .docs-sidebar {
+            /* ⚠ Overrides the element's `hidden` class, which is what keeps it out of the wide
+               layout's flow below `lg`. On a phone it must exist to slide in — parked off screen by
+               `left` rather than removed — or opening it shows nothing, which it never did. */
+            display: block;
             position: fixed;
             top: 0;
             left: -100%;
@@ -218,12 +234,26 @@
 @endpush
 
 @section('content')
-<div class="flex gap-8">
-    <!-- Mobile menu button -->
-    <button id="docs-menu-btn" class="lg:hidden fixed bottom-4 right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg">
-        <i class="fas fa-bars text-xl"></i>
-    </button>
+{{-- Where you are, on a phone — and the way into the menu (user, 2026-09-30).
 
+     On a wide screen the menu beside the text already says it: the section and the sub-part being
+     read are lit. On a phone the menu is folded away, so nothing said where one stood in a page this
+     long; the only way in was a round purple button in the corner, over the text. This bar replaces
+     it: it rides under the site's top bar (--site-bar-offset) and names the section and sub-part,
+     fed by the same scroll-spy as the menu (resources/js/app.js), so the two cannot disagree.
+
+     ⚠ Outside the row below, which lays the menu and the text side by side: inside it, this would
+     have been a third column. --}}
+<div class="docs-section-bar lg:hidden sticky z-30 -mx-4 sm:-mx-6 -mt-8 mb-6 px-4 sm:px-6 bg-gray-900/95 backdrop-blur border-b border-gray-800">
+    <button id="docs-menu-btn" type="button" aria-controls="docs-sidebar" aria-expanded="false"
+            class="w-full h-11 flex items-center gap-3 text-left text-sm text-gray-200">
+        <i class="fas fa-bars text-purple-400"></i>
+        <span class="truncate" data-docs-current>{{ __('docs.title') }}</span>
+        <i class="fas fa-chevron-down text-xs text-gray-500 ml-auto"></i>
+    </button>
+</div>
+
+<div class="flex gap-8">
     <!-- Mobile overlay -->
     <div id="docs-overlay" class="docs-overlay"></div>
 
@@ -2376,31 +2406,26 @@ c = 0.8 → 1.0</pre>
     const sidebar = document.getElementById('docs-sidebar');
     const overlay = document.getElementById('docs-overlay');
 
-    menuBtn?.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
+    const setMenuOpen = (open) => {
+        sidebar.classList.toggle('open', open);
+        overlay.classList.toggle('open', open);
+        menuBtn?.setAttribute('aria-expanded', String(open));
+    };
+
+    menuBtn?.addEventListener('click', () => setMenuOpen(!sidebar.classList.contains('open')));
+    overlay?.addEventListener('click', () => setMenuOpen(false));
+
+    // Choosing a place in the menu on a phone is choosing what to read: the menu gets out of the
+    // way. It used to stay open over the very section it had just scrolled to. The chevrons that
+    // fold a group are buttons, not links, so they leave it open.
+    sidebar?.addEventListener('click', (event) => {
+        if (sidebar.classList.contains('open') && event.target.closest('a[href^="#"]')) setMenuOpen(false);
     });
 
-    overlay?.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('open');
-    });
-
-    // Active section tracking
-    const sections = document.querySelectorAll('section[id]');
-    const navItems = document.querySelectorAll('.docs-nav-item');
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                navItems.forEach(item => item.classList.remove('active'));
-                const activeItem = document.querySelector(`.docs-nav-item[href="#${entry.target.id}"]`);
-                activeItem?.classList.add('active');
-            }
-        });
-    }, { rootMargin: '-20% 0px -80% 0px' });
-
-    sections.forEach(section => observer.observe(section));
+    // ⚠ No section tracking here. An IntersectionObserver sat below, setting `.active` on the menu
+    // alongside resources/js/section-spy.js — it never ran (this stack was not printed by the
+    // layout until 2026-09-30), and would have been a second author for one highlight the day it
+    // did. The spy is the one, and it also feeds the section bar above.
 </script>
 @endpush
 @endsection

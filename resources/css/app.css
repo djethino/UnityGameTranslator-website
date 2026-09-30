@@ -449,6 +449,27 @@ span.editor-text[dir] { display: block; text-align: start; }
 .edit-affordance button:hover { color: white; background-color: rgb(88 28 135); }
 .edit-affordance button.delete-btn:hover { background-color: rgb(127 29 29); }
 
+/* The site's top bar, which steps aside going down a page and comes back going up — see
+ * resources/js/site-bar.js.
+ *
+ * 🔴 `--site-bar-offset` is the room the bar takes at the top of the screen right now (0 while it is
+ * away). Anything pinned to the top of the viewport sits below it through that variable, and so does
+ * the landing point of an anchor: without the padding, a link to a heading would scroll it exactly
+ * under the bar. `--page-bar-height` is for a page that pins a bar of its own under the site's (the
+ * documentation on a phone), so its anchors land below both. */
+html {
+    scroll-padding-top: calc(var(--site-bar-offset, 0px) + var(--page-bar-height, 0px));
+}
+.site-bar {
+    transition: transform 200ms ease-out;
+}
+.site-bar.site-bar-hidden {
+    transform: translateY(-100%);
+}
+@media (prefers-reduced-motion: reduce) {
+    .site-bar { transition: none; }
+}
+
 /* Organic animated background — one canvas, five "bobs".
  *
  * The five stacked <div>s that used to live here are gone, and so is the Firefox 150 workaround

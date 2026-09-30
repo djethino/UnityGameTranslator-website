@@ -182,6 +182,14 @@ if (historyRoot) {
     // selector now — one default, and no second place for them to drift apart in.
     let lastNavSection = null;
 
+    // The phone's section bar (docs), named with the menu's OWN labels: a bar that wrote its own
+    // words would be a second table of contents to keep in step with the first, in twenty languages.
+    const currentLabel = document.querySelector('[data-docs-current]');
+    const defaultLabel = currentLabel?.textContent.trim() ?? '';
+    const menuLabel = (id) =>
+        document.querySelector(`.docs-nav-item[href="#${CSS.escape(id)}"], .docs-nav-sub[href="#${CSS.escape(id)}"]`)
+            ?.textContent.trim() ?? null;
+
     createSectionSpy({
         root: historyRoot,
         linkSelector: '.docs-nav-item, .docs-nav-sub',
@@ -201,6 +209,12 @@ if (historyRoot) {
                 if ('navUser' in group.dataset) return;
                 setNavOpen(group, trail.includes(navSectionOf(group)));
             });
+
+            if (currentLabel) {
+                // Section first, then the sub-part — the order the reader goes down the menu.
+                const names = [...trail].reverse().map(menuLabel).filter(Boolean);
+                currentLabel.textContent = names.length ? names.join(' › ') : defaultLabel;
+            }
         },
     });
 }
@@ -217,6 +231,11 @@ startAmbient();
 // carry `data-no-glitch` and get no moving field at all.
 import { startRubberBand } from './rubber.js';
 startRubberBand();
+
+// The top bar steps aside going down the page and comes back going up — page chrome too, on every
+// screen. Everything pinned to the top of the viewport sits below it through --site-bar-offset.
+import { startSiteBar } from './site-bar.js';
+startSiteBar();
 
 // F: Stats counter ramping — any element with [data-counter] gets its number
 // animated from 0 to its final value on first viewport entry. Source value

@@ -418,9 +418,15 @@ export function editorCore(config) {
                 // and with the default the prev/next/replace buttons slid out
                 // of reach while the observer still called the bar "visible" —
                 // a dead zone with no controls at either end.
+                //
+                // ⚠ The top of the screen minus the site's bar (site-bar.js): when the bar comes
+                // back it covers the band where the search bar would still count as "visible",
+                // which was the same dead zone again. Its full height, whether or not it is shown
+                // at this moment — for the band it may cover, the floating search is the right one.
+                const siteBar = document.querySelector('[data-site-bar]')?.offsetHeight ?? 0;
                 new IntersectionObserver(entries => {
                     this.searchBarOffscreen = !entries[0].isIntersecting;
-                }, { threshold: 1 }).observe(this.$refs.searchBar);
+                }, { threshold: 1, rootMargin: `-${siteBar}px 0px 0px 0px` }).observe(this.$refs.searchBar);
             }
         },
 
