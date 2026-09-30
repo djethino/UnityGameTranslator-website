@@ -344,6 +344,7 @@
         { "kind": "button", "name": "IdentifyBtn", "text": "?", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "identify" },
         { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged" }
       ] },
+      { "kind": "label", "name": "MissingChars", "text": { "bind": "missingChars" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "checkbox", "name": "RtlMirrorToggle", "text": "Mirror alignment (RTL)", "act": "rtlChanged",
           "help": "Right-to-left text flips left-aligned components to right-aligned, following the reading direction. Turn off to keep the game's own alignment when its layout was built around one side." }
