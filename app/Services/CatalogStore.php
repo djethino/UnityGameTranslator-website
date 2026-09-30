@@ -399,6 +399,85 @@ class CatalogStore
         ];
     }
 
+    /**
+     * One flag as an SVG document, or null when it has not been drawn — what /flags/{id}.svg
+     * serves, and the only place a flag is turned into shapes.
+     *
+     * 🔴 **A file, not markup copied into every page** (2026-09-30). Both flag components used to
+     * write this SVG inline: the two language menus of the navigation bar carried three hundred of
+     * them on every page, closed — 1.8 MB of 2.3 and 10 000 of 11 500 elements, which Firefox paid
+     * for in every open tab. A page now names the file; the browser fetches it once for the whole
+     * site.
+     *
+     * One rect per RUN of identical pixels, never one per pixel: a flag of flat bands becomes three
+     * rects instead of a hundred and seventy-six. shape-rendering=crispEdges because these are
+     * pixels, and a browser smoothing a 16-wide flag turns the ones that differ by one edge into the
+     * same smudge.
+     */
+    public static function flagSvg(?string $id): ?string
+    {
+        $flag = self::flag($id);
+        if ($flag === null) {
+            return null;
+        }
+
+        $rects = '';
+        foreach ($flag['rows'] as $y => $row) {
+            $length = 0;
+            $current = null;
+            $cells = str_split($row);
+
+            foreach ($cells as $x => $key) {
+                if ($key === $current) {
+                    $length++;
+                    continue;
+                }
+                $rects .= self::flagRun($flag['palette'], $current, $x - $length, $y, $length);
+                $current = $key;
+                $length = 1;
+            }
+            $rects .= self::flagRun($flag['palette'], $current, $flag['width'] - $length, $y, $length);
+        }
+
+        return '<svg xmlns="http://www.w3.org/2000/svg"'
+            . ' width="' . $flag['width'] . '" height="' . $flag['height'] . '"'
+            . ' viewBox="0 0 ' . $flag['width'] . ' ' . $flag['height'] . '"'
+            . ' shape-rendering="crispEdges">' . $rects . '</svg>';
+    }
+
+    /** One run of a row, or nothing for a transparent or unknown key. */
+    private static function flagRun(array $palette, ?string $key, int $x, int $y, int $width): string
+    {
+        if ($key === null || $key === '.' || !isset($palette[$key])) {
+            return '';
+        }
+
+        return '<rect x="' . $x . '" y="' . $y . '" width="' . $width . '" height="1" fill="'
+            . htmlspecialchars((string) $palette[$key], ENT_QUOTES) . '"/>';
+    }
+
+    /**
+     * Where a page finds a flag's file, or null when it has not been drawn.
+     *
+     * The address carries the flag catalogue's version, so a flag redrawn upstream reaches every
+     * browser at once instead of waiting out a year of cache — the same reason the built assets
+     * carry a hash.
+     */
+    public static function flagUrl(?string $id): ?string
+    {
+        if (self::flag($id) === null) {
+            return null;
+        }
+
+        return route('flag', ['flag' => $id, 'v' => self::flagsVersion()]);
+    }
+
+    /** A short fingerprint of the flag catalogue as it is served right now. */
+    public static function flagsVersion(): string
+    {
+        return self::$memo['#flags-version'] ??= substr(hash('sha256', self::raw('flags')), 0, 12);
+    }
+
     private static function localeIndex(): array
     {
         if (isset(self::$memo['#locales'])) {

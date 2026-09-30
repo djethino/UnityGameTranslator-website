@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConnectionsController;
 use App\Http\Controllers\EditSessionController;
+use App\Http\Controllers\FlagController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameLanguageController;
 use App\Http\Controllers\HomeController;
@@ -41,6 +42,15 @@ Route::get('/indexnow.txt', function () {
 Route::get('/catalog/{name}.json', [CatalogController::class, 'show'])
     ->where('name', '[a-z]+')
     ->name('catalog.show');
+
+// The catalogue's flags, one image each (see FlagController). Out of the `web` group ENTIRELY: an
+// image needs no session, cookie or locale, and that group's PublicCacheHeaders rewrites any
+// unprefixed anonymous answer to `private, no-cache` — the year of cache that makes a file worth
+// having would be thrown away on every page.
+Route::get('/flags/{flag}.svg', [FlagController::class, 'show'])
+    ->where('flag', '[a-z0-9-]+')
+    ->withoutMiddleware('web')
+    ->name('flag');
 
 // Short interface strings per language, fetched by the background so a word on screen can slip
 // into another of the twenty languages for a second. No locale prefix: the page asks for a locale

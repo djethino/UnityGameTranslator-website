@@ -17,44 +17,17 @@
 
 @php
     $drawn = \App\Services\CatalogStore::flag($flag);
+    $src = $drawn ? \App\Services\CatalogStore::flagUrl($flag) : null;
 @endphp
 
 @if ($drawn)
-    <svg width="{{ round($height * $drawn['width'] / max($drawn['height'], 1)) }}"
+    {{-- A file fetched once for the whole site, not an SVG written into the page — see
+         CatalogStore::flagSvg. Decorative (alt=""): whatever shows it names the language or the
+         locale in words. Lazy, so a flag in a closed menu is not fetched until it opens. --}}
+    <img src="{{ $src }}" alt="" loading="lazy" decoding="async"
+         width="{{ round($height * $drawn['width'] / max($drawn['height'], 1)) }}"
          height="{{ $height }}"
-         viewBox="0 0 {{ $drawn['width'] }} {{ $drawn['height'] }}"
-         shape-rendering="crispEdges"
-         role="img" aria-hidden="true" focusable="false"
          {{ $attributes->merge(['class' => 'inline-block align-middle rounded-[1px] shrink-0']) }}>
-        @foreach ($drawn['rows'] as $y => $row)
-            @php
-                // One rect per RUN, never one per pixel — see language-mark for the arithmetic.
-                $runs = [];
-                $length = 0;
-                $current = null;
-
-                foreach (str_split($row) as $x => $key) {
-                    if ($key === $current) { $length++; continue; }
-                    if ($current !== null && $current !== '.') {
-                        $runs[] = [$x - $length, $length, $current];
-                    }
-                    $current = $key;
-                    $length = 1;
-                }
-
-                if ($current !== null && $current !== '.') {
-                    $runs[] = [$drawn['width'] - $length, $length, $current];
-                }
-            @endphp
-
-            @foreach ($runs as [$x, $width, $key])
-                @if (isset($drawn['palette'][$key]))
-                    <rect x="{{ $x }}" y="{{ $y }}" width="{{ $width }}" height="1"
-                          fill="{{ $drawn['palette'][$key] }}" />
-                @endif
-            @endforeach
-        @endforeach
-    </svg>
 @else
     <span aria-hidden="true">🌐</span>
 @endif
