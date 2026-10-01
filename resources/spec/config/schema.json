@@ -57,6 +57,7 @@
     "interface_font": { "type": ["string", "null"], "default": null, "x-writer": "mod" },
     "source_text_font": { "type": ["string", "null"], "default": null, "x-writer": "mod", "description": "Font of the game's source text shown in the mod's windows. null = the interface font." },
     "target_text_font": { "type": ["string", "null"], "default": null, "x-writer": "mod", "description": "Font of the translation shown in the mod's windows. null = the interface font." },
+    "object_name_font": { "type": ["string", "null"], "default": null, "x-writer": "mod", "description": "Font of the game's object names (paths, identifiers) shown in the mod's windows. null = the interface font." },
     "translate_localization_fallback": { "type": "boolean", "default": false, "x-writer": "mod" },
     "first_run_completed": { "type": "boolean", "default": false, "x-writer": "both", "description": "The wizard has been answered. The Manager writes true only when its settings answer every question the wizard asks, and REMOVES the key (never writes false) to let the game ask again: absent is 'never answered', false would be a claim." },
     "online_mode": { "type": "boolean", "default": false, "x-writer": "both", "description": "Community features in game: search, sync, publishing." },

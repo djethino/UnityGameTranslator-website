@@ -27,6 +27,11 @@
             { "kind": "dropdown", "name": "TargetTextFont", "options": "code", "popupHeight": 250, "width": 260, "act": "targetTextFontChanged",
               "help": "Font of the translation shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with your target language's characters. (None): the interface font. Marked (missing characters only): on this game it only draws what the interface font lacks — set it as a game font's fallback to draw everything." }
           ] },
+          { "kind": "row", "name": "ObjectNameFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "label", "name": "ObjectNameFontLabel", "text": "Object name font:", "role": "Info", "minWidth": 110 },
+            { "kind": "dropdown", "name": "ObjectNameFont", "options": "code", "popupHeight": 250, "width": 260, "act": "objectNameFontChanged",
+              "help": "Font of the names of the game's objects shown in this mod's windows: paths in Inspector and Translation Tools, variables. (None): the interface font. Marked (missing characters only): on this game it only draws what the interface font lacks — set it as a game font's fallback to draw everything." }
+          ] },
           { "kind": "spacer", "name": "GeneralGap2", "height": 10 },
           { "kind": "label", "name": "NotificationsLabel", "text": "Notification Overlay", "role": "SectionTitle" },
           { "kind": "checkbox", "name": "NotifEnabledToggle", "text": " Show notification overlay", "tone": "Secondary", "act": "notificationsEnabledChanged",

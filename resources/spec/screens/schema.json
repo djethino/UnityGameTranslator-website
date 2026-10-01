@@ -124,7 +124,7 @@
               "scroll": { "type": "boolean", "default": false, "description": "A Multiline field that keeps its height and scrolls inside it, instead of growing with what it holds." },
               "readOnly": { "type": "boolean", "default": false, "description": "A field that can be selected and copied but never typed into: text the code shows and the person needs to take characters out of. It is not a disabled field — a disabled one cannot be selected either." },
               "richText": { "type": "boolean", "default": true, "description": "False keeps markup as characters — the file's exact text, being edited." },
-              "gameText": { "type": "string", "enum": ["source", "target"], "description": "Shows the game's text, not the interface: its source text or its translation, drawn in the source or target text font chosen in Options — never the interface font." },
+              "gameText": { "type": "string", "enum": ["source", "target", "names"], "description": "Shows the game's text, not the interface: its source text, its translation, or its objects' names (paths, identifiers), drawn in the source text, target text or object name font chosen in Options — never the interface font." },
               "minHeight": { "$ref": "#/$defs/minHeight" },
               "minWidth": { "type": "integer" },
               "fill": { "type": "string", "enum": ["Content", "Stretch"] },
@@ -225,7 +225,7 @@
               "fill": { "type": "string", "enum": ["Content", "Stretch"], "description": "As wide as its words, or the rest of the row." },
               "autoHeight": { "type": "boolean", "description": "A paragraph that wraps grows to what it draws." },
               "richText": { "type": "boolean", "default": true, "description": "False shows markup as characters instead of rendering it — the file's exact text, for a line being edited." },
-              "gameText": { "type": "string", "enum": ["source", "target"], "description": "Shows the game's text, not the interface: its source text or its translation, drawn in the source or target text font chosen in Options — never the interface font." },
+              "gameText": { "type": "string", "enum": ["source", "target", "names"], "description": "Shows the game's text, not the interface: its source text, its translation, or its objects' names (paths, identifiers), drawn in the source text, target text or object name font chosen in Options — never the interface font." },
               "italic": { "type": "boolean", "description": "Said only to override the role's own choice (a Hint is italic unless told otherwise)." },
               "wrap": { "type": "boolean", "default": true, "description": "False keeps the text on one line, overflowing rather than folding — a name, a tag, a mark." },
               "bold": { "type": "boolean" }

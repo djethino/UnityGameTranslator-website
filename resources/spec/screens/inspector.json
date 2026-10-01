@@ -15,12 +15,12 @@
       { "kind": "spacer", "name": "CameraGap", "height": 8 },
       { "kind": "label", "name": "HoverSectionLabel", "text": "Hovered", "role": "SectionTitle" },
       { "kind": "section", "name": "HoverBox", "children": [
-        { "kind": "label", "name": "HoverPathValue", "gameText": "source", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "HoverPathValue", "gameText": "names", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
       { "kind": "spacer", "name": "HoverGap", "height": 8 },
       { "kind": "label", "name": "SelectedSectionLabel", "text": "Selected", "role": "SectionTitle" },
       { "kind": "section", "name": "SelectedBox", "children": [
-        { "kind": "label", "name": "SelectedPathValue", "gameText": "source", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "SelectedPathValue", "gameText": "names", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
       { "kind": "spacer", "name": "SelectedGap", "height": 8 },
       { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
