@@ -20,12 +20,12 @@
           { "kind": "row", "name": "SourceTextFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
             { "kind": "label", "name": "SourceTextFontLabel", "text": "Source text font:", "role": "Info", "minWidth": 110 },
             { "kind": "dropdown", "name": "SourceTextFont", "options": "code", "popupHeight": 250, "width": 260, "act": "sourceTextFontChanged",
-              "help": "Font of the game's source text shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with that language's characters. (None): the interface font." }
+              "help": "Font of the game's source text shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with that language's characters. (None): the interface font. Marked (missing characters only): on this game it only draws what the interface font lacks — set it as a game font's fallback to draw everything." }
           ] },
           { "kind": "row", "name": "TargetTextFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
             { "kind": "label", "name": "TargetTextFontLabel", "text": "Target text font:", "role": "Info", "minWidth": 110 },
             { "kind": "dropdown", "name": "TargetTextFont", "options": "code", "popupHeight": 250, "width": 260, "act": "targetTextFontChanged",
-              "help": "Font of the translation shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with your target language's characters. (None): the interface font." }
+              "help": "Font of the translation shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with your target language's characters. (None): the interface font. Marked (missing characters only): on this game it only draws what the interface font lacks — set it as a game font's fallback to draw everything." }
           ] },
           { "kind": "spacer", "name": "GeneralGap2", "height": 10 },
           { "kind": "label", "name": "NotificationsLabel", "text": "Notification Overlay", "role": "SectionTitle" },
