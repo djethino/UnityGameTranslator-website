@@ -45,7 +45,8 @@
       ] },
       { "kind": "stack", "name": "TextEditRow", "spacing": 4, "fillHeight": true, "visible": false, "children": [
         { "kind": "label", "name": "TextEditCount", "text": { "bind": "textEditCount" }, "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
-        { "kind": "list", "name": "TextEditScroll", "minHeight": 260, "preferredHeight": 260 }
+        { "kind": "list", "name": "TextEditScroll", "minHeight": 260, "preferredHeight": 260 },
+        { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
       { "kind": "row", "name": "ActionRow2", "spacing": 5, "minHeight": "ButtonHeight", "children": [
         { "kind": "button", "name": "CancelBtn", "text": "Clear Selection", "fill": "Stretch", "act": "clearSelection",
