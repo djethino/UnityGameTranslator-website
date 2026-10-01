@@ -15,7 +15,7 @@
           { "kind": "row", "name": "InterfaceFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
             { "kind": "label", "name": "InterfaceFontLabel", "text": "Interface font:", "role": "Info", "minWidth": 90 },
             { "kind": "dropdown", "name": "InterfaceFont", "options": "code", "popupHeight": 250, "width": 260, "act": "interfaceFontChanged",
-              "help": "Font for this mod's interface when it is translated. Only fonts usable by the interface are listed; pick one that supports your target language's characters." }
+              "help": "Font of this mod's window, for its own text and for the game text it shows. Pick one with your target language's characters. (None): the font that replaces Arial in this game's fonts, if one is set." }
           ] },
           { "kind": "spacer", "name": "GeneralGap2", "height": 10 },
           { "kind": "label", "name": "NotificationsLabel", "text": "Notification Overlay", "role": "SectionTitle" },

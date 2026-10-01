@@ -46,6 +46,13 @@
           { "kind": "button", "name": "FontCoverageIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "fontCoverageIgnore" }
         ] }
       ] },
+      { "kind": "callout", "name": "WindowFontBox", "tone": "Warning", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "WindowFontLabel", "text": { "bind": "windowFont" }, "policy": "Excluded", "bold": true, "autoHeight": true },
+        { "kind": "row", "name": "WindowFontBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "WindowFontFixBtn", "text": "Options", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "windowFontFix" },
+          { "kind": "button", "name": "WindowFontIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "windowFontIgnore" }
+        ] }
+      ] },
       { "kind": "callout", "name": "UnreachableBox", "tone": "Error", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
         { "kind": "label", "name": "UnreachableLabel", "text": "Cannot reach the translation server", "bold": true },
         { "kind": "label", "name": "UnreachableCause", "text": { "bind": "unreachableCause" }, "policy": "Excluded", "role": "Small", "autoHeight": true },
