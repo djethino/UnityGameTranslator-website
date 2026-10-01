@@ -28,21 +28,21 @@
   ],
   "templates": [
     { "kind": "stack", "name": "ConflictRow", "spacing": 3, "minHeight": "MultiLineMedium", "children": [
-      { "kind": "label", "name": "Key", "text": { "bind": "key" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall" },
+      { "kind": "label", "name": "Key", "gameText": "source", "text": { "bind": "key" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightSmall" },
       { "kind": "row", "name": "Values", "spacing": 10, "minHeight": "CodeDisplayHeight", "fill": "Stretch", "children": [
         { "kind": "stack", "name": "Local", "spacing": 2, "children": [
           { "kind": "row", "name": "LocalHead", "spacing": 6, "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
             { "kind": "label", "name": "LocalLabel", "text": "Local:", "role": "Small", "tone": "Secondary" },
             { "kind": "chip", "name": "LocalChip", "visible": false }
           ] },
-          { "kind": "label", "name": "LocalValue", "text": { "bind": "local" }, "policy": "Excluded", "role": "Small", "tone": "Accent", "fill": "Stretch" }
+          { "kind": "label", "name": "LocalValue", "gameText": "target", "text": { "bind": "local" }, "policy": "Excluded", "role": "Small", "tone": "Accent", "fill": "Stretch" }
         ] },
         { "kind": "stack", "name": "Remote", "spacing": 2, "children": [
           { "kind": "row", "name": "RemoteHead", "spacing": 6, "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
             { "kind": "label", "name": "RemoteLabel", "text": "Server:", "role": "Small", "tone": "Secondary" },
             { "kind": "chip", "name": "RemoteChip", "visible": false }
           ] },
-          { "kind": "label", "name": "RemoteValue", "text": { "bind": "remote" }, "policy": "Excluded", "role": "Small", "tone": "Success", "fill": "Stretch" }
+          { "kind": "label", "name": "RemoteValue", "gameText": "target", "text": { "bind": "remote" }, "policy": "Excluded", "role": "Small", "tone": "Success", "fill": "Stretch" }
         ] }
       ] },
       { "kind": "row", "name": "Choices", "spacing": 10, "minHeight": "RowHeightMedium", "fill": "Stretch", "children": [

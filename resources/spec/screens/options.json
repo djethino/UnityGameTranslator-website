@@ -13,9 +13,19 @@
             "help": "Translate this mod's own buttons and labels into your target language, alongside the game's text." },
           { "kind": "label", "name": "ModUIHint", "text": "Translate this mod's own buttons and labels", "role": "Hint" },
           { "kind": "row", "name": "InterfaceFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
-            { "kind": "label", "name": "InterfaceFontLabel", "text": "Interface font:", "role": "Info", "minWidth": 90 },
+            { "kind": "label", "name": "InterfaceFontLabel", "text": "Interface font:", "role": "Info", "minWidth": 110 },
             { "kind": "dropdown", "name": "InterfaceFont", "options": "code", "popupHeight": 250, "width": 260, "act": "interfaceFontChanged",
-              "help": "Font of this mod's window, for its own text and for the game text it shows. Pick one with your target language's characters. (None): the font that replaces Arial in this game's fonts, if one is set." }
+              "help": "Font of this mod's buttons and labels. (None): the mod's default font. The game's text shown in its windows has its own fonts: Source text font and Target text font." }
+          ] },
+          { "kind": "row", "name": "SourceTextFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "label", "name": "SourceTextFontLabel", "text": "Source text font:", "role": "Info", "minWidth": 110 },
+            { "kind": "dropdown", "name": "SourceTextFont", "options": "code", "popupHeight": 250, "width": 260, "act": "sourceTextFontChanged",
+              "help": "Font of the game's source text shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with that language's characters. (None): the interface font." }
+          ] },
+          { "kind": "row", "name": "TargetTextFontRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "label", "name": "TargetTextFontLabel", "text": "Target text font:", "role": "Info", "minWidth": 110 },
+            { "kind": "dropdown", "name": "TargetTextFont", "options": "code", "popupHeight": 250, "width": 260, "act": "targetTextFontChanged",
+              "help": "Font of the translation shown in this mod's windows: Inspector, Translation Tools, Merge. Pick one with your target language's characters. (None): the interface font." }
           ] },
           { "kind": "spacer", "name": "GeneralGap2", "height": 10 },
           { "kind": "label", "name": "NotificationsLabel", "text": "Notification Overlay", "role": "SectionTitle" },

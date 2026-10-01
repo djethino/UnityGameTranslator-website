@@ -15,12 +15,12 @@
       { "kind": "spacer", "name": "CameraGap", "height": 8 },
       { "kind": "label", "name": "HoverSectionLabel", "text": "Hovered", "role": "SectionTitle" },
       { "kind": "section", "name": "HoverBox", "children": [
-        { "kind": "label", "name": "HoverPathValue", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "HoverPathValue", "gameText": "source", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
       { "kind": "spacer", "name": "HoverGap", "height": 8 },
       { "kind": "label", "name": "SelectedSectionLabel", "text": "Selected", "role": "SectionTitle" },
       { "kind": "section", "name": "SelectedBox", "children": [
-        { "kind": "label", "name": "SelectedPathValue", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "SelectedPathValue", "gameText": "source", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
       { "kind": "spacer", "name": "SelectedGap", "height": 8 },
       { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
@@ -68,11 +68,11 @@
     { "kind": "stack", "name": "TextEditEntry", "spacing": 3, "surface": "Card", "children": [
       { "kind": "row", "name": "KeyRow", "spacing": 6, "placement": "TopLeft", "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
         { "kind": "chip", "name": "Tag" },
-        { "kind": "label", "name": "Key", "text": { "bind": "key" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall" }
+        { "kind": "label", "name": "Key", "gameText": "source", "text": { "bind": "key" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall" }
       ] },
       { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
-      { "kind": "field", "name": "TranslationInput", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false },
-      { "kind": "label", "name": "Preview", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+      { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false },
+      { "kind": "label", "name": "Preview", "gameText": "target", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
       { "kind": "row", "name": "BtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
         { "kind": "button", "name": "SaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "policy": "Excluded", "act": "save" },
         { "kind": "button", "name": "RetranslateBtn", "text": "Retranslate (AI)", "tone": "Primary", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "retranslate" },

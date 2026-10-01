@@ -114,9 +114,9 @@
             { "kind": "collapsible", "name": "GameText", "title": "Game text", "expanded": true,
               "help": "The line as the game shows it, tags and placeholders included. Fold it to give the field the room.",
               "children": [
-              { "kind": "field", "name": "SourceText", "input": "Multiline", "scroll": true, "readOnly": true, "richText": false, "minHeight": 60, "fill": "Stretch",
+              { "kind": "field", "name": "SourceText", "gameText": "source", "input": "Multiline", "scroll": true, "readOnly": true, "richText": false, "minHeight": 60, "fill": "Stretch",
                 "help": "Select any part of it to copy — a placeholder the translation has to keep, for instance. It cannot be typed into." },
-              { "kind": "label", "name": "FailElement", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" }
+              { "kind": "label", "name": "FailElement", "gameText": "source", "text": { "bind": "failElement" }, "policy": "Excluded", "role": "Caption", "tone": "Muted", "fill": "Stretch" }
             ] },
             { "kind": "splitter", "name": "TextSplit", "help": "Drag to give the game text or the proposal more room. Back to automatic when the window closes." },
             { "kind": "collapsible", "name": "Proposals", "title": "What the AI proposed", "expanded": true,
@@ -135,7 +135,7 @@
               { "kind": "list", "name": "AttemptScroll", "minHeight": 0, "preferredHeight": 60, "fill": false }
             ] },
             { "kind": "splitter", "name": "FieldSplit", "help": "Drag to give the proposal or the field more room. Back to automatic when the window closes." },
-            { "kind": "field", "name": "FailInput", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 90, "richText": false,
+            { "kind": "field", "name": "FailInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 90, "richText": false,
               "help": "The translation to keep. Use copies a proposal here so you can correct it. Every placeholder of the game text must be there; the line below says which one is not." },
             { "kind": "label", "name": "FailInputCheck", "text": { "bind": "failInputCheck" }, "policy": "Excluded", "role": "Caption", "tone": "Error", "richText": false, "fill": "Stretch", "visible": false },
             { "kind": "row", "name": "FailBtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "children": [
@@ -293,24 +293,24 @@
       { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "richText": false, "fill": "Stretch" }
     ] },
     { "kind": "row", "name": "FindResult", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
-      { "kind": "label", "name": "Path", "text": { "bind": "path" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "label", "name": "Path", "gameText": "source", "text": { "bind": "path" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
       { "kind": "label", "name": "Engine", "text": { "bind": "engine" }, "policy": "Excluded", "role": "Caption", "wrap": false, "minWidth": 60, "align": "MiddleRight" },
       { "kind": "button", "name": "PickBtn", "text": "+", "minWidth": 30, "act": "pick" }
     ] },
     { "kind": "row", "name": "ExclusionRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
-      { "kind": "label", "name": "PatternLabel", "text": { "bind": "pattern" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "label", "name": "PatternLabel", "gameText": "source", "text": { "bind": "pattern" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
       { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight", "visible": false },
       { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo", "visible": false },
       { "kind": "button", "name": "DeleteBtn", "text": "X", "minWidth": 30, "act": "delete" }
     ] },
     { "kind": "row", "name": "FailureRow", "spacing": 8, "padX": 6, "padY": 5, "surface": "Item", "minHeight": "RowHeightNormal", "act": "pick", "children": [
-      { "kind": "label", "name": "Source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
+      { "kind": "label", "name": "Source", "gameText": "source", "text": { "bind": "source" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
       { "kind": "label", "name": "Attempts", "text": { "bind": "attempts" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "wrap": false, "minWidth": 80, "align": "MiddleRight" }
     ] },
     { "kind": "row", "name": "HeldRow", "spacing": 5, "padX": 6, "padY": 3, "minHeight": "RowHeightNormal", "children": [
       { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
-        { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
-        { "kind": "label", "name": "Element", "text": { "bind": "element" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch" }
+        { "kind": "label", "name": "Text", "gameText": "source", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" },
+        { "kind": "label", "name": "Element", "gameText": "source", "text": { "bind": "element" }, "policy": "Excluded", "role": "Caption", "tone": "Secondary", "fill": "Stretch" }
       ] },
       { "kind": "label", "name": "RemovedLabel", "text": "Removed on Apply", "role": "Small", "tone": "Error", "minWidth": 110, "align": "MiddleRight", "visible": false },
       { "kind": "button", "name": "UndoBtn", "text": "Undo", "minWidth": 50, "act": "undo", "visible": false },
@@ -318,7 +318,7 @@
         "help": "Sends this text to the AI again on this element. Applied on Apply." }
     ] },
     { "kind": "stack", "name": "TextRow", "pad": 4, "fill": "Stretch", "children": [
-      { "kind": "label", "name": "Text", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" }
+      { "kind": "label", "name": "Text", "gameText": "target", "text": { "bind": "text" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch" }
     ] },
     { "kind": "row", "name": "RemovedOverrideRow", "spacing": 5, "padX": 5, "padY": 8, "surface": "Card", "minHeight": "RowHeightNormal", "children": [
       { "kind": "label", "name": "MatchLabel", "text": { "bind": "match" }, "policy": "Excluded", "role": "Small", "tone": "Muted", "fill": "Stretch" },
@@ -368,13 +368,13 @@
       { "kind": "button", "name": "RemoveBtn", "text": "X", "minWidth": 30, "act": "remove" }
     ] },
     { "kind": "row", "name": "ScanCandidate", "spacing": 5, "pad": 2, "minHeight": "RowHeightSmall", "children": [
-      { "kind": "label", "name": "Label", "text": { "bind": "label" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "label", "name": "Label", "gameText": "source", "text": { "bind": "label" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
       { "kind": "button", "name": "AddBtn", "text": "+", "minWidth": 30, "act": "add" }
     ] },
     { "kind": "row", "name": "VariableRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "children": [
       { "kind": "stack", "name": "Info", "fill": "Stretch", "children": [
         { "kind": "label", "name": "Name", "text": { "bind": "name" }, "policy": "Excluded", "role": "Small", "bold": true, "fill": "Stretch" },
-        { "kind": "label", "name": "Detail", "text": { "bind": "detail" }, "policy": "Excluded", "role": "Caption", "fill": "Stretch" }
+        { "kind": "label", "name": "Detail", "gameText": "source", "text": { "bind": "detail" }, "policy": "Excluded", "role": "Caption", "fill": "Stretch" }
       ] },
       { "kind": "button", "name": "RemoveBtn", "text": "X", "minWidth": 30, "act": "remove" }
     ] }
