@@ -331,7 +331,13 @@
         { "kind": "field", "name": "MatchInput", "placeholder": "path:*Pattern*", "act": "matchChanged" },
         { "kind": "button", "name": "DeleteBtn", "text": "X", "tone": "Danger", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "delete" }
       ] },
-      { "kind": "slider", "name": "OverrideSize", "caption": "Size:", "min": 0, "max": 3, "format": "PercentOrDefault", "captionWidth": 35, "act": "sizeChanged" },
+      { "kind": "row", "name": "SizeRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+        { "kind": "slider", "name": "OverrideSize", "caption": "Size:", "min": 0, "max": 3, "format": "PercentOrDefault", "captionWidth": 35, "act": "sizeChanged" },
+        { "kind": "button", "name": "SizeUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "sizeUndo", "visible": false,
+          "help": "Back to the size saved for this rule." },
+        { "kind": "button", "name": "SizeDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "sizeDefault", "visible": false,
+          "help": "Sets the size back to 100%. Applied on Apply." }
+      ] },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "label", "name": "RtlLabel", "text": "RTL alignment:", "role": "Small", "policy": "Excluded", "minWidth": 95 },
         { "kind": "dropdown", "name": "OverrideRtl", "options": "code", "width": 150, "act": "rtlChanged" }
@@ -357,6 +363,10 @@
       { "kind": "label", "name": "NoFallbackLabel", "text": "Fallback not supported for this font type", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false },
       { "kind": "row", "name": "ScaleRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
         { "kind": "slider", "name": "Scale", "caption": "Size:", "min": 0.01, "max": 2, "format": "Percent", "captionWidth": 55, "act": "scaleChanged" },
+        { "kind": "button", "name": "ScaleUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "scaleUndo", "visible": false,
+          "help": "Back to the size saved for this font." },
+        { "kind": "button", "name": "ScaleDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "scaleDefault", "visible": false,
+          "help": "Sets the size back to 100%. Applied on Apply." },
         { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false }
       ] }
     ] },
