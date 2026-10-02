@@ -4,6 +4,8 @@
     "contract": "This list IS the upload contract. The website validates target_language against these names and the mod sends them, so a name added, removed or respelled on one side only shows up as an upload refused by a validation error the contributor did not cause and cannot read. It moves on every side at once or not at all.",
     "identity": "The NAME is the identity, never the tag. It is what the website stores, what the mod resolves to and what a game's config holds. Five of these have no ISO 639-1 code at all, which is a fact about a 1967 standard and not about a language.",
     "tag": "BCP 47. For most languages that is the familiar two-letter code, which is already a valid BCP 47 tag; the five without one carry the registered subtag instead - yue, prs, arz, ary, apc - each checked against the IANA Language Subtag Registry rather than written from memory. None of them is deprecated.",
+    "script": "The ISO 15924 code of the script the language is written in, as CLDR's likely subtags give it for the tag (an alias such as prs is followed to its replacement first). A language written in more than one script carries the one CLDR calls likely; a script written in the tag itself (zh-Hant) wins. Read from CLDR, never typed: see sources.",
+    "direction": "rtl or ltr: whether that script is written right to left, as CLDR's script metadata says (its rtl field). A fact about the script, written on the language so a program needs nothing else to know it.",
     "parent": "Set only where the parent is itself an entry in this list, for grouping in a picker. Cantonese has none: its macrolanguage is zh, and this list has Simplified and Traditional Chinese, which are scripts rather than a language it is a variety of. Left empty rather than attached to something it does not belong to.",
     "aliases": "What somebody would actually type. Present only where a source gives one - the registry's own alternative descriptions here. Nothing invented.",
     "providers": "What Google Translate and DeepL accept, and under which code. null means the provider does not do that language: the caller must say so BEFORE translating rather than send a request per line and collect a refusal each time, which is what happened while this field did not exist. Google's codes come from its Neural Machine Translation list, because that is the model behind the v2 endpoint this project calls - the newer LLM list is longer and does not apply. DeepL distinguishes source from target: the same language is EN as a source and EN-US as a target, and sending the wrong one is refused. Taken from their published tables on 2026-08-11, not from an endpoint - see sources below. A list read from their own API would be better and needs a key; this is dated so it can be recognised as stale.",
@@ -12,7 +14,8 @@
     "interface_fallback": "When somebody's system asks for a language the website's interface does not have — Catalan, Breton, Basque — it serves ENGLISH. Uniformly, so no field carries it. The tempting alternative was to fall back to the majority language of the territory: Catalan to Spanish, Breton to French. It would often be more useful and it was rejected on purpose. It decides for somebody what else they speak, and routing a minority language to the language that displaced it is exactly the framing that makes those languages invisible elsewhere. English assumes nothing about anyone. ⚠ This is now a decision rather than an accident: the behaviour was already English, but only because an unmatched locale fell through to the default. Written down so it is not silently 'improved' later.",
     "sources": {
       "deepl": "https://developers.deepl.com/docs/getting-started/supported-languages, read 2026-08-11 (125 languages)",
-      "google": "https://docs.cloud.google.com/translate/docs/languages, Neural Machine Translation table, read 2026-08-11 (232 languages)"
+      "google": "https://docs.cloud.google.com/translate/docs/languages, Neural Machine Translation table, read 2026-08-11 (232 languages)",
+      "cldr": "https://github.com/unicode-org/cldr-json, CLDR 48: cldr-core/supplemental/likelySubtags.json and aliases.json for script, cldr-core/scriptMetadata.json for direction, read 2026-10-02"
     },
     "also": "Other codes the same language answers to, and it is a recognition list rather than a choice. A system reports zh-CN, a browser sends zh-Hans, Java still emits iw for Hebrew and no is what most systems mean by Norwegian Bokmål. All of them have to be understood; only `tag` is ever written down. Dropping these would not lose a language, it would lose the ability to recognise the machine somebody is actually using."
   },
@@ -20,6 +23,8 @@
     {
       "name": "English",
       "tag": "en",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "gb",
       "providers": {
         "google": "en",
@@ -32,6 +37,8 @@
     {
       "name": "French",
       "tag": "fr",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fr",
       "providers": {
         "google": "fr",
@@ -44,6 +51,8 @@
     {
       "name": "German",
       "tag": "de",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "de",
       "providers": {
         "google": "de",
@@ -56,6 +65,8 @@
     {
       "name": "Spanish",
       "tag": "es",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es",
       "providers": {
         "google": "es",
@@ -68,6 +79,8 @@
     {
       "name": "Italian",
       "tag": "it",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it",
       "providers": {
         "google": "it",
@@ -80,6 +93,8 @@
     {
       "name": "Portuguese",
       "tag": "pt",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "pt",
       "providers": {
         "google": "pt",
@@ -92,6 +107,8 @@
     {
       "name": "Russian",
       "tag": "ru",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "ru",
       "providers": {
         "google": "ru",
@@ -104,6 +121,8 @@
     {
       "name": "Polish",
       "tag": "pl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "pl",
       "providers": {
         "google": "pl",
@@ -116,6 +135,8 @@
     {
       "name": "Japanese",
       "tag": "ja",
+      "script": "Jpan",
+      "direction": "ltr",
       "flag": "jp",
       "providers": {
         "google": "ja",
@@ -128,6 +149,8 @@
     {
       "name": "Korean",
       "tag": "ko",
+      "script": "Kore",
+      "direction": "ltr",
       "flag": "kr",
       "providers": {
         "google": "ko",
@@ -140,6 +163,8 @@
     {
       "name": "Simplified Chinese",
       "tag": "zh",
+      "script": "Hans",
+      "direction": "ltr",
       "flag": "cn",
       "also": [
         "zh-cn",
@@ -156,6 +181,8 @@
     {
       "name": "Traditional Chinese",
       "tag": "zh-tw",
+      "script": "Hant",
+      "direction": "ltr",
       "flag": "tw",
       "also": [
         "zh-hant"
@@ -171,6 +198,8 @@
     {
       "name": "Arabic",
       "tag": "ar",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "sa",
       "providers": {
         "google": "ar",
@@ -183,6 +212,8 @@
     {
       "name": "Turkish",
       "tag": "tr",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "tr",
       "providers": {
         "google": "tr",
@@ -195,6 +226,8 @@
     {
       "name": "Dutch",
       "tag": "nl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "nl",
       "providers": {
         "google": "nl",
@@ -207,6 +240,8 @@
     {
       "name": "Swedish",
       "tag": "sv",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "se",
       "providers": {
         "google": "sv",
@@ -219,6 +254,8 @@
     {
       "name": "Danish",
       "tag": "da",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "dk",
       "providers": {
         "google": "da",
@@ -231,6 +268,8 @@
     {
       "name": "Norwegian Bokmål",
       "tag": "nb",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "no",
       "also": [
         "no"
@@ -246,6 +285,8 @@
     {
       "name": "Finnish",
       "tag": "fi",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fi",
       "providers": {
         "google": "fi",
@@ -258,6 +299,8 @@
     {
       "name": "Czech",
       "tag": "cs",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "cz",
       "providers": {
         "google": "cs",
@@ -270,6 +313,8 @@
     {
       "name": "Hungarian",
       "tag": "hu",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "hu",
       "providers": {
         "google": "hu",
@@ -282,6 +327,8 @@
     {
       "name": "Romanian",
       "tag": "ro",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ro",
       "providers": {
         "google": "ro",
@@ -294,6 +341,8 @@
     {
       "name": "Greek",
       "tag": "el",
+      "script": "Grek",
+      "direction": "ltr",
       "flag": "gr",
       "providers": {
         "google": "el",
@@ -306,6 +355,8 @@
     {
       "name": "Thai",
       "tag": "th",
+      "script": "Thai",
+      "direction": "ltr",
       "flag": "th",
       "providers": {
         "google": "th",
@@ -318,6 +369,8 @@
     {
       "name": "Vietnamese",
       "tag": "vi",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "vn",
       "providers": {
         "google": "vi",
@@ -330,6 +383,8 @@
     {
       "name": "Indonesian",
       "tag": "id",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "id",
       "providers": {
         "google": "id",
@@ -342,6 +397,8 @@
     {
       "name": "Malay",
       "tag": "ms",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "my",
       "providers": {
         "google": "ms",
@@ -354,6 +411,8 @@
     {
       "name": "Ukrainian",
       "tag": "uk",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "ua",
       "providers": {
         "google": "uk",
@@ -366,6 +425,8 @@
     {
       "name": "Bulgarian",
       "tag": "bg",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "bg",
       "providers": {
         "google": "bg",
@@ -378,6 +439,8 @@
     {
       "name": "Slovak",
       "tag": "sk",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "sk",
       "providers": {
         "google": "sk",
@@ -390,6 +453,8 @@
     {
       "name": "Croatian",
       "tag": "hr",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "hr",
       "providers": {
         "google": "hr",
@@ -402,6 +467,8 @@
     {
       "name": "Serbian",
       "tag": "sr",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "rs",
       "providers": {
         "google": "sr",
@@ -414,6 +481,8 @@
     {
       "name": "Slovenian",
       "tag": "sl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "si",
       "providers": {
         "google": "sl",
@@ -426,6 +495,8 @@
     {
       "name": "Lithuanian",
       "tag": "lt",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "lt",
       "providers": {
         "google": "lt",
@@ -438,6 +509,8 @@
     {
       "name": "Latvian",
       "tag": "lv",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "lv",
       "providers": {
         "google": "lv",
@@ -450,6 +523,8 @@
     {
       "name": "Estonian",
       "tag": "et",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ee",
       "providers": {
         "google": "et",
@@ -462,6 +537,8 @@
     {
       "name": "Norwegian Nynorsk",
       "tag": "nn",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "no",
       "providers": {
         "google": "no",
@@ -474,6 +551,8 @@
     {
       "name": "Icelandic",
       "tag": "is",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "is",
       "providers": {
         "google": "is",
@@ -486,6 +565,8 @@
     {
       "name": "Faroese",
       "tag": "fo",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fo",
       "providers": {
         "google": null,
@@ -495,6 +576,8 @@
     {
       "name": "Irish",
       "tag": "ga",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ie",
       "providers": {
         "google": "ga",
@@ -507,6 +590,8 @@
     {
       "name": "Welsh",
       "tag": "cy",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "gb-wls",
       "providers": {
         "google": "cy",
@@ -519,6 +604,8 @@
     {
       "name": "Catalan",
       "tag": "ca",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es-ct",
       "providers": {
         "google": "ca",
@@ -531,6 +618,8 @@
     {
       "name": "Galician",
       "tag": "gl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es-ga",
       "providers": {
         "google": "gl",
@@ -543,6 +632,8 @@
     {
       "name": "Basque",
       "tag": "eu",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es-pv",
       "providers": {
         "google": "eu",
@@ -555,6 +646,8 @@
     {
       "name": "Luxembourgish",
       "tag": "lb",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "lu",
       "providers": {
         "google": "lb",
@@ -567,6 +660,8 @@
     {
       "name": "Afrikaans",
       "tag": "af",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "za",
       "providers": {
         "google": "af",
@@ -579,6 +674,8 @@
     {
       "name": "Macedonian",
       "tag": "mk",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "mk",
       "providers": {
         "google": "mk",
@@ -591,6 +688,8 @@
     {
       "name": "Bosnian",
       "tag": "bs",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ba",
       "providers": {
         "google": "bs",
@@ -603,6 +702,8 @@
     {
       "name": "Albanian",
       "tag": "sq",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "al",
       "providers": {
         "google": "sq",
@@ -615,6 +716,8 @@
     {
       "name": "Armenian",
       "tag": "hy",
+      "script": "Armn",
+      "direction": "ltr",
       "flag": "am",
       "providers": {
         "google": "hy",
@@ -627,6 +730,8 @@
     {
       "name": "Belarusian",
       "tag": "be",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "by",
       "providers": {
         "google": "be",
@@ -639,6 +744,8 @@
     {
       "name": "Persian",
       "tag": "fa",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "ir",
       "providers": {
         "google": "fa",
@@ -651,6 +758,8 @@
     {
       "name": "Dari",
       "tag": "prs",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "af",
       "parent": "Persian",
       "aliases": [
@@ -667,6 +776,8 @@
     {
       "name": "Tajik",
       "tag": "tg",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "tj",
       "providers": {
         "google": "tg",
@@ -679,6 +790,8 @@
     {
       "name": "Hindi",
       "tag": "hi",
+      "script": "Deva",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "hi",
@@ -691,6 +804,8 @@
     {
       "name": "Bengali",
       "tag": "bn",
+      "script": "Beng",
+      "direction": "ltr",
       "flag": "bd",
       "providers": {
         "google": "bn",
@@ -703,6 +818,8 @@
     {
       "name": "Urdu",
       "tag": "ur",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "pk",
       "providers": {
         "google": "ur",
@@ -715,6 +832,8 @@
     {
       "name": "Punjabi",
       "tag": "pa",
+      "script": "Guru",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "pa",
@@ -727,6 +846,8 @@
     {
       "name": "Gujarati",
       "tag": "gu",
+      "script": "Gujr",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "gu",
@@ -739,6 +860,8 @@
     {
       "name": "Marathi",
       "tag": "mr",
+      "script": "Deva",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "mr",
@@ -751,6 +874,8 @@
     {
       "name": "Tamil",
       "tag": "ta",
+      "script": "Taml",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "ta",
@@ -763,6 +888,8 @@
     {
       "name": "Telugu",
       "tag": "te",
+      "script": "Telu",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "te",
@@ -775,6 +902,8 @@
     {
       "name": "Kannada",
       "tag": "kn",
+      "script": "Knda",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "kn",
@@ -784,6 +913,8 @@
     {
       "name": "Malayalam",
       "tag": "ml",
+      "script": "Mlym",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "ml",
@@ -796,6 +927,8 @@
     {
       "name": "Oriya",
       "tag": "or",
+      "script": "Orya",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "or",
@@ -805,6 +938,8 @@
     {
       "name": "Sinhala",
       "tag": "si",
+      "script": "Sinh",
+      "direction": "ltr",
       "flag": "lk",
       "providers": {
         "google": "si",
@@ -814,6 +949,8 @@
     {
       "name": "Nepali",
       "tag": "ne",
+      "script": "Deva",
+      "direction": "ltr",
       "flag": "np",
       "providers": {
         "google": "ne",
@@ -826,6 +963,8 @@
     {
       "name": "Assamese",
       "tag": "as",
+      "script": "Beng",
+      "direction": "ltr",
       "flag": "in",
       "providers": {
         "google": "as",
@@ -838,6 +977,8 @@
     {
       "name": "Sindhi",
       "tag": "sd",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "pk",
       "providers": {
         "google": "sd",
@@ -847,6 +988,8 @@
     {
       "name": "Cantonese",
       "tag": "yue",
+      "script": "Hant",
+      "direction": "ltr",
       "flag": "hk",
       "aliases": [
         "Yue Chinese"
@@ -862,6 +1005,8 @@
     {
       "name": "Burmese",
       "tag": "my",
+      "script": "Mymr",
+      "direction": "ltr",
       "flag": "mm",
       "providers": {
         "google": "my",
@@ -874,6 +1019,8 @@
     {
       "name": "Khmer",
       "tag": "km",
+      "script": "Khmr",
+      "direction": "ltr",
       "flag": "kh",
       "providers": {
         "google": "km",
@@ -883,6 +1030,8 @@
     {
       "name": "Lao",
       "tag": "lo",
+      "script": "Laoo",
+      "direction": "ltr",
       "flag": "la",
       "providers": {
         "google": "lo",
@@ -892,6 +1041,8 @@
     {
       "name": "Tagalog",
       "tag": "tl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ph",
       "providers": {
         "google": "tl",
@@ -904,6 +1055,8 @@
     {
       "name": "Cebuano",
       "tag": "ceb",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ph",
       "providers": {
         "google": "ceb",
@@ -916,6 +1069,8 @@
     {
       "name": "Javanese",
       "tag": "jv",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "id",
       "providers": {
         "google": "jv",
@@ -928,6 +1083,8 @@
     {
       "name": "Sundanese",
       "tag": "su",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "id",
       "providers": {
         "google": "su",
@@ -940,6 +1097,8 @@
     {
       "name": "Azerbaijani",
       "tag": "az",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "az",
       "providers": {
         "google": "az",
@@ -952,6 +1111,8 @@
     {
       "name": "Uzbek",
       "tag": "uz",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "uz",
       "providers": {
         "google": "uz",
@@ -964,6 +1125,8 @@
     {
       "name": "Kazakh",
       "tag": "kk",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "kz",
       "providers": {
         "google": "kk",
@@ -976,6 +1139,8 @@
     {
       "name": "Bashkir",
       "tag": "ba",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "ru-ba",
       "providers": {
         "google": "ba",
@@ -988,6 +1153,8 @@
     {
       "name": "Tatar",
       "tag": "tt",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "ru-ta",
       "providers": {
         "google": "tt",
@@ -1000,6 +1167,8 @@
     {
       "name": "Hebrew",
       "tag": "he",
+      "script": "Hebr",
+      "direction": "rtl",
       "flag": "il",
       "also": [
         "iw"
@@ -1015,6 +1184,8 @@
     {
       "name": "Maltese",
       "tag": "mt",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "mt",
       "providers": {
         "google": "mt",
@@ -1027,6 +1198,8 @@
     {
       "name": "Egyptian Arabic",
       "tag": "arz",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "eg",
       "parent": "Arabic",
       "providers": {
@@ -1038,6 +1211,8 @@
       "name": "Levantine Arabic",
       "tag": "apc",
       "parent": "Arabic",
+      "script": "Arab",
+      "direction": "rtl",
       "providers": {
         "google": null,
         "deepl": null
@@ -1046,6 +1221,8 @@
     {
       "name": "Moroccan Arabic",
       "tag": "ary",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "ma",
       "parent": "Arabic",
       "providers": {
@@ -1056,6 +1233,8 @@
     {
       "name": "Georgian",
       "tag": "ka",
+      "script": "Geor",
+      "direction": "ltr",
       "flag": "ge",
       "providers": {
         "google": "ka",
@@ -1068,6 +1247,8 @@
     {
       "name": "Swahili",
       "tag": "sw",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ke",
       "providers": {
         "google": "sw",
@@ -1080,6 +1261,8 @@
     {
       "name": "Haitian Creole",
       "tag": "ht",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ht",
       "providers": {
         "google": "ht",
@@ -1092,6 +1275,8 @@
     {
       "name": "Breton",
       "tag": "br",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fr-bre",
       "providers": {
         "google": "br",
@@ -1101,6 +1286,8 @@
     {
       "name": "Occitan",
       "tag": "oc",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fr-oci",
       "providers": {
         "google": "oc",
@@ -1110,6 +1297,8 @@
     {
       "name": "Corsican",
       "tag": "co",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "fr-cor",
       "providers": {
         "google": "co",
@@ -1119,6 +1308,8 @@
     {
       "name": "Scottish Gaelic",
       "tag": "gd",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "gb-sct",
       "providers": {
         "google": "gd",
@@ -1128,6 +1319,8 @@
     {
       "name": "Cornish",
       "tag": "kw",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "gb-cor",
       "providers": {
         "google": "kw",
@@ -1137,6 +1330,8 @@
     {
       "name": "Manx",
       "tag": "gv",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "im",
       "providers": {
         "google": "gv",
@@ -1146,6 +1341,8 @@
     {
       "name": "Pashto",
       "tag": "ps",
+      "script": "Arab",
+      "direction": "rtl",
       "flag": "af",
       "providers": {
         "google": "ps",
@@ -1155,6 +1352,8 @@
     {
       "name": "Mongolian",
       "tag": "mn",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "mn",
       "providers": {
         "google": "mn",
@@ -1164,6 +1363,8 @@
     {
       "name": "Kyrgyz",
       "tag": "ky",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "kg",
       "providers": {
         "google": "ky",
@@ -1173,6 +1374,8 @@
     {
       "name": "Turkmen",
       "tag": "tk",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "tm",
       "providers": {
         "google": "tk",
@@ -1182,6 +1385,8 @@
     {
       "name": "Amharic",
       "tag": "am",
+      "script": "Ethi",
+      "direction": "ltr",
       "flag": "et",
       "providers": {
         "google": "am",
@@ -1191,6 +1396,8 @@
     {
       "name": "Yoruba",
       "tag": "yo",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ng",
       "providers": {
         "google": "yo",
@@ -1200,6 +1407,8 @@
     {
       "name": "Igbo",
       "tag": "ig",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ng",
       "providers": {
         "google": "ig",
@@ -1209,6 +1418,8 @@
     {
       "name": "Hausa",
       "tag": "ha",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ng",
       "providers": {
         "google": "ha",
@@ -1218,6 +1429,8 @@
     {
       "name": "Zulu",
       "tag": "zu",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "za",
       "providers": {
         "google": "zu",
@@ -1227,6 +1440,8 @@
     {
       "name": "Xhosa",
       "tag": "xh",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "za",
       "providers": {
         "google": "xh",
@@ -1236,6 +1451,8 @@
     {
       "name": "Somali",
       "tag": "so",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "so",
       "providers": {
         "google": "so",
@@ -1245,6 +1462,8 @@
     {
       "name": "Malagasy",
       "tag": "mg",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "mg",
       "providers": {
         "google": "mg",
@@ -1254,6 +1473,8 @@
     {
       "name": "Guarani",
       "tag": "gn",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "py",
       "providers": {
         "google": "gn",
@@ -1263,6 +1484,8 @@
     {
       "name": "Maori",
       "tag": "mi",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "nz",
       "providers": {
         "google": "mi",
@@ -1272,6 +1495,8 @@
     {
       "name": "Esperanto",
       "tag": "eo",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "eo",
       "providers": {
         "google": "eo",
@@ -1281,6 +1506,8 @@
     {
       "name": "Kurdish",
       "tag": "ku",
+      "script": "Latn",
+      "direction": "ltr",
       "providers": {
         "google": "ku",
         "deepl": null
@@ -1289,6 +1516,8 @@
     {
       "name": "Central Kurdish",
       "tag": "ckb",
+      "script": "Arab",
+      "direction": "rtl",
       "providers": {
         "google": "ckb",
         "deepl": null
@@ -1297,6 +1526,8 @@
     {
       "name": "Uyghur",
       "tag": "ug",
+      "script": "Arab",
+      "direction": "rtl",
       "providers": {
         "google": "ug",
         "deepl": null
@@ -1305,6 +1536,8 @@
     {
       "name": "Tibetan",
       "tag": "bo",
+      "script": "Tibt",
+      "direction": "ltr",
       "providers": {
         "google": "bo",
         "deepl": null
@@ -1313,6 +1546,8 @@
     {
       "name": "Quechua",
       "tag": "qu",
+      "script": "Latn",
+      "direction": "ltr",
       "providers": {
         "google": "qu",
         "deepl": null
@@ -1321,6 +1556,8 @@
     {
       "name": "Latin",
       "tag": "la",
+      "script": "Latn",
+      "direction": "ltr",
       "providers": {
         "google": "la",
         "deepl": null
@@ -1329,6 +1566,8 @@
     {
       "name": "Yiddish",
       "tag": "yi",
+      "script": "Hebr",
+      "direction": "rtl",
       "providers": {
         "google": "yi",
         "deepl": null
@@ -1337,6 +1576,8 @@
     {
       "name": "Frisian",
       "tag": "fy",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "nl-fr",
       "providers": {
         "google": "fy",
@@ -1346,6 +1587,8 @@
     {
       "name": "Asturian",
       "tag": "ast",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es-as",
       "providers": {
         "google": "ast",
@@ -1355,6 +1598,8 @@
     {
       "name": "Aragonese",
       "tag": "an",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "es-ar",
       "providers": {
         "google": null,
@@ -1364,6 +1609,8 @@
     {
       "name": "Sardinian",
       "tag": "sc",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-88",
       "providers": {
         "google": null,
@@ -1373,6 +1620,8 @@
     {
       "name": "Sicilian",
       "tag": "scn",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-82",
       "providers": {
         "google": "scn",
@@ -1382,6 +1631,8 @@
     {
       "name": "Venetian",
       "tag": "vec",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-34",
       "providers": {
         "google": "vec",
@@ -1391,6 +1642,8 @@
     {
       "name": "Friulian",
       "tag": "fur",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-36",
       "providers": {
         "google": "fur",
@@ -1400,6 +1653,8 @@
     {
       "name": "Ligurian",
       "tag": "lij",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-42",
       "providers": {
         "google": "lij",
@@ -1409,6 +1664,8 @@
     {
       "name": "Lombard",
       "tag": "lmo",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-25",
       "providers": {
         "google": "lmo",
@@ -1418,6 +1675,8 @@
     {
       "name": "Neapolitan",
       "tag": "nap",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "it-72",
       "providers": {
         "google": "nap",
@@ -1427,6 +1686,8 @@
     {
       "name": "Silesian",
       "tag": "szl",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "pl-sl",
       "providers": {
         "google": "szl",
@@ -1436,6 +1697,8 @@
     {
       "name": "Limburgish",
       "tag": "li",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "nl-li",
       "providers": {
         "google": "li",
@@ -1445,6 +1708,8 @@
     {
       "name": "Low German",
       "tag": "nds",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "de-nds",
       "providers": {
         "google": "nds",
@@ -1454,6 +1719,8 @@
     {
       "name": "Romansh",
       "tag": "rm",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "ch-gr",
       "providers": {
         "google": null,
@@ -1463,6 +1730,8 @@
     {
       "name": "Northern Sami",
       "tag": "se",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "sapmi",
       "providers": {
         "google": "se",
@@ -1472,6 +1741,8 @@
     {
       "name": "Latgalian",
       "tag": "ltg",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "lv-ltg",
       "providers": {
         "google": "ltg",
@@ -1481,6 +1752,8 @@
     {
       "name": "Romani",
       "tag": "rom",
+      "script": "Latn",
+      "direction": "ltr",
       "flag": "rom",
       "providers": {
         "google": "rom",
@@ -1490,6 +1763,8 @@
     {
       "name": "Komi",
       "tag": "kv",
+      "script": "Cyrl",
+      "direction": "ltr",
       "flag": "ru-ko",
       "providers": {
         "google": "kv",
