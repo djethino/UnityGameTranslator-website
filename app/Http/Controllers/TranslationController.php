@@ -249,7 +249,18 @@ class TranslationController extends Controller
             'source_language' => $languages['source'],
             'target_language' => $languages['target'],
             'line_count' => $parsed['line_count'],
-            'is_fork' => $parentId !== null,
+
+            // ⚠ Named for what it is: `is_fork` until 2026-10-02, holding `$parentId !== null` —
+            // a branch. Same correction as the upload API.
+            'is_branch' => $parentId !== null,
+
+            // What the form sent about the game, beside the card it landed on (T21).
+            'sent' => [
+                'game_id' => $request->input('game_id'),
+                'game_name' => $request->input('game_name'),
+                'game_source' => $request->input('game_source'),
+                'game_external_id' => $request->input('game_external_id'),
+            ],
         ], $request);
 
         return redirect()->route('games.show', $game)

@@ -44,6 +44,42 @@ final class StoreLinks
     }
 
     /**
+     * The RAWG page of a game id, or null when the id is not one.
+     *
+     * RAWG answers its game pages by numeric id as well as by slug (checked 2026-10-02:
+     * `/games/1001328` is Aviassembly's page, an id that exists nowhere falls back to the home
+     * page), so a card that kept only the id still links to the right page.
+     */
+    public static function rawgId(?string $id): ?string
+    {
+        return $id !== null && ctype_digit($id) && $id !== '0'
+            ? 'https://rawg.io/games/' . $id
+            : null;
+    }
+
+    /**
+     * The page of a card's store id, by the column that holds it — `steam_id`, `igdb_id`,
+     * `rawg_id` — or null. One place, so the game page and the admin screen cannot link a store
+     * differently.
+     */
+    public static function forField(string $field, mixed $value): ?string
+    {
+        $value = $value === null ? null : (string) $value;
+
+        return match ($field) {
+            'steam_id' => self::steam($value),
+            'igdb_id' => self::igdbId($value),
+            'rawg_id' => self::rawgId($value),
+            default => null,
+        };
+    }
+
+    /**
+     * The store ids a card can hold, by column, with the store's name — the order they are shown in.
+     */
+    public const Stores = ['steam_id' => 'Steam', 'igdb_id' => 'IGDB', 'rawg_id' => 'RAWG'];
+
+    /**
      * An image to open full size: only an https address, which is all a store ever serves.
      */
     public static function image(?string $url): ?string

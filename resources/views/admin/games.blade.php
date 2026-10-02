@@ -214,15 +214,13 @@
                          the Steam id and read as a second Steam id — asked on 2026-09-22 why the
                          screen proposed "another Steam id" for a game whose Steam id was right. --}}
                     <td class="py-3 px-4 text-sm whitespace-nowrap">
-                        @foreach(['steam_id' => 'Steam', 'igdb_id' => 'IGDB'] as $idField => $storeName)
+                        @foreach(\App\Support\StoreLinks::Stores as $idField => $storeName)
                             <div class="{{ $loop->first ? '' : 'mt-2' }}">
                                 <div class="flex items-baseline gap-2">
                                     <span class="w-10 text-gray-500">{{ $storeName }}</span>
                                     @php
                                         $current = $game->{$idField};
-                                        $storePage = $idField === 'steam_id'
-                                            ? \App\Support\StoreLinks::steam($current)
-                                            : \App\Support\StoreLinks::igdbId($current === null ? null : (string) $current);
+                                        $storePage = \App\Support\StoreLinks::forField($idField, $current);
                                     @endphp
                                     @if($storePage)
                                         {{-- The id already there opens too: checking what the card

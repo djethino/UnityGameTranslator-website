@@ -42,12 +42,19 @@ class GameResolver
         }
 
         if ($gameName) {
-            $game = Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])->first();
+            // 🔴 **A Steam id that answered nothing still says which games this is NOT.** Every
+            // card answering to it was tried above, so a card found by name that carries a Steam
+            // id carries ANOTHER one: a different game under the same title — homonyms exist, each
+            // with its own Steam id. Only a card with no Steam id yet can
+            // be this game by its name; it then receives the id (findOrCreateGame, attachSteamId).
+            $byName = fn ($query) => $query->when($steamId, fn ($q) => $q->whereNull('steam_id'));
+
+            $game = $byName(Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)]))->first();
             if ($game) {
                 return ['game' => $game, 'via' => 'name', 'external' => null];
             }
 
-            $game = Game::where('unity_name', $gameName)->first();
+            $game = $byName(Game::where('unity_name', $gameName))->first();
             if ($game) {
                 return ['game' => $game, 'via' => 'unity', 'external' => null];
             }
@@ -64,11 +71,23 @@ class GameResolver
             $resolvedSteamId = $external['steam_id'] ?? $steamId;
 
             // Searched on what the resolution ANSWERED, not on what the caller sent — see
-            // findOrCreateGame: one game is one card, wherever the copy came from.
-            $known = Game::query()
-                ->when($resolvedSteamId, fn ($q) => $q->answeringToSteamId($resolvedSteamId))
-                ->when(!$resolvedSteamId, fn ($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($title)]))
-                ->first();
+            // findOrCreateGame: one game is one card, wherever the copy came from. By the ids the
+            // answer carries first (its Steam id, then its own IGDB or RAWG id), the title last.
+            $storeField = match ($external['source'] ?? null) {
+                'igdb' => 'igdb_id',
+                'rawg' => 'rawg_id',
+                default => null,
+            };
+
+            $known = $resolvedSteamId ? Game::answeringToSteamId($resolvedSteamId)->first() : null;
+
+            if (!$known && $storeField && isset($external['id'])) {
+                $known = Game::where($storeField, $external['id'])->first();
+            }
+
+            if (!$known && !$resolvedSteamId) {
+                $known = Game::whereRaw('LOWER(name) = ?', [strtolower($title)])->first();
+            }
 
             if ($known) {
                 return ['game' => $known, 'via' => 'external', 'external' => $external];

@@ -3,31 +3,59 @@
 namespace App\Services;
 
 use App\Models\Game;
+use App\Support\GameNaming;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GameSearchService
 {
-    private ?string $twitchToken = null;
+    /**
+     * IGDB's number for Steam in `external_games.external_game_source` — read on 2026-10-02 from
+     * real answers (the Steam app ids of known games came back under 1).
+     *
+     * ⚠ `external_game_source`, never `category`: IGDB retired `category` on external games, and a
+     * filter on it matches nothing without a word.
+     */
+    private const IgdbSteamSource = 1;
+
+    /** Where the Twitch app token IGDB is asked with is kept between requests. */
+    private const TwitchTokenKey = 'twitch_api_token';
 
     /**
      * Full search: local DB first, then Steam (if ID), then external APIs.
      * Optimizes API quota by checking local database first.
      *
      * Order:
+     * 0. A Steam id or Steam page address typed as the query is taken as a Steam id
      * 1. Local database (games we already have)
      * 2. Steam API (if steam_id provided)
-     * 3. IGDB (Twitch) → RAWG (only if not enough local results)
+     * 3. IGDB (Twitch), only if not enough local results — each hit with its Steam id when known
+     * 4. Steam's title search
+     * 5. RAWG, only if nothing at all came back
      *
      * @param string|null $query Search query (game name)
      * @param string|null $steamId Steam App ID for exact match
      * @param int $limit Maximum results to return
-     * @return array Deduplicated game results
+     * @return array Results, each game once (deduplicateResults)
      */
     public function searchFull(?string $query, ?string $steamId = null, int $limit = 15): array
     {
         $results = [];
+
+        // 0. A Steam id or a Steam page address typed into the search box IS a Steam id — the way
+        // to name a game whose title the stores do not know under the name the person has (a
+        // game Steam lists only under its Chinese title, even in English).
+        //
+        // ⚠ Bare digits are ALSO searched as a title ("2048", "1942" are games); an address names
+        // nothing else.
+        if (!$steamId && $query && ($typed = $this->steamIdTyped($query))) {
+            $steamId = $typed;
+
+            if (!ctype_digit(trim($query))) {
+                $query = null;
+            }
+        }
 
         // 1. Check local database FIRST (saves API quota)
         if ($query && strlen($query) >= 2) {
@@ -63,19 +91,37 @@ class GameSearchService
             }
         }
 
-        // 3. Call IGDB if not enough results (IGDB is free)
+        // 3. Call IGDB if not enough results (IGDB is free). Its hits carry their Steam id when
+        // IGDB knows it, so a pick from here names the game by id even from a client that only
+        // sends a title and a Steam id (every released mod and Manager).
         if (count($results) < 3 && $query && strlen($query) >= 2) {
             $igdbResults = $this->searchIGDB($query, 10);
             $results = array_merge($results, $igdbResults);
         }
 
-        // 4. Call RAWG only if still no results (RAWG has paid quota)
+        // 4. Steam's own search, by title: the games IGDB does not know, each with its id. Loose —
+        // it answers neighbours too — which is fine in a list a person reads, and why nothing
+        // automatic ever takes its first hit (findGame keeps exact titles only).
+        //
+        // ⚠ Asked whatever IGDB answered: IGDB answers neighbours for a game it does not know, so
+        // "enough results already" would have skipped Steam exactly when only Steam has the game.
+        if ($query && strlen($query) >= 2) {
+            foreach ($this->steamSearch($query) as $hit) {
+                $results[] = [
+                    'name' => $hit['name'],
+                    'steam_id' => $hit['id'],
+                    'image_url' => $hit['image_url'],
+                    'source' => 'steam',
+                ];
+            }
+        }
+
+        // 5. Call RAWG only if still no results (RAWG has paid quota)
         if (empty($results) && $query && strlen($query) >= 2) {
             $rawgResults = $this->searchRAWG($query, 10);
             $results = array_merge($results, $rawgResults);
         }
 
-        // Deduplicate by name (case-insensitive)
         $results = $this->deduplicateResults($results);
 
         // Calculate match_score for each result
@@ -100,7 +146,13 @@ class GameSearchService
         // search behind the publish form: without the latin half, somebody publishing for
         // 龙胤立志传 who typed "longyin" did not find the card and was steered towards the external
         // sources — the first step towards a second card for the same game.
+        //
+        // ⚠ And by the name a game states on disk, exactly: that is what the mod and the Manager
+        // put in this box for a game with no Steam id, and a card whose title says something else
+        // ("JHL" for Jianghu Chronicles) was otherwise never offered — the next publisher was sent
+        // to the stores, towards a second card.
         return Game::titleMatches($query)
+            ->orWhere('unity_name', $query)
             ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->limit($limit)
             ->get()
@@ -118,23 +170,88 @@ class GameSearchService
     }
 
     /**
-     * Deduplicate results by name (case-insensitive)
-     * Prioritizes earlier entries (local > steam > external)
+     * Each game once — told apart by its ids, never by its name. Earlier entries win (local >
+     * Steam by id > IGDB > Steam search > RAWG).
+     *
+     * 🔴 **Not by name, and that was the defect** (analyse/identite-des-jeux-parcours.md, T18).
+     * Two different games can share one title — each with its own Steam id — and folding by name
+     * showed one line for both, so whichever one somebody picked, the other could not be.
+     *
+     * ⚠ What still folds: the same game reached twice — an IGDB hit and a Steam hit carrying the
+     * same Steam id, or a store hit for a game a card of ours already holds the id of (that card is
+     * listed, and is the one to pick).
      */
     private function deduplicateResults(array $results): array
     {
+        // The ids the listed cards of ours already carry: a store hit for one of them is that card.
+        // Kept apart from $seen, which a card's own row must not trip over.
+        $held = [];
+        $localIds = collect($results)->where('source', 'local')->pluck('id')->filter()->all();
+        if ($localIds !== []) {
+            foreach (Game::whereIn('id', $localIds)->get(['id', 'steam_id', 'igdb_id', 'rawg_id']) as $card) {
+                foreach ($this->identityOf(['source' => 'card', 'steam_id' => $card->steam_id, 'igdb_id' => $card->igdb_id, 'rawg_id' => $card->rawg_id]) as $key) {
+                    $held[$key] = true;
+                }
+            }
+        }
+
         $seen = [];
         $unique = [];
 
         foreach ($results as $game) {
-            $key = strtolower($game['name'] ?? '');
-            if ($key && !isset($seen[$key])) {
-                $seen[$key] = true;
-                $unique[] = $game;
+            $keys = $this->identityOf($game);
+            $flipped = array_flip($keys);
+
+            if ($keys === [] || array_intersect_key($seen, $flipped) !== []) {
+                continue;
             }
+
+            if (($game['source'] ?? '') !== 'local' && array_intersect_key($held, $flipped) !== []) {
+                continue;
+            }
+
+            foreach ($keys as $key) {
+                $seen[$key] = true;
+            }
+
+            $unique[] = $game;
         }
 
         return $unique;
+    }
+
+    /**
+     * Every id one result answers to, as `source:value` keys — its own, and the Steam id it
+     * carries whatever its source.
+     *
+     * ⚠ A card of ours is keyed `local:` by its OWN id only when listed; its store ids come in
+     * separately (deduplicateResults), so a card and a store hit for the same game meet on them.
+     */
+    private function identityOf(array $game): array
+    {
+        $source = $game['source'] ?? '';
+        $keys = [];
+
+        if ($source === 'local' && ($game['id'] ?? null) !== null) {
+            $keys[] = 'local:' . $game['id'];
+        }
+
+        if (in_array($source, ['igdb', 'rawg'], true) && ($game['id'] ?? null) !== null) {
+            $keys[] = $source . ':' . $game['id'];
+        }
+
+        if (!empty($game['steam_id'])) {
+            $keys[] = 'steam:' . $game['steam_id'];
+        }
+
+        // A card's own store ids, for the "already held" set.
+        foreach (['igdb_id' => 'igdb', 'rawg_id' => 'rawg'] as $field => $store) {
+            if (!empty($game[$field])) {
+                $keys[] = $store . ':' . $game[$field];
+            }
+        }
+
+        return $keys;
     }
 
     /**
@@ -193,26 +310,6 @@ class GameSearchService
     }
 
     /**
-     * Search for games using IGDB first, fallback to RAWG
-     */
-    public function search(string $query, int $limit = 10): array
-    {
-        if (strlen($query) < 2) {
-            return [];
-        }
-
-        // Try IGDB first
-        $results = $this->searchIGDB($query, $limit);
-
-        // Fallback to RAWG if no results or error
-        if (empty($results)) {
-            $results = $this->searchRAWG($query, $limit);
-        }
-
-        return $results;
-    }
-
-    /**
      * Escape special characters for IGDB query language
      * Prevents injection attacks via search queries
      *
@@ -251,11 +348,25 @@ class GameSearchService
                 return [];
             }
 
-            $response = Http::withHeaders([
-                'Client-ID' => config('services.twitch.client_id'),
-                'Authorization' => 'Bearer ' . $token,
-                'Accept' => 'application/json',
-            ])->withBody($body, 'text/plain')->post('https://api.igdb.com/v4/' . $endpoint);
+            $response = $this->askIgdb($endpoint, $body, $token);
+
+            // 🔴 **A refused token is forgotten, and asked for again — once.** Twitch can revoke an
+            // app token long before the expiry it announced (measured 2026-10-02: `/validate` →
+            // "invalid access token" on a token cached until 2026-11-25). Kept in the cache, it
+            // turned every IGDB question into an empty answer for weeks, and the searches quietly
+            // fell back to RAWG — which is how a publication could be filed under a RAWG neighbour.
+            // The event that makes a new token worth asking for is this refusal, nothing else.
+            if ($response->status() === 401) {
+                Cache::forget(self::TwitchTokenKey);
+                Log::warning('IGDB refused the cached token; asking Twitch for a new one', ['endpoint' => $endpoint]);
+
+                $token = $this->getTwitchToken();
+                if (!$token) {
+                    return [];
+                }
+
+                $response = $this->askIgdb($endpoint, $body, $token);
+            }
 
             if (!$response->successful()) {
                 Log::warning('IGDB API error', ['status' => $response->status(), 'endpoint' => $endpoint]);
@@ -270,6 +381,47 @@ class GameSearchService
         }
     }
 
+    /** One POST to IGDB with this token — the request igdb() may have to make twice. */
+    private function askIgdb(string $endpoint, string $body, string $token): \Illuminate\Http\Client\Response
+    {
+        return Http::withHeaders([
+            'Client-ID' => config('services.twitch.client_id'),
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+        ])->withBody($body, 'text/plain')->post('https://api.igdb.com/v4/' . $endpoint);
+    }
+
+    /**
+     * The fields every game read from IGDB is asked for: its Steam id comes with it, so a hit
+     * names the game by id rather than by title (see igdbRow).
+     */
+    private const IgdbGameFields = 'id,name,cover.url,external_games.uid,external_games.external_game_source';
+
+    /**
+     * One IGDB game as this service hands it out — the same shape for a search hit and a lookup.
+     */
+    private function igdbRow(array $game): array
+    {
+        $imageUrl = null;
+        if (isset($game['cover']['url'])) {
+            // Convert thumbnail to larger image
+            $imageUrl = 'https:' . str_replace('t_thumb', 't_cover_big', $game['cover']['url']);
+        }
+
+        // The Steam app id IGDB links to this game, when it links one.
+        $steamId = collect($game['external_games'] ?? [])
+            ->first(fn ($external) => ($external['external_game_source'] ?? null) === self::IgdbSteamSource
+                && ctype_digit((string) ($external['uid'] ?? '')))['uid'] ?? null;
+
+        return [
+            'id' => $game['id'],
+            'name' => $game['name'],
+            'steam_id' => $steamId !== null ? (string) $steamId : null,
+            'image_url' => $imageUrl,
+            'source' => 'igdb',
+        ];
+    }
+
     /**
      * Search IGDB (Twitch) API
      */
@@ -278,26 +430,20 @@ class GameSearchService
         try {
             // Escape query to prevent IGDB query injection
             $safeQuery = $this->escapeIGDBQuery($query);
+
+            // ⚠ A title in another script escapes to NOTHING, and an empty search answers with
+            // whatever IGDB likes — taken as "the" game by findGame before 2026-10-02. Nothing to
+            // ask is nothing found.
+            if (trim($safeQuery) === '') {
+                return [];
+            }
+
             // Ensure limit is a valid integer
             $safeLimit = max(1, min(50, (int) $limit));
 
-            $games = $this->igdb('games', "search \"{$safeQuery}\"; fields id,name,cover.url; limit {$safeLimit};");
+            $games = $this->igdb('games', "search \"{$safeQuery}\"; fields " . self::IgdbGameFields . "; limit {$safeLimit};");
 
-            return collect($games)->map(function ($game) {
-                $imageUrl = null;
-                if (isset($game['cover']['url'])) {
-                    // Convert thumbnail to larger image
-                    $imageUrl = str_replace('t_thumb', 't_cover_big', $game['cover']['url']);
-                    $imageUrl = 'https:' . $imageUrl;
-                }
-
-                return [
-                    'id' => $game['id'],
-                    'name' => $game['name'],
-                    'image_url' => $imageUrl,
-                    'source' => 'igdb',
-                ];
-            })->toArray();
+            return collect($games)->map(fn ($game) => $this->igdbRow($game))->toArray();
 
         } catch (\Exception $e) {
             Log::error('IGDB search error', ['error' => $e->getMessage()]);
@@ -346,11 +492,16 @@ class GameSearchService
 
     /**
      * Get Twitch OAuth token for IGDB API
+     *
+     * ⚠ IGDB has no key of its own: it is asked with the Twitch app's credentials
+     * (`TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET`, the same as the Twitch sign-in). A client
+     * credentials token checks no address, so a site that is not reachable from outside asks IGDB
+     * exactly like production.
      */
     private function getTwitchToken(): ?string
     {
         // Check cache first
-        $cached = Cache::get('twitch_api_token');
+        $cached = Cache::get(self::TwitchTokenKey);
         if ($cached) {
             return $cached;
         }
@@ -379,7 +530,7 @@ class GameSearchService
             $expiresIn = $data['expires_in'] ?? 3600;
 
             // Cache token (expire 1 hour before actual expiry)
-            Cache::put('twitch_api_token', $token, $expiresIn - 3600);
+            Cache::put(self::TwitchTokenKey, $token, $expiresIn - 3600);
 
             return $token;
 
@@ -499,7 +650,8 @@ class GameSearchService
     }
 
     /**
-     * What the store's own search answers for a title — `[{id, name}, ...]`, or an empty array.
+     * What the store's own search answers for a title — `[{id, name, image_url}, ...]`, or an
+     * empty array.
      *
      * ⚠ Loose by nature: it answers with add-ons, sequels and neighbours. A caller that means to
      * attach an id to a card must keep only an EXACT title match (App\Services\StoreProposals),
@@ -520,7 +672,12 @@ class GameSearchService
             }
 
             return collect($response->json('items') ?? [])
-                ->map(fn ($item) => ['id' => (string) ($item['id'] ?? ''), 'name' => (string) ($item['name'] ?? '')])
+                ->map(fn ($item) => [
+                    'id' => (string) ($item['id'] ?? ''),
+                    'name' => (string) ($item['name'] ?? ''),
+                    // The capsule Steam shows beside the hit, or null when it is not an https address.
+                    'image_url' => \App\Support\StoreLinks::image($item['tiny_image'] ?? null),
+                ])
                 ->filter(fn ($item) => $item['id'] !== '' && $item['name'] !== '')
                 ->values()
                 ->all();
@@ -532,7 +689,17 @@ class GameSearchService
     }
 
     /**
-     * Search for a game by name, trying Steam first (if steam_id provided), then IGDB, then RAWG
+     * The one game the stores name for a publication, or null — by Steam id when one was sent,
+     * otherwise by a title that IS the name sent, and only when exactly one game carries it.
+     *
+     * 🔴 **Never the first hit of a search** (analyse/identite-des-jeux-parcours.md, T1). This asked
+     * IGDB for ONE result and took it: a title came back as another series' game, IGDB's first
+     * answer, while the game that carries that exact title — with its Steam id — sat further down
+     * the same answer. A search ranks; it does not identify.
+     *
+     * ⚠ Null is the honest answer when the title is shared (two games of the same name) or
+     * unknown: the caller then files the publication under the name it was sent, which the mod
+     * finds again — a card nobody can find, or a card of another game, is worse.
      */
     public function findGame(?string $steamId, string $gameName): ?array
     {
@@ -544,16 +711,40 @@ class GameSearchService
             }
         }
 
-        // Try IGDB search
-        $results = $this->searchIGDB($gameName, 1);
-        if (!empty($results)) {
-            return $results[0];
+        // IGDB, by exact title. Asked for enough answers to see a homonym: one result would hide
+        // the second game of the same name.
+        $igdb = $this->searchIGDB($gameName, 10);
+        $exact = GameNaming::exactTitleMatches($igdb, $gameName);
+        if (count($exact) === 1) {
+            return $exact[0];
         }
 
-        // Fallback to RAWG
-        $results = $this->searchRAWG($gameName, 1);
-        if (!empty($results)) {
-            return $results[0];
+        // ⚠ RAWG only when IGDB had nothing to say at all. IGDB naming two games of this title is
+        // an answer — that a machine cannot choose — not a silence for RAWG to fill.
+        if ($exact !== []) {
+            return null;
+        }
+
+        $rawg = GameNaming::exactTitleMatches($this->searchRAWG($gameName, 10), $gameName);
+
+        return count($rawg) === 1 ? $rawg[0] : null;
+    }
+
+    /**
+     * The Steam app id a search box was given, when it was given one — the bare number, or the
+     * address of a Steam store page (`https://store.steampowered.com/app/<id>/...`). Null
+     * otherwise.
+     */
+    private function steamIdTyped(string $query): ?string
+    {
+        $query = trim($query);
+
+        if (ctype_digit($query) && $query !== '0') {
+            return $query;
+        }
+
+        if (preg_match('~^(?:https?://)?store\.steampowered\.com/app/(\d+)~i', $query, $match)) {
+            return $match[1];
         }
 
         return null;
@@ -576,24 +767,13 @@ class GameSearchService
         try {
             // Use intval() for defense-in-depth even though $id is type-hinted int
             $safeId = intval($id);
-            $rows = $this->igdb('games', "where id = {$safeId}; fields id,name,cover.url;");
+            $rows = $this->igdb('games', "where id = {$safeId}; fields " . self::IgdbGameFields . ';');
 
             if (empty($rows)) {
                 return null;
             }
 
-            $game = $rows[0];
-            $imageUrl = null;
-            if (isset($game['cover']['url'])) {
-                $imageUrl = 'https:' . str_replace('t_thumb', 't_cover_big', $game['cover']['url']);
-            }
-
-            return [
-                'id' => $game['id'],
-                'name' => $game['name'],
-                'image_url' => $imageUrl,
-                'source' => 'igdb',
-            ];
+            return $this->igdbRow($rows[0]);
 
         } catch (\Exception $e) {
             Log::error('IGDB get game error', ['error' => $e->getMessage()]);

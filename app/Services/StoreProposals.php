@@ -101,7 +101,9 @@ class StoreProposals
         $new = 0;
 
         if (!$game->steam_id) {
-            foreach ($this->exactMatches($this->stores->steamSearch($game->name), $game->name) as $hit) {
+            // Every exact title, homonyms included: an admin decides which one is this card's
+            // (GameNaming::exactTitleMatches) — "Love n Life: Happy Student" also returns its DLC.
+            foreach (GameNaming::exactTitleMatches($this->stores->steamSearch($game->name), $game->name) as $hit) {
                 $new += $this->propose($game, 'steam_id', $hit['id'], 'steam', $hit['name'], StoreLinks::steam($hit['id']));
             }
         }
@@ -121,7 +123,7 @@ class StoreProposals
                     'url' => $row['url'] ?? null,
                 ], $rows);
 
-                foreach ($this->exactMatches($hits, $game->name) as $hit) {
+                foreach (GameNaming::exactTitleMatches($hits, $game->name) as $hit) {
                     $new += $this->propose($game, 'igdb_id', $hit['id'], 'igdb', $hit['name'], StoreLinks::igdb($hit['url']));
                 }
             }
@@ -255,28 +257,6 @@ class StoreProposals
         ]);
 
         return 1;
-    }
-
-    /**
-     * Keep only the hits whose title IS this card's title — case, spacing and punctuation aside.
-     *
-     * ⚠ A store search answers with add-ons, sequels and neighbours ("Love n Life: Happy Student"
-     * also returns its three DLC). Anything short of the same title is a guess about which game
-     * somebody meant, and this class exists precisely to avoid writing one.
-     */
-    private function exactMatches(array $hits, string $title): array
-    {
-        $wanted = GameNaming::flatten($title);
-
-        if ($wanted === '') {
-            return [];
-        }
-
-        return collect($hits)
-            ->filter(fn ($hit) => $hit['id'] !== '' && GameNaming::flatten($hit['name']) === $wanted)
-            ->unique('id')
-            ->values()
-            ->all();
     }
 
     /**

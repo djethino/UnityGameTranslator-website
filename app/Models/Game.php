@@ -53,13 +53,20 @@ class Game extends Model
     /**
      * The game's page on each store this card holds an id for, keyed by the store's name. Empty
      * when it holds none.
+     *
+     * ⚠ Every source the card holds an id from, RAWG included (user, 2026-10-02: what the card
+     * knows about the game is shown on it) — RAWG was missing although cards made from it keep
+     * `rawg_id`.
      */
     public function storePages(): array
     {
-        return array_filter([
-            'Steam' => \App\Support\StoreLinks::steam($this->steam_id === null ? null : (string) $this->steam_id),
-            'IGDB' => \App\Support\StoreLinks::igdbId($this->igdb_id === null ? null : (string) $this->igdb_id),
-        ]);
+        $pages = [];
+
+        foreach (\App\Support\StoreLinks::Stores as $field => $store) {
+            $pages[$store] = \App\Support\StoreLinks::forField($field, $this->{$field});
+        }
+
+        return array_filter($pages);
     }
 
     protected static function boot()
@@ -77,7 +84,7 @@ class Game extends Model
                 if (empty($slug)) {
                     $slug = 'game-' . uniqid();
                 }
-                $game->slug = $slug;
+                $game->slug = static::freeSlug($slug, $game->steam_id);
             }
         });
 
@@ -104,6 +111,36 @@ class Game extends Model
         // declaration rescue a game detection missed, since "the store said nothing" is not "the
         // store said no" (a game whose adult content ships as a separate DLC says nothing).
         static::saving(fn ($game) => $game->refreshAdult());
+    }
+
+    /**
+     * The slug, or a free variant of it when another card already has it.
+     *
+     * 🔴 **Two games can share a title** — each with its own Steam id — and the slug is unique.
+     * Derived from the title alone, the second one could not be created at all; and as long as the
+     * upload attached a homonym instead of creating it, nobody saw that it could not. The Steam id
+     * makes the most telling suffix (`lost-echo-500`); a counter covers a card without one.
+     *
+     * ⚠ The first card keeps the plain slug: it is the address already shared and indexed.
+     */
+    public static function freeSlug(string $slug, ?string $steamId = null): string
+    {
+        $taken = fn (string $candidate) => static::where('slug', $candidate)->exists();
+
+        if (!$taken($slug)) {
+            return $slug;
+        }
+
+        if ($steamId && ctype_digit((string) $steamId) && !$taken($slug . '-' . $steamId)) {
+            return $slug . '-' . $steamId;
+        }
+
+        $n = 2;
+        while ($taken($slug . '-' . $n)) {
+            $n++;
+        }
+
+        return $slug . '-' . $n;
     }
 
     /**

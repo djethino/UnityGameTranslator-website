@@ -101,4 +101,36 @@ class GameNaming
     {
         return preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($value));
     }
+
+    /**
+     * The hits of a store search whose title IS the one asked about — case, spacing and
+     * punctuation aside — each id once.
+     *
+     * ⚠ A store search answers with add-ons, sequels, neighbours and HOMONYMS: asked for one
+     * title, IGDB can rank a different game first (a word-swapped title of another series) and
+     * still list two distinct games that carry the exact title asked. Anything short of the same
+     * title is a guess about which game somebody meant.
+     *
+     * ⚠ **Several hits can survive, and that is information, not noise.** Two games sharing a title
+     * is exactly the case a machine must not settle on its own: App\Services\StoreProposals shows
+     * them all to an admin, GameSearchService::findGame takes one only when it is alone.
+     *
+     * @param array<int, array{id: string|int, name: string}> $hits
+     * @return array<int, array> The kept hits, in the order the store gave them.
+     */
+    public static function exactTitleMatches(array $hits, string $title): array
+    {
+        $wanted = self::flatten($title);
+
+        if ($wanted === '') {
+            return [];
+        }
+
+        return collect($hits)
+            ->filter(fn ($hit) => (string) ($hit['id'] ?? '') !== ''
+                && self::flatten((string) ($hit['name'] ?? '')) === $wanted)
+            ->unique(fn ($hit) => (string) $hit['id'])
+            ->values()
+            ->all();
+    }
 }

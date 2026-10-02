@@ -1223,16 +1223,34 @@ class TranslationController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
+        // Where a fork came from — read here, before the game, because it decides the game. The
+        // mod severs its sync with the original — it must, or it would keep offering to merge from
+        // a lineage it has left — and used to sever the provenance with it, so a fork reached the
+        // site as a brand-new translation and whoever wrote the first thousands of lines lost every
+        // trace of it.
+        //
+        // The POINTER is verified, the NUMBERS are taken as declared. We cannot recompute how
+        // much the original held at the instant of the fork — it has grown since — but a claim
+        // that resolves to nothing is dropped whole rather than stored dangling.
+        $origin = $this->resolveForkOrigin($request, $existingTranslation, $parentId);
+        $forkedFrom = $origin['translation_id'] ? Translation::with('game')->find($origin['translation_id']) : null;
+
         // Resolve game by case (game_id is part of a translation's identity once created):
         //   UPDATE → keep the translation's existing game (never mutate; the user may have
         //            uploaded with a slightly different _game.name/steam_id, but identity wins)
-        //   FORK   → inherit the parent's game (a fork of a translation is by definition a
-        //            translation of the same game; the plugin's _game payload is informational)
+        //   BRANCH → the Main's game (same lineage, same uuid)
+        //   FORK   → the game of the translation it was forked from. 🔴 A fork has a NEW uuid, so
+        //            it never reached the branch above: it went through the search like a
+        //            stranger's first upload and could land on another card than its original
+        //            (analyse/identite-des-jeux-parcours.md, T11). A fork is a translation of the
+        //            game it was taken from — the plugin's _game payload is informational here.
         //   NEW    → resolve via findOrCreateGame (steam_id → name → external API → create)
         if ($existingTranslation) {
             $game = $existingTranslation->game;
         } elseif ($originalTranslation) {
             $game = $originalTranslation->game;
+        } elseif ($forkedFrom?->game) {
+            $game = $forkedFrom->game;
         } else {
             $game = $this->findOrCreateGame($request);
             if (!$game) {
@@ -1358,17 +1376,7 @@ class TranslationController extends Controller
             ], 200);
         }
 
-        // NEW or BRANCH: Create new translation
-        // Where a fork came from. The mod severs its sync with the original — it must, or it
-        // would keep offering to merge from a lineage it has left — and used to sever the
-        // provenance with it, so a fork reached the site as a brand-new translation and whoever
-        // wrote the first thousands of lines lost every trace of it.
-        //
-        // The POINTER is verified, the NUMBERS are taken as declared. We cannot recompute how
-        // much the original held at the instant of the fork — it has grown since — but a claim
-        // that resolves to nothing is dropped whole rather than stored dangling.
-        $origin = $this->resolveForkOrigin($request, $existingTranslation, $parentId);
-
+        // NEW or BRANCH: Create new translation ($origin was read before the game, above).
         $translation = Translation::create([
             'game_id' => $game->id,
             'user_id' => $userId,
@@ -1408,7 +1416,20 @@ class TranslationController extends Controller
             'source_language' => $languages['source'],
             'target_language' => $languages['target'],
             'line_count' => $parsed['line_count'],
-            'is_fork' => $parentId !== null,
+
+            // ⚠ Named for what it is. Until 2026-10-02 this key was `is_fork` and held
+            // `$parentId !== null` — a BRANCH. Rows written before then read that way.
+            'is_branch' => $parentId !== null,
+            'forked_from' => $origin['translation_id'],
+
+            // 🔴 **What the client SENT about the game, beside the card it landed on.** Only the
+            // card was kept, so a translation filed under the wrong game could only be traced back
+            // to its cause by deduction.
+            'sent' => [
+                'steam_id' => $request->input('steam_id'),
+                'game_name' => $request->input('game_name'),
+                'game_company' => $request->input('game_company'),
+            ],
         ], $request);
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
@@ -1575,8 +1596,14 @@ class TranslationController extends Controller
             if ($known) {
                 // The copy in hand may know something the card does not: an id it was created
                 // without, and the product name a machine reads.
+                $fill = $this->storeIdsFor($known, $externalGame);
+
                 if ($resolvedSteamId && !$known->steam_id) {
-                    $known->update(['steam_id' => $resolvedSteamId]);
+                    $fill['steam_id'] = $resolvedSteamId;
+                }
+
+                if ($fill !== []) {
+                    $known->update($fill);
 
                     // The card can now be asked about at the store, and it could not before: a
                     // game rated on its name alone was judged by IGDB, which misses most of what
@@ -1604,7 +1631,7 @@ class TranslationController extends Controller
                 'unity_company' => $company,
                 'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
-            ]);
+            ] + $this->storeIdsFor(null, $externalGame));
 
             $this->rememberDemoId($created, $externalGame);
 
@@ -1633,6 +1660,39 @@ class TranslationController extends Controller
         app(\App\Services\AdultRating::class)->rate($bare);
 
         return $bare;
+    }
+
+    /**
+     * The IGDB or RAWG id the stores' answer carries, as the column to fill — only where the card
+     * has none and no other card holds it.
+     *
+     * 🔴 **The answer the card was made from is kept, not thrown away** (analyse/
+     * identite-des-jeux-parcours.md, T5/T12). This path wrote the Steam id of an answer and never
+     * its IGDB or RAWG id, while the web upload did the opposite: a card's sources depended on
+     * which door it came in by, and "Check stores" had to guess back by title an id the site had
+     * held in hand. ⚠ Never over a value already there, and never one another card answers to:
+     * that would make one game two cards' — the same rule as StoreProposals::apply.
+     *
+     * @return array<string, int|string> Zero or one `column => id`.
+     */
+    private function storeIdsFor(?Game $card, array $externalGame): array
+    {
+        $field = match ($externalGame['source'] ?? null) {
+            'igdb' => 'igdb_id',
+            'rawg' => 'rawg_id',
+            default => null,
+        };
+        $id = $externalGame['id'] ?? null;
+
+        if ($field === null || $id === null || ($card && $card->{$field})) {
+            return [];
+        }
+
+        $heldElsewhere = Game::where($field, $id)
+            ->when($card, fn ($q) => $q->where('id', '!=', $card->id))
+            ->exists();
+
+        return $heldElsewhere ? [] : [$field => $id];
     }
 
     /**
