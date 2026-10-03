@@ -351,6 +351,7 @@
         { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged" }
       ] },
       { "kind": "label", "name": "MissingChars", "text": { "bind": "missingChars" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
+      { "kind": "label", "name": "NoDecorations", "text": { "bind": "noDecorations" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "checkbox", "name": "RtlMirrorToggle", "text": "Mirror alignment (RTL)", "act": "rtlChanged",
           "help": "Aligns right-to-left text to the right. In a right-to-left translation, every text in this font, Latin words and numbers too. Turn off to keep the game's alignment. An override rule can change one place." }

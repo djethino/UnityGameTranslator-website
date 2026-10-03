@@ -46,6 +46,13 @@
           { "kind": "button", "name": "FontCoverageIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "fontCoverageIgnore" }
         ] }
       ] },
+      { "kind": "callout", "name": "FontDecorationsBox", "tone": "Warning", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "FontDecorationsLabel", "text": { "bind": "fontDecorations" }, "policy": "Excluded", "bold": true, "autoHeight": true },
+        { "kind": "row", "name": "FontDecorationsBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "FontDecorationsFixBtn", "text": "Fonts", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "fontDecorationsFix" },
+          { "kind": "button", "name": "FontDecorationsIgnoreBtn", "text": "Ignore", "size": "Compact", "minWidth": 55, "act": "fontDecorationsIgnore" }
+        ] }
+      ] },
       { "kind": "callout", "name": "WindowFontBox", "tone": "Warning", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
         { "kind": "label", "name": "WindowFontLabel", "text": { "bind": "windowFont" }, "policy": "Excluded", "bold": true, "autoHeight": true },
         { "kind": "row", "name": "WindowFontBtnRow", "spacing": 3, "children": [
