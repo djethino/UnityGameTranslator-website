@@ -67,6 +67,7 @@
             <h3 class="font-semibold text-gray-100 mb-2">{{ __('legal.hold_programs') }}</h3>
             <p class="text-gray-300 mb-2">{{ __('legal.hold_programs_mod') }}</p>
             <p class="text-gray-300 mb-2">{{ __('legal.hold_programs_manager') }}</p>
+            <p class="text-gray-300 mb-2">{{ __('legal.hold_programs_covers') }}</p>
             <p class="text-gray-300">{{ __('legal.hold_programs_never') }}</p>
         </section>
 
