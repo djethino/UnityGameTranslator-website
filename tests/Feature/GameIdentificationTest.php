@@ -404,6 +404,33 @@ class GameIdentificationTest extends TestCase
         $this->assertSame(1, Translation::count());
     }
 
+    public function test_a_fork_left_behind_by_its_moved_original_is_told_to_follow_it(): void
+    {
+        $this->stores();
+        $wrong = Game::create(['name' => 'Lost Echo', 'steam_id' => '600']);
+        $right = Game::create(['name' => 'Lost Echo Reborn', 'steam_id' => '500']);
+        [$owner] = $this->lineageOn($wrong);
+        $original = Translation::first();
+
+        $forker = User::factory()->create();
+        $forkUuid = (string) Str::uuid();
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'forked_from_id' => $original->id,
+            'content' => $this->contentOf($forkUuid),
+        ], $forker)->assertSuccessful();
+        $this->assertSame($wrong->id, Translation::where('file_uuid', $forkUuid)->first()->game_id);
+
+        app(\App\Services\LineageGame::class)->move($original, $right, $owner, 'test');
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'content' => $this->contentOf($forkUuid),
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+        ], $forker)->assertStatus(422)
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'Move it to the game of the translation it was forked from'));
+    }
+
     public function test_an_upload_into_a_lineage_of_the_same_game_goes_through(): void
     {
         $this->stores();

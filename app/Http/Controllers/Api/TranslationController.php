@@ -1285,8 +1285,13 @@ class TranslationController extends Controller
             $mayMove = $existingTranslation
                 ? \App\Services\LineageGame::mayChange($existingTranslation, $request->user(), false)
                 : null;
+            // ⚠ A fork whose original was moved since CAN act: it follows its original's game.
+            $originalsGame = $mayMove === \App\Services\LineageGame::OriginalsGame
+                ? \App\Services\LineageGame::originalsGame($existingTranslation)
+                : null;
             $wayOut = match (true) {
                 $mayMove === \App\Services\LineageGame::AnyGame => 'Change its game on the website, then publish again.',
+                $originalsGame !== null && $originalsGame->id !== $game->id => 'Move it to the game of the translation it was forked from on the website, then publish again.',
                 $mayMove === \App\Services\LineageGame::OriginalsGame,
                 !$existingTranslation && !$originalTranslation => 'Only the owner of the translation it was forked from can change its game.',
                 default => 'Only the owner of the Main can change its game.',
