@@ -670,6 +670,8 @@
           "name": { "type": "string" },
           "slug": { "type": "string" },
           "steam_id": { "type": ["string", "null"] },
+          "igdb_id": { "type": ["integer", "null"], "description": "Additive. The IGDB id the card holds." },
+          "rawg_id": { "type": ["integer", "null"], "description": "Additive. The RAWG id the card holds." },
           "image_url": { "type": ["string", "null"] }
         }
       },

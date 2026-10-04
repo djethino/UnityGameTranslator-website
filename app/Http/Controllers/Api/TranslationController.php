@@ -567,6 +567,11 @@ class TranslationController extends Controller
                         'name' => $t->game->name,
                         'slug' => $t->game->slug,
                         'steam_id' => $t->game->steam_id,
+                        // Additive: with the Steam id, every id the card answers to — so a client
+                        // compares the game this translation is filed under with the one its
+                        // player confirmed, however that one was picked (common GameChoices).
+                        'igdb_id' => $t->game->igdb_id !== null ? (int) $t->game->igdb_id : null,
+                        'rawg_id' => $t->game->rawg_id !== null ? (int) $t->game->rawg_id : null,
                         'image_url' => $t->game->image_url,
                     ],
                     'uploader' => $t->user->name,
