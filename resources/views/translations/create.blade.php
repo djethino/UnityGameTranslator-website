@@ -652,22 +652,23 @@ function updateCompositionDisplay() {
     aiBox.classList.toggle('border-orange-500/50', aiPct > 0);
 }
 
-// Game search
-let searchTimeout = null;
+// Game search — the shared list (resources/js/components/game-picker.js), the same one a
+// translation's settings use to change its game.
 const gameSuggestions = document.getElementById('game_suggestions');
 const gameLoading = document.getElementById('game_loading');
 const gameSearchIcon = document.getElementById('game_search_icon');
 const gameImagePreview = document.getElementById('game_image_preview');
 const gameImageThumb = document.getElementById('game_image_thumb');
 
-// The one way a hit becomes the form's game: its source and its id in that source — a Steam hit is
-// named by its Steam id, every other by `id` — sent back as `game_pick`, the pair the mod and the
-// Manager send too. Nothing else about the hit is trusted by the server.
+// The one way a hit becomes the form's game: its source and its id in that source (pickOf), sent
+// back as `game_pick`, the pair the mod and the Manager send too. Nothing else about the hit is
+// trusted by the server.
 function choosePick(g) {
+    const pick = window.UGT.pickOf(g);
     gameSearch.value = g.name;
     gameName.value = g.name;
-    pickSource.value = g.source || '';
-    pickId.value = (g.source === 'steam' ? g.steam_id : g.id) ?? '';
+    pickSource.value = pick.source;
+    pickId.value = pick.id;
 
     if (g.image_url) {
         gameImageThumb.src = g.image_url;
@@ -675,96 +676,32 @@ function choosePick(g) {
         gameSearchIcon.classList.add('hidden');
     }
 
-    gameSelected = pickSource.value !== '' && String(pickId.value) !== '';
+    gameSelected = pick.source !== '' && pick.id !== '';
 }
 
-gameSearch.addEventListener('input', function() {
-    const q = this.value;
-
-    // Clear selection
-    gameName.value = '';
-    pickSource.value = '';
-    pickId.value = '';
-    gameImagePreview.classList.add('hidden');
-    gameSearchIcon.classList.remove('hidden');
-    gameSelected = false;
-    updateSubmitButton();
-
-    if (q.length < 2) {
-        gameSuggestions.classList.add('hidden');
-        return;
-    }
-
-    clearTimeout(searchTimeout);
-    gameLoading.classList.remove('hidden');
-
-    searchTimeout = setTimeout(async () => {
-        try {
-            const res = await fetch('/api/games/search-external?q=' + encodeURIComponent(q));
-            const games = await res.json();
-
-            gameLoading.classList.add('hidden');
-
-            if (games.length === 0) {
-                gameSuggestions.innerHTML = '<div class="px-4 py-3 text-gray-400 text-sm">No games found in IGDB/RAWG database.</div>';
-                gameSuggestions.classList.remove('hidden');
-                return;
-            }
-
-            gameSuggestions.innerHTML = '';
-            games.forEach(g => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-3 px-4 py-2 hover:bg-gray-600 cursor-pointer';
-
-                // Build via DOM: g.name / g.image_url come from external APIs (XSS sink if innerHTML)
-                let imgEl;
-                if (g.image_url) {
-                    imgEl = document.createElement('img');
-                    imgEl.src = g.image_url;
-                    imgEl.className = 'w-10 h-14 object-cover rounded flex-shrink-0';
-                    imgEl.addEventListener('error', () => { imgEl.style.display = 'none'; });
-                } else {
-                    imgEl = document.createElement('div');
-                    imgEl.className = 'w-10 h-14 bg-gray-600 rounded flex-shrink-0 flex items-center justify-center';
-                    imgEl.innerHTML = '<i class="fas fa-gamepad text-gray-400"></i>';
-                }
-
-                let sourceLabel = '';
-                if (g.source === 'igdb') sourceLabel = '<span class="text-xs bg-purple-600 px-1.5 py-0.5 rounded ml-2">IGDB</span>';
-                else if (g.source === 'rawg') sourceLabel = '<span class="text-xs bg-blue-600 px-1.5 py-0.5 rounded ml-2">RAWG</span>';
-                else if (g.source === 'steam') sourceLabel = '<span class="text-xs bg-gray-600 px-1.5 py-0.5 rounded ml-2">Steam</span>';
-                else if (g.source === 'local') sourceLabel = '<span class="text-xs bg-green-600 px-1.5 py-0.5 rounded ml-2">Local</span>';
-
-                const nameWrap = document.createElement('div');
-                nameWrap.className = 'flex-1 min-w-0';
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'font-medium truncate';
-                nameDiv.textContent = g.name;
-                if (sourceLabel) nameDiv.insertAdjacentHTML('beforeend', sourceLabel); // static markup only
-                nameWrap.appendChild(nameDiv);
-                div.append(imgEl, nameWrap);
-
-                div.addEventListener('click', () => {
-                    choosePick(g);
-                    gameSuggestions.classList.add('hidden');
-                    document.getElementById('game_error').classList.add('hidden');
-                    updateSubmitButton();
-                });
-
-                gameSuggestions.appendChild(div);
-            });
-            gameSuggestions.classList.remove('hidden');
-        } catch (e) {
-            gameLoading.classList.add('hidden');
-            console.error('Search error:', e);
-        }
-    }, 300);
-});
-
-document.addEventListener('click', (e) => {
-    if (!gameSearch.contains(e.target) && !gameSuggestions.contains(e.target)) {
-        gameSuggestions.classList.add('hidden');
-    }
+// window.UGT is set by the bundled app.js, a deferred module: it exists once Alpine starts.
+document.addEventListener('alpine:init', () => {
+    window.UGT.attachGamePicker({
+        input: gameSearch,
+        list: gameSuggestions,
+        loading: gameLoading,
+        emptyText: @js(__('upload.no_game_found')),
+        onType: () => {
+            // Typing again withdraws the pick: what is sent is always a hit, never a typed title.
+            gameName.value = '';
+            pickSource.value = '';
+            pickId.value = '';
+            gameImagePreview.classList.add('hidden');
+            gameSearchIcon.classList.remove('hidden');
+            gameSelected = false;
+            updateSubmitButton();
+        },
+        onPick: (g) => {
+            choosePick(g);
+            document.getElementById('game_error').classList.add('hidden');
+            updateSubmitButton();
+        },
+    });
 });
 
 function updateSubmitButton() {

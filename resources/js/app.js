@@ -89,7 +89,9 @@ import { createLiveSync } from './components/live-sync.js';
 import { createSectionHistory } from './section-history.js';
 import { createSectionSpy } from './section-spy.js';
 import { createViewer } from './components/translation-viewer.js';
-window.UGT = { composeEditor, normalizeLineEndings, createLiveSync, createViewer };
+// The game list where a game is chosen — the upload form and a translation's settings.
+import { attachGamePicker, pickOf } from './components/game-picker.js';
+window.UGT = { composeEditor, normalizeLineEndings, createLiveSync, createViewer, attachGamePicker, pickOf };
 
 // Flowing text or line breaks. The three editors get it by composing the editor
 // core; this registration is for any other screen that lists translation lines

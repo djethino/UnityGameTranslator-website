@@ -37,6 +37,44 @@
                 </p>
             </div>
         </div>
+
+        {{-- Changing the game: in this card, under the game's name, because that is where the eye
+             goes to check "is this the right game?". An act of its own (its own form and route,
+             App\Services\LineageGame), never a field of the settings form below. Drawn only where it
+             can act: a branch is filed with its Main and gets nothing; a fork only follows the game
+             of its original, and only when that differs. --}}
+        @php($gameRoute = ($fromAdmin ?? false) ? route('admin.translations.game', $translation) : route('translations.game', $translation))
+        @if($mayChangeGame === \App\Services\LineageGame::AnyGame)
+            <form action="{{ $gameRoute }}" method="POST" class="mt-4 pt-4 border-t border-gray-700">
+                @csrf
+                <div class="relative">
+                    <input type="text" id="change_game_search" autocomplete="off"
+                        placeholder="{{ __('upload.search_game') }}"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500 pl-12">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <i id="change_game_loading" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hidden"></i>
+                    <div id="change_game_list" class="absolute w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 hidden z-10 max-h-80 overflow-y-auto shadow-xl"></div>
+                </div>
+                <input type="hidden" name="game_name" id="change_game_name" value="">
+                <input type="hidden" name="game_pick[source]" id="change_game_source" value="">
+                <input type="hidden" name="game_pick[id]" id="change_game_id" value="">
+                <p class="text-xs text-gray-500 mt-1">{{ __('my_translations.change_game_hint') }}</p>
+                <button type="submit" id="change_game_submit" disabled
+                    class="mt-3 w-full bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-exchange-alt mr-2"></i> {{ __('my_translations.change_game') }}
+                </button>
+            </form>
+        @elseif($mayChangeGame === \App\Services\LineageGame::OriginalsGame && $originalsGame && $originalsGame->id !== $translation->game_id)
+            <form action="{{ $gameRoute }}" method="POST" class="mt-4 pt-4 border-t border-gray-700">
+                @csrf
+                <input type="hidden" name="align" value="1">
+                <p class="text-xs text-gray-500">{{ __('my_translations.originals_game_hint', ['game' => $originalsGame->name]) }}</p>
+                <button type="submit"
+                    class="mt-3 w-full bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition">
+                    <i class="fas fa-exchange-alt mr-2"></i> {{ __('my_translations.use_originals_game', ['game' => $originalsGame->name]) }}
+                </button>
+            </form>
+        @endif
     </div>
 
     @if($errors->any())
@@ -158,5 +196,37 @@
         </div>
     </form>
 </div>
+
+@if($mayChangeGame === \App\Services\LineageGame::AnyGame)
+<script nonce="{{ $cspNonce }}">
+// window.UGT is set by the bundled app.js, a deferred module: it exists once Alpine starts.
+document.addEventListener('alpine:init', () => {
+    const name = document.getElementById('change_game_name');
+    const source = document.getElementById('change_game_source');
+    const id = document.getElementById('change_game_id');
+    const submit = document.getElementById('change_game_submit');
+
+    window.UGT.attachGamePicker({
+        input: document.getElementById('change_game_search'),
+        list: document.getElementById('change_game_list'),
+        loading: document.getElementById('change_game_loading'),
+        emptyText: @js(__('upload.no_game_found')),
+        // Typing again withdraws the pick: what is sent is always a hit, never a typed title.
+        onType: () => {
+            name.value = source.value = id.value = '';
+            submit.disabled = true;
+        },
+        onPick: (hit) => {
+            const pick = window.UGT.pickOf(hit);
+            document.getElementById('change_game_search').value = hit.name;
+            name.value = hit.name;
+            source.value = pick.source;
+            id.value = pick.id;
+            submit.disabled = pick.source === '' || pick.id === '';
+        },
+    });
+});
+</script>
+@endif
 
 @endsection

@@ -204,6 +204,10 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
         Route::post('/my-translations/{translation}/convert-to-fork', [TranslationController::class, 'convertToFork'])->name('translations.convert-to-fork');
         Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
         Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
+        // Filing a lineage under another game: an act of its own, with its own conditions
+        // (App\Services\LineageGame) — never a field of the settings form above.
+        Route::post('/translations/{translation}/game', [TranslationController::class, 'changeGame'])
+            ->middleware('throttle:10,1')->name('translations.game');
         Route::delete('/translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
         Route::post('/translations/{translation}/merge-preview', [TranslationController::class, 'applyMergePreview'])->name('translations.merge-preview.apply');
         // Separate route on purpose: this one never writes the translation file, it hands the
@@ -311,6 +315,10 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         Route::post('/games/proposals/{proposal}/reject', [AdminController::class, 'rejectGameProposal'])
             ->name('games.proposals.reject');
 
+        // Remove a card no translation is filed under any more — a wrong card emptied by moving its
+        // translations elsewhere, or by their deletion. Refused while anything is filed under it.
+        Route::delete('/games/{game:id}', [AdminController::class, 'destroyGame'])->name('games.destroy');
+
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         // One account's translations, as its author sees them on "My translations" — branches
         // included, under the same rule as the translation screens below.
@@ -332,6 +340,8 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
             ->name('translations.download');
         Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
         Route::put('/translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
+        // The same act as the owner's, free of the owner's limits — from here only.
+        Route::post('/translations/{translation}/game', [TranslationController::class, 'changeGame'])->name('translations.game');
         Route::delete('/translations/{translation}', [AdminController::class, 'destroyTranslation'])->name('translations.destroy');
     });
 };

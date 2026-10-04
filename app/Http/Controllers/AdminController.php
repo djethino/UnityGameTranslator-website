@@ -465,6 +465,32 @@ class AdminController extends Controller
     }
 
     /**
+     * Remove a game card no translation is filed under.
+     *
+     * Decided 2026-10-02 ("je devrais avoir le droit dans l'admin de supprimer un jeu s'il est vide
+     * de trad"). A card without translations is never listed, but it is not inert: the publish list
+     * still offers it first and the resolution still files uploads under it — which is how a wrong
+     * card emptied by its author kept catching the same translation, publication after publication.
+     *
+     * 🔴 **Refused while ANY translation is filed under it**, branches and unlisted rows included:
+     * the foreign key cascades, so deleting a card deletes everything filed under it. Its store
+     * proposals, its extra ids and its visit counts go with it — that is what removing it means.
+     */
+    public function destroyGame(Game $game)
+    {
+        if ($game->translations()->exists()) {
+            return back()->with('error', "{$game->name} still has translations filed under it. Move them to their game first.");
+        }
+
+        $before = $game->only(['name', 'slug', 'steam_id', 'igdb_id', 'rawg_id', 'unity_name', 'unity_company']);
+        $game->delete();
+
+        AuditLog::log('game.deleted', auth()->id(), 'game', $game->id, ['before' => $before]);
+
+        return back()->with('success', "Removed {$before['name']}.");
+    }
+
+    /**
      * The only word that can say a game is NOT for adults only.
      *
      * Detection and a contributor's declaration can only raise the flag (App\Models\Game derives

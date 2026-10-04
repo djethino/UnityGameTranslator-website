@@ -239,7 +239,23 @@
                             </div>
                         @endforeach
                     </td>
-                    <td class="py-3 px-4 text-gray-400">{{ $game->translations_count }}</td>
+                    {{-- Remove is drawn only where it can act: a card nothing is filed under (every
+                         translation counted, branches included — AdminController::destroyGame).
+                         Such a card is never listed, but the publish list still offers it and
+                         uploads are still filed under it. --}}
+                    <td class="py-3 px-4 text-gray-400">
+                        {{ $game->translations_count }}
+                        @if($game->translations_count === 0)
+                            <form action="{{ route('admin.games.destroy', $game->id) }}" method="POST" class="mt-1"
+                                  data-confirm="Remove {{ $game->name }}? No translation is filed under it. Its store proposals, extra ids and visit counts go with it.">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                    Remove
+                                </button>
+                            </form>
+                        @endif
+                    </td>
                     {{-- Shown, never typed: the value comes from the game's own files, which an
                          admin does not have (decided 2026-09-22). The one act is Clear, and it is
                          only drawn when there is something to clear.

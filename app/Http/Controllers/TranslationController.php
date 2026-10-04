@@ -497,7 +497,14 @@ class TranslationController extends Controller
         // Detect if accessed via admin route (for back button navigation)
         $fromAdmin = request()->routeIs('admin.*');
 
-        return view('translations.edit', compact('translation', 'fromAdmin'));
+        // What this reader may do about the game the translation is filed under — the card draws
+        // only the act that can succeed (App\Services\LineageGame).
+        $mayChangeGame = \App\Services\LineageGame::mayChange($translation, $user, $fromAdmin);
+        $originalsGame = $mayChangeGame === \App\Services\LineageGame::OriginalsGame
+            ? \App\Services\LineageGame::originalsGame($translation)
+            : null;
+
+        return view('translations.edit', compact('translation', 'fromAdmin', 'mayChangeGame', 'originalsGame'));
     }
 
     public function update(Request $request, Translation $translation)
@@ -563,6 +570,55 @@ class TranslationController extends Controller
 
         return redirect()->route('translations.mine')
             ->with('success', __('my_translations.updated'));
+    }
+
+    /**
+     * File a translation's whole lineage under another game — the way out for a translation
+     * published under the wrong one (App\Services\LineageGame: who may, and what moves).
+     *
+     * The game is picked in the same list as at publication (`game_pick`, App\Services\GameFiling),
+     * never typed: what it names is read from the card, or asked of its source. A fork's owner sends
+     * `align` instead, and only ever reaches the game of the translation it was forked from.
+     */
+    public function changeGame(Request $request, Translation $translation, \App\Services\LineageGame $lineage)
+    {
+        $user = auth()->user();
+        $fromAdmin = request()->routeIs('admin.*');
+        $may = \App\Services\LineageGame::mayChange($translation, $user, $fromAdmin);
+
+        if ($may === null) {
+            abort(403);
+        }
+
+        $request->validate([
+            'game_pick' => 'nullable|array',
+            'game_pick.source' => ['required_with:game_pick', 'string', 'in:' . implode(',', \App\Services\GameResolver::PickSources)],
+            'game_pick.id' => ['required_with:game_pick', 'regex:/^\d{1,20}$/'],
+            'game_name' => 'nullable|string|max:255',
+            'align' => 'nullable|boolean',
+        ]);
+
+        $target = $may === \App\Services\LineageGame::OriginalsGame || $request->boolean('align')
+            ? \App\Services\LineageGame::originalsGame($translation)
+            : app(\App\Services\GameFiling::class)->cardFor(
+                null,
+                $request->filled('game_name') ? $request->game_name : null,
+                null,
+                \App\Services\GameFiling::pickFrom($request->input('game_pick')),
+                null,
+            );
+
+        if (!$target) {
+            return back()->withErrors(['game' => __('upload.please_select_game')]);
+        }
+
+        $lineage->move($translation, $target, $user, $fromAdmin ? 'admin' : 'owner');
+
+        $back = $fromAdmin
+            ? redirect()->route('admin.translations.show', $translation)
+            : redirect()->route('translations.edit', $translation);
+
+        return $back->with('success', __('my_translations.game_changed', ['game' => $target->name]));
     }
 
     public function destroy(Translation $translation, TranslationService $service)
