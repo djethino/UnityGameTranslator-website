@@ -53,6 +53,14 @@
       "help": "Confirm the game (and, before a first upload, the languages) and move on. Enabled once all fields are valid." }
   ],
   "templates": [
-    { "kind": "button", "name": "GameBtn", "text": { "bind": "game" }, "policy": "Excluded", "size": "Compact", "fill": "Stretch", "act": "pick" }
+    { "kind": "row", "name": "GameHit", "spacing": 6, "placement": "TopLeft", "fill": "Stretch", "children": [
+      { "kind": "stack", "name": "CoverBox", "minWidth": 32, "fill": "Content", "children": [
+        { "kind": "image", "name": "Cover", "height": 44 }
+      ] },
+      { "kind": "stack", "name": "HitText", "spacing": 1, "fill": "Stretch", "children": [
+        { "kind": "button", "name": "GameBtn", "text": { "bind": "game" }, "policy": "Excluded", "size": "Compact", "fill": "Stretch", "act": "pick" },
+        { "kind": "label", "name": "GameFacts", "text": { "bind": "gameFacts" }, "policy": "Excluded", "role": "Caption" }
+      ] }
+    ] }
   ]
 }
