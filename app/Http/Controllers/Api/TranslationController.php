@@ -819,6 +819,15 @@ class TranslationController extends Controller
                 'lines_offered' => $role === 'branch'
                     ? $service->linesOfferedToMain($ownTranslation, $publicTranslation)
                     : null,
+                // 🔴 **The game this lineage is filed under, and whether this branch still has to
+                // follow it** (2026-10-05). A client compares `game` with the game its player
+                // confirmed: a difference is said under the game's name and never followed without
+                // asking — a Main can be moved by its owner at any time, rightly or not. A branch
+                // held since its Main moved (`game_switch_pending`) cannot contribute until its
+                // author confirms the new game; the client closes its button with the reason
+                // rather than letting the upload be refused. Additive.
+                'game' => $ownTranslation->game ? $this->lineageGameBlock($ownTranslation->game) : null,
+                'game_switch_pending' => $role === 'branch' ? (bool) $ownTranslation->game_switch_pending : null,
                 'translation' => [
                     'id' => $ownTranslation->id,
                     'source_language' => $ownTranslation->source_language,
@@ -880,6 +889,8 @@ class TranslationController extends Controller
                 // translation whose author works alone, and determineOwnership refused after the
                 // upload. Additive; sync/state has said it at this level all along.
                 'accepts_branches' => (bool) $mainTranslation->accepts_branches,
+                // The game this lineage is filed under, as on the caller's own row above. Additive.
+                'game' => $mainTranslation->game ? $this->lineageGameBlock($mainTranslation->game) : null,
                 'main' => [
                     'id' => $mainTranslation->id,
                     'uploader' => $mainTranslation->user->name,
@@ -901,6 +912,21 @@ class TranslationController extends Controller
             'exists' => false,
             'role' => 'none',
         ]);
+    }
+
+    /**
+     * A lineage's game as check-uuid names it: enough for a client to compare with the game its
+     * player confirmed (`id` is the card, the store ids say what game it is) and to name it.
+     */
+    private function lineageGameBlock(Game $game): array
+    {
+        return [
+            'id' => $game->id,
+            'name' => $game->name,
+            'steam_id' => $game->steam_id,
+            'igdb_id' => $game->igdb_id !== null ? (int) $game->igdb_id : null,
+            'rawg_id' => $game->rawg_id !== null ? (int) $game->rawg_id : null,
+        ];
     }
 
     /**
@@ -1305,6 +1331,30 @@ class TranslationController extends Controller
                     'refused_code' => \App\Exceptions\WrongGame::Code,
                 ], 422);
             }
+
+            // 🔴 **A branch follows its Main's game, and its author confirms it before contributing
+            // again** (user, 2026-10-05: "ça doit bloquer la contribution de la branche tant que la
+            // synchro de nom n'est pas faite… ils sont censés travailler sur le même projet"). The
+            // client names the game its author confirmed (`game_pick`, from its config). Refused:
+            // - a pick that names ANOTHER card than the lineage's game — two facts disagreeing;
+            // - a branch held since its Main moved (LineageGame::move) whose upload does not name
+            //   the new game — confirmed nowhere, including by a client too old to say.
+            // ⚠ A pick that names no card while nothing moved is let through: an unresolved store
+            // id proves nothing, and no move means nothing to confirm.
+            if ($visibility === 'branch') {
+                $pick = $this->gamePick($request);
+                $named = $pick ? app(\App\Services\GameResolver::class)->locatePick($pick['source'], $pick['id'])['game'] : null;
+                $pending = (bool) $existingTranslation?->game_switch_pending;
+                $namesThisGame = $named !== null && $named->id === $game->id;
+
+                if (($named !== null && !$namesThisGame) || ($pending && !$namesThisGame)) {
+                    return response()->json([
+                        'error' => "The Main moved to {$game->name}. "
+                                 . ($pick ? 'Switch game to keep contributing.' : 'Update the mod or UGT Manager, then switch game to keep contributing.'),
+                        'refused_code' => 'game_changed',
+                    ], 422);
+                }
+            }
         } else {
             $game = $this->findOrCreateGame($request);
             if (!$game) {
@@ -1374,6 +1424,9 @@ class TranslationController extends Controller
             $existingTranslation->update([
                 // The installation it was sent from this time — kept when the client says nothing.
                 'game_read' => $this->gameRead($request) ?? $existingTranslation->game_read,
+                // Reached only when this upload named the lineage's game (the check above): the
+                // author has followed their Main's move.
+                'game_switch_pending' => false,
                 'line_count' => $parsed['line_count'],
                 'human_count' => $parsed['tag_counts']['human_count'],
                 'validated_count' => $parsed['tag_counts']['validated_count'],

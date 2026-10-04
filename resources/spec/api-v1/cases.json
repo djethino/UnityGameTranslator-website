@@ -1,7 +1,7 @@
 {
   "$comment": "The contract cases of API v1. The site REPLAYS each one (tests/Feature/ApiContractTest.php: build `setup`, send `request`, compare `response`); the mod READS each response body (Core.Checks: feed `response.body` to the reader named in `read`, compare what it derives); check-spec.py holds every request and response body to openapi.json. One file, three executors — see spec/README.md.",
   "conventions": {
-    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, origin?, origin_lines?, status?, accepts_branches?, notes?, resources_url?, file_hash, lines, vote_count?}} (`origin` names the row a fork was taken from — the site fills origin_* and leaves parent_id null, as its two fork paths do), votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
+    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, origin?, origin_lines?, status?, accepts_branches?, game_switch_pending?, notes?, resources_url?, file_hash, lines, vote_count?}} (`game_switch_pending`: a branch held since its Main moved to another game; `origin` names the row a fork was taken from — the site fills origin_* and leaves parent_id null, as its two fork paths do), votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
     "request": "{method, path, as?, query?, headers?, body?, body_encoding?}. `as` names a user of the setup: the site sends a fresh token of theirs. `{{a.b.c}}` in path, query and header strings is a setup value (`translations.main.id`) or a `capture` of the prelude. In a body, {\"$ref\": \"translations.main.id\"} is the same thing as a JSON value and {\"$json\": {...}} is that object serialised as a string (the upload's `content`).",
     "prelude": "Requests sent before the one under test, in order; `capture: {name: \"header:ETag\" | \"body:token\"}` keeps a value for `{{name}}`. Site only.",
     "request_valid": "false when the request body is one the route must REFUSE: check-spec.py then requires the schema to refuse it too.",
@@ -24,6 +24,24 @@
           "status": "complete",
           "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Level [!v*0]": { "v": "Niveau [!v*0]", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
+        }
+      }
+    },
+    "moved": {
+      "users": { "alice": { "name": "alice" }, "bob": { "name": "bob" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" } }
+        },
+        "branch": {
+          "game": "g", "user": "bob", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "branch", "parent": "main",
+          "game_switch_pending": true,
+          "file_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "lines": { "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } }
         }
       }
     },
@@ -608,6 +626,40 @@
         "body": { "error": { "$contains": "could not be identified" }, "refused_code": "game_not_found" }
       },
       "why": "no card answers and no store knows the game: nothing is created — a translation filed under a game nobody can identify reaches nobody, and any project on a disk could be sent that way"
+    },
+    {
+      "id": "api-v1/upload/refused-a-held-branch-not-following-its-main",
+      "setup": "moved",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "bob",
+        "body": {
+          "game_name": "Old Title", "source_language": "English", "target_language": "French",
+          "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter !", "t": "H" } } }
+        }
+      },
+      "response": { "status": 422, "body": { "error": { "$contains": "The Main moved to Sample Game" }, "refused_code": "game_changed" } },
+      "why": "a branch whose Main moved to another game contributes again only once its author confirmed that game — a client that names none (too old to) is held, and told how to go on"
+    },
+    {
+      "id": "api-v1/upload/a-held-branch-following-its-main",
+      "setup": "moved",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "bob",
+        "body": {
+          "game_name": "Sample Game", "source_language": "English", "target_language": "French",
+          "game_pick": { "source": "local", "id": { "$ref": "games.g.id" } },
+          "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter !", "t": "H" } } }
+        }
+      },
+      "response": { "status": 200, "body": { "success": true, "translation": { "role": "branch" } } },
+      "why": "naming the lineage's game as the one its author confirmed lifts the hold"
+    },
+    {
+      "id": "api-v1/check-uuid/a-held-branch-is-told",
+      "setup": "moved",
+      "request": { "method": "GET", "path": "/translations/check-uuid", "as": "bob", "query": { "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "response": { "status": 200, "body": { "role": "branch", "game": { "id": { "$ref": "games.g.id" }, "name": "Sample Game" }, "game_switch_pending": true } },
+      "why": "the client compares the lineage's game with the one its player confirmed, and closes its button with the reason before any click"
     },
     {
       "id": "api-v1/upload/updating-ones-own-main",

@@ -101,6 +101,14 @@ class NotificationController extends Controller
                 $data['game_name'] ?? '?',
                 $data['target_language'] ?? '?',
             ),
+            // The way out is the mod's and the Manager's own control, named as it is there.
+            'main_moved_game' => sprintf(
+                'Your contribution to %s %s translation: it moved from %s to %s. To keep contributing, use Switch game.',
+                $this->whose($data['owner_username'] ?? null),
+                $data['target_language'] ?? '?',
+                $data['from_game'] ?? '?',
+                $data['game_name'] ?? '?',
+            ),
             'announcement' => (string) ($data['title'] ?? 'Announcement'),
             default => 'Notification',
         };
@@ -123,7 +131,7 @@ class NotificationController extends Controller
                 : null,
             // Both land on the branch's own dashboard: it is where the way out — turning it into
             // a translation of its own — actually lives.
-            'branches_closed', 'branch_orphaned' => !empty($data['translation_id'])
+            'branches_closed', 'branch_orphaned', 'main_moved_game' => !empty($data['translation_id'])
                 ? url('/my-translations/' . $data['translation_id'] . '/dashboard')
                 : url('/notifications'),
             'announcement' => $data['link'] ?? url('/notifications'),

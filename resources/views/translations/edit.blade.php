@@ -44,6 +44,31 @@
              can act: a branch is filed with its Main and gets nothing; a fork only follows the game
              of its original, and only when that differs. --}}
         @php($gameRoute = ($fromAdmin ?? false) ? route('admin.translations.game', $translation) : route('translations.game', $translation))
+
+        {{-- The move asked contradicts a Steam app this translation's own uploads read on disk
+             (LineageGame::contradictedRead). Warned, not refused: an edition filed with another, a
+             wrong steam_appid.txt are honest. The fact, then the one act — the same move,
+             confirmed. --}}
+        @if($contradiction = session('game_contradiction'))
+            <form action="{{ $gameRoute }}" method="POST" class="mt-4 bg-amber-900/30 border border-amber-700 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3">
+                @csrf
+                <input type="hidden" name="confirmed" value="1">
+                @if($contradiction['align'])
+                    <input type="hidden" name="align" value="1">
+                @else
+                    <input type="hidden" name="game_name" value="{{ $contradiction['game_name'] }}">
+                    <input type="hidden" name="game_pick[source]" value="{{ $contradiction['pick']['source'] ?? '' }}">
+                    <input type="hidden" name="game_pick[id]" value="{{ $contradiction['pick']['id'] ?? '' }}">
+                @endif
+                <p class="flex-1 min-w-0 text-sm text-amber-200">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    {{ __('my_translations.game_contradiction', ['read' => $contradiction['read'], 'game' => $contradiction['game']]) }}
+                </p>
+                <button type="submit" class="text-sm bg-amber-700 hover:bg-amber-600 text-white font-semibold px-3 py-1.5 rounded-lg transition">
+                    {{ __('my_translations.move_anyway') }}
+                </button>
+            </form>
+        @endif
         @if($mayChangeGame === \App\Services\LineageGame::AnyGame)
             <form action="{{ $gameRoute }}" method="POST" class="mt-4 pt-4 border-t border-gray-700">
                 @csrf

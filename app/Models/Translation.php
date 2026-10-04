@@ -15,6 +15,8 @@ class Translation extends Model
         // see the migration that added them.
         'game_read',
         'game_pick',
+        // A branch held until its author confirms the game its Main moved to — see the migration.
+        'game_switch_pending',
         'user_id',
         'parent_id',
         // Written once, at the fork, and never touched again — see the migration
@@ -78,6 +80,7 @@ class Translation extends Model
         'settings_summary' => 'array',
         'game_read' => 'array',
         'game_pick' => 'array',
+        'game_switch_pending' => 'boolean',
         'content_updated_at' => 'datetime',
     ];
 

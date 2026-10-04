@@ -65,6 +65,30 @@ class LineageGameTest extends TestCase
         $this->assertTrue(AuditLog::where('action', 'translation.game_changed')->exists());
     }
 
+    public function test_a_move_its_own_uploads_contradict_is_warned_then_confirmed(): void
+    {
+        // Published from Steam app 500 (said by the uploading machine); moved towards a card that is
+        // Steam app 600. Warned — editions and wrong steam_appid.txt exist — never refused.
+        $this->storesQuiet();
+        $from = Game::create(['name' => 'Lost Echo', 'steam_id' => '500']);
+        $to = Game::create(['name' => 'Crystal Dragon', 'steam_id' => '600']);
+        $owner = User::factory()->create();
+        $main = $this->row($from, $owner, 'lineage-w');
+        $main->forceFill(['game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500']])->save();
+        $asked = ['game_pick' => ['source' => 'local', 'id' => $to->id], 'game_name' => 'Crystal Dragon'];
+
+        $this->actingAs($owner)->from(route('translations.edit', $main))
+            ->post(route('translations.game', $main), $asked)
+            ->assertRedirect(route('translations.edit', $main))
+            ->assertSessionHas('game_contradiction', fn ($c) => $c['read'] === '500' && $c['game'] === 'Crystal Dragon');
+        $this->assertSame($from->id, $main->fresh()->game_id, 'nothing moves before it is confirmed');
+
+        $this->actingAs($owner)
+            ->post(route('translations.game', $main), $asked + ['confirmed' => 1])
+            ->assertRedirect(route('translations.edit', $main));
+        $this->assertSame($to->id, $main->fresh()->game_id);
+    }
+
     public function test_a_branch_author_cannot_move_a_lineage(): void
     {
         $game = Game::create(['name' => 'A Game']);

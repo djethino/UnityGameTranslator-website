@@ -41,6 +41,8 @@
                             <i class="fas fa-unlink text-red-400"></i>
                         @elseif($type === 'branches_closed')
                             <i class="fas fa-lock text-amber-400"></i>
+                        @elseif($type === 'main_moved_game')
+                            <i class="fas fa-exchange-alt text-amber-400"></i>
                         @elseif($type === 'translation_delisted' || $type === 'main_delisted')
                             <i class="fas fa-eye-slash text-amber-400"></i>
                         @elseif($type === 'announcement')
@@ -75,6 +77,13 @@
                                     'game' => $data['game_name'] ?? '?',
                                     'lang' => $data['target_language'] ?? '?',
                                     'owner' => $data['owner_username'] ?? '?',
+                                ]) }}
+                            @elseif($type === 'main_moved_game')
+                                {{ __('notif.main_moved_game', [
+                                    'owner' => $data['owner_username'] ?? '?',
+                                    'lang' => $data['target_language'] ?? '?',
+                                    'from' => $data['from_game'] ?? '?',
+                                    'to' => $data['game_name'] ?? '?',
                                 ]) }}
                             @elseif($type === 'translation_delisted')
                                 {{ __('notif.translation_delisted', [

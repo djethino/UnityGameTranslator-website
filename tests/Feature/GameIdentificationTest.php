@@ -502,6 +502,113 @@ class GameIdentificationTest extends TestCase
         $this->assertSame(1, Translation::count());
     }
 
+    /** A Main on `$from` taking contributions, one branch of it, then the Main moved to `$to`. */
+    private function branchLeftBehind(Game $from, Game $to): array
+    {
+        [$owner, $uuid] = $this->lineageOn($from);
+        Translation::first()->update(['accepts_branches' => true]);
+
+        $contributor = User::factory()->create();
+        $this->publish(['game_name' => $from->name, 'content' => $this->contentOf($uuid)], $contributor)->assertSuccessful();
+
+        app(\App\Services\LineageGame::class)->move(Translation::first(), $to, $owner, 'test');
+
+        return [$owner, $contributor, $uuid];
+    }
+
+    public function test_a_branch_is_held_after_its_main_moves_until_its_author_follows(): void
+    {
+        $this->stores();
+        $old = Game::create(['name' => 'Old Echo']);
+        $new = Game::create(['name' => 'Lost Echo']);
+        [, $contributor, $uuid] = $this->branchLeftBehind($old, $new);
+
+        $branch = Translation::where('user_id', $contributor->id)->sole();
+        $this->assertTrue($branch->game_switch_pending);
+        $this->assertSame(1, $contributor->notifications()->where('type', \App\Notifications\MainMovedGame::class)->count());
+
+        // A client too old to say which game its author confirmed: held, and told to update.
+        $this->publish(['game_name' => 'Old Echo', 'content' => $this->contentOf($uuid)], $contributor)
+            ->assertStatus(422)->assertJsonPath('refused_code', 'game_changed')
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'Update the mod'));
+
+        // Still on the old game: held.
+        $this->publish(['game_name' => 'Old Echo', 'game_pick' => ['source' => 'local', 'id' => $old->id], 'content' => $this->contentOf($uuid)], $contributor)
+            ->assertStatus(422)->assertJsonPath('refused_code', 'game_changed');
+
+        // Followed: goes through, and the hold is lifted.
+        $this->publish(['game_name' => 'Lost Echo', 'game_pick' => ['source' => 'local', 'id' => $new->id], 'content' => $this->contentOf($uuid)], $contributor)
+            ->assertSuccessful();
+        $this->assertFalse($branch->refresh()->game_switch_pending);
+    }
+
+    public function test_the_main_owner_is_not_held_by_their_own_move(): void
+    {
+        $this->stores();
+        $old = Game::create(['name' => 'Old Echo']);
+        $new = Game::create(['name' => 'Lost Echo']);
+        [$owner, , $uuid] = $this->branchLeftBehind($old, $new);
+
+        $this->publish(['game_name' => 'Old Echo', 'content' => $this->contentOf($uuid)], $owner)->assertSuccessful();
+        $this->assertFalse(Translation::where('user_id', $owner->id)->sole()->game_switch_pending);
+    }
+
+    public function test_a_new_contribution_naming_another_game_than_the_lineages_is_refused(): void
+    {
+        $this->stores();
+        $old = Game::create(['name' => 'Old Echo']);
+        $new = Game::create(['name' => 'Lost Echo']);
+        [, , $uuid] = $this->branchLeftBehind($old, $new);
+
+        $this->publish([
+            'game_name' => 'Old Echo',
+            'game_pick' => ['source' => 'local', 'id' => $old->id],
+            'content' => $this->contentOf($uuid),
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_changed');
+    }
+
+    public function test_check_uuid_names_the_lineages_game_and_the_hold(): void
+    {
+        $this->stores();
+        $old = Game::create(['name' => 'Old Echo']);
+        $new = Game::create(['name' => 'Lost Echo']);
+        [, $contributor, $uuid] = $this->branchLeftBehind($old, $new);
+
+        $token = ApiToken::createForUser($contributor, 'test')->plain_token;
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/translations/check-uuid?uuid=' . $uuid)
+            ->assertOk()
+            ->assertJsonPath('game.id', $new->id)
+            ->assertJsonPath('game.name', 'Lost Echo')
+            ->assertJsonPath('game_switch_pending', true);
+
+        // And to somebody about to contribute: the game they would contribute to.
+        $token = ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/translations/check-uuid?uuid=' . $uuid)
+            ->assertOk()
+            ->assertJsonPath('game.id', $new->id);
+    }
+
+    public function test_the_website_upload_is_not_the_way_round_the_hold(): void
+    {
+        $this->stores();
+        $old = Game::create(['name' => 'Old Echo']);
+        $new = Game::create(['name' => 'Lost Echo']);
+        [, $contributor, $uuid] = $this->branchLeftBehind($old, $new);
+        $hash = Translation::where('user_id', $contributor->id)->sole()->file_hash;
+
+        $this->actingAs($contributor)
+            ->post(route('translations.store'), [
+                'source_language' => 'English',
+                'target_language' => 'French',
+                'status' => 'in_progress',
+                'file' => \Illuminate\Http\UploadedFile::fake()->createWithContent('translations.json', $this->contentOf($uuid)),
+            ])->assertSessionHasErrors(['file' => 'The Main moved to Lost Echo. Switch game in the mod or UGT Manager to keep contributing.']);
+
+        $this->assertSame($hash, Translation::where('user_id', $contributor->id)->sole()->file_hash);
+    }
+
     public function test_a_fork_left_behind_by_its_moved_original_is_told_to_follow_it(): void
     {
         $this->stores();

@@ -214,6 +214,7 @@ class ApiContractTest extends TestCase
                 'visibility' => $spec['visibility'],
                 'status' => $spec['status'] ?? 'in_progress',
                 'accepts_branches' => $spec['accepts_branches'] ?? false,
+                'game_switch_pending' => $spec['game_switch_pending'] ?? false,
                 'notes' => $spec['notes'] ?? null,
                 'resources_url' => $spec['resources_url'] ?? null,
                 'source_language' => $spec['source_language'] ?? 'English',

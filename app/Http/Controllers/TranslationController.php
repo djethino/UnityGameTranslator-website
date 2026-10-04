@@ -133,6 +133,15 @@ class TranslationController extends Controller
         //   NEW    → the hit picked in the form's list (findOrCreateGame)
         if ($existingTranslation) {
             $game = $existingTranslation->game;
+
+            // The API path's hold, and this form must not be the way round it: a branch whose Main
+            // moved to another game waits for its author to confirm that game where the game is
+            // played (Api\TranslationController, `game_changed`). This form has no game of its own
+            // to confirm with.
+            if ($existingTranslation->game_switch_pending) {
+                return back()->withErrors(['file' =>
+                    "The Main moved to {$game->name}. Switch game in the mod or UGT Manager to keep contributing."]);
+            }
         } elseif ($originalTranslation) {
             $game = $originalTranslation->game;
         } else {
@@ -596,15 +605,38 @@ class TranslationController extends Controller
             'game_pick.id' => ['required_with:game_pick', 'regex:/^\d{1,20}$/'],
             'game_name' => 'nullable|string|max:255',
             'align' => 'nullable|boolean',
+            'confirmed' => 'nullable|boolean',
         ]);
 
-        $target = $may === \App\Services\LineageGame::OriginalsGame || $request->boolean('align')
+        $aligning = $may === \App\Services\LineageGame::OriginalsGame || $request->boolean('align');
+        $pick = \App\Services\GameFiling::pickFrom($request->input('game_pick'));
+
+        // The fact first, before anything is written — no card is created for a move not confirmed
+        // (LineageGame::contradictedRead: warned, never refused).
+        if (!$request->boolean('confirmed')) {
+            $found = $aligning
+                ? ['game' => \App\Services\LineageGame::originalsGame($translation), 'external' => null]
+                : app(\App\Services\GameResolver::class)->resolve(null, $request->filled('game_name') ? $request->game_name : null, $pick);
+            $read = \App\Services\LineageGame::contradictedRead($translation, $found['game'], $found['external']);
+
+            if ($read !== null) {
+                return back()->with('game_contradiction', [
+                    'read' => $read,
+                    'game' => $found['game']?->name ?? ($found['external']['name'] ?? $request->game_name),
+                    'game_name' => $request->game_name,
+                    'pick' => $pick,
+                    'align' => $aligning,
+                ]);
+            }
+        }
+
+        $target = $aligning
             ? \App\Services\LineageGame::originalsGame($translation)
             : app(\App\Services\GameFiling::class)->cardFor(
                 null,
                 $request->filled('game_name') ? $request->game_name : null,
                 null,
-                \App\Services\GameFiling::pickFrom($request->input('game_pick')),
+                $pick,
                 null,
             );
 

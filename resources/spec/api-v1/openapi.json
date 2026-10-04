@@ -85,7 +85,7 @@
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "description": "Refused: the Main takes no contributions, its owner's account is gone, the Main itself is gone while branches remain, or the caller's branch is frozen. `error` is a whole sentence the mod shows as-is; `refused_code` names the case (additive).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadRefused" } } } },
           "413": { "$ref": "#/components/responses/TooLarge" },
-          "422": { "description": "The file or the request cannot be taken: invalid JSON or lines, no `_uuid`, no line at all, a file identical to one already published (twins), `auto` or equal languages on a new translation, the wrong game (`refused_code`: `game_mismatch`, `game_not_found` — a sentence to show as-is, ending on the way out), or a Laravel validation failure (`{message, errors}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadUnprocessable" } } } },
+          "422": { "description": "The file or the request cannot be taken: invalid JSON or lines, no `_uuid`, no line at all, a file identical to one already published (twins), `auto` or equal languages on a new translation, the wrong game (`refused_code`: `game_mismatch`, `game_not_found`, `game_changed` — a sentence to show as-is, ending on the way out), or a Laravel validation failure (`{message, errors}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadUnprocessable" } } } },
           "429": { "$ref": "#/components/responses/TooMany" }
         }
       }
@@ -645,7 +645,7 @@
       "Holder": { "type": "string", "enum": ["game", "manager"], "description": "Which product opened an edit session; absent reads as `game`." },
       "RetranslationOutcome": { "type": "string", "enum": ["replaced", "unchanged", "failed"] },
       "MergeDestination": { "type": "string", "enum": ["server", "local"] },
-      "RefusedCode": { "type": "string", "enum": ["branches_refused", "main_abandoned", "main_gone", "branch_frozen", "game_mismatch", "game_not_found"], "description": "Why an upload was refused, beside the sentence. With 403: the Main takes no contributions; the Main's owner erased their account; the Main was removed while branches remain; the caller's own branch is frozen (its Main closed since). With 422: `game_mismatch` — a fact read in the game's files (`game_read.steam_id`, `game_read.engine`) contradicts the game picked, or the Steam id read is not the game the lineage uploaded into is filed under (the sentence then says who can change that game); `game_not_found` — nothing identifies the game, and no card is created: the `game_pick` names a card of the site that is gone, or an id its store does not describe (made up, or the store down); without a pick, no card answers and no store describes the Steam id or knows the title as exactly one game. A game nothing identifies is never created." },
+      "RefusedCode": { "type": "string", "enum": ["branches_refused", "main_abandoned", "main_gone", "branch_frozen", "game_mismatch", "game_not_found", "game_changed"], "description": "Why an upload was refused, beside the sentence. With 403: the Main takes no contributions; the Main's owner erased their account; the Main was removed while branches remain; the caller's own branch is frozen (its Main closed since). With 422: `game_mismatch` — a fact read in the game's files (`game_read.steam_id`, `game_read.engine`) contradicts the game picked, or the Steam id read is not the game the lineage uploaded into is filed under (the sentence then says who can change that game); `game_not_found` — nothing identifies the game, and no card is created: the `game_pick` names a card of the site that is gone, or an id its store does not describe (made up, or the store down); without a pick, no card answers and no store describes the Steam id or knows the title as exactly one game. A game nothing identifies is never created. `game_changed` — a branch whose `game_pick` names another card than its lineage's game, or a branch held since its Main moved to another game whose upload does not name that game: its author confirms the new game, then contributes again." },
       "GameSource": { "type": "string", "enum": ["local", "steam", "igdb", "rawg"] },
       "ErrorBody": {
         "type": "object",
@@ -845,6 +845,8 @@
               "lines_available": { "type": ["integer", "null"], "description": "Additive. On a Main: lines those hold, counted once each. Null on a branch." },
               "lines_waiting": { "$ref": "#/components/schemas/LinesWaiting" },
               "lines_offered": { "type": ["integer", "null"], "description": "Additive. On a branch: what this contribution still holds for its Main. Null on a Main." },
+              "game": { "$ref": "#/components/schemas/LineageGame" },
+              "game_switch_pending": { "type": ["boolean", "null"], "description": "Additive. On a branch: its Main moved to another game since, and this branch contributes again only once its author confirmed that game (an upload naming it in `game_pick`); until then an upload is refused with `game_changed`. Null on a Main." },
               "translation": { "$ref": "#/components/schemas/OwnRow" },
               "branches_count": { "type": ["integer", "null"], "description": "On a Main: how many people contribute. Null on a branch." },
               "vote": { "$ref": "#/components/schemas/VoteState" }
@@ -859,6 +861,7 @@
               "role": { "type": "string", "const": "none" },
               "main_abandoned": { "type": "boolean", "description": "Additive." },
               "accepts_branches": { "type": "boolean", "description": "Additive. Told to the one person it is for: somebody about to contribute." },
+              "game": { "$ref": "#/components/schemas/LineageGame" },
               "main": { "$ref": "#/components/schemas/MainRow" },
               "vote": { "$ref": "#/components/schemas/VoteState" }
             }
@@ -874,6 +877,19 @@
             "additionalProperties": false
           }
         ]
+      },
+      "LineageGame": {
+        "type": ["object", "null"],
+        "required": ["id", "name", "steam_id", "igdb_id", "rawg_id"],
+        "additionalProperties": false,
+        "description": "Additive. The game the lineage is filed under. A client compares it with the game its player confirmed: a difference is said under the game's name and followed only when the player confirms it — a Main can be moved by its owner at any time.",
+        "properties": {
+          "id": { "type": "integer", "description": "The card." },
+          "name": { "type": "string" },
+          "steam_id": { "type": ["string", "null"] },
+          "igdb_id": { "type": ["integer", "null"] },
+          "rawg_id": { "type": ["integer", "null"] }
+        }
       },
       "SyncStateResponse": {
         "type": "object",
@@ -969,7 +985,7 @@
             "type": ["object", "null"],
             "required": ["source", "id"],
             "additionalProperties": false,
-            "description": "Additive. The `/games/search` answer the person took, as it was given: the site files the translation under THAT game — the card (`local`), or the card holding that store id, or one created from what that store says about it — and never searches its title again. Read only when the upload creates a row (NEW); an update, a branch and a fork keep their game.",
+            "description": "Additive. The `/games/search` answer the person took, as it was given: the site files the translation under THAT game — the card (`local`), or the card holding that store id, or one created from what that store says about it — and never searches its title again. On a NEW upload it decides the game. An update, a branch and a fork keep their lineage's game; there it says which game this installation's player confirmed, and a branch naming another card than its lineage's game — or not naming its game while held since its Main moved — is refused with `game_changed`. Clients send it on every upload.",
             "properties": {
               "source": { "$ref": "#/components/schemas/GameSource" },
               "id": { "type": ["string", "integer"], "pattern": "^[0-9]{1,20}$", "description": "`local`: the card's id; `steam`: the Steam app id; `igdb` / `rawg`: that source's id." }
