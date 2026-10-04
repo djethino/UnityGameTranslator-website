@@ -27,9 +27,9 @@ class GameSearchService
      * Optimizes API quota by checking local database first.
      *
      * Order:
-     * 0. A Steam id or Steam page address typed as the query is taken as a Steam id
+     * 0. Ids typed as the query: digits asked of Steam, IGDB and RAWG; a page address of its source
      * 1. Local database (games we already have)
-     * 2. Steam API (if steam_id provided)
+     * 2. The games those ids (and `steam_id`) name — our card holding it, or what the source says
      * 3. IGDB (Twitch), only if not enough local results — each hit with its Steam id when known
      * 4. Steam's title search
      * 5. RAWG, only if nothing at all came back
@@ -43,58 +43,64 @@ class GameSearchService
     {
         $results = [];
 
-        // 0. A Steam id or a Steam page address typed into the search box IS a Steam id — the way
-        // to name a game whose title the stores do not know under the name the person has (a
-        // game Steam lists only under its Chinese title, even in English).
+        // 0. An id or a store page address typed into the search box — the way to name a game
+        // whose title the stores do not know under the name the person has (a game Steam lists
+        // only under its Chinese title, even in English).
         //
-        // ⚠ Bare digits are ALSO searched as a title ("2048", "1942" are games); an address names
-        // nothing else.
-        if (!$steamId && $query && ($typed = $this->steamIdTyped($query))) {
-            $steamId = $typed;
-
-            if (!ctype_digit(trim($query))) {
-                $query = null;
-            }
+        // 🔴 **No store is THE id** (user, 2026-10-04: "je ne vois pas pourquoi la liste ne
+        // pourrait pas tout chercher et afficher"). Bare digits are asked of every source that
+        // numbers its games — Steam, IGDB, RAWG — AND searched as a title ("2048" is a game): the
+        // list shows each answer with its source and its cover, and the person picks. An address
+        // names one source and nothing else.
+        $typed = $query ? $this->idsTyped($query) : [];
+        if ($typed !== [] && !ctype_digit(trim((string) $query))) {
+            $query = null;
+        }
+        if ($steamId) {
+            $typed[] = ['source' => 'steam', 'id' => $steamId];
         }
 
         // 1. Check local database FIRST (saves API quota)
+        $byTitle = 0;
         if ($query && strlen($query) >= 2) {
             $localGames = $this->searchLocal($query, 5);
             foreach ($localGames as $game) {
                 $results[] = $game;
             }
+            $byTitle = count($localGames);
         }
 
-        // 2. Search by Steam ID if provided
-        if ($steamId) {
-            // First check if we have it locally
-            $localBySteam = Game::answeringToSteamId($steamId)
-                ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
-                ->first();
-            if ($localBySteam) {
-                // Add at beginning if not already present
-                $steamResult = [
-                    'id' => $localBySteam->id,
-                    'name' => $localBySteam->name,
-                    'steam_id' => $localBySteam->steam_id,
-                    'image_url' => $localBySteam->image_url,
-                    'source' => 'local',
-                    'translations_count' => $localBySteam->translations_count,
-                ];
-                array_unshift($results, $steamResult);
-            } else {
-                // Call Steam API
-                $steamResult = $this->getGameFromSteam($steamId);
-                if ($steamResult) {
-                    array_unshift($results, $steamResult);
-                }
+        // 2. The games those ids name — the card of ours holding it, or what that source says.
+        // First in the list: an id typed is the most precise thing a person can give.
+        $byId = [];
+        foreach ($typed as $asked) {
+            $card = match ($asked['source']) {
+                'steam' => Game::answeringToSteamId($asked['id']),
+                'igdb' => ctype_digit($asked['id']) ? Game::where('igdb_id', $asked['id']) : null,
+                'rawg' => ctype_digit($asked['id']) ? Game::where('rawg_id', $asked['id']) : null,
+            };
+            $card = $card?->withCount(['translations' => fn ($q) => $q->publiclyListed()])->first();
+
+            $hit = $card ? $this->localRow($card) : match ($asked['source']) {
+                'steam' => $this->getGameFromSteam($asked['id']),
+                'igdb' => ctype_digit($asked['id']) ? $this->getGameFromIGDB((int) $asked['id']) : $this->getGameFromIGDBSlug($asked['id']),
+                'rawg' => $this->getGameFromRAWG($asked['id']),
+            };
+
+            if ($hit) {
+                $byId[] = $hit;
             }
         }
+        $results = array_merge($byId, $results);
 
         // 3. Call IGDB if not enough results (IGDB is free). Its hits carry their Steam id when
         // IGDB knows it, so a pick from here names the game by id even from a client that only
         // sends a title and a Steam id (every released mod and Manager).
-        if (count($results) < 3 && $query && strlen($query) >= 2) {
+        //
+        // ⚠ "Enough" counts the catalogue's TITLE matches only: the answers to a typed id are a
+        // different question, and three of them ("2048" asked of Steam, IGDB and RAWG) used to
+        // stop the title from ever being searched.
+        if ($byTitle < 3 && $query && strlen($query) >= 2) {
             $igdbResults = $this->searchIGDB($query, 10);
             $results = array_merge($results, $igdbResults);
         }
@@ -160,17 +166,21 @@ class GameSearchService
             ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->limit($limit)
             ->get()
-            ->map(function ($game) {
-                return [
-                    'id' => $game->id,
-                    'name' => $game->name,
-                    'steam_id' => $game->steam_id,
-                    'image_url' => $game->image_url,
-                    'source' => 'local',
-                    'translations_count' => $game->translations_count,
-                ];
-            })
+            ->map(fn (Game $game) => $this->localRow($game))
             ->toArray();
+    }
+
+    /** A card of ours as the list shows it (`translations_count` loaded by the caller). */
+    private function localRow(Game $game): array
+    {
+        return [
+            'id' => $game->id,
+            'name' => $game->name,
+            'steam_id' => $game->steam_id,
+            'image_url' => $game->image_url,
+            'source' => 'local',
+            'translations_count' => (int) ($game->translations_count ?? 0),
+        ];
     }
 
     /**
@@ -716,23 +726,52 @@ class GameSearchService
     }
 
     /**
-     * The Steam app id a search box was given, when it was given one — the bare number, or the
-     * address of a Steam store page (`https://store.steampowered.com/app/<id>/...`). Null
-     * otherwise.
+     * The store ids a search box was given, as `[{source, id}]` — empty when it was given a title.
+     *
+     * - bare digits: that number in EVERY source that numbers its games — Steam, IGDB, RAWG;
+     * - a page address: its own source only — `store.steampowered.com/app/<id>`,
+     *   `igdb.com/games/<slug>`, `rawg.io/games/<slug or id>`. An IGDB page is addressed by a
+     *   slug, not a number, so the slug is what is looked up.
+     *
+     * ⚠ A slug is kept to `[a-z0-9-]`: it travels into an IGDB query and a RAWG path.
      */
-    private function steamIdTyped(string $query): ?string
+    private function idsTyped(string $query): array
     {
         $query = trim($query);
 
-        if (ctype_digit($query) && $query !== '0') {
-            return $query;
+        if (ctype_digit($query) && $query !== '0' && strlen($query) <= 20) {
+            return [
+                ['source' => 'steam', 'id' => $query],
+                ['source' => 'igdb', 'id' => $query],
+                ['source' => 'rawg', 'id' => $query],
+            ];
         }
 
-        if (preg_match('~^(?:https?://)?store\.steampowered\.com/app/(\d+)~i', $query, $match)) {
-            return $match[1];
+        if (preg_match('~^(?:https?://)?store\.steampowered\.com/app/(\d{1,20})~i', $query, $m)) {
+            return [['source' => 'steam', 'id' => $m[1]]];
         }
 
-        return null;
+        if (preg_match('~^(?:https?://)?(?:www\.)?igdb\.com/games/([a-z0-9-]{1,200})~i', $query, $m)) {
+            return [['source' => 'igdb', 'id' => strtolower($m[1])]];
+        }
+
+        if (preg_match('~^(?:https?://)?(?:www\.)?rawg\.io/games/([a-z0-9-]{1,200})~i', $query, $m)) {
+            return [['source' => 'rawg', 'id' => strtolower($m[1])]];
+        }
+
+        return [];
+    }
+
+    /** One IGDB game by the slug its page is addressed by, or null. */
+    private function getGameFromIGDBSlug(string $slug): ?array
+    {
+        if (!preg_match('/^[a-z0-9-]{1,200}$/', $slug)) {
+            return null;
+        }
+
+        $rows = $this->igdb('games', 'where slug = "' . $slug . '"; fields ' . self::IgdbGameFields . ';');
+
+        return empty($rows) ? null : $this->igdbRow($rows[0]);
     }
 
     /**
@@ -766,11 +805,14 @@ class GameSearchService
         }
     }
 
-    private function getGameFromRAWG(int $id): ?array
+    /**
+     * One RAWG game by its id or its slug (RAWG answers either on the same route), or null.
+     */
+    private function getGameFromRAWG(int|string $id): ?array
     {
         try {
             $apiKey = config('services.rawg.key');
-            if (!$apiKey) {
+            if (!$apiKey || !preg_match('/^[a-z0-9-]{1,200}$/', (string) $id)) {
                 return null;
             }
 

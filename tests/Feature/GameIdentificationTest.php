@@ -50,19 +50,27 @@ class GameIdentificationTest extends TestCase
      * What the stores answer. `$igdb` maps a searched title (or `id:N`) to its rows; `$steamApps`
      * maps an app id to its store data; `$steamSearch` and `$rawg` answer every title search.
      */
-    private function stores(array $igdb = [], array $steamApps = [], array $steamSearch = [], array $rawg = []): void
+    private function stores(array $igdb = [], array $steamApps = [], array $steamSearch = [], array $rawg = [], array $rawgGames = []): void
     {
         Http::preventStrayRequests();
 
         Http::fake([
+            // One RAWG game by id or slug (`/api/games/<id>`), before RAWG's search (`/api/games?`).
+            'api.rawg.io/api/games/*' => function (Request $request) use ($rawgGames) {
+                $asked = basename(parse_url($request->url(), PHP_URL_PATH));
+
+                return isset($rawgGames[$asked]) ? Http::response($rawgGames[$asked]) : Http::response(['detail' => 'Not found.'], 404);
+            },
             'id.twitch.tv/*' => Http::response(['access_token' => 'fresh', 'expires_in' => 5_000_000]),
             'api.igdb.com/*' => function (Request $request) use ($igdb) {
                 $body = $request->body();
 
                 foreach ($igdb as $asked => $rows) {
-                    $matches = str_starts_with($asked, 'id:')
-                        ? str_contains($body, 'where id = ' . substr($asked, 3) . ';')
-                        : str_contains($body, 'search "' . $asked . '"');
+                    $matches = match (true) {
+                        str_starts_with($asked, 'id:') => str_contains($body, 'where id = ' . substr($asked, 3) . ';'),
+                        str_starts_with($asked, 'slug:') => str_contains($body, 'where slug = "' . substr($asked, 5) . '"'),
+                        default => str_contains($body, 'search "' . $asked . '"'),
+                    };
 
                     if ($matches) {
                         return Http::response($rows);
@@ -456,6 +464,43 @@ class GameIdentificationTest extends TestCase
 
         $this->assertSame('500', $rows[0]['steam_id'] ?? null);
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'storesearch'));
+    }
+
+    public function test_a_number_is_asked_of_every_store_and_searched_as_a_title(): void
+    {
+        // "2048" can be a title, a Steam app, an IGDB game and a RAWG game: no source is THE id.
+        $this->stores(
+            ['id:2048' => [$this->igdbGame(2048, 'An IGDB Game')], '2048' => [$this->igdbGame(77, '2048')]],
+            ['2048' => ['name' => 'A Steam Game', 'type' => 'game']],
+            [],
+            [],
+            ['2048' => ['id' => 2048, 'name' => 'A RAWG Game']],
+        );
+
+        $names = collect(app(GameSearchService::class)->searchFull('2048'))->pluck('name')->all();
+
+        $this->assertContains('A Steam Game', $names);
+        $this->assertContains('An IGDB Game', $names);
+        $this->assertContains('A RAWG Game', $names);
+        $this->assertContains('2048', $names, 'and the title too');
+    }
+
+    public function test_an_igdb_or_rawg_page_address_names_that_game(): void
+    {
+        $this->stores(
+            ['slug:lost-echo--1' => [$this->igdbGame(22, 'Lost Echo', '500')]],
+            [],
+            [],
+            [],
+            ['lost-echo' => ['id' => 5, 'name' => 'Lost Echo From RAWG']],
+        );
+
+        $igdb = app(GameSearchService::class)->searchFull('https://www.igdb.com/games/lost-echo--1');
+        $this->assertSame([22, '500'], [$igdb[0]['id'] ?? null, $igdb[0]['steam_id'] ?? null]);
+        Http::assertSent(fn (Request $r) => str_contains($r->body(), 'where slug = "lost-echo--1"'));
+
+        $rawg = app(GameSearchService::class)->searchFull('https://rawg.io/games/lost-echo');
+        $this->assertSame('Lost Echo From RAWG', $rawg[0]['name'] ?? null);
     }
 
     public function test_a_card_is_offered_by_the_name_its_game_states_on_disk(): void
