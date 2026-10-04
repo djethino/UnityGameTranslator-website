@@ -106,13 +106,15 @@ class GameSearchService
         if ($query && strlen($query) >= 2) {
             $results = array_merge($results, $this->searchIGDB($query, $perSource));
 
+            // ⚠ Steam's title search gives a name and a capsule, nothing more: asking each hit's page
+            // for its year would be one more store call per row. Its link is there to check it.
             foreach ($this->steamSearch($query) as $hit) {
                 $results[] = [
                     'name' => $hit['name'],
                     'steam_id' => $hit['id'],
                     'image_url' => $hit['image_url'],
                     'source' => 'steam',
-                ];
+                ] + $this->details('steam', null, [], [], \App\Support\StoreLinks::steam($hit['id']));
             }
 
             $results = array_merge($results, $this->searchRAWG($query, $perSource));
@@ -167,17 +169,44 @@ class GameSearchService
             ->toArray();
     }
 
-    /** A card of ours as the list shows it (`translations_count` loaded by the caller). */
+    /**
+     * A card of ours as the list shows it (`translations_count` loaded by the caller) — its page
+     * on this site to check it on, and the store ids it holds, which tell homonyms apart.
+     */
     private function localRow(Game $game): array
     {
         return [
             'id' => $game->id,
             'name' => $game->name,
             'steam_id' => $game->steam_id,
+            'igdb_id' => $game->igdb_id,
+            'rawg_id' => $game->rawg_id,
             'image_url' => $game->image_url,
             'source' => 'local',
             'translations_count' => (int) ($game->translations_count ?? 0),
-        ];
+        ] + $this->details('local', null, [], [], route('games.show', $game));
+    }
+
+    /**
+     * One RAWG game as this service hands it out — a search hit carries its release date, a game
+     * read by id also its developers and publishers.
+     */
+    private function rawgRow(array $game): array
+    {
+        $year = preg_match('/^(\d{4})/', (string) ($game['released'] ?? ''), $m) ? (int) $m[1] : null;
+
+        return [
+            'id' => $game['id'],
+            'name' => $game['name'],
+            'image_url' => $game['background_image'] ?? null,
+            'source' => 'rawg',
+        ] + $this->details(
+            'rawg',
+            $year,
+            collect($game['developers'] ?? [])->pluck('name')->all(),
+            collect($game['publishers'] ?? [])->pluck('name')->all(),
+            \App\Support\StoreLinks::rawgId((string) $game['id']),
+        );
     }
 
     /**
@@ -191,52 +220,84 @@ class GameSearchService
      * ⚠ What still folds: the same game reached twice — an IGDB hit and a Steam hit carrying the
      * same Steam id, or a store hit for a game a card of ours already holds the id of (that card is
      * listed, and is the one to pick).
+     *
+     * 🔴 **Folded INTO the row kept, never dropped** (user, 2026-10-04: "on peut peut-être
+     * regrouper les fiches/id quand on sait que c'est le même"). The row that stays is still the
+     * one picked, but it gathers what the others knew: every id the game answers to (`ids`, by
+     * source), each source's page to check it on (`pages`), and the year, makers and cover a
+     * poorer source lacked. A person sees one game with its Steam, IGDB and RAWG numbers side by
+     * side, rather than one source's view of it.
      */
     private function deduplicateResults(array $results): array
     {
-        // The ids the listed cards of ours already carry: a store hit for one of them is that card.
-        // Kept apart from $seen, which a card's own row must not trip over.
-        $held = [];
-        $localIds = collect($results)->where('source', 'local')->pluck('id')->filter()->all();
-        if ($localIds !== []) {
-            foreach (Game::whereIn('id', $localIds)->get(['id', 'steam_id', 'igdb_id', 'rawg_id']) as $card) {
-                foreach ($this->identityOf(['source' => 'card', 'steam_id' => $card->steam_id, 'igdb_id' => $card->igdb_id, 'rawg_id' => $card->rawg_id]) as $key) {
-                    $held[$key] = true;
-                }
-            }
-        }
-
-        $seen = [];
         $unique = [];
+        // `source:value` → the index in $unique of the row that answers to it.
+        $owner = [];
 
         foreach ($results as $game) {
             $keys = $this->identityOf($game);
-            $flipped = array_flip($keys);
 
-            if ($keys === [] || array_intersect_key($seen, $flipped) !== []) {
+            if ($keys === []) {
                 continue;
             }
 
-            if (($game['source'] ?? '') !== 'local' && array_intersect_key($held, $flipped) !== []) {
-                continue;
+            $into = null;
+            foreach ($keys as $key) {
+                if (isset($owner[$key])) {
+                    $into = $owner[$key];
+                    break;
+                }
+            }
+
+            if ($into === null) {
+                $into = count($unique);
+                // ⚠ A card of ours answers to the store ids it holds (localRow carries them), so a
+                // store hit for it joins its row rather than standing beside it as a second way
+                // to the same game.
+                $unique[] = $game + ['ids' => []];
+            } else {
+                $unique[$into] = $this->gather($unique[$into], $game);
             }
 
             foreach ($keys as $key) {
-                $seen[$key] = true;
+                $owner[$key] ??= $into;
+                [$source, $value] = explode(':', $key, 2);
+                $unique[$into]['ids'][$source] ??= $value;
             }
-
-            $unique[] = $game;
         }
 
         return $unique;
     }
 
     /**
+     * What a second hit for the same game adds to the row kept: its page, and what the kept row
+     * did not know. Nothing the kept row states is overwritten — it is the row picked.
+     */
+    private function gather(array $kept, array $other): array
+    {
+        $kept['pages'] = ($kept['pages'] ?? []) + ($other['pages'] ?? []);
+
+        foreach (['year', 'image_url'] as $field) {
+            if (empty($kept[$field]) && !empty($other[$field])) {
+                $kept[$field] = $other[$field];
+            }
+        }
+
+        foreach (['developers', 'publishers', 'engines'] as $field) {
+            if (empty($kept[$field]) && !empty($other[$field])) {
+                $kept[$field] = $other[$field];
+            }
+        }
+
+        return $kept;
+    }
+
+    /**
      * Every id one result answers to, as `source:value` keys — its own, and the Steam id it
      * carries whatever its source.
      *
-     * ⚠ A card of ours is keyed `local:` by its OWN id only when listed; its store ids come in
-     * separately (deduplicateResults), so a card and a store hit for the same game meet on them.
+     * ⚠ A card of ours is keyed `local:` by its own id, and by the store ids it holds (localRow
+     * carries them), so a card and a store hit for the same game meet on them.
      */
     private function identityOf(array $game): array
     {
@@ -255,7 +316,7 @@ class GameSearchService
             $keys[] = 'steam:' . $game['steam_id'];
         }
 
-        // A card's own store ids, for the "already held" set.
+        // A card's own store ids — what a store hit for the same game meets it on.
         foreach (['igdb_id' => 'igdb', 'rawg_id' => 'rawg'] as $field => $store) {
             if (!empty($game[$field])) {
                 $keys[] = $store . ':' . $game[$field];
@@ -406,7 +467,7 @@ class GameSearchService
      * The fields every game read from IGDB is asked for: its Steam id comes with it, so a hit
      * names the game by id rather than by title (see igdbRow).
      */
-    private const IgdbGameFields = 'id,name,cover.url,external_games.uid,external_games.external_game_source,game_engines.name';
+    private const IgdbGameFields = 'id,name,url,cover.url,first_release_date,external_games.uid,external_games.external_game_source,game_engines.name,involved_companies.developer,involved_companies.publisher,involved_companies.company.name';
 
     /**
      * One IGDB game as this service hands it out — the same shape for a search hit and a lookup.
@@ -424,6 +485,8 @@ class GameSearchService
             ->first(fn ($external) => ($external['external_game_source'] ?? null) === self::IgdbSteamSource
                 && ctype_digit((string) ($external['uid'] ?? '')))['uid'] ?? null;
 
+        $companies = collect($game['involved_companies'] ?? []);
+
         return [
             'id' => $game['id'],
             'name' => $game['name'],
@@ -431,9 +494,37 @@ class GameSearchService
             'image_url' => $imageUrl,
             'source' => 'igdb',
             // The engines IGDB declares, often none. A stated engine that is not the one the game
-            // runs on is a sure sign of the wrong game (Api\TranslationController::contradiction);
-            // none stated proves nothing.
+            // runs on is a sure sign of the wrong game (GameFiling::refuseWrongGame); none stated
+            // proves nothing.
             'engines' => collect($game['game_engines'] ?? [])->pluck('name')->filter()->values()->all(),
+        ] + $this->details(
+            'igdb',
+            isset($game['first_release_date']) ? (int) date('Y', (int) $game['first_release_date']) : null,
+            $companies->where('developer', true)->pluck('company.name')->all(),
+            $companies->where('publisher', true)->pluck('company.name')->all(),
+            \App\Support\StoreLinks::igdb($game['url'] ?? null) ?? \App\Support\StoreLinks::igdbId((string) $game['id']),
+        );
+    }
+
+    /**
+     * What tells two homonyms apart in a list a person reads — the year, who made it, who
+     * published it, and the page to check it on — each only when the source gives it.
+     *
+     * 🔴 **For the person picking, never for a decision** (user, 2026-10-04: "ça permet à
+     * l'utilisateur d'aller vérifier avant de cliquer"). Two games of one title used to differ by
+     * their cover alone. Nothing here takes part in resolving a game.
+     */
+    private function details(string $source, ?int $year, array $developers, array $publishers, ?string $pageUrl): array
+    {
+        $names = fn (array $list) => array_values(array_unique(array_filter(array_map('strval', $list))));
+
+        return [
+            'year' => $year ?: null,
+            'developers' => $names($developers),
+            'publishers' => $names($publishers),
+            // One page per source, keyed by it — a row that gathered several sources
+            // (deduplicateResults) links each of them.
+            'pages' => $pageUrl ? [$source => $pageUrl] : [],
         ];
     }
 
@@ -490,14 +581,7 @@ class GameSearchService
 
             $data = $response->json();
 
-            return collect($data['results'] ?? [])->map(function ($game) {
-                return [
-                    'id' => $game['id'],
-                    'name' => $game['name'],
-                    'image_url' => $game['background_image'] ?? null,
-                    'source' => 'rawg',
-                ];
-            })->toArray();
+            return collect($data['results'] ?? [])->map(fn ($game) => $this->rawgRow($game))->toArray();
 
         } catch (\Exception $e) {
             Log::error('RAWG search error', ['error' => $e->getMessage()]);
@@ -594,7 +678,7 @@ class GameSearchService
                 'image_url' => $full['header_image'] ?? null,
                 'source' => 'steam',
                 'demo_steam_id' => $steamId,
-            ];
+            ] + $this->steamDetails($full ?? [], $fullGameId);
         }
 
         return [
@@ -602,7 +686,18 @@ class GameSearchService
             'steam_id' => $steamId,
             'image_url' => $game['header_image'] ?? null,
             'source' => 'steam',
-        ];
+        ] + $this->steamDetails($game, $steamId);
+    }
+
+    /**
+     * Year, developers and publishers from a Steam store page's data (`release_date.date` is a
+     * display string in the store's own format — only its four-digit year is read).
+     */
+    private function steamDetails(array $app, string $appId): array
+    {
+        $year = preg_match('/\b(\d{4})\b/', (string) ($app['release_date']['date'] ?? ''), $m) ? (int) $m[1] : null;
+
+        return $this->details('steam', $year, $app['developers'] ?? [], $app['publishers'] ?? [], \App\Support\StoreLinks::steam($appId));
     }
 
     /**
@@ -821,14 +916,7 @@ class GameSearchService
                 return null;
             }
 
-            $game = $response->json();
-
-            return [
-                'id' => $game['id'],
-                'name' => $game['name'],
-                'image_url' => $game['background_image'] ?? null,
-                'source' => 'rawg',
-            ];
+            return $this->rawgRow($response->json());
 
         } catch (\Exception $e) {
             Log::error('RAWG get game error', ['error' => $e->getMessage()]);

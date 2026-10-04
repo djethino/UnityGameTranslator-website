@@ -857,6 +857,7 @@
     "my_translations.updated": "翻訳が正常に更新されました！",
     "my_translations.edit_title": "翻訳を編集",
     "my_translations.change_game": "ゲームを変更",
+    "my_translations.current_game": "現在のゲーム",
     "my_translations.change_game_hint": "翻訳と貢献は、選択したゲームに移動します。",
     "my_translations.game_changed": "ゲームを :game に変更しました。",
     "my_translations.originals_game_hint": "元の翻訳は現在 :game に登録されています。",

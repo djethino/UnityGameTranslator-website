@@ -857,6 +857,7 @@
     "my_translations.updated": "Übersetzung erfolgreich aktualisiert!",
     "my_translations.edit_title": "Übersetzung bearbeiten",
     "my_translations.change_game": "Spiel ändern",
+    "my_translations.current_game": "Aktuelles Spiel",
     "my_translations.change_game_hint": "Die Übersetzung und ihre Beiträge werden zum ausgewählten Spiel verschoben.",
     "my_translations.game_changed": "Spiel geändert: :game.",
     "my_translations.originals_game_hint": "Die Originalübersetzung ist jetzt :game zugeordnet.",

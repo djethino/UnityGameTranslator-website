@@ -857,6 +857,7 @@
     "my_translations.updated": "Đã cập nhật bản dịch thành công!",
     "my_translations.edit_title": "Chỉnh sửa bản dịch",
     "my_translations.change_game": "Đổi game",
+    "my_translations.current_game": "Game hiện tại",
     "my_translations.change_game_hint": "Bản dịch cùng các đóng góp sẽ được chuyển sang game đã chọn.",
     "my_translations.game_changed": "Đã đổi game thành :game.",
     "my_translations.originals_game_hint": "Bản dịch gốc hiện thuộc về :game.",

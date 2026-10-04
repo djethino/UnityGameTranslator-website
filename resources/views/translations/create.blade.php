@@ -82,6 +82,8 @@
                 <i id="game_search_icon" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <i id="game_loading" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hidden"></i>
             </div>
+            {{-- The game picked, with what tells it apart and its store pages. --}}
+            <div id="game_chosen" class="mt-2 hidden"></div>
             {{-- The hit picked, sent back as it was given: its source and its id there — the same
                  `game_pick` the mod and the Manager send (App\Services\GameFiling). --}}
             <input type="hidden" name="game_name" id="game_name" value="">
@@ -677,14 +679,18 @@ function choosePick(g) {
     }
 
     gameSelected = pick.source !== '' && pick.id !== '';
+    gamePicker?.choose(g);
 }
+
+let gamePicker = null;
 
 // window.UGT is set by the bundled app.js, a deferred module: it exists once Alpine starts.
 document.addEventListener('alpine:init', () => {
-    window.UGT.attachGamePicker({
+    gamePicker = window.UGT.attachGamePicker({
         input: gameSearch,
         list: gameSuggestions,
         loading: gameLoading,
+        chosenBox: document.getElementById('game_chosen'),
         emptyText: @js(__('upload.no_game_found')),
         onType: () => {
             // Typing again withdraws the pick: what is sent is always a hit, never a typed title.

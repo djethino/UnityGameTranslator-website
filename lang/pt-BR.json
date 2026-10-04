@@ -857,6 +857,7 @@
     "my_translations.updated": "Tradução atualizada com sucesso!",
     "my_translations.edit_title": "Editar tradução",
     "my_translations.change_game": "Trocar de jogo",
+    "my_translations.current_game": "Jogo atual",
     "my_translations.change_game_hint": "A tradução e suas contribuições serão movidas para o jogo selecionado.",
     "my_translations.game_changed": "Jogo alterado para :game.",
     "my_translations.originals_game_hint": "A tradução original agora está associada a :game.",

@@ -857,6 +857,7 @@
     "my_translations.updated": "התרגום עודכן בהצלחה!",
     "my_translations.edit_title": "עריכת תרגום",
     "my_translations.change_game": "החלפת משחק",
+    "my_translations.current_game": "המשחק הנוכחי",
     "my_translations.change_game_hint": "התרגום והתרומות שלו יועברו למשחק שנבחר.",
     "my_translations.game_changed": "המשחק שונה: :game.",
     "my_translations.originals_game_hint": "התרגום המקורי משויך כעת למשחק :game.",

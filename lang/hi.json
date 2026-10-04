@@ -857,6 +857,7 @@
     "my_translations.updated": "अनुवाद सफलतापूर्वक अपडेट हो गया!",
     "my_translations.edit_title": "अनुवाद एडिट करें",
     "my_translations.change_game": "गेम बदलें",
+    "my_translations.current_game": "वर्तमान गेम",
     "my_translations.change_game_hint": "अनुवाद और उसके योगदान चुने गए गेम में चले जाएँगे।",
     "my_translations.game_changed": "गेम बदलकर :game कर दिया गया।",
     "my_translations.originals_game_hint": "मूल अनुवाद अब :game के अंतर्गत है।",

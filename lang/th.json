@@ -857,6 +857,7 @@
     "my_translations.updated": "อัปเดตการแปลสำเร็จ!",
     "my_translations.edit_title": "แก้ไขการแปล",
     "my_translations.change_game": "เปลี่ยนเกม",
+    "my_translations.current_game": "เกมปัจจุบัน",
     "my_translations.change_game_hint": "การแปลและการมีส่วนร่วมทั้งหมดจะถูกย้ายไปยังเกมที่เลือก",
     "my_translations.game_changed": "เปลี่ยนเกมเป็น :game แล้ว",
     "my_translations.originals_game_hint": "ตอนนี้การแปลต้นฉบับอยู่ภายใต้เกม :game",

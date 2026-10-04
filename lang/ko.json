@@ -857,6 +857,7 @@
     "my_translations.updated": "번역이 업데이트되었습니다!",
     "my_translations.edit_title": "번역 편집",
     "my_translations.change_game": "게임 변경",
+    "my_translations.current_game": "현재 게임",
     "my_translations.change_game_hint": "번역과 기여 내역이 선택한 게임으로 옮겨집니다.",
     "my_translations.game_changed": "게임이 :game(으)로 변경되었습니다.",
     "my_translations.originals_game_hint": "원본 번역은 이제 :game에 등록되어 있습니다.",

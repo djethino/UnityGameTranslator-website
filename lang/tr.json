@@ -857,6 +857,7 @@
     "my_translations.updated": "Çeviri başarıyla güncellendi!",
     "my_translations.edit_title": "Çeviriyi Düzenle",
     "my_translations.change_game": "Oyunu değiştir",
+    "my_translations.current_game": "Mevcut oyun",
     "my_translations.change_game_hint": "Çeviri ve katkıları seçilen oyuna taşınır.",
     "my_translations.game_changed": "Oyun değiştirildi: :game.",
     "my_translations.originals_game_hint": "Orijinal çeviri artık :game oyununa bağlı.",

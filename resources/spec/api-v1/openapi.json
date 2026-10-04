@@ -257,7 +257,7 @@
         "tags": ["catalogue"],
         "operationId": "searchGamesExternal",
         "summary": "Find a game the site may not know yet: local catalogue first, then Steam, IGDB, RAWG.",
-        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from, `id` is that source's id (absent on `steam` hits, whose id is `steam_id`), and the hit to send back as `game_pick` is that pair. Each game appears once — told apart by its ids, never by its title, so two games of one title are both listed. IGDB hits carry the Steam id IGDB links (`steam_id`) and the engines it names (`engines`). `translations_count` exists only on `local` hits.",
+        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from, `id` is that source's id (absent on `steam` hits, whose id is `steam_id`), and the hit to send back as `game_pick` is that pair. Each game appears once — told apart by its ids, never by its title, so two games of one title are both listed; when two sources answer for the same game (a shared Steam id, a store id a card holds), the first hit stays and gathers the other's ids (`ids`) and page (`pages`). IGDB hits carry the Steam id IGDB links (`steam_id`) and the engines it names (`engines`). `translations_count` exists only on `local` hits.",
         "security": [{ "bearer": [] }],
         "x-throttle": "60/min per token",
         "parameters": [
@@ -1105,7 +1105,14 @@
               "image_url": { "type": ["string", "null"] },
               "source": { "$ref": "#/components/schemas/GameSource" },
               "engines": { "type": "array", "items": { "type": "string" }, "description": "`igdb` hits: the engines IGDB names for the game, often none." },
-              "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." }
+              "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." },
+              "igdb_id": { "type": ["integer", "null"], "description": "`local` hits: the IGDB id the card holds." },
+              "rawg_id": { "type": ["integer", "null"], "description": "`local` hits: the RAWG id the card holds." },
+              "ids": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Every id this game answers to, by source (`local`, `steam`, `igdb`, `rawg`) — its own and those of the other hits for the same game folded into it. For a person to tell homonyms apart; the pick is still `source` and `id`." },
+              "year": { "type": ["integer", "null"], "description": "Release year, when the source gives one. For display only." },
+              "developers": { "type": "array", "items": { "type": "string" }, "description": "When the source names them, often none. For display only." },
+              "publishers": { "type": "array", "items": { "type": "string" }, "description": "When the source names them, often none. For display only." },
+              "pages": { "type": "object", "additionalProperties": { "type": "string" }, "description": "A page to check the game on, by source — one per hit folded into this one (`local` is the game's page on the site)." }
             }
           } }
         }

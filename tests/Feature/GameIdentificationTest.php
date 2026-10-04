@@ -444,6 +444,10 @@ class GameIdentificationTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame('igdb', $rows->first()['source']);
+
+        // The row kept gathers what the other source knew: both ids, both pages to check.
+        $this->assertSame(['igdb' => '22', 'steam' => '500'], $rows->first()['ids']);
+        $this->assertSame(['igdb', 'steam'], array_keys($rows->first()['pages']));
     }
 
     public function test_a_store_hit_for_a_card_we_hold_is_that_card(): void
@@ -454,6 +458,7 @@ class GameIdentificationTest extends TestCase
         $rows = app(GameSearchService::class)->searchFull('Lost Echo');
 
         $this->assertSame([['local', $card->id]], array_map(fn ($r) => [$r['source'], $r['id']], $rows));
+        $this->assertArrayHasKey('igdb', $rows[0]['pages']);
     }
 
     public function test_a_steam_page_address_is_searched_as_its_steam_id(): void

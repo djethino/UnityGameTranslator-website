@@ -857,6 +857,7 @@
     "my_translations.updated": "翻译更新成功！",
     "my_translations.edit_title": "编辑翻译",
     "my_translations.change_game": "更换游戏",
+    "my_translations.current_game": "当前游戏",
     "my_translations.change_game_hint": "翻译及其贡献将移至所选游戏。",
     "my_translations.game_changed": "游戏已更改为 :game。",
     "my_translations.originals_game_hint": "原始翻译现已归入 :game。",

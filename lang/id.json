@@ -857,6 +857,7 @@
     "my_translations.updated": "Terjemahan berhasil diperbarui!",
     "my_translations.edit_title": "Edit Terjemahan",
     "my_translations.change_game": "Ganti game",
+    "my_translations.current_game": "Game saat ini",
     "my_translations.change_game_hint": "Terjemahan dan kontribusinya akan dipindahkan ke game yang dipilih.",
     "my_translations.game_changed": "Game diubah menjadi :game.",
     "my_translations.originals_game_hint": "Terjemahan asli kini terkait dengan :game.",

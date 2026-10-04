@@ -55,13 +55,16 @@
                     <i id="change_game_loading" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hidden"></i>
                     <div id="change_game_list" class="absolute w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 hidden z-10 max-h-80 overflow-y-auto shadow-xl"></div>
                 </div>
+                {{-- The game picked, with what tells it apart and its store pages: what the button
+                     below will move the translation to. --}}
+                <div id="change_game_chosen" class="mt-2 hidden"></div>
                 <input type="hidden" name="game_name" id="change_game_name" value="">
                 <input type="hidden" name="game_pick[source]" id="change_game_source" value="">
                 <input type="hidden" name="game_pick[id]" id="change_game_id" value="">
                 <p class="text-xs text-gray-500 mt-1">{{ __('my_translations.change_game_hint') }}</p>
                 <button type="submit" id="change_game_submit" disabled
                     class="mt-3 w-full bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-exchange-alt mr-2"></i> {{ __('my_translations.change_game') }}
+                    <i class="fas fa-exchange-alt mr-2"></i> <span id="change_game_label">{{ __('my_translations.change_game') }}</span>
                 </button>
             </form>
         @elseif($mayChangeGame === \App\Services\LineageGame::OriginalsGame && $originalsGame && $originalsGame->id !== $translation->game_id)
@@ -205,16 +208,25 @@ document.addEventListener('alpine:init', () => {
     const source = document.getElementById('change_game_source');
     const id = document.getElementById('change_game_id');
     const submit = document.getElementById('change_game_submit');
+    const label = document.getElementById('change_game_label');
+    const idle = label.textContent;
+    // The button names where the translation goes: "Move to <game>" once a game is picked.
+    const moveTo = @js(__('my_translations.use_originals_game'));
 
     window.UGT.attachGamePicker({
         input: document.getElementById('change_game_search'),
         list: document.getElementById('change_game_list'),
         loading: document.getElementById('change_game_loading'),
+        chosenBox: document.getElementById('change_game_chosen'),
         emptyText: @js(__('upload.no_game_found')),
+        // The game the translation is filed under: shown in the list, never offered.
+        current: { source: 'local', id: @js((string) $translation->game_id) },
+        currentText: @js(__('my_translations.current_game')),
         // Typing again withdraws the pick: what is sent is always a hit, never a typed title.
         onType: () => {
             name.value = source.value = id.value = '';
             submit.disabled = true;
+            label.textContent = idle;
         },
         onPick: (hit) => {
             const pick = window.UGT.pickOf(hit);
@@ -223,6 +235,7 @@ document.addEventListener('alpine:init', () => {
             source.value = pick.source;
             id.value = pick.id;
             submit.disabled = pick.source === '' || pick.id === '';
+            label.textContent = moveTo.replace(':game', hit.name);
         },
     });
 });

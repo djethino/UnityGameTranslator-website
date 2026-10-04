@@ -857,6 +857,7 @@
     "my_translations.updated": "Vertaling succesvol bijgewerkt!",
     "my_translations.edit_title": "Vertaling bewerken",
     "my_translations.change_game": "Game wijzigen",
+    "my_translations.current_game": "Huidige game",
     "my_translations.change_game_hint": "De vertaling en de bijdragen ervan worden naar de geselecteerde game verplaatst.",
     "my_translations.game_changed": "Game gewijzigd: :game.",
     "my_translations.originals_game_hint": "De originele vertaling hoort nu bij :game.",
