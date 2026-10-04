@@ -479,19 +479,21 @@ class AdultGamesTest extends TestCase
 
     public function test_the_publish_screen_is_told_whether_it_may_ask(): void
     {
-        $this->storesKnowNothing();
+        $this->storesDescribeOnly('Brand New Game', '777003');
         $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
         $asked = fn (array $q) => $this->withHeaders(['Authorization' => 'Bearer ' . $token])
             ->getJson('/api/v1/games/adult?' . http_build_query($q));
 
-        // A game nobody has published, and the stores find nothing: the box is offered.
+        // A game a store describes, nobody has published it, and nobody classified it: the box is
+        // offered.
         $asked(['game_name' => 'Brand New Game'])->assertOk()
-            ->assertExactJson(['known' => false, 'adult' => false, 'source' => null, 'declarable' => true]);
+            ->assertExactJson(['known' => false, 'identified' => true, 'adult' => false, 'source' => null, 'declarable' => true]);
 
-        // A game already on the site: its state, and no box.
+        // A game already on the site: its state, and no box to tick (shown checked and locked when
+        // it is classified).
         $this->listedGame(['name' => 'Already Here', 'adult_override' => true]);
         $asked(['game_name' => 'Already Here'])->assertOk()
-            ->assertExactJson(['known' => true, 'adult' => true, 'source' => 'admin', 'declarable' => false]);
+            ->assertExactJson(['known' => true, 'identified' => true, 'adult' => true, 'source' => 'admin', 'declarable' => false]);
 
         // Nobody signed in: not asked at all — the question costs the stores' quota.
         $this->withHeaders(['Authorization' => ''])->getJson('/api/v1/games/adult?game_name=X')->assertUnauthorized();
@@ -509,9 +511,22 @@ class AdultGamesTest extends TestCase
         $this->withHeaders(['Authorization' => 'Bearer ' . $token])
             ->getJson('/api/v1/games/adult?game_name=StoreTitle&steam_id=3149980')
             ->assertOk()
-            ->assertExactJson(['known' => false, 'adult' => true, 'source' => 'steam', 'declarable' => false]);
+            ->assertExactJson(['known' => false, 'identified' => true, 'adult' => true, 'source' => 'steam', 'declarable' => false]);
 
         $this->assertSame(0, Game::count(), 'asking creates nothing');
+    }
+
+    public function test_a_game_nothing_identifies_is_offered_no_box(): void
+    {
+        // The upload will be refused (nothing is created for a game nobody can identify), so the
+        // screen must not ask about a game that will never exist — it says so before sending.
+        $this->storesKnowNothing();
+        $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/games/adult?game_name=' . urlencode('A Project On Somebody\'s Disk'))
+            ->assertOk()
+            ->assertExactJson(['known' => false, 'identified' => false, 'adult' => false, 'source' => null, 'declarable' => false]);
     }
 
     public function test_the_admin_screen_says_which_source_decided(): void

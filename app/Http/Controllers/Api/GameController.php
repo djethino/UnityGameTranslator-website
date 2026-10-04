@@ -126,7 +126,9 @@ class GameController extends Controller
      *   itself uses — so the screen and the upload cannot disagree). Its mark is shown as it stands
      *   and nobody declares anything: the first publisher already had their say.
      * - otherwise the stores are asked on the spot (App\Services\AdultRating::judge) and
-     *   `declarable` says the box is offered — true only when they found nothing.
+     *   `declarable` says the box is offered — true only when they found nothing;
+     * - `identified: false` when no card answers and no store describes the game: the upload will
+     *   be refused, so no box is offered.
      *
      * ⚠ The verdict of an unknown game is cached for a day: judging costs one store call plus up to
      * ten for its DLC, against a limit of 200 per five minutes, and a screen opened twice asks twice.
@@ -152,11 +154,27 @@ class GameController extends Controller
 
         $found = $resolver->resolve($steamId, $gameName, $pick);
 
+        // 🔴 **Nothing identifies the game: no box, and the screen says so before sending** (user,
+        // 2026-10-04: "la case doit arriver que si on a sélectionné un jeu et qu'il est nouveau,
+        // jamais si on a rien"). No card answers and no store describes it, so the upload will be
+        // refused (GameFiling::cardFor, `game_not_found`) — offering a declaration for a game that
+        // will not be created was a dead end. Not cached: nothing was judged.
+        if (!$found['game'] && !$found['external']) {
+            return response()->json([
+                'known' => false,
+                'identified' => false,
+                'adult' => false,
+                'source' => null,
+                'declarable' => false,
+            ]);
+        }
+
         if ($found['game']) {
             $game = $found['game'];
 
             return response()->json([
                 'known' => true,
+                'identified' => true,
                 'adult' => (bool) $game->adult,
                 'source' => $game->adultCitation(),
                 'declarable' => false,
@@ -177,6 +195,7 @@ class GameController extends Controller
 
         return response()->json([
             'known' => false,
+            'identified' => true,
             'adult' => $verdict !== null,
             // The words a reader is shown, as on a card: the add-on detail is how we asked.
             'source' => $verdict === 'steam_dlc' ? 'steam' : $verdict,

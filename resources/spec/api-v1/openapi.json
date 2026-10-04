@@ -1123,6 +1123,7 @@
         "required": ["known", "adult", "source", "declarable"],
         "properties": {
           "known": { "type": "boolean", "description": "A card already answers to what was sent: the upload will land on it, not create one." },
+          "identified": { "type": "boolean", "description": "Additive (absent = not asked, never no). False when no card answers and no store describes the game: the upload will be refused with `game_not_found`, so `declarable` is false and the screen says the game could not be identified before sending." },
           "adult": { "type": "boolean" },
           "source": { "enum": ["steam", "igdb", "contributor", "admin", null], "description": "Who says so, in the words a reader is shown; null when nobody does." },
           "declarable": { "type": "boolean", "description": "The publish screen offers the 'Adults only' box: the upload will create the game and the stores found nothing." }
