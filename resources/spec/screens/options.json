@@ -52,13 +52,18 @@
           { "kind": "spacer", "name": "GeneralGap4", "height": 10 },
           { "kind": "stack", "name": "LanguagesEditableSection", "children": [
             { "kind": "label", "name": "LangLabel", "text": "Languages", "role": "SectionTitle" },
-            { "kind": "label", "name": "SourceLangLabel", "text": "Source Language:", "role": "Info", "minHeight": "RowHeightSmall" },
-            { "kind": "dropdown", "name": "SourceLang", "options": "languages", "first": "auto (Detect)", "width": 200, "act": "sourceChanged",
-              "help": "The language the game's text is written in. Leave on Auto to detect it automatically." },
-            { "kind": "spacer", "name": "LanguagesGap", "height": 5 },
-            { "kind": "label", "name": "TargetLangLabel", "text": "Target Language:", "role": "Info", "minHeight": "RowHeightSmall" },
-            { "kind": "dropdown", "name": "TargetLang", "options": "languages", "first": "auto (System)", "width": 200, "act": "targetChanged",
-              "help": "The language you want the game translated into. Auto uses your system language." }
+            { "kind": "stack", "name": "SourceEditable", "children": [
+              { "kind": "label", "name": "SourceLangLabel", "text": "Source Language:", "role": "Info", "minHeight": "RowHeightSmall" },
+              { "kind": "dropdown", "name": "SourceLang", "options": "languages", "first": "auto (Detect)", "width": 200, "act": "sourceChanged",
+                "help": "The language the game's text is written in. Leave on Auto to detect it automatically." },
+              { "kind": "label", "name": "SourceSettles", "text": { "bind": "sourceSettles" }, "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
+              { "kind": "spacer", "name": "LanguagesGap", "height": 5 }
+            ] },
+            { "kind": "stack", "name": "TargetEditable", "children": [
+              { "kind": "label", "name": "TargetLangLabel", "text": "Target Language:", "role": "Info", "minHeight": "RowHeightSmall" },
+              { "kind": "dropdown", "name": "TargetLang", "options": "languages", "first": "auto (System)", "width": 200, "act": "targetChanged",
+                "help": "The language you want the game translated into. Auto uses your system language." }
+            ] }
           ] },
           { "kind": "stack", "name": "LanguagesLockedSection", "visible": false, "children": [
             { "kind": "label", "name": "LockedHeader", "text": { "bind": "lockedHeader" }, "role": "Small", "tone": "Warning" },
