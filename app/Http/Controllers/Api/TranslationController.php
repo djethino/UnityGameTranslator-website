@@ -1309,10 +1309,12 @@ class TranslationController extends Controller
             $game = $this->findOrCreateGame($request);
             if (!$game) {
                 // ⚠ The sentence is shown as-is by the clients: a choice that named nothing says so,
-                // so the person searches again instead of reading a server fault.
+                // so the person searches again instead of reading a server fault. 🔴 And a game
+                // nothing identifies is refused, never created (GameFiling::cardFor) — said with
+                // the way out, the same words as the clients' empty list (common GameCandidates).
                 return response()->json($request->filled('game_pick')
                     ? ['error' => 'The picked game could not be found. Search for it again.', 'refused_code' => 'game_not_found']
-                    : ['error' => 'Could not find or create game'], 422);
+                    : ['error' => 'This game could not be identified. Search for it by title, or paste its Steam ID or Steam link, and pick it in the list.', 'refused_code' => 'game_not_found'], 422);
             }
 
             // 🔴 **Declared by the publication that creates the game, and by no other.** A game's

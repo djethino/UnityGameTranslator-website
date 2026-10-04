@@ -338,9 +338,16 @@ class CatalogTruthTest extends TestCase
     {
         $token = \App\Models\ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
 
+        // A game is created only when a store describes it — here Steam, for its Steam id.
+        \Illuminate\Support\Facades\Http::fake([
+            'store.steampowered.com/api/appdetails*' => \Illuminate\Support\Facades\Http::response(['424242' => ['success' => true, 'data' => ['name' => 'MYGAME', 'type' => 'game']]]),
+            '*' => \Illuminate\Support\Facades\Http::response([]),
+        ]);
+
         $this->withHeaders(['Authorization' => 'Bearer ' . $token])
             ->postJson('/api/v1/translations', [
                 'game_name' => 'MYGAME',
+                'steam_id' => '424242',
                 'game_company' => 'Some Studio',
                 'source_language' => 'English',
                 'target_language' => 'French',

@@ -30,6 +30,8 @@ class UploadLanguagesTest extends TestCase
 
     private function upload(User $user, array $fields): \Illuminate\Testing\TestResponse
     {
+        // The game exists: what is tested here is the languages, not how a game is identified.
+        \App\Models\Game::firstOrCreate(['name' => 'Languages Test Game']);
         $token = ApiToken::createForUser($user, 'test')->plain_token;
 
         return $this->withHeaders(['Authorization' => 'Bearer ' . $token])

@@ -188,18 +188,47 @@ class GameIdentificationTest extends TestCase
         $this->assertSame(22, (int) $card->igdb_id, 'the IGDB id the card was made from is kept');
     }
 
-    public function test_a_shared_title_is_filed_under_the_name_sent_not_a_guess(): void
+    public function test_a_shared_title_is_refused_not_guessed(): void
     {
         $this->stores(['Lost Echo' => [
             $this->igdbGame(22, 'Lost Echo', '500'),
             $this->igdbGame(33, 'Lost Echo', '600'),
         ]]);
 
-        $this->publish(['game_name' => 'Lost Echo'])->assertSuccessful();
+        // Two games carry the title: which one this is cannot be told, so nothing is created —
+        // the person picks it in the list.
+        $this->publish(['game_name' => 'Lost Echo'])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_not_found');
 
-        $card = Translation::latest('id')->first()->game;
-        $this->assertNull($card->steam_id);
-        $this->assertSame('Lost Echo', $card->unity_name, 'findable again by the name the mod reads');
+        $this->assertSame(0, Game::count());
+        $this->assertSame(0, Translation::count());
+    }
+
+    public function test_a_game_nothing_identifies_is_refused_never_created(): void
+    {
+        $this->stores();
+
+        $this->publish(['game_name' => 'My Unity Project', 'game_read' => ['product_name' => 'My Unity Project']])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_not_found')
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'could not be identified'));
+
+        $this->assertSame(0, Game::count());
+        $this->assertSame(0, Translation::count());
+    }
+
+    public function test_a_steam_id_steam_does_not_know_creates_nothing(): void
+    {
+        // Any Unity project can carry a made-up steam_appid.txt: an id is a game only when the
+        // store describes it.
+        $this->stores();
+
+        $this->publish(['steam_id' => '500', 'game_name' => 'Lost Echo'])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_not_found');
+
+        $this->assertSame(0, Game::count());
     }
 
     public function test_a_steam_id_nobody_holds_never_lands_on_a_homonym_with_another_one(): void
@@ -496,22 +525,19 @@ class GameIdentificationTest extends TestCase
         $this->assertSame(0, Game::count());
     }
 
-    public function test_a_store_silent_about_the_id_picked_does_not_refuse_the_upload(): void
+    public function test_a_picked_id_its_store_does_not_describe_creates_nothing(): void
     {
-        // IGDB knows nothing of that id today (an outage, a rate limit): the person's choice is
-        // kept as the card's id, under the title sent — never a search for that title.
+        // IGDB says nothing of that id (made up, or the store down): nothing vouches for the game,
+        // so nothing is created — and the title sent is never searched instead.
         $this->stores();
 
         $this->publish([
             'game_name' => 'Lost Echo',
             'game_pick' => ['source' => 'igdb', 'id' => 22],
             'game_read' => ['product_name' => 'Lost Echo'],
-        ])->assertSuccessful();
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_not_found');
 
-        $card = Translation::latest('id')->first()->game;
-        $this->assertSame(22, (int) $card->igdb_id);
-        $this->assertSame('Lost Echo', $card->name);
-        $this->assertNull($card->image_url);
+        $this->assertSame(0, Game::count());
         Http::assertNotSent(fn (Request $r) => str_contains($r->body(), 'search "Lost Echo"'));
     }
 

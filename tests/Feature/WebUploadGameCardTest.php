@@ -67,21 +67,21 @@ class WebUploadGameCardTest extends TestCase
         $this->assertSame('https://images.igdb.com/igdb/image/upload/t_cover_big/real.jpg', $game->image_url);
     }
 
-    public function test_when_the_source_is_silent_the_title_is_kept_and_the_cover_is_not(): void
+    public function test_when_the_source_is_silent_nothing_is_created(): void
     {
         $this->mock(GameSearchService::class, function ($mock) {
             $this->storesSayNothingAboutAdultContent($mock);
             $mock->shouldReceive('getGame')->andReturn(null);
         });
 
+        // Nothing describes the game picked: no card is made from the form's title (a game nothing
+        // identifies is refused, never created).
         $this->upload([
             'game_name' => 'Offered Title',
             'game_image_url' => 'https://tracker.example/pixel.png',
-        ])->assertSessionHasNoErrors();
+        ])->assertSessionHasErrors('game');
 
-        $game = Game::where('igdb_id', 777)->firstOrFail();
-        $this->assertSame('Offered Title', $game->name, 'an outage must not refuse the upload');
-        $this->assertNull($game->image_url, 'but a cover never comes from the form');
+        $this->assertSame(0, Game::count());
     }
 
     public function test_a_card_of_ours_picked_in_the_list_is_the_game(): void

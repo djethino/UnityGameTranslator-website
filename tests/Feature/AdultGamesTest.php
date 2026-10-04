@@ -400,12 +400,24 @@ class AdultGamesTest extends TestCase
         });
     }
 
+    /**
+     * A store describes the game (a game nothing identifies is never created), and says nothing
+     * about its content — so the first publisher's declaration is what marks it.
+     */
+    private function storesDescribeOnly(string $name, string $steamId): void
+    {
+        $this->mock(\App\Services\GameSearchService::class, function ($mock) use ($name, $steamId) {
+            $this->storesSayNothingAboutAdultContent($mock);
+            $mock->shouldReceive('findGame')->andReturn(['name' => $name, 'steam_id' => $steamId, 'source' => 'steam']);
+        });
+    }
+
     public function test_the_first_publisher_declares_when_their_upload_creates_the_game(): void
     {
-        $this->storesKnowNothing();
+        $this->storesDescribeOnly('A Game Nobody Knows', '777001');
         $first = User::factory()->create();
 
-        $this->publishAs($first, ['game_name' => 'A Game Nobody Knows', 'adult_declared' => true])
+        $this->publishAs($first, ['game_name' => 'A Game Nobody Knows', 'steam_id' => '777001', 'adult_declared' => true])
             ->assertSuccessful();
 
         $game = Game::where('name', 'A Game Nobody Knows')->firstOrFail();
@@ -439,9 +451,9 @@ class AdultGamesTest extends TestCase
 
     public function test_only_the_declarer_may_take_it_back(): void
     {
-        $this->storesKnowNothing();
+        $this->storesDescribeOnly('A Declared Game', '777002');
         $first = User::factory()->create();
-        $this->publishAs($first, ['game_name' => 'A Declared Game', 'adult_declared' => true])->assertSuccessful();
+        $this->publishAs($first, ['game_name' => 'A Declared Game', 'steam_id' => '777002', 'adult_declared' => true])->assertSuccessful();
         $game = Game::where('name', 'A Declared Game')->firstOrFail();
 
         // Another translator of the same game, and a passer-by: not theirs to undo.

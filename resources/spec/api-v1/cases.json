@@ -589,6 +589,27 @@
       "why": "a Steam id read on disk that the game picked does not answer to is two facts disagreeing: refused before anything is written, with a sentence the clients show as-is"
     },
     {
+      "id": "api-v1/upload/refused-a-game-nothing-identifies",
+      "setup": "lineage",
+      "request": {
+        "method": "POST",
+        "path": "/translations",
+        "as": "carol",
+        "body": {
+          "game_name": "A Project On Somebody's Disk",
+          "game_read": { "product_name": "A Project On Somebody's Disk" },
+          "source_language": "English",
+          "target_language": "Italian",
+          "content": { "$json": { "_uuid": "c9d0e1f2-a3b4-4c5d-8e6f-7a8b9c0d1e2f", "Shop": { "v": "Negozio", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": { "error": { "$contains": "could not be identified" }, "refused_code": "game_not_found" }
+      },
+      "why": "no card answers and no store knows the game: nothing is created — a translation filed under a game nobody can identify reaches nobody, and any project on a disk could be sent that way"
+    },
+    {
       "id": "api-v1/upload/updating-ones-own-main",
       "setup": "lineage",
       "request": {

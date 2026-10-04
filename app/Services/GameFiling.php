@@ -74,7 +74,8 @@ class GameFiling
     }
 
     /**
-     * The card for a new translation, or null when nothing names one.
+     * The card for a new translation, or null when nothing identifies the game: no card answers and
+     * no store describes it.
      *
      * - by what the person CHOSE (`$pick`): that card, or the store's own description of that id —
      *   never a new search;
@@ -123,113 +124,79 @@ class GameFiling
             return $found['game'];
         }
 
-        // A card of ours picked and removed since the list was drawn: nothing to file under, and no
-        // guess from its title.
-        if ($pick && $pick['source'] === 'local' && !$external) {
+        // 🔴 **A game nothing identifies is refused, never created** (user, 2026-10-01 and again
+        // 2026-10-04: "un jeu non identifiable ne partagera jamais rien avec personne… on n'est pas
+        // un stockage poubelle… sinon je fais des projets Unity sur mon disque et j'envoie plein de
+        // fausses traductions"). A new card is made only from what a store DESCRIBES: an id a store
+        // answers for, or a title the stores know as exactly one game. A name alone, a Steam id
+        // Steam does not know, a picked id its store does not describe — all of them can be typed
+        // into any Unity project on anybody's disk, and what is filed under them reaches nobody.
+        //
+        // ⚠ This includes a store that is down when asked: the publication is refused with the way
+        // out (search again) rather than filed under a card nothing vouches for. It replaces the
+        // 2026-10-04 morning choice of making a card from the picked id when its store was silent.
+        // The caller says it (`game_not_found`).
+        if (!$external) {
+            if ($pick || $steamId) {
+                \Illuminate\Support\Facades\Log::info('Publication refused: no store describes the game named', ['pick' => $pick, 'steam_id' => $steamId]);
+            }
+
             return null;
         }
 
-        // ⚠ **A store that does not answer for the id picked** — a rate limit, an outage — does not
-        // refuse the upload (the form's decision, kept): the card is made from the id picked, which
-        // is the person's choice, under the title sent, with no cover — a card without a picture is
-        // an inconvenience, a card whose picture is somebody's tracker is not. Said in the log.
-        if ($pick && !$external) {
-            if (!$gameName) {
-                return null;
+        $title = $external['name'] ?? $gameName;
+        $resolvedSteamId = $external['steam_id'] ?? $steamId;
+        $known = $found['game'];
+
+        if ($known) {
+            // The copy in hand may know something the card does not: an id it was created
+            // without, and the product name a machine reads.
+            $fill = $this->storeIdsFor($known, $external);
+
+            if ($resolvedSteamId && !$known->steam_id) {
+                $fill['steam_id'] = $resolvedSteamId;
             }
 
-            \Illuminate\Support\Facades\Log::info('Publication: the source did not answer for the game picked; the card keeps the title sent and no cover', $pick);
+            if ($fill !== []) {
+                $known->update($fill);
 
-            $field = ['steam' => 'steam_id', 'igdb' => 'igdb_id', 'rawg' => 'rawg_id'][$pick['source']];
-            $silent = Game::create([
-                'name' => $gameName,
-                'unity_name' => $declaredName,
-                'unity_company' => $company,
-                'steam_id' => $field === 'steam_id' ? $pick['id'] : $steamId,
-            ] + ($field === 'steam_id' ? [] : [$field => $pick['id']]));
-
-            $this->rating->rate($silent);
-
-            return $silent;
-        }
-
-        if (!$gameName && !$external) {
-            return null;
-        }
-
-        if ($external) {
-            $title = $external['name'] ?? $gameName;
-            $resolvedSteamId = $external['steam_id'] ?? $steamId;
-            $known = $found['game'];
-
-            if ($known) {
-                // The copy in hand may know something the card does not: an id it was created
-                // without, and the product name a machine reads.
-                $fill = $this->storeIdsFor($known, $external);
-
-                if ($resolvedSteamId && !$known->steam_id) {
-                    $fill['steam_id'] = $resolvedSteamId;
-                }
-
-                if ($fill !== []) {
-                    $known->update($fill);
-
-                    // The card can now be asked about at the store, and it could not before: a
-                    // game rated on its name alone was judged by IGDB, which misses most of what
-                    // Steam states outright. See App\Services\AdultRating.
-                    $this->rating->rate($known);
-                }
-
-                $this->rememberUnityNames($known, $declaredName, $company);
-                $this->rememberDemoId($known, $external);
-
-                return $known;
+                // The card can now be asked about at the store, and it could not before: a
+                // game rated on its name alone was judged by IGDB, which misses most of what
+                // Steam states outright. See App\Services\AdultRating.
+                $this->rating->rate($known);
             }
 
-            // Created under the title the world knows it by — and carrying the name the machine
-            // that published it reads, which is what makes it findable from another machine.
-            //
-            // ⚠ **The same rule as an update.** When the title comes from IGDB rather than from the
-            // caller, the declared name is a separate claim about the game — so it is held to the
-            // same test. Without it the FIRST publisher of a game chose its key freely while every
-            // later one was refused, and a key chosen badly cannot be written again ("never
-            // overwrite"), so the real product name was locked out for good.
-            $created = Game::create([
-                'name' => $title,
-                'unity_name' => GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
-                'unity_company' => $company,
-                'steam_id' => $resolvedSteamId,
-                'image_url' => $external['image_url'] ?? null,
-            ] + $this->storeIdsFor(null, $external));
+            $this->rememberUnityNames($known, $declaredName, $company);
+            $this->rememberDemoId($known, $external);
 
-            $this->rememberDemoId($created, $external);
-
-            // 🔴 **Rated before it can ever be listed.** A card is created by the upload that
-            // publishes the first translation of a game, so this is the only moment between the
-            // game not existing and it appearing in the catalogue. A nightly pass would leave a
-            // window of up to a day where a game marked for adults only is shown to everyone.
-            $this->rating->rate($created);
-
-            return $created;
+            return $known;
         }
 
-        // No store knows the game: a card under the name sent. The display name is the one sent,
-        // the key the one read (the same string for a client that does not say what it read); both
-        // are recorded: a display name can be edited afterwards, and the lookup must go on working
-        // when it is.
-        $bare = Game::create([
-            'name' => $gameName,
-            'unity_name' => $declaredName,
+        // Created under the title the world knows it by — and carrying the name the machine
+        // that published it reads, which is what makes it findable from another machine.
+        //
+        // ⚠ **The same rule as an update.** When the title comes from IGDB rather than from the
+        // caller, the declared name is a separate claim about the game — so it is held to the
+        // same test. Without it the FIRST publisher of a game chose its key freely while every
+        // later one was refused, and a key chosen badly cannot be written again ("never
+        // overwrite"), so the real product name was locked out for good.
+        $created = Game::create([
+            'name' => $title,
+            'unity_name' => GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
             'unity_company' => $company,
-            'steam_id' => $steamId,
-        ]);
+            'steam_id' => $resolvedSteamId,
+            'image_url' => $external['image_url'] ?? null,
+        ] + $this->storeIdsFor(null, $external));
 
-        // Rated here too, and it matters most here: this is the branch for a game no store knows by
-        // name. It usually finds nothing — which is the honest answer, and what leaves the first
-        // publisher's declaration (`adult_declared`) as the way to mark it.
-        $this->rating->rate($bare);
+        $this->rememberDemoId($created, $external);
 
-        return $bare;
+        // 🔴 **Rated before it can ever be listed.** A card is created by the upload that
+        // publishes the first translation of a game, so this is the only moment between the
+        // game not existing and it appearing in the catalogue. A nightly pass would leave a
+        // window of up to a day where a game marked for adults only is shown to everyone.
+        $this->rating->rate($created);
+
+        return $created;
     }
 
     /**

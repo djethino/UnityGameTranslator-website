@@ -29,6 +29,8 @@ class EmptyUploadTest extends TestCase
 
     private function upload(User $user, array $content): \Illuminate\Testing\TestResponse
     {
+        // The game exists: what is tested here is the file, not how a game is identified.
+        \App\Models\Game::firstOrCreate(['name' => 'Empty Upload Game']);
         $token = ApiToken::createForUser($user, 'test')->plain_token;
 
         return $this->withHeaders(['Authorization' => 'Bearer ' . $token])

@@ -82,11 +82,14 @@ class ApiContractTest extends TestCase
     #[DataProvider('cases')]
     public function test_the_site_answers_as_the_case_says(array $case): void
     {
-        // The cases' Steam ids are made up, so the store knows none of them: said here, rather than
-        // by the real store, so a case never depends on the network (GameFiling asks Steam about an
-        // id read on disk that no card answers to).
+        // The cases' games are made up, so no store knows them: said here, rather than by the real
+        // stores, so a case never depends on the network (GameFiling asks the stores about a game
+        // no card answers to).
         \Illuminate\Support\Facades\Http::fake([
             'store.steampowered.com/*' => \Illuminate\Support\Facades\Http::response([]),
+            'id.twitch.tv/*' => \Illuminate\Support\Facades\Http::response(['access_token' => 'none', 'expires_in' => 5_000_000]),
+            'api.igdb.com/*' => \Illuminate\Support\Facades\Http::response([]),
+            'api.rawg.io/*' => \Illuminate\Support\Facades\Http::response(['results' => []]),
         ]);
 
         $this->build($case['setup']);

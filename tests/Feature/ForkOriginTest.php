@@ -28,6 +28,8 @@ class ForkOriginTest extends TestCase
 
     private function upload(User $user, array $extra = []): \Illuminate\Testing\TestResponse
     {
+        // The game exists: what is tested here is the origin, not how a game is identified.
+        Game::firstOrCreate(['slug' => 'origin-game'], ['name' => 'Origin Game']);
         $token = ApiToken::createForUser($user, 'test')->plain_token;
 
         return $this->withHeaders(['Authorization' => 'Bearer ' . $token])
