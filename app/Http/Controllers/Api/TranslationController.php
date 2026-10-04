@@ -681,6 +681,8 @@ class TranslationController extends Controller
             $uploader,
             // Answered below, so covered here: a renamed origin author is a changed answer.
             json_encode($translation->originBlock()),
+            // And the game it is filed under: a move by its owner is a changed answer (2026-10-05).
+            $translation->game_id,
         ])), 0, 32) . '"';
 
         // Check If-None-Match header for 304 response
@@ -692,6 +694,11 @@ class TranslationController extends Controller
         $response = [
             'id' => $translation->id,
             'file_hash' => $translation->file_hash,
+            // 🔴 The game this translation is filed under — to anybody holding it, account or not
+            // (2026-10-05). A client compares it with the game its player confirmed and says a
+            // difference under the game's name; a move by its owner is never followed in silence.
+            // Additive.
+            'game' => $translation->game ? $this->lineageGameBlock($translation->game) : null,
             // Who published it. The one endpoint someone with NO ACCOUNT can reach about the
             // translation they installed, so without this the mod can only call them "Website" —
             // it knows the site id it came from and nothing about whose work it is.

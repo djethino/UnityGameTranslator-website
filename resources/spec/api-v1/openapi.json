@@ -944,6 +944,7 @@
         "properties": {
           "id": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "game": { "$ref": "#/components/schemas/LineageGame" },
           "uploader": { "type": "string", "description": "Who published it — the one place somebody with no account learns whose work they installed. Empty string when the account is gone." },
           "line_count": { "type": "integer" },
           "vote_count": { "type": "integer" },
