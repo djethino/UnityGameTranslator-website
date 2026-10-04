@@ -24,7 +24,7 @@
           { "kind": "button", "name": "SearchBtn", "text": "Search", "tone": "Primary", "size": "Field", "minWidth": 70, "act": "search",
             "help": "Run the search for the title you typed and list the matching games below." }
         ] },
-        { "kind": "label", "name": "SearchStatus", "text": { "bind": "searchStatus" }, "role": "Small" },
+        { "kind": "status", "name": "SearchStatus" },
         { "kind": "label", "name": "ResultsLegend", "text": { "bind": "legend" }, "role": "Hint" },
         { "kind": "list", "name": "ResultsScroll", "minHeight": 80, "fill": false, "spacing": 2, "padding": 2 }
       ] },
