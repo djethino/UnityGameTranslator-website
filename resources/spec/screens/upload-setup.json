@@ -1,12 +1,12 @@
 {
-  "$comment": "What a first publication needs settled before the upload: the game, confirmed from a search; the source language, a question only until the file states it (strict source detection writes it with the first line); the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears), and the 'Adults only' box under the game — shown ticked and locked with its source when the game is classified, open when the upload will add the game and nothing classified it, absent otherwise (the site says which, GET /games/adult). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
+  "$comment": "Two uses, one screen (2026-10-05: Change opens the same screen as the publication): choosing which game this is — the game block alone, its choice kept in config.json (`game_choice`) — and what a first publication needs settled before the upload: the game, confirmed from a search; the source language, a question only until the file states it (strict source detection writes it with the first line); the target language, which is what the file IS and only shown once it holds a line. The document holds every piece, the help sentence of each control, and the acts. The code keeps the rules: which game is shown and in which tone, what the validation line says and whether Continue is offered, the search itself and the rows it lists, whether the target is settled (then its dropdown is shown and locked, and the note under it appears), and the 'Adults only' box under the game — shown ticked and locked with its source when the game is classified, open when the upload will add the game and nothing classified it, absent otherwise (the site says which, GET /games/adult). The languages a dropdown offers are the catalogue's, named as `options`, never written here; the legend under the search is the socle's (GameCandidates.Legend), so it is written by the code.",
   "name": "New Upload Setup",
   "size": { "width": 500, "height": 600, "minWidth": 500, "minHeight": 400 },
   "chrome": { "cardWidth": 460, "help": "Hover an element to see what it does" },
   "body": [
     { "kind": "card", "name": "SetupCard", "width": 460, "children": [
-      { "kind": "label", "name": "Title", "text": "New Upload Setup", "role": "Title" },
-      { "kind": "label", "name": "Instructions", "text": "Configure your translation before uploading:", "role": "Small" },
+      { "kind": "label", "name": "Title", "text": { "bind": "title" }, "role": "Title" },
+      { "kind": "label", "name": "Instructions", "text": { "bind": "instructions" }, "role": "Small" },
       { "kind": "spacer", "name": "IntroGap", "height": 10 },
 
       { "kind": "label", "name": "GameTitle", "text": "1. Game", "role": "SectionTitle" },
@@ -30,6 +30,7 @@
       ] },
       { "kind": "spacer", "name": "GameGap", "height": 10 },
 
+      { "kind": "stack", "name": "LanguagesSection", "children": [
       { "kind": "label", "name": "SourceTitle", "text": "2. Source Language (original game language)", "role": "SectionTitle" },
       { "kind": "dropdown", "name": "Source", "options": "languages", "width": 200, "act": "sourceChanged",
         "help": "The language the game is written in. Pick the original text language, not your translation." },
@@ -40,15 +41,16 @@
       { "kind": "dropdown", "name": "Target", "options": "languages", "width": 200, "act": "targetChanged",
         "help": "The language this translation is written in. Settled with its first line — clear the translation to change it." },
       { "kind": "label", "name": "TargetSettled", "text": "Settled: this file already holds lines in this language.", "role": "Hint", "visible": false },
-      { "kind": "spacer", "name": "TargetGap", "height": 10 },
+      { "kind": "spacer", "name": "TargetGap", "height": 10 }
+      ] },
 
       { "kind": "label", "name": "Validation", "text": { "bind": "validation" }, "role": "Body", "centred": true, "bold": true, "minHeight": "RowHeightLarge" }
     ] }
   ],
   "footer": [
     { "kind": "button", "name": "CancelBtn", "text": "Cancel", "tone": "Secondary", "act": "cancel" },
-    { "kind": "button", "name": "ContinueBtn", "text": "Continue to Upload", "tone": "Primary", "act": "continue",
-      "help": "Confirm the game and languages and move on to the upload step. Enabled once all fields are valid." }
+    { "kind": "button", "name": "ContinueBtn", "text": { "bind": "continue" }, "tone": "Primary", "act": "continue",
+      "help": "Confirm the game (and, before a first upload, the languages) and move on. Enabled once all fields are valid." }
   ],
   "templates": [
     { "kind": "button", "name": "GameBtn", "text": { "bind": "game" }, "policy": "Excluded", "size": "Compact", "fill": "Stretch", "act": "pick" }

@@ -81,7 +81,11 @@
       { "kind": "card", "name": "ChoiceCard", "width": 460, "children": [
         { "kind": "label", "name": "ChoiceTitle", "text": "Community Translations", "role": "Title" },
         { "kind": "section", "name": "GameSection", "children": [
-          { "kind": "label", "name": "GameLabel", "text": { "bind": "game" }, "policy": "Excluded", "bold": true, "minHeight": "RowHeightNormal" },
+          { "kind": "row", "name": "WizardGameRow", "spacing": 6, "minHeight": "RowHeightNormal", "children": [
+            { "kind": "label", "name": "GameLabel", "text": { "bind": "game" }, "policy": "Excluded", "bold": true, "fill": "Stretch" },
+            { "kind": "button", "name": "WizardChangeGameBtn", "text": "Change", "size": "Compact", "minWidth": 70, "act": "changeGame", "visible": false,
+              "help": "Confirm which game this is. Used to publish this game's translation and to find translations shared for it." }
+          ] },
           { "kind": "label", "name": "LocalLabel", "text": { "bind": "localTranslations" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
           { "kind": "label", "name": "AccountStatus", "text": { "bind": "accountStatus" }, "policy": "Excluded", "role": "Caption", "minHeight": "RowHeightSmall" },
           { "kind": "button", "name": "LoginBtn", "text": "Connect Account (optional)", "tone": "Primary", "minWidth": 200, "act": "login",

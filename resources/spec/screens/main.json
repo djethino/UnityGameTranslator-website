@@ -3,6 +3,16 @@
   "size": { "width": 580, "height": 600, "minWidth": 580, "minHeight": 350 },
   "chrome": { "cardWidth": 520, "help": "Hover an element to see what it does" },
   "header": [
+    { "kind": "row", "name": "GameLine", "spacing": 6, "minHeight": "RowHeightNormal", "children": [
+      { "kind": "label", "name": "GameLineName", "text": { "bind": "gameName" }, "policy": "Excluded", "role": "Body", "bold": true, "fill": "Stretch" },
+      { "kind": "button", "name": "GameChangeBtn", "text": { "bind": "gameChange" }, "size": "Compact", "minWidth": 70, "act": "changeGame", "visible": false,
+        "help": "Confirm which game this is. Used to publish this game's translation and to find translations shared for it." }
+    ] },
+    { "kind": "callout", "name": "GameDiffersBanner", "tone": "Warning", "spacing": 8, "padX": 8, "padY": 2, "visible": false, "children": [
+      { "kind": "label", "name": "GameDiffersLabel", "text": { "bind": "gameDiffers" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
+      { "kind": "button", "name": "SwitchGameBtn", "text": "Switch game", "size": "Compact", "minWidth": 90, "act": "switchGame",
+        "help": "Use the game the website files this translation under. Asks before changing anything." }
+    ] },
     { "kind": "label", "name": "AccountSectionLabel", "text": "Account", "role": "SectionTitle" },
     { "kind": "card", "name": "AccountBox", "children": [
       { "kind": "row", "name": "AccountRow", "minHeight": "RowHeightLarge", "children": [
