@@ -197,6 +197,24 @@ class CatalogTruthTest extends TestCase
         $this->assertSame(0, $results[2]['games_total']);
     }
 
+    public function test_a_batch_asks_first_by_the_game_its_player_confirmed(): void
+    {
+        // The Steam id read on disk names another game (a wrong steam_appid.txt); the player
+        // confirmed the right card. The card decides.
+        $confirmed = $this->makeGame('Confirmed Game');
+        $other = $this->makeGame('Other Game', '999201');
+        $this->makeTranslation($confirmed, ['target_language' => 'French']);
+        $this->makeTranslation($other, ['target_language' => 'German']);
+
+        $results = $this->postJson('/api/v1/translations/for-games', [
+            'games' => [['steam_id' => '999201', 'name' => 'Other Game', 'game_id' => $confirmed->id]],
+        ])->assertOk()->json('results');
+
+        $this->assertSame($confirmed->id, $results[0]['key']['game_id']);
+        $this->assertSame('French', $results[0]['games'][0]['translations'][0]['target_language']);
+        $this->assertSame(1, $results[0]['games_total']);
+    }
+
     public function test_a_batch_matches_a_name_whatever_its_case(): void
     {
         $game = $this->makeGame('Case Game');

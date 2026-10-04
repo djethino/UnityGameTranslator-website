@@ -82,7 +82,7 @@ class TranslationController extends Controller
         // The relation has no foreign key on purpose (a credit outlives the account it names), so
         // it simply resolves to null when the account is gone — which is a state the payload says.
         $query = Translation::with([
-            'game:id,name,slug,steam_id,image_url',
+            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
 
@@ -344,9 +344,17 @@ class TranslationController extends Controller
             'games.*.steam_id' => 'nullable|string|max:32',
             'games.*.name' => 'nullable|string|max:255',
             'games.*.uuid' => 'nullable|string|max:36',
+            // The game its player confirmed (`game_choice`, a card of the site), when it is one.
+            'games.*.game_id' => 'nullable|integer|min:1',
         ]);
 
         $asked = collect($request->input('games'));
+
+        // 🔴 **The game its player confirmed comes first** (2026-10-05): a client that knows which
+        // card this game is asks by it, and the Steam id or the name read on disk — which can be
+        // wrong, or another game's — only stands in when it does not.
+        $cardIds = $asked->pluck('game_id')->filter()->unique()->values();
+        $byCard = $cardIds->isEmpty() ? collect() : Game::whereIn('id', $cardIds->all())->get()->keyBy('id');
 
         // ── Which games, in as few queries as the shapes allow ────────────────────────────────
         $steamIds = $asked->pluck('steam_id')->filter()->unique()->values();
@@ -459,10 +467,10 @@ class TranslationController extends Controller
         //
         // What bounds the work instead sits upstream, where it costs nothing true: names under
         // three characters never reach the loose pass, and that pass is limited in SQL.
-        $gameIds = $bySteam->flatten()->merge($byName->flatten())->pluck('id')->unique()->values();
+        $gameIds = $bySteam->flatten()->merge($byName->flatten())->merge($byCard->values())->pluck('id')->unique()->values();
 
         $rows = $gameIds->isEmpty() ? collect() : Translation::with([
-            'game:id,name,slug,steam_id,image_url',
+            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
             // Same reason as the search above: the ranking reads `parent` through `fork_bonus`.
@@ -488,7 +496,7 @@ class TranslationController extends Controller
         // 🔴 Le raisonnement disait une chose et le compteur en disait une autre. Ne pas
         // « nettoyer » ce préchargement sans le remesurer.
         $matching = $uuids->isEmpty() ? collect() : Translation::with([
-            'game:id,name,slug,steam_id,image_url',
+            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
             'parent',
@@ -518,12 +526,15 @@ class TranslationController extends Controller
         // ⚠ Including the ones that found nothing. A missing key reads as "not asked about", and a
         // caller cannot tell that apart from "no translation exists" — the distinction the whole
         // sweep already keeps (`OnlineCatalogCache` never caches a failure as an empty catalogue).
-        $results = $asked->map(function ($entry) use ($bySteam, $byName, $ranked, $userVotes, $matching, $tallies, $games) {
+        $results = $asked->map(function ($entry) use ($bySteam, $byName, $byCard, $ranked, $userVotes, $matching, $tallies, $games) {
             $steamId = $entry['steam_id'] ?? null;
             $name = isset($entry['name']) ? mb_strtolower(trim($entry['name'])) : null;
 
             $games = collect();
-            if ($steamId !== null && $bySteam->has($steamId)) {
+            $cardId = isset($entry['game_id']) ? (int) $entry['game_id'] : null;
+            if ($cardId !== null && $byCard->has($cardId)) {
+                $games = collect([$byCard->get($cardId)]);
+            } elseif ($steamId !== null && $bySteam->has($steamId)) {
                 $games = $bySteam->get($steamId);
             } elseif ($name !== null && $byName->has($name)) {
                 $games = $byName->get($name);
@@ -536,6 +547,7 @@ class TranslationController extends Controller
                 'key' => array_filter([
                     'steam_id' => $steamId,
                     'name' => $entry['name'] ?? null,
+                    'game_id' => $cardId,
                 ], fn ($v) => $v !== null),
                 'games' => $ids->isEmpty()
                     ? []
