@@ -549,29 +549,6 @@ class GameSearchService
     }
 
     /**
-     * Find a game by Steam ID (local DB first, then Steam API)
-     * Used for auto-detection from mod's _game.steam_id metadata
-     */
-    public function findBySteamId(string $steamId): ?array
-    {
-        // Check local database first — including an id recorded as also being this game (a demo's).
-        $localGame = Game::answeringToSteamId($steamId)->first();
-        if ($localGame) {
-            return [
-                'id' => $localGame->igdb_id ?? $localGame->rawg_id ?? $localGame->id,
-                'name' => $localGame->name,
-                'steam_id' => $localGame->steam_id,
-                'image_url' => $localGame->image_url,
-                'source' => 'local',
-                'local_id' => $localGame->id,
-            ];
-        }
-
-        // Try Steam API
-        return $this->getGameFromSteam($steamId);
-    }
-
-    /**
      * Get game details from Steam by Steam App ID
      *
      * 🔴 **A demo answers as the game it is a demo of.** Steam publishes the link itself — an app of

@@ -166,8 +166,7 @@ class EmptyTranslationGraceTest extends TestCase
         });
         $payload = [
             'game_name' => 'Asked Game',
-            'game_source' => 'igdb',
-            'game_external_id' => 4242,
+            'game_pick' => ['source' => 'igdb', 'id' => 4242],
             'source_language' => 'English',
             'target_language' => 'French',
             'status' => 'in_progress',

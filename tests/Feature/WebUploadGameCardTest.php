@@ -36,8 +36,8 @@ class WebUploadGameCardTest extends TestCase
 
         return $this->actingAs(User::factory()->create())
             ->post(route('translations.store'), array_merge([
-                'game_source' => 'igdb',
-                'game_external_id' => 777,
+                // The hit picked in the form's list, as the form sends it back (`game_pick`).
+                'game_pick' => ['source' => 'igdb', 'id' => 777],
                 'source_language' => 'English',
                 'target_language' => 'French',
                 'status' => 'in_progress',
@@ -82,6 +82,27 @@ class WebUploadGameCardTest extends TestCase
         $game = Game::where('igdb_id', 777)->firstOrFail();
         $this->assertSame('Offered Title', $game->name, 'an outage must not refuse the upload');
         $this->assertNull($game->image_url, 'but a cover never comes from the form');
+    }
+
+    public function test_a_card_of_ours_picked_in_the_list_is_the_game(): void
+    {
+        // Picking a catalogue hit sent `game_source: local`, which the form refused — the card
+        // could only be reached through a Steam id found in the file.
+        $card = Game::create(['name' => 'Known Game']);
+        $this->mock(GameSearchService::class, fn ($mock) => $this->storesSayNothingAboutAdultContent($mock));
+
+        $this->upload(['game_name' => 'Known Game', 'game_pick' => ['source' => 'local', 'id' => $card->id]])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, $card->translations()->count());
+    }
+
+    public function test_nothing_picked_is_asked_for_not_guessed(): void
+    {
+        $this->upload(['game_name' => 'Typed But Not Picked', 'game_pick' => null])
+            ->assertSessionHasErrors('game');
+
+        $this->assertSame(0, Game::count());
     }
 
     public function test_an_existing_card_never_takes_a_cover_from_the_form(): void

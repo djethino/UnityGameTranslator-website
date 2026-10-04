@@ -363,6 +363,25 @@ class GameIdentificationTest extends TestCase
         $this->assertSame(0, Game::count());
     }
 
+    public function test_a_store_silent_about_the_id_picked_does_not_refuse_the_upload(): void
+    {
+        // IGDB knows nothing of that id today (an outage, a rate limit): the person's choice is
+        // kept as the card's id, under the title sent — never a search for that title.
+        $this->stores();
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'igdb', 'id' => 22],
+            'game_read' => ['product_name' => 'Lost Echo'],
+        ])->assertSuccessful();
+
+        $card = Translation::latest('id')->first()->game;
+        $this->assertSame(22, (int) $card->igdb_id);
+        $this->assertSame('Lost Echo', $card->name);
+        $this->assertNull($card->image_url);
+        Http::assertNotSent(fn (Request $r) => str_contains($r->body(), 'search "Lost Echo"'));
+    }
+
     public function test_the_adult_question_resolves_the_choice_as_the_upload_will(): void
     {
         $this->stores();

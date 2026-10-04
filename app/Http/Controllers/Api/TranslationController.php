@@ -1577,282 +1577,40 @@ class TranslationController extends Controller
     }
 
     /**
-     * The game a upload belongs to — found, or created.
+     * The game a NEW upload belongs to — found, or created — by the one creator the site's upload
+     * form uses too (App\Services\GameFiling: the order of the resolution, what it writes on the
+     * way, and when it refuses). Null when nothing names one.
      *
-     * 🔴 **What the caller reads off the disk is now KEPT** (`unity_name`, `unity_company`). It was
-     * used to look the game up and then thrown away: when the game is new, IGDB or RAWG names it,
-     * and the string every client can actually see — `Application.productName`, the first lines of
-     * `<Game>_Data/app.info` — was recorded nowhere. From then on the only way back to that game
-     * was hoping one title contained the other, which is what `name LIKE %…%` was doing and why a
-     * lookup could answer about several games at once.
-     *
-     * ⚠ Filled in on games that already exist too, and only when empty: every upload carries the
-     * name, so the catalogue completes itself as people publish. Nothing overwrites a value already
-     * there — two machines disagreeing about a game's productName is a thing to notice, not to
-     * settle silently by last-writer-wins.
+     * @throws HttpResponseException 422 `game_mismatch` when a fact read on disk contradicts the game
      */
     private function findOrCreateGame(Request $request): ?Game
     {
-        $steamId = $request->filled('steam_id') ? (string) $request->steam_id : null;
-        $gameName = $request->filled('game_name') ? $request->game_name : null;
-        $read = $this->gameRead($request);
-        $pick = $this->gamePick($request);
-
-        // 🔴 **The key other machines resolve with comes from what a machine READ, never from what
-        // a person CHOSE** (analyse/identite-des-jeux-parcours.md, T16). A client that says what it
-        // read sends the chosen title as `game_name` — recording that as `unity_name` filled the key
-        // with shop titles, and the name the game states on disk was never kept. A client that says
-        // nothing of the kind (released before 2026-10-04) keeps the old reading of `game_name`.
-        $declaredName = $read !== null ? ($read['product_name'] ?? null) : $gameName;
-        $company = $read !== null
-            ? ($read['company_name'] ?? null)
-            : ($request->filled('game_company') ? $request->game_company : null);
-
-        // A Steam id read in the game's own files is a fact about this installation: the card is
-        // given it when it has none, exactly like the one the old clients send.
-        $steamId ??= $read['steam_id'] ?? null;
-
-        // 🔴 **Which card, asked of the one resolver the publish screens ask too** (GET
-        // games/adult). Its four steps and their order are documented there and here below; what
-        // stays here is what the upload WRITES on the way — never done by a mere question.
-        //
-        // - by Steam id — the card's own, or one recorded as also being this game (a demo's);
-        // - 🔴 by the DISPLAY name before the declared one, and that order is a guard: `unity_name`
-        //   is a string a caller states about itself, so resolving on it first let an account send
-        //   any name and be sent to the game holding it (see rememberUnityNames, the other half);
-        // - by the name the machine reads, which is what other machines will search with;
-        // - 🔴 by what the stores answer — one game is one card wherever the copy came from. Asking
-        //   IGDB turns "LONESTAR" into "Lonestar: The Game", and creating on that answer without
-        //   looking again gave the same game a second entry. ⚠ Searched on what the resolution
-        //   ANSWERED, not on what the caller sent — that is the whole point of having asked.
-        //
-        // - 🔴 and before all of it, by what the person CHOSE when the client says so (`game_pick`):
-        //   that card, or the store's own description of that id — never a new search.
-        $found = app(\App\Services\GameResolver::class)->resolve($steamId, $gameName, $pick);
-        $externalGame = $found['external'];
-
-        // A fact read on disk that contradicts the game found refuses the upload — BEFORE any card
-        // is written, so a refusal leaves nothing behind.
-        $this->refuseWrongGame($found['game'], $externalGame, $read);
-
-        if ($found['via'] === 'steam') {
-            $this->rememberUnityNames($found['game'], $declaredName, $company);
-            return $found['game'];
+        try {
+            return app(\App\Services\GameFiling::class)->cardFor(
+                $request->filled('steam_id') ? (string) $request->steam_id : null,
+                $request->filled('game_name') ? $request->game_name : null,
+                $request->filled('game_company') ? $request->game_company : null,
+                $this->gamePick($request),
+                $this->gameRead($request),
+            );
+        } catch (\App\Exceptions\WrongGame $wrong) {
+            throw new HttpResponseException(response()->json([
+                'error' => $wrong->getMessage(),
+                'refused_code' => \App\Exceptions\WrongGame::Code,
+            ], 422));
         }
-
-        if ($found['via'] === 'name' || $found['via'] === 'unity' || ($found['via'] === 'pick' && !$externalGame)) {
-            $this->attachSteamId($found['game'], $steamId);
-            $this->rememberUnityNames($found['game'], $declaredName, $company);
-            return $found['game'];
-        }
-
-        // A choice that names nothing — a card removed since the list was drawn, a store that does
-        // not answer for that id — is not replaced by a guess from its title.
-        if ($pick && !$externalGame) {
-            return null;
-        }
-
-        // Game not found - the stores' answer is what a new card is made from
-        if (!$gameName && !$externalGame) {
-            return null;
-        }
-
-        if ($externalGame) {
-            $title = $externalGame['name'] ?? $gameName;
-            $resolvedSteamId = $externalGame['steam_id'] ?? $steamId;
-            $known = $found['game'];
-
-            if ($known) {
-                // The copy in hand may know something the card does not: an id it was created
-                // without, and the product name a machine reads.
-                $fill = $this->storeIdsFor($known, $externalGame);
-
-                if ($resolvedSteamId && !$known->steam_id) {
-                    $fill['steam_id'] = $resolvedSteamId;
-                }
-
-                if ($fill !== []) {
-                    $known->update($fill);
-
-                    // The card can now be asked about at the store, and it could not before: a
-                    // game rated on its name alone was judged by IGDB, which misses most of what
-                    // Steam states outright. See App\Services\AdultRating.
-                    app(\App\Services\AdultRating::class)->rate($known);
-                }
-
-                $this->rememberUnityNames($known, $declaredName, $company);
-                $this->rememberDemoId($known, $externalGame);
-
-                return $known;
-            }
-
-            // Created under the title the world knows it by — and carrying the name the machine
-            // that published it reads, which is what makes it findable from another machine.
-            //
-            // ⚠ **The same rule as an update, and it was missing here.** When the title comes from
-            // IGDB rather than from the caller, the declared name is a separate claim about the
-            // game — so it is held to the same test. Without it the FIRST publisher of a game chose
-            // its key freely while every later one was refused, and a key chosen badly cannot be
-            // written again ("never overwrite"), so the real product name was locked out for good.
-            $created = Game::create([
-                'name' => $title,
-                'unity_name' => \App\Support\GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
-                'unity_company' => $company,
-                'steam_id' => $resolvedSteamId,
-                'image_url' => $externalGame['image_url'] ?? null,
-            ] + $this->storeIdsFor(null, $externalGame));
-
-            $this->rememberDemoId($created, $externalGame);
-
-            // 🔴 **Rated before it can ever be listed.** A card is created by the upload that
-            // publishes the first translation of a game, so this is the only moment between the
-            // game not existing and it appearing in the catalogue. A nightly pass would leave a
-            // window of up to a day where a game marked for adults only is shown to everyone.
-            app(\App\Services\AdultRating::class)->rate($created);
-
-            return $created;
-        }
-
-        // Fallback: Create basic game entry without external data. The display name is the one
-        // sent, the key the one read (the same string for a client that does not say what it read);
-        // both are recorded: a display name can be edited afterwards, and the lookup must go on
-        // working when it is.
-        $bare = Game::create([
-            'name' => $gameName,
-            'unity_name' => $declaredName,
-            'unity_company' => $company,
-            'steam_id' => $steamId,
-        ]);
-
-        // Rated here too, and it matters most here: this is the branch for a game no store knows
-        // by name. It usually finds nothing — which is the honest answer, and what leaves the
-        // first publisher's declaration (`adult_declared`, applied by store()) as the way to mark it.
-        app(\App\Services\AdultRating::class)->rate($bare);
-
-        return $bare;
     }
 
-    /**
-     * What the publishing machine read in the game's own files (`game_read`), with the empty
-     * fields dropped — or null when the client said nothing of the kind (every client released
-     * before 2026-10-04). ⚠ An empty object is not null: the client said it read nothing.
-     *
-     * @return array{product_name?: string, company_name?: string, steam_id?: string, steam_id_from?: string, engine?: string}|null
-     */
+    /** What the publishing machine read in the game's files (`game_read`) — GameFiling::readFrom. */
     private function gameRead(Request $request): ?array
     {
-        if (!$request->has('game_read') || !is_array($request->input('game_read'))) {
-            return null;
-        }
-
-        $read = $request->input('game_read');
-
-        return array_filter([
-            'product_name' => $read['product_name'] ?? null,
-            'company_name' => $read['company_name'] ?? null,
-            'steam_id' => isset($read['steam_id']) ? (string) $read['steam_id'] : null,
-            'steam_id_from' => $read['steam_id_from'] ?? null,
-            'engine' => $read['engine'] ?? null,
-        ], fn ($value) => $value !== null && $value !== '');
+        return \App\Services\GameFiling::readFrom($request->input('game_read'));
     }
 
-    /**
-     * The publish-list answer the person took (`game_pick`), or null.
-     *
-     * @return array{source: string, id: string}|null
-     */
+    /** The publish-list answer the person took (`game_pick`) — GameFiling::pickFrom. */
     private function gamePick(Request $request): ?array
     {
-        $pick = $request->input('game_pick');
-
-        return is_array($pick) && isset($pick['source'], $pick['id'])
-            ? ['source' => (string) $pick['source'], 'id' => (string) $pick['id']]
-            : null;
-    }
-
-    /**
-     * Refuse the upload when what the machine read in the game's files CONTRADICTS the game
-     * found — and only then.
-     *
-     * 🔴 **Refused when sure, never on a resemblance** (decided 2026-10-02: "si on peut être sûr on
-     * refuse, sinon on avertit"). Sure means two facts disagree:
-     *
-     * - a Steam id read on disk (`steam_appid.txt`, the library manifest) that the game found does
-     *   not answer to — its own id, or one recorded as also being it (a demo's);
-     * - an engine the game runs on, when the store names the game's engines and that one is not
-     *   among them.
-     *
-     * ⚠ Titles that do not look alike prove nothing — a product name like "JHL" for a shop title
-     * that spells the words out is ordinary — so they are left to the client to WARN about, before
-     * sending. A store that names no engine proves nothing either.
-     *
-     * @throws HttpResponseException 422 with `refused_code: game_mismatch`
-     */
-    private function refuseWrongGame(?Game $card, ?array $external, ?array $read): void
-    {
-        if (!$read) {
-            return;
-        }
-
-        $refuse = fn (string $sentence) => throw new HttpResponseException(response()->json([
-            'error' => $sentence,
-            'refused_code' => 'game_mismatch',
-        ], 422));
-
-        $readSteam = $read['steam_id'] ?? null;
-        $foundSteam = $card?->steam_id ?? ($external['steam_id'] ?? null);
-
-        if ($readSteam && $foundSteam && (string) $foundSteam !== $readSteam) {
-            $sameGame = $card
-                ? Game::answeringToSteamId($readSteam)->whereKey($card->id)->exists()
-                : ($external['demo_steam_id'] ?? null) === $readSteam;
-
-            if (!$sameGame) {
-                $refuse("Wrong game: the installed game is Steam app {$readSteam}, the picked one is "
-                      . "Steam app {$foundSteam}. Pick the game again.");
-            }
-        }
-
-        $engine = $read['engine'] ?? null;
-        $engines = $external['engines'] ?? [];
-
-        if ($engine && $engines !== [] && !in_array(mb_strtolower($engine), array_map('mb_strtolower', $engines), true)) {
-            $refuse("Wrong game: the picked one is made with " . implode(', ', $engines)
-                  . ", the installed game with {$engine}. Pick the game again.");
-        }
-    }
-
-    /**
-     * The IGDB or RAWG id the stores' answer carries, as the column to fill — only where the card
-     * has none and no other card holds it.
-     *
-     * 🔴 **The answer the card was made from is kept, not thrown away** (analyse/
-     * identite-des-jeux-parcours.md, T5/T12). This path wrote the Steam id of an answer and never
-     * its IGDB or RAWG id, while the web upload did the opposite: a card's sources depended on
-     * which door it came in by, and "Check stores" had to guess back by title an id the site had
-     * held in hand. ⚠ Never over a value already there, and never one another card answers to:
-     * that would make one game two cards' — the same rule as StoreProposals::apply.
-     *
-     * @return array<string, int|string> Zero or one `column => id`.
-     */
-    private function storeIdsFor(?Game $card, array $externalGame): array
-    {
-        $field = match ($externalGame['source'] ?? null) {
-            'igdb' => 'igdb_id',
-            'rawg' => 'rawg_id',
-            default => null,
-        };
-        $id = $externalGame['id'] ?? null;
-
-        if ($field === null || $id === null || ($card && $card->{$field})) {
-            return [];
-        }
-
-        $heldElsewhere = Game::where($field, $id)
-            ->when($card, fn ($q) => $q->where('id', '!=', $card->id))
-            ->exists();
-
-        return $heldElsewhere ? [] : [$field => $id];
+        return \App\Services\GameFiling::pickFrom($request->input('game_pick'));
     }
 
     /**
@@ -1901,117 +1659,6 @@ class TranslationController extends Controller
         }
 
         return $fullId;
-    }
-
-    /**
-     * Gives a card the Steam id it was created without — as the id of a game, never of a demo.
-     *
-     * 🔴 **The last place an identity was written without being checked.** A card created from a
-     * copy that has no Steam id (GOG, Epic, a disc) gets one from the first upload that carries one
-     * — and if that upload came from the DEMO, the card's main id became the demo's. Every later
-     * player of the full game then resolved nothing, and the card they were meant to find was
-     * sitting there under an id that is not the game's.
-     *
-     * ⚠ **One store call, and only here**: the condition is a card with no id at all, so it can
-     * happen once per card and never again. If Steam does not answer, the id is written as sent —
-     * the behaviour that shipped — rather than the upload being refused for a detail.
-     *
-     * ⚠ Filling a blank only, exactly as before: an id already recorded is never moved.
-     */
-    private function attachSteamId(Game $game, ?string $steamId): void
-    {
-        if (!$steamId || $game->steam_id) {
-            return;
-        }
-
-        $store = app(GameSearchService::class)->getGameFromSteam($steamId);
-        $demoId = $store['demo_steam_id'] ?? null;
-
-        if ($demoId && !empty($store['steam_id'])) {
-            $game->update(['steam_id' => $store['steam_id']]);
-            GameIdentifier::remember($game, GameIdentifier::Steam, $demoId, GameIdentifier::BecauseDemo);
-
-            return;
-        }
-
-        $game->update(['steam_id' => $steamId]);
-    }
-
-    /**
-     * Records the demo's own app id on the game it is a demo of.
-     *
-     * 🔴 **So the store is asked once, not once per player.** The resolution above only reaches the
-     * network when nothing local matched; without this, every player on that demo would take the
-     * same two round-trips to Steam to reach the same card. With it, the second one resolves in the
-     * database — which is also what makes the card reachable when Steam is down.
-     *
-     * ⚠ The write refuses on its own if that id belongs elsewhere (App\Models\GameIdentifier);
-     * there is nothing to decide here.
-     */
-    private function rememberDemoId(Game $game, array $externalGame): void
-    {
-        $demoId = $externalGame['demo_steam_id'] ?? null;
-
-        if ($demoId) {
-            GameIdentifier::remember($game, GameIdentifier::Steam, $demoId, GameIdentifier::BecauseDemo);
-        }
-    }
-
-    /**
-     * Writes what a machine reported about a game, without ever overwriting what is there.
-     *
-     * ⚠ Only fills blanks. A game published from two installs can report two different product
-     * names — a repack, a demo, a regional build — and letting the last upload win would move the
-     * key other machines resolve with, silently.
-     */
-    private function rememberUnityNames(Game $game, ?string $gameName, ?string $company): void
-    {
-        // 🔴 **Never on a game that has a Steam id, and that single line closes the hole.**
-        //
-        // `unity_name` is only ever consulted for games WITHOUT a Steam id — anything carrying one
-        // is resolved by it, before any name is looked at. So writing it on a game that has one
-        // buys nothing, and costs everything: an account could publish a translation declaring the
-        // Steam id of a popular game and any product name it liked, and that name became the key
-        // every other machine resolves with. From then on, players of the real game — the ones
-        // without a Steam id, precisely those this column serves — were shown the popular game's
-        // translations, offered them for install, and had their own uploads filed under it.
-        //
-        // ⚠ And "never overwrite" made it permanent rather than protecting anything: the squatter
-        // held the name for good.
-        //
-        // ⚠ **Refusing outright would cost the very case this column exists for**, and it did for
-        // half a day: a game published from a Steam copy carries an id, so it would never record
-        // its product name — and a copy of that game WITHOUT one (a repack, a store that is not
-        // Steam) is exactly who needs it. So the rule is narrower: on a game holding an id, the
-        // declared name is recorded only when it is a FORM OF THE TITLE that game already carries.
-        //
-        // "LONESTAR" against "Lonestar: The Game" passes; "Cattails" against "Cat" does not, and
-        // neither does anything unrelated. Compared without case, spaces or punctuation, because
-        // that is the whole difference between a product name and a shop title.
-        if ($game->steam_id && !\App\Support\GameNaming::isFormOfTitle($gameName, $game->name)) {
-            return;
-        }
-
-        $fill = [];
-
-        // ⚠ **Refused when the name already belongs to another game**, under either column. A
-        // declared string may not be made to collide with a name somebody else's game answers to.
-        $taken = $gameName !== null && Game::where('id', '!=', $game->id)
-            ->where(fn ($q) => $q->where('unity_name', $gameName)
-                                 ->orWhereRaw('LOWER(name) = ?', [strtolower($gameName)]))
-            ->exists();
-
-        if ($gameName && !$game->unity_name && !$taken) {
-            $fill['unity_name'] = $gameName;
-        }
-
-        if ($company && !$game->unity_company) {
-            $fill['unity_company'] = $company;
-        }
-
-        if ($fill !== []) {
-            $game->update($fill);
-        }
     }
 
 

@@ -170,7 +170,7 @@ class BranchAcceptanceTest extends TestCase
         ]));
 
         $this->actingAs($user)->post(route('translations.store'), [
-            'game_id' => $game->id,
+            'game_pick' => ['source' => 'local', 'id' => $game->id],
             'source_language' => 'English',
             'target_language' => 'French',
             'status' => 'in_progress',
@@ -198,7 +198,7 @@ class BranchAcceptanceTest extends TestCase
         ]));
 
         $this->actingAs($user)->post(route('translations.store'), [
-            'game_id' => $game->id,
+            'game_pick' => ['source' => 'local', 'id' => $game->id],
             'source_language' => 'English',
             'target_language' => 'French',
             'status' => 'in_progress',

@@ -8,7 +8,6 @@ use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
 use App\Services\CatalogStore;
-use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
@@ -30,8 +29,13 @@ class TranslationController extends Controller
         $languages = CatalogStore::languageNames();
 
         $request->validate([
-            'game_id' => 'nullable|exists:games,id',
-            'game_name' => 'required_without:game_id|string|max:255',
+            // The hit the person picked in the form's list — the same `game_pick` the upload API
+            // takes, resolved by the same creator (App\Services\GameFiling). Required where the
+            // upload creates a row; an update or a branch keeps its game and the form sends none.
+            'game_pick' => 'nullable|array',
+            'game_pick.source' => ['required_with:game_pick', 'string', 'in:' . implode(',', \App\Services\GameResolver::PickSources)],
+            'game_pick.id' => ['required_with:game_pick', 'regex:/^\d{1,20}$/'],
+            'game_name' => 'nullable|string|max:255',
             'source_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'target_language' => ['required', 'string', 'in:' . implode(',', $languages)],
             'status' => 'nullable|in:in_progress,complete', // Optional - branches inherit from Main
@@ -41,8 +45,6 @@ class TranslationController extends Controller
             'accepts_branches' => 'nullable|boolean',
             'notes' => 'nullable|string|max:1000',
             'file' => 'required|file|mimes:json|max:65536', // 64 MB, in kilobytes — the socle's limit
-            'game_source' => 'required_without:game_id|string|in:igdb,rawg',
-            'game_external_id' => 'required_without:game_id|integer',
             // ⚠ No image field any more: the picture on a game's card comes from the source the
             // id names, re-asked server-side — see findOrCreateGame. A URL from the form was one
             // the visitor's browser then fetched from wherever the uploader chose.
@@ -127,14 +129,19 @@ class TranslationController extends Controller
 
         // Resolve game by case (game_id is part of a translation's identity once created):
         //   UPDATE → keep the translation's existing game (never mutate)
-        //   FORK   → inherit the parent's game (a fork is by definition same-game)
-        //   NEW    → resolve via findOrCreateGame (form's game_id / external_id / etc.)
+        //   BRANCH → the Main's game (same lineage)
+        //   NEW    → the hit picked in the form's list (findOrCreateGame)
         if ($existingTranslation) {
             $game = $existingTranslation->game;
         } elseif ($originalTranslation) {
             $game = $originalTranslation->game;
         } else {
             $game = $this->findOrCreateGame($request);
+
+            // The same words the form shows when nothing is picked: a choice is what is missing.
+            if (!$game) {
+                return back()->withInput()->withErrors(['game' => __('upload.please_select_game')]);
+            }
         }
 
         // Note: 'type' is now a computed attribute from HVASM stats (getTypeAttribute)
@@ -256,10 +263,8 @@ class TranslationController extends Controller
 
             // What the form sent about the game, beside the card it landed on (T21).
             'sent' => [
-                'game_id' => $request->input('game_id'),
                 'game_name' => $request->input('game_name'),
-                'game_source' => $request->input('game_source'),
-                'game_external_id' => $request->input('game_external_id'),
+                'game_pick' => \App\Services\GameFiling::pickFrom($request->input('game_pick')),
             ],
         ], $request);
 
@@ -1503,67 +1508,34 @@ class TranslationController extends Controller
     }
 
     /**
-     * Find or create a game based on existing game_id or external API data.
+     * The game a NEW translation from the upload form belongs to — by the hit the person picked in
+     * the form's list (`game_pick`), through the one creator the upload API uses too
+     * (App\Services\GameFiling). Null when the pick names nothing.
      *
-     * 🔴 **The form names the game; the source describes it.** The upload page sent the title and
-     * the cover URL it had shown, and this wrote both into the card as they came. So a line with
-     * the real IGDB id of a popular game and a title of the uploader's choosing captured every
-     * later upload of that game — page title, JSON-LD, og:image included — and a cover hosted on
-     * the uploader's own server made every visitor of the game's pages send it their address,
-     * which is precisely the leak the provider-avatar change was made to close. The id is the only
-     * thing the form is trusted for: what that id names is asked of the source again, here.
+     * 🔴 **The form names the game; the source describes it.** The page used to send the title and
+     * the cover URL it had shown, and both went into the card as they came — so a line with the real
+     * id of a popular game and a title of the uploader's choosing captured every later upload of that
+     * game, and a cover hosted on the uploader's own server made every visitor of the game's pages
+     * send it their address. The pick is the only thing the form is trusted for: what it names is
+     * read from the card, or asked of the source again (GameResolver::locatePick).
      *
-     * ⚠ When the source does not answer — a rate limit, an outage — the upload still goes through
-     * under the title the form gave, said in the log, and with no cover at all: a card without a
-     * picture is an inconvenience, a card whose picture is somebody's tracker is not.
+     * ⚠ No `game_read` here: the file's `_game` is what the mod held when it saved, which can be the
+     * game picked in a session rather than what the game's files say — not a fact to refuse on.
      */
-    private function findOrCreateGame(Request $request): Game
+    private function findOrCreateGame(Request $request): ?Game
     {
-        // If we have a direct game_id (from UUID auto-detection), use it
-        if ($request->filled('game_id')) {
-            return Game::findOrFail($request->input('game_id'));
+        $pick = \App\Services\GameFiling::pickFrom($request->input('game_pick'));
+
+        if ($pick === null) {
+            return null;
         }
 
-        $source = $request->input('game_source');
-        $externalId = (int) $request->input('game_external_id');
-        $idField = $source === 'igdb' ? 'igdb_id' : 'rawg_id';
-
-        $described = app(GameSearchService::class)->getGame($externalId, $source);
-
-        if ($described === null) {
-            Log::info('Web upload: the game source did not answer, the card keeps the form title and no cover', [
-                'source' => $source,
-                'external_id' => $externalId,
-            ]);
-        }
-
-        $name = $described['name'] ?? $request->input('game_name');
-        $imageUrl = $described['image_url'] ?? null;
-
-        // Try to find existing game by external ID
-        $game = Game::where($idField, $externalId)->first();
-
-        if ($game) {
-            // A cover the card did not have yet, from the source and nowhere else.
-            if ($imageUrl && !$game->image_url) {
-                $game->update(['image_url' => $imageUrl]);
-            }
-            return $game;
-        }
-
-        // Create new game with external ID
-        $created = Game::create([
-            'name' => $name,
-            $idField => $externalId,
-            'image_url' => $imageUrl,
-        ]);
-
-        // 🔴 **Rated before it can ever be listed**, the same rule as the upload API's own path
-        // (Api\TranslationController::resolveGame). A card created here carries no Steam id — it
-        // came from an IGDB or RAWG pick in the publish form — so the judgment falls to IGDB's
-        // themes, which is exactly what App\Services\AdultRating keeps as its fallback.
-        app(\App\Services\AdultRating::class)->rate($created);
-
-        return $created;
+        return app(\App\Services\GameFiling::class)->cardFor(
+            null,
+            $request->filled('game_name') ? $request->game_name : null,
+            null,
+            $pick,
+            null,
+        );
     }
 }

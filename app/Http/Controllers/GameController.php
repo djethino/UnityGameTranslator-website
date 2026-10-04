@@ -429,19 +429,13 @@ class GameController extends Controller
      */
     public function searchExternal(Request $request, GameSearchService $gameService)
     {
-        // Steam ID exact lookup (from mod's _game metadata)
+        // Steam ID exact lookup (from the file's `_game`): the card of ours answering to it, or what
+        // Steam says about it — the same answer, in the same shape, as the publish list of the mod
+        // and the Manager (`GET /api/v1/games/search?steam_id=`).
         if ($request->filled('steam_id')) {
-            $steamId = $request->get('steam_id');
+            $games = $gameService->searchFull(null, (string) $request->get('steam_id'), 1);
 
-            // Use findBySteamId: local DB → Steam API
-            $game = $gameService->findBySteamId($steamId);
-            if ($game) {
-                $game['auto_detected'] = true;
-                return response()->json([$game]);
-            }
-
-            // Not found by steam_id
-            return response()->json([]);
+            return response()->json(array_map(fn ($game) => $game + ['auto_detected' => true], $games));
         }
 
         // Name search: use searchFull for complete flow (local → Steam → IGDB → RAWG)

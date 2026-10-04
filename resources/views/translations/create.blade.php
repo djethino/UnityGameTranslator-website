@@ -82,10 +82,11 @@
                 <i id="game_search_icon" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <i id="game_loading" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hidden"></i>
             </div>
-            <input type="hidden" name="game_id" id="game_id" value="">
+            {{-- The hit picked, sent back as it was given: its source and its id there — the same
+                 `game_pick` the mod and the Manager send (App\Services\GameFiling). --}}
             <input type="hidden" name="game_name" id="game_name" value="">
-            <input type="hidden" name="game_source" id="game_source" value="">
-            <input type="hidden" name="game_external_id" id="game_external_id" value="">
+            <input type="hidden" name="game_pick[source]" id="game_pick_source" value="">
+            <input type="hidden" name="game_pick[id]" id="game_pick_id" value="">
             <div id="game_suggestions" class="absolute w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 hidden z-10 max-h-80 overflow-y-auto shadow-xl"></div>
             <p id="game_error" class="text-red-400 text-sm mt-1 hidden">{{ __('upload.please_select_game') }}</p>
         </div>
@@ -282,10 +283,9 @@ const contributionsSection = document.getElementById('contributionsSection');
 const submitBtn = document.getElementById('submitBtn');
 
 // Form fields
-const gameId = document.getElementById('game_id');
 const gameName = document.getElementById('game_name');
-const gameSource = document.getElementById('game_source');
-const gameExternalId = document.getElementById('game_external_id');
+const pickSource = document.getElementById('game_pick_source');
+const pickId = document.getElementById('game_pick_id');
 const gameSearch = document.getElementById('game_search');
 const sourceLang = document.getElementById('source_language');
 const targetLang = document.getElementById('target_language');
@@ -483,8 +483,10 @@ function showAutoDetected(data) {
     detectionResult.classList.remove('hidden');
     detectionResult.innerHTML = detectionMessage;
 
-    // Set game info
-    gameId.value = data.game.id;
+    // Set game info. An update or a branch keeps its game on the server; the card is named anyway,
+    // so the form never travels without a game.
+    pickSource.value = 'local';
+    pickId.value = data.game.id;
     gameName.value = data.game.name;
     document.getElementById('display_game_name').textContent = data.game.name;
     // Build via DOM: data.uploader is a user-controlled OAuth display name (XSS sink if innerHTML)
@@ -556,50 +558,29 @@ async function showNewTranslation() {
                    ['New translation! Searching for game "' + (fileGameMetadata.name || 'Unknown') + '"...']);
 
         try {
-            // Try steam_id first (more precise), fallback to name
-            let searchUrl = '/api/games/search-external?';
+            // 🔴 **A Steam id in the file names the game by a fact; a name only opens the list.** The
+            // first hit of a title search used to be selected on its own — the very fault that filed
+            // translations under another series' game (analyse/identite-des-jeux-parcours.md, T6).
+            // A name now fills the search box and the person picks, as in the mod and the Manager.
+            let found = null;
             if (fileGameMetadata.steam_id) {
-                searchUrl += 'steam_id=' + encodeURIComponent(fileGameMetadata.steam_id);
-            } else if (fileGameMetadata.name) {
-                searchUrl += 'q=' + encodeURIComponent(fileGameMetadata.name);
+                const res = await fetch('/api/games/search-external?steam_id=' + encodeURIComponent(fileGameMetadata.steam_id));
+                const games = await res.json();
+                found = games.length > 0 ? games[0] : null;
             }
 
-            const res = await fetch(searchUrl);
-            const games = await res.json();
-
-            if (games.length > 0) {
-                const game = games[0];
-
-                // Auto-select the game
-                gameSearch.value = game.name;
-                gameName.value = game.name;
-                gameSource.value = game.source || '';
-                gameExternalId.value = game.id || '';
-
-                if (game.local_id) {
-                    gameId.value = game.local_id;
-                }
-
-                if (game.image_url) {
-                    gameImageThumb.src = game.image_url;
-                    gameImagePreview.classList.remove('hidden');
-                    gameSearchIcon.classList.add('hidden');
-                }
-
-                gameSelected = true;
-
-                // Update detection message
-                const autoLabel = game.auto_detected ? ' (auto-detected from file)' : '';
+            if (found) {
+                choosePick(found);
                 showNotice('bg-green-900/30 border border-green-700', 'text-green-300', 'fas fa-check-circle',
-                           ['New translation! Game found: ', { strong: game.name }, autoLabel],
+                           ['New translation! Game found: ', { strong: found.name }, ' (auto-detected from file)'],
                            'You can change the game selection below if needed.');
             } else {
-                // No game found - show manual selection
                 if (fileGameMetadata.name) {
                     gameSearch.value = fileGameMetadata.name;
+                    gameSearch.dispatchEvent(new Event('input'));
                 }
-                showNotice('bg-yellow-900/30 border border-yellow-700', 'text-yellow-300', 'fas fa-exclamation-triangle',
-                           ['New translation! Game "' + (fileGameMetadata.name || 'Unknown') + '" not found. Please select it manually.']);
+                showNotice('bg-blue-900/30 border border-blue-700', 'text-blue-300', 'fas fa-plus-circle',
+                           ['New translation! Please select the game below.']);
             }
         } catch (e) {
             console.error('Game search error:', e);
@@ -679,14 +660,31 @@ const gameSearchIcon = document.getElementById('game_search_icon');
 const gameImagePreview = document.getElementById('game_image_preview');
 const gameImageThumb = document.getElementById('game_image_thumb');
 
+// The one way a hit becomes the form's game: its source and its id in that source — a Steam hit is
+// named by its Steam id, every other by `id` — sent back as `game_pick`, the pair the mod and the
+// Manager send too. Nothing else about the hit is trusted by the server.
+function choosePick(g) {
+    gameSearch.value = g.name;
+    gameName.value = g.name;
+    pickSource.value = g.source || '';
+    pickId.value = (g.source === 'steam' ? g.steam_id : g.id) ?? '';
+
+    if (g.image_url) {
+        gameImageThumb.src = g.image_url;
+        gameImagePreview.classList.remove('hidden');
+        gameSearchIcon.classList.add('hidden');
+    }
+
+    gameSelected = pickSource.value !== '' && String(pickId.value) !== '';
+}
+
 gameSearch.addEventListener('input', function() {
     const q = this.value;
 
     // Clear selection
-    gameId.value = '';
     gameName.value = '';
-    gameSource.value = '';
-    gameExternalId.value = '';
+    pickSource.value = '';
+    pickId.value = '';
     gameImagePreview.classList.add('hidden');
     gameSearchIcon.classList.remove('hidden');
     gameSelected = false;
@@ -734,7 +732,8 @@ gameSearch.addEventListener('input', function() {
                 let sourceLabel = '';
                 if (g.source === 'igdb') sourceLabel = '<span class="text-xs bg-purple-600 px-1.5 py-0.5 rounded ml-2">IGDB</span>';
                 else if (g.source === 'rawg') sourceLabel = '<span class="text-xs bg-blue-600 px-1.5 py-0.5 rounded ml-2">RAWG</span>';
-                else if (g.local_id) sourceLabel = '<span class="text-xs bg-green-600 px-1.5 py-0.5 rounded ml-2">Local</span>';
+                else if (g.source === 'steam') sourceLabel = '<span class="text-xs bg-gray-600 px-1.5 py-0.5 rounded ml-2">Steam</span>';
+                else if (g.source === 'local') sourceLabel = '<span class="text-xs bg-green-600 px-1.5 py-0.5 rounded ml-2">Local</span>';
 
                 const nameWrap = document.createElement('div');
                 nameWrap.className = 'flex-1 min-w-0';
@@ -746,24 +745,8 @@ gameSearch.addEventListener('input', function() {
                 div.append(imgEl, nameWrap);
 
                 div.addEventListener('click', () => {
-                    gameSearch.value = g.name;
-                    gameName.value = g.name;
-                    gameSource.value = g.source || '';
-                    gameExternalId.value = g.id || '';
-
-                    // For local games, set game_id instead
-                    if (g.local_id) {
-                        gameId.value = g.local_id;
-                    }
-
-                    if (g.image_url) {
-                        gameImageThumb.src = g.image_url;
-                        gameImagePreview.classList.remove('hidden');
-                        gameSearchIcon.classList.add('hidden');
-                    }
-
+                    choosePick(g);
                     gameSuggestions.classList.add('hidden');
-                    gameSelected = true;
                     document.getElementById('game_error').classList.add('hidden');
                     updateSubmitButton();
                 });
