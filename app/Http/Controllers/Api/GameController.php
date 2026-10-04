@@ -104,11 +104,7 @@ class GameController extends Controller
      */
     public function search(Request $request, GameSearchService $gameSearchService): JsonResponse
     {
-        $results = $gameSearchService->searchFull(
-            $request->input('q'),
-            $request->input('steam_id'),
-            15
-        );
+        $results = $gameSearchService->searchFull($request->input('q'), $request->input('steam_id'));
 
         return response()->json([
             'count' => count($results),

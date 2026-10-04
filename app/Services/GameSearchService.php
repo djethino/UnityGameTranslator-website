@@ -36,10 +36,11 @@ class GameSearchService
      *
      * @param string|null $query Search query (game name)
      * @param string|null $steamId Steam App ID for exact match
-     * @param int $limit Maximum results to return
-     * @return array Results, each game once (deduplicateResults)
+     * @param int $perSource How many answers the catalogue and each store are asked for — the size
+     *                       of the question, which bounds the list; nothing found is cut afterwards
+     * @return array Results, each game once (deduplicateResults), best matches first
      */
-    public function searchFull(?string $query, ?string $steamId = null, int $limit = 15): array
+    public function searchFull(?string $query, ?string $steamId = null, int $perSource = 10): array
     {
         $results = [];
 
@@ -60,14 +61,9 @@ class GameSearchService
             $typed[] = ['source' => 'steam', 'id' => $steamId];
         }
 
-        // 1. Check local database FIRST (saves API quota)
-        $byTitle = 0;
+        // 1. The catalogue of ours: a card here is the one to pick when it is the game.
         if ($query && strlen($query) >= 2) {
-            $localGames = $this->searchLocal($query, 5);
-            foreach ($localGames as $game) {
-                $results[] = $game;
-            }
-            $byTitle = count($localGames);
+            $results = array_merge($results, $this->searchLocal($query, $perSource));
         }
 
         // 2. The games those ids name — the card of ours holding it, or what that source says.
@@ -93,25 +89,23 @@ class GameSearchService
         }
         $results = array_merge($byId, $results);
 
-        // 3. Call IGDB if not enough results (IGDB is free). Its hits carry their Steam id when
-        // IGDB knows it, so a pick from here names the game by id even from a client that only
-        // sends a title and a Steam id (every released mod and Manager).
+        // 3-5. Every store, by title: IGDB (its hits carry the Steam id it links, so a pick from
+        // here names the game by id even from a client that only sends a title and a Steam id),
+        // Steam's own search (the games IGDB does not know), RAWG.
         //
-        // ⚠ "Enough" counts the catalogue's TITLE matches only: the answers to a typed id are a
-        // different question, and three of them ("2048" asked of Steam, IGDB and RAWG) used to
-        // stop the title from ever being searched.
-        if ($byTitle < 3 && $query && strlen($query) >= 2) {
-            $igdbResults = $this->searchIGDB($query, 10);
-            $results = array_merge($results, $igdbResults);
-        }
-
-        // 4. Steam's own search, by title: the games IGDB does not know, each with its id. Loose —
-        // it answers neighbours too — which is fine in a list a person reads, and why nothing
-        // automatic ever takes its first hit (findGame keeps exact titles only).
+        // 🔴 **Never skipped because the list "has enough"** (user, 2026-10-04: "3 c'est pas
+        // beaucoup, c'est pas source de cacher les bons résultats ?"). IGDB was asked only when the
+        // catalogue held fewer than 3 matching cards, RAWG only when everything else was empty: a
+        // title shared by three cards of ours hid the real game, which only a store knew — and a
+        // list without the right game is how a person picks a wrong one. A store is skipped only
+        // when it cannot be asked. These searches come from a person picking a game in a publish
+        // or change-game list, so the quota they cost stays small.
         //
-        // ⚠ Asked whatever IGDB answered: IGDB answers neighbours for a game it does not know, so
-        // "enough results already" would have skipped Steam exactly when only Steam has the game.
+        // ⚠ Loose by nature — stores answer neighbours too — which is fine in a list a person
+        // reads, and why nothing automatic ever takes a first hit (findGame keeps exact titles).
         if ($query && strlen($query) >= 2) {
+            $results = array_merge($results, $this->searchIGDB($query, $perSource));
+
             foreach ($this->steamSearch($query) as $hit) {
                 $results[] = [
                     'name' => $hit['name'],
@@ -120,12 +114,8 @@ class GameSearchService
                     'source' => 'steam',
                 ];
             }
-        }
 
-        // 5. Call RAWG only if still no results (RAWG has paid quota)
-        if (empty($results) && $query && strlen($query) >= 2) {
-            $rawgResults = $this->searchRAWG($query, 10);
-            $results = array_merge($results, $rawgResults);
+            $results = array_merge($results, $this->searchRAWG($query, $perSource));
         }
 
         $results = $this->deduplicateResults($results);
@@ -133,10 +123,12 @@ class GameSearchService
         // Calculate match_score for each result
         $results = $this->calculateMatchScores($results, $query, $steamId);
 
-        // Sort by match_score descending (best matches first)
+        // Best matches first. ⚠ Nothing is cut after the sort: each source was asked for
+        // `$perSource` answers, which bounds the list; dropping rows already found would only hide
+        // a right answer that ranked low.
         usort($results, fn($a, $b) => ($b['match_score'] ?? 0) <=> ($a['match_score'] ?? 0));
 
-        return array_slice($results, 0, $limit);
+        return $results;
     }
 
     /**
@@ -146,7 +138,7 @@ class GameSearchService
      * catalogue's rule (Translation::scopePubliclyListed): it used to count every row, branches
      * and delisted files included, and weighted the match score with them.
      */
-    public function searchLocal(string $query, int $limit = 5): array
+    public function searchLocal(string $query, int $limit = 10): array
     {
         // ⚠ By title in its own script OR in latin letters (Game::scopeTitleMatches). This is the
         // search behind the publish form: without the latin half, somebody publishing for
@@ -160,10 +152,15 @@ class GameSearchService
         //
         // ⚠ And by the names the machines of its translations read (Game::readAs), which a card
         // with a Steam id never takes as `unity_name` when they do not look like its title.
+        //
+        // ⚠ The exact matches come first, BEFORE the limit: a short word matches many titles, and
+        // the card whose title or name on disk IS the query must never be the one cut.
         return Game::titleMatches($query)
             ->orWhere('unity_name', $query)
             ->orWhereIn('id', Game::readAs([$query])->flatten()->all())
             ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
+            ->orderByRaw('(LOWER(name) = ? OR unity_name = ?) DESC', [mb_strtolower(trim($query)), trim($query)])
+            ->orderBy('name')
             ->limit($limit)
             ->get()
             ->map(fn (Game $game) => $this->localRow($game))

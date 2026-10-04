@@ -503,6 +503,20 @@ class GameIdentificationTest extends TestCase
         $this->assertSame('Lost Echo From RAWG', $rawg[0]['name'] ?? null);
     }
 
+    public function test_the_stores_are_asked_however_many_cards_of_ours_match(): void
+    {
+        // Three cards of ours share a word with the title; the real game is only in a store.
+        foreach (['Legacy One', 'Legacy Two', 'Legacy Three'] as $name) {
+            Game::create(['name' => $name]);
+        }
+        $this->stores(['Legacy' => [$this->igdbGame(22, 'Legacy', '500')]]);
+
+        $names = collect(app(GameSearchService::class)->searchFull('Legacy'))->pluck('name')->all();
+
+        $this->assertContains('Legacy', $names, 'a store answer is never hidden by cards of ours');
+        $this->assertCount(4, $names);
+    }
+
     public function test_a_card_is_offered_by_the_name_its_game_states_on_disk(): void
     {
         $card = Game::create(['name' => 'Chronicles of the Long Road', 'unity_name' => 'CLR']);

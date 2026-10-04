@@ -433,7 +433,7 @@ class GameController extends Controller
         // Steam says about it — the same answer, in the same shape, as the publish list of the mod
         // and the Manager (`GET /api/v1/games/search?steam_id=`).
         if ($request->filled('steam_id')) {
-            $games = $gameService->searchFull(null, (string) $request->get('steam_id'), 1);
+            $games = $gameService->searchFull(null, (string) $request->get('steam_id'));
 
             return response()->json(array_map(fn ($game) => $game + ['auto_detected' => true], $games));
         }
@@ -446,7 +446,7 @@ class GameController extends Controller
         }
 
         // searchFull handles: local DB first, then external APIs, with deduplication
-        $results = $gameService->searchFull($query, null, 10);
+        $results = $gameService->searchFull($query);
 
         return response()->json($results);
     }
