@@ -1275,12 +1275,31 @@ class TranslationController extends Controller
         //            (analyse/identite-des-jeux-parcours.md, T11). A fork is a translation of the
         //            game it was taken from — the plugin's _game payload is informational here.
         //   NEW    → resolve via findOrCreateGame (steam_id → name → external API → create)
-        if ($existingTranslation) {
-            $game = $existingTranslation->game;
-        } elseif ($originalTranslation) {
-            $game = $originalTranslation->game;
-        } elseif ($forkedFrom?->game) {
-            $game = $forkedFrom->game;
+        $lineageGame = $existingTranslation?->game ?? $originalTranslation?->game ?? $forkedFrom?->game;
+
+        if ($lineageGame) {
+            $game = $lineageGame;
+
+            // 🔴 The game a lineage is filed under is checked against what the installation read
+            // (GameFiling::refuseIntoLineage) — the way out named for the one who can act on it.
+            $mayMove = $existingTranslation
+                ? \App\Services\LineageGame::mayChange($existingTranslation, $request->user(), false)
+                : null;
+            $wayOut = match (true) {
+                $mayMove === \App\Services\LineageGame::AnyGame => 'Change its game on the website, then publish again.',
+                $mayMove === \App\Services\LineageGame::OriginalsGame,
+                !$existingTranslation && !$originalTranslation => 'Only the owner of the translation it was forked from can change its game.',
+                default => 'Only the owner of the Main can change its game.',
+            };
+
+            try {
+                app(\App\Services\GameFiling::class)->refuseIntoLineage($game, $this->gameRead($request), $wayOut);
+            } catch (\App\Exceptions\WrongGame $wrong) {
+                return response()->json([
+                    'error' => $wrong->getMessage(),
+                    'refused_code' => \App\Exceptions\WrongGame::Code,
+                ], 422);
+            }
         } else {
             $game = $this->findOrCreateGame($request);
             if (!$game) {

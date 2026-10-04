@@ -346,6 +346,104 @@ class GameIdentificationTest extends TestCase
         $this->assertSame('900', Translation::latest('id')->first()->game->steam_id);
     }
 
+    // ── an upload into a lineage that exists ────────────────────────────────────────────────
+
+    /** A lineage filed under `$game`: the Main's owner, and the uuid of its file. */
+    private function lineageOn(Game $game): array
+    {
+        $uuid = (string) Str::uuid();
+        $owner = User::factory()->create();
+
+        $this->publish([
+            'game_name' => $game->name,
+            'game_pick' => ['source' => 'local', 'id' => $game->id],
+            'content' => json_encode(['_uuid' => $uuid, 'Hello' => ['v' => 'Bonjour', 't' => 'H']]),
+        ], $owner)->assertSuccessful();
+
+        return [$owner, $uuid];
+    }
+
+    private function contentOf(string $uuid): string
+    {
+        return json_encode(['_uuid' => $uuid, 'Hello' => ['v' => 'Bonjour', 't' => 'H'], 'Line ' . uniqid() => ['v' => 'Ligne', 't' => 'H']]);
+    }
+
+    public function test_an_update_from_another_game_is_refused_with_the_way_out(): void
+    {
+        $this->stores();
+        $wrong = Game::create(['name' => 'Lost Echo', 'steam_id' => '600']);
+        [$owner, $uuid] = $this->lineageOn($wrong);
+        $hash = Translation::first()->file_hash;
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'content' => $this->contentOf($uuid),
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+        ], $owner)->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_mismatch')
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'Change its game on the website'));
+
+        $this->assertSame($hash, Translation::first()->file_hash);
+    }
+
+    public function test_a_branch_from_another_game_is_refused_and_names_who_can_act(): void
+    {
+        $this->stores();
+        $wrong = Game::create(['name' => 'Lost Echo', 'steam_id' => '600']);
+        [, $uuid] = $this->lineageOn($wrong);
+        Translation::first()->update(['accepts_branches' => true]);
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'content' => $this->contentOf($uuid),
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+        ])->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_mismatch')
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'Only the owner of the Main'));
+
+        $this->assertSame(1, Translation::count());
+    }
+
+    public function test_an_upload_into_a_lineage_of_the_same_game_goes_through(): void
+    {
+        $this->stores();
+        $game = Game::create(['name' => 'Lost Echo', 'steam_id' => '500']);
+        [$owner, $uuid] = $this->lineageOn($game);
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'content' => $this->contentOf($uuid),
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+        ], $owner)->assertSuccessful();
+    }
+
+    public function test_a_demo_of_the_lineages_game_is_that_game_and_remembered(): void
+    {
+        $this->stores([], [
+            '901' => ['name' => 'Lost Echo Demo', 'type' => 'demo', 'fullgame' => ['appid' => '900', 'name' => 'Lost Echo']],
+            '900' => ['name' => 'Lost Echo', 'type' => 'game'],
+        ]);
+        $game = Game::create(['name' => 'Lost Echo', 'steam_id' => '900']);
+        [$owner, $uuid] = $this->lineageOn($game);
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'content' => $this->contentOf($uuid),
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '901'],
+        ], $owner)->assertSuccessful();
+
+        $this->assertTrue(Game::answeringToSteamId('901')->whereKey($game->id)->exists());
+    }
+
+    public function test_a_client_that_reads_nothing_updates_as_before(): void
+    {
+        $this->stores();
+        $game = Game::create(['name' => 'Lost Echo', 'steam_id' => '600']);
+        [$owner, $uuid] = $this->lineageOn($game);
+
+        $this->publish(['game_name' => 'Lost Echo', 'content' => $this->contentOf($uuid), 'steam_id' => '500'], $owner)->assertSuccessful();
+    }
+
     public function test_an_engine_the_store_names_that_is_not_the_games_refuses_it(): void
     {
         $this->stores(['id:22' => [array_merge($this->igdbGame(22, 'Lost Echo'), ['game_engines' => [['name' => 'Unreal Engine 4']]])]]);

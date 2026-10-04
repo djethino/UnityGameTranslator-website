@@ -603,6 +603,23 @@
       "why": "an update keeps the row and its languages whatever the request says about them — here a pair that would be refused on a new translation"
     },
     {
+      "id": "api-v1/upload/refused-an-update-from-another-game",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "alice",
+        "body": {
+          "game_name": "Sample Game", "source_language": "English", "target_language": "French",
+          "game_read": { "product_name": "Sample Game", "steam_id": "999999", "steam_id_from": "steam_appid.txt" },
+          "content": { "$json": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" }, "Quit": { "v": "Quitter", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": { "error": { "$contains": "Change its game on the website" }, "refused_code": "game_mismatch" }
+      },
+      "why": "a lineage that exists keeps its game, so a Steam id read on disk that this game does not answer to is checked there too — otherwise a file taken for the wrong game is republished into that game's lineage; the sentence names the way out for the one who can take it"
+    },
+    {
       "id": "api-v1/upload/contributing-to-somebodys-main",
       "setup": "lineage",
       "request": {

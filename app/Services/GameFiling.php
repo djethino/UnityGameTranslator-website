@@ -233,6 +233,48 @@ class GameFiling
     }
 
     /**
+     * Refuse an upload into an EXISTING lineage — an update, a branch, a fork — when the Steam id the
+     * machine read in the game's files is not the game that lineage is filed under.
+     *
+     * 🔴 **The last step of the chain the 2026-09-04 decision guarded against** (analyse/
+     * identite-des-jeux.md § « Voie écartée », analyse/identite-des-jeux-parcours.md « Tranché »):
+     * a file taken for the wrong game, by any path, republished, became a branch in that other
+     * game's lineage — in everybody's database. Only a new translation was checked (cardFor); a
+     * lineage that exists took its game as given, whatever the installation said.
+     *
+     * ⚠ Sure only: a Steam id read on disk (never a title), against a card that has one. A card
+     * without one, or a client that says nothing it read (released before 2026-10-04), is let
+     * through as before. A demo of the lineage's game is that game: an id no card answers to yet is
+     * asked of the store once, and remembered when it is a demo of this one.
+     *
+     * @param string $wayOut The sentence that says who can put it right — the caller knows the role
+     *
+     * @throws WrongGame before anything is written
+     */
+    public function refuseIntoLineage(Game $game, ?array $read, string $wayOut): void
+    {
+        $readSteam = $read['steam_id'] ?? null;
+
+        if (!$readSteam || !$game->steam_id) {
+            return;
+        }
+
+        if (Game::answeringToSteamId($readSteam)->whereKey($game->id)->exists()) {
+            return;
+        }
+
+        $store = $this->stores->getGameFromSteam($readSteam);
+        if (($store['demo_steam_id'] ?? null) === $readSteam && (string) ($store['steam_id'] ?? '') === (string) $game->steam_id) {
+            $this->rememberDemoId($game, $store);
+
+            return;
+        }
+
+        throw new WrongGame("Wrong game: the installed game is Steam app {$readSteam}, this translation "
+            . "is filed under {$game->name} (Steam app {$game->steam_id}). {$wayOut}");
+    }
+
+    /**
      * Refuse when what the machine read in the game's files CONTRADICTS the game found — and only
      * then.
      *
