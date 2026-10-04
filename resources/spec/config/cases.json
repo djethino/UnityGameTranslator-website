@@ -221,6 +221,20 @@
       "why": "the mod reads an absent notify_prereleases as false; the Manager reads it as 'not said' — reading 'no pre-release notices' as stable would invent an answer for every game written before the key existed"
     },
     {
+      "id": "config/a-confirmed-game-reads-as-it-was-written",
+      "document": { "translation_backend": "none", "game_choice": { "source": "steam", "id": "500", "name": "Lost Echo" } },
+      "written": true,
+      "read": { "ConfirmedGameSource": "steam", "ConfirmedGameId": "500" },
+      "why": "the game the player confirmed is what a publication sends and Community searches with; the detection never writes over it"
+    },
+    {
+      "id": "config/a-confirmed-game-no-publication-could-send-reads-as-none",
+      "document": { "translation_backend": "none", "game_choice": { "source": "itch", "id": "7", "name": "X" } },
+      "written": false,
+      "read": { "ConfirmedGameSource": null, "ConfirmedGameId": null },
+      "why": "a hand-edited value says nothing rather than something wrong: an unknown source is not a game_pick"
+    },
+    {
       "id": "config/a-file-that-is-not-json",
       "raw": "{ \"translation_backend\": \"llm\", ",
       "written": false,

@@ -108,6 +108,16 @@ class SyncStateController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
+        // 🔴 The game the lineage is filed under, on the stream the game reads at startup
+        // (2026-10-05) — and whether this account's branch is held since its Main moved. The
+        // client compares the game with the one its player confirmed and never follows a move in
+        // silence. Additive.
+        $lineageGame = ($ownTranslation ?? $publicTranslation)?->game;
+        $state['game'] = $lineageGame?->lineageBlock();
+        $state['game_switch_pending'] = $ownTranslation && $ownTranslation->visibility === 'branch'
+            ? (bool) $ownTranslation->game_switch_pending
+            : null;
+
         if ($ownTranslation) {
             $role = $ownTranslation->visibility === 'public' ? 'main' : 'branch';
             $state['exists'] = true;

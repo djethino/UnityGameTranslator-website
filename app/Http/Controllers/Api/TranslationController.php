@@ -698,7 +698,7 @@ class TranslationController extends Controller
             // (2026-10-05). A client compares it with the game its player confirmed and says a
             // difference under the game's name; a move by its owner is never followed in silence.
             // Additive.
-            'game' => $translation->game ? $this->lineageGameBlock($translation->game) : null,
+            'game' => $translation->game ? $translation->game->lineageBlock() : null,
             // Who published it. The one endpoint someone with NO ACCOUNT can reach about the
             // translation they installed, so without this the mod can only call them "Website" —
             // it knows the site id it came from and nothing about whose work it is.
@@ -850,7 +850,7 @@ class TranslationController extends Controller
                 // held since its Main moved (`game_switch_pending`) cannot contribute until its
                 // author confirms the new game; the client closes its button with the reason
                 // rather than letting the upload be refused. Additive.
-                'game' => $ownTranslation->game ? $this->lineageGameBlock($ownTranslation->game) : null,
+                'game' => $ownTranslation->game ? $ownTranslation->game->lineageBlock() : null,
                 'game_switch_pending' => $role === 'branch' ? (bool) $ownTranslation->game_switch_pending : null,
                 'translation' => [
                     'id' => $ownTranslation->id,
@@ -914,7 +914,7 @@ class TranslationController extends Controller
                 // upload. Additive; sync/state has said it at this level all along.
                 'accepts_branches' => (bool) $mainTranslation->accepts_branches,
                 // The game this lineage is filed under, as on the caller's own row above. Additive.
-                'game' => $mainTranslation->game ? $this->lineageGameBlock($mainTranslation->game) : null,
+                'game' => $mainTranslation->game ? $mainTranslation->game->lineageBlock() : null,
                 'main' => [
                     'id' => $mainTranslation->id,
                     'uploader' => $mainTranslation->user->name,
@@ -938,20 +938,6 @@ class TranslationController extends Controller
         ]);
     }
 
-    /**
-     * A lineage's game as check-uuid names it: enough for a client to compare with the game its
-     * player confirmed (`id` is the card, the store ids say what game it is) and to name it.
-     */
-    private function lineageGameBlock(Game $game): array
-    {
-        return [
-            'id' => $game->id,
-            'name' => $game->name,
-            'steam_id' => $game->steam_id,
-            'igdb_id' => $game->igdb_id !== null ? (int) $game->igdb_id : null,
-            'rawg_id' => $game->rawg_id !== null ? (int) $game->rawg_id : null,
-        ];
-    }
 
     /**
      * Download a translation file.

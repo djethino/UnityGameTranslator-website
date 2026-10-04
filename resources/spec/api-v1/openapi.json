@@ -906,6 +906,8 @@
           "has_update": { "type": "boolean", "description": "`hash` sent and different from the row's (own row, or the Main's when the caller holds nothing). False when no hash was sent." },
           "vote": { "$ref": "#/components/schemas/VoteState" },
           "accepts_branches": { "type": ["boolean", "null"], "description": "Whether the lineage takes contributions; null when nothing of it is published." },
+          "game": { "$ref": "#/components/schemas/LineageGame" },
+          "game_switch_pending": { "type": ["boolean", "null"], "description": "Additive. On this account's branch: held since its Main moved to another game, until an upload names that game. Null otherwise." },
           "branches_pending_review": { "type": "integer", "description": "Additive, Main with lineage. Same number as `branches_with_work`, deliberately." },
           "branches_with_work": { "type": "integer", "description": "Additive, Main with lineage." },
           "lines_available": { "type": "integer", "description": "Additive, Main with lineage." },

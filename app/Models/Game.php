@@ -58,6 +58,23 @@ class Game extends Model
      * knows about the game is shown on it) — RAWG was missing although cards made from it keep
      * `rawg_id`.
      */
+    /**
+     * This game as the API names the game a lineage is filed under (`LineageGame` in the spec):
+     * the card, its title, and every id it answers to — what a client compares with the game its
+     * player confirmed (common GameChoices). One shape for check-uuid, the public check and the
+     * sync stream.
+     */
+    public function lineageBlock(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'steam_id' => $this->steam_id,
+            'igdb_id' => $this->igdb_id !== null ? (int) $this->igdb_id : null,
+            'rawg_id' => $this->rawg_id !== null ? (int) $this->rawg_id : null,
+        ];
+    }
+
     public function storePages(): array
     {
         $pages = [];
