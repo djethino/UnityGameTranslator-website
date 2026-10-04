@@ -75,7 +75,7 @@
         "tags": ["publish"],
         "operationId": "uploadTranslation",
         "summary": "Publish a file: a new Main, an update of one's own row, or a contribution (branch) to somebody's Main.",
-        "description": "The server decides which of the three it is, from `_uuid` in `content` and who is asking (`common/Uploads` is the client-side prediction; `check-uuid` asks). One of `steam_id`, `game_name` is required. `source_language` and `target_language` are required as catalogue names but IGNORED on an update and on a branch, which keep the row's / the Main's pair. `content` is the translation file as a JSON STRING (see `spec/translation-file`): it must carry `_uuid`, at least one line, and lines in the `{v, t, i?}` form — a bare `\"key\": \"value\"` is refused with 422. `accepts_branches` is only written on a Main and only when sent: absent is 'no opinion'. A fork declares its origin with `forked_from_*`; a pointer the caller could not have held is dropped, never refused. Nobody writes on somebody else's row: an upload into a lineage the caller does not lead becomes THEIR branch, or is refused with 403 and a sentence to show as-is.",
+        "description": "The server decides which of the three it is, from `_uuid` in `content` and who is asking (`common/Uploads` is the client-side prediction; `check-uuid` asks). One of `steam_id`, `game_name`, `game_pick` is required; a new row is filed under the game of `game_pick` when sent, never under a fresh search of a title. `source_language` and `target_language` are required as catalogue names but IGNORED on an update and on a branch, which keep the row's / the Main's pair. `content` is the translation file as a JSON STRING (see `spec/translation-file`): it must carry `_uuid`, at least one line, and lines in the `{v, t, i?}` form — a bare `\"key\": \"value\"` is refused with 422. `accepts_branches` is only written on a Main and only when sent: absent is 'no opinion'. A fork declares its origin with `forked_from_*`; a pointer the caller could not have held is dropped, never refused. Nobody writes on somebody else's row: an upload into a lineage the caller does not lead becomes THEIR branch, or is refused with 403 and a sentence to show as-is.",
         "security": [{ "bearer": [] }],
         "x-throttle": "10/min per token",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadBody" } } } },
@@ -85,7 +85,7 @@
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "description": "Refused: the Main takes no contributions, its owner's account is gone, the Main itself is gone while branches remain, or the caller's branch is frozen. `error` is a whole sentence the mod shows as-is; `refused_code` names the case (additive).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadRefused" } } } },
           "413": { "$ref": "#/components/responses/TooLarge" },
-          "422": { "description": "The file or the request cannot be taken: invalid JSON or lines, no `_uuid`, no line at all, a file identical to one already published (twins), `auto` or equal languages on a new translation, or a Laravel validation failure (`{message, errors}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadUnprocessable" } } } },
+          "422": { "description": "The file or the request cannot be taken: invalid JSON or lines, no `_uuid`, no line at all, a file identical to one already published (twins), `auto` or equal languages on a new translation, the wrong game (`refused_code`: `game_mismatch`, `game_not_found` — a sentence to show as-is, ending on the way out), or a Laravel validation failure (`{message, errors}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadUnprocessable" } } } },
           "429": { "$ref": "#/components/responses/TooMany" }
         }
       }
@@ -257,11 +257,11 @@
         "tags": ["catalogue"],
         "operationId": "searchGamesExternal",
         "summary": "Find a game the site may not know yet: local catalogue first, then Steam, IGDB, RAWG.",
-        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from; `id` and `translations_count` exist only on `local` hits.",
+        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from, `id` is that source's id (absent on `steam` hits, whose id is `steam_id`), and the hit to send back as `game_pick` is that pair. Each game appears once — told apart by its ids, never by its title, so two games of one title are both listed. IGDB hits carry the Steam id IGDB links (`steam_id`) and the engines it names (`engines`). `translations_count` exists only on `local` hits.",
         "security": [{ "bearer": [] }],
         "x-throttle": "60/min per token",
         "parameters": [
-          { "name": "q", "in": "query", "schema": { "type": "string", "minLength": 2 } },
+          { "name": "q", "in": "query", "schema": { "type": "string", "minLength": 2 }, "description": "A title — or a Steam app id, or the address of a Steam store page, searched as that Steam id (bare digits are also searched as a title)." },
           { "name": "steam_id", "in": "query", "schema": { "type": "string" } }
         ],
         "responses": {
@@ -277,12 +277,14 @@
         "tags": ["catalogue"],
         "operationId": "gameAdultRating",
         "summary": "Before publishing: is the picked game for adults only, and may this publication say so?",
-        "description": "Takes the two fields the upload sends and resolves them the way the upload will (the site's GameResolver), so the answer and the upload cannot disagree. `known`: a card already answers — its mark as it stands, `declarable: false`, since its first publisher already had their say. Otherwise the stores are asked on the spot (Steam content descriptor 3 on the app or its DLC, IGDB theme 42 as a fallback), nothing is created, and `declarable` is true only when they found nothing. `source` is the word a reader is shown: `steam`, `igdb`, `contributor` (the author of its first translation) or `admin`, null when not marked. Costs external quota, hence the account.",
+        "description": "Takes the fields the upload sends (`steam_id`, `game_name`, `game_pick`) and resolves them the way the upload will (the site's GameResolver), so the answer and the upload cannot disagree. `known`: a card already answers — its mark as it stands, `declarable: false`, since its first publisher already had their say. Otherwise the stores are asked on the spot (Steam content descriptor 3 on the app or its DLC, IGDB theme 42 as a fallback), nothing is created, and `declarable` is true only when they found nothing. `source` is the word a reader is shown: `steam`, `igdb`, `contributor` (the author of its first translation) or `admin`, null when not marked. Costs external quota, hence the account.",
         "security": [{ "bearer": [] }],
         "x-throttle": "60/min per token",
         "parameters": [
-          { "name": "steam_id", "in": "query", "schema": { "type": "string", "maxLength": 32 }, "description": "Required without `game_name`." },
-          { "name": "game_name", "in": "query", "schema": { "type": "string", "maxLength": 255 }, "description": "Required without `steam_id`." }
+          { "name": "steam_id", "in": "query", "schema": { "type": "string", "maxLength": 32 }, "description": "Required without `game_name` and `game_pick`." },
+          { "name": "game_name", "in": "query", "schema": { "type": "string", "maxLength": 255 }, "description": "Required without `steam_id` and `game_pick`." },
+          { "name": "game_pick[source]", "in": "query", "schema": { "$ref": "#/components/schemas/GameSource" }, "description": "With `game_pick[id]`: the hit the upload will send as `game_pick` — resolved exactly as the upload will." },
+          { "name": "game_pick[id]", "in": "query", "schema": { "type": "string", "pattern": "^[0-9]{1,20}$" } }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameAdultRating" } } } },
@@ -643,7 +645,7 @@
       "Holder": { "type": "string", "enum": ["game", "manager"], "description": "Which product opened an edit session; absent reads as `game`." },
       "RetranslationOutcome": { "type": "string", "enum": ["replaced", "unchanged", "failed"] },
       "MergeDestination": { "type": "string", "enum": ["server", "local"] },
-      "RefusedCode": { "type": "string", "enum": ["branches_refused", "main_abandoned", "main_gone", "branch_frozen"], "description": "Why an upload was refused with 403, beside the sentence: the Main takes no contributions; the Main's owner erased their account; the Main was removed while branches remain; the caller's own branch is frozen (its Main closed since)." },
+      "RefusedCode": { "type": "string", "enum": ["branches_refused", "main_abandoned", "main_gone", "branch_frozen", "game_mismatch", "game_not_found"], "description": "Why an upload was refused, beside the sentence. With 403: the Main takes no contributions; the Main's owner erased their account; the Main was removed while branches remain; the caller's own branch is frozen (its Main closed since). With 422: `game_mismatch` — a fact read in the game's files (`game_read.steam_id`, `game_read.engine`) contradicts the game picked; `game_not_found` — the `game_pick` names nothing (a card removed since, a store id the store does not know)." },
       "GameSource": { "type": "string", "enum": ["local", "steam", "igdb", "rawg"] },
       "ErrorBody": {
         "type": "object",
@@ -958,11 +960,33 @@
       "UploadBody": {
         "type": "object",
         "required": ["source_language", "target_language", "content"],
-        "anyOf": [{ "required": ["steam_id"] }, { "required": ["game_name"] }],
+        "anyOf": [{ "required": ["steam_id"] }, { "required": ["game_name"] }, { "required": ["game_pick"] }],
         "properties": {
-          "steam_id": { "type": ["string", "null"], "description": "Required without `game_name`." },
-          "game_name": { "type": ["string", "null"], "maxLength": 255, "description": "Required without `steam_id`: the product name the machine reads (`Application.productName`), kept as the game's `unity_name`." },
-          "game_company": { "type": ["string", "null"], "maxLength": 255, "description": "The studio Unity records beside the product name." },
+          "steam_id": { "type": ["string", "null"], "description": "Required without `game_name` and `game_pick`. The Steam id of the game the translation is for." },
+          "game_name": { "type": ["string", "null"], "maxLength": 255, "description": "Required without `steam_id` and `game_pick`. Without `game_read`: the product name the machine reads (`Application.productName`), kept as the game's `unity_name` (every client released before 2026-10-04). With `game_read`: the title of the game picked, a display name only — the key comes from `game_read.product_name`." },
+          "game_company": { "type": ["string", "null"], "maxLength": 255, "description": "The studio Unity records beside the product name. Ignored when `game_read` is sent (`game_read.company_name`)." },
+          "game_pick": {
+            "type": ["object", "null"],
+            "required": ["source", "id"],
+            "additionalProperties": false,
+            "description": "Additive. The `/games/search` answer the person took, as it was given: the site files the translation under THAT game — the card (`local`), or the card holding that store id, or one created from what that store says about it — and never searches its title again. Read only when the upload creates a row (NEW); an update, a branch and a fork keep their game.",
+            "properties": {
+              "source": { "$ref": "#/components/schemas/GameSource" },
+              "id": { "type": ["string", "integer"], "pattern": "^[0-9]{1,20}$", "description": "`local`: the card's id; `steam`: the Steam app id; `igdb` / `rawg`: that source's id." }
+            }
+          },
+          "game_read": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "description": "Additive. What the machine READ in the game's own files — facts about this installation, kept on the translation row. `product_name` (with `company_name`) is the key other machines without a Steam id resolve the game by. A Steam id or an engine read here that contradicts the game picked refuses the upload with 422 `game_mismatch`; titles that merely differ are never refused (the client warns before sending).",
+            "properties": {
+              "product_name": { "type": ["string", "null"], "maxLength": 255, "description": "`Application.productName` / the second line of `<Game>_Data/app.info`." },
+              "company_name": { "type": ["string", "null"], "maxLength": 255, "description": "`Application.companyName` / the first line of `app.info`." },
+              "steam_id": { "type": ["string", "integer", "null"], "pattern": "^[0-9]{1,20}$", "description": "A Steam app id found on disk." },
+              "steam_id_from": { "type": ["string", "null"], "maxLength": 32, "description": "Where: `steam_appid.txt`, `appmanifest`." },
+              "engine": { "type": ["string", "null"], "maxLength": 32, "description": "The engine the game runs on, as stores name it: `Unity`." }
+            }
+          },
           "source_language": { "$ref": "#/components/schemas/LanguageName" },
           "target_language": { "$ref": "#/components/schemas/LanguageName" },
           "status": { "$ref": "#/components/schemas/Status", "description": "Main only; a branch inherits. Absent keeps the row's, `in_progress` on a new one." },
@@ -1005,9 +1029,10 @@
       },
       "UploadUnprocessable": {
         "type": "object",
-        "description": "Either the site's own refusal (`error`, with `details` and `hint` when lines are malformed) or Laravel's validation body (`message`, `errors`).",
+        "description": "Either the site's own refusal (`error`, with `details` and `hint` when lines are malformed, `refused_code` when the game is refused) or Laravel's validation body (`message`, `errors`).",
         "properties": {
           "error": { "type": "string" },
+          "refused_code": { "$ref": "#/components/schemas/RefusedCode" },
           "details": { "type": "array", "items": { "type": "string" }, "description": "Up to ten malformed lines, named." },
           "hint": { "type": "string" },
           "message": { "type": "string" },
@@ -1074,11 +1099,12 @@
             "type": "object",
             "required": ["name", "source"],
             "properties": {
-              "id": { "type": "integer", "description": "`local` hits only." },
+              "id": { "type": "integer", "description": "The hit's id in its `source`: the card's on `local`, IGDB's or RAWG's on those. Absent on `steam` hits." },
               "name": { "type": "string" },
               "steam_id": { "type": ["string", "integer", "null"] },
               "image_url": { "type": ["string", "null"] },
               "source": { "$ref": "#/components/schemas/GameSource" },
+              "engines": { "type": "array", "items": { "type": "string" }, "description": "`igdb` hits: the engines IGDB names for the game, often none." },
               "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." }
             }
           } }

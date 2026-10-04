@@ -236,11 +236,158 @@ class GameIdentificationTest extends TestCase
             ->assertSuccessful();
 
         $entry = AuditLog::where('action', AuditLog::ACTION_TRANSLATION_UPLOAD)->latest('id')->first();
+        // A client that sends no choice and no reading: both said absent, not empty.
         $this->assertSame(
-            ['steam_id' => '500', 'game_name' => 'LOSTECHO', 'game_company' => 'Studio'],
+            ['steam_id' => '500', 'game_name' => 'LOSTECHO', 'game_company' => 'Studio', 'game_pick' => null, 'game_read' => null],
             $entry->metadata['sent'],
         );
         $this->assertFalse($entry->metadata['is_branch']);
+    }
+
+    // ── what a client that sends its choice and what it read gets ───────────────────────────
+
+    public function test_a_picked_card_is_the_game_whatever_the_title_sent(): void
+    {
+        $this->stores();
+        $card = Game::create(['name' => 'Chronicles of the Long Road', 'steam_id' => '700']);
+
+        $this->publish([
+            'game_name' => 'Some Other Title',
+            'game_pick' => ['source' => 'local', 'id' => $card->id],
+        ])->assertSuccessful();
+
+        $row = Translation::latest('id')->first();
+        $this->assertSame($card->id, $row->game_id);
+        $this->assertSame(['source' => 'local', 'id' => (string) $card->id], $row->game_pick);
+    }
+
+    public function test_a_picked_store_game_is_created_from_that_id_and_never_searched_again(): void
+    {
+        $this->stores(
+            [
+                'id:22' => [$this->igdbGame(22, 'Lost Echo', '500')],
+                // What a new search would answer first — must never be asked.
+                'Lost Echo' => [$this->igdbGame(11, 'Echo: The Lost Legacy')],
+            ],
+            ['500' => ['name' => 'Lost Echo', 'type' => 'game']],
+        );
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'igdb', 'id' => 22],
+            'game_read' => ['product_name' => 'LOSTECHO', 'company_name' => 'Studio'],
+        ])->assertSuccessful();
+
+        $card = Translation::latest('id')->first()->game;
+        $this->assertSame(22, (int) $card->igdb_id);
+        $this->assertSame('500', $card->steam_id);
+        $this->assertSame('LOSTECHO', $card->unity_name, 'the key is the name READ, not the title picked');
+        Http::assertNotSent(fn (Request $r) => str_contains($r->body(), 'search "Lost Echo"'));
+    }
+
+    public function test_a_name_read_unlike_the_title_is_not_the_key_but_still_finds_the_card(): void
+    {
+        $this->stores();
+        $card = Game::create(['name' => 'Chronicles of the Long Road', 'steam_id' => '700']);
+
+        $this->publish([
+            'steam_id' => '700',
+            'game_name' => 'Chronicles of the Long Road',
+            'game_pick' => ['source' => 'local', 'id' => $card->id],
+            'game_read' => ['product_name' => 'CLR', 'steam_id' => '700'],
+        ])->assertSuccessful();
+
+        // The guard against a declared name taking a Steam card's key still holds…
+        $this->assertNull($card->fresh()->unity_name);
+
+        // …and the copies without a Steam id that read "CLR" find the card all the same.
+        $this->getJson('/api/v1/translations?q=CLR')
+            ->assertOk()
+            ->assertJsonPath('translations.0.game.id', $card->id);
+    }
+
+    public function test_a_steam_id_read_on_disk_refuses_another_game_and_writes_nothing(): void
+    {
+        $this->stores();
+        $picked = Game::create(['name' => 'Lost Echo', 'steam_id' => '600']);
+        $cards = Game::count();
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'local', 'id' => $picked->id],
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500', 'steam_id_from' => 'steam_appid.txt'],
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_mismatch');
+
+        $this->assertSame(0, Translation::count());
+        $this->assertSame($cards, Game::count());
+    }
+
+    public function test_a_demo_read_on_disk_is_the_full_game_it_belongs_to(): void
+    {
+        $this->stores([], [
+            '901' => ['name' => 'Lost Echo Demo', 'type' => 'demo', 'fullgame' => ['appid' => '900', 'name' => 'Lost Echo']],
+            '900' => ['name' => 'Lost Echo', 'type' => 'game'],
+        ]);
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'steam', 'id' => '901'],
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '901'],
+        ])->assertSuccessful();
+
+        $this->assertSame('900', Translation::latest('id')->first()->game->steam_id);
+    }
+
+    public function test_an_engine_the_store_names_that_is_not_the_games_refuses_it(): void
+    {
+        $this->stores(['id:22' => [array_merge($this->igdbGame(22, 'Lost Echo'), ['game_engines' => [['name' => 'Unreal Engine 4']]])]]);
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'igdb', 'id' => 22],
+            'game_read' => ['product_name' => 'Lost Echo', 'engine' => 'Unity'],
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_mismatch');
+
+        $this->assertSame(0, Game::count());
+    }
+
+    public function test_a_choice_that_names_nothing_is_said_not_guessed(): void
+    {
+        $this->stores();
+
+        $this->publish([
+            'game_name' => 'Lost Echo',
+            'game_pick' => ['source' => 'local', 'id' => 999999],
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_not_found');
+
+        $this->assertSame(0, Game::count());
+    }
+
+    public function test_the_adult_question_resolves_the_choice_as_the_upload_will(): void
+    {
+        $this->stores();
+        $card = Game::create(['name' => 'Chronicles of the Long Road', 'steam_id' => '700']);
+        $token = ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/games/adult?game_name=Something%20Else&game_pick[source]=local&game_pick[id]=' . $card->id)
+            ->assertOk()
+            ->assertJsonPath('known', true);
+    }
+
+    public function test_a_batch_lookup_finds_a_card_by_a_name_its_translations_read(): void
+    {
+        $this->stores();
+        $card = Game::create(['name' => 'Chronicles of the Long Road', 'steam_id' => '700']);
+        $this->publish([
+            'steam_id' => '700',
+            'game_name' => 'Chronicles of the Long Road',
+            'game_read' => ['product_name' => 'CLR', 'steam_id' => '700'],
+        ])->assertSuccessful();
+
+        $this->postJson('/api/v1/translations/for-games', ['games' => [['name' => 'CLR']]])
+            ->assertOk()
+            ->assertJsonPath('results.0.games.0.game.id', $card->id);
     }
 
     // ── what the publish list offers ────────────────────────────────────────────────────────

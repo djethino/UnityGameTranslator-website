@@ -11,6 +11,10 @@ class Translation extends Model
 {
     protected $fillable = [
         'game_id',
+        // How the game was identified: what the publishing machine read, what the person chose —
+        // see the migration that added them.
+        'game_read',
+        'game_pick',
         'user_id',
         'parent_id',
         // Written once, at the fork, and never touched again — see the migration
@@ -72,6 +76,8 @@ class Translation extends Model
         'vote_count' => 'integer',
         'font_config' => 'array',
         'settings_summary' => 'array',
+        'game_read' => 'array',
+        'game_pick' => 'array',
         'content_updated_at' => 'datetime',
     ];
 

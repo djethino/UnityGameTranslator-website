@@ -125,6 +125,17 @@
       "read": { "reader": "game_adult", "expects": { "Known": true, "Adult": false, "Source": null, "Declarable": false } }
     },
     {
+      "id": "api-v1/games/adult/known-by-the-pick",
+      "why": "The hit the upload will send as `game_pick` is resolved as the upload will resolve it: the card picked answers, whatever title travels beside it.",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/games/adult", "as": "carol", "query": { "game_name": "Another Title", "game_pick[source]": "local", "game_pick[id]": "{{games.g.id}}" } },
+      "response": {
+        "status": 200,
+        "body": { "known": true, "adult": false, "source": null, "declarable": false }
+      },
+      "read": { "reader": "game_adult", "expects": { "Known": true, "Adult": false, "Source": null, "Declarable": false } }
+    },
+    {
       "id": "api-v1/search/by-steam-id",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520", "lang": "French" } },
@@ -528,6 +539,54 @@
       "response": { "status": 201, "body": { "success": true, "translation": { "id": { "$is": "integer" }, "file_hash": { "$is": "file_hash" }, "line_count": 2, "role": "main", "web_url": { "$contains": "/games/sample-game" } } } },
       "read": { "reader": "upload", "expects": { "Success": true, "Role": "Main", "LineCount": 2 } },
       "why": "a uuid nobody has published: the sender becomes the Main of a new lineage and the file records id and hash as `_source`"
+    },
+    {
+      "id": "api-v1/upload/a-new-main-under-the-game-picked",
+      "setup": "lineage",
+      "request": {
+        "method": "POST",
+        "path": "/translations",
+        "as": "carol",
+        "body": {
+          "game_name": "Another Title",
+          "game_pick": { "source": "local", "id": { "$ref": "games.g.id" } },
+          "game_read": { "product_name": "SampleGame", "company_name": "Sample Studio", "steam_id": "367520", "steam_id_from": "steam_appid.txt", "engine": "Unity" },
+          "source_language": "English",
+          "target_language": "Italian",
+          "content": { "$json": { "_uuid": "a7b8c9d0-e1f2-4a3b-8c4d-5e6f7a8b9c0d", "Shop": { "v": "Negozio", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "translation": { "id": { "$is": "integer" }, "file_hash": { "$is": "file_hash" }, "line_count": 1, "role": "main", "web_url": { "$contains": "/games/sample-game" } }
+        }
+      },
+      "read": { "reader": "upload", "expects": { "Success": true, "Role": "Main", "LineCount": 1 } },
+      "why": "the hit the person took is followed as it was given — the card picked, whatever title travels beside it — and what the machine read agrees with it (same Steam id)"
+    },
+    {
+      "id": "api-v1/upload/refused-a-game-its-files-contradict",
+      "setup": "lineage",
+      "request": {
+        "method": "POST",
+        "path": "/translations",
+        "as": "carol",
+        "body": {
+          "game_name": "Sample Game",
+          "game_pick": { "source": "local", "id": { "$ref": "games.g.id" } },
+          "game_read": { "product_name": "Sample Game", "steam_id": "999999", "steam_id_from": "steam_appid.txt" },
+          "source_language": "English",
+          "target_language": "Italian",
+          "content": { "$json": { "_uuid": "b8c9d0e1-f2a3-4b4c-9d5e-6f7a8b9c0d1e", "Shop": { "v": "Negozio", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": { "error": { "$contains": "Pick the game again" }, "refused_code": "game_mismatch" }
+      },
+      "why": "a Steam id read on disk that the game picked does not answer to is two facts disagreeing: refused before anything is written, with a sentence the clients show as-is"
     },
     {
       "id": "api-v1/upload/updating-ones-own-main",

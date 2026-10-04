@@ -17,8 +17,73 @@ use App\Models\Game;
  */
 class GameResolver
 {
+    /** The sources a publish list answer can come from, as `game_pick.source` names them. */
+    public const PickSources = ['local', 'steam', 'igdb', 'rawg'];
+
     public function __construct(private GameSearchService $search)
     {
+    }
+
+    /**
+     * The one entry both callers use: by what the person CHOSE in the publish list when the client
+     * says it, otherwise by the name and Steam id it sent (every client released before
+     * 2026-10-04). Same shape as locate().
+     *
+     * 🔴 **A choice is followed, never searched again** (analyse/identite-des-jeux-parcours.md, T1).
+     * The list hands each hit's source and id to the client; only its title came back, and the site
+     * searched that title anew — so the game the person picked and the game the site filed the
+     * translation under could differ, with nothing on screen to say so.
+     *
+     * @param array{source: string, id: string|int}|null $pick
+     */
+    public function resolve(?string $steamId, ?string $gameName, ?array $pick): array
+    {
+        return $pick ? $this->locatePick((string) $pick['source'], (string) $pick['id']) : $this->locate($steamId, $gameName);
+    }
+
+    /**
+     * The card a publish-list answer names, or the store's description of it when no card does
+     * yet. `via: 'pick'` when a card answered.
+     *
+     * - `local`: the card itself — and nothing when it is gone (removed since the list was drawn);
+     * - `steam` / `igdb` / `rawg`: the card holding that id; otherwise what that store says about
+     *   it, which may carry a Steam id a card answers to (an IGDB pick of a game the site holds by
+     *   its Steam id is that card).
+     */
+    public function locatePick(string $source, string $id): array
+    {
+        $none = ['game' => null, 'via' => null, 'external' => null];
+
+        if (!in_array($source, self::PickSources, true) || !ctype_digit($id)) {
+            return $none;
+        }
+
+        $card = match ($source) {
+            'local' => Game::find((int) $id),
+            'steam' => Game::answeringToSteamId($id)->first(),
+            'igdb' => Game::where('igdb_id', $id)->first(),
+            'rawg' => Game::where('rawg_id', $id)->first(),
+        };
+
+        if ($card) {
+            return ['game' => $card, 'via' => 'pick', 'external' => null];
+        }
+
+        if ($source === 'local') {
+            return $none;
+        }
+
+        $external = $source === 'steam'
+            ? $this->search->getGameFromSteam($id)
+            : $this->search->getGame((int) $id, $source);
+
+        if (!$external) {
+            return $none;
+        }
+
+        $known = !empty($external['steam_id']) ? Game::answeringToSteamId((string) $external['steam_id'])->first() : null;
+
+        return ['game' => $known, 'via' => $known ? 'pick' : null, 'external' => $external];
     }
 
     /**

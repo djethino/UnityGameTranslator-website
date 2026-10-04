@@ -114,6 +114,34 @@ class Game extends Model
     }
 
     /**
+     * The cards whose translations were published from a machine that READ one of these product
+     * names in the game's files (`translations.game_read`) — game ids keyed by the name, lowered.
+     *
+     * 🔴 **How a card answers to the names its own players' machines read** (analyse/
+     * identite-des-jeux-parcours.md, T16). `unity_name` holds one name per card and refuses, on a
+     * card with a Steam id, any name that does not look like its title — the guard against a
+     * declared name taking a popular game's key. But "JHL" for a title that spells the words out is
+     * a real product name, and the copies without a Steam id that read it found nothing.
+     *
+     * ⚠ **Read by name searches only, as a union** — never by GameResolver, never in place of the
+     * other matches. Adding a card to an answer can only widen it, and the caller picks among the
+     * games named (common/GameNames.Which); it can never decide where somebody's upload is filed.
+     */
+    public static function readAs(array $names): \Illuminate\Support\Collection
+    {
+        $names = array_values(array_filter(array_map(fn ($n) => trim((string) $n), $names), fn ($n) => $n !== ''));
+
+        if ($names === []) {
+            return collect();
+        }
+
+        return Translation::whereIn('game_read->product_name', $names)
+            ->get(['game_id', 'game_read'])
+            ->groupBy(fn (Translation $t) => mb_strtolower((string) ($t->game_read['product_name'] ?? '')))
+            ->map(fn ($rows) => $rows->pluck('game_id')->unique()->values());
+    }
+
+    /**
      * The slug, or a free variant of it when another card already has it.
      *
      * 🔴 **Two games can share a title** — each with its own Steam id — and the slug is unique.

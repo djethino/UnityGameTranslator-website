@@ -138,14 +138,23 @@ class GameController extends Controller
     public function adult(Request $request, \App\Services\GameResolver $resolver, \App\Services\AdultRating $rating): JsonResponse
     {
         $request->validate([
-            'steam_id' => 'nullable|required_without:game_name|string|max:32',
-            'game_name' => 'nullable|required_without:steam_id|string|max:255',
+            'steam_id' => 'nullable|required_without_all:game_name,game_pick|string|max:32',
+            'game_name' => 'nullable|required_without_all:steam_id,game_pick|string|max:255',
+
+            // The choice the upload will send (`game_pick`), so this answer and the upload resolve
+            // the same game — GameResolver::resolve for both.
+            'game_pick' => 'nullable|array',
+            'game_pick.source' => ['required_with:game_pick', 'string', 'in:' . implode(',', \App\Services\GameResolver::PickSources)],
+            'game_pick.id' => ['required_with:game_pick', 'regex:/^\d{1,20}$/'],
         ]);
 
         $steamId = $request->filled('steam_id') ? (string) $request->steam_id : null;
         $gameName = $request->filled('game_name') ? (string) $request->game_name : null;
+        $pick = $request->filled('game_pick')
+            ? ['source' => (string) $request->input('game_pick.source'), 'id' => (string) $request->input('game_pick.id')]
+            : null;
 
-        $found = $resolver->locate($steamId, $gameName);
+        $found = $resolver->resolve($steamId, $gameName, $pick);
 
         if ($found['game']) {
             $game = $found['game'];

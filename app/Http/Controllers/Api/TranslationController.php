@@ -16,6 +16,7 @@ use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use App\Rules\ResourcesLink;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -120,7 +121,13 @@ class TranslationController extends Controller
             // from `<Game>_Data/app.info` — so where the site knows it there is nothing to guess.
             // The LIKE below is for the games it does not know yet, and it is what lets one lookup
             // answer about several games at once.
-            $exact = Game::where('unity_name', $request->q)->pluck('id');
+            //
+            // ⚠ The names the machines of a card's translations read count as well (Game::readAs):
+            // a product name unlike the card's title is never its `unity_name` on a Steam card.
+            $exact = Game::where('unity_name', $request->q)->pluck('id')
+                ->merge(Game::readAs([$request->q])->flatten())
+                ->unique()
+                ->values();
 
             // 🔴 **A union, never a short-circuit.** `unity_name` is declared by whoever published,
             // so letting a match on it REPLACE the ordinary search handed one account the power to
@@ -402,6 +409,13 @@ class TranslationController extends Controller
             if (!$byName->has($alias)) {
                 $byName->put($alias, collect([$game]));
             }
+        }
+
+        // The names the machines of a card's translations read (Game::readAs), for what the two
+        // columns did not answer — still an exact match, so it comes before the fuzzy pass.
+        $unanswered = collect($trimmed)->reject(fn ($n) => $byName->has(mb_strtolower($n)))->values()->all();
+        foreach (Game::readAs($unanswered) as $readName => $gameIds) {
+            $byName->put($readName, Game::whereIn('id', $gameIds)->get());
         }
 
         $unresolved = $lowered->reject(fn ($n) => $byName->has($n))->values();
@@ -1071,8 +1085,24 @@ class TranslationController extends Controller
         $languages = CatalogStore::languageNames();
 
         $request->validate([
-            'steam_id' => 'nullable|required_without:game_name|string',
-            'game_name' => 'nullable|required_without:steam_id|string|max:255',
+            'steam_id' => 'nullable|required_without_all:game_name,game_pick|string',
+            'game_name' => 'nullable|required_without_all:steam_id,game_pick|string|max:255',
+
+            // Additive (2026-10-04): what the person CHOSE in the publish list — followed as is,
+            // never searched again (App\Services\GameResolver::resolve). Ids are digits in all four
+            // sources: a card's own, a Steam app id, an IGDB or RAWG id.
+            'game_pick' => 'nullable|array',
+            'game_pick.source' => ['required_with:game_pick', 'string', 'in:' . implode(',', \App\Services\GameResolver::PickSources)],
+            'game_pick.id' => ['required_with:game_pick', 'regex:/^\d{1,20}$/'],
+
+            // Additive (2026-10-04): what the machine READ in the game's files. The key other
+            // machines resolve with comes from here, and a fact here can refuse a wrong game.
+            'game_read' => 'nullable|array',
+            'game_read.product_name' => 'nullable|string|max:255',
+            'game_read.company_name' => 'nullable|string|max:255',
+            'game_read.steam_id' => ['nullable', 'regex:/^\d{1,20}$/'],
+            'game_read.steam_id_from' => 'nullable|string|max:32',
+            'game_read.engine' => 'nullable|string|max:32',
 
             // ⚠ Same shape as the name it travels with. It was read straight into a varchar(255)
             // with no rule at all: in strict mode a longer string is a 500, and nothing in the
@@ -1254,7 +1284,11 @@ class TranslationController extends Controller
         } else {
             $game = $this->findOrCreateGame($request);
             if (!$game) {
-                return response()->json(['error' => 'Could not find or create game'], 422);
+                // ⚠ The sentence is shown as-is by the clients: a choice that named nothing says so,
+                // so the person searches again instead of reading a server fault.
+                return response()->json($request->filled('game_pick')
+                    ? ['error' => 'The picked game could not be found. Search for it again.', 'refused_code' => 'game_not_found']
+                    : ['error' => 'Could not find or create game'], 422);
             }
 
             // 🔴 **Declared by the publication that creates the game, and by no other.** A game's
@@ -1312,6 +1346,8 @@ class TranslationController extends Controller
             // game is fixed at creation; the payload's _game metadata is treated as
             // informational on subsequent uploads.
             $existingTranslation->update([
+                // The installation it was sent from this time — kept when the client says nothing.
+                'game_read' => $this->gameRead($request) ?? $existingTranslation->game_read,
                 'line_count' => $parsed['line_count'],
                 'human_count' => $parsed['tag_counts']['human_count'],
                 'validated_count' => $parsed['tag_counts']['validated_count'],
@@ -1379,6 +1415,9 @@ class TranslationController extends Controller
         // NEW or BRANCH: Create new translation ($origin was read before the game, above).
         $translation = Translation::create([
             'game_id' => $game->id,
+            // How that game was identified — see the migration of 2026-10-04.
+            'game_read' => $this->gameRead($request),
+            'game_pick' => $this->gamePick($request),
             'user_id' => $userId,
             'parent_id' => $parentId,
             'origin_translation_id' => $origin['translation_id'],
@@ -1429,6 +1468,8 @@ class TranslationController extends Controller
                 'steam_id' => $request->input('steam_id'),
                 'game_name' => $request->input('game_name'),
                 'game_company' => $request->input('game_company'),
+                'game_pick' => $this->gamePick($request),
+                'game_read' => $this->gameRead($request),
             ],
         ], $request);
 
@@ -1552,9 +1593,24 @@ class TranslationController extends Controller
      */
     private function findOrCreateGame(Request $request): ?Game
     {
-        $steamId = $request->filled('steam_id') ? $request->steam_id : null;
+        $steamId = $request->filled('steam_id') ? (string) $request->steam_id : null;
         $gameName = $request->filled('game_name') ? $request->game_name : null;
-        $company = $request->filled('game_company') ? $request->game_company : null;
+        $read = $this->gameRead($request);
+        $pick = $this->gamePick($request);
+
+        // 🔴 **The key other machines resolve with comes from what a machine READ, never from what
+        // a person CHOSE** (analyse/identite-des-jeux-parcours.md, T16). A client that says what it
+        // read sends the chosen title as `game_name` — recording that as `unity_name` filled the key
+        // with shop titles, and the name the game states on disk was never kept. A client that says
+        // nothing of the kind (released before 2026-10-04) keeps the old reading of `game_name`.
+        $declaredName = $read !== null ? ($read['product_name'] ?? null) : $gameName;
+        $company = $read !== null
+            ? ($read['company_name'] ?? null)
+            : ($request->filled('game_company') ? $request->game_company : null);
+
+        // A Steam id read in the game's own files is a fact about this installation: the card is
+        // given it when it has none, exactly like the one the old clients send.
+        $steamId ??= $read['steam_id'] ?? null;
 
         // 🔴 **Which card, asked of the one resolver the publish screens ask too** (GET
         // games/adult). Its four steps and their order are documented there and here below; what
@@ -1569,22 +1625,35 @@ class TranslationController extends Controller
         //   IGDB turns "LONESTAR" into "Lonestar: The Game", and creating on that answer without
         //   looking again gave the same game a second entry. ⚠ Searched on what the resolution
         //   ANSWERED, not on what the caller sent — that is the whole point of having asked.
-        $found = app(\App\Services\GameResolver::class)->locate($steamId, $gameName);
+        //
+        // - 🔴 and before all of it, by what the person CHOSE when the client says so (`game_pick`):
+        //   that card, or the store's own description of that id — never a new search.
+        $found = app(\App\Services\GameResolver::class)->resolve($steamId, $gameName, $pick);
         $externalGame = $found['external'];
 
+        // A fact read on disk that contradicts the game found refuses the upload — BEFORE any card
+        // is written, so a refusal leaves nothing behind.
+        $this->refuseWrongGame($found['game'], $externalGame, $read);
+
         if ($found['via'] === 'steam') {
-            $this->rememberUnityNames($found['game'], $gameName, $company);
+            $this->rememberUnityNames($found['game'], $declaredName, $company);
             return $found['game'];
         }
 
-        if ($found['via'] === 'name' || $found['via'] === 'unity') {
+        if ($found['via'] === 'name' || $found['via'] === 'unity' || ($found['via'] === 'pick' && !$externalGame)) {
             $this->attachSteamId($found['game'], $steamId);
-            $this->rememberUnityNames($found['game'], $gameName, $company);
+            $this->rememberUnityNames($found['game'], $declaredName, $company);
             return $found['game'];
+        }
+
+        // A choice that names nothing — a card removed since the list was drawn, a store that does
+        // not answer for that id — is not replaced by a guess from its title.
+        if ($pick && !$externalGame) {
+            return null;
         }
 
         // Game not found - the stores' answer is what a new card is made from
-        if (!$gameName) {
+        if (!$gameName && !$externalGame) {
             return null;
         }
 
@@ -1611,7 +1680,7 @@ class TranslationController extends Controller
                     app(\App\Services\AdultRating::class)->rate($known);
                 }
 
-                $this->rememberUnityNames($known, $gameName, $company);
+                $this->rememberUnityNames($known, $declaredName, $company);
                 $this->rememberDemoId($known, $externalGame);
 
                 return $known;
@@ -1627,7 +1696,7 @@ class TranslationController extends Controller
             // written again ("never overwrite"), so the real product name was locked out for good.
             $created = Game::create([
                 'name' => $title,
-                'unity_name' => \App\Support\GameNaming::isFormOfTitle($gameName, $title) ? $gameName : null,
+                'unity_name' => \App\Support\GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
                 'unity_company' => $company,
                 'steam_id' => $resolvedSteamId,
                 'image_url' => $externalGame['image_url'] ?? null,
@@ -1644,12 +1713,13 @@ class TranslationController extends Controller
             return $created;
         }
 
-        // Fallback: Create basic game entry without external data. Here the two names are the same
-        // string, and they are still both recorded: a display name can be edited afterwards, and
-        // the lookup must go on working when it is.
+        // Fallback: Create basic game entry without external data. The display name is the one
+        // sent, the key the one read (the same string for a client that does not say what it read);
+        // both are recorded: a display name can be edited afterwards, and the lookup must go on
+        // working when it is.
         $bare = Game::create([
             'name' => $gameName,
-            'unity_name' => $gameName,
+            'unity_name' => $declaredName,
             'unity_company' => $company,
             'steam_id' => $steamId,
         ]);
@@ -1660,6 +1730,96 @@ class TranslationController extends Controller
         app(\App\Services\AdultRating::class)->rate($bare);
 
         return $bare;
+    }
+
+    /**
+     * What the publishing machine read in the game's own files (`game_read`), with the empty
+     * fields dropped — or null when the client said nothing of the kind (every client released
+     * before 2026-10-04). ⚠ An empty object is not null: the client said it read nothing.
+     *
+     * @return array{product_name?: string, company_name?: string, steam_id?: string, steam_id_from?: string, engine?: string}|null
+     */
+    private function gameRead(Request $request): ?array
+    {
+        if (!$request->has('game_read') || !is_array($request->input('game_read'))) {
+            return null;
+        }
+
+        $read = $request->input('game_read');
+
+        return array_filter([
+            'product_name' => $read['product_name'] ?? null,
+            'company_name' => $read['company_name'] ?? null,
+            'steam_id' => isset($read['steam_id']) ? (string) $read['steam_id'] : null,
+            'steam_id_from' => $read['steam_id_from'] ?? null,
+            'engine' => $read['engine'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * The publish-list answer the person took (`game_pick`), or null.
+     *
+     * @return array{source: string, id: string}|null
+     */
+    private function gamePick(Request $request): ?array
+    {
+        $pick = $request->input('game_pick');
+
+        return is_array($pick) && isset($pick['source'], $pick['id'])
+            ? ['source' => (string) $pick['source'], 'id' => (string) $pick['id']]
+            : null;
+    }
+
+    /**
+     * Refuse the upload when what the machine read in the game's files CONTRADICTS the game
+     * found — and only then.
+     *
+     * 🔴 **Refused when sure, never on a resemblance** (decided 2026-10-02: "si on peut être sûr on
+     * refuse, sinon on avertit"). Sure means two facts disagree:
+     *
+     * - a Steam id read on disk (`steam_appid.txt`, the library manifest) that the game found does
+     *   not answer to — its own id, or one recorded as also being it (a demo's);
+     * - an engine the game runs on, when the store names the game's engines and that one is not
+     *   among them.
+     *
+     * ⚠ Titles that do not look alike prove nothing — a product name like "JHL" for a shop title
+     * that spells the words out is ordinary — so they are left to the client to WARN about, before
+     * sending. A store that names no engine proves nothing either.
+     *
+     * @throws HttpResponseException 422 with `refused_code: game_mismatch`
+     */
+    private function refuseWrongGame(?Game $card, ?array $external, ?array $read): void
+    {
+        if (!$read) {
+            return;
+        }
+
+        $refuse = fn (string $sentence) => throw new HttpResponseException(response()->json([
+            'error' => $sentence,
+            'refused_code' => 'game_mismatch',
+        ], 422));
+
+        $readSteam = $read['steam_id'] ?? null;
+        $foundSteam = $card?->steam_id ?? ($external['steam_id'] ?? null);
+
+        if ($readSteam && $foundSteam && (string) $foundSteam !== $readSteam) {
+            $sameGame = $card
+                ? Game::answeringToSteamId($readSteam)->whereKey($card->id)->exists()
+                : ($external['demo_steam_id'] ?? null) === $readSteam;
+
+            if (!$sameGame) {
+                $refuse("Wrong game: the installed game is Steam app {$readSteam}, the picked one is "
+                      . "Steam app {$foundSteam}. Pick the game again.");
+            }
+        }
+
+        $engine = $read['engine'] ?? null;
+        $engines = $external['engines'] ?? [];
+
+        if ($engine && $engines !== [] && !in_array(mb_strtolower($engine), array_map('mb_strtolower', $engines), true)) {
+            $refuse("Wrong game: the picked one is made with " . implode(', ', $engines)
+                  . ", the installed game with {$engine}. Pick the game again.");
+        }
     }
 
     /**

@@ -151,8 +151,12 @@ class GameSearchService
         // put in this box for a game with no Steam id, and a card whose title says something else
         // ("JHL" for Jianghu Chronicles) was otherwise never offered — the next publisher was sent
         // to the stores, towards a second card.
+        //
+        // ⚠ And by the names the machines of its translations read (Game::readAs), which a card
+        // with a Steam id never takes as `unity_name` when they do not look like its title.
         return Game::titleMatches($query)
             ->orWhere('unity_name', $query)
+            ->orWhereIn('id', Game::readAs([$query])->flatten()->all())
             ->withCount(['translations' => fn ($q) => $q->publiclyListed()])
             ->limit($limit)
             ->get()
@@ -395,7 +399,7 @@ class GameSearchService
      * The fields every game read from IGDB is asked for: its Steam id comes with it, so a hit
      * names the game by id rather than by title (see igdbRow).
      */
-    private const IgdbGameFields = 'id,name,cover.url,external_games.uid,external_games.external_game_source';
+    private const IgdbGameFields = 'id,name,cover.url,external_games.uid,external_games.external_game_source,game_engines.name';
 
     /**
      * One IGDB game as this service hands it out — the same shape for a search hit and a lookup.
@@ -419,6 +423,10 @@ class GameSearchService
             'steam_id' => $steamId !== null ? (string) $steamId : null,
             'image_url' => $imageUrl,
             'source' => 'igdb',
+            // The engines IGDB declares, often none. A stated engine that is not the one the game
+            // runs on is a sure sign of the wrong game (Api\TranslationController::contradiction);
+            // none stated proves nothing.
+            'engines' => collect($game['game_engines'] ?? [])->pluck('name')->filter()->values()->all(),
         ];
     }
 
