@@ -878,6 +878,30 @@ class GameSearchService
         return $this->getGameFromRAWG($id);
     }
 
+    /**
+     * Every Steam app id IGDB links to one of its games — an edition, a demo or a re-release can
+     * each have its own — or null when IGDB does not answer for that id.
+     *
+     * ⚠ All of them, never the first: a game is not contradicted by a Steam id IGDB links to it
+     * second (GameResolver::contradicts).
+     *
+     * @return list<string>|null
+     */
+    public function steamIdsOfIgdbGame(int $id): ?array
+    {
+        $rows = $this->igdb('games', 'where id = ' . intval($id) . '; fields external_games.uid,external_games.external_game_source;');
+
+        if (empty($rows)) {
+            return null;
+        }
+
+        return collect($rows[0]['external_games'] ?? [])
+            ->filter(fn ($external) => ($external['external_game_source'] ?? null) === self::IgdbSteamSource
+                && ctype_digit((string) ($external['uid'] ?? '')))
+            ->map(fn ($external) => (string) $external['uid'])
+            ->unique()->values()->all();
+    }
+
     private function getGameFromIGDB(int $id): ?array
     {
         try {

@@ -375,6 +375,75 @@ class GameIdentificationTest extends TestCase
         $this->assertSame('900', Translation::latest('id')->first()->game->steam_id);
     }
 
+    // ── a card that took another game's name ────────────────────────────────────────────────
+    //
+    // The production case, with made-up names: a card of one game (IGDB 81, Steam 996 per IGDB)
+    // with no Steam id of its own took, by mistake, the name ANOTHER game states on disk. Found by
+    // that name, it was given that other game's Steam id, and its publications kept landing on it.
+
+    private function cardThatTookAnotherName(): Game
+    {
+        return Game::create(['name' => 'Crystal Dragon', 'unity_name' => 'Lost Echo', 'igdb_id' => 81]);
+    }
+
+    public function test_a_card_its_igdb_id_contradicts_is_passed_over_not_given_the_steam_id(): void
+    {
+        $this->stores(['id:81' => [$this->igdbGame(81, 'Crystal Dragon', '996')]], ['500' => ['name' => 'Lost Echo', 'type' => 'game']]);
+        $wrong = $this->cardThatTookAnotherName();
+
+        // A client that sends only the name and the Steam id (every release before 2026-10-04).
+        $this->publish(['steam_id' => '500', 'game_name' => 'Lost Echo'])->assertSuccessful();
+
+        $card = Translation::latest('id')->first()->game;
+        $this->assertNotSame($wrong->id, $card->id);
+        $this->assertSame('500', $card->steam_id);
+        $this->assertNull($wrong->refresh()->steam_id, 'the other game\'s card never receives this Steam id');
+    }
+
+    public function test_a_card_picked_that_its_igdb_id_contradicts_is_refused(): void
+    {
+        $this->stores(['id:81' => [$this->igdbGame(81, 'Crystal Dragon', '996')]], ['500' => ['name' => 'Lost Echo', 'type' => 'game']]);
+        $wrong = $this->cardThatTookAnotherName();
+
+        $this->publish([
+            'game_name' => 'Crystal Dragon',
+            'game_pick' => ['source' => 'local', 'id' => $wrong->id],
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+        ])->assertStatus(422)->assertJsonPath('refused_code', 'game_mismatch');
+
+        $this->assertNull($wrong->refresh()->steam_id);
+        $this->assertSame(0, Translation::count());
+    }
+
+    public function test_a_steam_id_igdb_links_among_several_is_not_a_contradiction(): void
+    {
+        // An edition, a re-release: IGDB links several Steam apps to one game.
+        $this->stores(['id:81' => [[
+            'id' => 81, 'name' => 'Lost Echo',
+            'external_games' => [['uid' => '996', 'external_game_source' => self::Steam], ['uid' => '500', 'external_game_source' => self::Steam]],
+        ]]]);
+        $card = Game::create(['name' => 'Lost Echo', 'igdb_id' => 81]);
+
+        $this->publish(['steam_id' => '500', 'game_name' => 'Lost Echo'])->assertSuccessful();
+
+        $this->assertSame($card->id, Translation::latest('id')->first()->game_id);
+        $this->assertSame('500', $card->refresh()->steam_id);
+    }
+
+    public function test_a_card_a_store_identifies_keeps_only_a_form_of_its_title_as_name_read(): void
+    {
+        $this->stores();
+        $card = Game::create(['name' => 'Crystal Dragon', 'igdb_id' => 81]);
+
+        $this->publish([
+            'game_name' => 'Crystal Dragon',
+            'game_pick' => ['source' => 'local', 'id' => $card->id],
+            'game_read' => ['product_name' => 'Lost Echo'],
+        ])->assertSuccessful();
+
+        $this->assertNull($card->refresh()->unity_name, 'a name unlike its title is never its key');
+    }
+
     // ── an upload into a lineage that exists ────────────────────────────────────────────────
 
     /** A lineage filed under `$game`: the Main's owner, and the uuid of its file. */

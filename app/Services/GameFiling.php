@@ -277,6 +277,14 @@ class GameFiling
             }
         }
 
+        // A card with no Steam id of its own picked for a game whose Steam id was read: its IGDB id
+        // may say it is another game (GameResolver::contradicts) — the card it would otherwise
+        // receive this Steam id as, for good.
+        if ($readSteam && $card && !$card->steam_id && $this->resolver->contradicts($card, $readSteam)) {
+            throw new WrongGame("Wrong game: the installed game is Steam app {$readSteam}, and {$card->name} "
+                . 'is another game. Pick the game again.');
+        }
+
         $engine = $read['engine'] ?? null;
         $engines = $external['engines'] ?? [];
 
@@ -375,7 +383,12 @@ class GameFiling
         // same game WITHOUT a Steam id. "LONESTAR" against "Lonestar: The Game" passes; "Cattails"
         // against "Cat" does not, and neither does anything unrelated. A name read that does not
         // pass still finds the card through its translations (Game::readAs).
-        if ($game->steam_id && !GameNaming::isFormOfTitle($gameName, $game->name)) {
+        //
+        // ⚠ **And on a game a store identifies by another id** (IGDB, RAWG) — the same reasoning: its
+        // title is a store's fact. A card with an IGDB id and no Steam id took, as its key, the name
+        // another game states on disk, and that game's publications kept landing on it
+        // (analyse/identite-des-jeux-parcours.md, the production case).
+        if (($game->steam_id || $game->igdb_id || $game->rawg_id) && !GameNaming::isFormOfTitle($gameName, $game->name)) {
             return;
         }
 

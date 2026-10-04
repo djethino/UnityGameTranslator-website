@@ -114,13 +114,17 @@ class GameResolver
             // be this game by its name; it then receives the id (findOrCreateGame, attachSteamId).
             $byName = fn ($query) => $query->when($steamId, fn ($q) => $q->whereNull('steam_id'));
 
+            // ⚠ **And a card with no Steam id can still be ANOTHER game** — the one its own store
+            // id names (contradicts): passed over, never taken and given this Steam id.
+            $fits = fn (?Game $game) => $game && !($steamId && $this->contradicts($game, $steamId));
+
             $game = $byName(Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)]))->first();
-            if ($game) {
+            if ($fits($game)) {
                 return ['game' => $game, 'via' => 'name', 'external' => null];
             }
 
             $game = $byName(Game::where('unity_name', $gameName))->first();
-            if ($game) {
+            if ($fits($game)) {
                 return ['game' => $game, 'via' => 'unity', 'external' => null];
             }
         }
@@ -160,5 +164,44 @@ class GameResolver
         }
 
         return ['game' => null, 'via' => null, 'external' => $external];
+    }
+
+    /**
+     * Whether a card is SURELY not the game a Steam id names — two facts disagreeing, never a
+     * resemblance.
+     *
+     * 🔴 **The trap this closes** (analyse/identite-des-jeux-parcours.md, the production case): a
+     * card with no Steam id of its own took, by mistake, the name another game states on disk.
+     * Found by that name, it was given that game's Steam id — and every later publication of the
+     * real game landed on it. A card with no Steam id is not a blank: when it carries an IGDB id,
+     * IGDB says which Steam apps that game is.
+     *
+     * - a card with a Steam id: contradicted when it does not answer to this one (its own, or one
+     *   recorded as also being it);
+     * - a card with an IGDB id: contradicted when IGDB links Steam ids to that game and this one is
+     *   not among them — nor a demo of one of them (Steam's own `fullgame` link);
+     * - otherwise, or when IGDB does not answer: not contradicted — nothing is known.
+     *
+     * ⚠ A RAWG id says nothing here: RAWG gives no Steam app id to compare.
+     */
+    public function contradicts(Game $card, string $steamId): bool
+    {
+        if ($card->steam_id) {
+            return !Game::answeringToSteamId($steamId)->whereKey($card->id)->exists();
+        }
+
+        if (!$card->igdb_id) {
+            return false;
+        }
+
+        $linked = $this->search->steamIdsOfIgdbGame((int) $card->igdb_id);
+
+        if (!$linked || in_array($steamId, $linked, true)) {
+            return false;
+        }
+
+        $store = $this->search->getGameFromSteam($steamId);
+
+        return !(($store['demo_steam_id'] ?? null) === $steamId && in_array((string) ($store['steam_id'] ?? ''), $linked, true));
     }
 }
