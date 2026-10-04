@@ -7,6 +7,7 @@
     "verb": { "in": { "act": "UploadAct" }, "out": "the word on the button" },
     "wall": { "in": { "publication": "Publication", "on_a_branch": "bool", "owner": "who leads the lineage, when known", "accepts_branches": "bool or absent", "main_missing": "bool or absent", "main_abandoned": "bool or absent", "branch_frozen": "bool or absent" }, "out": "why the natural act is closed, with the way on, in one sentence — null when nothing closes it" },
     "wall_of": { "in": "the same as wall", "out": "{fact, way_out} — the two halves of the wall, for a screen that shows the fact somewhere else; null when nothing closes it" },
+    "game_wall": { "in": { "act": "UploadAct", "on_a_branch": "bool", "confirmed_game": "{source, id, name} confirmed on this machine, or absent", "game": "{id, name, steam_id?, igdb_id?, rawg_id?} the lineage's game on the site, or absent" }, "out": "{fact, way_out} when a contribution waits for Switch game (its lineage moved to another game); null otherwise" },
     "decided_in_the_game": { "in": { "act": "UploadAct" }, "out": "bool: taken in the game and nowhere else" },
     "closed_reason": { "in": { "act": "UploadAct", "lines": "int", "untouched_copy": "bool", "online": "bool, true when absent", "signed_in": "bool, true when absent", "in_sync": "bool", "server_moved": "bool: the published copy moved since this machine synced and nothing here did" }, "out": "why the act cannot be taken now — null when it can" },
     "button": { "in": "the fact sheets of standing/from (lines, local_changes, metadata_dirty, last_synced, content_hash, fork_still_the_copy, exists, is_owner, role, site_id, server_hash, uploader, main_username, accepts_branches, main_missing, main_abandoned, branch_frozen, signed_in, online)", "out": "{act, verb, hint, hint_is_translatable, mention, closed, wall, enabled} — when a wall turned the act into a fork, hint carries the way out alone if the author's own status card states the fact, the whole wall otherwise; wall is the whole for a screen with no card" }
@@ -113,6 +114,27 @@
     { "id": "uploads/button/offline-closes-an-update", "op": "button",
       "in": { "lines": 100, "local_changes": 3, "exists": true, "is_owner": true, "role": "Main", "site_id": 123, "server_hash": "h1", "last_synced": "h1", "content_hash": "h2", "signed_in": true, "online": false },
       "out": { "act": "Update", "verb": "Update", "closed": "Offline mode: nothing is sent", "enabled": false },
-      "why": "nothing is sent from an install that talks to nobody" }
+      "why": "nothing is sent from an install that talks to nobody" },
+    { "id": "uploads/game_wall/a-branch-whose-main-moved-waits", "op": "game_wall",
+      "in": { "act": "Update", "on_a_branch": true, "confirmed_game": { "source": "local", "id": "13", "name": "Crystal Dragon" }, "game": { "id": 12, "name": "Lost Echo", "steam_id": "500" } },
+      "out": { "fact": "On the website, this translation is for Lost Echo.", "way_out": "Switch game to keep contributing." },
+      "why": "🔴 a contribution follows its Main's game (2026-10-05): the site refuses it otherwise (game_changed), so it is said before the click" },
+    { "id": "uploads/game_wall/a-main-is-never-held", "op": "game_wall",
+      "in": { "act": "Update", "on_a_branch": false, "confirmed_game": { "source": "local", "id": "13", "name": "Crystal Dragon" }, "game": { "id": 12, "name": "Lost Echo" } },
+      "out": null,
+      "why": "its owner moved it; the line under the game's name still says the difference" },
+    { "id": "uploads/game_wall/the-same-game-by-a-store-id", "op": "game_wall",
+      "in": { "act": "Contribute", "confirmed_game": { "source": "steam", "id": "500", "name": "Lost Echo" }, "game": { "id": 12, "name": "Lost Echo", "steam_id": "500" } },
+      "out": null,
+      "why": "a game picked as a Steam hit before its card existed is that card" },
+    { "id": "uploads/game_wall/nothing-confirmed-is-no-difference", "op": "game_wall",
+      "in": { "act": "Contribute", "game": { "id": 12, "name": "Lost Echo" } },
+      "out": null,
+      "why": "unknown is not a difference: the site's game is then taken as it stands" },
+    { "id": "uploads/button/a-held-branch-says-the-way-out", "op": "button",
+      "in": { "lines": 100, "local_changes": 3, "exists": true, "is_owner": true, "role": "Branch", "site_id": 9, "server_hash": "h1", "last_synced": "h1", "content_hash": "h2", "signed_in": true,
+              "confirmed_game": { "source": "local", "id": "13", "name": "Crystal Dragon" }, "game": { "id": 12, "name": "Lost Echo" }, "game_switch_pending": true },
+      "out": { "act": "Update", "closed": "Switch game to keep contributing.", "wall": "On the website, this translation is for Lost Echo. Switch game to keep contributing.", "enabled": false },
+      "why": "the line under the game's name states the fact; the button says the way out; a screen without that line shows the whole wall" }
   ]
 }
