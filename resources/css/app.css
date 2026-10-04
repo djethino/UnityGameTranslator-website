@@ -1,5 +1,8 @@
 @import 'tailwindcss';
-@import '@fortawesome/fontawesome-free/css/all.css';
+/* ⚠ In the `components` layer, BELOW Tailwind's utilities (2026-10-04). Imported unlayered, Font
+   Awesome's `display` beat every utility written on an icon: `hidden` on a spinner left it turning
+   for ever, and the search icon of the upload form never hid. A class written on an icon must win. */
+@import '@fortawesome/fontawesome-free/css/all.css' layer(components);
 @import 'flag-icons/css/flag-icons.min.css';
 
 /* Override FontAwesome font-display: block → swap (avoid render-blocking) */
