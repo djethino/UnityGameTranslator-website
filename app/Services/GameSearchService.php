@@ -141,7 +141,7 @@ class GameSearchService
             unset($row['_shape']);
 
             return $row;
-        }, $this->deduplicateResults($this->rawgSteamIds($results)));
+        }, $this->deduplicateResults($this->rawgSteamIds($this->steamParts($results))));
 
         // Calculate match_score for each result
         $results = $this->calculateMatchScores($results, $query, $steamId);
@@ -231,6 +231,78 @@ class GameSearchService
             collect($game['publishers'] ?? [])->pluck('name')->all(),
             \App\Support\StoreLinks::rawgId((string) $game['id']),
         );
+    }
+
+    /**
+     * Steam's own rows as the game they are part of, with its portrait capsule.
+     *
+     * 🔴 **A demo, an add-on, a soundtrack are not games to translate** (user, 2026-10-06, on
+     * Foretales: its Artbook, Soundtrack and Demo were listed above the game, and picked, the
+     * Artbook would have become a card of its own). Steam names the game each belongs to
+     * (`parent`, App\Services\GameSearchService::steamItems): the row becomes THAT game — its
+     * Steam id, its name, its picture — and folds into the game's own row by that id
+     * (deduplicateResults). A translation of the demo is the game's, as an upload of it already is
+     * (getGameFromSteam).
+     *
+     * And a Steam row's picture is its header or its search capsule, both wide: the library capsule
+     * of the same id replaces it — the picture rule of the cards (App\Services\GameArt).
+     *
+     * ⚠ Two calls at most, whatever the list: the rows' ids together, then the parents not among
+     * them. Steam not answering leaves the rows as they came, said in the log.
+     */
+    private function steamParts(array $results): array
+    {
+        $ids = [];
+        foreach ($results as $row) {
+            if (($row['source'] ?? null) === 'steam' && !empty($row['steam_id'])) {
+                $ids[] = (string) $row['steam_id'];
+            }
+        }
+
+        if ($ids === []) {
+            return $results;
+        }
+
+        try {
+            $items = $this->steamItems($ids);
+
+            $parents = [];
+            foreach ($items as $item) {
+                if ($item['parent'] !== null && !isset($items[$item['parent']])) {
+                    $parents[] = $item['parent'];
+                }
+            }
+            $items += $parents === [] ? [] : $this->steamItems($parents);
+        } catch (StoreUnavailable $e) {
+            Log::info('Game search without Steam item types', ['why' => $e->getMessage()]);
+            return $results;
+        }
+
+        foreach ($results as $i => $row) {
+            if (($row['source'] ?? null) !== 'steam' || !isset($items[(string) ($row['steam_id'] ?? '')])) {
+                continue;
+            }
+
+            $item = $items[(string) $row['steam_id']];
+
+            if ($item['parent'] !== null && isset($items[$item['parent']])) {
+                $game = $items[$item['parent']];
+                $row['steam_id'] = $item['parent'];
+                $row['name'] = $game['name'] ?? $row['name'];
+                $row['pages'] = ['steam' => \App\Support\StoreLinks::steam($item['parent'])];
+                $row['image_url'] = $game['banner'] ?? $row['image_url'] ?? null;
+                $item = $game;
+            }
+
+            if ($item['cover'] !== null) {
+                $row['image_url'] = $item['cover'];
+                $row['_shape'] = 'portrait';
+            }
+
+            $results[$i] = $row;
+        }
+
+        return $results;
     }
 
     /**
@@ -440,47 +512,41 @@ class GameSearchService
      * Calculate match_score for each result based on query and steam_id.
      * Higher score = better match.
      *
-     * Scoring:
-     * - Steam ID exact match: +50 (very high confidence)
-     * - Local source: +20 (game exists in our DB)
-     * - Has translations: +1 per translation (max +10)
-     * - Exact name match: +20
-     * - Partial name match (contains query): +5
+     * 🔴 **The weights of the mod's and the Manager's list** (common `GameCandidates.Confidence`),
+     * so one search orders the same in the three products — plus, here only, a tie-break among
+     * catalogue cards by how many translations they carry:
+     * - the Steam id asked for: +50
+     * - a card of ours: +30, and +1 per translation (max +10)
+     * - a Steam id, whichever source carries it: +10 — never the source itself (2026-10-06: an
+     *   add-on Steam listed under a title that contains the name outranked the game)
+     * - the same name: +30; a name containing the query, or contained in it: +5
      */
     private function calculateMatchScores(array $results, ?string $query, ?string $steamId): array
     {
-        $normalizedQuery = $query ? strtolower(trim($query)) : null;
+        $normalizedQuery = $query ? mb_strtolower(trim($query)) : null;
 
         foreach ($results as &$result) {
             $score = 0;
-            $resultName = strtolower($result['name'] ?? '');
+            $resultName = mb_strtolower(trim($result['name'] ?? ''));
             $resultSteamId = $result['steam_id'] ?? null;
 
-            // Steam ID exact match = very high confidence
-            if ($steamId && $resultSteamId && $resultSteamId === $steamId) {
+            if ($steamId && $resultSteamId && (string) $resultSteamId === (string) $steamId) {
                 $score += 50;
             }
 
-            // Local source = game exists in our database
             if (($result['source'] ?? '') === 'local') {
-                $score += 20;
-                // Bonus for having translations (max +10)
-                $translationsCount = $result['translations_count'] ?? 0;
-                $score += min(10, $translationsCount);
+                $score += 30;
+                $score += min(10, (int) ($result['translations_count'] ?? 0));
             }
 
-            // Steam API source = verified game info
-            if (($result['source'] ?? '') === 'steam') {
+            if (!empty($resultSteamId)) {
                 $score += 10;
             }
 
-            // Name matching
-            if ($normalizedQuery) {
+            if ($normalizedQuery !== null && $normalizedQuery !== '' && $resultName !== '') {
                 if ($resultName === $normalizedQuery) {
-                    // Exact match
-                    $score += 20;
-                } elseif (str_contains($resultName, $normalizedQuery)) {
-                    // Partial match
+                    $score += 30;
+                } elseif (str_contains($resultName, $normalizedQuery) || str_contains($normalizedQuery, $resultName)) {
                     $score += 5;
                 }
             }
@@ -794,7 +860,11 @@ class GameSearchService
             return null;
         }
 
-        $fullGameId = ($game['type'] ?? null) === 'demo'
+        // ⚠ An add-on and a soundtrack too (2026-10-06): Steam gives them the same `fullgame` link,
+        // and neither is a game a translation could be filed under — an Artbook picked would have
+        // become a card of its own. Their id is then remembered as also being the game, like a
+        // demo's (`demo_steam_id`).
+        $fullGameId = in_array($game['type'] ?? null, ['demo', 'dlc', 'music'], true)
             ? (string) ($game['fullgame']['appid'] ?? '')
             : '';
 
@@ -902,20 +972,61 @@ class GameSearchService
      */
     public function steamAssets(string $steamId): ?array
     {
-        if (!ctype_digit($steamId)) {
-            return null;
+        $item = $this->steamItems([$steamId])[$steamId] ?? null;
+
+        return $item === null ? null : ['cover' => $item['cover'], 'banner' => $item['banner']];
+    }
+
+    /** Steam's item types, as `IStoreBrowseService/GetItems` numbers them (read 2026-10-06). */
+    public const SteamGame = 0;
+    public const SteamDemo = 1;
+
+    /**
+     * What Steam's item list says about these app ids, keyed by id — `{name, type, parent, cover,
+     * banner}` — in ONE request for all of them. An id Steam does not know is left out.
+     *
+     * `type` is Steam's own number (0 a game, 1 a demo, 4 an add-on, 11 a soundtrack…), `parent`
+     * the game a demo, an add-on or a soundtrack belongs to (`related_items.parent_appid`) — measured
+     * on Foretales: its Artbook, Soundtrack and Demo are three apps of their own, each naming
+     * 1170080 as its parent.
+     *
+     * ⚠ `api.steampowered.com`, not the store: it is outside the store's per-address ceiling
+     * (App\Support\SteamStore), and it answers a whole list in one call. Each id kept a day.
+     *
+     * ⚠ Throws StoreUnavailable when Steam could not be asked.
+     *
+     * @param list<string> $steamIds
+     * @return array<string, array{name: ?string, type: ?int, parent: ?string, cover: ?string, banner: ?string}>
+     */
+    public function steamItems(array $steamIds): array
+    {
+        $found = [];
+        $asked = [];
+
+        foreach (array_unique(array_map('strval', $steamIds)) as $id) {
+            if (!ctype_digit($id)) {
+                continue;
+            }
+
+            $cached = Cache::get('steam:item:' . $id);
+            if ($cached !== null) {
+                if ($cached['data'] !== null) {
+                    $found[$id] = $cached['data'];
+                }
+                continue;
+            }
+
+            $asked[] = $id;
         }
 
-        // Kept a day like an app page: the same card is asked about by every check of it.
-        $key = 'steam:assets:' . $steamId;
-        if (Cache::has($key)) {
-            return Cache::get($key)['data'];
+        if ($asked === []) {
+            return $found;
         }
 
         $input = json_encode([
-            'ids' => [['appid' => (int) $steamId]],
+            'ids' => array_map(fn ($id) => ['appid' => (int) $id], $asked),
             'context' => ['language' => 'english', 'country_code' => 'US'],
-            'data_request' => ['include_assets' => true],
+            'data_request' => ['include_assets' => true, 'include_basic_info' => true],
         ]);
 
         try {
@@ -923,39 +1034,60 @@ class GameSearchService
                 'input_json' => $input,
             ]);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::warning('Steam assets unreachable', ['error' => $e->getMessage()]);
-            throw new StoreUnavailable('Steam asset list unreachable');
+            Log::warning('Steam item list unreachable', ['error' => $e->getMessage()]);
+            throw new StoreUnavailable('Steam item list unreachable');
         }
 
         if (!$response->successful()) {
-            Log::warning('Steam assets refused', ['status' => $response->status(), 'steam_id' => $steamId]);
-            throw new StoreUnavailable('Steam asset list answered ' . $response->status());
+            Log::warning('Steam item list refused', ['status' => $response->status()]);
+            throw new StoreUnavailable('Steam item list answered ' . $response->status());
         }
 
-        $item = $response->json('response.store_items.0');
-        $assets = is_array($item) && ($item['success'] ?? null) === 1 ? ($item['assets'] ?? null) : null;
+        $answered = [];
+        foreach ($response->json('response.store_items') ?? [] as $item) {
+            $id = (string) ($item['appid'] ?? $item['id'] ?? '');
+            if (!in_array($id, $asked, true) || ($item['success'] ?? null) !== 1) {
+                continue;
+            }
 
-        $data = null;
-        if (is_array($assets) && is_string($assets['asset_url_format'] ?? null)) {
-            $url = function (?string $file) use ($assets): ?string {
-                // A file name as Steam writes them: an optional hash folder, then the file.
-                if (!is_string($file) || !preg_match('~^(?:[0-9a-f]{40}/)?[A-Za-z0-9_.-]+\.(?:jpg|png)$~', $file)) {
-                    return null;
-                }
-
-                return 'https://shared.akamai.steamstatic.com/store_item_assets/'
-                    . str_replace('${FILENAME}', $file, $assets['asset_url_format']);
-            };
-
-            $data = [
-                'cover' => $url($assets['library_capsule'] ?? null),
-                'banner' => $url($assets['header'] ?? null),
-            ];
+            $answered[$id] = $this->steamItemRow($item);
         }
 
-        Cache::put($key, ['data' => $data], SteamStore::AppTtlSeconds);
+        // Every id asked is remembered, the unknown ones as unknown: the same list asks again
+        // tomorrow, not at every keystroke.
+        foreach ($asked as $id) {
+            Cache::put('steam:item:' . $id, ['data' => $answered[$id] ?? null], SteamStore::AppTtlSeconds);
+        }
 
-        return $data;
+        return $found + $answered;
+    }
+
+    /** One item of Steam's list as this service keeps it. */
+    private function steamItemRow(array $item): array
+    {
+        $assets = $item['assets'] ?? [];
+        $format = is_string($assets['asset_url_format'] ?? null) ? $assets['asset_url_format'] : null;
+
+        $url = function (mixed $file) use ($format): ?string {
+            // The folder Steam names (`steam/apps/<id>/${FILENAME}`, a cache query maybe) and a file
+            // name as it writes them — an optional hash folder, then the file. Anything else: none.
+            if ($format === null || !preg_match('~^steam/apps/\d{1,20}/\$\{FILENAME\}(?:\?t=\d{1,20})?$~', $format)
+                || !is_string($file) || !preg_match('~^(?:[0-9a-f]{40}/)?[A-Za-z0-9_.-]+\.(?:jpg|png)$~', $file)) {
+                return null;
+            }
+
+            return 'https://shared.akamai.steamstatic.com/store_item_assets/' . str_replace('${FILENAME}', $file, $format);
+        };
+
+        $parent = $item['related_items']['parent_appid'] ?? null;
+
+        return [
+            'name' => isset($item['name']) ? (string) $item['name'] : null,
+            'type' => isset($item['type']) ? (int) $item['type'] : null,
+            'parent' => $parent !== null && ctype_digit((string) $parent) ? (string) $parent : null,
+            'cover' => $url($assets['library_capsule'] ?? null),
+            'banner' => $url($assets['header'] ?? null),
+        ];
     }
 
     /**

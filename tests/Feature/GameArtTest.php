@@ -34,22 +34,38 @@ class GameArtTest extends TestCase
         Http::preventStrayRequests();
     }
 
-    /** Steam knows app 4242 with a header; `$capsule` says whether its asset list has a library capsule. */
-    private function stores(bool $capsule, array $igdbSearch = []): void
+    /**
+     * Steam knows app 4242 with a header; `$capsule` says whether its item list has a library
+     * capsule. `$items` adds other apps to the item list (`appid => [name, type, parent]`), and
+     * `$search` is what Steam's title search answers.
+     */
+    private function stores(bool $capsule, array $igdbSearch = [], array $items = [], array $search = []): void
     {
+        $item = fn (int $id, string $name, int $type, ?int $parent, bool $withCapsule) => array_filter([
+            'appid' => $id, 'success' => 1, 'name' => $name, 'type' => $type,
+            'related_items' => $parent ? ['parent_appid' => $parent] : null,
+            'assets' => array_filter([
+                'asset_url_format' => "steam/apps/{$id}/\${FILENAME}?t=1",
+                'library_capsule' => $withCapsule ? '0123456789abcdef0123456789abcdef01234567/library_600x900.jpg' : null,
+                'header' => '0123456789abcdef0123456789abcdef01234567/header.jpg',
+            ]),
+        ], fn ($v) => $v !== null);
+
         Http::fake([
             'store.steampowered.com/api/appdetails*' => Http::response(['4242' => ['success' => true, 'data' => [
                 'name' => 'Lost Echo', 'type' => 'game', 'header_image' => self::AppHeader,
             ]]]),
-            'store.steampowered.com/api/storesearch/*' => Http::response(['items' => []]),
-            'api.steampowered.com/*' => Http::response(['response' => ['store_items' => [[
-                'success' => 1,
-                'assets' => array_filter([
-                    'asset_url_format' => 'steam/apps/4242/${FILENAME}?t=1',
-                    'library_capsule' => $capsule ? '0123456789abcdef0123456789abcdef01234567/library_600x900.jpg' : null,
-                    'header' => '0123456789abcdef0123456789abcdef01234567/header.jpg',
-                ]),
-            ]]]]),
+            'store.steampowered.com/api/storesearch/*' => Http::response(['items' => $search]),
+            // The item list answers the ids it is asked for, as Steam does.
+            'api.steampowered.com/*' => function (Request $r) use ($item, $capsule, $items) {
+                $asked = array_column(json_decode($r->data()['input_json'] ?? '{}', true)['ids'] ?? [], 'appid');
+                $known = [4242 => $item(4242, 'Lost Echo', 0, null, $capsule)];
+                foreach ($items as $id => [$name, $type, $parent]) {
+                    $known[$id] = $item($id, $name, $type, $parent, true);
+                }
+
+                return Http::response(['response' => ['store_items' => array_values(array_intersect_key($known, array_flip($asked)))]]);
+            },
             'id.twitch.tv/*' => Http::response(['access_token' => 't', 'expires_in' => 5_000_000]),
             'api.igdb.com/*' => fn (Request $r) => Http::response(str_contains($r->body(), 'search "') ? $igdbSearch : []),
             'api.rawg.io/*' => Http::response(['results' => []]),
@@ -116,6 +132,42 @@ class GameArtTest extends TestCase
         $rows = app(GameSearchService::class)->searchFull('Lost Echo', '4242');
 
         $this->assertSame(self::AppHeader, $rows[0]['image_url'], 'a sideways move is no better');
+    }
+
+    public function test_a_games_artbook_soundtrack_and_demo_are_the_game_in_the_list(): void
+    {
+        // Measured on Foretales (2026-10-06): three Steam apps of their own, each naming the game.
+        $this->stores(capsule: true, items: [
+            2080350 => ['Lost Echo - Artbook', 4, 4242],
+            2080330 => ['Lost Echo - Soundtrack', 11, 4242],
+            2012150 => ['Lost Echo Demo', 1, 4242],
+        ], search: [
+            ['id' => 2080350, 'name' => 'Lost Echo - Artbook', 'tiny_image' => 'https://shared.akamai.steamstatic.com/a.jpg'],
+            ['id' => 2080330, 'name' => 'Lost Echo - Soundtrack', 'tiny_image' => 'https://shared.akamai.steamstatic.com/b.jpg'],
+            ['id' => 2012150, 'name' => 'Lost Echo Demo', 'tiny_image' => 'https://shared.akamai.steamstatic.com/c.jpg'],
+        ]);
+
+        $rows = app(GameSearchService::class)->searchFull('Lost Echo');
+
+        $this->assertCount(1, $rows, 'one game, whatever Steam sells beside it');
+        $this->assertSame('4242', (string) $rows[0]['steam_id']);
+        $this->assertSame('Lost Echo', $rows[0]['name']);
+        $this->assertSame(self::Capsule, $rows[0]['image_url'], 'with its portrait capsule');
+    }
+
+    public function test_the_same_name_outranks_an_add_on_that_contains_it(): void
+    {
+        // The site's order follows the mod's and the Manager's (common GameCandidates.Confidence).
+        $this->stores(capsule: false, igdbSearch: [[
+            'id' => 7, 'name' => 'Lost Echo',
+            'external_games' => [['uid' => '4242', 'external_game_source' => 1]],
+        ]], search: [
+            ['id' => 9999, 'name' => 'Lost Echo - Artbook', 'tiny_image' => 'https://shared.akamai.steamstatic.com/a.jpg'],
+        ]);
+
+        $rows = app(GameSearchService::class)->searchFull('Lost Echo');
+
+        $this->assertSame('Lost Echo', $rows[0]['name']);
     }
 
     public function test_only_a_better_picture_replaces_the_one_shown(): void
