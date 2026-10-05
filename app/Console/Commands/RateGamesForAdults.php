@@ -4,25 +4,27 @@ namespace App\Console\Commands;
 
 use App\Models\Game;
 use App\Services\AdultRating;
+use App\Services\StoreChanges;
+use App\Support\SteamStore;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Support\Facades\Event;
 
 /**
- * Asks the stores which games are for adults only.
+ * Asks the stores which games are for adults only — the games that are DUE, and only those.
  *
- * New games are rated by the upload that creates them, so this is for two other jobs: the
- * catalogue published before the column existed, and games whose store page has changed since —
- * a descriptor added, an 18+ DLC published, a game delisted.
+ * 🔴 **Due is an event, not an age** (user, 2026-10-05). A new game is rated by the upload that
+ * creates it. After that, a game is asked about again only when a store says it changed
+ * (App\Services\StoreChanges: Steam's change list, its DLC included, and IGDB's) or when an admin
+ * presses Check again. It used to re-ask every game every 30 days: a timer, which at 20,000 games
+ * would have had to hammer a store whose limit is counted per address and punishes insisting.
  *
- * ⚠ **Bounded by the stores' own limit, counted request by request** (2026-10-05). Steam allows
- * about 200 requests per 5 minutes and one game costs 1 to 11 (its DLC are asked too). A pass
- * used to take a fixed 40 games a night: at 20,000 games a full round would have taken some 500
- * nights, and "re-asked after 30 days" would never have been true, with nothing to say so. Now a
- * pass spends up to `--budget` requests — counted on the HTTP client, so a cached answer costs
- * nothing — and runs every five minutes (routes/console.php), each run inside one window of the
- * store's limit. A run with nothing due costs one query. The games screen says when games are
- * overdue all the same (AdminController::games).
+ * ⚠ **A small budget, and the first refusal stops everything** (App\Support\SteamStore). The
+ * store's limit (about 200 requests per 5 minutes per address) is shared with every player
+ * publishing at the same moment, and they come first: a pass spends at most `--budget` store
+ * requests, counted on the HTTP client, and a 429 or 403 ends it on the spot. It runs hourly: what
+ * a pass leaves due, the next takes; while the store refuses, a pass asks it once and stops — the
+ * store never says it accepts again, so asking is the only way to know.
  *
  * ⚠ **Nothing is re-timestamped.** `saveQuietly()` silences events and still writes `updated_at`,
  * which would reorder every listing sorted by freshness — the trap this project has paid for
@@ -30,57 +32,43 @@ use Illuminate\Support\Facades\Event;
  */
 class RateGamesForAdults extends Command
 {
-    /** A game asked longer ago than this is asked again — a store page can change and tell nobody. */
-    public const StaleDays = 30;
-
     /** The most one game can cost: its page and its first ten DLC (AdultRating::DlcAsked). */
     private const WorstCasePerGame = 11;
 
     protected $signature = 'games:rate-adult
-        {--budget=180 : store requests this pass may spend (Steam allows about 200 per 5 minutes)}
-        {--stale= : re-ask about a game checked more than this many days ago (default: StaleDays)}
-        {--all : ignore --stale and re-ask about everything, oldest first}';
+        {--budget=50 : store requests this pass may spend (Steam allows about 200 per 5 minutes, players first)}
+        {--all : ask about every game, not only the due ones (by hand, after a deploy or an import)}';
 
-    protected $description = 'Ask Steam, then IGDB, which games are for adults only';
+    protected $description = 'Ask Steam, then IGDB, which games are for adults only — those due';
 
-    public function handle(AdultRating $rating): int
+    public function handle(AdultRating $rating, StoreChanges $changes): int
     {
         $budget = max(self::WorstCasePerGame, (int) $this->option('budget'));
-        $stale = max(1, (int) ($this->option('stale') ?: self::StaleDays));
 
         $spent = 0;
         Event::listen(RequestSending::class, function () use (&$spent) {
             $spent++;
         });
 
+        // While the store refuses, one game is asked about, as the probe: its answer says whether
+        // the refusal is over (SteamStore clears it on the first success).
+        $probing = SteamStore::refusing();
+
         $due = Game::query()
-            ->unless($this->option('all'), fn ($q) => $q
-                ->where(fn ($w) => $w
-                    ->whereNull('adult_checked_at')
-                    ->orWhere('adult_checked_at', '<', now()->subDays($stale))))
-            // Never checked first, then the oldest check. A game nobody has ever asked about is
-            // the one that can be listed wrongly right now.
+            ->unless($this->option('all'), fn ($q) => $q->whereNull('adult_checked_at'))
             ->orderByRaw('adult_checked_at IS NULL DESC')
             ->orderBy('adult_checked_at')
             ->orderBy('id');
 
-        // A page, never the catalogue: at best a game costs one request, so no more than the
-        // budget can ever be reached in one pass.
-        $games = (clone $due)->limit($budget)->get();
+        // A page, never the catalogue: at best a game costs one request.
+        $games = (clone $due)->limit($probing ? 1 : $budget)->get();
 
-        if ($games->isEmpty()) {
-            $this->info('Nothing to ask about.');
-
-            return self::SUCCESS;
-        }
-
+        $asked = 0;
         $marked = 0;
         $changed = 0;
 
-        $asked = 0;
         foreach ($games as $game) {
-            // Stop while one more game, at its worst, still fits in the budget.
-            if ($spent + self::WorstCasePerGame > $budget) {
+            if ($spent + self::WorstCasePerGame > $budget || ($asked > 0 && SteamStore::refusing())) {
                 break;
             }
 
@@ -90,7 +78,6 @@ class RateGamesForAdults extends Command
             if ($rating->rate($game, quiet: true)) {
                 $changed++;
             }
-
             if ($game->adult) {
                 $marked++;
             }
@@ -107,14 +94,30 @@ class RateGamesForAdults extends Command
             }
         }
 
+        // Then, with what is left, which games a store has changed since the last pass: they are
+        // asked about by the next one. ⚠ After the due games, not before: a game already known to
+        // have changed must not wait behind the tracing of a hundred DLC (measured 2026-10-05: two
+        // days of Steam's DLC took five passes of thirty requests to trace to their games).
+        if (!$this->option('all') && !SteamStore::refusing()) {
+            // ⚠ A closure by reference, not `fn`: an arrow function would capture `$spent` once,
+            // and the budget would never seem to be spent.
+            $made = $changes->markDue(function () use (&$spent, $budget) {
+                return $spent < $budget;
+            });
+            if ($made > 0) {
+                $this->line("  {$made} game(s) changed in a store since the last pass — asked about next");
+            }
+        }
+
+        $refusal = SteamStore::refusal();
         $this->info(sprintf(
-            '%d game(s) asked about, %d answer(s) changed, %d marked for adults only, %d store request(s)%s.',
+            '%d game(s) asked about, %d answer(s) changed, %d marked for adults only, %d request(s)%s%s.',
             $asked,
             $changed,
             $marked,
             $spent,
-            // Read after the pass: the games just asked are no longer due.
-            $this->option('all') ? '' : ', ' . $due->count() . ' still due'
+            $this->option('all') ? '' : ', ' . $due->count() . ' still due',
+            $refusal ? ", Steam's store refusing since {$refusal['at']} ({$refusal['status']})" : ''
         ));
 
         return self::SUCCESS;

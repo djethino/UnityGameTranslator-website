@@ -307,6 +307,10 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         // raise the flag. Same `{game:id}` reasoning as above.
         Route::post('/games/{game:id}/adult', [AdminController::class, 'setGameAdult'])
             ->name('games.adult');
+        // Ask the stores again, now — the hourly pass only asks about games a store says changed.
+        Route::post('/games/{game:id}/adult/check', [AdminController::class, 'checkGameAdultAgain'])
+            ->middleware('throttle:30,1')
+            ->name('games.adult.check');
 
         // What the stores can tell a card that lacks it — PROPOSED, never written: a title match
         // is a guess, and only an admin turns it into a fact. See App\Services\StoreProposals.

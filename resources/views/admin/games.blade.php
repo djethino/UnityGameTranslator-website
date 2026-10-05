@@ -153,14 +153,14 @@
     </div>
 @endif
 
-{{-- Whether the adult check keeps up with the catalogue (games:rate-adult, every five minutes within
-     the store's limit). Said only when it does not: a game not asked for longer than the pass
-     promises is one a store may have reclassified without anybody knowing. --}}
-@if($adultOverdue > 0)
+{{-- Steam's store refusing us (App\Support\SteamStore): what is paused, and that it is asked again
+     on its own — the store never says it accepts again. Said only while it is true. --}}
+@if($steamRefusal)
     <div class="bg-gray-800 border-l-4 border-amber-500 rounded p-3 mb-3 text-sm text-gray-300">
         <i class="fas fa-triangle-exclamation mr-1 text-amber-400"></i>
-        {{ $adultOverdue }} {{ Str::plural('game', $adultOverdue) }} not checked for adult content in
-        {{ \App\Console\Commands\RateGamesForAdults::StaleDays }} days. The automatic check is not keeping up.
+        Steam's store refused our requests ({{ $steamRefusal['status'] }}) at
+        {{ \Illuminate\Support\Carbon::parse($steamRefusal['at'])->format('M d, H:i') }} UTC.
+        Background checks are paused. They try again every hour.
     </div>
 @endif
 
@@ -317,7 +317,7 @@
                         <p class="text-xs mb-1 {{ $game->adult ? 'text-amber-400' : 'text-gray-500' }}">
                             {{ $game->adult ? 'yes' : 'no' }}
                             <span class="text-gray-500">
-                                &middot; {{ $game->adultSource() ?? ($game->adult_checked_at ? 'nothing found' : 'never checked') }}
+                                &middot; {{ $game->adultSource() ?? ($game->adult_checked_at ? 'nothing found' : 'waiting for the check') }}
                             </span>
                         </p>
                         @php
@@ -335,6 +335,15 @@
                                     {{ $label }}
                                 </button>
                             @endforeach
+                        </form>
+                        {{-- The stores asked again, now: the hourly pass only asks about games a store
+                             says changed (games:rate-adult). For a doubt or a report. --}}
+                        <form action="{{ route('admin.games.adult.check', $game->id) }}" method="POST" class="mt-1">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                    title="Ask Steam, then IGDB, again">
+                                Check again
+                            </button>
                         </form>
                     </td>
                     {{-- When one of its translations last changed — the "Updated" of the

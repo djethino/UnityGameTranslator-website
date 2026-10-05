@@ -540,7 +540,8 @@ class AdultGamesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.games'))
             ->assertOk()
             ->assertSee('steam_dlc')
-            ->assertSee('never checked')
+            // Not asked yet: it waits in the hourly pass's queue (games:rate-adult).
+            ->assertSee('waiting for the check')
             ->assertSee('Unmark')
             ->assertSee('Clear');
     }

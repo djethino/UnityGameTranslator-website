@@ -96,11 +96,12 @@ Schedule::command('releases:refresh')->hourly();
 // right on the day something is published. This is for what changes afterwards and tells nobody:
 // a descriptor added to a store page, an 18+ DLC published months after the game, a game delisted.
 //
-// ⚠ Every five minutes, each run inside one window of the store's limit (about 200 requests per 5
-// minutes; one game costs 1 to 11) — RateGamesForAdults counts its requests. A daily pass of a
-// fixed 40 games would have needed some 500 nights to come round 20,000 games. A run with nothing
-// due costs one query.
-Schedule::command('games:rate-adult')->everyFiveMinutes()->withoutOverlapping();
+// ⚠ Hourly, and only the games DUE: new ones, those a store says changed (Steam's change list, its
+// DLC included, and IGDB's — App\Services\StoreChanges) and those an admin asked about again. A
+// small budget of store requests, and the first refusal stops the pass (App\Support\SteamStore):
+// the store's limit is per address and players publishing come first. A pass with nothing due
+// costs two calls to Steam's Web API, not to its store.
+Schedule::command('games:rate-adult')->hourly()->withoutOverlapping();
 
 // Being delisted is computed on every query, so nothing here decides anything: the state is
 // already true the moment the thirtieth day passes. What no code can do on its own is say so —

@@ -350,14 +350,14 @@ class AdminController extends Controller
         $pendingProposals = GameProposal::pending()->count();
         $pendingGames = GameProposal::pending()->distinct()->count('game_id');
 
-        // Whether the nightly adult check keeps up: games last asked longer ago than it promises
-        // (games:rate-adult). Said only when there are some — then the pass is too small.
-        $adultOverdue = Game::where(fn ($q) => $q->whereNull('adult_checked_at')
-            ->orWhere('adult_checked_at', '<', now()->subDays(\App\Console\Commands\RateGamesForAdults::StaleDays)))->count();
+        // The adult check's queue (games:rate-adult, hourly): games new, changed in a store, or asked
+        // about again — and whether Steam's store is refusing us, which pauses it.
+        $adultDue = Game::whereNull('adult_checked_at')->count();
+        $steamRefusal = \App\Support\SteamStore::refusal();
 
         $stores = app(StoreProposals::class);
 
-        return view('admin.games', compact('games', 'storesDue', 'pendingProposals', 'pendingGames', 'adultOverdue', 'stores'));
+        return view('admin.games', compact('games', 'storesDue', 'pendingProposals', 'pendingGames', 'adultDue', 'steamRefusal', 'stores'));
     }
 
     /**
@@ -461,6 +461,20 @@ class AdminController extends Controller
 
         return back()->with('success', "Asked the stores about {$game->name}: "
             . ($new > 0 ? $new . ' new ' . Str::plural('proposal', $new) . '.' : 'nothing new.'));
+    }
+
+    /**
+     * Ask the stores again whether this game is for adults only — now. The hourly pass only asks
+     * about games a store says changed; this is for a doubt, or a report.
+     */
+    public function checkGameAdultAgain(Game $game, \App\Services\AdultRating $rating)
+    {
+        $before = $game->adult;
+        $rating->rate($game, quiet: true);
+
+        return back()->with('success', "Asked the stores about {$game->name}: "
+            . ($game->adultSource() ? 'for adults only (' . $game->adultSource() . ').' : 'nothing found.')
+            . ($before !== $game->adult ? ' The mark changed.' : ''));
     }
 
     public function rejectGameProposal(GameProposal $proposal, StoreProposals $service)

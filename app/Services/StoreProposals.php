@@ -71,7 +71,9 @@ class StoreProposals
         $proposed = 0;
 
         foreach (Game::whereNull('stores_checked_at')->lazyById(200) as $game) {
-            if (microtime(true) - $started > self::BudgetSeconds) {
+            // The budget, and the store's refusal: Steam's limit is per address and players
+            // publishing come first (App\Support\SteamStore).
+            if (microtime(true) - $started > self::BudgetSeconds || \App\Support\SteamStore::refusing()) {
                 break;
             }
 

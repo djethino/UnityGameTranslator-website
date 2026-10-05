@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Game;
 use App\Support\GameNaming;
+use App\Support\SteamStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -801,10 +802,19 @@ class GameSearchService
      */
     public function steamApp(string $steamId): ?array
     {
+        // Kept a day, the store's "no such app" included: the same page was asked again by every
+        // publication, search and check, against a limit counted per address (App\Support\SteamStore).
+        // A failure is never kept — the next caller asks again.
+        $key = SteamStore::appKey($steamId);
+        if (Cache::has($key)) {
+            return Cache::get($key)['data'];
+        }
+
         try {
             $response = Http::timeout(5)->get('https://store.steampowered.com/api/appdetails', [
                 'appids' => $steamId,
             ]);
+            SteamStore::note($response->status());
 
             if (!$response->successful()) {
                 Log::warning('Steam API error', ['status' => $response->status()]);
@@ -814,11 +824,12 @@ class GameSearchService
             $data = $response->json();
 
             // Steam returns {steamId: {success: bool, data: {...}}}
-            if (!isset($data[$steamId]['success']) || !$data[$steamId]['success']) {
-                return null;
-            }
+            $app = isset($data[$steamId]['success']) && $data[$steamId]['success']
+                ? $data[$steamId]['data']
+                : null;
+            Cache::put($key, ['data' => $app], SteamStore::AppTtlSeconds);
 
-            return $data[$steamId]['data'];
+            return $app;
 
         } catch (\Exception $e) {
             Log::warning('Steam API error', ['error' => $e->getMessage()]);
@@ -842,6 +853,7 @@ class GameSearchService
                 'cc' => 'us',
                 'l' => 'en',
             ]);
+            SteamStore::note($response->status());
 
             if (!$response->successful()) {
                 Log::warning('Steam search error', ['status' => $response->status()]);
