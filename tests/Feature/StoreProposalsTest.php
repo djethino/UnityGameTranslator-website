@@ -33,14 +33,22 @@ class StoreProposalsTest extends TestCase
      * Steam answers this search with the game AND its add-ons — the shape it really has (measured
      * on 2026-09-22 for "Love n Life Happy Student").
      */
-    private function storesKnow(array $steamHits, array $igdbRows = [], ?array $steamApp = null): void
+    private function storesKnow(array $steamHits, array $igdbRows = [], ?array $steamApp = null,
+                                ?array $steamAssets = null, ?array $igdbCover = null, ?array $igdbBySteamId = null): void
     {
-        $this->mock(GameSearchService::class, function ($mock) use ($steamHits, $igdbRows, $steamApp) {
+        $this->mock(GameSearchService::class, function ($mock) use ($steamHits, $igdbRows, $steamApp, $steamAssets, $igdbCover, $igdbBySteamId) {
             $mock->shouldReceive('steamSearch')->andReturn($steamHits);
             $mock->shouldReceive('igdb')->andReturn($igdbRows);
             $mock->shouldReceive('steamApp')->andReturn($steamApp);
+            $mock->shouldReceive('steamAssets')->andReturn($steamAssets);
+            $mock->shouldReceive('igdbCover')->andReturn($igdbCover);
+            $mock->shouldReceive('getGameFromIgdbBySteamId')->andReturn($igdbBySteamId);
         });
     }
+
+    private const SteamCover = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2503770/abc/library_600x900.jpg';
+    private const SteamHeader = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2503770/abc/header.jpg';
+    private const IgdbCover = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co748v.jpg';
 
     public function test_an_exact_title_is_proposed_and_nothing_is_written(): void
     {
@@ -85,10 +93,14 @@ class StoreProposalsTest extends TestCase
     {
         $game = Game::create(['name' => 'A Game', 'steam_id' => '111', 'igdb_id' => 222, 'image_url' => 'https://images.igdb.com/cover.jpg']);
 
+        // Its pictures are still read from its ids — that is not asking about a value.
         $this->mock(GameSearchService::class, function ($mock) {
             $mock->shouldNotReceive('steamSearch');
             $mock->shouldNotReceive('igdb');
             $mock->shouldNotReceive('steamApp');
+            $mock->shouldNotReceive('getGameFromIgdbBySteamId');
+            $mock->shouldReceive('steamAssets')->andReturnNull();
+            $mock->shouldReceive('igdbCover')->andReturnNull();
         });
 
         $this->assertSame(0, app(StoreProposals::class)->check($game));
@@ -195,41 +207,128 @@ class StoreProposalsTest extends TestCase
         $this->assertSame(0, GameProposal::pending()->count());
     }
 
-    public function test_a_cover_comes_only_from_an_id_the_card_already_has(): void
-    {
-        $header = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2503770/header.jpg';
+    // ── the card's picture, by shape, from its own ids (2026-10-06) ─────────────────────────
 
-        // A RAWG in-game screenshot is not store art: replaceable.
+    public function test_the_best_picture_of_the_cards_ids_is_written_with_its_banner(): void
+    {
+        // A RAWG in-game screenshot: the Steam portrait capsule replaces it, the header becomes
+        // the banner. Written, not proposed: both are read from the card's own Steam id.
         $game = Game::create([
-            'name' => 'House of Legacy',
-            'steam_id' => '2503770',
-            'igdb_id' => 1,
+            'name' => 'House of Legacy', 'steam_id' => '2503770', 'igdb_id' => 1,
             'image_url' => 'https://media.rawg.io/media/screenshots/36d/36d0fad027bec526f9274e5a14f8c43d.jpg',
         ]);
-        $this->storesKnow([], [], ['header_image' => $header]);
+        Game::whereKey($game->id)->update(['updated_at' => now()->subYear()]);
+        $before = $game->refresh()->updated_at;
 
-        app(StoreProposals::class)->check($game);
-        $this->assertSame($header, GameProposal::where('field', 'image_url')->value('value'));
+        $this->storesKnow([], [], null, ['cover' => self::SteamCover, 'banner' => self::SteamHeader],
+            ['url' => self::IgdbCover, 'width' => 264, 'height' => 352]);
 
-        // A card with no Steam id gets no cover proposed, even when its id is being proposed:
-        // accepting the cover and rejecting the id would leave the cover of the wrong game.
-        $other = Game::create(['name' => 'LoneStar', 'igdb_id' => 2]);
-        $this->storesKnow([['id' => '2056210', 'name' => 'LONESTAR']], [], ['header_image' => $header]);
+        $this->assertSame(0, app(StoreProposals::class)->checkOne($game));
 
-        app(StoreProposals::class)->check($other);
-        $this->assertSame(0, GameProposal::where('game_id', $other->id)->where('field', 'image_url')->count());
+        $game->refresh();
+        $this->assertSame(self::SteamCover, $game->image_url);
+        $this->assertSame(self::SteamHeader, $game->banner_url);
+        $this->assertEquals($before, $game->updated_at, 'reading a store is not a change somebody made');
+        $this->assertSame(0, GameProposal::count(), 'the batch writes the best and proposes nothing');
     }
 
-    public function test_a_store_cover_already_there_is_kept(): void
+    public function test_a_wide_picture_gives_way_to_a_cover_but_a_cover_never_to_a_banner(): void
     {
-        $game = Game::create([
-            'name' => 'A Game', 'steam_id' => '111', 'igdb_id' => 1,
-            'image_url' => 'https://images.igdb.com/igdb/image/upload/t_cover_big/co748v.jpg',
-        ]);
+        // The Steam header a Steam pick created the card with: the IGDB cover replaces it.
+        $wide = Game::create(['name' => 'Little Kitty', 'steam_id' => '1177980', 'igdb_id' => 145937, 'image_url' => self::SteamHeader]);
+        $this->storesKnow([], [], null, ['cover' => null, 'banner' => self::SteamHeader],
+            ['url' => self::IgdbCover, 'width' => 264, 'height' => 352]);
+        app(StoreProposals::class)->checkOne($wide);
+        $this->assertSame(self::IgdbCover, $wide->refresh()->image_url);
 
-        $this->mock(GameSearchService::class, fn ($mock) => $mock->shouldNotReceive('steamApp'));
+        // IGDB silent this time: the header found is NOT taken over the cover already there — a
+        // store not answering must not flip a card sideways.
+        $this->storesKnow([], [], null, ['cover' => null, 'banner' => self::SteamHeader], null);
+        $wide->update(['name' => 'Little Kitty, Big City']);
+        app(StoreProposals::class)->checkOne($wide->refresh());
+        $this->assertSame(self::IgdbCover, $wide->refresh()->image_url);
+    }
 
-        $this->assertSame(0, app(StoreProposals::class)->check($game));
+    public function test_a_picture_an_admin_chose_is_never_moved(): void
+    {
+        $game = Game::create(['name' => 'A Game', 'steam_id' => '111', 'igdb_id' => 1, 'image_url' => self::SteamHeader]);
+        $game->forceFill(['image_chosen_at' => now()])->save();
+
+        $this->storesKnow([], [], null, ['cover' => self::SteamCover, 'banner' => self::SteamHeader]);
+        app(StoreProposals::class)->checkOne($game->refresh());
+
+        $this->assertSame(self::SteamHeader, $game->refresh()->image_url);
+    }
+
+    public function test_check_again_lays_out_the_variants_unticked_and_applying_one_pins_it(): void
+    {
+        $game = Game::create(['name' => 'A Game', 'steam_id' => '2503770', 'igdb_id' => 1]);
+        $this->storesKnow([], [], null, ['cover' => self::SteamCover, 'banner' => self::SteamHeader],
+            ['url' => self::IgdbCover, 'width' => 264, 'height' => 352]);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->post(route('admin.games.check-stores.one', $game->id))->assertRedirect();
+
+        $this->assertSame(self::SteamCover, $game->refresh()->image_url, 'the best is written');
+        $variants = GameProposal::pending()->where('field', 'image_url')->pluck('value')->sort()->values()->all();
+        $this->assertSame([self::IgdbCover, self::SteamHeader], $variants, 'every OTHER picture is proposed');
+
+        // Never ticked: an Apply meant for an id must not change the picture on the way.
+        $html = $this->get(route('admin.games'))->assertOk()->getContent();
+        foreach (GameProposal::pending()->where('field', 'image_url')->pluck('id') as $id) {
+            $this->assertSame(1, preg_match('~<input[^>]*name="proposals\[\]" value="' . $id . '"[^>]*>~', $html, $tag));
+            $this->assertStringNotContainsString('checked', $tag[0]);
+        }
+
+        $this->post(route('admin.games.proposals.apply'), ['proposals' => [GameProposal::where('value', self::IgdbCover)->value('id')]])
+            ->assertSessionHas('success');
+        $game->refresh();
+        $this->assertSame(self::IgdbCover, $game->image_url);
+        $this->assertNotNull($game->image_chosen_at);
+
+        // The next check keeps the admin's choice.
+        app(StoreProposals::class)->checkOne($game);
+        $this->assertSame(self::IgdbCover, $game->refresh()->image_url);
+    }
+
+    public function test_a_card_without_ids_is_given_no_picture_from_a_proposed_one(): void
+    {
+        // A picture from a PROPOSED id could be accepted while the id is rejected — the picture of
+        // the wrong game. It waits for the id to be applied.
+        $game = Game::create(['name' => 'LoneStar']);
+        $this->mock(GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('steamSearch')->andReturn([['id' => '2056210', 'name' => 'LONESTAR']]);
+            $mock->shouldReceive('igdb')->andReturn([]);
+            $mock->shouldNotReceive('steamAssets');
+            $mock->shouldNotReceive('igdbCover');
+        });
+
+        app(StoreProposals::class)->check($game);
+        $this->assertNull($game->refresh()->image_url);
+    }
+
+    // ── the IGDB id read from the Steam id (2026-10-06) ─────────────────────────────────────
+
+    public function test_the_igdb_id_of_a_steam_card_is_written_when_igdb_links_exactly_one_game(): void
+    {
+        $game = Game::create(['name' => 'Aviassembly', 'steam_id' => '2660460']);
+        $this->storesKnow([], [], null, null, null, ['id' => 291217, 'name' => 'Aviassembly']);
+
+        app(StoreProposals::class)->checkOne($game);
+
+        $this->assertSame('291217', (string) $game->refresh()->igdb_id);
+        $this->assertSame(0, GameProposal::where('field', 'igdb_id')->count(), 'read by id: nothing to propose by title');
+    }
+
+    public function test_an_igdb_id_another_card_holds_is_never_written(): void
+    {
+        Game::create(['name' => 'The Other Card', 'igdb_id' => 291217]);
+        $game = Game::create(['name' => 'Aviassembly', 'steam_id' => '2660460']);
+        $this->storesKnow([], [], null, null, null, ['id' => 291217, 'name' => 'Aviassembly']);
+
+        app(StoreProposals::class)->checkOne($game);
+
+        $this->assertNull($game->refresh()->igdb_id, 'one game two cards would be a merge');
     }
 
     public function test_a_title_in_another_script_is_asked_of_igdb_whole(): void
@@ -243,6 +342,8 @@ class StoreProposalsTest extends TestCase
                  ->with('games', \Mockery::on(fn ($body) => str_contains($body, 'search "轮回修仙路"')))
                  ->andReturn([]);
             $mock->shouldReceive('steamApp')->andReturn(null);
+            $mock->shouldReceive('getGameFromIgdbBySteamId')->andReturnNull();
+            $mock->shouldReceive('steamAssets')->andReturnNull();
         });
 
         $this->assertSame(0, app(StoreProposals::class)->check($game));
@@ -256,6 +357,8 @@ class StoreProposalsTest extends TestCase
         $this->mock(GameSearchService::class, function ($mock) {
             $mock->shouldNotReceive('igdb');
             $mock->shouldReceive('steamApp')->andReturn(null);
+            $mock->shouldReceive('getGameFromIgdbBySteamId')->andReturnNull();
+            $mock->shouldReceive('steamAssets')->andReturnNull();
         });
 
         $this->assertSame(0, app(StoreProposals::class)->check($game));
@@ -380,8 +483,9 @@ class StoreProposalsTest extends TestCase
         $this->assertSame(1, $proposals->checkDue()['checked']);
     }
 
-    public function test_check_again_asks_now_and_is_offered_only_where_an_answer_could_add_something(): void
+    public function test_check_again_asks_now_and_is_offered_on_every_card_asked_once(): void
     {
+        // On a complete card too, since 2026-10-06: it lays out the pictures to choose another.
         $open = Game::create(['name' => 'Open card']);
         $complete = Game::create(['name' => 'Complete card', 'steam_id' => '100', 'igdb_id' => 200,
             'image_url' => 'https://cdn.example/cover.jpg']);
@@ -390,7 +494,7 @@ class StoreProposalsTest extends TestCase
 
         $page = $this->actingAs($this->admin())->get(route('admin.games'))->assertOk();
         $page->assertSee(route('admin.games.check-stores.one', $open->id), false);
-        $page->assertDontSee(route('admin.games.check-stores.one', $complete->id), false);
+        $page->assertSee(route('admin.games.check-stores.one', $complete->id), false);
 
         GameProposal::query()->delete();
         $this->post(route('admin.games.check-stores.one', $open->id))->assertRedirect();

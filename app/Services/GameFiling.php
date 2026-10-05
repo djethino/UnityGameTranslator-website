@@ -37,6 +37,7 @@ class GameFiling
         private GameResolver $resolver,
         private GameSearchService $stores,
         private AdultRating $rating,
+        private GameArt $art,
     ) {
     }
 
@@ -198,13 +199,15 @@ class GameFiling
         // same test. Without it the FIRST publisher of a game chose its key freely while every
         // later one was refused, and a key chosen badly cannot be written again ("never
         // overwrite"), so the real product name was locked out for good.
+        $storeIds = $this->storeIdsFor(null, $external);
+        $pictures = $this->picturesFor($resolvedSteamId, $storeIds['igdb_id'] ?? null, $external['image_url'] ?? null);
+
         $created = Game::create([
             'name' => $title,
             'unity_name' => GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
             'unity_company' => $company,
             'steam_id' => $resolvedSteamId,
-            'image_url' => $external['image_url'] ?? null,
-        ] + $this->storeIdsFor(null, $external));
+        ] + $pictures + $storeIds);
 
         $this->rememberDemoId($created, $external);
 
@@ -310,6 +313,34 @@ class GameFiling
             throw new WrongGame('Wrong game: the picked one is made with ' . implode(', ', $engines)
                 . ", the installed game with {$engine}. Pick the game again.");
         }
+    }
+
+    /**
+     * The picture and banner a new card is created with: the best its ids give (App\Services\
+     * GameArt), the same choice the stores check makes for every card — otherwise the picture of
+     * the store it was picked from, as before.
+     *
+     * 🔴 **A publication never waits on a picture.** Steam not answering here leaves the picked
+     * store's picture; the card is created due (`stores_checked_at` null), so the next stores check
+     * makes the choice with Steam's answer.
+     *
+     * @return array{image_url: ?string, banner_url: ?string}
+     */
+    private function picturesFor(?string $steamId, int|string|null $igdbId, ?string $picked): array
+    {
+        try {
+            $candidates = $this->art->candidates($steamId, $igdbId);
+        } catch (\App\Exceptions\StoreUnavailable $e) {
+            \Illuminate\Support\Facades\Log::info('New card created with the picked picture: Steam assets unavailable', ['steam_id' => $steamId, 'why' => $e->getMessage()]);
+            $candidates = [];
+        }
+
+        $best = GameArt::best($candidates);
+
+        return [
+            'image_url' => GameArt::shouldReplace($picked, $best, $candidates) ? $best['url'] : $picked,
+            'banner_url' => GameArt::banner($candidates),
+        ];
     }
 
     /**

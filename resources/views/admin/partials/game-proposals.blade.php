@@ -9,7 +9,10 @@
      the card that holds it, so the admin can see the duplicate — and Reject it to stop seeing it. --}}
 @php
     $here = $game->proposals->where('field', $field);
-    $tickedByDefault = $here->filter(fn ($p) => $p->isApplicable())->count() === 1;
+    // ⚠ Never a picture: those are the variants "Check again" lays out to choose ANOTHER one, while
+    // the card already shows the best its ids give — ticked, a lone variant would be applied by an
+    // Apply meant for an id.
+    $tickedByDefault = $field !== 'image_url' && $here->filter(fn ($p) => $p->isApplicable())->count() === 1;
     $sourceName = fn ($source) => match ($source) {
         'steam' => 'Steam',
         'igdb' => 'IGDB',
@@ -40,10 +43,13 @@
         @if($field === 'image_url')
             {{-- The picture IS the label: it sits in the narrow title column, where "Steam cover"
                  written out pushed Reject across the next column. --}}
+            {{-- Its shape in the title: a portrait fills a card, a wide one is shown whole on its
+                 own blur (App\Services\GameArt). --}}
+            @php $kind = $sourceName($proposal->source) . ($proposal->detail === 'wide' ? ' banner' : ' cover'); @endphp
             <span class="text-emerald-300">&rarr;</span>
             <a href="{{ $proposal->link }}" target="_blank" rel="noopener noreferrer"
-               title="{{ $sourceName($proposal->source) }} cover — open full size">
-                <img src="{{ $proposal->value }}" alt="{{ $sourceName($proposal->source) }} cover" class="h-6 rounded">
+               title="{{ $kind }} — open full size">
+                <img src="{{ $proposal->value }}" alt="{{ $kind }}" class="h-6 rounded">
             </a>
         @else
             <span class="text-emerald-300">&rarr;</span>

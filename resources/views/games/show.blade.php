@@ -27,7 +27,9 @@
 
 @section('og_type', 'article')
 
-@section('og_image', $game->image_url ?? '')
+{{-- A link to this page is previewed wide (Discord, social sites): the Steam banner when the card
+     has one, its portrait picture otherwise (App\Services\GameArt). --}}
+@section('og_image', $game->banner_url ?? $game->image_url ?? '')
 
 @push('head')
 <script type="application/ld+json">

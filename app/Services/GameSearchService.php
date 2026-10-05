@@ -136,7 +136,12 @@ class GameSearchService
             $results = array_merge($results, $this->searchRAWG($query, $perSource));
         }
 
-        $results = $this->deduplicateResults($this->rawgSteamIds($results));
+        // `_shape` only served the folding (gather): internal, never handed out.
+        $results = array_map(function (array $row) {
+            unset($row['_shape']);
+
+            return $row;
+        }, $this->deduplicateResults($this->rawgSteamIds($results)));
 
         // Calculate match_score for each result
         $results = $this->calculateMatchScores($results, $query, $steamId);
@@ -364,10 +369,18 @@ class GameSearchService
     {
         $kept['pages'] = ($kept['pages'] ?? []) + ($other['pages'] ?? []);
 
-        foreach (['year', 'image_url'] as $field) {
-            if (empty($kept[$field]) && !empty($other[$field])) {
-                $kept[$field] = $other[$field];
-            }
+        if (empty($kept['year']) && !empty($other['year'])) {
+            $kept['year'] = $other['year'];
+        }
+
+        // 🔴 **The picture by shape, the one rule a card's picture follows** (App\Services\GameArt,
+        // 2026-10-06). The row kept may be Steam's, whose picture is its wide header, while the
+        // IGDB hit folded into it — the SAME game, by id — carries the portrait cover: the list
+        // showed the header. A card of ours keeps its own: it was already chosen that way.
+        if (!empty($other['image_url'])
+            && (empty($kept['image_url']) || ($this->imageShape($kept) === 'wide' && $this->imageShape($other) === 'portrait'))) {
+            $kept['image_url'] = $other['image_url'];
+            $kept['_shape'] = $this->imageShape($other);
         }
 
         foreach (['developers', 'publishers', 'engines'] as $field) {
@@ -377,6 +390,16 @@ class GameSearchService
         }
 
         return $kept;
+    }
+
+    /**
+     * The shape of a row's picture: an IGDB cover by IGDB's own size (`_shape`, igdbRow), a Steam
+     * or RAWG picture wide by what they serve (header, search capsule, background), a card of ours
+     * unknown — its picture was already chosen.
+     */
+    private function imageShape(array $row): ?string
+    {
+        return $row['_shape'] ?? (in_array($row['source'] ?? null, ['steam', 'rawg'], true) ? 'wide' : null);
     }
 
     /**
@@ -569,7 +592,7 @@ class GameSearchService
      * The fields every game read from IGDB is asked for: its Steam id comes with it, so a hit
      * names the game by id rather than by title (see igdbRow).
      */
-    private const IgdbGameFields = 'id,name,url,cover.url,first_release_date,external_games.uid,external_games.external_game_source,game_engines.name,involved_companies.developer,involved_companies.publisher,involved_companies.company.name';
+    private const IgdbGameFields = 'id,name,url,cover.url,cover.width,cover.height,first_release_date,external_games.uid,external_games.external_game_source,game_engines.name,involved_companies.developer,involved_companies.publisher,involved_companies.company.name';
 
     /**
      * One IGDB game as this service hands it out — the same shape for a search hit and a lookup.
@@ -577,9 +600,15 @@ class GameSearchService
     private function igdbRow(array $game): array
     {
         $imageUrl = null;
+        $shape = null;
         if (isset($game['cover']['url'])) {
             // Convert thumbnail to larger image
             $imageUrl = 'https:' . str_replace('t_thumb', 't_cover_big', $game['cover']['url']);
+
+            // Its shape by IGDB's own size, for the folding of a list (gather) — internal.
+            if (!empty($game['cover']['width']) && !empty($game['cover']['height'])) {
+                $shape = $game['cover']['height'] > $game['cover']['width'] ? 'portrait' : 'wide';
+            }
         }
 
         // The Steam app id IGDB links to this game, when it links one.
@@ -594,6 +623,7 @@ class GameSearchService
             'name' => $game['name'],
             'steam_id' => $steamId !== null ? (string) $steamId : null,
             'image_url' => $imageUrl,
+            '_shape' => $shape,
             'source' => 'igdb',
             // The engines IGDB declares, often none. A stated engine that is not the one the game
             // runs on is a sure sign of the wrong game (GameFiling::refuseWrongGame); none stated
@@ -851,6 +881,103 @@ class GameSearchService
         Cache::put($key, ['data' => $app], SteamStore::AppTtlSeconds);
 
         return $app;
+    }
+
+    /**
+     * The art Steam keeps for an app — its portrait library capsule and its store header — as full
+     * addresses, or null when Steam knows no such app. Either may be null: a game whose publisher
+     * never uploaded a capsule has none.
+     *
+     * 🔴 **Through the store's own asset list, never a built address** (measured 2026-10-06). The
+     * fixed `…/apps/{id}/library_600x900.jpg` answered 404 for 8 of 34 games: Steam now files newer
+     * art under a hashed folder (`{id}/{hash}/library_600x900.jpg`) and names it in
+     * `IStoreBrowseService/GetItems` (`asset_url_format` + the file), which needs no key.
+     *
+     * ⚠ The 1x capsule (300×450), not the 2x: the site shows it at a few hundred pixels at most,
+     * and a catalogue page holds dozens.
+     *
+     * ⚠ Throws StoreUnavailable when Steam could not be asked — never read as "no art".
+     *
+     * @return array{cover: ?string, banner: ?string}|null
+     */
+    public function steamAssets(string $steamId): ?array
+    {
+        if (!ctype_digit($steamId)) {
+            return null;
+        }
+
+        // Kept a day like an app page: the same card is asked about by every check of it.
+        $key = 'steam:assets:' . $steamId;
+        if (Cache::has($key)) {
+            return Cache::get($key)['data'];
+        }
+
+        $input = json_encode([
+            'ids' => [['appid' => (int) $steamId]],
+            'context' => ['language' => 'english', 'country_code' => 'US'],
+            'data_request' => ['include_assets' => true],
+        ]);
+
+        try {
+            $response = Http::timeout(5)->get('https://api.steampowered.com/IStoreBrowseService/GetItems/v1/', [
+                'input_json' => $input,
+            ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::warning('Steam assets unreachable', ['error' => $e->getMessage()]);
+            throw new StoreUnavailable('Steam asset list unreachable');
+        }
+
+        if (!$response->successful()) {
+            Log::warning('Steam assets refused', ['status' => $response->status(), 'steam_id' => $steamId]);
+            throw new StoreUnavailable('Steam asset list answered ' . $response->status());
+        }
+
+        $item = $response->json('response.store_items.0');
+        $assets = is_array($item) && ($item['success'] ?? null) === 1 ? ($item['assets'] ?? null) : null;
+
+        $data = null;
+        if (is_array($assets) && is_string($assets['asset_url_format'] ?? null)) {
+            $url = function (?string $file) use ($assets): ?string {
+                // A file name as Steam writes them: an optional hash folder, then the file.
+                if (!is_string($file) || !preg_match('~^(?:[0-9a-f]{40}/)?[A-Za-z0-9_.-]+\.(?:jpg|png)$~', $file)) {
+                    return null;
+                }
+
+                return 'https://shared.akamai.steamstatic.com/store_item_assets/'
+                    . str_replace('${FILENAME}', $file, $assets['asset_url_format']);
+            };
+
+            $data = [
+                'cover' => $url($assets['library_capsule'] ?? null),
+                'banner' => $url($assets['header'] ?? null),
+            ];
+        }
+
+        Cache::put($key, ['data' => $data], SteamStore::AppTtlSeconds);
+
+        return $data;
+    }
+
+    /**
+     * An IGDB game's cover with its size — `{url, width, height}` — or null when it has none.
+     *
+     * The size is IGDB's own (`cover.width`, `cover.height`): a cover is portrait by custom, not by
+     * rule, and the shape is what decides whether it can fill a card (App\Services\GameArt).
+     */
+    public function igdbCover(int $igdbId): ?array
+    {
+        $rows = $this->igdb('games', 'where id = ' . intval($igdbId) . '; fields cover.url,cover.width,cover.height;');
+        $cover = $rows[0]['cover'] ?? null;
+
+        if (!is_array($cover) || !isset($cover['url'])) {
+            return null;
+        }
+
+        return [
+            'url' => 'https:' . str_replace('t_thumb', 't_cover_big', $cover['url']),
+            'width' => (int) ($cover['width'] ?? 0),
+            'height' => (int) ($cover['height'] ?? 0),
+        ];
     }
 
     /**

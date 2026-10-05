@@ -39,6 +39,11 @@ class SteamStoreTest extends TestCase
             'store.steampowered.com/*' => fn (Request $r) => $steamStatus === 200
                 ? Http::response([(string) ($r->data()['appids'] ?? '') => ['success' => true, 'data' => ['name' => 'From Steam']]])
                 : Http::response('', $steamStatus),
+            // The asset list a new card's picture is read from (App\Services\GameArt): down with
+            // the store, empty otherwise — a publication never waits on a picture.
+            'api.steampowered.com/*' => $steamStatus === 200
+                ? Http::response(['response' => ['store_items' => []]])
+                : Http::response('', $steamStatus),
             'id.twitch.tv/*' => Http::response(['access_token' => 't', 'expires_in' => 5_000_000]),
             'api.igdb.com/v4/external_games' => function (Request $r) use ($igdbLinks) {
                 foreach ($igdbLinks as $steamId => $igdbId) {

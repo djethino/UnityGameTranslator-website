@@ -366,9 +366,7 @@ class AdminController extends Controller
         $adultDue = Game::whereNull('adult_checked_at')->count();
         $steamRefusal = \App\Support\SteamStore::refusal();
 
-        $stores = app(StoreProposals::class);
-
-        return view('admin.games', compact('games', 'storesDue', 'pendingProposals', 'pendingGames', 'adultDue', 'steamRefusal', 'stores'));
+        return view('admin.games', compact('games', 'storesDue', 'pendingProposals', 'pendingGames', 'adultDue', 'steamRefusal'));
     }
 
     /**
@@ -466,12 +464,13 @@ class AdminController extends Controller
     /**
      * Ask the stores about one card now — "Check again" on its row. A card is only due on its own
      * when something about it changed (StoreProposals::checkDue); a store that has since added the
-     * game sends no signal, so this is how somebody asks.
+     * game sends no signal, so this is how somebody asks. It also lays out every picture the card's
+     * ids give, to choose another one (StoreProposals::checkOne, `$variants`).
      */
     public function checkGameStoresAgain(Game $game, StoreProposals $proposals)
     {
         try {
-            $new = $proposals->checkOne($game);
+            $new = $proposals->checkOne($game, variants: true);
         } catch (\App\Exceptions\StoreUnavailable) {
             return back()->with('error', 'Steam is not answering right now: try again in a few minutes.');
         }

@@ -17,10 +17,16 @@ abstract class TestCase extends BaseTestCase
      * Answering nothing is the honest default here: these tests have no network and no
      * credentials, and "the store said nothing" is exactly what that means. A test about the
      * classification itself states its own expectations instead.
+     *
+     * ⚠ Same for the card's pictures (App\Services\GameArt, 2026-10-06): a card created asks the
+     * stores for the art of its ids, through the same service. Nothing found keeps the picture of
+     * the store the game was picked from — what these tests were written against.
      */
     protected function storesSayNothingAboutAdultContent($mock): void
     {
         $mock->shouldReceive('steamApp')->andReturnNull();
         $mock->shouldReceive('igdb')->andReturn([]);
+        $mock->shouldReceive('steamAssets')->andReturnNull();
+        $mock->shouldReceive('igdbCover')->andReturnNull();
     }
 }

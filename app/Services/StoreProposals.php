@@ -24,16 +24,27 @@ use Illuminate\Validation\ValidationException;
  * | field | from | when |
  * |---|---|---|
  * | `steam_id` | Steam's search, EXACT title only | the card has none |
- * | `igdb_id` | IGDB's search, EXACT title only | the card has none |
- * | `image_url` | the Steam page of the card's own id | no cover, or a RAWG in-game screenshot |
+ * | `igdb_id` | IGDB's search, EXACT title only | the card has none, and its Steam id did not name one |
+ * | `image_url` | every picture the card's own ids give (App\Services\GameArt) | on "Check again" only — the variants |
+ *
+ * And what it WRITES, because it is read from an id the card already holds (user, 2026-10-06 —
+ * analyse/images-des-jeux.md):
+ *
+ * | field | from | guard |
+ * |---|---|---|
+ * | `igdb_id` | the one IGDB game linked to the card's Steam id | exactly one game; no other card holds it |
+ * | `image_url` | the best picture of GameArt | not after an admin chose one (`image_chosen_at`); only a better one |
+ * | `banner_url` | the Steam header | — |
  *
  * ⚠ Never the display name, never `unity_name`, never an adult mark: those are human decisions or
- * facts no store holds. And never over a value that is already there — the same rule the upload
- * path follows.
+ * facts no store holds. And never an id over a value that is already there — the same rule the
+ * upload path follows. ⚠ No `rawg_id` is ever looked for: RAWG is searched by title only, its base
+ * is edited by anyone, and on a card with a Steam id a RAWG pick already lands by that Steam id —
+ * the id would be a link, at the price of a guess (user, 2026-10-06).
  *
- * ⚠ **A cover is only proposed from an id the card already HAS.** Proposing one alongside a
- * proposed Steam id would let an admin accept the cover and reject the id — a cover taken from the
- * wrong game. Accept the id, and the next check proposes its cover.
+ * ⚠ **A picture only ever comes from an id the card already HAS.** Proposing one alongside a
+ * proposed Steam id would let an admin accept the picture and reject the id — a picture of the
+ * wrong game. Accept the id, and the next check finds its pictures.
  */
 class StoreProposals
 {
@@ -45,7 +56,7 @@ class StoreProposals
      */
     public const BudgetSeconds = 15;
 
-    public function __construct(private GameSearchService $stores, private AdultRating $rating)
+    public function __construct(private GameSearchService $stores, private AdultRating $rating, private GameArt $art)
     {
     }
 
@@ -101,11 +112,16 @@ class StoreProposals
      * Ask the stores about one card now, and mark it asked. Returns how many NEW proposals were
      * written. The way to ask again about a card that is not due — a store may know it by now.
      *
+     * `$variants`: also propose every other picture the card's ids give, for an admin to choose
+     * from — "Check again" on one card (user, 2026-10-06: "si je fais un check unitaire en admin
+     * […] il me propose les variantes"). Never in the batch: a hundred cards would each carry three
+     * proposals nobody asked for.
+     *
      * ⚠ Throws StoreUnavailable when Steam could not be asked: the card is then NOT marked asked.
      */
-    public function checkOne(Game $game): int
+    public function checkOne(Game $game, bool $variants = false): int
     {
-        $proposed = $this->check($game);
+        $proposed = $this->check($game, $variants);
 
         // ⚠ Quietly and without timestamps: asking a store about a card is not a change to the
         // card, and `updated_at` would reorder every listing sorted by freshness. Nothing here
@@ -118,25 +134,21 @@ class StoreProposals
     }
 
     /**
-     * Whether asking the stores about this card again could bring anything: an id it lacks, or a
-     * cover a store's could replace. A complete card has no question left — "Check again" is not
-     * drawn on it.
-     */
-    public function hasOpenQuestion(Game $game): bool
-    {
-        return !$game->steam_id || !$game->igdb_id || $this->coverMayBeReplaced($game->image_url);
-    }
-
-    /**
      * Ask the stores about one card. Returns how many NEW proposals were written.
      */
-    public function check(Game $game): int
+    public function check(Game $game, bool $variants = false): int
     {
         // Proposals for a field the card has since filled — by an upload attaching an id, say —
         // are no longer proposals. Left behind, they would sit in "Pending" offering to overwrite.
         $this->forgetMootProposals($game);
 
         $new = 0;
+
+        // Before the title searches: an IGDB id read from the Steam id is a fact, and a card that
+        // gets one has no IGDB title question left.
+        if (!$game->igdb_id && $game->steam_id) {
+            $this->igdbIdFromSteamId($game);
+        }
 
         if (!$game->steam_id) {
             // Every exact title, homonyms included: an admin decides which one is this card's
@@ -167,15 +179,100 @@ class StoreProposals
             }
         }
 
-        if ($game->steam_id && $this->coverMayBeReplaced($game->image_url)) {
-            $header = $this->stores->steamApp($game->steam_id)['header_image'] ?? null;
+        $new += $this->pictures($game, $variants);
 
-            if ($header) {
-                $new += $this->propose($game, 'image_url', $header, 'steam', null, StoreLinks::image($header));
+        return $new;
+    }
+
+    /**
+     * The IGDB id of a card that has a Steam id, written when IGDB links that Steam id to exactly
+     * ONE of its games and no other card holds it (user, 2026-10-06: "on ne veut pas d'erreurs").
+     *
+     * ⚠ The same reading the site already trusts to identify a game when Steam is down
+     * (GameSearchService::getGameFromIgdbBySteamId): two IGDB games for one Steam id is a guess and
+     * gives nothing; a value another card holds would make one game two cards', which is a merge.
+     * Either way the title search below still runs and proposes, as before.
+     */
+    private function igdbIdFromSteamId(Game $game): void
+    {
+        $found = $this->stores->getGameFromIgdbBySteamId((string) $game->steam_id);
+        $id = isset($found['id']) ? (string) $found['id'] : null;
+
+        if ($id === null || !ctype_digit($id) || $this->holderOf('igdb_id', $id, $game->id)) {
+            return;
+        }
+
+        $game->igdb_id = $id;
+        $this->writeQuietly($game);
+
+        AuditLog::log('game.igdb_id_from_steam_id', null, 'game', $game->id, [
+            'steam_id' => $game->steam_id,
+            'igdb_id' => $id,
+        ]);
+    }
+
+    /**
+     * The card's picture and banner from its own ids (App\Services\GameArt), and — on "Check
+     * again" — every other picture they give, proposed. Returns how many NEW proposals were written.
+     *
+     * ⚠ Steam not answering: nothing is decided about pictures this time. A choice made without
+     * Steam's answer would take a lower picture for the best one; the batch stops on it anyway
+     * (checkDue), and "Check again" says Steam is not answering.
+     */
+    private function pictures(Game $game, bool $variants): int
+    {
+        if (!$game->steam_id && !$game->igdb_id) {
+            return 0;
+        }
+
+        $candidates = $this->art->candidates($game->steam_id, $game->igdb_id);
+        $best = GameArt::best($candidates);
+        $before = ['image_url' => $game->image_url, 'banner_url' => $game->banner_url];
+
+        // An admin's choice stands: the automatic pass never moves a picture somebody picked.
+        if ($game->image_chosen_at === null && GameArt::shouldReplace($game->image_url, $best, $candidates)) {
+            $game->image_url = $best['url'];
+        }
+
+        $banner = GameArt::banner($candidates);
+        if ($banner !== null) {
+            $game->banner_url = $banner;
+        }
+
+        if ($game->isDirty(['image_url', 'banner_url'])) {
+            $this->writeQuietly($game);
+            AuditLog::log('game.pictures_from_ids', null, 'game', $game->id, [
+                'before' => $before,
+                'after' => ['image_url' => $game->image_url, 'banner_url' => $game->banner_url],
+            ]);
+        }
+
+        if (!$variants) {
+            return 0;
+        }
+
+        $new = 0;
+        foreach ($candidates as $candidate) {
+            if ($candidate['url'] !== $game->image_url) {
+                $new += $this->propose($game, 'image_url', $candidate['url'], $candidate['source'],
+                    $candidate['shape'], StoreLinks::image($candidate['url']));
             }
         }
 
         return $new;
+    }
+
+    /**
+     * Write what the stores answered from the card's own ids, without touching its dates: reading
+     * a store is not a change somebody made, and `updated_at` orders every listing by freshness.
+     * ⚠ Quietly also means the model's `saving` hooks do not run — nothing written here feeds them
+     * (no title, no adult column); and the card is marked asked by the caller right after.
+     */
+    private function writeQuietly(Game $game): void
+    {
+        $game->timestamps = false;
+        $game->saveQuietly();
+        $game->timestamps = true;
     }
 
     /**
@@ -207,6 +304,13 @@ class StoreProposals
         $before = $game->{$proposal->field};
 
         $game->{$proposal->field} = $proposal->value;
+
+        // A picture an admin picked is theirs: the automatic pass leaves it from now on
+        // (StoreProposals::pictures).
+        if ($proposal->field === 'image_url') {
+            $game->image_chosen_at = now();
+        }
+
         $game->save();
 
         $proposal->state = GameProposal::Applied;
@@ -311,23 +415,13 @@ class StoreProposals
     }
 
     /**
-     * May this field still receive a value? Never over one that is there — except a cover that is
-     * a RAWG in-game screenshot, which is not a cover at all.
+     * May this field still receive a value? An id never over one that is there. A picture always:
+     * the variants are offered for an admin to change it (user, 2026-10-06), and every one of them
+     * comes from the card's own ids.
      */
     private function fieldIsOpen(Game $game, string $field): bool
     {
-        return $field === 'image_url'
-            ? $this->coverMayBeReplaced($game->image_url)
-            : !$game->{$field};
-    }
-
-    /**
-     * No cover, or one RAWG took from inside the game. ⚠ A RAWG screenshot is in-game content, not
-     * curated store art, so nothing guarantees what it shows — the one cover worth replacing.
-     */
-    private function coverMayBeReplaced(?string $url): bool
-    {
-        return !$url || str_contains($url, 'media.rawg.io/media/screenshots');
+        return $field === 'image_url' || !$game->{$field};
     }
 
     private function forgetMootProposals(Game $game): void
@@ -336,6 +430,13 @@ class StoreProposals
             if (!$this->fieldIsOpen($game, $field)) {
                 GameProposal::where('game_id', $game->id)->where('field', $field)->pending()->delete();
             }
+        }
+
+        // A picture variant the card now shows — taken since, by the automatic pass or an admin —
+        // has nothing left to propose.
+        if ($game->image_url) {
+            GameProposal::where('game_id', $game->id)->where('field', 'image_url')
+                ->where('value', $game->image_url)->pending()->delete();
         }
     }
 }

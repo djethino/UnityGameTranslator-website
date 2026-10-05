@@ -27,6 +27,10 @@ class Game extends Model
         'steam_id',
         'image_url',
 
+        // The wide picture a link to the game's page is previewed with — App\Services\GameArt.
+        // ⚠ Not `image_chosen_at`: only an admin's Apply on /admin/games writes it.
+        'banner_url',
+
         // ⚠ No `adult*` column here, on purpose. They decide whether a game is shown at all, so
         // none of them may ever be set by a mass assignment from a request: they are written by
         // App\Services\AdultRating, by declareAdultBy() / withdrawAdultDeclaration() and by
@@ -40,6 +44,7 @@ class Game extends Model
         'adult_checked_at' => 'datetime',
         'adult_declared_at' => 'datetime',
         'stores_checked_at' => 'datetime',
+        'image_chosen_at' => 'datetime',
     ];
 
     /**

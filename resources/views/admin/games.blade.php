@@ -250,8 +250,9 @@
                         @endforeach
                         {{-- When the stores were last asked, and the way to ask again: a card is only
                              due again when it changes, and a store that adds the game later says
-                             nothing. Drawn only where an answer could still add something. --}}
-                        @if($game->stores_checked_at && $stores->hasOpenQuestion($game))
+                             nothing. On every card asked once: besides a missing id, it lists the
+                             pictures the card's ids give, to choose another (user, 2026-10-06). --}}
+                        @if($game->stores_checked_at)
                             <form action="{{ route('admin.games.check-stores.one', $game->id) }}" method="POST"
                                   class="mt-2 flex items-center gap-2 text-xs text-gray-500">
                                 @csrf

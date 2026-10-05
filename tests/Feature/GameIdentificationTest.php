@@ -88,6 +88,9 @@ class GameIdentificationTest extends TestCase
                     : [$id => ['success' => false]]);
             },
             'api.rawg.io/*' => Http::response(['results' => $rawg]),
+            // The asset list a new card's picture is read from (App\Services\GameArt): no art here,
+            // so a card keeps the picture of the store it was picked from.
+            'api.steampowered.com/*' => Http::response(['response' => ['store_items' => []]]),
         ]);
     }
 
