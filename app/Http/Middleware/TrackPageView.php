@@ -69,7 +69,6 @@ class TrackPageView
     {
         $userAgent = $request->userAgent() ?? '';
         $ip = $request->ip() ?? '0.0.0.0';
-        $today = now()->toDateString();
 
         // Get game_id if viewing a game page
         $gameId = null;
@@ -83,14 +82,16 @@ class TrackPageView
 
         AnalyticsEvent::create([
             'route' => $routeName,
+            // The language the page was served in — what the site's audience reads it in, kept
+            // per day beyond the raw events (analytics_daily.locales).
+            'locale' => app()->getLocale(),
             'game_id' => $gameId,
             'country' => $country,
             'referrer_domain' => AnalyticsEvent::extractReferrerDomain($request->header('Referer')),
             'device' => AnalyticsEvent::detectDevice($userAgent),
             'browser' => AnalyticsEvent::detectBrowser($userAgent),
-            'visitor_hash' => AnalyticsEvent::generateVisitorHash($ip, $userAgent, $today),
             'created_at' => now(),
-        ]);
+        ] + AnalyticsEvent::visitorFingerprints($ip, $userAgent));
     }
 
     /**

@@ -880,6 +880,31 @@ class AdminController extends Controller
         }
         arsort($allBrowsers);
 
+        // What is kept beyond the 90 days of raw events since 2026-10-05: which pages, in which of
+        // the site's languages, and which languages translations are taken into. Summed over the
+        // period like the countries above, today counted live. Days aggregated before that date
+        // carry none of them — the cards say so rather than reading as "nobody".
+        $sumOver = function (string $column, array $today) use ($dailyStats): array {
+            $sum = [];
+            foreach ($dailyStats as $day) {
+                foreach ($day->{$column} ?? [] as $key => $count) {
+                    $sum[$key] = ($sum[$key] ?? 0) + $count;
+                }
+            }
+            foreach ($today as $key => $count) {
+                $sum[$key] = ($sum[$key] ?? 0) + $count;
+            }
+            arsort($sum);
+            return $sum;
+        };
+        $pages = $sumOver('routes', $todayBreakdown('route'));
+        $siteLocales = $sumOver('locales', $todayBreakdown('locale'));
+        $downloadLanguages = $sumOver('download_languages', AnalyticsEvent::downloadBreakdownFor($today, 'target_language'));
+
+        // Distinct visitors and copies per month — the figures the days cannot add up to. The month
+        // in progress is counted up to yesterday by the nightly job. Every month, newest first.
+        $months = \App\Models\AnalyticsMonthly::orderByDesc('month')->get();
+
         // Top games. The two figures are pulled apart in the model — `page_views` counts downloads
         // too, so showing them raw side by side double-counts. See AnalyticsGame.
         $topGames = AnalyticsGame::topOverPeriod($period, self::TOP_ROWS);
@@ -995,6 +1020,10 @@ class AdminController extends Controller
         $releasesKnown = KnownReleases::known();
 
         return view('admin.analytics', compact(
+            'pages',
+            'siteLocales',
+            'downloadLanguages',
+            'months',
             'clients',
             'spanLabel',
             'recentUploadsTotal',

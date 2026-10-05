@@ -41,6 +41,31 @@ Schedule::command('tokens:purge-idle')->dailyAt('02:40');
 // row in My translations, a banner above it, a count on the merge button.
 Schedule::command('notifications:purge')->dailyAt('02:50');
 
+// Expired cache entries, when the cache is the database.
+//
+// 🔴 **The database store never removes an expired entry it is not asked for again** (found
+// 2026-10-05, analyse/retention-et-mesures.md). The site's texts are cached under a key that changes
+// with every version of the language files (`lang-bank:<locale>:<mtime>`), so each deployment left
+// the previous copies behind for good — 210 of them, 2.8 MB, in a local copy of a few weeks. A store
+// that expires entries by itself (Redis) needs none of this, hence the test.
+Schedule::call(function () {
+    if (config('cache.default') !== 'database') {
+        return;
+    }
+
+    $store = config('cache.stores.database');
+    $now = now()->getTimestamp();
+
+    \Illuminate\Support\Facades\DB::connection($store['connection'] ?? null)
+        ->table($store['table'] ?? 'cache')->where('expiration', '<', $now)->delete();
+    \Illuminate\Support\Facades\DB::connection($store['lock_connection'] ?? $store['connection'] ?? null)
+        ->table($store['lock_table'] ?? 'cache_locks')->where('expiration', '<', $now)->delete();
+})->dailyAt('03:15')->name('prune-expired-cache');
+
+// Password reset links past their hour. Laravel removes them only when one is used or replaced;
+// the rest stayed for ever — an email address and a date, kept for nothing.
+Schedule::command('auth:clear-resets')->dailyAt('03:20');
+
 // Pick up changes to the shared catalogues (languages, mod loaders, AI models).
 //
 // These hold facts we do not decide — a provider adds a language, a loader ships a release — so

@@ -360,14 +360,15 @@ class TranslationController extends Controller
 
             AnalyticsEvent::create([
                 'route' => 'translations.download',
+                'locale' => app()->getLocale(),
                 'game_id' => $translation->game_id,
+                'target_language' => $translation->target_language,
                 'country' => null, // Not tracking country for downloads
                 'referrer_domain' => AnalyticsEvent::extractReferrerDomain($request->header('Referer')),
                 'device' => AnalyticsEvent::detectDevice($userAgent),
                 'browser' => AnalyticsEvent::detectBrowser($userAgent),
-                'visitor_hash' => AnalyticsEvent::generateVisitorHash($ip, $userAgent, now()->toDateString()),
                 'created_at' => now(),
-            ]);
+            ] + AnalyticsEvent::visitorFingerprints($ip, $userAgent));
         } catch (\Exception $e) {
             // Silently fail - don't break downloads if analytics fails
             report($e);

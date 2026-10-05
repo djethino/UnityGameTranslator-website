@@ -15,12 +15,15 @@ class AnalyticsEvent extends Model
 
     protected $fillable = [
         'route',
+        'locale',
         'game_id',
+        'target_language',
         'country',
         'referrer_domain',
         'device',
         'browser',
         'visitor_hash',
+        'visitor_month_hash',
         'created_at',
     ];
 
@@ -214,6 +217,88 @@ class AnalyticsEvent extends Model
             now()->addDays(2),
             fn () => bin2hex(random_bytes(32))
         );
+    }
+
+    /**
+     * Both fingerprints of one caller — the day's and the month's — for an event or a copy count.
+     *
+     * 🔴 **The one place they are made**, because three writers record events (page views, the
+     * site's download, the API's) and the client counter reads the same pair: a fingerprint built in
+     * one of them and not the others would count a month that does not add up.
+     *
+     * @return array{visitor_hash: string, visitor_month_hash: string}
+     */
+    public static function visitorFingerprints(string $ip, string $userAgent, ?\DateTimeInterface $at = null): array
+    {
+        $at ??= now();
+
+        return [
+            'visitor_hash' => self::generateVisitorHash($ip, $userAgent, $at->format('Y-m-d')),
+            'visitor_month_hash' => substr(hash_hmac('sha256', $ip . '|' . $userAgent, self::monthlySalt($at->format('Y-m')), false), 0, 32),
+        ];
+    }
+
+    /**
+     * The salt for one month, made once and forgotten a few days after the month ends.
+     *
+     * 🔴 **The monthly twin of dailySalt, and exactly as forgettable** (user, 2026-10-05: a month's
+     * distinct visitors cannot be added up from the days). Never written down: once it expires,
+     * nobody — us included — can tell whose visits these were. The few days past the month's end are
+     * for the nightly job that counts the month on the night after its last day.
+     *
+     * ⚠ A cache cleared mid-month changes the salt, and that month's visitors are counted twice —
+     * the same trade as the daily salt, for the same reason.
+     */
+    private static function monthlySalt(string $month): string
+    {
+        $ends = \Carbon\Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+        return Cache::remember(
+            "analytics:visitor-salt-month:{$month}",
+            $ends->copy()->addDays(3),
+            fn () => bin2hex(random_bytes(32))
+        );
+    }
+
+    /**
+     * Distinct visitors in the month starting on `$monthStart`, counted in SQL from the monthly
+     * fingerprint — only while it is still there (see forgetMonthVisitorsBefore).
+     */
+    public static function uniqueVisitorsInMonth(\Carbon\CarbonInterface $monthStart): int
+    {
+        return self::where('created_at', '>=', $monthStart->copy()->startOfMonth())
+            ->where('created_at', '<', $monthStart->copy()->startOfMonth()->addMonth())
+            ->distinct('visitor_month_hash')
+            ->count('visitor_month_hash');
+    }
+
+    /**
+     * Forget the monthly fingerprints of every month before `$monthStart` — counted already, so the
+     * working-out goes. Idempotent: a night that was missed is caught up by the next one.
+     */
+    public static function forgetMonthVisitorsBefore(\Carbon\CarbonInterface $monthStart): int
+    {
+        return static::where('created_at', '<', $monthStart->copy()->startOfMonth())
+            ->whereNotNull('visitor_month_hash')
+            ->update(['visitor_month_hash' => null]);
+    }
+
+    /**
+     * One day's events broken down over a column, restricted to the downloads of a translation —
+     * the site's button and the API's take, never the API's refresh.
+     */
+    public static function downloadBreakdownFor(string $date, string $column): array
+    {
+        return self::whereDate('created_at', $date)
+            ->whereIn('route', ['translations.download', 'api.translations.download'])
+            ->whereNotNull($column)
+            ->where($column, '!=', '')
+            ->select($column, \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->groupBy($column)
+            ->orderByDesc('total')
+            ->pluck('total', $column)
+            ->map(fn ($count) => (int) $count)
+            ->toArray();
     }
 
     /**

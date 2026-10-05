@@ -426,7 +426,10 @@
 
     <!-- Top Countries -->
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-flag mr-2 text-red-400"></i> Top Countries</h2>
+        <h2 class="text-lg font-semibold mb-1"><i class="fas fa-flag mr-2 text-red-400"></i> Top Countries</h2>
+        {{-- Said, because the name suggests a location: no address is ever looked up
+             (TrackPageView::detectCountryFromLanguage reads the Accept-Language header). --}}
+        <p class="text-xs text-gray-500 mb-3">Guessed from the browser's language.</p>
         @if(count($topCountries) > 0)
             <div class="space-y-2">
                 @foreach($topCountries as $country => $count)
@@ -460,6 +463,82 @@
             <p class="text-gray-500 text-sm">No external referrers</p>
         @endif
     </div>
+</div>
+
+{{-- ─── What stays beyond the raw events ──────────────────────────────────────
+     Summed every night before the raw events go at 90 days (analyse/retention-et-mesures.md):
+     pages, the site's languages, and the languages translations are downloaded in. Kept since
+     2026-10-05 — a period reaching before that date shows only the days that carry them. --}}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" x-data="{ expanded: false }">
+    @foreach ([
+        ['title' => 'Pages', 'icon' => 'fa-file-lines text-purple-400', 'rows' => $pages],
+        ['title' => 'Site languages', 'icon' => 'fa-language text-green-400', 'rows' => $siteLocales],
+        ['title' => 'Languages downloaded', 'icon' => 'fa-download text-yellow-400', 'rows' => $downloadLanguages],
+    ] as $card)
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas {{ $card['icon'] }} mr-2"></i> {{ $card['title'] }}</h2>
+            @if(count($card['rows']) > 0)
+                <div class="space-y-2">
+                    @foreach($card['rows'] as $key => $count)
+                        <div class="flex justify-between items-center"
+                             @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
+                            <span class="truncate" title="{{ $key }}">{{ $key }}</span>
+                            <span class="text-gray-400">{{ number_format($count) }}</span>
+                        </div>
+                    @endforeach
+                </div>
+                <x-admin.show-more :count="count($card['rows'])" :visible="$topRows['visible']" />
+            @else
+                <p class="text-gray-500 text-sm">No data yet — kept since 2026-10-05</p>
+            @endif
+        </div>
+    @endforeach
+</div>
+
+{{-- ─── Per month ───────────────────────────────────────────────────────────────
+     The figures the days cannot add up to: a person who comes on twenty days is twenty daily
+     visitors and one monthly one. Every month kept, newest first; the month in progress is counted
+     up to yesterday. Outside the period on purpose — a month is its own span. --}}
+<div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6" x-data="{ expanded: false }">
+    <h2 class="text-lg font-semibold mb-1"><i class="fas fa-calendar mr-2 text-blue-400"></i> Per month</h2>
+    <p class="text-xs text-gray-500 mb-4">
+        Distinct visitors of the site, and distinct copies of UGT Mod and UGT Manager in use. Counted
+        from a fingerprint that lasts the month and is erased once it is counted — never followed from
+        one month to the next.
+    </p>
+    @if($months->isNotEmpty())
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-gray-400 text-left">
+                        <th class="py-2 pr-4">Month</th>
+                        <th class="py-2 pr-4 text-right">Visitors</th>
+                        <th class="py-2 pr-4 text-right">UGT Mod copies</th>
+                        <th class="py-2 text-right">UGT Manager copies</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($months as $month)
+                        <tr class="border-t border-gray-700"
+                            @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
+                            <td class="py-2 pr-4">
+                                {{ $month->month->format('Y-m') }}
+                                @if($month->month->isSameMonth(now()))
+                                    <span class="text-xs text-gray-500">(to yesterday)</span>
+                                @endif
+                            </td>
+                            <td class="py-2 pr-4 text-right">{{ number_format($month->unique_visitors) }}</td>
+                            <td class="py-2 pr-4 text-right">{{ number_format($month->mod_copies) }}</td>
+                            <td class="py-2 text-right">{{ number_format($month->manager_copies) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <x-admin.show-more :count="$months->count()" :visible="$topRows['visible']" />
+    @else
+        <p class="text-gray-500 text-sm">No month counted yet — the first one is counted the night after 2026-10-05.</p>
+    @endif
 </div>
 
 {{-- ─── What is running out there ──────────────────────────────────────────────

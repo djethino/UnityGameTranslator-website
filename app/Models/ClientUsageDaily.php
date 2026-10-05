@@ -72,7 +72,7 @@ class ClientUsageDaily extends Model
      * included — which on a shared host is a price paid for a number nobody wanted. The question
      * being answered is "how many copies", and a copy calling twenty times is still one copy.
      */
-    public static function record(array $client, string $fingerprint, ?string $date = null): void
+    public static function record(array $client, string $fingerprint, ?string $date = null, ?string $monthFingerprint = null): void
     {
         $date ??= now()->toDateString();
 
@@ -81,6 +81,17 @@ class ClientUsageDaily extends Model
         }
 
         $product = $client['kind'];
+
+        // Seen this month too — once a day at most, behind the day's own test, so the month costs
+        // one more statement per copy per day and nothing per call. Counted into analytics_monthly
+        // by the nightly aggregation, then forgotten (AggregateAnalytics::aggregateMonth).
+        if ($monthFingerprint !== null) {
+            DB::table('client_monthly_seen')->insertOrIgnore([
+                'month' => substr($date, 0, 7) . '-01',
+                'product' => $product,
+                'fingerprint' => $monthFingerprint,
+            ]);
+        }
         $version = self::versionSlot($client);
         $variant = self::variantSlot($client);
 

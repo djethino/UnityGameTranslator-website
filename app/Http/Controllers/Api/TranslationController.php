@@ -1003,6 +1003,8 @@ class TranslationController extends Controller
             AnalyticsEvent::create([
                 'route' => $refresh ? 'api.translations.refresh' : 'api.translations.download',
                 'game_id' => $translation->game_id,
+                // Which language people take translations into, kept per day (download_languages).
+                'target_language' => $translation->target_language,
                 'country' => null,
                 'referrer_domain' => 'mod', // Mark as mod download
                 'device' => $client['kind'] ?? AnalyticsEvent::detectDevice($userAgent),
@@ -1010,9 +1012,8 @@ class TranslationController extends Controller
                 // nulls, and a mod filed under a browser name makes that chart answer a question
                 // nobody asked. Which build called is counted properly in client_usage_daily.
                 'browser' => $client === null ? AnalyticsEvent::detectBrowser($userAgent) : null,
-                'visitor_hash' => AnalyticsEvent::generateVisitorHash($ip, $userAgent, now()->toDateString()),
                 'created_at' => now(),
-            ]);
+            ] + AnalyticsEvent::visitorFingerprints($ip, $userAgent));
         } catch (\Exception $e) {
             report($e);
         }

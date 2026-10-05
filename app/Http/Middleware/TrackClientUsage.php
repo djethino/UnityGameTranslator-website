@@ -41,14 +41,14 @@ class TrackClientUsage
 
         if ($client !== null) {
             try {
-                ClientUsageDaily::record(
-                    $client,
-                    AnalyticsEvent::generateVisitorHash(
-                        $request->ip() ?? '0.0.0.0',
-                        (string) $request->userAgent(),
-                        now()->toDateString()
-                    )
+                // The same pair of fingerprints the page views use (AnalyticsEvent::visitorFingerprints):
+                // the day's counts a copy once a day, the month's once a month.
+                $fingerprints = AnalyticsEvent::visitorFingerprints(
+                    $request->ip() ?? '0.0.0.0',
+                    (string) $request->userAgent()
                 );
+
+                ClientUsageDaily::record($client, $fingerprints['visitor_hash'], monthFingerprint: $fingerprints['visitor_month_hash']);
             } catch (\Throwable $e) {
                 report($e);
             }
