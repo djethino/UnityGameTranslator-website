@@ -19,6 +19,11 @@ Schedule::command('analytics:aggregate')->dailyAt('02:00');
 // cannot be removed along with a statistics change.
 Schedule::command('audit:purge-ips')->dailyAt('02:30');
 
+// Failed queue jobs, at thirty days (user, 2026-10-05). A failed job keeps its whole payload — an
+// announcement to send, a notification to deliver, with the people it names — and nothing reads
+// one back after the failure has been looked at.
+Schedule::command('queue:prune-failed', ['--hours' => 24 * 30])->dailyAt('02:35');
+
 // Cut the accesses nobody uses any more, six months after their last exchange.
 //
 // ⚠ Not a security measure: an access being used stays alive, because being used is what keeps it

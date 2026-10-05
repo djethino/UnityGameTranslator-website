@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Die Übersetzungen, die du hochlädst, die Stimmen, die du abgibst, und die Meldungen, die du schickst. Sie bleiben deinem Konto zugeordnet, solange es besteht — und danach siehe „Deine Rechte (DSGVO)“ weiter unten.",
     "legal.hold_connections": "Anmeldungen und Beiträge",
     "legal.hold_connections_why": "Jede Anmeldung, jeder Upload und jedes Zugriffs-Token, das wir ausstellen, wird mit deiner IP-Adresse und der Kennung deines Browsers festgehalten. Wir müssen das aufbewahren: Das französische Recht verlangt, dass wer Inhalte anderer hostet, feststellen kann, wer sie beigetragen hat.",
-    "legal.hold_connections_end": "Die IP-Adresse wird nach zwölf Monaten automatisch gelöscht. Der Eintrag über den Vorgang bleibt, ohne noch an eine Adresse gebunden zu sein.",
+    "legal.hold_connections_end": "Die IP-Adresse wird nach zwölf Monaten automatisch gelöscht. Der Eintrag zu einer Anmeldung oder einem Zugriffs-Token wird dann vollständig gelöscht; der zu einem Upload bleibt, ohne noch an eine Adresse gebunden zu sein.",
     "legal.hold_accesses": "Die mit deinem Konto verknüpften Programme",
     "legal.hold_accesses_text": "Wenn du ein Spiel oder den Manager mit deinem Konto verknüpfst, halten wir fest, welches Programm gefragt hat, welchen Namen du dem Gerät gegeben hast und — wenn das Programm es sagt — um welches Spiel es geht. Der Name des Spiels wird verschlüsselt gespeichert, und nichts davon identifiziert deinen Rechner. Die ganze Liste steht unter „Verknüpfte Geräte“ in deinem Profil, und du kannst dort alles davon kappen.",
     "legal.hold_counting": "Besucher zählen",

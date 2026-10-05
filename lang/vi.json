@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Các bản dịch bạn tải lên, các lượt bình chọn bạn đưa ra và các báo cáo bạn gửi. Chúng vẫn gắn với tài khoản của bạn chừng nào tài khoản còn tồn tại — và sau đó, xem «Quyền của bạn (GDPR)» ở dưới.",
     "legal.hold_connections": "Đăng nhập và đóng góp",
     "legal.hold_connections_why": "Mỗi lần đăng nhập, mỗi lần tải lên và mỗi token truy cập chúng tôi cấp đều được ghi lại cùng địa chỉ IP của bạn và định danh trình duyệt của bạn. Chúng tôi buộc phải lưu điều này: luật Pháp yêu cầu bất kỳ ai lưu trữ nội dung do người khác công bố phải xác định được ai đã gửi nội dung đó.",
-    "legal.hold_connections_end": "Địa chỉ IP được xóa sau mười hai tháng, tự động. Bản ghi về hành động vẫn còn, không còn gắn với một địa chỉ nào nữa.",
+    "legal.hold_connections_end": "Địa chỉ IP được xóa sau mười hai tháng, tự động. Khi đó, bản ghi về một lần đăng nhập hay một token truy cập bị xóa hoàn toàn; bản ghi về một lần tải lên vẫn còn, không còn gắn với một địa chỉ nào nữa.",
     "legal.hold_accesses": "Các chương trình đã liên kết với tài khoản của bạn",
     "legal.hold_accesses_text": "Khi bạn liên kết một trò chơi hoặc Manager với tài khoản, chúng tôi ghi lại chương trình nào đã yêu cầu, tên bạn đặt cho thiết bị, và — khi chương trình cho biết — đó là trò chơi nào. Tên trò chơi được lưu ở dạng mã hóa, và không điều gì trong đó nhận dạng máy của bạn. Toàn bộ danh sách nằm ở «Thiết bị đã liên kết» trong hồ sơ của bạn, và bạn có thể cắt bất kỳ mục nào tại đó.",
     "legal.hold_counting": "Đếm lượt truy cập",

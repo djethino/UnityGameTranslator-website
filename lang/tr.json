@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Yüklediğiniz çeviriler, verdiğiniz oylar ve gönderdiğiniz bildirimler. Hesabınız var olduğu sürece ona bağlı kalırlar — sonrasında için aşağıdaki «Haklarınız (GDPR)» bölümüne bakın.",
     "legal.hold_connections": "Girişler ve katkılar",
     "legal.hold_connections_why": "Her giriş, her yükleme ve verdiğimiz her erişim jetonu, IP adresiniz ve tarayıcınızın kimliğiyle birlikte kaydedilir. Bunu saklamak zorundayız: Fransız yasası, başkalarının yayımladığı içeriği barındıran herkesin, bunu kimin gönderdiğini belirleyebilmesini ister.",
-    "legal.hold_connections_end": "IP adresi on iki ay sonra otomatik olarak silinir. İşlemin kaydı kalır, artık bir adrese bağlı olmadan.",
+    "legal.hold_connections_end": "IP adresi on iki ay sonra otomatik olarak silinir. O zaman bir girişin ya da erişim jetonunun kaydı tamamen silinir; bir yüklemenin kaydı ise kalır, artık bir adrese bağlı olmadan.",
     "legal.hold_accesses": "Hesabınıza bağlı programlar",
     "legal.hold_accesses_text": "Bir oyunu ya da Manager'ı hesabınıza bağladığınızda, bunu hangi programın istediğini, cihaza verdiğiniz adı ve — program söylüyorsa — hangi oyun olduğunu kaydediyoruz. Oyunun adı şifreli olarak saklanır ve bunların hiçbiri bilgisayarınızı tanımlamaz. Listenin tamamı profilinizdeki «Bağlı cihazlar» bölümündedir; oradan istediğinizi kesebilirsiniz.",
     "legal.hold_counting": "Ziyaretlerin sayımı",

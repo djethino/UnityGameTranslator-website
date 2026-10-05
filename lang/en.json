@@ -906,7 +906,7 @@
     "legal.hold_published_text": "The translations you upload, the votes you cast and the reports you send. They stay attached to your account for as long as it exists — and after it, see \"Your Rights\" below.",
     "legal.hold_connections": "Connections and contributions",
     "legal.hold_connections_why": "Every sign-in, every upload and every access token we issue is recorded with your IP address and your browser's identification. We are required to keep this: French law asks anyone hosting content published by others to be able to identify who contributed it.",
-    "legal.hold_connections_end": "The IP address is erased after twelve months, automatically. The record of the act stays, no longer attached to an address.",
+    "legal.hold_connections_end": "The IP address is erased after twelve months, automatically. The record of a sign-in or of an access token is then erased entirely; the record of an upload stays, no longer attached to an address.",
     "legal.hold_accesses": "Programs linked to your account",
     "legal.hold_accesses_text": "When you link a game or the Manager to your account, we record which program asked, the name you gave the device, and — when the program says — which game. The game's name is kept encrypted, and nothing here identifies your machine. You can see the whole list, and cut any of it, under Linked devices in your profile.",
     "legal.hold_counting": "Counting visitors",

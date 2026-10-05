@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Terjemahan yang kamu unggah, vote yang kamu berikan, dan laporan yang kamu kirim. Semuanya tetap terkait dengan akunmu selama akun itu ada — dan setelahnya, lihat «Hakmu (GDPR)» di bawah.",
     "legal.hold_connections": "Masuk dan kontribusi",
     "legal.hold_connections_why": "Setiap kali masuk, setiap unggahan, dan setiap token akses yang kami terbitkan dicatat bersama alamat IP-mu dan identitas peramban yang kamu pakai. Kami wajib menyimpannya: hukum Prancis mengharuskan siapa pun yang menampung konten terbitan orang lain untuk bisa mengetahui siapa yang mengirimkannya.",
-    "legal.hold_connections_end": "Alamat IP dihapus setelah dua belas bulan, otomatis. Catatan tindakannya tetap ada, tidak lagi terkait dengan sebuah alamat.",
+    "legal.hold_connections_end": "Alamat IP dihapus setelah dua belas bulan, otomatis. Saat itu catatan masuk atau token akses dihapus seluruhnya; catatan unggahan tetap ada, tidak lagi terkait dengan sebuah alamat.",
     "legal.hold_accesses": "Program yang terhubung ke akunmu",
     "legal.hold_accesses_text": "Saat kamu menghubungkan sebuah game atau Manager ke akunmu, kami mencatat program mana yang memintanya, nama yang kamu berikan pada perangkat, dan — kalau programnya menyebutkan — game apa itu. Nama game disimpan terenkripsi, dan tidak ada satu pun dari ini yang mengidentifikasi komputermu. Daftar lengkapnya ada di «Perangkat yang terhubung» pada profilmu, dan kamu bisa mencabut apa saja dari sana.",
     "legal.hold_counting": "Menghitung kunjungan",

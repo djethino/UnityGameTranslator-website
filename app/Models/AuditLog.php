@@ -40,6 +40,23 @@ class AuditLog extends Model
     public const ACTION_DEVICE_LINKED = 'device_linked';
 
     /**
+     * The connection record: signing in and out, and the accesses given to programs.
+     *
+     * 🔴 **Erased whole after twelve months, unlike every other line** (user, 2026-10-05). Once its
+     * address is gone (audit:purge-ips), "this account signed in on this date" serves nothing — no
+     * moderation reads it — while still saying when somebody was there. The other events (a
+     * translation published, deleted, moved; what an admin did) are the memory of the content and
+     * stay without a limit, their identifiers cleared.
+     */
+    public const CONNECTION_ACTIONS = [
+        self::ACTION_LOGIN,
+        self::ACTION_LOGOUT,
+        self::ACTION_TOKEN_CREATED,
+        self::ACTION_TOKEN_REVOKED,
+        self::ACTION_DEVICE_LINKED,
+    ];
+
+    /**
      * Log an action with request context
      */
     public static function log(

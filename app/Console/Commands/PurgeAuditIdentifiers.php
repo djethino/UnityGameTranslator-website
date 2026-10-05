@@ -36,7 +36,7 @@ class PurgeAuditIdentifiers extends Command
                             {--months=12 : How long an identifier is kept}
                             {--dry-run : Count what would be cleared, write nothing}';
 
-    protected $description = 'Clear IP addresses and user agents from audit log entries older than twelve months';
+    protected $description = 'Erase connection records, and clear IP addresses and user agents from other audit log entries, older than twelve months';
 
     public function handle(): int
     {
@@ -51,10 +51,21 @@ class PurgeAuditIdentifiers extends Command
             $q->whereNotNull('ip_address')->orWhereNotNull('user_agent');
         })->where('created_at', '<', $cutoff);
 
+        // The connection record goes whole at the same age (AuditLog::CONNECTION_ACTIONS): without
+        // its address it serves nothing, and still says when somebody was there.
+        $connections = AuditLog::whereIn('action', AuditLog::CONNECTION_ACTIONS)
+            ->where('created_at', '<', $cutoff);
+
         if ($this->option('dry-run')) {
-            $this->info("Would clear {$query->count()} identifier(s) older than {$cutoff->toDateString()}.");
+            $this->info("Would erase {$connections->count()} connection record(s) and clear "
+                . "{$query->count()} identifier(s) older than {$cutoff->toDateString()}.");
 
             return Command::SUCCESS;
+        }
+
+        $erased = $connections->delete();
+        if ($erased > 0) {
+            $this->info("Erased {$erased} connection record(s) older than {$cutoff->toDateString()}.");
         }
 
         // ⚠ update(), never delete(): the line is kept, only the identifier goes. And no touch() —

@@ -906,7 +906,7 @@
     "legal.hold_published_text": "De vertalingen die je uploadt, de stemmen die je uitbrengt en de meldingen die je stuurt. Ze blijven aan je account gekoppeld zolang het bestaat — en daarna, zie ‘Je rechten (AVG)’ hieronder.",
     "legal.hold_connections": "Aanmeldingen en bijdragen",
     "legal.hold_connections_why": "Elke aanmelding, elke upload en elk toegangstoken dat we uitgeven wordt vastgelegd met je IP-adres en de identificatie van je browser. We zijn verplicht dit te bewaren: de Franse wet vereist dat wie inhoud van anderen host, kan vaststellen wie die heeft ingestuurd.",
-    "legal.hold_connections_end": "Het IP-adres wordt na twaalf maanden automatisch gewist. De vastlegging van de handeling blijft, niet langer aan een adres gekoppeld.",
+    "legal.hold_connections_end": "Het IP-adres wordt na twaalf maanden automatisch gewist. De vastlegging van een aanmelding of een toegangstoken wordt dan volledig gewist; die van een upload blijft, niet langer aan een adres gekoppeld.",
     "legal.hold_accesses": "De programma's die aan je account gekoppeld zijn",
     "legal.hold_accesses_text": "Wanneer je een game of de Manager aan je account koppelt, leggen we vast welk programma het vroeg, welke naam je het apparaat gaf en — als het programma dat zegt — om welke game het gaat. De naam van de game wordt versleuteld bewaard, en niets hiervan identificeert je machine. De hele lijst staat onder «Gekoppelde apparaten» in je profiel, en je kunt daar alles ervan intrekken.",
     "legal.hold_counting": "Bezoekers tellen",

@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Les traductions que vous envoyez, les votes que vous exprimez et les signalements que vous adressez. Ils restent rattachés à votre compte tant qu'il existe — et au-delà, voir « Vos droits (RGPD) » plus bas.",
     "legal.hold_connections": "Connexions et contributions",
     "legal.hold_connections_why": "Chaque connexion, chaque envoi et chaque jeton d'accès que nous délivrons est enregistré avec votre adresse IP et l'identification de votre navigateur. Nous sommes tenus de le conserver : la loi française demande à quiconque héberge des contenus publiés par d'autres de pouvoir identifier qui les a déposés.",
-    "legal.hold_connections_end": "L'adresse IP est effacée au bout de douze mois, automatiquement. La trace de l'acte demeure, sans être rattachée à une adresse.",
+    "legal.hold_connections_end": "L'adresse IP est effacée au bout de douze mois, automatiquement. La trace d'une connexion ou d'un jeton d'accès est alors effacée entièrement ; celle d'un envoi demeure, sans être rattachée à une adresse.",
     "legal.hold_accesses": "Les programmes liés à votre compte",
     "legal.hold_accesses_text": "Quand vous liez un jeu ou le Manager à votre compte, nous enregistrons quel programme l'a demandé, le nom que vous avez donné à l'appareil et — quand le programme le dit — de quel jeu il s'agit. Le nom du jeu est conservé chiffré, et rien ici n'identifie votre machine. Vous pouvez voir toute la liste, et en couper ce que vous voulez, dans « Appareils liés » sur votre profil.",
     "legal.hold_counting": "Comptage des visites",

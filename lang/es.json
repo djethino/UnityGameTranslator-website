@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Las traducciones que subes, los votos que emites y los reportes que envías. Siguen ligados a tu cuenta mientras exista — y después de ella, mira «Tus derechos (RGPD)» más abajo.",
     "legal.hold_connections": "Conexiones y contribuciones",
     "legal.hold_connections_why": "Cada inicio de sesión, cada envío y cada token de acceso que emitimos queda registrado con tu dirección IP y la identificación de tu navegador. Estamos obligados a conservarlo: la ley francesa exige que quien aloja contenidos publicados por otros pueda identificar a quien los aportó.",
-    "legal.hold_connections_end": "La dirección IP se borra al cabo de doce meses, automáticamente. Queda el registro del acto, ya sin dirección asociada.",
+    "legal.hold_connections_end": "La dirección IP se borra al cabo de doce meses, automáticamente. El registro de un inicio de sesión o de un token de acceso se borra entonces por completo; el de un envío queda, ya sin dirección asociada.",
     "legal.hold_accesses": "Los programas vinculados a tu cuenta",
     "legal.hold_accesses_text": "Cuando vinculas un juego o el Manager a tu cuenta, registramos qué programa lo pidió, el nombre que le diste al dispositivo y —cuando el programa lo dice— de qué juego se trata. El nombre del juego se guarda cifrado, y nada de esto identifica tu máquina. Puedes ver la lista entera, y cortar lo que quieras, en «Dispositivos vinculados» de tu perfil.",
     "legal.hold_counting": "Recuento de visitas",

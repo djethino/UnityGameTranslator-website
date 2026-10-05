@@ -17,10 +17,10 @@ class PurgeAuditIdentifiersTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function entry(int $monthsAgo): AuditLog
+    private function entry(int $monthsAgo, string $action = AuditLog::ACTION_TRANSLATION_UPLOAD): AuditLog
     {
         return AuditLog::forceCreate([
-            'action' => 'login',
+            'action' => $action,
             'user_id' => null,
             'ip_address' => '203.0.113.7',
             'user_agent' => 'Mozilla/5.0 (Windows NT 10.0) Firefox/130.0',
@@ -39,7 +39,7 @@ class PurgeAuditIdentifiersTest extends TestCase
         $old->refresh();
         $this->assertNull($old->ip_address);
         $this->assertNull($old->user_agent, 'the user agent identifies a machine as surely as its address');
-        $this->assertSame('login', $old->action, 'the event itself is kept');
+        $this->assertSame(AuditLog::ACTION_TRANSLATION_UPLOAD, $old->action, 'the event itself is kept');
         $this->assertEquals($when, $old->created_at, 'the moment it happened is never rewritten');
 
         $recent->refresh();
@@ -56,5 +56,22 @@ class PurgeAuditIdentifiersTest extends TestCase
         $this->artisan('audit:purge-ips')->assertSuccessful();
 
         $this->assertNull($old->fresh()->user_agent);
+    }
+
+    public function test_the_connection_record_goes_whole_after_twelve_months(): void
+    {
+        // 🔴 User, 2026-10-05: once its address is gone, "this account signed in on this date"
+        // serves nothing and still says when somebody was there.
+        $oldLogin = $this->entry(13, AuditLog::ACTION_LOGIN);
+        $oldDevice = $this->entry(13, AuditLog::ACTION_DEVICE_LINKED);
+        $recentLogin = $this->entry(11, AuditLog::ACTION_LOGIN);
+        $oldUpload = $this->entry(13);
+
+        $this->artisan('audit:purge-ips')->assertSuccessful();
+
+        $this->assertNull($oldLogin->fresh());
+        $this->assertNull($oldDevice->fresh());
+        $this->assertNotNull($recentLogin->fresh(), 'within twelve months it is kept, address included');
+        $this->assertNotNull($oldUpload->fresh(), 'the memory of the content stays, without its identifiers');
     }
 }

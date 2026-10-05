@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Tłumaczenia, które wysyłasz, oddane głosy i zgłoszenia, które przesyłasz. Pozostają przypisane do Twojego konta tak długo, jak ono istnieje — a po nim zobacz „Twoje prawa (RODO)” poniżej.",
     "legal.hold_connections": "Logowania i wkłady",
     "legal.hold_connections_why": "Każde logowanie, każde wysłanie i każdy token dostępu, który wydajemy, jest zapisywany wraz z Twoim adresem IP i identyfikacją Twojej przeglądarki. Musimy to przechowywać: prawo francuskie wymaga, by ten, kto hostuje treści publikowane przez innych, mógł ustalić, kto je przesłał.",
-    "legal.hold_connections_end": "Adres IP jest usuwany po dwunastu miesiącach, automatycznie. Zapis samej czynności pozostaje, już bez powiązania z adresem.",
+    "legal.hold_connections_end": "Adres IP jest usuwany po dwunastu miesiącach, automatycznie. Zapis logowania lub tokenu dostępu jest wtedy usuwany w całości; zapis wysłania pozostaje, już bez powiązania z adresem.",
     "legal.hold_accesses": "Programy połączone z Twoim kontem",
     "legal.hold_accesses_text": "Kiedy łączysz grę albo Managera ze swoim kontem, zapisujemy, który program o to poprosił, jaką nazwę nadałeś urządzeniu i — jeśli program to poda — o którą grę chodzi. Nazwa gry jest przechowywana w postaci zaszyfrowanej i nic z tego nie identyfikuje Twojego komputera. Całą listę znajdziesz w «Połączonych urządzeniach» w swoim profilu i możesz tam odebrać dostęp dowolnej pozycji.",
     "legal.hold_counting": "Liczenie odwiedzin",

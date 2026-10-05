@@ -906,7 +906,7 @@
     "legal.hold_published_text": "Le traduzioni che carichi, i voti che esprimi e le segnalazioni che invii. Restano legati al tuo account finché esiste — e dopo di esso, vedi «I tuoi diritti (GDPR)» più sotto.",
     "legal.hold_connections": "Accessi e contributi",
     "legal.hold_connections_why": "Ogni accesso, ogni caricamento e ogni token che rilasciamo viene registrato con il tuo indirizzo IP e l'identificazione del tuo browser. Siamo tenuti a conservarlo: la legge francese chiede a chi ospita contenuti pubblicati da altri di poter identificare chi li ha inviati.",
-    "legal.hold_connections_end": "L'indirizzo IP viene cancellato dopo dodici mesi, automaticamente. La traccia dell'operazione resta, non più legata a un indirizzo.",
+    "legal.hold_connections_end": "L'indirizzo IP viene cancellato dopo dodici mesi, automaticamente. La traccia di un accesso o di un token viene allora cancellata del tutto; quella di un caricamento resta, non più legata a un indirizzo.",
     "legal.hold_accesses": "I programmi collegati al tuo account",
     "legal.hold_accesses_text": "Quando colleghi un gioco o il Manager al tuo account, registriamo quale programma lo ha chiesto, il nome che hai dato al dispositivo e — quando il programma lo dice — di quale gioco si tratta. Il nome del gioco è conservato cifrato, e niente di tutto questo identifica la tua macchina. Trovi l'elenco completo, e puoi tagliarne quello che vuoi, in «Dispositivi collegati» nel tuo profilo.",
     "legal.hold_counting": "Conteggio delle visite",

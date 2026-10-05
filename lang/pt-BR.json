@@ -906,7 +906,7 @@
     "legal.hold_published_text": "As traduções que você envia, os votos que dá e as denúncias que faz. Ficam ligados à sua conta enquanto ela existir — e depois dela, veja «Seus direitos (GDPR)» mais abaixo.",
     "legal.hold_connections": "Acessos e contribuições",
     "legal.hold_connections_why": "Cada acesso, cada envio e cada token que emitimos fica registrado com seu endereço IP e a identificação do seu navegador. Somos obrigados a guardar isso: a lei francesa exige que quem hospeda conteúdo publicado por outras pessoas consiga identificar quem o enviou.",
-    "legal.hold_connections_end": "O endereço IP é apagado depois de doze meses, automaticamente. O registro do ato permanece, sem estar mais ligado a um endereço.",
+    "legal.hold_connections_end": "O endereço IP é apagado depois de doze meses, automaticamente. O registro de um acesso ou de um token é então apagado por inteiro; o de um envio permanece, sem estar mais ligado a um endereço.",
     "legal.hold_accesses": "Os programas vinculados à sua conta",
     "legal.hold_accesses_text": "Quando você vincula um jogo ou o Manager à sua conta, registramos qual programa pediu, o nome que você deu ao dispositivo e — quando o programa informa — de qual jogo se trata. O nome do jogo fica guardado criptografado, e nada disso identifica sua máquina. A lista inteira está em «Dispositivos vinculados» no seu perfil, e você pode cortar o que quiser por lá.",
     "legal.hold_counting": "Contagem de visitas",
