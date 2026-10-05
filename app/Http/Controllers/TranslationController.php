@@ -294,6 +294,36 @@ class TranslationController extends Controller
      * No download count is incremented here: looking is not taking, and counting it would
      * inflate the very number people use to judge a translation.
      */
+    /**
+     * A translation's page on the site — the one address UGT Mod and UGT Manager open with "View on
+     * website" (2026-10-05), and the site decides where it lands by WHO LOOKS in this browser:
+     *
+     * - its author (a Main or a branch) → My translations, on its row: where it is managed;
+     * - anybody else, signed in or not → the Main's card on its game's page, where it is voted on,
+     *   reported and downloaded. A branch is a proposal, not a page of its own: its Main is.
+     *
+     * ⚠ The client does not decide: the account in the game may not be the one in the browser,
+     * and the page has to be the right one for whoever opens it. A Main the catalogue no longer
+     * lists (an empty file past its grace) has no card: its read-only view answers instead.
+     */
+    public function open(Translation $translation)
+    {
+        $user = auth()->user();
+
+        if ($user && (int) $translation->user_id === (int) $user->id) {
+            return redirect()->to(route('translations.mine') . '#translation-' . $translation->id);
+        }
+
+        $main = $translation->visibility === 'public' ? $translation : $translation->getMain();
+        abort_if($main === null, 404);
+
+        if (!Translation::publiclyListed()->whereKey($main->id)->exists()) {
+            return redirect()->route('translations.view', $main);
+        }
+
+        return redirect()->to(route('games.show', $main->game) . '#translation-' . $main->id);
+    }
+
     public function view(Translation $translation)
     {
         if (!$translation->isReadableBy(auth()->user())) {

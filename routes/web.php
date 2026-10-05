@@ -179,6 +179,10 @@ $localizableRoutes = function () {
     Route::get('/translations/{translation}/view/data', [TranslationController::class, 'viewData'])
         ->middleware('throttle:30,1')->name('translations.view.data');
 
+    // "View on website" from UGT Mod and UGT Manager: the site picks the page by who looks —
+    // the author's My translations, or the Main's card for everybody else (TranslationController::open).
+    Route::get('/translations/{translation}', [TranslationController::class, 'open'])->name('translations.open');
+
     // Merge preview page — token-based auth from the mod; the tokenized
     // entry URL is unprefixed (mod-generated) but browsed afterwards
     Route::get('/translations/{translation}/merge-preview', [TranslationController::class, 'mergePreview'])->name('translations.merge-preview');

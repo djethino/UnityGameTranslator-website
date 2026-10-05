@@ -6,7 +6,8 @@
     { "kind": "stack", "name": "Card", "spacing": "ElementSpacing", "pad": "SectionPadding", "children": [
       { "kind": "row", "name": "IdentityRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightMedium", "children": [
         { "kind": "row", "name": "IdentityMarks", "spacing": 4, "pad": 0, "fill": "Content", "minHeight": "RowHeightSmall" },
-        { "kind": "label", "name": "IdentityLabel", "text": { "bind": "identity" }, "policy": "Excluded", "bold": true, "fill": "Stretch" }
+        { "kind": "label", "name": "IdentityLabel", "text": { "bind": "identity" }, "policy": "Excluded", "bold": true, "fill": "Stretch" },
+        { "kind": "button", "name": "SiteBtn", "text": "View on website", "size": "Compact", "minWidth": 110, "act": "site", "visible": false }
       ] },
       { "kind": "stack", "name": "BadgeHost" },
       { "kind": "row", "name": "StatusRow", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightSmall", "children": [
