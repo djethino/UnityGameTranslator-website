@@ -4,13 +4,13 @@
   "size": { "width": 500, "height": 600, "minWidth": 500, "minHeight": 400 },
   "chrome": { "cardWidth": 460, "help": "Hover an element to see what it does" },
   "body": [
-    { "kind": "card", "name": "SetupCard", "width": 460, "children": [
+    { "kind": "card", "name": "SetupCard", "width": 460, "stretch": true, "children": [
       { "kind": "label", "name": "Title", "text": { "bind": "title" }, "role": "Title" },
       { "kind": "label", "name": "Instructions", "text": { "bind": "instructions" }, "role": "Small" },
       { "kind": "spacer", "name": "IntroGap", "height": 10 },
 
       { "kind": "label", "name": "GameTitle", "text": "1. Game", "role": "SectionTitle" },
-      { "kind": "section", "name": "GameBox", "children": [
+      { "kind": "section", "name": "GameBox", "fillHeight": true, "children": [
         { "kind": "row", "name": "GameRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
           { "kind": "label", "name": "GameName", "text": { "bind": "game" }, "role": "Body", "fill": "Stretch", "bold": true },
           { "kind": "label", "name": "GameSource", "text": { "bind": "gameSource" }, "role": "Small", "policy": "Excluded", "minWidth": 100, "align": "MiddleRight", "italic": true }
@@ -26,7 +26,7 @@
         ] },
         { "kind": "status", "name": "SearchStatus" },
         { "kind": "label", "name": "ResultsLegend", "text": { "bind": "legend" }, "role": "Hint" },
-        { "kind": "list", "name": "ResultsScroll", "minHeight": 80, "fill": false, "spacing": 2, "padding": 2 }
+        { "kind": "list", "name": "ResultsScroll", "minHeight": 160, "preferredHeight": 160, "spacing": 2, "padding": 2 }
       ] },
       { "kind": "spacer", "name": "GameGap", "height": 10 },
 

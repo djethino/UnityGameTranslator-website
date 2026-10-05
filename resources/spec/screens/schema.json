@@ -74,7 +74,7 @@
               "surface": { "type": "string", "enum": ["Card", "Elevated"], "default": "Card" },
               "stretch": { "type": "boolean", "default": false, "description": "Takes the height left in its host — a tab's card, so the tab fills the window." },
               "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } } } },
-        { "if": { "properties": { "kind": { "const": "section" } } }, "then": { "properties": { "minHeight": { "$ref": "#/$defs/minHeight" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A section inside a card: no edge, its own padding." } },
+        { "if": { "properties": { "kind": { "const": "section" } } }, "then": { "properties": { "minHeight": { "$ref": "#/$defs/minHeight" }, "fillHeight": { "type": "boolean", "default": false, "description": "Takes the spare height as well — a section holding a list that grows with the window." }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } } }, "description": "A section inside a card: no edge, its own padding." } },
         { "if": { "properties": { "kind": { "const": "tabs" } } }, "then": { "properties": {
               "rowHeight": { "type": "integer", "minimum": 16, "description": "The buttons' row height; the theme's when absent. Smaller for a row of sub-tabs." },
               "contentsIn": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "The name of the piece the tabs' contents go into — a tab of another row, for sub-tabs — built earlier in the document. The body when absent." },
