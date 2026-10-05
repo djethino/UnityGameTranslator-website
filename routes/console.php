@@ -96,9 +96,11 @@ Schedule::command('releases:refresh')->hourly();
 // right on the day something is published. This is for what changes afterwards and tells nobody:
 // a descriptor added to a store page, an 18+ DLC published months after the game, a game delisted.
 //
-// ⚠ A bounded pass, not the whole catalogue: the store allows about 200 requests per 5 minutes and
-// one game can cost several (its DLC are asked about too). Daily, it comes round.
-Schedule::command('games:rate-adult')->dailyAt('04:45');
+// ⚠ Every five minutes, each run inside one window of the store's limit (about 200 requests per 5
+// minutes; one game costs 1 to 11) — RateGamesForAdults counts its requests. A daily pass of a
+// fixed 40 games would have needed some 500 nights to come round 20,000 games. A run with nothing
+// due costs one query.
+Schedule::command('games:rate-adult')->everyFiveMinutes()->withoutOverlapping();
 
 // Being delisted is computed on every query, so nothing here decides anything: the state is
 // already true the moment the thirtieth day passes. What no code can do on its own is say so —

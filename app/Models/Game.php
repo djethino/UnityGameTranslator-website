@@ -128,6 +128,17 @@ class Game extends Model
         // declaration rescue a game detection missed, since "the store said nothing" is not "the
         // store said no" (a game whose adult content ships as a separate DLC says nothing).
         static::saving(fn ($game) => $game->refreshAdult());
+
+        // 🔴 **What makes asking the stores again worth it** (user, 2026-10-05: "le check store refait
+        // tous les jeux à chaque fois ?"). The stores are asked about a card by its title and its
+        // ids (App\Services\StoreProposals); the same card asked again gets the same answer. A new
+        // title, an id added or removed, or a new cover is a new question — so it, and nothing
+        // else, makes the card due again. The check itself writes quietly and never reaches here.
+        static::saving(function ($game) {
+            if ($game->exists && $game->isDirty(['name', 'steam_id', 'igdb_id', 'image_url'])) {
+                $game->stores_checked_at = null;
+            }
+        });
     }
 
     /**

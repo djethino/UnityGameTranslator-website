@@ -312,6 +312,10 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         // is a guess, and only an admin turns it into a fact. See App\Services\StoreProposals.
         Route::post('/games/check-stores', [AdminController::class, 'checkGameStores'])
             ->name('games.check-stores');
+        // One card, now — a card is only due again when it changes; a store adding it later says nothing.
+        Route::post('/games/{game:id}/check-stores', [AdminController::class, 'checkGameStoresAgain'])
+            ->middleware('throttle:30,1')
+            ->name('games.check-stores.one');
         Route::post('/games/proposals/apply', [AdminController::class, 'applyGameProposals'])
             ->name('games.proposals.apply');
         Route::post('/games/proposals/{proposal}/reject', [AdminController::class, 'rejectGameProposal'])

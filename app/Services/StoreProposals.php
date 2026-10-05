@@ -39,9 +39,9 @@ class StoreProposals
 {
     /**
      * How long one click may spend asking the stores. ⚠ A budget, not a wait: it bounds the work
-     * of one request and the next click takes up where this one stopped (oldest check first). The
-     * stores answer in well under a second each, so a click covers most of the catalogue; the
-     * bound is there for the day one of them is slow, so a click never runs into PHP's own limit.
+     * of one request and the next click takes up the cards still due (checkDue). The stores answer
+     * in well under a second each; the bound is there for the day one of them is slow, or many
+     * cards arrive at once, so a click never runs into PHP's own limit.
      */
     public const BudgetSeconds = 15;
 
@@ -50,7 +50,17 @@ class StoreProposals
     }
 
     /**
-     * Ask the stores about the cards due — never asked first, then the oldest — within the budget.
+     * Ask the stores about the cards DUE, within the budget.
+     *
+     * 🔴 **Due means there is a new question, not that time has passed** (user, 2026-10-05: "le
+     * check store refait tous les jeux à chaque fois ? qu'est-ce que ça va donner quand on aura
+     * 20000 jeux ?"). A card is due when it was never asked, or since it was renamed or one of its
+     * ids or its cover changed (Game: `stores_checked_at` is cleared then). Every click used to
+     * walk the whole catalogue oldest-first and ask again about every title no store knows — the
+     * same question, the same empty answer, for ever. A store that adds a game later sends no
+     * signal: "Check again" on the card's row is the way to ask about it then (checkOne).
+     *
+     * ⚠ Read in pages of ids, never the whole catalogue at once.
      *
      * @return array{checked: int, proposed: int, left: int}
      */
@@ -60,33 +70,48 @@ class StoreProposals
         $checked = 0;
         $proposed = 0;
 
-        $due = Game::query()
-            ->orderByRaw('stores_checked_at IS NULL DESC')
-            ->orderBy('stores_checked_at')
-            ->orderBy('id')
-            ->get();
-
-        foreach ($due as $game) {
+        foreach (Game::whereNull('stores_checked_at')->lazyById(200) as $game) {
             if (microtime(true) - $started > self::BudgetSeconds) {
                 break;
             }
 
-            $proposed += $this->check($game);
+            $proposed += $this->checkOne($game);
             $checked++;
-
-            // ⚠ Quietly and without timestamps: asking a store about a card is not a change to
-            // the card, and `updated_at` would reorder every listing sorted by freshness. Nothing
-            // here touches the adult columns, so the derived answer cannot go stale.
-            $game->stores_checked_at = now();
-            $game->timestamps = false;
-            $game->saveQuietly();
         }
 
         return [
             'checked' => $checked,
             'proposed' => $proposed,
-            'left' => $due->count() - $checked,
+            'left' => Game::whereNull('stores_checked_at')->count(),
         ];
+    }
+
+    /**
+     * Ask the stores about one card now, and mark it asked. Returns how many NEW proposals were
+     * written. The way to ask again about a card that is not due — a store may know it by now.
+     */
+    public function checkOne(Game $game): int
+    {
+        $proposed = $this->check($game);
+
+        // ⚠ Quietly and without timestamps: asking a store about a card is not a change to the
+        // card, and `updated_at` would reorder every listing sorted by freshness. Nothing here
+        // touches the adult columns, so the derived answer cannot go stale.
+        $game->stores_checked_at = now();
+        $game->timestamps = false;
+        $game->saveQuietly();
+
+        return $proposed;
+    }
+
+    /**
+     * Whether asking the stores about this card again could bring anything: an id it lacks, or a
+     * cover a store's could replace. A complete card has no question left — "Check again" is not
+     * drawn on it.
+     */
+    public function hasOpenQuestion(Game $game): bool
+    {
+        return !$game->steam_id || !$game->igdb_id || $this->coverMayBeReplaced($game->image_url);
     }
 
     /**

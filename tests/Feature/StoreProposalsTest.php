@@ -321,9 +321,10 @@ class StoreProposalsTest extends TestCase
 
     public function test_a_second_check_says_what_is_still_waiting_not_only_what_is_new(): void
     {
-        // The second click finds the same value again and writes nothing — "0 new" alone read as
-        // "the stores found nothing" beside proposals waiting on screen (asked 2026-09-30).
-        Game::create(['name' => 'LoneStar']);
+        // "0 new" alone read as "the stores found nothing" beside proposals waiting on screen (asked
+        // 2026-09-30). Since 2026-10-05 the second click asks nothing — the card has not changed —
+        // and says so, with what still waits.
+        $game = Game::create(['name' => 'LoneStar']);
         $this->storesKnow([['id' => '2056210', 'name' => 'LONESTAR']]);
         $admin = $this->admin();
 
@@ -331,7 +332,11 @@ class StoreProposalsTest extends TestCase
             ->assertSessionHas('success', 'Asked the stores about 1 game: 1 new proposal. 1 proposal waiting on 1 game.');
 
         $this->actingAs($admin)->post(route('admin.games.check-stores'))
-            ->assertSessionHas('success', 'Asked the stores about 1 game: nothing new. 1 proposal waiting on 1 game.');
+            ->assertSessionHas('success', 'No game has a new question for the stores. Use Check again on a game to ask about it anyway. 1 proposal waiting on 1 game.');
+
+        // Asked again on purpose: the same value found again, nothing new, the waiting one said.
+        $this->actingAs($admin)->post(route('admin.games.check-stores.one', $game->id))
+            ->assertSessionHas('success', 'Asked the stores about LoneStar: nothing new.');
     }
 
     public function test_with_nothing_proposed_the_admin_stays_where_they_were(): void
@@ -345,5 +350,50 @@ class StoreProposalsTest extends TestCase
             ->from($from)
             ->post(route('admin.games.check-stores'))
             ->assertRedirect($from);
+    }
+
+    // ── when the stores are asked again (2026-10-05) ────────────────────────────────────────
+
+    public function test_a_card_asked_once_is_not_asked_again_until_it_changes(): void
+    {
+        $unknown = Game::create(['name' => 'A title no store knows']);
+        $calls = 0;
+        $this->mock(GameSearchService::class, function ($mock) use (&$calls) {
+            $mock->shouldReceive('steamSearch')->andReturnUsing(function () use (&$calls) { $calls++; return []; });
+            $mock->shouldReceive('igdb')->andReturnUsing(function () use (&$calls) { $calls++; return []; });
+            $mock->shouldReceive('steamApp')->andReturn(null);
+        });
+        $proposals = app(StoreProposals::class);
+
+        $this->assertSame(1, $proposals->checkDue()['checked']);
+        $asked = $calls;
+        $this->assertGreaterThan(0, $asked);
+
+        // The same question, the same empty answer: not asked again.
+        $result = $proposals->checkDue();
+        $this->assertSame([0, 0], [$result['checked'], $result['left']]);
+        $this->assertSame($asked, $calls, 'no store asked twice the same question');
+
+        // Renamed: a new question, so due again.
+        $unknown->refresh()->update(['name' => 'Its real title']);
+        $this->assertNull($unknown->refresh()->stores_checked_at);
+        $this->assertSame(1, $proposals->checkDue()['checked']);
+    }
+
+    public function test_check_again_asks_now_and_is_offered_only_where_an_answer_could_add_something(): void
+    {
+        $open = Game::create(['name' => 'Open card']);
+        $complete = Game::create(['name' => 'Complete card', 'steam_id' => '100', 'igdb_id' => 200,
+            'image_url' => 'https://cdn.example/cover.jpg']);
+        $this->storesKnow([['id' => '555', 'name' => 'Open card']]);
+        app(StoreProposals::class)->checkDue();
+
+        $page = $this->actingAs($this->admin())->get(route('admin.games'))->assertOk();
+        $page->assertSee(route('admin.games.check-stores.one', $open->id), false);
+        $page->assertDontSee(route('admin.games.check-stores.one', $complete->id), false);
+
+        GameProposal::query()->delete();
+        $this->post(route('admin.games.check-stores.one', $open->id))->assertRedirect();
+        $this->assertSame(['555'], GameProposal::pending()->where('game_id', $open->id)->pluck('value')->all());
     }
 }

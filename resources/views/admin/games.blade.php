@@ -103,8 +103,8 @@
         @csrf
         <button type="submit" :disabled="running"
             class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-wait transition"
-            title="Asks Steam and IGDB what the cards lack. Nothing is written until you apply it.">
-            <span x-show="!running"><i class="fas fa-store mr-1"></i> Check stores{{ $neverChecked > 0 ? " ({$neverChecked})" : '' }}</span>
+            title="Asks Steam and IGDB about the cards never asked, or changed since. Nothing is written until you apply it.">
+            <span x-show="!running"><i class="fas fa-store mr-1"></i> Check stores{{ $storesDue > 0 ? " ({$storesDue})" : '' }}</span>
             <span x-show="running" x-cloak><i class="fas fa-rotate fa-spin mr-1"></i> Checking stores…</span>
         </button>
     </form>
@@ -150,6 +150,17 @@
            class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded">
             Show all games
         </a>
+    </div>
+@endif
+
+{{-- Whether the adult check keeps up with the catalogue (games:rate-adult, every five minutes within
+     the store's limit). Said only when it does not: a game not asked for longer than the pass
+     promises is one a store may have reclassified without anybody knowing. --}}
+@if($adultOverdue > 0)
+    <div class="bg-gray-800 border-l-4 border-amber-500 rounded p-3 mb-3 text-sm text-gray-300">
+        <i class="fas fa-triangle-exclamation mr-1 text-amber-400"></i>
+        {{ $adultOverdue }} {{ Str::plural('game', $adultOverdue) }} not checked for adult content in
+        {{ \App\Console\Commands\RateGamesForAdults::StaleDays }} days. The automatic check is not keeping up.
     </div>
 @endif
 
@@ -238,6 +249,19 @@
                                 </div>
                             </div>
                         @endforeach
+                        {{-- When the stores were last asked, and the way to ask again: a card is only
+                             due again when it changes, and a store that adds the game later says
+                             nothing. Drawn only where an answer could still add something. --}}
+                        @if($game->stores_checked_at && $stores->hasOpenQuestion($game))
+                            <form action="{{ route('admin.games.check-stores.one', $game->id) }}" method="POST"
+                                  class="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                                @csrf
+                                <span>Checked {{ $game->stores_checked_at->format('M d, Y') }}</span>
+                                <button type="submit" class="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                    Check again
+                                </button>
+                            </form>
+                        @endif
                     </td>
                     {{-- Remove is drawn only where it can act: a card nothing is filed under (every
                          translation counted, branches included — AdminController::destroyGame).

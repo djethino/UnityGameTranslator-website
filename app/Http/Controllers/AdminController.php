@@ -342,13 +342,21 @@ class AdminController extends Controller
 
         $games = $query->paginate(30)->withQueryString();
 
-        // Said on the buttons themselves: how many cards the stores were never asked about, and
-        // how many proposals wait across the whole catalogue — not just this page.
-        $neverChecked = Game::whereNull('stores_checked_at')->count();
+        // Said on the buttons themselves: how many cards have a new question for the stores (never
+        // asked, or renamed or changed since — StoreProposals::checkDue), and how many proposals
+        // wait across the whole catalogue — not just this page.
+        $storesDue = Game::whereNull('stores_checked_at')->count();
         $pendingProposals = GameProposal::pending()->count();
         $pendingGames = GameProposal::pending()->distinct()->count('game_id');
 
-        return view('admin.games', compact('games', 'neverChecked', 'pendingProposals', 'pendingGames'));
+        // Whether the nightly adult check keeps up: games last asked longer ago than it promises
+        // (games:rate-adult). Said only when there are some — then the pass is too small.
+        $adultOverdue = Game::where(fn ($q) => $q->whereNull('adult_checked_at')
+            ->orWhere('adult_checked_at', '<', now()->subDays(\App\Console\Commands\RateGamesForAdults::StaleDays)))->count();
+
+        $stores = app(StoreProposals::class);
+
+        return view('admin.games', compact('games', 'storesDue', 'pendingProposals', 'pendingGames', 'adultOverdue', 'stores'));
     }
 
     /**
@@ -368,10 +376,14 @@ class AdminController extends Controller
         $waiting = GameProposal::pending()->count();
         $waitingGames = GameProposal::pending()->distinct()->count('game_id');
 
-        $message = 'Asked the stores about ' . $result['checked'] . ' ' . Str::plural('game', $result['checked']) . ': '
-            . ($result['proposed'] > 0
-                ? $result['proposed'] . ' new ' . Str::plural('proposal', $result['proposed']) . '.'
-                : 'nothing new.');
+        // Nothing due is its own answer: a card is only asked again once it changes (checkDue), and
+        // "Asked the stores about 0 games" would read as a click that did not work.
+        $message = $result['checked'] === 0
+            ? 'No game has a new question for the stores. Use Check again on a game to ask about it anyway.'
+            : 'Asked the stores about ' . $result['checked'] . ' ' . Str::plural('game', $result['checked']) . ': '
+                . ($result['proposed'] > 0
+                    ? $result['proposed'] . ' new ' . Str::plural('proposal', $result['proposed']) . '.'
+                    : 'nothing new.');
 
         if ($waiting > 0) {
             $message .= ' ' . $waiting . ' ' . Str::plural('proposal', $waiting) . ' waiting on '
@@ -437,6 +449,19 @@ class AdminController extends Controller
     /**
      * Refuse one proposal for good — the same value is never proposed again for that card.
      */
+    /**
+     * Ask the stores about one card now — "Check again" on its row. A card is only due on its own
+     * when something about it changed (StoreProposals::checkDue); a store that has since added the
+     * game sends no signal, so this is how somebody asks.
+     */
+    public function checkGameStoresAgain(Game $game, StoreProposals $proposals)
+    {
+        $new = $proposals->checkOne($game);
+
+        return back()->with('success', "Asked the stores about {$game->name}: "
+            . ($new > 0 ? $new . ' new ' . Str::plural('proposal', $new) . '.' : 'nothing new.'));
+    }
+
     public function rejectGameProposal(GameProposal $proposal, StoreProposals $service)
     {
         $service->reject($proposal, auth()->user());
