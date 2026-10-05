@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * the two halves of the chart would mean different things. Subtracting here is exact for every day
  * already stored, because the subset relation has always held.
  *
- * ⚠ Therefore: **never read `page_views` directly for display.** Go through `topOverPeriod`.
+ * ⚠ Therefore: **never read `page_views` directly for display.** Go through `topBetween`.
  */
 class AnalyticsGame extends Model
 {
@@ -54,22 +54,24 @@ class AnalyticsGame extends Model
      * ⚠ Games that no longer exist are dropped by the QUERY, not skipped while rendering. Skipping
      * at render is how a "top 10" quietly shows seven rows and still calls itself a top 10.
      */
-    public static function topOverPeriod(int $days, int $limit = 10): \Illuminate\Support\Collection
+    public static function topBetween(\DateTimeInterface $from, \DateTimeInterface $to, int $limit = 10): \Illuminate\Support\Collection
     {
-        $since = now()->subDays($days);
+        $from = \Carbon\CarbonImmutable::instance($from);
+        $to = \Carbon\CarbonImmutable::instance($to);
 
         // The days still kept, plus the months already folded (foldOldDays). A row is in one table
         // or the other, never both, so adding them counts nothing twice.
         //
-        // ⚠ A folded month counts WHOLE once the span reaches into it: its days no longer exist, so
-        // a span starting on the 20th of a month folded long ago includes that month's first days.
-        // Only spans longer than thirteen months reach a folded month, and those are read in months.
+        // ⚠ A folded month counts WHOLE once the span touches it: its days no longer exist, so a
+        // span from the 20th of a month folded long ago includes that month's first days, and one
+        // ending on the 10th includes its last. The screen says when a span reaches folded months
+        // (foldedBefore).
         $dayRows = DB::table('analytics_games')
             ->select('game_id', 'page_views', 'downloads')
-            ->where('date', '>=', $since->toDateString());
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()]);
         $monthRows = DB::table('analytics_games_monthly')
             ->select('game_id', 'page_views', 'downloads')
-            ->where('month', '>=', $since->copy()->startOfMonth()->toDateString());
+            ->whereBetween('month', [$from->startOfMonth()->toDateString(), $to->toDateString()]);
 
         $rows = DB::query()->fromSub($dayRows->unionAll($monthRows), 'attention')
             ->whereExists(fn ($q) => $q->select(DB::raw(1))->from('games')->whereColumn('games.id', 'attention.game_id'))
@@ -90,19 +92,25 @@ class AnalyticsGame extends Model
     /** How many months of days are kept before they are folded into months. */
     public const DAYS_KEPT_MONTHS = 13;
 
+    /** The first day still kept day by day: before it, games are counted per month (foldOldDays). */
+    public static function foldedBefore(): \Carbon\CarbonImmutable
+    {
+        return \Carbon\CarbonImmutable::now()->startOfMonth()->subMonths(self::DAYS_KEPT_MONTHS);
+    }
+
     /**
      * Fold every month older than DAYS_KEPT_MONTHS into analytics_games_monthly, and delete its
      * days. Returns how many day rows were folded.
      *
      * ⚠ **One transaction per month, adding to what the month already holds.** A month is folded
      * whole and its days deleted together, so a night that fails leaves the month either entirely
-     * in days or entirely in months — never in both, which is what lets topOverPeriod add the two
+     * in days or entirely in months — never in both, which is what lets topBetween add the two
      * tables. Adding rather than writing makes a late day (a `--date` run on an old day, written
      * after its month was folded) join its month on the next night instead of being lost.
      */
     public static function foldOldDays(): int
     {
-        $before = now()->startOfMonth()->subMonths(self::DAYS_KEPT_MONTHS)->toDateString();
+        $before = self::foldedBefore()->toDateString();
         $folded = 0;
 
         $months = self::where('date', '<', $before)

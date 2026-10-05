@@ -53,30 +53,18 @@
                 {{ $said }} <i class="fas fa-xmark text-gray-400"></i>
             </a>
         @endforeach
-        <a href="{{ route('admin.flows', array_filter(['period' => request('period'), 'type' => $typeSlug])) }}"
+        <a href="{{ route('admin.flows', $span->query() + array_filter(['type' => $typeSlug])) }}"
            class="text-sm text-purple-400 hover:text-purple-300 ml-2">Clear all</a>
     </div>
 @endif
 
-{{-- The span bar of the analytics page, same offers and same words. --}}
-<div class="sticky top-[var(--site-bar-offset,0px)] transition-[top] duration-200 z-30 -mx-4 px-4 mb-3 py-2 bg-gray-900/95 backdrop-blur
-            border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
-    <h2 class="text-lg font-semibold text-gray-300">
-        <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
-        {{-- ⚠ Not the analytics page's "Yesterday and today": that one reads whole days, this one
-             counts back from now — "24 h" is exactly 24 hours. --}}
-        Last {{ $spanLabel }}
-        <span class="text-sm font-normal text-gray-500 ml-2">— up to now</span>
-    </h2>
-    <div class="flex flex-wrap gap-2">
-        @foreach (\App\Support\AnalyticsPeriods::choices($daysStored, $period) as $days => $label)
-            <a href="{{ $link(['period' => $days]) }}"
-               class="px-3 py-1.5 rounded text-sm {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-                {{ $label }}
-            </a>
-        @endforeach
-    </div>
-</div>
+{{-- The span bar of the analytics page — the same component, the same offers and words. ⚠ Not its
+     "Yesterday and today": that one reads whole days, this one counts back from now, so "24 h" is
+     exactly 24 hours. The other filters ride along. --}}
+<x-admin.span-bar :span="$span" :daysStored="$daysStored" route="admin.flows"
+    :keep="request()->only(['type', 'game', 'user', 'language', 'translation', 'via'])"
+    :title="$span->label()"
+    :note="$span->includesToday() ? 'up to now' : null" />
 
 {{-- One tile per kind of event. A tile is also the filter of the list below; pressed again, it lets
      go. The tiles keep counting every kind — they are what a kind is picked from. --}}

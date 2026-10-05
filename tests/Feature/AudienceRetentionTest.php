@@ -154,10 +154,10 @@ class AudienceRetentionTest extends TestCase
         $this->assertSame(19, (int) DB::table('analytics_games_monthly')->value('page_views'));
 
         // The top games add both tables over a long span, and only the days over a short one.
-        $long = \App\Models\AnalyticsGame::topOverPeriod(500)->first();
+        $long = \App\Models\AnalyticsGame::topBetween(now()->subDays(500), now())->first();
         $this->assertSame(26, (int) $long->attention);
         $this->assertSame(3 + 3, (int) $long->downloads);
         $this->assertSame('Some Game', $long->game->name);
-        $this->assertSame(7, (int) \App\Models\AnalyticsGame::topOverPeriod(30)->first()->attention);
+        $this->assertSame(7, (int) \App\Models\AnalyticsGame::topBetween(now()->subDays(30), now())->first()->attention);
     }
 }

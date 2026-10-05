@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Support\Span;
 use App\Support\TranslationFlows;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -24,14 +25,12 @@ use Illuminate\Support\Collection;
  */
 class TranslationFlowReport
 {
-    private Carbon $since;
-
     /**
+     * @param Span $span the last N days, or two dates (App\Support\Span)
      * @param array{type?: ?string, game?: ?int, user?: ?int, language?: ?string, translation?: ?int, via?: ?string} $filters
      */
-    public function __construct(public readonly int $period, public readonly array $filters)
+    public function __construct(public readonly Span $span, public readonly array $filters)
     {
-        $this->since = now()->subDays($period);
     }
 
     /** Days since the oldest event the screen can show — the ceiling of its span (AnalyticsPeriods). */
@@ -67,12 +66,12 @@ class TranslationFlowReport
      */
     public function daily(): array
     {
-        $hourly = $this->period <= self::HOURLY_UP_TO_DAYS;
+        $hourly = $this->span->dayCount() <= self::HOURLY_UP_TO_DAYS;
         $keyOf = fn (Carbon $at) => $hourly ? $at->format('Y-m-d H') : $at->toDateString();
 
         $buckets = [];
-        $start = $hourly ? $this->since->copy()->startOfHour() : $this->since->copy()->startOfDay();
-        for ($at = $start; $at->lte(now()); $hourly ? $at->addHour() : $at->addDay()) {
+        $start = Carbon::instance($hourly ? $this->span->from->startOfHour() : $this->span->from->startOfDay());
+        for ($at = $start; $at->lte($this->span->to); $hourly ? $at->addHour() : $at->addDay()) {
             $buckets[$keyOf($at)] = 0;
         }
 
@@ -241,7 +240,7 @@ class TranslationFlowReport
             ->whereIn('action', $withType && !empty($f['type'])
                 ? [$f['type']]
                 : TranslationFlows::actions())
-            ->where('created_at', '>=', $this->since)
+            ->whereBetween('created_at', [$this->span->from, $this->span->to])
             // A game is where an event is filed — or, for a move, either end of it.
             ->when(!empty($f['game']), fn ($q) => $q->where(fn ($g) => $g
                 ->where('metadata->game_id', (int) $f['game'])

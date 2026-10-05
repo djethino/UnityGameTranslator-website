@@ -201,48 +201,20 @@
 
      ⚠ `top-0` with a background and a full-bleed shadow: a sticky bar with a transparent background
      lets the page scroll through its own text. --}}
-<div class="sticky top-[var(--site-bar-offset,0px)] transition-[top] duration-200 z-30 -mx-4 px-4 mt-8 mb-3 py-2 bg-gray-900/95 backdrop-blur
-            border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center"
-     id="period-bar">
-    <h2 class="text-lg font-semibold text-gray-300">
-        <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
-        {{-- "Last 1 days" is not a sentence, and the shortest window is exactly the one somebody
-             reaches for when something is happening right now.
-
-             ⚠ Every other span is named by the button the reader just pressed, never re-worded:
-             "48 h" up there and "Last 2 days" here would read as two different spans. --}}
-        {{ $period === 1 ? 'Yesterday and today' : 'Last ' . $spanLabel }}
-        <span class="text-sm font-normal text-gray-500 ml-2">— today included, counted live</span>
-    </h2>
-
-    {{-- ⚠ 1 day and the full span are both real answers that used to be unreachable: the smallest
-         offer was a week, and anything past a year was silently served as a year while the daily
-         aggregates are kept forever. "All" is only offered once there is more than a year to
-         show — a duplicate button would just be a second way to ask for the same thing.
-
-         🔴 The list itself lives in AnalyticsPeriods, not here: it stopped being a display filter
-         the day the version inventory started using it to decide what reads as extinct. --}}
-    <div class="flex gap-2">
-        @foreach (\App\Support\AnalyticsPeriods::choices($daysStored, $period) as $days => $label)
-            {{-- ⚠ An ordinary link. Where the reader was is remembered by a delegated listener on
-                 the bar — see the script at the foot of this file for why the page is reloaded
-                 whole rather than patched in place. --}}
-            {{-- ⚠ Carries the uploads sub-filter along, for the same reason it carries the period
-                 back: touching one control must not silently reset the other. --}}
-            <a href="{{ route('admin.analytics', ['period' => $days, 'uploads' => $uploadRole === 'all' ? null : $uploadRole]) }}"
-               data-keeps-scroll
-               class="px-3 py-1.5 rounded text-sm {{ $period == $days ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600' }}">
-                {{ $label }}
-            </a>
-        @endforeach
-    </div>
-</div>
+{{-- ⚠ "Last 1 days" is not a sentence, and the shortest window is the one somebody reaches for
+     when something is happening right now; every other span is named by the button pressed,
+     never re-worded. Two dates name themselves (Span::label). Today is "counted live" only in a
+     span that reaches it. --}}
+<x-admin.span-bar :span="$span" :daysStored="$daysStored" route="admin.analytics"
+    :keep="['uploads' => $uploadRole === 'all' ? null : $uploadRole]"
+    :title="$span->days === 1 ? 'Yesterday and today' : $spanName"
+    :note="$span->includesToday() ? 'today included, counted live' : null" />
 
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Page Views</p>
         <p class="text-2xl font-bold">{{ number_format($totals['page_views']) }}</p>
-        <p class="text-xs text-green-400">+{{ number_format($todayStats['page_views']) }} today</p>
+        @if($span->includesToday())<p class="text-xs text-green-400">+{{ number_format($todayStats['page_views']) }} today</p>@endif
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         {{-- NOT unique visitors over the period: this adds up each day's unique
@@ -251,22 +223,22 @@
              count is only possible over the 90 days of raw events we keep. --}}
         <p class="text-gray-400 text-sm">Daily Visitors <span class="text-gray-600">(summed)</span></p>
         <p class="text-2xl font-bold">{{ number_format($totals['unique_visitors']) }}</p>
-        <p class="text-xs text-green-400">+{{ number_format($todayStats['unique_visitors']) }} today</p>
+        @if($span->includesToday())<p class="text-xs text-green-400">+{{ number_format($todayStats['unique_visitors']) }} today</p>@endif
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Downloads</p>
         <p class="text-2xl font-bold">{{ number_format($totals['downloads']) }}</p>
-        <p class="text-xs text-green-400">+{{ number_format($todayStats['downloads']) }} today</p>
+        @if($span->includesToday())<p class="text-xs text-green-400">+{{ number_format($todayStats['downloads']) }} today</p>@endif
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">Uploads</p>
         <p class="text-2xl font-bold">{{ number_format($totals['uploads']) }}</p>
-        <p class="text-xs text-green-400">+{{ number_format($todayStats['uploads']) }} today</p>
+        @if($span->includesToday())<p class="text-xs text-green-400">+{{ number_format($todayStats['uploads']) }} today</p>@endif
     </div>
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <p class="text-gray-400 text-sm">New Users</p>
         <p class="text-2xl font-bold">{{ number_format($totals['registrations']) }}</p>
-        <p class="text-xs text-green-400">+{{ number_format($todayStats['registrations']) }} today</p>
+        @if($span->includesToday())<p class="text-xs text-green-400">+{{ number_format($todayStats['registrations']) }} today</p>@endif
     </div>
 </div>
 
@@ -573,7 +545,7 @@
          still running and what is not. Leaving the reader to remember which button they pressed is
          how the old card became unreadable. --}}
     <p class="text-xs text-gray-500 mb-3">
-        Activity and copies over the <span class="text-gray-400">last {{ $spanLabel }}</span>;
+        Activity and copies over the <span class="text-gray-400">last {{ $spanLabel }}</span>{{ $span->isRange() ? ' — up to today, not the dates above: this card says what is installed now' : '' }};
         first and last seen are the whole history. Counting started 2026-08-20 — before that every
         build called itself the same thing.
     </p>
@@ -705,7 +677,12 @@
                  Ranking on the two together is right — a game nobody browses but everybody
                  downloads is doing well — but with only the two parts shown, neither column
                  decreased down the list and the order read as broken. --}}
-            <p class="text-xs text-gray-500">Last {{ $spanLabel }} — ranked on views + downloads</p>
+            <p class="text-xs text-gray-500">{{ $spanName }} — ranked on views + downloads</p>
+            {{-- Days older than thirteen months are kept per month (AnalyticsGame::foldOldDays):
+                 a span reaching them counts those months whole, and says so. --}}
+            @if($span->from->lessThan(\App\Models\AnalyticsGame::foldedBefore()))
+                <p class="text-xs text-gray-500">Before {{ \App\Models\AnalyticsGame::foldedBefore()->toDateString() }}, counted per whole month.</p>
+            @endif
         </div>
         @if($topGames->isNotEmpty())
             <div class="space-y-3">
@@ -759,7 +736,7 @@
                  abandoned. It now counts anything created OR whose content changed. --}}
             <h2 class="text-lg font-semibold"><i class="fas fa-pen-to-square mr-2 text-green-400"></i> Activity</h2>
             <p class="text-xs text-gray-500">
-                Last {{ $spanLabel }} —
+                {{ $spanName }} —
                 {{ number_format($recentUploadsTotal) }} in all{{ $recentUploadsTotal > $recentUploads->count() ? ', newest ' . $recentUploads->count() . ' shown' : '' }}
             </p>
         </div>
@@ -771,7 +748,7 @@
              would move two things when the reader touched one. --}}
         <div class="flex gap-1.5 mb-4 text-xs">
             @foreach (['all' => 'All', 'main' => 'Main', 'branch' => 'Branch'] as $role => $label)
-                <a href="{{ route('admin.analytics', ['period' => $period, 'uploads' => $role]) }}"
+                <a href="{{ route('admin.analytics', $span->query() + ['uploads' => $role]) }}"
                    data-keeps-scroll
                    class="px-2.5 py-1 rounded transition
                           {{ $uploadRole === $role ? 'bg-gray-600 text-gray-100' : 'bg-gray-750 text-gray-400 hover:bg-gray-700' }}">
@@ -917,7 +894,7 @@
         <i class="fas fa-clock mr-2"></i>
         <strong>Where the numbers come from.</strong>
         Past days are aggregated once a night, at 02:00 UTC, from the raw events of the day before.
-        Today is counted live on every load, so the period totals always include it.
+        Today is counted live on every load, so a period that reaches today includes it.
         Concurrency peaks are sampled every 5 minutes; sessions started and refused are counted one by one.
     </p>
     <p>
@@ -961,7 +938,7 @@
         // page lower — where losing the position costs more, not less. Any filter link added later
         // joins in by carrying `data-keeps-scroll`, with nothing to wire up.
         document.addEventListener('click', (event) => {
-            if (!event.target.closest('a[data-keeps-scroll]')) {
+            if (!event.target.closest('[data-keeps-scroll]')) {
                 return;
             }
             try {

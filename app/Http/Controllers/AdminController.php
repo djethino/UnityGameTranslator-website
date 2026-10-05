@@ -23,6 +23,7 @@ use App\Services\TranslationFlowReport;
 use App\Services\VersionInventory;
 use App\Support\AnalyticsPeriods;
 use App\Support\OwnerTranslations;
+use App\Support\Span;
 use App\Support\TranslationFlows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -802,7 +803,7 @@ class AdminController extends Controller
     public function flows(Request $request)
     {
         $daysStored = TranslationFlowReport::daysStored();
-        $period = AnalyticsPeriods::clamp($request->get('period'), $daysStored);
+        $span = Span::fromRequest($request, $daysStored);
 
         $filters = [
             'type' => TranslationFlows::SLUGS[$request->get('type')] ?? null,
@@ -813,7 +814,7 @@ class AdminController extends Controller
             'via' => array_key_exists($request->get('via'), TranslationFlows::VIA) ? $request->get('via') : null,
         ];
 
-        $report = new TranslationFlowReport($period, $filters);
+        $report = new TranslationFlowReport($span, $filters);
         $events = $report->events();
 
         // Which translations named by the list still exist, to link them — a deleted one is named
@@ -823,9 +824,8 @@ class AdminController extends Controller
             ->get(['id'])->keyBy('id');
 
         return view('admin.flows', [
-            'period' => $period,
+            'span' => $span,
             'daysStored' => $daysStored,
-            'spanLabel' => AnalyticsPeriods::label($period),
             'filters' => $filters,
             'counts' => $report->counts(),
             'daily' => $report->daily(),
@@ -859,10 +859,16 @@ class AdminController extends Controller
         // what reads as extinct, and invites breaking the API those builds use. That makes it a
         // rule, and a rule cannot live in a `@php` block inside the view — see AnalyticsPeriods.
         $maxPeriod = AnalyticsPeriods::ceiling($daysStored);
-        $period = AnalyticsPeriods::clamp($request->get('period'), $daysStored);
+
+        // The last N days, or two dates (Span) — every figure below reads `from` and `to` from it.
+        $span = Span::fromRequest($request, $daysStored);
+        // What the version inventory reads: it answers "what is installed NOW", so a past range
+        // leaves it on the default span, and the screen says so where it is shown.
+        $period = $span->days ?? AnalyticsPeriods::DEFAULT_DAYS;
 
         // Get aggregated daily stats for the period
-        $dailyStats = AnalyticsDaily::where('date', '>=', now()->subDays($period))
+        $dailyStats = AnalyticsDaily::where('date', '>=', $span->from)
+            ->where('date', '<=', $span->to->toDateString())
             ->orderBy('date')
             ->get();
 
@@ -872,18 +878,21 @@ class AdminController extends Controller
         // event of the day into models on each visit, which costs more the more
         // the site succeeds — the one kind of slowdown that arrives exactly when
         // it hurts most. The breakdowns below follow the same rule.
+        //
+        // ⚠ Only when the span reaches today: a range that ends in the past has no live part.
         $today = now()->toDateString();
+        $live = $span->includesToday();
         $todayEventsQuery = fn() => AnalyticsEvent::whereDate('created_at', $today);
 
-        $todayStats = [
+        $todayStats = $live ? [
             'page_views' => $todayEventsQuery()->count(),
             'unique_visitors' => AnalyticsEvent::uniqueVisitorsOn($today),
             'downloads' => $todayEventsQuery()->where('route', 'like', '%translations.download')->count(),
             'uploads' => Translation::whereDate('created_at', $today)->count(),
             'registrations' => User::whereDate('created_at', $today)->count(),
-        ];
+        ] : array_fill_keys(['page_views', 'unique_visitors', 'downloads', 'uploads', 'registrations'], 0);
 
-        $todayBreakdown = fn(string $column, ?int $limit = null) => AnalyticsEvent::breakdownFor($today, $column, $limit);
+        $todayBreakdown = fn(string $column, ?int $limit = null) => $live ? AnalyticsEvent::breakdownFor($today, $column, $limit) : [];
 
         // Calculate totals (aggregated days + today's live stats)
         $totals = [
@@ -981,7 +990,7 @@ class AdminController extends Controller
         };
         $pages = $sumOver('routes', $todayBreakdown('route'));
         $siteLocales = $sumOver('locales', $todayBreakdown('locale'));
-        $downloadLanguages = $sumOver('download_languages', AnalyticsEvent::downloadBreakdownFor($today, 'target_language'));
+        $downloadLanguages = $sumOver('download_languages', $live ? AnalyticsEvent::downloadBreakdownFor($today, 'target_language') : []);
 
         // Distinct visitors and copies per month — the figures the days cannot add up to. The month
         // in progress is counted up to yesterday by the nightly job. Every month, newest first.
@@ -989,7 +998,7 @@ class AdminController extends Controller
 
         // Top games. The two figures are pulled apart in the model — `page_views` counts downloads
         // too, so showing them raw side by side double-counts. See AnalyticsGame.
-        $topGames = AnalyticsGame::topOverPeriod($period, self::TOP_ROWS);
+        $topGames = AnalyticsGame::topBetween($span->from, $span->to, self::TOP_ROWS);
 
         // Global stats
         $globalStats = [
@@ -1024,11 +1033,9 @@ class AdminController extends Controller
         // ⚠ `content_updated_at`, never `updated_at`: a vote or a download counter bumps the latter
         // (the reason it was added in the first place — see the ordering in translations()), so
         // "changed" would have meant "somebody voted".
-        $since = now()->subDays($period);
-
         $uploadsQuery = Translation::where(fn ($q) => $q
-            ->where('created_at', '>=', $since)
-            ->orWhere('content_updated_at', '>=', $since));
+            ->whereBetween('created_at', [$span->from, $span->to])
+            ->orWhereBetween('content_updated_at', [$span->from, $span->to]));
 
         // 'public' is a Main; anything else in a lineage is a branch — the same reading as
         // Translation::lineageRole(), asked of the database rather than of each row.
@@ -1093,6 +1100,7 @@ class AdminController extends Controller
         // write time, so nothing here holds a row about anybody — see VersionInventory.
         $clients = VersionInventory::forSpan($period);
         $spanLabel = AnalyticsPeriods::label($period);
+        $spanName = $span->label();
 
         // How many rows the side-by-side cards show before "Show more", and how many in all.
         $topRows = ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS];
@@ -1108,6 +1116,8 @@ class AdminController extends Controller
             'months',
             'clients',
             'spanLabel',
+            'span',
+            'spanName',
             'recentUploadsTotal',
             'uploadRole',
             'lineages',
