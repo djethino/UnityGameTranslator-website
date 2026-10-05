@@ -79,16 +79,34 @@
             </div>
             <i class="fas fa-file-alt text-4xl text-green-400 opacity-50"></i>
         </div>
-        {{-- Two ways in: the translations as they stand, and what has happened to them (the Flows
-             screen is English only, like the rest of what is added to the admin). --}}
-        <div class="mt-auto pt-4 flex flex-col gap-1 self-start">
-            <a href="{{ route('admin.translations.index') }}" class="text-purple-400 hover:text-purple-300 text-sm">
-                {{ __('admin.manage_translations') }} <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-            <a href="{{ route('admin.flows') }}" class="text-purple-400 hover:text-purple-300 text-sm">
-                Flows <i class="fas fa-arrow-right ml-1"></i>
-            </a>
+        <a href="{{ route('admin.translations.index') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+            {{ __('admin.manage_translations') }} <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
+    {{-- What happened to translations in the last 24 h (the Flows screen, English only like the rest of what
+         is added to the admin). Beside Translations: the same subject, as it stands and as it moves.
+         The refusals and deletions are named when there are any — what is worth a look. --}}
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-200 font-semibold">Translation flows</p>
+                <p class="text-3xl font-bold {{ $flowsLastDay['events'] > 0 ? 'text-cyan-400' : 'text-gray-500' }}">{{ $flowsLastDay['events'] }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ $flowsLastDay['events'] === 1 ? 'event in the last 24 h' : 'events in the last 24 h' }}</p>
+                @if($flowsLastDay['refused'] > 0 || $flowsLastDay['deleted'] > 0)
+                    <p class="text-sm text-orange-300 mt-1">
+                        {{ collect([
+                            $flowsLastDay['refused'] > 0 ? $flowsLastDay['refused'] . ' refused' : null,
+                            $flowsLastDay['deleted'] > 0 ? $flowsLastDay['deleted'] . ' deleted' : null,
+                        ])->filter()->implode(' · ') }}
+                    </p>
+                @endif
+            </div>
+            <i class="fas fa-code-branch text-4xl text-cyan-400 opacity-50"></i>
         </div>
+        <a href="{{ route('admin.flows', ['period' => 1]) }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+            View flows <i class="fas fa-arrow-right ml-1"></i>
+        </a>
     </div>
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">

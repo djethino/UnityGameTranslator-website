@@ -65,9 +65,20 @@ class AdminController extends Controller
         // count its own header shows.
         $pendingProposals = GameProposal::pending()->count();
 
+        // What happened to translations in the last 24 h — the span the card's link opens the Flows
+        // screen on, so the two figures are the same — with the two kinds worth a look.
+        $flows = AuditLog::whereIn('action', TranslationFlows::actions())
+            ->where('created_at', '>=', now()->subDays(1))
+            ->selectRaw('action, COUNT(*) as n')->groupBy('action')->pluck('n', 'action');
+        $flowsLastDay = [
+            'events' => (int) $flows->sum(),
+            'refused' => (int) ($flows[TranslationFlows::REFUSED] ?? 0),
+            'deleted' => (int) ($flows[TranslationFlows::DELETED] ?? 0),
+        ];
+
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
-            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals'
+            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay'
         ));
     }
 

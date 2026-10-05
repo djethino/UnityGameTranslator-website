@@ -151,6 +151,24 @@ class TranslationFlowsTest extends TestCase
         $this->assertSame('Deleted by its author, after 3 hours', TranslationFlows::describe($event));
     }
 
+    public function test_the_dashboard_has_a_card_for_the_last_day(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $translation = $this->translation(User::factory()->create());
+        TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, ['line_count' => 4]);
+        TranslationFlows::log(TranslationFlows::DELETED, $translation, ['how' => 'author']);
+
+        // Older than the card's 24 h: not counted.
+        $old = TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, ['line_count' => 5]);
+        $old->forceFill(['created_at' => now()->subDays(2)])->save();
+
+        $this->actingAs($admin)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Translation flows')
+            ->assertSeeInOrder(['2', 'events in the last 24 h', '1 deleted'])
+            ->assertSee(route('admin.flows', ['period' => 1]), false);
+    }
+
     public function test_the_screen_is_for_admins_only(): void
     {
         $this->actingAs(User::factory()->create())->get(route('admin.flows'))->assertForbidden();
