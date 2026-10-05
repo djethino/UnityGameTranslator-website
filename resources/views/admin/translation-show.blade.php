@@ -161,6 +161,12 @@
                     <i class="fas fa-trash mr-1"></i> {{ __('common.delete') }}
                 </button>
             </form>
+            {{-- Not an act on it: what has happened to it, on the Flows screen (English, admin only).
+                 Every span, since a translation's history starts at its publication. --}}
+            <a href="{{ route('admin.flows', ['translation' => $translation->id, 'period' => 100000]) }}"
+               class="ml-auto self-center text-purple-400 hover:text-purple-300 text-sm">
+                <i class="fas fa-clock-rotate-left mr-1"></i> History
+            </a>
         </div>
     </div>
 

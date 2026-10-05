@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\Translation;
 use App\Models\User;
+use App\Support\TranslationFlows;
 
 /**
  * Which game a lineage is filed under — and who may change it.
@@ -130,12 +130,14 @@ class LineageGame
 
         // Where a translation is filed decides which players are ever offered it: a change here
         // is invisible everywhere else, so it is traced — who, from which card to which.
-        AuditLog::log('translation.game_changed', $actor->id, 'Translation', $translation->id, [
+        // ⚠ fresh(): the rows were moved by a query, so the model in hand still names the old card,
+        // and the event's own game is the one it is filed under NOW.
+        TranslationFlows::log(TranslationFlows::GAME_CHANGED, $translation->fresh(), [
             'how' => $how,
             'from' => $from ? ['id' => $from->id, 'name' => $from->name] : null,
             'to' => ['id' => $to->id, 'name' => $to->name],
             'rows' => $rows->all(),
-        ]);
+        ], actorId: $actor->id);
 
         return $rows->count();
     }

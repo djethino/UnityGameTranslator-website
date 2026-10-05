@@ -8,6 +8,7 @@ use App\Notifications\BranchMerged;
 use App\Rules\ResourcesLink;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
+use App\Support\TranslationFlows;
 use Illuminate\Http\Request;
 
 class MergeController extends Controller
@@ -584,6 +585,20 @@ class MergeController extends Controller
                     $branch->user->notify(new BranchMerged($main, $mergedPerBranch[$branch->id]));
                 }
             }
+        }
+
+        // The lines changed from the site's editor — the author's own corrections, and on a Main
+        // the lines taken from its branches (branch id => lines taken). Only when the file actually
+        // changed: a save that only edited the description is a details change, logged as such.
+        if ($main->wasChanged('file_hash')) {
+            TranslationFlows::log(TranslationFlows::CONTENT_SAVED, $main, [
+                'how' => 'site_editor',
+                'modified' => $modifiedCount,
+                'deleted' => $deletedCount,
+                'tags' => $tagChangedCount,
+                'branches_taken' => $mergedPerBranch,
+                'line_count' => $main->line_count,
+            ]);
         }
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods

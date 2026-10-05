@@ -19,9 +19,11 @@ use App\Services\KnownReleases;
 use App\Services\Lineages;
 use App\Services\LiveEditCapacity;
 use App\Services\StoreProposals;
+use App\Services\TranslationFlowReport;
 use App\Services\VersionInventory;
 use App\Support\AnalyticsPeriods;
 use App\Support\OwnerTranslations;
+use App\Support\TranslationFlows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
@@ -754,6 +756,50 @@ class AdminController extends Controller
         return $code === 0
             ? back()->with('success', $said ?: 'Catalogues refreshed.')
             : back()->with('error', $said ?: 'catalog:refresh failed.');
+    }
+
+    /**
+     * What happens to translations: published, edited, moved, deleted, refused — over a span, by
+     * game, account, language or program (App\Services\TranslationFlowReport). The same span bar as
+     * the analytics page (AnalyticsPeriods), so the two read the same way.
+     */
+    public function flows(Request $request)
+    {
+        $daysStored = TranslationFlowReport::daysStored();
+        $period = AnalyticsPeriods::clamp($request->get('period'), $daysStored);
+
+        $filters = [
+            'type' => TranslationFlows::SLUGS[$request->get('type')] ?? null,
+            'game' => $request->integer('game') ?: null,
+            'user' => $request->integer('user') ?: null,
+            'language' => $request->filled('language') ? (string) $request->get('language') : null,
+            'translation' => $request->integer('translation') ?: null,
+            'via' => array_key_exists($request->get('via'), TranslationFlows::VIA) ? $request->get('via') : null,
+        ];
+
+        $report = new TranslationFlowReport($period, $filters);
+        $events = $report->events();
+
+        // Which translations named by the list still exist, to link them — a deleted one is named
+        // by its number only.
+        $translations = Translation::whereIn('id', $events->getCollection()
+            ->where('entity_type', 'Translation')->pluck('entity_id')->filter()->unique())
+            ->get(['id'])->keyBy('id');
+
+        return view('admin.flows', [
+            'period' => $period,
+            'daysStored' => $daysStored,
+            'spanLabel' => AnalyticsPeriods::label($period),
+            'filters' => $filters,
+            'counts' => $report->counts(),
+            'daily' => $report->daily(),
+            'breakdowns' => $report->breakdowns(),
+            'events' => $events,
+            'translations' => $translations,
+            'filterGame' => $filters['game'] ? Game::find($filters['game']) : null,
+            'filterUser' => $filters['user'] ? User::find($filters['user']) : null,
+            'topRows' => ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS],
+        ]);
     }
 
     /**

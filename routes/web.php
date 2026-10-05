@@ -271,6 +271,8 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
     Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+        // What happens to translations: published, edited, moved, deleted, refused (TranslationFlows).
+        Route::get('/flows', [AdminController::class, 'flows'])->name('flows');
 
         // Fetch the shared catalogues now instead of waiting for the nightly run.
         //

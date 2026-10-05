@@ -128,6 +128,10 @@ class Translation extends Model
                 $translation->notifyBranchesOfOrphanhood();
             }
         });
+        // What an author says about their translation, traced from here so that no path writing it
+        // (the edit forms, the API, an upload, a saved merge) can forget — the Flows screen.
+        static::updated(fn (Translation $translation) => \App\Support\TranslationFlows::detailsChanged($translation));
+
         static::updated(function (Translation $translation) use ($syncSearchEngines) {
             // Only content-level changes matter to search engines - not vote or
             // download counter increments, which fire 'updated' constantly.

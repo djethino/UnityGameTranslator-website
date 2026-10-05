@@ -134,7 +134,7 @@ Route::prefix('v1')->group(function () {
 
         // Upload translation
         Route::post('translations', [TranslationController::class, 'store'])
-            ->middleware('throttle:10,1');
+            ->middleware(['throttle:10,1', \App\Http\Middleware\TraceRefusedUpload::class]);
 
         // What is SAID about a translation, without resending the translation.
         //

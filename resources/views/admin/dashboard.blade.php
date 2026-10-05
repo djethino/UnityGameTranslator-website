@@ -79,9 +79,16 @@
             </div>
             <i class="fas fa-file-alt text-4xl text-green-400 opacity-50"></i>
         </div>
-        <a href="{{ route('admin.translations.index') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
-            {{ __('admin.manage_translations') }} <i class="fas fa-arrow-right ml-1"></i>
-        </a>
+        {{-- Two ways in: the translations as they stand, and what has happened to them (the Flows
+             screen is English only, like the rest of what is added to the admin). --}}
+        <div class="mt-auto pt-4 flex flex-col gap-1 self-start">
+            <a href="{{ route('admin.translations.index') }}" class="text-purple-400 hover:text-purple-300 text-sm">
+                {{ __('admin.manage_translations') }} <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+            <a href="{{ route('admin.flows') }}" class="text-purple-400 hover:text-purple-300 text-sm">
+                Flows <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
     </div>
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">

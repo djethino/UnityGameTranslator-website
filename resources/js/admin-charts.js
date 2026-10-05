@@ -1,8 +1,12 @@
 import Chart from 'chart.js/auto';
 
+// Two admin screens draw with this file, each handing its figures over in its own global: the
+// analytics page (`__analyticsData`) and the translation flows page (`__flowsData`). The colours and
+// axes are shared so the two read alike.
 const data = window.__analyticsData;
-if (!data) {
-    console.error('Analytics data not found');
+const flows = window.__flowsData;
+if (!data && !flows) {
+    console.error('Chart data not found');
 } else {
     const colors = {
         purple: 'rgb(168, 85, 247)',
@@ -46,7 +50,7 @@ if (!data) {
     };
 
     // Traffic Chart
-    if (data.hasTrafficData) {
+    if (data?.hasTrafficData) {
         new Chart(document.getElementById('trafficChart'), {
             type: 'line',
             data: {
@@ -77,7 +81,7 @@ if (!data) {
     }
 
     // Downloads Chart
-    if (data.hasDownloadData) {
+    if (data?.hasDownloadData) {
         new Chart(document.getElementById('downloadsChart'), {
             type: 'bar',
             data: {
@@ -95,7 +99,7 @@ if (!data) {
     // Concurrency Chart — daily peaks with the ceiling drawn in.
     // The ceiling matters more than the peaks: the question this answers is
     // "how much headroom is left", not "how many people edited".
-    if (data.hasConcurrencyData) {
+    if (data?.hasConcurrencyData) {
         const datasets = [
             {
                 label: 'Peak sessions',
@@ -169,7 +173,7 @@ if (!data) {
     }
 
     // Devices Chart
-    if (data.hasDeviceData) {
+    if (data?.hasDeviceData) {
         new Chart(document.getElementById('devicesChart'), {
             type: 'doughnut',
             data: {
@@ -184,7 +188,7 @@ if (!data) {
     }
 
     // Browsers Chart
-    if (data.hasBrowserData) {
+    if (data?.hasBrowserData) {
         new Chart(document.getElementById('browsersChart'), {
             type: 'doughnut',
             data: {
@@ -198,6 +202,35 @@ if (!data) {
                 }]
             },
             options: doughnutOptions
+        });
+    }
+
+    // Translation flows — one stacked bar per day, one colour per kind of event (the colours are
+    // the screen's own, sent with the figures, so a tile and its bar always match).
+    if (flows?.hasData) {
+        new Chart(document.getElementById('flowsChart'), {
+            type: 'bar',
+            data: {
+                labels: flows.labels,
+                datasets: flows.datasets.map((set) => ({
+                    label: set.label,
+                    data: set.data,
+                    backgroundColor: `rgba(${set.rgb}, 0.8)`,
+                })),
+            },
+            options: {
+                ...lineBarOptions,
+                scales: {
+                    x: { ...lineBarOptions.scales.x, stacked: true },
+                    y: {
+                        ...lineBarOptions.scales.y,
+                        stacked: true,
+                        beginAtZero: true,
+                        // Half an upload does not exist.
+                        ticks: { ...lineBarOptions.scales.y.ticks, precision: 0 }
+                    }
+                }
+            }
         });
     }
 }

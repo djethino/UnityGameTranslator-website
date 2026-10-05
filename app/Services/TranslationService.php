@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\AuditLog;
 use App\Models\Translation;
+use App\Support\TranslationFlows;
 use Illuminate\Support\Facades\Storage;
 
 class TranslationService
@@ -1440,14 +1440,14 @@ class TranslationService
      */
     public function deleteTranslation(Translation $translation, string $how): void
     {
-        AuditLog::log(AuditLog::ACTION_TRANSLATION_DELETE, auth()->id(), 'Translation', $translation->id, [
+        // Game, languages and visibility come with the event (TranslationFlows::context). The
+        // creation date is kept so the Flows screen can tell how long the translation lived.
+        TranslationFlows::log(TranslationFlows::DELETED, $translation, [
             'how' => $how,
             'owner_id' => $translation->user_id,
-            'game' => $translation->game?->name,
-            'visibility' => $translation->visibility,
             'file_uuid' => $translation->file_uuid,
-            'target_language' => $translation->target_language,
             'line_count' => $translation->line_count,
+            'created_at' => $translation->created_at?->toIso8601String(),
         ]);
 
         $this->deleteFile($translation->file_path);

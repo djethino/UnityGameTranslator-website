@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnalyticsEvent;
-use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\MergePreviewToken;
 use App\Models\Translation;
@@ -13,6 +12,7 @@ use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use App\Rules\ResourcesLink;
 use App\Support\OwnerTranslations;
+use App\Support\TranslationFlows;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -98,7 +98,11 @@ class TranslationController extends Controller
         // Same two doors as the API path, in the same order — see the note there: the frozen
         // branch is asked FIRST, or determineOwnership's generic refusal takes its sentence away.
         // This one is the website's own upload form, and it must not be the way round the decision.
+        // Each refusal is traced with the code the upload API answers for the same case, so the
+        // Flows screen counts them together whichever door they came through.
         if ($existingTranslation && $existingTranslation->isFrozenBranch()) {
+            TranslationFlows::refused($request, 'branch_frozen');
+
             return back()->withErrors(['file' =>
                 'The translation you contribute to no longer accepts contributions. '
                 . 'Your work is untouched — turn it into your own version to carry on.']);
@@ -108,6 +112,8 @@ class TranslationController extends Controller
         $ownership = $service->determineOwnership($fileUuid, $userId);
 
         if (isset($ownership['refused'])) {
+            TranslationFlows::refused($request, $ownership['refused_code']);
+
             return back()->withErrors(['file' => $ownership['refused']]);
         }
 
@@ -139,6 +145,8 @@ class TranslationController extends Controller
             // played (Api\TranslationController, `game_changed`). This form has no game of its own
             // to confirm with.
             if ($existingTranslation->game_switch_pending) {
+                TranslationFlows::refused($request, 'game_changed');
+
                 return back()->withErrors(['file' =>
                     "The Main moved to {$game->name}. Switch game in the mod or UGT Manager to keep contributing."]);
             }
@@ -217,14 +225,11 @@ class TranslationController extends Controller
                 $existingTranslation->notifyBranchesOfClosure();
             }
 
-            AuditLog::logTranslationUpload($userId, $existingTranslation->id, [
-                'game_id' => $game->id,
-                'game_name' => $game->name,
-                'source_language' => $languages['source'],
-                'target_language' => $languages['target'],
+            // Game, languages and where it came from come with the event — TranslationFlows.
+            TranslationFlows::log(TranslationFlows::PUBLISHED, $existingTranslation, [
                 'line_count' => $parsed['line_count'],
                 'is_update' => true,
-            ], $request);
+            ], $request, $userId);
 
             return redirect()->route('games.show', $game)
                 ->with('success', 'Translation updated successfully!');
@@ -259,11 +264,7 @@ class TranslationController extends Controller
             'settings_summary' => $parsed['settings_summary'],
         ]);
 
-        AuditLog::logTranslationUpload($userId, $translation->id, [
-            'game_id' => $game->id,
-            'game_name' => $game->name,
-            'source_language' => $languages['source'],
-            'target_language' => $languages['target'],
+        TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, [
             'line_count' => $parsed['line_count'],
 
             // ⚠ Named for what it is: `is_fork` until 2026-10-02, holding `$parentId !== null` —
@@ -275,7 +276,7 @@ class TranslationController extends Controller
                 'game_name' => $request->input('game_name'),
                 'game_pick' => \App\Services\GameFiling::pickFrom($request->input('game_pick')),
             ],
-        ], $request);
+        ], $request, $userId);
 
         return redirect()->route('games.show', $game)
             ->with('success', 'Translation uploaded successfully!');
@@ -868,6 +869,14 @@ class TranslationController extends Controller
         $fork->file_hash = $fork->computeHash();
         $fork->content_hash = $fork->computeContentHash();
         $fork->save();
+
+        // Logged on the NEW row: it is the one that exists from now on. The branch it came from
+        // stays as it was, and is named here.
+        TranslationFlows::log(TranslationFlows::FORKED, $fork, [
+            'from_branch' => $translation->id,
+            'from_main' => $fork->origin_translation_id,
+            'line_count' => $fork->line_count,
+        ]);
 
         // Return the file for download
         return Storage::disk('local')->download(
@@ -1543,6 +1552,16 @@ class TranslationController extends Controller
             fn($k) => !str_starts_with($k, '_')
         ));
         $translation->save();
+
+        // The published lines changed without an upload: the author compared their game's file
+        // with this one in the browser and saved the result here.
+        TranslationFlows::log(TranslationFlows::CONTENT_SAVED, $translation, [
+            'how' => 'local_merge',
+            'modified' => $modifiedCount,
+            'deleted' => $deletedCount,
+            'settings' => count($settingChoices),
+            'line_count' => $translation->line_count,
+        ]);
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         $mergeTokens = MergePreviewToken::where('translation_id', $translation->id)->get();

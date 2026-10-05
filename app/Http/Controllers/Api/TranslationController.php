@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsEvent;
-use App\Models\AuditLog;
 use App\Models\Game;
 use App\Models\GameIdentifier;
 use App\Models\MergePreviewToken;
@@ -16,6 +15,7 @@ use App\Services\GameSearchService;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use App\Rules\ResourcesLink;
+use App\Support\TranslationFlows;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -1463,14 +1463,11 @@ class TranslationController extends Controller
                 'settings_summary' => $parsed['settings_summary'],
             ]);
 
-            AuditLog::logTranslationUpload($userId, $existingTranslation->id, [
-                'game_id' => $game->id,
-                'game_name' => $game->name,
-                'source_language' => $languages['source'],
-                'target_language' => $languages['target'],
+            // Game, languages and the program that sent it come with the event — TranslationFlows.
+            TranslationFlows::log(TranslationFlows::PUBLISHED, $existingTranslation, [
                 'line_count' => $parsed['line_count'],
                 'is_update' => true,
-            ], $request);
+            ], $request, $userId);
 
             // Signal SSE via Redis pub/sub — Node.js relays to connected mods
             SsePublisher::translationUpdated($existingTranslation->id, [
@@ -1539,11 +1536,7 @@ class TranslationController extends Controller
             'settings_summary' => $parsed['settings_summary'],
         ]);
 
-        AuditLog::logTranslationUpload($userId, $translation->id, [
-            'game_id' => $game->id,
-            'game_name' => $game->name,
-            'source_language' => $languages['source'],
-            'target_language' => $languages['target'],
+        TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, [
             'line_count' => $parsed['line_count'],
 
             // ⚠ Named for what it is. Until 2026-10-02 this key was `is_fork` and held
@@ -1561,7 +1554,7 @@ class TranslationController extends Controller
                 'game_pick' => $this->gamePick($request),
                 'game_read' => $this->gameRead($request),
             ],
-        ], $request);
+        ], $request, $userId);
 
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         SsePublisher::translationUpdated($translation->id, [
