@@ -145,11 +145,24 @@ class GameIdentificationTest extends TestCase
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'api.rawg.io'));
     }
 
-    public function test_a_title_in_another_script_is_not_sent_to_igdb_empty(): void
+    public function test_a_title_in_another_script_is_asked_of_igdb_whole(): void
     {
+        // 🔴 Guarded against the query language, never against a language (2026-10-05): until then
+        // a title in another script escaped to nothing and never reached IGDB.
         $this->stores();
 
         app(GameSearchService::class)->findGame(null, '百花杀尽');
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'api.igdb.com')
+                                            && str_contains($r->body(), 'search "百花杀尽"'));
+    }
+
+    public function test_a_title_that_escapes_to_nothing_is_not_sent_to_igdb_empty(): void
+    {
+        // An empty search answers with whatever IGDB likes — taken as "the" game before 2026-10-02.
+        $this->stores();
+
+        app(GameSearchService::class)->findGame(null, '"*;|');
 
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'api.igdb.com'));
     }

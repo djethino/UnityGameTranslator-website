@@ -232,11 +232,26 @@ class StoreProposalsTest extends TestCase
         $this->assertSame(0, app(StoreProposals::class)->check($game));
     }
 
-    public function test_a_title_in_another_script_is_not_sent_to_igdb_empty(): void
+    public function test_a_title_in_another_script_is_asked_of_igdb_whole(): void
     {
-        // IGDB's search only takes latin characters here; escaped, this title is nothing, and an
-        // empty search would answer with whatever it likes.
+        // 🔴 Guarded against the query language, never against a language (2026-10-05): until then
+        // this title escaped to nothing and its card never got IGDB's proposals.
         $game = Game::create(['name' => '轮回修仙路', 'steam_id' => '1993150']);
+
+        $this->mock(GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('igdb')->once()
+                 ->with('games', \Mockery::on(fn ($body) => str_contains($body, 'search "轮回修仙路"')))
+                 ->andReturn([]);
+            $mock->shouldReceive('steamApp')->andReturn(null);
+        });
+
+        $this->assertSame(0, app(StoreProposals::class)->check($game));
+    }
+
+    public function test_a_title_that_escapes_to_nothing_is_not_sent_to_igdb_empty(): void
+    {
+        // An empty search would answer with whatever IGDB likes.
+        $game = Game::create(['name' => '"*;|', 'steam_id' => '1993150']);
 
         $this->mock(GameSearchService::class, function ($mock) {
             $mock->shouldNotReceive('igdb');

@@ -389,7 +389,15 @@ class GameSearchService
      * same allowlist (App\Services\AdultRating, App\Services\StoreProposals). A second copy of the
      * pattern is a second place to get the escaping wrong.
      *
-     * ⚠ It keeps latin characters only, so a title written in another script comes out EMPTY —
+     * 🔴 **It guards against the query language, never against a language** (user, 2026-10-05:
+     * "il faut se protéger des attaques pas des langues"). The title goes between double quotes
+     * of an Apicalypse body: what could leave that string is a quote, a backslash or a control
+     * character, never a letter. So letters, marks and digits of EVERY script are kept — a game
+     * titled only in Chinese is searched like any other — with the same few punctuation signs as
+     * before, and any run of whitespace becomes one plain space. Until that day it kept Latin
+     * letters only, and a title in another script never reached IGDB at all.
+     *
+     * ⚠ What is left can still be empty (a title of symbols only, or bytes that are not UTF-8) —
      * callers must treat that as "nothing to ask", never send an empty search.
      *
      * ⚠ Static because it is a pure function: called on an instance, a test that stubs this
@@ -397,9 +405,16 @@ class GameSearchService
      */
     public static function escapeIGDBQuery(string $query): string
     {
-        // Allowlist approach: only keep safe characters for IGDB search
-        // IGDB query language uses ; for statement end, " for strings, | for OR, etc.
-        return preg_replace('/[^a-zA-Z0-9\s\-\'\.,:!?]/', '', $query);
+        // Allowlist: \p{L} letters, \p{M} the marks that complete them (Devanagari, Thai,
+        // Arabic vowels), \p{N} digits — of any script — plus safe punctuation. Not ", \, ; or |.
+        $kept = preg_replace('/[^\p{L}\p{M}\p{N}\s\-\'\.,:!?]/u', '', $query);
+
+        // Null when the input is not valid UTF-8: nothing safe to ask.
+        if ($kept === null) {
+            return '';
+        }
+
+        return preg_replace('/\s+/u', ' ', $kept) ?? '';
     }
 
     /**
@@ -537,7 +552,7 @@ class GameSearchService
             // Escape query to prevent IGDB query injection
             $safeQuery = $this->escapeIGDBQuery($query);
 
-            // ⚠ A title in another script escapes to NOTHING, and an empty search answers with
+            // ⚠ A title of symbols only escapes to NOTHING, and an empty search answers with
             // whatever IGDB likes — taken as "the" game by findGame before 2026-10-02. Nothing to
             // ask is nothing found.
             if (trim($safeQuery) === '') {

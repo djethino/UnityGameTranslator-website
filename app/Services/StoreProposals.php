@@ -111,7 +111,7 @@ class StoreProposals
         if (!$game->igdb_id) {
             $safe = GameSearchService::escapeIGDBQuery($game->name);
 
-            // A title in another script escapes to nothing: there is nothing to ask IGDB then,
+            // A title of symbols only escapes to nothing: there is nothing to ask IGDB then,
             // and an empty search would answer with whatever it likes.
             if (trim($safe) !== '') {
                 // `url` too: an IGDB page is addressed by a slug, so the id alone gives the admin
