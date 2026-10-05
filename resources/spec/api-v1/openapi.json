@@ -256,17 +256,17 @@
       "get": {
         "tags": ["catalogue"],
         "operationId": "searchGamesExternal",
-        "summary": "Find a game the site may not know yet: local catalogue first, then Steam, IGDB, RAWG.",
-        "description": "For publishing a translation of a new game. Costs external quota, hence the account. `source` says where each hit came from, `id` is that source's id (absent on `steam` hits, whose id is `steam_id`), and the hit to send back as `game_pick` is that pair. Each game appears once — told apart by its ids, never by its title, so two games of one title are both listed; when two sources answer for the same game (a shared Steam id, a store id a card holds), the first hit stays and gathers the other's ids (`ids`) and page (`pages`). IGDB hits carry the Steam id IGDB links (`steam_id`) and the engines it names (`engines`). `translations_count` exists only on `local` hits.",
-        "security": [{ "bearer": [] }],
-        "x-throttle": "60/min per token",
+        "summary": "Find a game: the site's catalogue first, then — for an account — Steam, IGDB, RAWG.",
+        "description": "For picking which game this is: publishing a translation of a new game, or confirming the game a client detected (Change). Without an account, or with a token that is not valid, the answer is the site's catalogue ALONE (`local` hits, `stores: false`) and no store is asked: those are the games that have translations, which is all a caller without an account can use, and the stores cost external quota. `source` says where each hit came from, `id` is that source's id (absent on `steam` hits, whose id is `steam_id`), and the hit to send back as `game_pick` is that pair. Each game appears once — told apart by its ids, never by its title, so two games of one title are both listed; when two sources answer for the same game (a shared Steam id, a store id a card holds), the first hit stays and gathers the other's ids (`ids`) and page (`pages`). IGDB hits carry the Steam id IGDB links (`steam_id`) and the engines it names (`engines`). `translations_count` exists only on `local` hits.",
+        "security": [{}, { "bearer": [] }],
+        "x-auth": "optional — with a valid token the stores are asked too (`stores: true`)",
+        "x-throttle": "60/min per IP",
         "parameters": [
           { "name": "q", "in": "query", "schema": { "type": "string", "minLength": 2 }, "description": "A title, or an id, or a store page address. Bare digits are asked of every source that numbers its games — as a Steam app id, an IGDB id and a RAWG id — and searched as a title too (`2048` is a game): no source is THE id. A page address names its own source only: `store.steampowered.com/app/<id>`, `igdb.com/games/<slug>`, `rawg.io/games/<slug or id>`." },
           { "name": "steam_id", "in": "query", "schema": { "type": "string" } }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExternalGamesResponse" } } } },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "$ref": "#/components/responses/Banned" },
           "429": { "$ref": "#/components/responses/TooMany" }
         }
@@ -1116,6 +1116,7 @@
         "required": ["count", "games"],
         "properties": {
           "count": { "type": "integer" },
+          "stores": { "type": "boolean", "description": "Additive. Whether the stores were asked: false for a caller without an account, whose list is the site's catalogue alone. Absent (an older site): they were — that site answered an account only." },
           "games": { "type": "array", "items": {
             "type": "object",
             "required": ["name", "source"],

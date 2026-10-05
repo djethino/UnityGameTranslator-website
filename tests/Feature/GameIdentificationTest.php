@@ -959,4 +959,35 @@ class GameIdentificationTest extends TestCase
             'RAWG' => 'https://rawg.io/games/1001328',
         ], $card->storePages());
     }
+
+    // ── the game search without an account ──────────────────────────────────────────────────
+
+    public function test_without_an_account_the_search_lists_the_catalogue_and_asks_no_store(): void
+    {
+        // A player without an account confirming which game this is (2026-10-05): the games that
+        // have translations, found by title or by a Steam id a card holds — and no store asked.
+        $this->stores(['Lost Echo' => [$this->igdbGame(22, 'Lost Echo', '500')]]);
+        Game::create(['name' => 'Lost Echo', 'steam_id' => '500']);
+
+        $this->getJson('/api/v1/games/search?q=Lost%20Echo')
+            ->assertOk()
+            ->assertJsonPath('stores', false)
+            ->assertJsonPath('count', 1)
+            ->assertJsonPath('games.0.source', 'local');
+
+        $this->getJson('/api/v1/games/search?steam_id=777')
+            ->assertOk()
+            ->assertJsonPath('stores', false)
+            ->assertJsonPath('count', 0);
+
+        Http::assertNothingSent();
+
+        // With an account, the stores are asked too.
+        $token = ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
+        $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            ->getJson('/api/v1/games/search?q=Lost%20Echo')
+            ->assertOk()
+            ->assertJsonPath('stores', true);
+        Http::assertSent(fn (Request $request) => str_contains($request->url(), 'api.igdb.com'));
+    }
 }

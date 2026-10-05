@@ -955,6 +955,14 @@
       "why": "the catalogue before any external quota; a game already known is answered without a store call. Its count is the catalogue's: the Main, not the branch beside it"
     },
     {
+      "id": "api-v1/games/search-without-an-account-is-the-catalogue-alone",
+      "setup": "lineage",
+      "request": { "method": "GET", "path": "/games/search", "query": { "q": "Sample Game" } },
+      "response": { "status": 200, "body": { "count": 1, "stores": false, "games": [ { "id": { "$ref": "games.g.id" }, "name": "Sample Game", "source": "local", "translations_count": 1 } ] } },
+      "read": { "reader": "games_external", "expects": { "Count": 1, "Stores": false, "Games.0.Source": "local" } },
+      "why": "a player without an account confirms which game this is among the games that have translations — the ones they can use — and no store is asked on their behalf (2026-10-05: the search was closed to them, so a wrongly detected game never found its translations)"
+    },
+    {
       "id": "api-v1/me/who-this-token-is",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/me", "as": "alice" },

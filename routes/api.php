@@ -22,11 +22,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     // ===========================================
-    // GAME SEARCH (authenticated - uses external APIs with quota)
-    // MUST be defined before games/{game} to avoid route conflict
+    // GAME SEARCH — the catalogue for anyone, the stores (external quota) for an account only
+    // (GameController::search). MUST be defined before games/{game} to avoid route conflict
     // ===========================================
     Route::get('games/search', [GameController::class, 'search'])
-        ->middleware(['auth.api', 'check.banned.api', 'throttle:60,1']);
+        ->middleware(['auth.api.optional', 'check.banned.api', 'throttle:60,1']);
 
     // Asked by a publish screen for the game picked, before the upload that may create it: is it
     // for adults only, and may this publication say so. Same guard as search — it asks the stores.

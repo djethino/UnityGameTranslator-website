@@ -101,14 +101,23 @@ class GameController extends Controller
      *
      * GET /api/v1/games/search?q=hollow+knight
      * GET /api/v1/games/search?steam_id=111111
+     *
+     * 🔴 **Open to a caller with no account, on the catalogue alone** (user, 2026-10-05). A player
+     * without an account whose game was detected wrong could not change it — the search was for
+     * signed-in callers only — so they never found the translations others had published for it.
+     * Those translations are on cards of ours, so the catalogue is all they need; the stores, which
+     * cost quota and only matter to publish a game the site does not know, stay for an account.
+     * `stores` says which list was given, so a client can tell why a game is missing.
      */
     public function search(Request $request, GameSearchService $gameSearchService): JsonResponse
     {
-        $results = $gameSearchService->searchFull($request->input('q'), $request->input('steam_id'));
+        $stores = $request->user() !== null;
+        $results = $gameSearchService->searchFull($request->input('q'), $request->input('steam_id'), stores: $stores);
 
         return response()->json([
             'count' => count($results),
             'games' => $results,
+            'stores' => $stores,
         ]);
     }
 

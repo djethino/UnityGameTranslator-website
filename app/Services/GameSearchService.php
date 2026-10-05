@@ -38,9 +38,13 @@ class GameSearchService
      * @param string|null $steamId Steam App ID for exact match
      * @param int $perSource How many answers the catalogue and each store are asked for — the size
      *                       of the question, which bounds the list; nothing found is cut afterwards
+     * @param bool $stores Whether the stores may be asked. False for a caller with no account
+     *                     (user, 2026-10-05): the catalogue of ours only — the games that HAVE
+     *                     translations, which is all a player without an account can use — and no
+     *                     external quota spent on somebody nobody can name.
      * @return array Results, each game once (deduplicateResults), best matches first
      */
-    public function searchFull(?string $query, ?string $steamId = null, int $perSource = 10): array
+    public function searchFull(?string $query, ?string $steamId = null, int $perSource = 10, bool $stores = true): array
     {
         $results = [];
 
@@ -77,11 +81,11 @@ class GameSearchService
             };
             $card = $card?->withCount(['translations' => fn ($q) => $q->publiclyListed()])->first();
 
-            $hit = $card ? $this->localRow($card) : match ($asked['source']) {
+            $hit = $card ? $this->localRow($card) : (!$stores ? null : match ($asked['source']) {
                 'steam' => $this->getGameFromSteam($asked['id']),
                 'igdb' => ctype_digit($asked['id']) ? $this->getGameFromIGDB((int) $asked['id']) : $this->getGameFromIGDBSlug($asked['id']),
                 'rawg' => $this->getGameFromRAWG($asked['id']),
-            };
+            });
 
             if ($hit) {
                 $byId[] = $hit;
@@ -103,7 +107,7 @@ class GameSearchService
         //
         // ⚠ Loose by nature — stores answer neighbours too — which is fine in a list a person
         // reads, and why nothing automatic ever takes a first hit (findGame keeps exact titles).
-        if ($query && strlen($query) >= 2) {
+        if ($stores && $query && strlen($query) >= 2) {
             $results = array_merge($results, $this->searchIGDB($query, $perSource));
 
             // ⚠ Steam's title search gives a name and a capsule, nothing more: asking each hit's page
