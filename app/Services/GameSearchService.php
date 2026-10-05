@@ -120,7 +120,7 @@ class GameSearchService
             $results = array_merge($results, $this->searchRAWG($query, $perSource));
         }
 
-        $results = $this->deduplicateResults($results);
+        $results = $this->deduplicateResults($this->rawgSteamIds($results));
 
         // Calculate match_score for each result
         $results = $this->calculateMatchScores($results, $query, $steamId);
@@ -200,6 +200,9 @@ class GameSearchService
             'name' => $game['name'],
             'image_url' => $game['background_image'] ?? null,
             'source' => 'rawg',
+            // Whether RAWG lists a Steam page for it — what makes asking its Steam id worth a call
+            // (rawgSteamIds). Internal, removed before the list is handed out.
+            '_on_steam' => collect($game['stores'] ?? [])->contains(fn ($s) => ($s['store']['slug'] ?? null) === 'steam'),
         ] + $this->details(
             'rawg',
             $year,
@@ -207,6 +210,74 @@ class GameSearchService
             collect($game['publishers'] ?? [])->pluck('name')->all(),
             \App\Support\StoreLinks::rawgId((string) $game['id']),
         );
+    }
+
+    /**
+     * A RAWG hit that may be a game already listed is given its Steam id, so it folds into that
+     * row (deduplicateResults) — one game, one entry.
+     *
+     * 🔴 **Folded on the id, never on the name** (user, 2026-10-05: "quand on l'a pas tant pis on met
+     * tout mais si on l'a c'est une entrée"). A RAWG search hit carries no store id, only which
+     * stores sell the game; its Steam page — and so its Steam id — is one more call
+     * (`/games/{id}/stores`). The name only decides whether that call is worth making: a RAWG hit
+     * whose flattened title is the title of a row already holding a Steam id, and that RAWG says
+     * Steam sells. What folds it is the id that comes back; a hit RAWG gives no Steam page for
+     * stays its own row.
+     *
+     * ⚠ Bounded by the list, not by a count: in practice one call per search (the game's own RAWG
+     * twin), never one per RAWG hit.
+     */
+    private function rawgSteamIds(array $results): array
+    {
+        $onSteam = [];
+        foreach ($results as $row) {
+            if (!empty($row['steam_id']) && isset($row['name'])) {
+                $onSteam[\App\Support\GameNaming::flatten((string) $row['name'])] = true;
+            }
+        }
+
+        foreach ($results as $i => $row) {
+            $isRawg = ($row['source'] ?? null) === 'rawg';
+
+            if ($isRawg && empty($row['steam_id']) && ($row['_on_steam'] ?? false)
+                && isset($onSteam[\App\Support\GameNaming::flatten((string) ($row['name'] ?? ''))])) {
+                $steamId = $this->rawgSteamId($row['id']);
+                if ($steamId !== null) {
+                    $results[$i]['steam_id'] = $steamId;
+                }
+            }
+
+            unset($results[$i]['_on_steam']);
+        }
+
+        return $results;
+    }
+
+    /** The Steam app id of a RAWG game, from the Steam page RAWG lists for it, or null. */
+    private function rawgSteamId(int|string $id): ?string
+    {
+        try {
+            $apiKey = config('services.rawg.key');
+            if (!$apiKey || !ctype_digit((string) $id)) {
+                return null;
+            }
+
+            $response = Http::get("https://api.rawg.io/api/games/{$id}/stores", ['key' => $apiKey]);
+            if (!$response->successful()) {
+                return null;
+            }
+
+            foreach ($response->json('results') ?? [] as $store) {
+                if (preg_match('~store\.steampowered\.com/app/(\d{1,20})~i', (string) ($store['url'] ?? ''), $m)) {
+                    return $m[1];
+                }
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('RAWG stores error', ['error' => $e->getMessage()]);
+            return null;
+        }
     }
 
     /**
@@ -955,7 +1026,16 @@ class GameSearchService
                 return null;
             }
 
-            return $this->rawgRow($response->json());
+            $row = $this->rawgRow($response->json());
+
+            // Its Steam id when RAWG lists a Steam page — a card made from a RAWG pick then answers
+            // to the id the mod reads on disk, and folds with that game's other rows.
+            if ($row['_on_steam'] ?? false) {
+                $row['steam_id'] = $this->rawgSteamId($row['id']);
+            }
+            unset($row['_on_steam']);
+
+            return $row;
 
         } catch (\Exception $e) {
             Log::error('RAWG get game error', ['error' => $e->getMessage()]);

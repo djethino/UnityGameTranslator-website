@@ -848,6 +848,42 @@ class GameIdentificationTest extends TestCase
         $this->assertSame('Lost Echo From RAWG', $rawg[0]['name'] ?? null);
     }
 
+    public function test_a_rawg_twin_whose_steam_page_names_the_same_game_is_one_entry(): void
+    {
+        // 🔴 User, 2026-10-05: "si on l'a c'est une entrée". RAWG's search hit carries no store id;
+        // its Steam page does, and it is the same Steam id IGDB gives — one game, one row.
+        $this->stores(
+            ['Lost Echo' => [$this->igdbGame(22, 'Lost Echo', '500')]],
+            [],
+            [],
+            [['id' => 77, 'name' => 'Lost Echo', 'stores' => [['store' => ['slug' => 'steam']]]]],
+            ['stores' => ['results' => [['store_id' => 1, 'url' => 'http://store.steampowered.com/app/500/']]]],
+        );
+
+        $rows = collect(app(GameSearchService::class)->searchFull('Lost Echo'));
+
+        $this->assertCount(1, $rows->where('name', 'Lost Echo'), 'the RAWG hit folded into the IGDB row');
+        $this->assertSame('77', (string) ($rows->firstWhere('name', 'Lost Echo')['ids']['rawg'] ?? null),
+            'and the row carries its RAWG id too');
+        $this->assertArrayNotHasKey('_on_steam', $rows->first(), 'nothing internal is handed out');
+    }
+
+    public function test_a_rawg_hit_with_no_steam_page_stays_its_own_row_and_costs_nothing(): void
+    {
+        // When the id is not known the rows stay apart — never folded on a name.
+        $this->stores(
+            ['Lost Echo' => [$this->igdbGame(22, 'Lost Echo', '500')]],
+            [],
+            [],
+            [['id' => 77, 'name' => 'Lost Echo', 'stores' => [['store' => ['slug' => 'gog']]]]],
+        );
+
+        $rows = collect(app(GameSearchService::class)->searchFull('Lost Echo'));
+
+        $this->assertCount(2, $rows->where('name', 'Lost Echo'));
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'api.rawg.io/api/games/77/stores'));
+    }
+
     public function test_the_stores_are_asked_however_many_cards_of_ours_match(): void
     {
         // Three cards of ours share a word with the title; the real game is only in a store.
