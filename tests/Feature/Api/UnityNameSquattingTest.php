@@ -101,7 +101,11 @@ class UnityNameSquattingTest extends TestCase
 
         $second = Game::create(['name' => 'Twin Title', 'slug' => 'twin-title-second']);
 
-        $this->publish(['game_name' => 'Twin Title'])->assertSuccessful();
+        // Since 2026-10-05 a name two entries carry is refused outright (`game_ambiguous`), before
+        // anything could be written — which closes this opening a step earlier.
+        $this->publish(['game_name' => 'Twin Title'])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_ambiguous');
 
         $this->assertNull(
             $second->fresh()->unity_name,

@@ -1687,6 +1687,11 @@ class TranslationController extends Controller
                 'error' => $wrong->getMessage(),
                 'refused_code' => \App\Exceptions\WrongGame::Code,
             ], 422));
+        } catch (\App\Exceptions\UnsureGame $unsure) {
+            throw new HttpResponseException(response()->json([
+                'error' => $unsure->getMessage(),
+                'refused_code' => $unsure->refusedCode,
+            ], 422));
         }
     }
 

@@ -209,10 +209,11 @@ class GameIdentificationTest extends TestCase
         ]]);
 
         // Two games carry the title: which one this is cannot be told, so nothing is created —
-        // the person picks it in the list.
+        // and the refusal says it is a shared name, with the way out (user, 2026-10-05).
         $this->publish(['game_name' => 'Lost Echo'])
             ->assertStatus(422)
-            ->assertJsonPath('refused_code', 'game_not_found');
+            ->assertJsonPath('refused_code', 'game_ambiguous')
+            ->assertJsonPath('error', fn ($error) => str_contains($error, 'Several games are named Lost Echo'));
 
         $this->assertSame(0, Game::count());
         $this->assertSame(0, Translation::count());
@@ -222,12 +223,49 @@ class GameIdentificationTest extends TestCase
     {
         $this->stores();
 
-        $this->publish(['game_name' => 'My Unity Project', 'game_read' => ['product_name' => 'My Unity Project']])
+        // An older client: a name, nothing picked.
+        $this->publish(['game_name' => 'My Unity Project'])
             ->assertStatus(422)
             ->assertJsonPath('refused_code', 'game_not_found')
             ->assertJsonPath('error', fn ($error) => str_contains($error, 'could not be identified'));
 
         $this->assertSame(0, Game::count());
+        $this->assertSame(0, Translation::count());
+    }
+
+    public function test_a_recent_client_without_a_pick_is_refused_even_on_a_known_game(): void
+    {
+        // 🔴 User, 2026-10-05: recent clients use the right method. One that says what it read
+        // knows the publish list; sending no answer of it files nothing — not even on a card its
+        // Steam id names.
+        $card = Game::create(['name' => 'Lost Echo', 'steam_id' => '500']);
+        $this->stores();
+
+        $this->publish(['steam_id' => '500', 'game_name' => 'Lost Echo', 'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500']])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_not_picked');
+
+        $this->assertSame(0, Translation::count());
+
+        // The same, with the answer picked: filed.
+        $this->publish([
+            'steam_id' => '500', 'game_name' => 'Lost Echo',
+            'game_read' => ['product_name' => 'Lost Echo', 'steam_id' => '500'],
+            'game_pick' => ['source' => 'local', 'id' => $card->id],
+        ])->assertSuccessful();
+    }
+
+    public function test_an_older_client_on_two_cards_of_one_name_is_refused_not_given_the_first(): void
+    {
+        // The first card of the name used to be taken — another game's, as likely as not.
+        Game::create(['name' => 'Inari', 'slug' => 'inari']);
+        Game::create(['name' => 'Inari', 'slug' => 'inari-2']);
+        $this->stores();
+
+        $this->publish(['game_name' => 'Inari'])
+            ->assertStatus(422)
+            ->assertJsonPath('refused_code', 'game_ambiguous');
+
         $this->assertSame(0, Translation::count());
     }
 
@@ -750,6 +788,7 @@ class GameIdentificationTest extends TestCase
             'steam_id' => '700',
             'game_name' => 'Chronicles of the Long Road',
             'game_read' => ['product_name' => 'CLR', 'steam_id' => '700'],
+            'game_pick' => ['source' => 'local', 'id' => $card->id],
         ])->assertSuccessful();
 
         $this->postJson('/api/v1/translations/for-games', ['games' => [['name' => 'CLR']]])

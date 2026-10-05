@@ -87,7 +87,9 @@ class GameResolver
     }
 
     /**
-     * `['game' => ?Game, 'via' => 'steam'|'name'|'unity'|'external'|null, 'external' => ?array]`.
+     * `['game' => ?Game, 'via' => 'steam'|'name'|'unity'|'external'|null, 'external' => ?array, 'shared'?: true]`
+     * — `shared` when the NAME names several games (cards of ours, or the stores' exact titles):
+     * nothing is chosen then.
      *
      * ⚠ The order is a guard, read the comments in findOrCreateGame before moving a step: the
      * DISPLAY name comes before the declared `unity_name`, so an account cannot send any name and be
@@ -118,14 +120,22 @@ class GameResolver
             // id names (contradicts): passed over, never taken and given this Steam id.
             $fits = fn (?Game $game) => $game && !($steamId && $this->contradicts($game, $steamId));
 
-            $game = $byName(Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)]))->first();
-            if ($fits($game)) {
-                return ['game' => $game, 'via' => 'name', 'external' => null];
-            }
+            // 🔴 **Several cards of this name: none is taken** (user, 2026-10-05, namesakes). The
+            // first one used to be — the card of one game could receive another's translation on
+            // a name alone. `shared` says so, and the upload asks for the game to be picked.
+            foreach ([
+                'name' => $byName(Game::whereRaw('LOWER(name) = ?', [strtolower($gameName)])),
+                'unity' => $byName(Game::where('unity_name', $gameName)),
+            ] as $via => $query) {
+                $cards = $query->limit(10)->get()->filter($fits)->values();
 
-            $game = $byName(Game::where('unity_name', $gameName))->first();
-            if ($fits($game)) {
-                return ['game' => $game, 'via' => 'unity', 'external' => null];
+                if ($cards->count() > 1) {
+                    return ['game' => null, 'via' => null, 'external' => null, 'shared' => true];
+                }
+
+                if ($cards->count() === 1) {
+                    return ['game' => $cards->first(), 'via' => $via, 'external' => null];
+                }
             }
         }
 
@@ -133,7 +143,11 @@ class GameResolver
             return ['game' => null, 'via' => null, 'external' => null];
         }
 
-        $external = $this->search->findGame($steamId, $gameName);
+        $external = $this->search->findGame($steamId, $gameName, $shared);
+
+        if (!$external && $shared) {
+            return ['game' => null, 'via' => null, 'external' => null, 'shared' => true];
+        }
 
         if ($external) {
             $title = $external['name'] ?? $gameName;

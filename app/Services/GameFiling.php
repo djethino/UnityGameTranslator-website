@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\UnsureGame;
 use App\Exceptions\WrongGame;
 use App\Models\Game;
 use App\Models\GameIdentifier;
@@ -91,6 +92,7 @@ class GameFiling
      * @param array{source: string, id: string}|null $pick
      *
      * @throws WrongGame when a fact read on disk contradicts the game found — before anything is written
+     * @throws UnsureGame when a recent client sends no pick, or a name names several games
      */
     public function cardFor(?string $steamId, ?string $gameName, ?string $company, ?array $pick, ?array $read): ?Game
     {
@@ -99,6 +101,14 @@ class GameFiling
         // game name — recording that as `unity_name` filled the key with shop titles, and the name
         // the game states on disk was never kept. A client that says nothing of the kind keeps the
         // old reading of the name it sends.
+        // 🔴 **A client that knows the publish list sends the answer picked in it** (user,
+        // 2026-10-05: "sur les versions récentes utiliser la bonne méthode et refuser les
+        // anciennes"). A client saying what it read (`game_read`, which came with `game_pick` on
+        // 2026-10-04) never publishes without one: one that does is not filed by a name.
+        if ($read !== null && $pick === null) {
+            throw new UnsureGame('Pick the game in the list before publishing.', UnsureGame::NotPicked);
+        }
+
         $declaredName = $read !== null ? ($read['product_name'] ?? null) : $gameName;
         $company = $read !== null ? ($read['company_name'] ?? null) : $company;
 
@@ -108,6 +118,14 @@ class GameFiling
 
         $found = $this->resolver->resolve($steamId, $gameName, $pick);
         $external = $found['external'];
+
+        // 🔴 **A name several games carry is refused** — an older client, which sends the game it
+        // picked as a name: the first card of that name used to be taken, and a translation could
+        // land under another game of the same title. Said with the way out (user, 2026-10-05).
+        if ($found['shared'] ?? false) {
+            throw new UnsureGame("Several games are named {$gameName}. Update UGT Mod or UGT Manager, then pick the game in the list.",
+                UnsureGame::Ambiguous);
+        }
 
         $this->refuseWrongGame($found['game'], $external, $read);
 

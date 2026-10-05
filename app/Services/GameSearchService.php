@@ -871,11 +871,13 @@ class GameSearchService
      * the same answer. A search ranks; it does not identify.
      *
      * ⚠ Null is the honest answer when the title is shared (two games of the same name) or
-     * unknown: the caller then files the publication under the name it was sent, which the mod
-     * finds again — a card nobody can find, or a card of another game, is worse.
+     * unknown — and `$shared` says which of the two it was, so a caller can ask for the game to be
+     * picked rather than call it unknown (user, 2026-10-05: namesakes are refused, with the way out).
      */
-    public function findGame(?string $steamId, string $gameName): ?array
+    public function findGame(?string $steamId, string $gameName, ?bool &$shared = null): ?array
     {
+        $shared = false;
+
         // Try Steam API first if we have a Steam ID
         if ($steamId) {
             $result = $this->getGameFromSteam($steamId);
@@ -895,10 +897,12 @@ class GameSearchService
         // ⚠ RAWG only when IGDB had nothing to say at all. IGDB naming two games of this title is
         // an answer — that a machine cannot choose — not a silence for RAWG to fill.
         if ($exact !== []) {
+            $shared = true;
             return null;
         }
 
         $rawg = GameNaming::exactTitleMatches($this->searchRAWG($gameName, 10), $gameName);
+        $shared = count($rawg) > 1;
 
         return count($rawg) === 1 ? $rawg[0] : null;
     }

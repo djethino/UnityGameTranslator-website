@@ -630,15 +630,20 @@ class TranslationController extends Controller
             }
         }
 
-        $target = $aligning
-            ? \App\Services\LineageGame::originalsGame($translation)
-            : app(\App\Services\GameFiling::class)->cardFor(
-                null,
-                $request->filled('game_name') ? $request->game_name : null,
-                null,
-                $pick,
-                null,
-            );
+        try {
+            $target = $aligning
+                ? \App\Services\LineageGame::originalsGame($translation)
+                : app(\App\Services\GameFiling::class)->cardFor(
+                    null,
+                    $request->filled('game_name') ? $request->game_name : null,
+                    null,
+                    $pick,
+                    null,
+                );
+        } catch (\App\Exceptions\UnsureGame) {
+            // A name several games carry: this page has the list, so the way out is to pick in it.
+            $target = null;
+        }
 
         if (!$target) {
             return back()->withErrors(['game' => __('upload.please_select_game')]);

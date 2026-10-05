@@ -615,7 +615,6 @@
         "as": "carol",
         "body": {
           "game_name": "A Project On Somebody's Disk",
-          "game_read": { "product_name": "A Project On Somebody's Disk" },
           "source_language": "English",
           "target_language": "Italian",
           "content": { "$json": { "_uuid": "c9d0e1f2-a3b4-4c5d-8e6f-7a8b9c0d1e2f", "Shop": { "v": "Negozio", "t": "H" } } }
@@ -625,7 +624,56 @@
         "status": 422,
         "body": { "error": { "$contains": "could not be identified" }, "refused_code": "game_not_found" }
       },
-      "why": "no card answers and no store knows the game: nothing is created — a translation filed under a game nobody can identify reaches nobody, and any project on a disk could be sent that way"
+      "why": "an older client names a game no card answers to and no store knows: nothing is created — a translation filed under a game nobody can identify reaches nobody, and any project on a disk could be sent that way"
+    },
+    {
+      "id": "api-v1/upload/refused-a-recent-client-without-a-pick",
+      "setup": "lineage",
+      "request": {
+        "method": "POST",
+        "path": "/translations",
+        "as": "carol",
+        "body": {
+          "game_name": "Sample Game",
+          "steam_id": "367520",
+          "game_read": { "product_name": "Sample Game", "steam_id": "367520" },
+          "source_language": "English",
+          "target_language": "Italian",
+          "content": { "$json": { "_uuid": "d0e1f2a3-b4c5-4d6e-9f70-8a9b0c1d2e3f", "Shop": { "v": "Negozio", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": { "error": { "$contains": "Pick the game in the list" }, "refused_code": "game_not_picked" }
+      },
+      "why": "a client that says what it read knows the publish list, and always sends the answer picked in it: without one nothing is filed, not even under a game its Steam id names — the choice is the person's click"
+    },
+    {
+      "id": "api-v1/upload/refused-an-older-client-on-namesakes",
+      "setup": {
+        "users": { "carol": { "name": "carol" } },
+        "games": {
+          "a": { "name": "Inari", "slug": "inari" },
+          "b": { "name": "Inari", "slug": "inari-2" }
+        },
+        "translations": {}
+      },
+      "request": {
+        "method": "POST",
+        "path": "/translations",
+        "as": "carol",
+        "body": {
+          "game_name": "Inari",
+          "source_language": "English",
+          "target_language": "Italian",
+          "content": { "$json": { "_uuid": "e1f2a3b4-c5d6-4e7f-8a91-9b0c1d2e3f40", "Shop": { "v": "Negozio", "t": "H" } } }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": { "error": { "$contains": "Several games are named Inari" }, "refused_code": "game_ambiguous" }
+      },
+      "why": "an older client sends the game it picked as a name; two cards carry it, and taking the first could file the translation under the other game — refused, with the way out: update, then pick"
     },
     {
       "id": "api-v1/upload/refused-a-held-branch-not-following-its-main",
