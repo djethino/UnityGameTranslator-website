@@ -17,6 +17,9 @@
       { "kind": "button", "name": "SwitchGameBtn", "text": "Switch game", "size": "Compact", "minWidth": 90, "act": "switchGame",
         "help": "Use the game the website files this translation under. Asks before changing anything." }
     ] },
+    { "kind": "callout", "name": "GameNamesakesBanner", "tone": "Warning", "spacing": 8, "padX": 8, "padY": 2, "visible": false, "children": [
+      { "kind": "label", "name": "GameNamesakesLabel", "text": { "bind": "gameNamesakes" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" }
+    ] },
     { "kind": "label", "name": "AccountSectionLabel", "text": "Account", "role": "SectionTitle" },
     { "kind": "card", "name": "AccountBox", "children": [
       { "kind": "row", "name": "AccountRow", "minHeight": "RowHeightLarge", "children": [
