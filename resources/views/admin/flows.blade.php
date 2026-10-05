@@ -63,8 +63,10 @@
             border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
     <h2 class="text-lg font-semibold text-gray-300">
         <i class="fas fa-calendar-days mr-2 text-purple-500"></i>
-        {{ $period === 1 ? 'Yesterday and today' : 'Last ' . $spanLabel }}
-        <span class="text-sm font-normal text-gray-500 ml-2">— today included</span>
+        {{-- ⚠ Not the analytics page's "Yesterday and today": that one reads whole days, this one
+             counts back from now — "24 h" is exactly 24 hours. --}}
+        Last {{ $spanLabel }}
+        <span class="text-sm font-normal text-gray-500 ml-2">— up to now</span>
     </h2>
     <div class="flex flex-wrap gap-2">
         @foreach (\App\Support\AnalyticsPeriods::choices($daysStored, $period) as $days => $label)
@@ -95,7 +97,7 @@
 </div>
 
 <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
-    <h2 class="text-lg font-semibold mb-4"><i class="fas fa-chart-column mr-2 text-purple-400"></i> Per day</h2>
+    <h2 class="text-lg font-semibold mb-4"><i class="fas fa-chart-column mr-2 text-purple-400"></i> {{ $daily['hourly'] ? 'Per hour' : 'Per day' }}</h2>
     @if(count($daily['datasets']) > 0)
         <div class="h-64">
             <canvas id="flowsChart"></canvas>
@@ -261,62 +263,37 @@
                         <th class="py-2 px-4">What</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($events as $event)
-                        @php
-                            $m = $event->metadata ?? [];
-                            $style = TranslationFlows::LABELS[$event->action];
-                            $gameId = $m['game_id'] ?? $m['to']['id'] ?? null;
-                            $gameName = $m['game'] ?? $m['game_name'] ?? $m['to']['name'] ?? null;
-                        @endphp
-                        <tr class="border-t border-gray-700 align-top">
-                            <td class="py-2 px-4 whitespace-nowrap text-gray-400">{{ $event->created_at->format('Y-m-d H:i') }}</td>
-                            <td class="py-2 px-4 whitespace-nowrap">
-                                <i class="fas {{ $style['icon'] }} {{ $style['class'] }} mr-1"></i> {{ $style['label'] }}
-                            </td>
-                            <td class="py-2 px-4 whitespace-nowrap">
-                                @if($event->entity_id)
-                                    @if($translations->has($event->entity_id))
-                                        <a href="{{ route('admin.translations.show', $event->entity_id) }}" class="text-purple-400 hover:text-purple-300">#{{ $event->entity_id }}</a>
-                                    @else
-                                        <span class="text-gray-500" title="No longer exists">#{{ $event->entity_id }}</span>
-                                    @endif
-                                    <a href="{{ $link(['translation' => $event->entity_id]) }}" class="text-gray-600 hover:text-gray-300 ml-1" title="Only this translation">
-                                        <i class="fas fa-filter text-xs"></i>
-                                    </a>
-                                @else
-                                    <span class="text-gray-600">—</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-4">
-                                @if($gameId)
-                                    <a href="{{ $link(['game' => $gameId]) }}" class="hover:text-purple-400">{{ $gameName ?? '#' . $gameId }}</a>
-                                @else
-                                    <span class="{{ $gameName ? '' : 'text-gray-600' }}">{{ $gameName ?? '—' }}</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-4 whitespace-nowrap">
-                                @if(!empty($m['target_language']))
-                                    <a href="{{ $link(['language' => $m['target_language']]) }}" class="hover:text-purple-400">{{ $m['target_language'] }}</a>
-                                @else
-                                    <span class="text-gray-600">—</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-4 whitespace-nowrap">
-                                <x-admin.user-link :user="$event->user" />
-                                @if($event->user_id)
-                                    <a href="{{ $link(['user' => $event->user_id]) }}" class="text-gray-600 hover:text-gray-300 ml-1" title="Only this account">
-                                        <i class="fas fa-filter text-xs"></i>
-                                    </a>
-                                @endif
-                            </td>
-                            <td class="py-2 px-4 whitespace-nowrap text-gray-400">
-                                {{ isset($m['via']) ? (TranslationFlows::VIA[$m['via']] ?? $m['via']) . (isset($m['version']) ? ' ' . $m['version'] : '') : '—' }}
-                            </td>
-                            <td class="py-2 px-4">{{ TranslationFlows::describe($event) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+                {{-- In runs: the same act on the same translation by the same account, one after
+                     the other, is ONE line that opens on its events (TranslationFlowReport::runs). --}}
+                @foreach(\App\Services\TranslationFlowReport::runs($events) as $run)
+                    @php
+                        $first = $run['events'][0];
+                        $last = $run['events'][count($run['events']) - 1];
+                        $count = count($run['events']);
+                    @endphp
+                    <tbody x-data="{ open: false }">
+                        @include('admin.partials.flow-row', [
+                            'event' => $first,
+                            'when' => $count === 1 ? $first->created_at->format('Y-m-d H:i')
+                                : $last->created_at->format('Y-m-d H:i') . ' → '
+                                  . $first->created_at->format($first->created_at->isSameDay($last->created_at) ? 'H:i' : 'Y-m-d H:i'),
+                            'what' => TranslationFlows::describeRun($run['events']),
+                            'opens' => $count > 1 ? $count : null,
+                            'nested' => false,
+                        ])
+                        @if($count > 1)
+                            @foreach($run['events'] as $event)
+                                @include('admin.partials.flow-row', [
+                                    'event' => $event,
+                                    'when' => $event->created_at->format('Y-m-d H:i'),
+                                    'what' => TranslationFlows::describe($event),
+                                    'opens' => null,
+                                    'nested' => true,
+                                ])
+                            @endforeach
+                        @endif
+                    </tbody>
+                @endforeach
             </table>
         </div>
         <div class="px-6 py-4">{{ $events->links() }}</div>

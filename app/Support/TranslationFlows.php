@@ -271,6 +271,60 @@ class TranslationFlows
     }
 
     /**
+     * One line for a run of the same act (TranslationFlowReport::runs) — newest first. Updates say
+     * how the file grew; anything else says how many times, then what the latest did.
+     *
+     * @param list<AuditLog> $events
+     */
+    public static function describeRun(array $events): string
+    {
+        if (count($events) === 1) {
+            return self::describe($events[0]);
+        }
+
+        $newest = $events[0];
+        $oldest = $events[count($events) - 1];
+
+        if ($newest->action === self::PUBLISHED
+            && isset($newest->metadata['line_count'], $oldest->metadata['line_count'])) {
+            return count($events) . ' updates — ' . number_format((int) $oldest->metadata['line_count'])
+                . ' → ' . number_format((int) $newest->metadata['line_count']) . ' lines';
+        }
+
+        return count($events) . ' times — latest: ' . self::describe($newest);
+    }
+
+    /**
+     * Where an event came from, as the screen names it, or null when it is not known.
+     *
+     * ⚠ A publication from before 2026-10-05 carries no `via`, but its row still holds the agent
+     * that sent it until `audit:purge-ips` clears it at twelve months: it is READ for that, never
+     * shown or copied — one of our programs and its version, or a browser. Only for publications:
+     * a deletion from a browser could be its author or an admin, and the agent cannot tell which.
+     *
+     * ⚠ For the list only. The "Through" card and its filter read `via` alone, since a filter asked
+     * of the database cannot read an agent this way — a count that its own filter does not find
+     * again would be a count that lies.
+     */
+    public static function viaOf(AuditLog $event): ?string
+    {
+        $m = $event->metadata ?? [];
+        if (isset($m['via'])) {
+            return (self::VIA[$m['via']] ?? $m['via']) . (isset($m['version']) ? ' ' . $m['version'] : '');
+        }
+
+        if ($event->action !== self::PUBLISHED || empty($event->user_agent)) {
+            return null;
+        }
+
+        $client = ClientAgent::ours($event->user_agent);
+
+        return $client === null
+            ? self::VIA['site']
+            : self::VIA[$client['kind']] . ($client['version'] ? ' ' . $client['version'] : '');
+    }
+
+    /**
      * How long a deleted translation lived, in seconds — null when its birth is not known (a row
      * deleted before 2026-10-05 carries no creation date).
      */

@@ -169,6 +169,46 @@ class TranslationFlowsTest extends TestCase
             ->assertSee(route('admin.flows', ['period' => 1]), false);
     }
 
+    public function test_repeated_updates_read_as_one_line_and_a_deletion_stays_its_own(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $owner = User::factory()->create();
+        $translation = $this->translation($owner);
+
+        $this->actingAs($owner);
+        foreach ([10, 11, 12] as $i => $lines) {
+            $e = TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, ['line_count' => $lines, 'is_update' => true]);
+            $e->forceFill(['created_at' => now()->subMinutes(30 - $i)])->save();
+        }
+        TranslationFlows::log(TranslationFlows::DELETED, $translation, ['how' => 'author']);
+
+        $runs = \App\Services\TranslationFlowReport::runs(
+            AuditLog::orderByDesc('created_at')->orderByDesc('id')->get());
+        $this->assertSame([1, 3], array_map(fn ($run) => count($run['events']), $runs), 'the deletion alone, then the three updates');
+        $this->assertSame('3 updates — 10 → 12 lines', TranslationFlows::describeRun($runs[1]['events']));
+
+        $this->actingAs($admin)->get(route('admin.flows', ['period' => 1]))
+            ->assertOk()
+            ->assertSee('3 updates — 10 → 12 lines')
+            ->assertSee('Show 3')
+            ->assertSee('Per hour')
+            ->assertSee('Last 24 h');
+    }
+
+    public function test_an_older_publication_says_its_program_from_the_agent_it_was_sent_with(): void
+    {
+        $translation = $this->translation(User::factory()->create());
+        $event = AuditLog::create([
+            'action' => TranslationFlows::PUBLISHED, 'entity_type' => 'Translation', 'entity_id' => $translation->id,
+            'metadata' => ['line_count' => 3], 'user_agent' => self::ModAgent, 'created_at' => now(),
+        ]);
+
+        $this->assertSame('UGT Mod 0.13.6', TranslationFlows::viaOf($event));
+
+        $event->user_agent = null;
+        $this->assertNull(TranslationFlows::viaOf($event), 'nothing said once the agent is cleared');
+    }
+
     public function test_the_screen_is_for_admins_only(): void
     {
         $this->actingAs(User::factory()->create())->get(route('admin.flows'))->assertForbidden();

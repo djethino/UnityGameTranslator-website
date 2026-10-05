@@ -55,36 +55,96 @@ class TranslationFlowReport
             ->all();
     }
 
-    /** One stacked bar per day: every day of the span, an empty day included. */
+    /** Up to this many days, the chart reads in hours: two or three daily bars say nothing. */
+    public const HOURLY_UP_TO_DAYS = 3;
+
+    /**
+     * One stacked bar per day — or per hour when the span is three days or less — every bucket of
+     * the span shown, an empty one included.
+     *
+     * ⚠ Hours are bucketed in PHP: grouping by hour in SQL is written differently on MariaDB and
+     * SQLite, and three days of human acts are few rows. Days stay counted by the database.
+     */
     public function daily(): array
     {
-        $rows = $this->query(withType: false)
-            ->selectRaw('DATE(created_at) as day, action, COUNT(*) as n')
-            ->groupBy('day', 'action')
-            ->get();
+        $hourly = $this->period <= self::HOURLY_UP_TO_DAYS;
+        $keyOf = fn (Carbon $at) => $hourly ? $at->format('Y-m-d H') : $at->toDateString();
 
-        $days = [];
-        for ($day = $this->since->copy()->startOfDay(); $day->lte(now()); $day->addDay()) {
-            $days[$day->toDateString()] = 0;
+        $buckets = [];
+        $start = $hourly ? $this->since->copy()->startOfHour() : $this->since->copy()->startOfDay();
+        for ($at = $start; $at->lte(now()); $hourly ? $at->addHour() : $at->addDay()) {
+            $buckets[$keyOf($at)] = 0;
         }
 
         $byAction = [];
-        foreach ($rows as $row) {
-            $byAction[$row->action][Carbon::parse($row->day)->toDateString()] = (int) $row->n;
+        if ($hourly) {
+            foreach ($this->query(withType: false)->get(['action', 'created_at']) as $event) {
+                $key = $keyOf($event->created_at);
+                $byAction[$event->action][$key] = ($byAction[$event->action][$key] ?? 0) + 1;
+            }
+        } else {
+            $rows = $this->query(withType: false)
+                ->selectRaw('DATE(created_at) as day, action, COUNT(*) as n')
+                ->groupBy('day', 'action')
+                ->get();
+            foreach ($rows as $row) {
+                $byAction[$row->action][Carbon::parse($row->day)->toDateString()] = (int) $row->n;
+            }
         }
 
         return [
-            'labels' => array_map(fn ($d) => Carbon::parse($d)->format('d/m'), array_keys($days)),
+            'hourly' => $hourly,
+            'labels' => array_map(
+                fn ($key) => $hourly
+                    ? Carbon::createFromFormat('Y-m-d H', $key)->format('d/m H\h')
+                    : Carbon::parse($key)->format('d/m'),
+                array_keys($buckets)),
             'datasets' => collect(TranslationFlows::actions())
                 ->filter(fn ($action) => isset($byAction[$action]))
                 ->map(fn ($action) => [
                     'label' => TranslationFlows::LABELS[$action]['label'],
                     'rgb' => TranslationFlows::LABELS[$action]['rgb'],
-                    'data' => array_values(array_replace($days, array_intersect_key($byAction[$action], $days))),
+                    'data' => array_values(array_replace($buckets, array_intersect_key($byAction[$action], $buckets))),
                 ])
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * The page's events in runs: the same act on the same translation by the same account, one
+     * after the other, read as ONE line (2026-10-05: thirteen identical "Update" rows in a row said
+     * less than "13 updates, 7,617 → 8,705 lines"). Each run keeps its events, to be opened.
+     *
+     * ⚠ Only acts that repeat as work goes on — a publication, an edit, a details change. A
+     * deletion, a move, a fork or a refusal is always its own line: each is a decision.
+     *
+     * @return list<array{events: list<AuditLog>}>
+     */
+    public static function runs(iterable $events): array
+    {
+        $repeating = [TranslationFlows::PUBLISHED, TranslationFlows::CONTENT_SAVED, TranslationFlows::DETAILS_CHANGED];
+        $runs = [];
+
+        foreach ($events as $event) {
+            $last = $runs === [] ? null : $runs[count($runs) - 1]['events'][0];
+            $joins = $last !== null
+                && in_array($event->action, $repeating, true)
+                && $event->action === $last->action
+                && $event->entity_id !== null && $event->entity_id === $last->entity_id
+                && $event->user_id === $last->user_id
+                // A new translation is a birth, never folded into the updates that follow it.
+                && !($event->action === TranslationFlows::PUBLISHED && empty($event->metadata['is_update']))
+                && !($last->action === TranslationFlows::PUBLISHED && empty($last->metadata['is_update']));
+
+            if ($joins) {
+                $runs[count($runs) - 1]['events'][] = $event;
+            } else {
+                $runs[] = ['events' => [$event]];
+            }
+        }
+
+        return $runs;
     }
 
     /** The events themselves, newest first, the type included. */
