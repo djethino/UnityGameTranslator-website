@@ -48,7 +48,7 @@ class AdminController extends Controller
         // counted everybody who had ever left as somebody moderation had punished, and the figure
         // grew with departures rather than with abuse.
         $bannedUsers = User::whereNotNull('banned_at')->whereNull('account_deleted_at')->count();
-        $recentReports = Report::with(['translation.game', 'translation.user', 'reporter'])
+        $recentReports = Report::with(['translation.game', 'translation.user', 'game', 'reporter'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -126,7 +126,7 @@ class AdminController extends Controller
 
     public function reports(Request $request)
     {
-        $query = Report::with(['translation.game', 'translation.user', 'reporter', 'reviewer']);
+        $query = Report::with(['translation.game', 'translation.user', 'game', 'reporter', 'reviewer']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -145,7 +145,7 @@ class AdminController extends Controller
         // translation, which was the one place a branch could be read — by a path that asked
         // nobody's permission — while the download button beside it answered 403. The lines now
         // open in the inspection screen, on the same grid as every other translation.
-        $report->load(['translation.game', 'translation.user', 'translation.parent.user', 'reporter', 'reviewer']);
+        $report->load(['translation.game', 'translation.user', 'translation.parent.user', 'game', 'reporter', 'reviewer']);
 
         return view('admin.report-show', compact('report'));
     }
@@ -153,9 +153,20 @@ class AdminController extends Controller
     public function handleReport(Request $request, Report $report)
     {
         $request->validate([
-            'action' => 'required|in:dismiss,delete_translation',
+            // `resolve`: a game report acted on (the card corrected on the games screen).
+            'action' => 'required|in:dismiss,delete_translation,resolve',
             'admin_notes' => 'nullable|string|max:1000',
         ]);
+
+        // Only a translation report can delete a translation; only a game report is "resolved".
+        abort_if($request->action === 'delete_translation' && $report->isAboutGame(), 422);
+        abort_if($request->action === 'resolve' && !$report->isAboutGame(), 422);
+
+        if ($request->action === 'resolve') {
+            $report->markAsReviewed(auth()->user(), 'reviewed', $request->admin_notes);
+
+            return redirect()->route('admin.reports')->with('success', 'Report resolved.');
+        }
 
         if ($request->action === 'delete_translation') {
             // Delete the translation (this also deletes the report via cascade)
@@ -391,7 +402,9 @@ class AdminController extends Controller
                 . $waitingGames . ' ' . Str::plural('game', $waitingGames) . '.';
         }
 
-        if ($result['left'] > 0) {
+        if ($result['stopped']) {
+            $message .= ' Steam is not answering right now: try again in a few minutes.';
+        } elseif ($result['left'] > 0) {
             $message .= " {$result['left']} not reached yet — check again to go on.";
         }
 
@@ -457,7 +470,11 @@ class AdminController extends Controller
      */
     public function checkGameStoresAgain(Game $game, StoreProposals $proposals)
     {
-        $new = $proposals->checkOne($game);
+        try {
+            $new = $proposals->checkOne($game);
+        } catch (\App\Exceptions\StoreUnavailable) {
+            return back()->with('error', 'Steam is not answering right now: try again in a few minutes.');
+        }
 
         return back()->with('success', "Asked the stores about {$game->name}: "
             . ($new > 0 ? $new . ' new ' . Str::plural('proposal', $new) . '.' : 'nothing new.'));
@@ -470,7 +487,9 @@ class AdminController extends Controller
     public function checkGameAdultAgain(Game $game, \App\Services\AdultRating $rating)
     {
         $before = $game->adult;
-        $rating->rate($game, quiet: true);
+        if ($rating->rate($game, quiet: true) === null) {
+            return back()->with('error', 'Steam is not answering right now: try again in a few minutes.');
+        }
 
         return back()->with('success', "Asked the stores about {$game->name}: "
             . ($game->adultSource() ? 'for adults only (' . $game->adultSource() . ').' : 'nothing found.')

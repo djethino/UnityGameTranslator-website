@@ -62,7 +62,7 @@ class StoreProposals
      *
      * ⚠ Read in pages of ids, never the whole catalogue at once.
      *
-     * @return array{checked: int, proposed: int, left: int}
+     * @return array{checked: int, proposed: int, left: int, stopped: bool}
      */
     public function checkDue(): array
     {
@@ -70,6 +70,9 @@ class StoreProposals
         $checked = 0;
         $proposed = 0;
 
+        // A batch: it draws on the background share of the Steam ceiling (App\Support\SteamStore),
+        // and Steam unavailable ends it — the card stays due, nothing is marked asked.
+        $stopped = false;
         foreach (Game::whereNull('stores_checked_at')->lazyById(200) as $game) {
             // The budget, and the store's refusal: Steam's limit is per address and players
             // publishing come first (App\Support\SteamStore).
@@ -77,7 +80,12 @@ class StoreProposals
                 break;
             }
 
-            $proposed += $this->checkOne($game);
+            try {
+                $proposed += \App\Support\SteamStore::inBackground(fn () => $this->checkOne($game));
+            } catch (\App\Exceptions\StoreUnavailable) {
+                $stopped = true;
+                break;
+            }
             $checked++;
         }
 
@@ -85,12 +93,15 @@ class StoreProposals
             'checked' => $checked,
             'proposed' => $proposed,
             'left' => Game::whereNull('stores_checked_at')->count(),
+            'stopped' => $stopped,
         ];
     }
 
     /**
      * Ask the stores about one card now, and mark it asked. Returns how many NEW proposals were
      * written. The way to ask again about a card that is not due — a store may know it by now.
+     *
+     * ⚠ Throws StoreUnavailable when Steam could not be asked: the card is then NOT marked asked.
      */
     public function checkOne(Game $game): int
     {

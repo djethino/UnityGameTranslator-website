@@ -38,20 +38,39 @@
             <div class="bg-gray-800 rounded-lg p-5 border border-gray-700">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="font-semibold text-lg">{{ $report->translation->game->name }}</span>
-                            <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
-                                @langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}
-                            </span>
-                            {{-- Visible before opening anything: a queue of reports on public
-                                 Mains and one on somebody's unpublished branch do not call for
-                                 the same attention. --}}
-                            <x-translation-role :translation="$report->translation" />
-                        </div>
-                        <p class="text-sm text-gray-400 mb-2">
-                            Translation by <x-admin.user-link :user="$report->translation->user" />
-                        </p>
-                        <p class="text-gray-300 mb-3">{{ $report->reason }}</p>
+                        @if($report->isAboutGame())
+                            {{-- A game card (2026-10-05): what is wrong with it, and — for the adult
+                                 mark — what the stores said when it was sent. --}}
+                            <div class="flex flex-wrap items-center gap-3 mb-2">
+                                <span class="font-semibold text-lg">{{ $report->game->name }}</span>
+                                <span class="bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded text-sm">
+                                    <i class="fas fa-gamepad mr-1"></i> {{ \App\Models\Report::GameKindLabels[$report->kind] ?? $report->kind }}
+                                </span>
+                            </div>
+                            @if($report->stores_answer)
+                                <p class="text-sm text-gray-400 mb-2">
+                                    When sent: {{ \App\Models\Report::StoresAnswerLabels[$report->stores_answer] ?? $report->stores_answer }}.
+                                    Now: {{ $report->game->adult ? 'marked for adults only' : 'not marked' }}{{ $report->game->adultSource() ? ' (' . $report->game->adultSource() . ')' : '' }}.
+                                </p>
+                            @endif
+                        @else
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="font-semibold text-lg">{{ $report->translation->game->name }}</span>
+                                <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
+                                    @langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}
+                                </span>
+                                {{-- Visible before opening anything: a queue of reports on public
+                                     Mains and one on somebody's unpublished branch do not call for
+                                     the same attention. --}}
+                                <x-translation-role :translation="$report->translation" />
+                            </div>
+                            <p class="text-sm text-gray-400 mb-2">
+                                Translation by <x-admin.user-link :user="$report->translation->user" />
+                            </p>
+                        @endif
+                        @if($report->reason !== '')
+                            <p class="text-gray-300 mb-3">{{ $report->reason }}</p>
+                        @endif
                         <p class="text-sm text-gray-500">
                             Reported by <x-admin.user-link :user="$report->reporter" /> • {{ $report->created_at->diffForHumans() }}
                         </p>
@@ -59,9 +78,10 @@
                             <p class="text-sm text-gray-500 mt-1">
                                 Reviewed by <x-admin.user-link :user="$report->reviewer" /> • {{ $report->reviewed_at->diffForHumans() }}
                             </p>
-                            @if($report->admin_notes)
-                                <p class="text-sm text-gray-400 mt-1 italic">Notes: {{ $report->admin_notes }}</p>
-                            @endif
+                        @endif
+                        {{-- Notes also when nobody reviewed it: a report the stores settled says so. --}}
+                        @if($report->admin_notes)
+                            <p class="text-sm text-gray-400 mt-1 italic">Notes: {{ $report->admin_notes }}</p>
                         @endif
                     </div>
                     @if($report->isPending())

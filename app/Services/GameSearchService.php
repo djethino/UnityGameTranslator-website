@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Game;
+use App\Exceptions\StoreUnavailable;
 use App\Support\GameNaming;
 use App\Support\SteamStore;
 use Illuminate\Support\Facades\Cache;
@@ -83,7 +84,8 @@ class GameSearchService
             $card = $card?->withCount(['translations' => fn ($q) => $q->publiclyListed()])->first();
 
             $hit = $card ? $this->localRow($card) : (!$stores ? null : match ($asked['source']) {
-                'steam' => $this->getGameFromSteam($asked['id']),
+                // Steam unavailable: IGDB answers for the id when it links it to exactly one game.
+                'steam' => $this->steamOrIgdb($asked['id']),
                 'igdb' => ctype_digit($asked['id']) ? $this->getGameFromIGDB((int) $asked['id']) : $this->getGameFromIGDBSlug($asked['id']),
                 'rawg' => $this->getGameFromRAWG($asked['id']),
             });
@@ -113,7 +115,16 @@ class GameSearchService
 
             // ⚠ Steam's title search gives a name and a capsule, nothing more: asking each hit's page
             // for its year would be one more store call per row. Its link is there to check it.
-            foreach ($this->steamSearch($query) as $hit) {
+            //
+            // ⚠ Steam unavailable: the list goes on with the other sources — IGDB carries the Steam
+            // id of most games, so a pick from it still names the game by its id.
+            try {
+                $steamHits = $this->steamSearch($query);
+            } catch (StoreUnavailable $e) {
+                Log::info('Game search without Steam', ['why' => $e->getMessage()]);
+                $steamHits = [];
+            }
+            foreach ($steamHits as $hit) {
                 $results[] = [
                     'name' => $hit['name'],
                     'steam_id' => $hit['id'],
@@ -758,7 +769,13 @@ class GameSearchService
             : '';
 
         if ($fullGameId !== '' && $fullGameId !== $steamId) {
-            $full = $this->steamApp($fullGameId);
+            // The demo's page already names its game (`fullgame`): enough when the store cannot
+            // be asked again for the full game's own page.
+            try {
+                $full = $this->steamApp($fullGameId);
+            } catch (StoreUnavailable) {
+                $full = null;
+            }
 
             return [
                 // ⚠ If Steam does not answer for the full game (it is delisted, or the store is
@@ -804,37 +821,36 @@ class GameSearchService
     {
         // Kept a day, the store's "no such app" included: the same page was asked again by every
         // publication, search and check, against a limit counted per address (App\Support\SteamStore).
-        // A failure is never kept — the next caller asks again.
         $key = SteamStore::appKey($steamId);
         if (Cache::has($key)) {
             return Cache::get($key)['data'];
         }
 
+        // 🔴 **Null means "Steam says there is no such app", nothing else.** A store that could not
+        // be asked — our ceiling, a refusal, no answer — throws StoreUnavailable, and is never
+        // kept: the caller decides what an unknown means for it (see the exception).
+        SteamStore::take();
+
         try {
             $response = Http::timeout(5)->get('https://store.steampowered.com/api/appdetails', [
                 'appids' => $steamId,
             ]);
-            SteamStore::note($response->status());
-
-            if (!$response->successful()) {
-                Log::warning('Steam API error', ['status' => $response->status()]);
-                return null;
-            }
-
-            $data = $response->json();
-
-            // Steam returns {steamId: {success: bool, data: {...}}}
-            $app = isset($data[$steamId]['success']) && $data[$steamId]['success']
-                ? $data[$steamId]['data']
-                : null;
-            Cache::put($key, ['data' => $app], SteamStore::AppTtlSeconds);
-
-            return $app;
-
-        } catch (\Exception $e) {
-            Log::warning('Steam API error', ['error' => $e->getMessage()]);
-            return null;
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::warning('Steam API unreachable', ['error' => $e->getMessage()]);
+            throw new StoreUnavailable('Steam store unreachable');
         }
+
+        SteamStore::note($response->status());
+
+        $data = $response->json();
+
+        // Steam returns {steamId: {success: bool, data: {...}}}
+        $app = isset($data[$steamId]['success']) && $data[$steamId]['success']
+            ? $data[$steamId]['data']
+            : null;
+        Cache::put($key, ['data' => $app], SteamStore::AppTtlSeconds);
+
+        return $app;
     }
 
     /**
@@ -844,37 +860,69 @@ class GameSearchService
      * ⚠ Loose by nature: it answers with add-ons, sequels and neighbours. A caller that means to
      * attach an id to a card must keep only an EXACT title match (App\Services\StoreProposals),
      * and even then an admin accepts it — a title is a guess, an id is a fact.
+     *
+     * ⚠ Throws StoreUnavailable when the store could not be asked, like steamApp(): an empty list
+     * is "Steam found nothing", never "Steam was not asked".
      */
     public function steamSearch(string $term): array
     {
+        SteamStore::take();
+
         try {
             $response = Http::timeout(5)->get('https://store.steampowered.com/api/storesearch/', [
                 'term' => $term,
                 'cc' => 'us',
                 'l' => 'en',
             ]);
-            SteamStore::note($response->status());
-
-            if (!$response->successful()) {
-                Log::warning('Steam search error', ['status' => $response->status()]);
-                return [];
-            }
-
-            return collect($response->json('items') ?? [])
-                ->map(fn ($item) => [
-                    'id' => (string) ($item['id'] ?? ''),
-                    'name' => (string) ($item['name'] ?? ''),
-                    // The capsule Steam shows beside the hit, or null when it is not an https address.
-                    'image_url' => \App\Support\StoreLinks::image($item['tiny_image'] ?? null),
-                ])
-                ->filter(fn ($item) => $item['id'] !== '' && $item['name'] !== '')
-                ->values()
-                ->all();
-
-        } catch (\Exception $e) {
-            Log::warning('Steam search error', ['error' => $e->getMessage()]);
-            return [];
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::warning('Steam search unreachable', ['error' => $e->getMessage()]);
+            throw new StoreUnavailable('Steam store unreachable');
         }
+
+        SteamStore::note($response->status());
+
+        return collect($response->json('items') ?? [])
+            ->map(fn ($item) => [
+                'id' => (string) ($item['id'] ?? ''),
+                'name' => (string) ($item['name'] ?? ''),
+                // The capsule Steam shows beside the hit, or null when it is not an https address.
+                'image_url' => \App\Support\StoreLinks::image($item['tiny_image'] ?? null),
+            ])
+            ->filter(fn ($item) => $item['id'] !== '' && $item['name'] !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * A Steam id's game: from Steam's store, or — when the store cannot be asked — from IGDB when
+     * IGDB links that id to exactly one game. Null when Steam says there is no such app; throws
+     * StoreUnavailable when neither can say for sure.
+     */
+    public function steamOrIgdb(string $steamId): ?array
+    {
+        try {
+            return $this->getGameFromSteam($steamId);
+        } catch (StoreUnavailable $e) {
+            return $this->getGameFromIgdbBySteamId($steamId) ?? throw $e;
+        }
+    }
+
+    /**
+     * The game IGDB links to a Steam app id, or null — the way to identify a game for sure when
+     * Steam's store cannot be asked (user, 2026-10-05: "sauf si on sait être sûr de la réponse avec
+     * le reste"). Only when exactly one IGDB game carries that Steam id: two would be a guess.
+     */
+    public function getGameFromIgdbBySteamId(string $steamId): ?array
+    {
+        if (!ctype_digit($steamId)) {
+            return null;
+        }
+
+        $links = $this->igdb('external_games',
+            'fields game; where uid = "' . $steamId . '" & external_game_source = ' . self::IgdbSteamSource . '; limit 2;');
+        $games = array_values(array_unique(array_filter(array_map(fn ($link) => $link['game'] ?? null, $links))));
+
+        return count($games) === 1 ? $this->getGameFromIGDB((int) $games[0]) : null;
     }
 
     /**
@@ -895,8 +943,12 @@ class GameSearchService
         $shared = false;
 
         // Try Steam API first if we have a Steam ID
+        //
+        // ⚠ Steam unavailable: IGDB by that id when it is sure, otherwise StoreUnavailable goes up —
+        // the title alone is not asked in its place, since the id would have said for certain
+        // which game this is (no wrong card, user 2026-10-05).
         if ($steamId) {
-            $result = $this->getGameFromSteam($steamId);
+            $result = $this->steamOrIgdb($steamId);
             if ($result) {
                 return $result;
             }

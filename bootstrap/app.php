@@ -132,5 +132,25 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Steam's store could not be asked, and only it could say which game this is
+        // (App\Exceptions\StoreUnavailable): nothing was written, and the person is told to try
+        // again in a few minutes — the API with its refused_code, a page with its own words.
+        // Logged as a warning rather than an error with a trace: it is a state of a third party,
+        // and App\Support\SteamStore exists so that it never happens.
+        $exceptions->dontReport(\App\Exceptions\StoreUnavailable::class);
+        $exceptions->render(function (\App\Exceptions\StoreUnavailable $e, \Illuminate\Http\Request $request) {
+            \Illuminate\Support\Facades\Log::warning('Steam unavailable for a request that needed it', [
+                'why' => $e->getMessage(),
+                'route' => $request->route()?->getName(),
+            ]);
+
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'error' => \App\Exceptions\StoreUnavailable::Sentence,
+                    'refused_code' => \App\Exceptions\StoreUnavailable::Code,
+                ], 503);
+            }
+
+            return back()->withInput()->with('error', __('upload.store_unavailable'));
+        });
     })->create();

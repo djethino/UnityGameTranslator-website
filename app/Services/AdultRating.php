@@ -58,10 +58,20 @@ class AdultRating
      * because a store page can change and the row must say what the source says today. It cannot
      * un-mark the game on its own — a contributor's declaration and an admin's word live in other
      * columns, and App\Models\Game's `saving` hook ORs the three together.
+     *
+     * Returns whether the answer changed — or NULL when the stores could not be asked, and nothing
+     * was written.
      */
-    public function rate(Game $game, bool $quiet = false): bool
+    public function rate(Game $game, bool $quiet = false): ?bool
     {
-        $verdict = $this->judge($game->steam_id, $game->igdb_id, $game->name);
+        // 🔴 Steam not asked is NOT "nothing found" (user, 2026-10-05: no wrong entry). The game is
+        // left as it was — still due if it was — and the hourly pass asks again; IGDB is not asked
+        // in Steam's place either, since it only speaks when Steam has no page for the game.
+        try {
+            $verdict = $this->judge($game->steam_id, $game->igdb_id, $game->name);
+        } catch (\App\Exceptions\StoreUnavailable) {
+            return null;
+        }
         $changed = $game->adult_detected !== ($verdict !== null) || $game->adult_detected_source !== $verdict;
 
         $game->adult_detected = $verdict !== null;

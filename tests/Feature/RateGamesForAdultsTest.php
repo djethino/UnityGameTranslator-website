@@ -114,10 +114,16 @@ class RateGamesForAdultsTest extends TestCase
         $this->artisan('games:rate-adult', ['--budget' => 100])->assertSuccessful();
         $this->assertSame(2, $asked);
 
-        // The store answers again: the probe clears the refusal, and the next pass goes on.
+        // In the same five minutes, no second probe: insisting is what lengthens a ban.
+        $this->artisan('games:rate-adult', ['--budget' => 100])->assertSuccessful();
+        $this->assertSame(2, $asked);
+
+        // The store answers again: the next window's probe clears the refusal, the next pass goes on.
         $status = 200;
+        $this->travel(6)->minutes();
         $this->artisan('games:rate-adult', ['--budget' => 100])->assertSuccessful();
         $this->assertFalse(SteamStore::refusing());
+        $this->travel(6)->minutes();
         $this->artisan('games:rate-adult', ['--budget' => 100])->assertSuccessful();
         $this->assertSame(0, Game::whereNull('adult_checked_at')->count());
     }

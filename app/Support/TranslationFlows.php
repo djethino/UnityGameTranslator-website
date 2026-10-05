@@ -88,6 +88,7 @@ class TranslationFlows
         'game_changed' => 'Main moved to another game',
         'game_not_picked' => 'No game picked',
         'game_ambiguous' => 'Several games share the name',
+        'store_unavailable' => 'Steam not answering — try again later',
     ];
 
     /** Where an event came from (`via`), as the screen says it. */

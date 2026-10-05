@@ -154,15 +154,26 @@
             @endif
         </div>
     </div>
-    @auth
-        <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left flex-shrink-0">
-            <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
-        </a>
-    @else
-        <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left flex-shrink-0">
-            <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
-        </a>
-    @endauth
+    {{-- The page's act, and under it the way to say the card itself is wrong (2026-10-05): a
+         wrong name, cover or store link, or the adult mark — the same dialog as a translation's
+         report (x-report-modal), with a question of its own. --}}
+    <div class="flex flex-col items-stretch sm:items-end gap-2 flex-shrink-0">
+        @auth
+            <a href="{{ route('translations.create') }}?game={{ $game->id }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left">
+                <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
+            </a>
+            <button type="button" data-report-game="{{ $game->id }}" class="report-btn text-xs text-gray-400 hover:text-red-300 transition self-center sm:self-end">
+                <i class="fas fa-flag mr-1"></i> {{ __('report.game_title') }}
+            </button>
+        @else
+            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=upload" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-center sm:text-left">
+                <i class="fas fa-upload mr-2"></i> {{ __('games.upload_translation') }}
+            </a>
+            <a href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}&action=report" class="text-xs text-gray-400 hover:text-red-300 transition self-center sm:self-end">
+                <i class="fas fa-flag mr-1"></i> {{ __('report.game_title') }}
+            </a>
+        @endauth
+    </div>
 </div>
 
 @if($targetLanguages->isNotEmpty())

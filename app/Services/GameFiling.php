@@ -357,7 +357,13 @@ class GameFiling
             return;
         }
 
-        $store = $this->stores->getGameFromSteam($steamId);
+        // ⚠ Steam unavailable: the blank stays blank — the next upload fills it. Writing the id as
+        // sent could record a demo's id as the game's (no wrong entry, user 2026-10-05).
+        try {
+            $store = $this->stores->getGameFromSteam($steamId);
+        } catch (\App\Exceptions\StoreUnavailable) {
+            return;
+        }
         $demoId = $store['demo_steam_id'] ?? null;
 
         if ($demoId && !empty($store['steam_id'])) {

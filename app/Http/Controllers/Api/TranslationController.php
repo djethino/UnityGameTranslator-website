@@ -1724,15 +1724,21 @@ class TranslationController extends Controller
      */
     private function fullGameOfDemo(string $steamId): ?string
     {
-        $fullId = \Illuminate\Support\Facades\Cache::remember(
-            'steam:fullgame:' . $steamId,
-            now()->addDays(30),
-            function () use ($steamId) {
-                $store = app(GameSearchService::class)->getGameFromSteam($steamId);
+        // ⚠ Steam unavailable throws out of the closure, so nothing is kept — the old code kept "not
+        // a demo" for a month when the store had only failed. No alias this time; asked again next.
+        try {
+            $fullId = \Illuminate\Support\Facades\Cache::remember(
+                'steam:fullgame:' . $steamId,
+                now()->addDays(30),
+                function () use ($steamId) {
+                    $store = app(GameSearchService::class)->getGameFromSteam($steamId);
 
-                return ($store['demo_steam_id'] ?? null) ? (string) ($store['steam_id'] ?? '') : '';
-            }
-        );
+                    return ($store['demo_steam_id'] ?? null) ? (string) ($store['steam_id'] ?? '') : '';
+                }
+            );
+        } catch (\App\Exceptions\StoreUnavailable) {
+            return null;
+        }
 
         if ($fullId === '') {
             return null;

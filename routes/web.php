@@ -250,6 +250,9 @@ Route::get('/translations/{translation}/merge-preview/state', [TranslationContro
 
         // Reports
         Route::post('/report/{translation}', [ReportController::class, 'store'])->name('reports.store');
+        // A game card. Throttled: an adult-content report asks the stores at once.
+        Route::post('/report/game/{game:id}', [ReportController::class, 'storeGame'])
+            ->middleware('throttle:5,1')->name('reports.game');
 
         // Votes
         Route::post('/vote/{translation}', [VoteController::class, 'vote'])->name('votes.store');

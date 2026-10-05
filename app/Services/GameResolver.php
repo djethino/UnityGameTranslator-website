@@ -73,8 +73,9 @@ class GameResolver
             return $none;
         }
 
+        // Steam unavailable: IGDB when sure, StoreUnavailable otherwise (GameSearchService::steamOrIgdb).
         $external = $source === 'steam'
-            ? $this->search->getGameFromSteam($id)
+            ? $this->search->steamOrIgdb($id)
             : $this->search->getGame((int) $id, $source);
 
         if (!$external) {

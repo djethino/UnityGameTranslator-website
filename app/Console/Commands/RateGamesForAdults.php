@@ -36,12 +36,22 @@ class RateGamesForAdults extends Command
     private const WorstCasePerGame = 11;
 
     protected $signature = 'games:rate-adult
-        {--budget=50 : store requests this pass may spend (Steam allows about 200 per 5 minutes, players first)}
+        {--budget=30 : store requests this pass may spend — the background share of the ceiling (App\Support\SteamStore)}
         {--all : ask about every game, not only the due ones (by hand, after a deploy or an import)}';
 
     protected $description = 'Ask Steam, then IGDB, which games are for adults only — those due';
 
     public function handle(AdultRating $rating, StoreChanges $changes): int
+    {
+        // Background work: it draws on the background share of the Steam ceiling, so a player
+        // publishing always has room (App\Support\SteamStore). `--all` is a person asking, by
+        // hand: it draws on the whole ceiling, still never past it.
+        return $this->option('all')
+            ? $this->pass($rating, $changes)
+            : SteamStore::inBackground(fn () => $this->pass($rating, $changes));
+    }
+
+    private function pass(AdultRating $rating, StoreChanges $changes): int
     {
         $budget = max(self::WorstCasePerGame, (int) $this->option('budget'));
 
@@ -72,10 +82,15 @@ class RateGamesForAdults extends Command
                 break;
             }
 
-            $asked++;
             $before = $game->adult;
+            $answer = $rating->rate($game, quiet: true);
 
-            if ($rating->rate($game, quiet: true)) {
+            // Not asked (our ceiling, or the store): the game stays due, and so does the rest.
+            if ($answer === null) {
+                break;
+            }
+            $asked++;
+            if ($answer) {
                 $changed++;
             }
             if ($game->adult) {

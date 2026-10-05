@@ -12,6 +12,48 @@
 <div class="max-w-4xl">
     <h1 class="text-3xl font-bold mb-8"><i class="fas fa-flag mr-2"></i> Review Report</h1>
 
+    @if($report->isAboutGame())
+        {{-- A game card (2026-10-05). The card is corrected on the games screen — the one place
+             a card's ids, cover and adult mark are acted on — so this links there rather than
+             carrying a second set of the same controls. --}}
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Reported Game</h2>
+            <div class="flex gap-4">
+                @if($report->game->image_url)
+                    <img src="{{ $report->game->image_url }}" alt="" class="w-16 h-20 object-cover rounded">
+                @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                    <div>
+                        <p class="text-gray-400 text-sm">Game</p>
+                        <p class="font-medium">{{ $report->game->name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">What is wrong</p>
+                        <p class="font-medium">{{ \App\Models\Report::GameKindLabels[$report->kind] ?? $report->kind }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Adults only, now</p>
+                        <p class="font-medium">{{ $report->game->adult ? 'yes' : 'no' }}{{ $report->game->adultSource() ? ' · ' . $report->game->adultSource() : '' }}</p>
+                    </div>
+                    @if($report->stores_answer)
+                        <div>
+                            <p class="text-gray-400 text-sm">The stores, when it was sent</p>
+                            <p class="font-medium">{{ \App\Models\Report::StoresAnswerLabels[$report->stores_answer] ?? $report->stores_answer }}</p>
+                        </div>
+                    @endif
+                    <div>
+                        <p class="text-gray-400 text-sm">Store ids</p>
+                        <p class="font-medium">Steam {{ $report->game->steam_id ?? '—' }} · IGDB {{ $report->game->igdb_id ?? '—' }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <a href="{{ route('admin.games', ['search' => $report->game->name]) }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-gamepad mr-1"></i> Open in Games
+                </a>
+            </div>
+        </div>
+    @else
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3">
             Reported Translation
@@ -73,6 +115,7 @@
             @endif
         </div>
     </div>
+    @endif
 
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
         <h2 class="text-xl font-semibold mb-4">Report Details</h2>
@@ -112,10 +155,19 @@
                         class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition">
                         <i class="fas fa-times mr-2"></i> Dismiss Report
                     </button>
-                    <button type="submit" name="action" value="delete_translation"
-                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition delete-translation-btn">
-                        <i class="fas fa-trash mr-2"></i> Delete Translation
-                    </button>
+                    @if($report->isAboutGame())
+                        {{-- The card was corrected on the games screen (or needs nothing): the
+                             report is closed as acted on, not dismissed. --}}
+                        <button type="submit" name="action" value="resolve"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition">
+                            <i class="fas fa-check mr-2"></i> Resolved
+                        </button>
+                    @else
+                        <button type="submit" name="action" value="delete_translation"
+                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition delete-translation-btn">
+                            <i class="fas fa-trash mr-2"></i> Delete Translation
+                        </button>
+                    @endif
                 </div>
             </form>
         </div>
@@ -129,7 +181,13 @@
                 </span>
             </p>
             <p class="text-gray-300 mt-2">
-                <span class="font-medium">Reviewed by:</span> <x-admin.user-link :user="$report->reviewer" />
+                {{-- Nobody, when the stores settled it as it was sent (ReportController::storeGame). --}}
+                <span class="font-medium">Reviewed by:</span>
+                @if($report->reviewed_by)
+                    <x-admin.user-link :user="$report->reviewer" />
+                @else
+                    the stores
+                @endif
             </p>
             <p class="text-gray-300 mt-2">
                 <span class="font-medium">Reviewed on:</span> {{ $report->reviewed_at->format('M d, Y H:i') }}

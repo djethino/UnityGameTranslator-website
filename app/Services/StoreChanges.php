@@ -92,8 +92,10 @@ class StoreChanges
                     break;
                 }
                 SteamStore::forget($appId);
-                $base = (string) ($this->stores->steamApp($appId)['fullgame']['appid'] ?? '');
-                if (SteamStore::refusing()) {
+                try {
+                    $base = (string) ($this->stores->steamApp($appId)['fullgame']['appid'] ?? '');
+                } catch (\App\Exceptions\StoreUnavailable) {
+                    // Our ceiling or the store: the rest of the list waits for the next pass.
                     $complete = false;
                     break;
                 }

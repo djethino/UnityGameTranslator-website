@@ -154,7 +154,11 @@
         @foreach($recentReports as $report)
             <div class="flex justify-between items-center bg-gray-750 rounded p-4">
                 <div>
-                    <p class="font-medium">{{ $report->translation->game->name }}</p>
+                    <p class="font-medium">{{ $report->isAboutGame() ? $report->game->name : $report->translation->game->name }}
+                        @if($report->isAboutGame())
+                            <span class="text-xs text-amber-300 ml-1">{{ \App\Models\Report::GameKindLabels[$report->kind] ?? $report->kind }}</span>
+                        @endif
+                    </p>
                     <p class="text-sm text-gray-400">
                         {{-- The name is escaped here and the sentence is ours, so the link can go
                              inside it without letting a name write markup. --}}
