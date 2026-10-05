@@ -8,6 +8,7 @@
       { "kind": "button", "name": "GameChangeBtn", "text": { "bind": "gameChange" }, "size": "Compact", "minWidth": 70, "act": "changeGame", "visible": false,
         "help": "Confirm which game this is. Used to publish this game's translation and to find translations shared for it." }
     ] },
+    { "kind": "label", "name": "GameLineDetected", "text": { "bind": "gameDetected" }, "policy": "Excluded", "role": "Caption", "visible": false },
     { "kind": "callout", "name": "GameDiffersBanner", "tone": "Warning", "spacing": 8, "padX": 8, "padY": 2, "visible": false, "children": [
       { "kind": "label", "name": "GameDiffersLabel", "text": { "bind": "gameDiffers" }, "policy": "Excluded", "role": "Small", "fill": "Stretch" },
       { "kind": "button", "name": "SwitchGameBtn", "text": "Switch game", "size": "Compact", "minWidth": 90, "act": "switchGame",
