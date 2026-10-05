@@ -199,6 +199,9 @@ class GameSearchService
         return [
             'id' => $game->id,
             'name' => $game->name,
+            // The names the stores give it besides its title: a person who searched one of them
+            // sees why this card answered (Game::otherNames).
+            'other_names' => $game->otherNames(),
             'steam_id' => $game->steam_id,
             'igdb_id' => $game->igdb_id,
             'rawg_id' => $game->rawg_id,
@@ -968,13 +971,13 @@ class GameSearchService
      *
      * ⚠ Throws StoreUnavailable when Steam could not be asked — never read as "no art".
      *
-     * @return array{cover: ?string, banner: ?string}|null
+     * @return array{name: ?string, cover: ?string, banner: ?string}|null
      */
     public function steamAssets(string $steamId): ?array
     {
         $item = $this->steamItems([$steamId])[$steamId] ?? null;
 
-        return $item === null ? null : ['cover' => $item['cover'], 'banner' => $item['banner']];
+        return $item === null ? null : ['name' => $item['name'], 'cover' => $item['cover'], 'banner' => $item['banner']];
     }
 
     /** Steam's item types, as `IStoreBrowseService/GetItems` numbers them (read 2026-10-06). */
@@ -1091,24 +1094,30 @@ class GameSearchService
     }
 
     /**
-     * An IGDB game's cover with its size — `{url, width, height}` — or null when it has none.
+     * What a card needs from one IGDB game: its name and its cover with its size —
+     * `{name, cover: {url, width, height}|null}` — or null when IGDB does not answer for it.
      *
      * The size is IGDB's own (`cover.width`, `cover.height`): a cover is portrait by custom, not by
-     * rule, and the shape is what decides whether it can fill a card (App\Services\GameArt).
+     * rule, and the shape is what decides whether it can fill a card (App\Services\GameArt). The
+     * name is one of the card's other names when it is not its title (Game::otherNames).
      */
-    public function igdbCover(int $igdbId): ?array
+    public function igdbFacts(int $igdbId): ?array
     {
-        $rows = $this->igdb('games', 'where id = ' . intval($igdbId) . '; fields cover.url,cover.width,cover.height;');
-        $cover = $rows[0]['cover'] ?? null;
+        $rows = $this->igdb('games', 'where id = ' . intval($igdbId) . '; fields name,cover.url,cover.width,cover.height;');
 
-        if (!is_array($cover) || !isset($cover['url'])) {
+        if (!isset($rows[0])) {
             return null;
         }
 
+        $cover = $rows[0]['cover'] ?? null;
+
         return [
-            'url' => 'https:' . str_replace('t_thumb', 't_cover_big', $cover['url']),
-            'width' => (int) ($cover['width'] ?? 0),
-            'height' => (int) ($cover['height'] ?? 0),
+            'name' => isset($rows[0]['name']) ? (string) $rows[0]['name'] : null,
+            'cover' => is_array($cover) && isset($cover['url']) ? [
+                'url' => 'https:' . str_replace('t_thumb', 't_cover_big', $cover['url']),
+                'width' => (int) ($cover['width'] ?? 0),
+                'height' => (int) ($cover['height'] ?? 0),
+            ] : null,
         ];
     }
 

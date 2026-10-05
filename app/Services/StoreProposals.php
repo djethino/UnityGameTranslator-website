@@ -35,6 +35,7 @@ use Illuminate\Validation\ValidationException;
  * | `igdb_id` | the one IGDB game linked to the card's Steam id | exactly one game; no other card holds it |
  * | `image_url` | the best picture of GameArt | not after an admin chose one (`image_chosen_at`); only a better one |
  * | `banner_url` | the Steam header | — |
+ * | `other_names` | the names Steam and IGDB give the game (Game::otherNames) | added to, never dropped |
  *
  * ⚠ Never the display name, never `unity_name`, never an adult mark: those are human decisions or
  * facts no store holds. And never an id over a value that is already there — the same rule the
@@ -212,8 +213,9 @@ class StoreProposals
     }
 
     /**
-     * The card's picture and banner from its own ids (App\Services\GameArt), and — on "Check
-     * again" — every other picture they give, proposed. Returns how many NEW proposals were written.
+     * The card's picture, banner and other names from its own ids (App\Services\GameArt), and —
+     * on "Check again" — every other picture they give, proposed. Returns how many NEW proposals
+     * were written.
      *
      * ⚠ Steam not answering: nothing is decided about pictures this time. A choice made without
      * Steam's answer would take a lower picture for the best one; the batch stops on it anyway
@@ -225,9 +227,17 @@ class StoreProposals
             return 0;
         }
 
-        $candidates = $this->art->candidates($game->steam_id, $game->igdb_id);
+        $read = $this->art->read($game->steam_id, $game->igdb_id);
+        $candidates = $read['candidates'];
         $best = GameArt::best($candidates);
-        $before = ['image_url' => $game->image_url, 'banner_url' => $game->banner_url];
+        $before = ['image_url' => $game->image_url, 'banner_url' => $game->banner_url, 'other_names' => $game->other_names];
+
+        // The names the stores give it, added to those already known — never dropped because a
+        // store was silent this time; a name it once had still finds the game.
+        $game->setOtherNames(array_merge($game->otherNames(), $read['names']));
+        if ($game->isDirty('other_names')) {
+            $game->refreshLatinSearch();
+        }
 
         // An admin's choice stands: the automatic pass never moves a picture somebody picked.
         if ($game->image_chosen_at === null && GameArt::shouldReplace($game->image_url, $best, $candidates)) {
@@ -239,11 +249,11 @@ class StoreProposals
             $game->banner_url = $banner;
         }
 
-        if ($game->isDirty(['image_url', 'banner_url'])) {
+        if ($game->isDirty(['image_url', 'banner_url', 'other_names'])) {
             $this->writeQuietly($game);
             AuditLog::log('game.pictures_from_ids', null, 'game', $game->id, [
                 'before' => $before,
-                'after' => ['image_url' => $game->image_url, 'banner_url' => $game->banner_url],
+                'after' => ['image_url' => $game->image_url, 'banner_url' => $game->banner_url, 'other_names' => $game->other_names],
             ]);
         }
 

@@ -202,12 +202,17 @@ class GameFiling
         $storeIds = $this->storeIdsFor(null, $external);
         $pictures = $this->picturesFor($resolvedSteamId, $storeIds['igdb_id'] ?? null, $external['image_url'] ?? null);
 
-        $created = Game::create([
+        $created = new Game([
             'name' => $title,
             'unity_name' => GameNaming::isFormOfTitle($declaredName, $title) ? $declaredName : null,
             'unity_company' => $company,
             'steam_id' => $resolvedSteamId,
-        ] + $pictures + $storeIds);
+            'image_url' => $pictures['image_url'],
+            'banner_url' => $pictures['banner_url'],
+        ] + $storeIds);
+        // The names the other stores give it, so a search for any of them finds this card.
+        $created->setOtherNames($pictures['names']);
+        $created->save();
 
         $this->rememberDemoId($created, $external);
 
@@ -324,22 +329,26 @@ class GameFiling
      * store's picture; the card is created due (`stores_checked_at` null), so the next stores check
      * makes the choice with Steam's answer.
      *
-     * @return array{image_url: ?string, banner_url: ?string}
+     * And the names the stores give the game (`names`), kept beside its title (Game::otherNames).
+     *
+     * @return array{image_url: ?string, banner_url: ?string, names: list<string>}
      */
     private function picturesFor(?string $steamId, int|string|null $igdbId, ?string $picked): array
     {
         try {
-            $candidates = $this->art->candidates($steamId, $igdbId);
+            $read = $this->art->read($steamId, $igdbId);
         } catch (\App\Exceptions\StoreUnavailable $e) {
             \Illuminate\Support\Facades\Log::info('New card created with the picked picture: Steam assets unavailable', ['steam_id' => $steamId, 'why' => $e->getMessage()]);
-            $candidates = [];
+            $read = ['candidates' => [], 'names' => []];
         }
 
+        $candidates = $read['candidates'];
         $best = GameArt::best($candidates);
 
         return [
             'image_url' => GameArt::shouldReplace($picked, $best, $candidates) ? $best['url'] : $picked,
             'banner_url' => GameArt::banner($candidates),
+            'names' => $read['names'],
         ];
     }
 

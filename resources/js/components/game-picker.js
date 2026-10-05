@@ -104,7 +104,10 @@ function links(hit) {
 
 /** The name, its source chip, the facts line and the store links — a row and the chosen card alike. */
 function body(hit, extraChip) {
-    const name = el('div', 'font-medium truncate', hit.name);
+    // A card's names in the other stores follow its title in brackets — why it answered a search
+    // for one of them; the mod and the Manager write it the same way (common GameCandidates.Row).
+    const others = (hit.other_names || []).filter(n => typeof n === 'string' && n !== '');
+    const name = el('div', 'font-medium truncate', others.length ? hit.name + ' (' + others.join(' / ') + ')' : hit.name);
 
     const tag = SOURCE_TAGS[hit.source];
     if (tag) name.append(el('span', 'text-xs ' + tag[1] + ' px-1.5 py-0.5 rounded ml-2', tag[0]));

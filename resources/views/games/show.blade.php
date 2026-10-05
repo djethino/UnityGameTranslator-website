@@ -11,17 +11,21 @@
         return $native === $lang ? $lang : $native . ' (' . $lang . ')';
     })->values();
     $seoTitleLanguages = $seoNativeLanguages->take(3)->implode(', ') . ($seoNativeLanguages->count() > 3 ? '…' : '');
+
+    // The game under every name the stores give it — "侠影录 (Legacy of Shadows)": a search engine
+    // asked for either has to meet it in the title and the description (Game::titleWithOtherNames).
+    $seoGame = $game->titleWithOtherNames();
     $seoDescription = $targetLanguages->isEmpty()
-        ? __('seo.game_description_nolang', ['game' => $game->name])
-        : __('seo.game_description', ['game' => $game->name, 'languages' => $seoComboLanguages->take(5)->implode(', ')]);
+        ? __('seo.game_description_nolang', ['game' => $seoGame])
+        : __('seo.game_description', ['game' => $seoGame, 'languages' => $seoComboLanguages->take(5)->implode(', ')]);
 
     // Shown under the title, and told to search engines as the same game (`sameAs`).
     $storePages = $game->storePages();
 @endphp
 
 @section('title', $targetLanguages->isEmpty()
-    ? __('seo.game_title_nolang', ['game' => $game->name])
-    : __('seo.game_title', ['game' => $game->name, 'languages' => $seoTitleLanguages]))
+    ? __('seo.game_title_nolang', ['game' => $seoGame])
+    : __('seo.game_title', ['game' => $seoGame, 'languages' => $seoTitleLanguages]))
 
 @section('description', $seoDescription)
 
@@ -37,6 +41,9 @@
     "@@context": "https://schema.org",
     "@@type": "VideoGame",
     "name": {!! json_encode($game->name, JSON_UNESCAPED_UNICODE) !!},
+@if($game->otherNames())
+    "alternateName": {!! json_encode($game->otherNames(), JSON_UNESCAPED_UNICODE) !!},
+@endif
     "image": "{{ $game->image_url ?? '' }}",
     "description": {!! json_encode($seoDescription, JSON_UNESCAPED_UNICODE) !!},
     "url": "{{ route('games.show', $game) }}",
@@ -108,6 +115,10 @@
         @endif
         <div class="min-w-0">
             <h1 class="glitch-text text-2xl sm:text-3xl font-bold break-words">{{ $game->name }}</h1>
+            {{-- Its names in the other stores, as a subtitle (Game::otherNames). --}}
+            @if($game->otherNames())
+                <p class="text-gray-300 text-base sm:text-lg break-words">{{ implode(' / ', $game->otherNames()) }}</p>
+            @endif
             <p class="text-gray-400 mt-1 text-sm sm:text-base">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
 
             {{-- The game's pages on the stores the card knows it by — to check it is the right game,

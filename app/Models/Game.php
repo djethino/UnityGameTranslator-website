@@ -21,6 +21,10 @@ class Game extends Model
         // Filled by the model itself on save; listed here so a mass assignment can set it too.
         'latin_search',
 
+        // The names the stores give the game besides its title — read from its own ids (see the
+        // migration `keep_the_names_a_game_has_in_the_stores`). Set through setOtherNames().
+        'other_names',
+
         'slug',
         'igdb_id',
         'rawg_id',
@@ -117,8 +121,8 @@ class Game extends Model
         // ⚠ On `saving`, not `creating`: a game renamed afterwards — an admin tidying a title, an
         // IGDB match arriving late — would otherwise keep a handle for the name it no longer has.
         static::saving(function ($game) {
-            if ($game->isDirty('name')) {
-                $game->latin_search = \App\Support\LatinSearch::for($game->name);
+            if ($game->isDirty(['name', 'other_names'])) {
+                $game->refreshLatinSearch();
             }
         });
 
@@ -205,6 +209,80 @@ class Game extends Model
     }
 
     /**
+     * The names the stores give this game that are not its title — 侠影录 on Steam for a card
+     * titled "Legacy of Shadows" after IGDB, or the reverse. Never one that is only another way of
+     * writing the title (case, punctuation, spacing: GameNaming::flatten).
+     *
+     * @return list<string>
+     */
+    public function otherNames(): array
+    {
+        return self::namesBesides((string) $this->name, preg_split('/\R/u', (string) $this->other_names) ?: []);
+    }
+
+    /**
+     * Keep these names as the game's other names — the ones that are not its title, once each.
+     *
+     * @param list<?string> $names
+     */
+    public function setOtherNames(array $names): void
+    {
+        $this->other_names = implode("\n", self::namesBesides((string) $this->name, $names)) ?: null;
+    }
+
+    /**
+     * The names that are not the title, nor another of them written differently, in order.
+     *
+     * ⚠ "&" reads "and" here (IGDB writes "Might & Magic" where Steam writes "Might and Magic"): a
+     * subtitle that only swaps the two says nothing. Here only — identifying a game keeps
+     * GameNaming::flatten as it is.
+     */
+    private static function namesBesides(string $title, array $names): array
+    {
+        $keyOf = fn (string $name) => \App\Support\GameNaming::flatten(str_replace('&', ' and ', $name));
+        $seen = [$keyOf($title) => true];
+        $kept = [];
+
+        foreach ($names as $name) {
+            $name = trim((string) $name);
+            $flat = $keyOf($name);
+            if ($name === '' || $flat === '' || isset($seen[$flat])) {
+                continue;
+            }
+            $seen[$flat] = true;
+            $kept[] = $name;
+        }
+
+        return $kept;
+    }
+
+    /**
+     * The title as a search engine and a reader of the page meet it: "侠影录 (Legacy of Shadows)".
+     */
+    public function titleWithOtherNames(): string
+    {
+        $others = $this->otherNames();
+
+        return $others === [] ? (string) $this->name : $this->name . ' (' . implode(' / ', $others) . ')';
+    }
+
+    /**
+     * The latin handle of the title AND of the other names (App\Support\LatinSearch).
+     *
+     * ⚠ Public for the same reason as refreshAdult(): a quiet save (the stores check) does not run
+     * the `saving` hook that calls it.
+     */
+    public function refreshLatinSearch(): void
+    {
+        $handles = array_filter(array_map(
+            fn ($name) => \App\Support\LatinSearch::for($name),
+            array_merge([$this->name], $this->otherNames())
+        ));
+
+        $this->latin_search = $handles === [] ? null : implode(' ', array_unique($handles));
+    }
+
+    /**
      * Recompute the derived answer from the three columns that decide it.
      *
      * ⚠ **Public because `saveQuietly()` does not fire the hook above.** A quiet save unsets the
@@ -239,8 +317,11 @@ class Game extends Model
     {
         $escaped = \App\Support\Like::escape($term);
 
+        // ⚠ And by the names the stores give it (otherNames, 2026-10-06): a card titled after
+        // one store was out of reach for whoever typed the other's name.
         return $query->where(fn ($q) => $q
             ->where('name', 'like', '%' . $escaped . '%')
+            ->orWhere('other_names', 'like', '%' . $escaped . '%')
             ->orWhere('latin_search', 'like', '%' . mb_strtolower($escaped) . '%'));
     }
 

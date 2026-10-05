@@ -27,6 +27,6 @@ abstract class TestCase extends BaseTestCase
         $mock->shouldReceive('steamApp')->andReturnNull();
         $mock->shouldReceive('igdb')->andReturn([]);
         $mock->shouldReceive('steamAssets')->andReturnNull();
-        $mock->shouldReceive('igdbCover')->andReturnNull();
+        $mock->shouldReceive('igdbFacts')->andReturnNull();
     }
 }

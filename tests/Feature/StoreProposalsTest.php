@@ -41,7 +41,7 @@ class StoreProposalsTest extends TestCase
             $mock->shouldReceive('igdb')->andReturn($igdbRows);
             $mock->shouldReceive('steamApp')->andReturn($steamApp);
             $mock->shouldReceive('steamAssets')->andReturn($steamAssets);
-            $mock->shouldReceive('igdbCover')->andReturn($igdbCover);
+            $mock->shouldReceive('igdbFacts')->andReturn($igdbCover === null ? null : ['name' => null, 'cover' => $igdbCover]);
             $mock->shouldReceive('getGameFromIgdbBySteamId')->andReturn($igdbBySteamId);
         });
     }
@@ -100,7 +100,7 @@ class StoreProposalsTest extends TestCase
             $mock->shouldNotReceive('steamApp');
             $mock->shouldNotReceive('getGameFromIgdbBySteamId');
             $mock->shouldReceive('steamAssets')->andReturnNull();
-            $mock->shouldReceive('igdbCover')->andReturnNull();
+            $mock->shouldReceive('igdbFacts')->andReturnNull();
         });
 
         $this->assertSame(0, app(StoreProposals::class)->check($game));
@@ -300,11 +300,44 @@ class StoreProposalsTest extends TestCase
             $mock->shouldReceive('steamSearch')->andReturn([['id' => '2056210', 'name' => 'LONESTAR']]);
             $mock->shouldReceive('igdb')->andReturn([]);
             $mock->shouldNotReceive('steamAssets');
-            $mock->shouldNotReceive('igdbCover');
+            $mock->shouldNotReceive('igdbFacts');
         });
 
         app(StoreProposals::class)->check($game);
         $this->assertNull($game->refresh()->image_url);
+    }
+
+    // ── the names the stores give a game (2026-10-06) ───────────────────────────────────────
+
+    public function test_the_names_the_stores_give_a_game_are_kept_and_found(): void
+    {
+        // Titled after IGDB; Steam calls it 侠影录.
+        $game = Game::create(['name' => 'Legacy of Shadows', 'steam_id' => '3863760', 'igdb_id' => 376372]);
+        $this->mock(GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('steamAssets')->andReturn(['name' => '侠影录', 'cover' => null, 'banner' => null]);
+            $mock->shouldReceive('igdbFacts')->andReturn(['name' => 'Legacy of Shadows', 'cover' => null]);
+        });
+
+        app(StoreProposals::class)->checkOne($game);
+
+        $game->refresh();
+        $this->assertSame(['侠影录'], $game->otherNames(), 'the title itself is not one of its other names');
+        $this->assertSame('Legacy of Shadows (侠影录)', $game->titleWithOtherNames());
+        $this->assertSame([$game->id], Game::titleMatches('侠影录')->pluck('id')->all(), 'found by the other store\'s name');
+        $this->assertSame([$game->id], Game::titleMatches('xia ying')->pluck('id')->all(), 'and by its latin handle');
+
+        // A store silent the next time takes no name away.
+        $this->mock(GameSearchService::class, function ($mock) {
+            $mock->shouldReceive('steamAssets')->andReturn(null);
+            $mock->shouldReceive('igdbFacts')->andReturn(null);
+        });
+        app(StoreProposals::class)->checkOne($game);
+        $this->assertSame(['侠影录'], $game->refresh()->otherNames());
+
+        // The page shows it under the title and tells search engines.
+        $this->get(route('games.show', $game))->assertOk()
+            ->assertSee('Legacy of Shadows (侠影录)', false)
+            ->assertSee('"alternateName": ["侠影录"]', false);
     }
 
     // ── the IGDB id read from the Steam id (2026-10-06) ─────────────────────────────────────

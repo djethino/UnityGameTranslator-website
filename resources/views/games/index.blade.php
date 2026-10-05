@@ -21,6 +21,9 @@
                 "@@type": "VideoGame",
                 "name": {!! json_encode($game->name, JSON_UNESCAPED_UNICODE) !!},
                 "url": "{{ route('games.show', $game) }}"
+                @if($game->otherNames())
+                ,"alternateName": {!! json_encode($game->otherNames(), JSON_UNESCAPED_UNICODE) !!}
+                @endif
                 @if($game->image_url)
                 ,"image": "{{ $game->image_url }}"
                 @endif
@@ -263,6 +266,11 @@
                     </div>
                     <div class="p-3">
                         <h2 class="font-semibold text-sm truncate group-hover:text-purple-400 transition">{{ $game->name }}</h2>
+                        {{-- Its names in the other stores, under the title: the card a search for
+                             侠影录 found is "Legacy of Shadows" here (Game::otherNames). --}}
+                        @if($otherNames = $game->otherNames())
+                            <p class="text-xs text-gray-400 truncate" title="{{ implode(' / ', $otherNames) }}">{{ implode(' / ', $otherNames) }}</p>
+                        @endif
                     </div>
                 </a>
             @endforeach

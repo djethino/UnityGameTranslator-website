@@ -48,10 +48,29 @@ class GameArt
      */
     public function candidates(?string $steamId, int|string|null $igdbId): array
     {
+        return $this->read($steamId, $igdbId)['candidates'];
+    }
+
+    /**
+     * What the card's ids say, in the same two calls: its pictures (`candidates`, best first) and
+     * the names each store gives the game (`names` — Steam's, then IGDB's), which become its other
+     * names when they are not its title (Game::otherNames, user 2026-10-06: 侠影录 on Steam is
+     * "Legacy of Shadows" on IGDB).
+     *
+     * ⚠ Throws StoreUnavailable when Steam could not be asked — see candidates().
+     *
+     * @return array{candidates: list<array>, names: list<string>}
+     */
+    public function read(?string $steamId, int|string|null $igdbId): array
+    {
         $found = [];
+        $names = [];
 
         if ($steamId) {
             $assets = $this->stores->steamAssets((string) $steamId);
+            if ($assets['name'] ?? null) {
+                $names[] = $assets['name'];
+            }
             if ($assets['cover'] ?? null) {
                 $found[] = ['url' => $assets['cover'], 'source' => 'steam', 'shape' => 'portrait', 'rank' => self::SteamCover];
             }
@@ -61,7 +80,11 @@ class GameArt
         }
 
         if ($igdbId !== null && $igdbId !== '' && ctype_digit((string) $igdbId)) {
-            $cover = $this->stores->igdbCover((int) $igdbId);
+            $igdb = $this->stores->igdbFacts((int) $igdbId);
+            if ($igdb['name'] ?? null) {
+                $names[] = $igdb['name'];
+            }
+            $cover = $igdb['cover'] ?? null;
             if ($cover) {
                 $portrait = $cover['height'] > $cover['width'];
                 $found[] = [
@@ -75,7 +98,7 @@ class GameArt
 
         usort($found, fn ($a, $b) => $a['rank'] <=> $b['rank']);
 
-        return $found;
+        return ['candidates' => $found, 'names' => $names];
     }
 
     /** The picture a card should show among these, or null when there is none. */
