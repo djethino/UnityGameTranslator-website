@@ -56,8 +56,23 @@ class AnalyticsGame extends Model
      */
     public static function topOverPeriod(int $days, int $limit = 10): \Illuminate\Support\Collection
     {
-        return self::where('date', '>=', now()->subDays($days)->toDateString())
-            ->whereHas('game')
+        $since = now()->subDays($days);
+
+        // The days still kept, plus the months already folded (foldOldDays). A row is in one table
+        // or the other, never both, so adding them counts nothing twice.
+        //
+        // ⚠ A folded month counts WHOLE once the span reaches into it: its days no longer exist, so
+        // a span starting on the 20th of a month folded long ago includes that month's first days.
+        // Only spans longer than thirteen months reach a folded month, and those are read in months.
+        $dayRows = DB::table('analytics_games')
+            ->select('game_id', 'page_views', 'downloads')
+            ->where('date', '>=', $since->toDateString());
+        $monthRows = DB::table('analytics_games_monthly')
+            ->select('game_id', 'page_views', 'downloads')
+            ->where('month', '>=', $since->copy()->startOfMonth()->toDateString());
+
+        $rows = DB::query()->fromSub($dayRows->unionAll($monthRows), 'attention')
+            ->whereExists(fn ($q) => $q->select(DB::raw(1))->from('games')->whereColumn('games.id', 'attention.game_id'))
             ->select(
                 'game_id',
                 DB::raw('SUM(page_views) - SUM(downloads) as views'),
@@ -67,7 +82,68 @@ class AnalyticsGame extends Model
             ->groupBy('game_id')
             ->orderByDesc('attention')
             ->limit($limit)
-            ->with('game')
             ->get();
+
+        return self::hydrate($rows->map(fn ($row) => (array) $row)->all())->load('game');
+    }
+
+    /** How many months of days are kept before they are folded into months. */
+    public const DAYS_KEPT_MONTHS = 13;
+
+    /**
+     * Fold every month older than DAYS_KEPT_MONTHS into analytics_games_monthly, and delete its
+     * days. Returns how many day rows were folded.
+     *
+     * ⚠ **One transaction per month, adding to what the month already holds.** A month is folded
+     * whole and its days deleted together, so a night that fails leaves the month either entirely
+     * in days or entirely in months — never in both, which is what lets topOverPeriod add the two
+     * tables. Adding rather than writing makes a late day (a `--date` run on an old day, written
+     * after its month was folded) join its month on the next night instead of being lost.
+     */
+    public static function foldOldDays(): int
+    {
+        $before = now()->startOfMonth()->subMonths(self::DAYS_KEPT_MONTHS)->toDateString();
+        $folded = 0;
+
+        $months = self::where('date', '<', $before)
+            ->pluck('date')
+            ->map(fn ($date) => $date->copy()->startOfMonth()->toDateString())
+            ->unique();
+
+        foreach ($months as $month) {
+            DB::transaction(function () use ($month, &$folded) {
+                $end = \Carbon\Carbon::parse($month)->endOfMonth()->toDateString();
+                $days = self::whereBetween('date', [$month, $end]);
+
+                $sums = (clone $days)
+                    ->select('game_id', DB::raw('SUM(page_views) as page_views'), DB::raw('SUM(downloads) as downloads'))
+                    ->groupBy('game_id')
+                    ->get();
+
+                foreach ($sums as $sum) {
+                    $row = DB::table('analytics_games_monthly')->where('month', $month)->where('game_id', $sum->game_id);
+                    if ((clone $row)->exists()) {
+                        $row->update([
+                            'page_views' => DB::raw('page_views + ' . (int) $sum->page_views),
+                            'downloads' => DB::raw('downloads + ' . (int) $sum->downloads),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        DB::table('analytics_games_monthly')->insert([
+                            'month' => $month,
+                            'game_id' => $sum->game_id,
+                            'page_views' => (int) $sum->page_views,
+                            'downloads' => (int) $sum->downloads,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                $folded += $days->delete();
+            });
+        }
+
+        return $folded;
     }
 }

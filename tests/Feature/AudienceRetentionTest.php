@@ -130,4 +130,34 @@ class AudienceRetentionTest extends TestCase
         $this->assertSame($prints['visitor_month_hash'], $later['visitor_month_hash']);
         $this->assertNotSame($prints['visitor_hash'], $later['visitor_hash']);
     }
+
+    public function test_game_days_older_than_thirteen_months_become_months_and_still_count(): void
+    {
+        $this->travelTo('2026-10-06 03:00');
+        $game = \App\Models\Game::create(['name' => 'Some Game']);
+
+        // Two days of August 2025 — older than thirteen months — and one recent day.
+        foreach ([['2025-08-03', 10, 2], ['2025-08-20', 5, 1], ['2026-10-01', 7, 3]] as [$date, $views, $downloads]) {
+            \App\Models\AnalyticsGame::create(['date' => $date, 'game_id' => $game->id, 'page_views' => $views, 'downloads' => $downloads]);
+        }
+
+        $this->assertSame(2, \App\Models\AnalyticsGame::foldOldDays());
+
+        $this->assertSame(1, \App\Models\AnalyticsGame::count(), 'the recent day stays a day');
+        $month = DB::table('analytics_games_monthly')->first();
+        $this->assertSame('2025-08-01', \Carbon\Carbon::parse($month->month)->toDateString());
+        $this->assertSame([15, 3], [(int) $month->page_views, (int) $month->downloads]);
+
+        // A late day of a folded month joins it the next night instead of being lost.
+        \App\Models\AnalyticsGame::create(['date' => '2025-08-25', 'game_id' => $game->id, 'page_views' => 4, 'downloads' => 0]);
+        \App\Models\AnalyticsGame::foldOldDays();
+        $this->assertSame(19, (int) DB::table('analytics_games_monthly')->value('page_views'));
+
+        // The top games add both tables over a long span, and only the days over a short one.
+        $long = \App\Models\AnalyticsGame::topOverPeriod(500)->first();
+        $this->assertSame(26, (int) $long->attention);
+        $this->assertSame(3 + 3, (int) $long->downloads);
+        $this->assertSame('Some Game', $long->game->name);
+        $this->assertSame(7, (int) \App\Models\AnalyticsGame::topOverPeriod(30)->first()->attention);
+    }
 }

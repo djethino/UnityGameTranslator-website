@@ -39,6 +39,12 @@ class AggregateAnalytics extends Command
         // Aggregate per-game stats
         $this->aggregateGameStats($date);
 
+        // Days of games older than thirteen months become months (AnalyticsGame::foldOldDays).
+        $folded = AnalyticsGame::foldOldDays();
+        if ($folded > 0) {
+            $this->info("  Folded {$folded} game day(s) older than " . AnalyticsGame::DAYS_KEPT_MONTHS . ' months into months');
+        }
+
         // The month the day belongs to — recounted every night, never waiting for its end.
         $this->aggregateMonth($date);
 
