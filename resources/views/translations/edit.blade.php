@@ -25,7 +25,7 @@
     <div class="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
         <div class="flex items-center gap-4">
             @if($translation->game->image_url)
-                <img src="{{ $translation->game->image_url }}" class="w-16 h-20 object-cover rounded">
+                <x-game-cover :src="$translation->game->image_url" class="w-16 h-20 rounded" />
             @endif
             <div>
                 <p class="font-semibold text-lg">{{ $translation->game->name }}</p>

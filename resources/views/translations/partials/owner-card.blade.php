@@ -12,7 +12,7 @@
                      own length (reported 2026-09-30). The cover and the icon keep their size. --}}
                 <div class="flex items-center gap-4 flex-1 min-w-0">
                     @if($translation->game->image_url)
-                        <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-12 h-16 object-cover rounded flex-shrink-0">
+                        <x-game-cover :src="$translation->game->image_url" :alt="$translation->game->name" class="w-12 h-16 rounded" />
                     @else
                         <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
                             <i class="fas fa-gamepad text-gray-500"></i>

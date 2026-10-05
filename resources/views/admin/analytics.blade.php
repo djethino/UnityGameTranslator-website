@@ -692,8 +692,8 @@
                     <div class="flex justify-between items-center bg-gray-750 rounded p-3"
                          @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
                         <div class="flex items-center gap-3 min-w-0">
-                            @if($gameStats->game->cover_url)
-                                <img src="{{ $gameStats->game->cover_url }}" alt="" class="w-10 h-10 rounded object-cover shrink-0">
+                            @if($gameStats->game->image_url)
+                                <x-game-cover :src="$gameStats->game->image_url" class="w-10 h-10 rounded" />
                             @else
                                 <div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center shrink-0">
                                     <i class="fas fa-gamepad text-gray-500"></i>

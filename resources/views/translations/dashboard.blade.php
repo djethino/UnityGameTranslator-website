@@ -13,7 +13,7 @@
         </div>
         <div class="flex items-center gap-4">
             @if($translation->game->image_url)
-                <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}" class="w-16 h-20 object-cover rounded">
+                <x-game-cover :src="$translation->game->image_url" :alt="$translation->game->name" class="w-16 h-20 rounded" />
             @else
                 <div class="w-16 h-20 bg-gray-700 rounded flex items-center justify-center">
                     <i class="fas fa-gamepad text-gray-500 text-2xl"></i>

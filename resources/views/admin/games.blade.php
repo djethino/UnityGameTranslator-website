@@ -200,7 +200,7 @@
                                      one a store proposes below it. --}}
                                 <a href="{{ \App\Support\StoreLinks::image($game->image_url) }}" target="_blank" rel="noopener noreferrer"
                                    class="flex-shrink-0" title="Current cover — open full size">
-                                    <img src="{{ $game->image_url }}" alt="" class="w-10 h-14 object-cover rounded">
+                                    <x-game-cover :src="$game->image_url" class="w-10 h-14 rounded" />
                                 </a>
                             @else
                                 <div class="w-10 h-14 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">

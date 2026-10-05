@@ -17,8 +17,7 @@
    class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
     <div class="flex items-start space-x-3">
         @if($translation->game->image_url)
-            <img src="{{ $translation->game->image_url }}" alt="{{ $translation->game->name }}"
-                 class="w-12 h-16 object-cover rounded">
+            <x-game-cover :src="$translation->game->image_url" :alt="$translation->game->name" class="w-12 h-16 rounded" />
         @else
             <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
                 <i class="fas fa-gamepad text-gray-400"></i>

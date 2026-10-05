@@ -98,7 +98,7 @@
 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
     <div class="flex items-center gap-4 sm:gap-6">
         @if($game->image_url)
-            <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded-lg shadow-lg flex-shrink-0">
+            <x-game-cover :src="$game->image_url" :alt="$game->name" class="w-20 h-28 sm:w-24 sm:h-32 rounded-lg shadow-lg" />
         @else
             <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i class="fas fa-gamepad text-2xl sm:text-3xl text-gray-400"></i>

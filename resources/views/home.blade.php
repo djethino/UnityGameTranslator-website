@@ -387,7 +387,7 @@
             <a href="{{ route('games.show', $game) }}" class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition block">
                 <div class="flex items-start space-x-3">
                     @if($game->image_url)
-                    <img src="{{ $game->image_url }}" alt="{{ $game->name }}" class="w-12 h-16 object-cover rounded">
+                    <x-game-cover :src="$game->image_url" :alt="$game->name" class="w-12 h-16 rounded" />
                     @else
                     <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
                         <i class="fas fa-gamepad text-gray-400"></i>

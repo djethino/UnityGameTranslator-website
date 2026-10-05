@@ -14,6 +14,8 @@
 // ⚠ Rows are built with the DOM, never innerHTML: a name comes from IGDB, RAWG, Steam or our own
 // catalogue, none of which this page controls.
 
+import { gameCover } from '../game-cover.js';
+
 const SOURCE_TAGS = {
     local: ['Local', 'bg-green-600'],
     steam: ['Steam', 'bg-gray-600'],
@@ -50,13 +52,7 @@ function el(tag, className, text) {
 }
 
 function picture(hit, size) {
-    if (hit.image_url) {
-        const img = el('img', size + ' object-cover rounded flex-shrink-0');
-        img.src = hit.image_url;
-        img.alt = '';
-        img.addEventListener('error', () => { img.style.display = 'none'; });
-        return img;
-    }
+    if (hit.image_url) return gameCover(hit.image_url, '', size + ' rounded');
 
     const box = el('div', size + ' bg-gray-600 rounded flex-shrink-0 flex items-center justify-center');
     box.append(el('i', 'fas fa-gamepad text-gray-400'));

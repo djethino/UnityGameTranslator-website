@@ -242,6 +242,11 @@ if (historyRoot) {
 import { startAmbient } from './ambient/index.js';
 startAmbient();
 
+// A game's picture fits its portrait frame whatever its shape — a cover fills it, a store banner is
+// shown whole on a blurred copy of itself. See game-cover.js for why it is decided on load.
+import { startGameCovers } from './game-cover.js';
+startGameCovers();
+
 // The page gives a little at its ends. Wired outside the ambient block on purpose: this is page
 // chrome and not decoration, so it runs on every screen — the editors and the admin included, which
 // carry `data-no-glitch` and get no moving field at all.

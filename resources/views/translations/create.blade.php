@@ -76,8 +76,11 @@
                     placeholder="{{ __('upload.search_game') }}"
                     autocomplete="off"
                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-purple-500 focus:border-purple-500 pl-12">
-                <div id="game_image_preview" class="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded overflow-hidden hidden">
-                    <img id="game_image_thumb" src="" class="w-full h-full object-cover">
+                {{-- The frame of <x-game-cover>, written out for the ids this page's script sets. --}}
+                <div id="game_image_preview" data-game-cover class="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded overflow-hidden bg-gray-700 hidden">
+                    <img data-game-cover-backdrop alt="" aria-hidden="true" hidden
+                         class="absolute inset-0 w-full h-full object-cover blur-md scale-110 brightness-75">
+                    <img id="game_image_thumb" data-game-cover-image alt="" class="relative w-full h-full object-cover">
                 </div>
                 <i id="game_search_icon" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <i id="game_loading" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hidden"></i>
@@ -99,7 +102,12 @@
                 <span class="text-lg">2.</span> {{ __('upload.game') }}
             </label>
             <div class="bg-gray-700 rounded-lg p-4 flex items-center gap-4">
-                <img id="display_game_image" src="" class="w-16 h-20 object-cover rounded" onerror="this.style.display='none'">
+                {{-- The frame of <x-game-cover>, written out for the id this page's script sets. --}}
+                <span data-game-cover class="relative block overflow-hidden bg-gray-700 flex-shrink-0 w-16 h-20 rounded">
+                    <img data-game-cover-backdrop alt="" aria-hidden="true" hidden
+                         class="absolute inset-0 w-full h-full object-cover blur-md scale-110 brightness-75">
+                    <img id="display_game_image" data-game-cover-image alt="" class="relative w-full h-full object-cover">
+                </span>
                 <div>
                     <p id="display_game_name" class="font-semibold text-lg"></p>
                     <p id="display_main_owner" class="text-sm text-gray-400"></p>

@@ -26,7 +26,7 @@
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
         <div class="flex items-start gap-6">
             @if($translation->game->image_url)
-                <img src="{{ $translation->game->image_url }}" class="w-24 h-32 object-cover rounded-lg">
+                <x-game-cover :src="$translation->game->image_url" class="w-24 h-32 rounded-lg" />
             @else
                 <div class="w-24 h-32 bg-gray-700 rounded-lg flex items-center justify-center">
                     <i class="fas fa-gamepad text-4xl text-gray-500"></i>

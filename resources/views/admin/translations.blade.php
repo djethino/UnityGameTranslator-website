@@ -97,7 +97,7 @@
                         <td class="py-3 px-4">
                             <div class="flex items-center gap-3">
                                 @if($translation->game->image_url)
-                                    <img src="{{ $translation->game->image_url }}" class="w-10 h-14 object-cover rounded">
+                                    <x-game-cover :src="$translation->game->image_url" class="w-10 h-14 rounded" />
                                 @else
                                     <div class="w-10 h-14 bg-gray-700 rounded flex items-center justify-center">
                                         <i class="fas fa-gamepad text-gray-500"></i>

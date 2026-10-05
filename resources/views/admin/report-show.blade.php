@@ -20,7 +20,7 @@
             <h2 class="text-xl font-semibold mb-4">Reported Game</h2>
             <div class="flex gap-4">
                 @if($report->game->image_url)
-                    <img src="{{ $report->game->image_url }}" alt="" class="w-16 h-20 object-cover rounded">
+                    <x-game-cover :src="$report->game->image_url" class="w-16 h-20 rounded" />
                 @endif
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                     <div>
