@@ -195,6 +195,53 @@ class TranslationFlowsTest extends TestCase
             ->assertSee('Last 24 h');
     }
 
+    public function test_the_pages_count_the_lines_shown_not_the_events_folded_into_them(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $owner = User::factory()->create();
+        $translation = $this->translation($owner);
+
+        // 120 updates in a row: ONE line. Before, they made three pages of which the first showed
+        // one line and the other two nothing.
+        $this->actingAs($owner);
+        foreach (range(1, 120) as $i) {
+            $e = TranslationFlows::log(TranslationFlows::PUBLISHED, $translation, ['line_count' => $i, 'is_update' => true]);
+            $e->forceFill(['created_at' => now()->subMinutes(200 - $i)])->save();
+        }
+
+        $page = $this->actingAs($admin)->get(route('admin.flows'))->assertOk()
+            ->assertSee('120 events, 1 line')
+            ->assertSee('120 updates — 1 → 120 lines');
+        $this->assertSame(1, $page->viewData('lines')->total());
+        $this->assertFalse($page->viewData('lines')->hasPages());
+    }
+
+    public function test_the_list_is_searched_and_sorted_by_the_server(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $alpha = $this->translation(User::factory()->create(['name' => 'Alpha Author']), 'Alpha Game');
+        $beta = $this->translation(User::factory()->create(['name' => 'Beta Author']), 'Beta Game');
+
+        $a = TranslationFlows::log(TranslationFlows::DELETED, $alpha, ['how' => 'admin']);
+        $a->forceFill(['created_at' => now()->subHour(), 'user_id' => $alpha->user_id])->save();
+        $b = TranslationFlows::log(TranslationFlows::DELETED, $beta, ['how' => 'author']);
+        $b->forceFill(['user_id' => $beta->user_id])->save();
+
+        $this->actingAs($admin)->get(route('admin.flows', ['search' => 'Alpha Game']))
+            ->assertOk()->assertSee('Deleted by an admin')->assertDontSee('Deleted by its author');
+        $this->actingAs($admin)->get(route('admin.flows', ['search' => 'Beta Author']))
+            ->assertOk()->assertSee('Deleted by its author')->assertDontSee('Deleted by an admin');
+        $this->actingAs($admin)->get(route('admin.flows', ['search' => '#' . $alpha->id]))
+            ->assertOk()->assertSee('Deleted by an admin')->assertDontSee('Deleted by its author');
+
+        $this->actingAs($admin)->get(route('admin.flows', ['sort' => 'when', 'dir' => 'asc']))
+            ->assertSeeInOrder(['Deleted by an admin', 'Deleted by its author']);
+        $this->actingAs($admin)->get(route('admin.flows', ['sort' => 'when', 'dir' => 'desc']))
+            ->assertSeeInOrder(['Deleted by its author', 'Deleted by an admin']);
+        $this->actingAs($admin)->get(route('admin.flows', ['sort' => 'account', 'dir' => 'asc']))
+            ->assertSeeInOrder(['Deleted by an admin', 'Deleted by its author']);
+    }
+
     public function test_an_older_publication_says_its_program_from_the_agent_it_was_sent_with(): void
     {
         $translation = $this->translation(User::factory()->create());

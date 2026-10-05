@@ -8,6 +8,20 @@ import mediumZoom from 'medium-zoom';
 import mergeTable from './components/merge-table.js';
 Alpine.data('mergeTable', mergeTable);
 
+// The editors' reachable horizontal scrollbar, on the admin tables too (x-admin.scroll-table).
+// The editor module reads three facts of a grid to know when to measure again; an admin table has
+// none of them, so they are given as constants and the ResizeObserver does the rest.
+import { editorHScroll } from './components/editor-hscroll.js';
+Alpine.data('adminTableScroll', () => ({
+    ...editorHScroll(),
+    allKeys: [],
+    wide: false,
+    showIndexColumn: false,
+    init() {
+        this.initHScroll();
+    },
+}));
+
 // Locally-generated avatars (DiceBear "thumbs", CC0): the SVG is built in
 // the browser from a seed — no upload, no external request, no PII.
 // Placeholders: <span data-dicebear-seed="..." data-dicebear-size="32">

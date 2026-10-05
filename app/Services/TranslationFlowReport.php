@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\User;
+use App\Support\Like;
 use App\Support\Span;
 use App\Support\TranslationFlows;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -111,14 +114,16 @@ class TranslationFlowReport
     }
 
     /**
-     * The page's events in runs: the same act on the same translation by the same account, one
-     * after the other, read as ONE line (2026-10-05: thirteen identical "Update" rows in a row said
-     * less than "13 updates, 7,617 → 8,705 lines"). Each run keeps its events, to be opened.
+     * Events in runs: the same act on the same translation by the same account, one after the
+     * other, read as ONE line (2026-10-05: thirteen identical "Update" rows in a row said less than
+     * "13 updates, 7,617 → 8,705 lines"). Each run keeps its events, to be opened.
      *
      * ⚠ Only acts that repeat as work goes on — a publication, an edit, a details change. A
      * deletion, a move, a fork or a refusal is always its own line: each is a decision.
      *
-     * @return list<array{events: list<AuditLog>}>
+     * Takes full events or the light rows `eventRuns` reads (`is_update` selected beside them).
+     *
+     * @return list<array{events: list<object>}>
      */
     public static function runs(iterable $events): array
     {
@@ -133,8 +138,8 @@ class TranslationFlowReport
                 && $event->entity_id !== null && $event->entity_id === $last->entity_id
                 && $event->user_id === $last->user_id
                 // A new translation is a birth, never folded into the updates that follow it.
-                && !($event->action === TranslationFlows::PUBLISHED && empty($event->metadata['is_update']))
-                && !($last->action === TranslationFlows::PUBLISHED && empty($last->metadata['is_update']));
+                && !($event->action === TranslationFlows::PUBLISHED && !self::isUpdate($event))
+                && !($last->action === TranslationFlows::PUBLISHED && !self::isUpdate($last));
 
             if ($joins) {
                 $runs[count($runs) - 1]['events'][] = $event;
@@ -146,15 +151,62 @@ class TranslationFlowReport
         return $runs;
     }
 
-    /** The events themselves, newest first, the type included. */
-    public function events(int $perPage = 50): LengthAwarePaginator
+    /** The orders the list offers — the column name in the address. Time breaks every tie. */
+    public const SORTS = ['when', 'event', 'account'];
+
+    /**
+     * The list, one LINE per run, paginated on those lines (2026-10-05: the pages counted events
+     * while the screen grouped them, so page 1 showed one line and "20 pages" stood under it).
+     *
+     * 🔴 Runs are cut over the WHOLE filtered list, never page by page: a run cut at a page break
+     * would show as two lines, and the page count would still not be the count of lines. Only the
+     * light columns are read for that — the full events are loaded for the page shown.
+     *
+     * @return array{lines: LengthAwarePaginator, events: int}
+     */
+    public function eventRuns(int $perPage, int $page, string $sort, string $dir): array
     {
-        return $this->query(withType: true)
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->paginate($perPage)
-            ->withQueryString();
+        $dir = $dir === 'asc' ? 'asc' : 'desc';
+        $query = $this->query(withType: true);
+
+        match ($sort) {
+            'event' => $query->orderBy('action', $dir),
+            'account' => $query->orderBy(User::select('name')->whereColumn('users.id', 'audit_logs.user_id'), $dir),
+            default => null,
+        };
+        // Time always last, so a run reads in order whatever the first key, and equal keys never
+        // swap between pages.
+        $timeDir = $sort === 'when' ? $dir : 'desc';
+        $query->orderBy('created_at', $timeDir)->orderBy('id', $timeDir);
+
+        $rows = $query->toBase()->get(['id', 'action', 'entity_id', 'user_id', 'metadata->is_update as is_update']);
+        $runs = self::runs($rows);
+
+        $page = max(1, $page);
+        $shown = array_slice($runs, ($page - 1) * $perPage, $perPage);
+        $full = AuditLog::with('user')
+            ->whereIn('id', collect($shown)->flatMap(fn ($run) => collect($run['events'])->pluck('id')))
+            ->get()->keyBy('id');
+
+        $items = array_map(fn ($run) => [
+            'events' => array_map(fn ($row) => $full[$row->id], $run['events']),
+        ], $shown);
+
+        return [
+            'lines' => new Paginator($items, count($runs), $perPage, $page, [
+                'path' => Paginator::resolveCurrentPath(),
+                'query' => request()->query(),
+            ]),
+            'events' => $rows->count(),
+        ];
+    }
+
+    /** Whether a publication updated a row — on a full event or a light row. */
+    private static function isUpdate(object $event): bool
+    {
+        $value = $event instanceof AuditLog ? ($event->metadata['is_update'] ?? null) : ($event->is_update ?? null);
+
+        return $value === true || in_array(strtolower((string) $value), ['1', 'true'], true);
     }
 
     /**
@@ -251,6 +303,20 @@ class TranslationFlowReport
             ->when(!empty($f['translation']), fn ($q) => $q
                 ->where('entity_type', 'Translation')
                 ->where('entity_id', (int) $f['translation']))
-            ->when(!empty($f['via']), fn ($q) => $q->where('metadata->via', $f['via']));
+            ->when(!empty($f['via']), fn ($q) => $q->where('metadata->via', $f['via']))
+            // A word typed in the list's box: a translation number, a game, or an account.
+            ->when(!empty($f['search']), function ($q) use ($f) {
+                $term = trim($f['search']);
+                $like = '%' . Like::escape($term) . '%';
+                $q->where(function ($w) use ($term, $like) {
+                    if (ctype_digit(ltrim($term, '#'))) {
+                        $w->orWhere('entity_id', (int) ltrim($term, '#'));
+                    }
+                    $w->orWhere('metadata->game', 'like', $like)
+                      ->orWhere('metadata->game_name', 'like', $like)
+                      ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $like));
+                });
+            });
     }
+
 }

@@ -271,7 +271,7 @@ class TranslationFlows
     }
 
     /**
-     * One line for a run of the same act (TranslationFlowReport::runs) — newest first. Updates say
+     * One line for a run of the same act (TranslationFlowReport::runs), in any order. Updates say
      * how the file grew; anything else says how many times, then what the latest did.
      *
      * @param list<AuditLog> $events
@@ -282,6 +282,8 @@ class TranslationFlows
             return self::describe($events[0]);
         }
 
+        // By time, not by position: the list can be sorted oldest first.
+        usort($events, fn ($a, $b) => [$b->created_at->timestamp, $b->id] <=> [$a->created_at->timestamp, $a->id]);
         $newest = $events[0];
         $oldest = $events[count($events) - 1];
 

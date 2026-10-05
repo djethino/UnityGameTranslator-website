@@ -28,6 +28,7 @@
         $filters['language'] ? ['Language: ' . $filters['language'], 'language'] : null,
         $filters['translation'] ? ['Translation #' . $filters['translation'], 'translation'] : null,
         $filters['via'] ? ['Through: ' . TranslationFlows::VIA[$filters['via']], 'via'] : null,
+        $filters['search'] ? ['Search: ' . $filters['search'], 'search'] : null,
     ]);
 @endphp
 
@@ -62,7 +63,7 @@
      "Yesterday and today": that one reads whole days, this one counts back from now, so "24 h" is
      exactly 24 hours. The other filters ride along. --}}
 <x-admin.span-bar :span="$span" :daysStored="$daysStored" route="admin.flows"
-    :keep="request()->only(['type', 'game', 'user', 'language', 'translation', 'via'])"
+    :keep="request()->only(['type', 'game', 'user', 'language', 'translation', 'via', 'search', 'sort', 'dir'])"
     :title="$span->label()"
     :note="$span->includesToday() ? 'up to now' : null" />
 
@@ -227,68 +228,88 @@
 </div>
 
 {{-- ─── The events ───────────────────────────────────────────────────────── --}}
-<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-    <div class="px-6 pt-5 pb-3 flex flex-wrap justify-between items-baseline gap-2">
-        <h2 class="text-lg font-semibold">
-            <i class="fas fa-list mr-2 text-gray-400"></i>
-            {{ $typeSlug ? TranslationFlows::LABELS[$filters['type']]['label'] : 'All events' }}
-            <span class="text-sm font-normal text-gray-500 ml-1">{{ number_format($events->total()) }}</span>
-        </h2>
-        <p class="text-xs text-gray-500">A game, an account or a language in the list filters on it.</p>
-    </div>
-    @if($events->isNotEmpty())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="text-gray-400 text-left">
-                    <tr>
-                        <th class="py-2 px-4">When (UTC)</th>
-                        <th class="py-2 px-4">Event</th>
-                        <th class="py-2 px-4">Translation</th>
-                        <th class="py-2 px-4">Game</th>
-                        <th class="py-2 px-4">Language</th>
-                        <th class="py-2 px-4">Account</th>
-                        <th class="py-2 px-4">Through</th>
-                        <th class="py-2 px-4">What</th>
-                    </tr>
-                </thead>
-                {{-- In runs: the same act on the same translation by the same account, one after
-                     the other, is ONE line that opens on its events (TranslationFlowReport::runs). --}}
-                @foreach(\App\Services\TranslationFlowReport::runs($events) as $run)
-                    @php
-                        $first = $run['events'][0];
-                        $last = $run['events'][count($run['events']) - 1];
-                        $count = count($run['events']);
-                    @endphp
-                    <tbody x-data="{ open: false }">
-                        @include('admin.partials.flow-row', [
-                            'event' => $first,
-                            'when' => $count === 1 ? $first->created_at->format('Y-m-d H:i')
-                                : $last->created_at->format('Y-m-d H:i') . ' → '
-                                  . $first->created_at->format($first->created_at->isSameDay($last->created_at) ? 'H:i' : 'Y-m-d H:i'),
-                            'what' => TranslationFlows::describeRun($run['events']),
-                            'opens' => $count > 1 ? $count : null,
-                            'nested' => false,
-                        ])
-                        @if($count > 1)
-                            @foreach($run['events'] as $event)
-                                @include('admin.partials.flow-row', [
-                                    'event' => $event,
-                                    'when' => $event->created_at->format('Y-m-d H:i'),
-                                    'what' => TranslationFlows::describe($event),
-                                    'opens' => null,
-                                    'nested' => true,
-                                ])
-                            @endforeach
-                        @endif
-                    </tbody>
-                @endforeach
-            </table>
-        </div>
-        <div class="px-6 py-4">{{ $events->links() }}</div>
-    @else
-        <p class="px-6 pb-6 text-gray-500 text-sm">Nothing matches in this period.</p>
-    @endif
+{{-- One LINE per run (TranslationFlowReport::eventRuns): the count, the pages and the rows all
+     count lines, so a page holds what it says. Searched and sorted by the server, over the whole
+     filtered list — never the fifty rows already on screen. --}}
+<div class="flex flex-wrap justify-between items-end gap-3 mb-3">
+    <h2 class="text-lg font-semibold">
+        <i class="fas fa-list mr-2 text-gray-400"></i>
+        {{ $typeSlug ? TranslationFlows::LABELS[$filters['type']]['label'] : 'All events' }}
+        <span class="text-sm font-normal text-gray-500 ml-1">
+            {{ number_format($eventCount) }} {{ Str::plural('event', $eventCount) }}@if($lines->total() !== $eventCount), {{ number_format($lines->total()) }} {{ Str::plural('line', $lines->total()) }}@endif
+        </span>
+    </h2>
+    <form action="{{ route('admin.flows') }}" method="GET" class="flex items-center gap-2">
+        @foreach(request()->except(['search', 'page']) as $name => $value)
+            @if(is_string($value))
+                <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+            @endif
+        @endforeach
+        <input type="search" name="search" value="{{ $filters['search'] }}" placeholder="Game, account or #number"
+               class="w-64 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-purple-500 focus:border-purple-500">
+        <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-sm">
+            <i class="fas fa-search mr-1"></i> Search
+        </button>
+    </form>
 </div>
+<p class="text-xs text-gray-500 mb-2">A game, an account or a language in the list filters on it.</p>
+
+@if($lines->isNotEmpty())
+    <x-admin.scroll-table>
+        <table class="w-full text-sm">
+            <thead class="text-gray-400 text-left">
+                <tr>
+                    <x-admin.sortable-th column="when" label="When (UTC)" default="when" />
+                    <x-admin.sortable-th column="event" label="Event" default="when" first="asc" />
+                    <th class="py-3 px-4">Translation</th>
+                    <th class="py-3 px-4">Game</th>
+                    <th class="py-3 px-4">Language</th>
+                    <x-admin.sortable-th column="account" label="Account" default="when" first="asc" />
+                    <th class="py-3 px-4">Through</th>
+                    <th class="py-3 px-4">What</th>
+                </tr>
+            </thead>
+            {{-- A run opens on its events, oldest to newest whatever the order of the list. --}}
+            @foreach($lines as $run)
+                @php
+                    $byTime = collect($run['events'])->sortBy(fn ($e) => [$e->created_at->timestamp, $e->id])->values();
+                    $oldest = $byTime->first();
+                    $newest = $byTime->last();
+                    $count = $byTime->count();
+                @endphp
+                <tbody x-data="{ open: false }">
+                    @include('admin.partials.flow-row', [
+                        'event' => $newest,
+                        'when' => $count === 1 ? $newest->created_at->format('Y-m-d H:i')
+                            : $oldest->created_at->format('Y-m-d H:i') . ' → '
+                              . $newest->created_at->format($newest->created_at->isSameDay($oldest->created_at) ? 'H:i' : 'Y-m-d H:i'),
+                        'what' => TranslationFlows::describeRun($run['events']),
+                        'opens' => $count > 1 ? $count : null,
+                        'nested' => false,
+                    ])
+                    @if($count > 1)
+                        @foreach($byTime as $event)
+                            @include('admin.partials.flow-row', [
+                                'event' => $event,
+                                'when' => $event->created_at->format('Y-m-d H:i'),
+                                'what' => TranslationFlows::describe($event),
+                                'opens' => null,
+                                'nested' => true,
+                            ])
+                        @endforeach
+                    @endif
+                </tbody>
+            @endforeach
+        </table>
+        @if($lines->hasPages())
+            <x-slot:below>
+                <div class="px-6 py-4 border-t border-gray-700">{{ $lines->links() }}</div>
+            </x-slot:below>
+        @endif
+    </x-admin.scroll-table>
+@else
+    <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm">Nothing matches in this period.</div>
+@endif
 
 <div class="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm text-gray-400 space-y-2">
     <p>

@@ -70,8 +70,7 @@
 </div>
 
 <!-- Results -->
-<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-    <div class="overflow-x-auto">
+<x-admin.scroll-table>
         <table class="w-full">
             <thead class="bg-gray-750 text-gray-400 text-sm">
                 <tr>
@@ -190,8 +189,7 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-</div>
+</x-admin.scroll-table>
 
 <!-- Pagination -->
 @if($translations->hasPages())

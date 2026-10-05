@@ -165,8 +165,7 @@
 @endif
 
 {{-- Results --}}
-<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-    <div class="overflow-x-auto">
+<x-admin.scroll-table>
     <table class="w-full">
         <thead class="bg-gray-750 text-gray-400 text-sm">
             <tr>
@@ -289,10 +288,13 @@
                          nothing here can prove. --}}
                     <td class="py-3 px-4 text-sm">
                         @if($game->unity_name || $game->unity_company)
-                            <div class="flex items-center gap-2 whitespace-nowrap">
-                                <span class="text-gray-300">{{ $game->unity_name ?? '—' }}</span>
+                            {{-- The company under the name, and both free to wrap: on one line that
+                                 never broke, this column alone took 346px and pushed the table past
+                                 the screen (2026-10-05). --}}
+                            <div class="max-w-[14rem]">
+                                <span class="text-gray-300 break-words">{{ $game->unity_name ?? '—' }}</span>
                                 @if($game->unity_company)
-                                    <span class="text-gray-500">&middot; {{ $game->unity_company }}</span>
+                                    <span class="block text-xs text-gray-500 break-words">{{ $game->unity_company }}</span>
                                 @endif
                             </div>
                             <form action="{{ route('admin.games.names.clear', $game->id) }}" method="POST" class="mt-1"
@@ -351,8 +353,7 @@
             @endforelse
         </tbody>
     </table>
-    </div>
-</div>
+</x-admin.scroll-table>
 
 @if($games->hasPages())
     <div class="mt-6">

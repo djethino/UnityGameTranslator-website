@@ -812,14 +812,22 @@ class AdminController extends Controller
             'language' => $request->filled('language') ? (string) $request->get('language') : null,
             'translation' => $request->integer('translation') ?: null,
             'via' => array_key_exists($request->get('via'), TranslationFlows::VIA) ? $request->get('via') : null,
+            // The list's search box narrows the whole screen, like every other filter: tiles that
+            // kept counting what the list no longer shows would contradict it.
+            'search' => $request->filled('search') ? mb_substr(trim((string) $request->get('search')), 0, 100) : null,
         ];
 
+        $sort = in_array($request->get('sort'), TranslationFlowReport::SORTS, true) ? $request->get('sort') : 'when';
+        $dir = $request->get('dir') === 'asc' ? 'asc' : 'desc';
+
         $report = new TranslationFlowReport($span, $filters);
-        $events = $report->events();
+        $list = $report->eventRuns(50, $request->integer('page', 1), $sort, $dir);
+        $lines = $list['lines'];
 
         // Which translations named by the list still exist, to link them — a deleted one is named
         // by its number only.
-        $translations = Translation::whereIn('id', $events->getCollection()
+        $translations = Translation::whereIn('id', collect($lines->items())
+            ->flatMap(fn ($run) => $run['events'])
             ->where('entity_type', 'Translation')->pluck('entity_id')->filter()->unique())
             ->get(['id'])->keyBy('id');
 
@@ -830,7 +838,8 @@ class AdminController extends Controller
             'counts' => $report->counts(),
             'daily' => $report->daily(),
             'breakdowns' => $report->breakdowns(),
-            'events' => $events,
+            'lines' => $lines,
+            'eventCount' => $list['events'],
             'translations' => $translations,
             'filterGame' => $filters['game'] ? Game::find($filters['game']) : null,
             'filterUser' => $filters['user'] ? User::find($filters['user']) : null,
