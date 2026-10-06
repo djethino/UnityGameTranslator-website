@@ -222,7 +222,7 @@ class GameSearchService
         return [
             'id' => $game['id'],
             'name' => $game['name'],
-            'image_url' => $game['background_image'] ?? null,
+            'image_url' => \App\Support\StoreLinks::rawgResized($game['background_image'] ?? null),
             'source' => 'rawg',
             // Whether RAWG lists a Steam page for it — what makes asking its Steam id worth a call
             // (rawgSteamIds). Internal, removed before the list is handed out.

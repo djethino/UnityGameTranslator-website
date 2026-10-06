@@ -170,6 +170,17 @@ class GameArtTest extends TestCase
         $this->assertSame('Lost Echo', $rows[0]['name']);
     }
 
+    public function test_a_rawg_picture_is_handed_out_resized(): void
+    {
+        // RAWG's originals reach 2746×1531 and 910 KB; the mod decodes each on the game's thread.
+        $this->assertSame('https://media.rawg.io/media/resize/420/-/games/7fa/7fa0b5.jpg',
+            \App\Support\StoreLinks::rawgResized('https://media.rawg.io/media/games/7fa/7fa0b5.jpg'));
+        $this->assertSame('https://media.rawg.io/media/resize/420/-/games/7fa/7fa0b5.jpg',
+            \App\Support\StoreLinks::rawgResized('https://media.rawg.io/media/resize/420/-/games/7fa/7fa0b5.jpg'),
+            'never resized twice');
+        $this->assertSame(self::Header, \App\Support\StoreLinks::rawgResized(self::Header), 'another store is left alone');
+    }
+
     public function test_only_a_better_picture_replaces_the_one_shown(): void
     {
         $steamCover = ['url' => self::Capsule, 'source' => 'steam', 'shape' => 'portrait', 'rank' => GameArt::SteamCover];

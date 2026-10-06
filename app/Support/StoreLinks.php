@@ -80,6 +80,26 @@ final class StoreLinks
     public const Stores = ['steam_id' => 'Steam', 'igdb_id' => 'IGDB', 'rawg_id' => 'RAWG'];
 
     /**
+     * A RAWG picture at 420 pixels across, by RAWG's own resizing address (`/media/resize/420/-/…`),
+     * or the address unchanged when it is not a RAWG original.
+     *
+     * 🔴 **RAWG hands out its originals** — measured 2026-10-06 on one search: 1728×1080 to
+     * 2746×1531, up to 910 KB, for a frame a few dozen pixels across. The mod decodes every one on
+     * the game's thread and the game froze while a list filled; the site's pages paid the weight too.
+     * Resized, the same pictures are 8 to 14 KB.
+     */
+    public static function rawgResized(?string $url): ?string
+    {
+        if ($url === null || !str_starts_with($url, 'https://media.rawg.io/media/')
+            || str_starts_with($url, 'https://media.rawg.io/media/resize/')
+            || str_starts_with($url, 'https://media.rawg.io/media/crop/')) {
+            return $url;
+        }
+
+        return 'https://media.rawg.io/media/resize/420/-/' . substr($url, strlen('https://media.rawg.io/media/'));
+    }
+
+    /**
      * An image to open full size: only an https address, which is all a store ever serves.
      */
     public static function image(?string $url): ?string
