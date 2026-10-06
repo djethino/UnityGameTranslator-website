@@ -8,7 +8,7 @@
      side, and the window decides how much room that takes. --}}
 @section('container', 'w-full px-4 sm:px-6 lg:px-8')
 
-@section('title', __('merge_preview.title') . ' - ' . $translation->game->name)
+@section('title', __('merge_preview.title') . ' - ' . $translation->game->titleWithOtherNames())
 
 @section('content')
 <div class="container mx-auto px-4 py-8" x-data="mergePreview" @keydown.window="handleEditorKeydown($event)">
@@ -30,7 +30,7 @@
             <h1 class="text-2xl font-bold text-white">{{ __('merge_preview.title') }}</h1>
         </div>
         <p class="text-gray-400">
-            {{ $translation->game->name }} &bull;
+            {{ $translation->game->titleWithOtherNames() }} &bull;
             <x-language-mark :language="$translation->source_language" named /> {{ $translation->source_language }}
             <i class="fas fa-arrow-right text-xs"></i>
             <x-language-mark :language="$translation->target_language" named /> {{ $translation->target_language }}

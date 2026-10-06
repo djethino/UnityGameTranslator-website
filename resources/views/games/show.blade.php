@@ -115,10 +115,7 @@
         @endif
         <div class="min-w-0">
             <h1 class="glitch-text text-2xl sm:text-3xl font-bold break-words">{{ $game->name }}</h1>
-            {{-- Its names in the other stores, as a subtitle (Game::otherNames). --}}
-            @if($game->otherNames())
-                <p class="text-gray-300 text-base sm:text-lg break-words">{{ implode(' / ', $game->otherNames()) }}</p>
-            @endif
+            <x-game-other-names :game="$game" :truncate="false" class="text-gray-300 text-base sm:text-lg" />
             <p class="text-gray-400 mt-1 text-sm sm:text-base">{{ trans_choice('home.translations_count', count($translationGroups), ['count' => count($translationGroups)]) }}</p>
 
             {{-- The game's pages on the stores the card knows it by — to check it is the right game,

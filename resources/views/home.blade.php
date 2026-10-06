@@ -395,6 +395,7 @@
                     @endif
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-white truncate">{{ $game->name }}</h3>
+                        <x-game-other-names :game="$game" />
                         {{-- The two facts side by side: what ordered this list, and how many
                              hands are on the game. Neither is worth guessing at. --}}
                         <div class="text-sm text-gray-400">

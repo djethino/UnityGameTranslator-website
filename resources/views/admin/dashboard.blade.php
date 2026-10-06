@@ -154,7 +154,7 @@
         @foreach($recentReports as $report)
             <div class="flex justify-between items-center bg-gray-750 rounded p-4">
                 <div>
-                    <p class="font-medium">{{ $report->isAboutGame() ? $report->game->name : $report->translation->game->name }}
+                    <p class="font-medium">{{ ($report->isAboutGame() ? $report->game : $report->translation->game)->titleWithOtherNames() }}
                         @if($report->isAboutGame())
                             <span class="text-xs text-amber-300 ml-1">{{ \App\Models\Report::GameKindLabels[$report->kind] ?? $report->kind }}</span>
                         @endif

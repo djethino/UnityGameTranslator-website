@@ -29,6 +29,7 @@
             @endif
             <div>
                 <p class="font-semibold text-lg">{{ $translation->game->name }}</p>
+                <x-game-other-names :game="$translation->game" :truncate="false" />
                 <p class="text-sm text-gray-400">
                     {{ __('translation.published_on', ['date' => $translation->created_at->isoFormat('LL')]) }}
                 </p>

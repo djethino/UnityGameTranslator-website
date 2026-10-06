@@ -46,7 +46,8 @@ class ProfileController extends Controller
             // a Main takes with it what its branches were contributing to; removing a branch
             // withdraws an offer nobody had accepted yet. Same act, very different consequences.
             'ownTranslations' => $user->translations()
-                ->with('game:id,name')
+                // `other_names` with the title: the line shows both (Game::titleWithOtherNames).
+                ->with('game:id,name,other_names')
                 ->orderBy('created_at')
                 ->get(),
 

@@ -26,6 +26,7 @@
                     <div>
                         <p class="text-gray-400 text-sm">Game</p>
                         <p class="font-medium">{{ $report->game->name }}</p>
+                        <x-game-other-names :game="$report->game" :truncate="false" />
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">What is wrong</p>
@@ -66,6 +67,7 @@
             <div>
                 <p class="text-gray-400 text-sm">Game</p>
                 <p class="font-medium">{{ $report->translation->game->name }}</p>
+                <x-game-other-names :game="$report->translation->game" :truncate="false" />
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Languages</p>

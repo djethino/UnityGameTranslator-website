@@ -30,10 +30,13 @@
     {{-- Asked 2026-09-30: "je me demandais ce qu'étaient les propositions" — the button's tooltip
          was the only place that said it. --}}
     <p class="mt-3">
-        <strong class="text-white">Proposals</strong> come from <strong class="text-white">Check stores</strong>:
-        a Steam or IGDB id the card lacks, found by its exact title, or a cover from the Steam page of its id.
-        Each one is in a green frame, under the value it would fill. Nothing is written until you tick it
-        and click Apply. Reject hides that value for good.
+        <strong class="text-white">Check stores</strong> writes what the card's own ids give: its cover, its banner,
+        its names in the other stores, and the IGDB id of its Steam id. A cover you applied is never replaced.
+    </p>
+    <p class="mt-2">
+        <strong class="text-white">Proposals</strong>: a Steam or IGDB id the card lacks, found by its exact title,
+        and the other covers of a card (Check again on its row). Each one is in a green frame, under the value
+        it would fill. Nothing is written until you tick it and click Apply. Reject hides that value for good.
     </p>
 </div>
 
@@ -103,7 +106,7 @@
         @csrf
         <button type="submit" :disabled="running"
             class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-wait transition"
-            title="Asks Steam and IGDB about the cards never asked, or changed since. Nothing is written until you apply it.">
+            title="Asks Steam and IGDB about the cards never asked, or changed since. Covers, banners and names come from the card's own ids and are written. Ids found by title wait for Apply.">
             <span x-show="!running"><i class="fas fa-store mr-1"></i> Check stores{{ $storesDue > 0 ? " ({$storesDue})" : '' }}</span>
             <span x-show="running" x-cloak><i class="fas fa-rotate fa-spin mr-1"></i> Checking stores…</span>
         </button>
@@ -207,9 +210,12 @@
                                     <i class="fas fa-gamepad text-gray-500"></i>
                                 </div>
                             @endif
-                            <a href="{{ route('games.show', $game->slug) }}" class="font-medium text-white hover:text-purple-400">
-                                {{ $game->name }}
-                            </a>
+                            <div class="min-w-0">
+                                <a href="{{ route('games.show', $game->slug) }}" class="font-medium text-white hover:text-purple-400">
+                                    {{ $game->name }}
+                                </a>
+                                <x-game-other-names :game="$game" :truncate="false" />
+                            </div>
                         </div>
                         {{-- A cover is proposed where it would change: under the one it replaces.
                              ⚠ Outside the flex row above, as a block of the cell: inside it, the
@@ -271,7 +277,7 @@
                         {{ $game->translations_count }}
                         @if($game->translations_count === 0)
                             <form action="{{ route('admin.games.destroy', $game->id) }}" method="POST" class="mt-1"
-                                  data-confirm="Remove {{ $game->name }}? No translation is filed under it. Its store proposals, extra ids and visit counts go with it.">
+                                  data-confirm="Remove {{ $game->titleWithOtherNames() }}? No translation is filed under it. Its store proposals, extra ids and visit counts go with it.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300">
@@ -299,7 +305,7 @@
                                 @endif
                             </div>
                             <form action="{{ route('admin.games.names.clear', $game->id) }}" method="POST" class="mt-1"
-                                  data-confirm="Clear the name on disk of {{ $game->name }}? The next upload from a copy without a Steam id will record it again.">
+                                  data-confirm="Clear the name on disk of {{ $game->titleWithOtherNames() }}? The next upload from a copy without a Steam id will record it again.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300">

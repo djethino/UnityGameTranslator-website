@@ -4,7 +4,7 @@
      See the note on data-no-glitch in layouts/app.blade.php. --}}
 @section('quiet-screen', true)
 
-@section('title', ($mode === 'edit' ? __('merge.edit_heading') : __('merge.title')) . ' - ' . $main->game->name)
+@section('title', ($mode === 'edit' ? __('merge.edit_heading') : __('merge.title')) . ' - ' . $main->game->titleWithOtherNames())
 
 {{-- No container override: outside the workbench this is an ordinary page, the same width as
      every other screen on the site. Stretching it to the window served neither use — it did not
@@ -34,7 +34,7 @@
     <div class="mb-6">
         <div class="flex items-center gap-4 mb-2">
             <a href="{{ route('translations.mine') }}" class="text-purple-400 hover:text-purple-300">
-                <i class="fas fa-arrow-left"></i> {{ $main->game->name }}
+                <i class="fas fa-arrow-left"></i> {{ $main->game->titleWithOtherNames() }}
             </a>
             @if($hasBranches)
             {{-- Mode switcher --}}

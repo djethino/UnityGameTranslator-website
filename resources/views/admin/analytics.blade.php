@@ -699,7 +699,7 @@
                                     <i class="fas fa-gamepad text-gray-500"></i>
                                 </div>
                             @endif
-                            <span class="font-medium truncate">{{ $gameStats->game->name }}</span>
+                            <span class="font-medium truncate">{{ $gameStats->game->titleWithOtherNames() }}</span>
                         </div>
                         <div class="text-right shrink-0 ml-3">
                             <p class="font-semibold">{{ number_format($gameStats->attention) }}</p>
@@ -767,7 +767,7 @@
                             <p class="font-medium truncate">
                                 {{-- The one component that says a role, in the one colour per role. --}}
                                 <x-translation-role :translation="$translation" plain class="text-xs" />
-                                <span class="text-gray-500 mx-1">·</span>{{ $translation->game->name ?? 'Unknown' }}
+                                <span class="text-gray-500 mx-1">·</span>{{ $translation->game?->titleWithOtherNames() ?? 'Unknown' }}
                             </p>
                             <p class="text-sm text-gray-400 truncate">
                                 by <x-admin.user-link :user="$translation->user" />
@@ -843,7 +843,7 @@
                             <tr class="border-b border-gray-750 last:border-0"
                                 @if($loop->index >= $topRows['visible']) x-show="expanded" x-cloak @endif>
                                 <td class="py-2 pr-4">
-                                    <span class="text-gray-200">{{ $line->game->name ?? 'Unknown' }}</span>
+                                    <span class="text-gray-200">{{ $line->game?->titleWithOtherNames() ?? 'Unknown' }}</span>
                                     <span class="block text-xs text-gray-500">
                                         by <x-admin.user-link :user="$line->user" />
                                         • {{ $line->source_language }} → {{ $line->target_language }}

@@ -26,7 +26,7 @@
             <select name="game_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-purple-500 focus:border-purple-500">
                 <option value="">{{ __('common.all') }}</option>
                 @foreach($games as $game)
-                    <option value="{{ $game->id }}" {{ request('game_id') == $game->id ? 'selected' : '' }}>{{ $game->name }}</option>
+                    <option value="{{ $game->id }}" {{ request('game_id') == $game->id ? 'selected' : '' }}>{{ $game->titleWithOtherNames() }}</option>
                 @endforeach
             </select>
         </div>
@@ -107,6 +107,7 @@
                                     <a href="{{ route('games.show', $translation->game) }}" class="font-medium hover:text-purple-400">
                                         {{ $translation->game->name }}
                                     </a>
+                                    <x-game-other-names :game="$translation->game" />
                                     {{-- Which of the three roles this file plays. Before this the
                                          list said "Fork" and nothing else, so a branch — not
                                          published, visible to its Main alone — looked exactly

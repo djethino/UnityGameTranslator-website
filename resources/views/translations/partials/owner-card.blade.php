@@ -22,6 +22,7 @@
                         <a href="{{ $titleUrl }}" class="text-lg font-semibold hover:text-purple-400">
                             {{ $translation->game->name }}
                         </a>
+                        <x-game-other-names :game="$translation->game" />
                     <div class="flex items-center gap-3 mt-1">
                         <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
                             @langflag($translation->source_language) {{ $translation->source_language }} → @langflag($translation->target_language) {{ $translation->target_language }}

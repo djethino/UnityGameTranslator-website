@@ -25,6 +25,7 @@
         @endif
         <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-white truncate">{{ $translation->game->name }}</h3>
+            <x-game-other-names :game="$translation->game" />
             <div class="text-sm text-gray-400 flex items-center gap-1">
                 <span>@langflag($translation->source_language)</span>
                 <i class="fas fa-arrow-right text-xs text-gray-600"></i>

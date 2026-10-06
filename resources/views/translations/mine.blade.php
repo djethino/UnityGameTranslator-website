@@ -37,7 +37,7 @@
                 @foreach($emptyPublished as $t)
                     <li>
                         <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
-                            {{ $t->game->name }} — {{ $t->target_language }}
+                            {{ $t->game->titleWithOtherNames() }} — {{ $t->target_language }}
                         </a>
                         <span class="text-gray-500">
                             ({{ __('my_translations.pending_lines', ['count' => number_format($t->capture_count)]) }})
@@ -69,7 +69,7 @@
                         {{-- To the dashboard, not to the card: that is where "become
                              independent" lives, with its warning and its confirmation. --}}
                         <a href="{{ route('translations.dashboard', $t) }}" class="text-red-300 hover:text-red-200 underline underline-offset-2">
-                            {{ $t->game->name }} — {{ $t->target_language }}
+                            {{ $t->game->titleWithOtherNames() }} — {{ $t->target_language }}
                         </a>
                     </li>
                 @endforeach
@@ -90,7 +90,7 @@
                 @foreach($ignoredBranches as $t)
                     <li>
                         <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
-                            {{ $t->game->name }} — {{ $t->target_language }}
+                            {{ $t->game->titleWithOtherNames() }} — {{ $t->target_language }}
                         </a>
                         @if($t->merged_lines_total > 0)
                             <span class="text-gray-500">
@@ -116,7 +116,7 @@
                 @foreach($delistedMains as $t)
                     <li>
                         <a href="{{ route('translations.dashboard', $t) }}" class="text-amber-300 hover:text-amber-200 underline underline-offset-2">
-                            {{ $t->game->name }} — {{ $t->target_language }}
+                            {{ $t->game->titleWithOtherNames() }} — {{ $t->target_language }}
                         </a>
                     </li>
                 @endforeach
@@ -134,7 +134,7 @@
                 @foreach($stalledBranches as $t)
                     <li>
                         <a href="{{ route('translations.dashboard', $t) }}" class="text-purple-400 hover:text-purple-300 underline underline-offset-2">
-                            {{ $t->game->name }} — {{ $t->target_language }}
+                            {{ $t->game->titleWithOtherNames() }} — {{ $t->target_language }}
                         </a>
                         @if($t->daysSinceMainMoved() !== null)
                             <span class="text-gray-500">

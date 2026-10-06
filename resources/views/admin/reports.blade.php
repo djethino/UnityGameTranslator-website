@@ -42,7 +42,7 @@
                             {{-- A game card (2026-10-05): what is wrong with it, and — for the adult
                                  mark — what the stores said when it was sent. --}}
                             <div class="flex flex-wrap items-center gap-3 mb-2">
-                                <span class="font-semibold text-lg">{{ $report->game->name }}</span>
+                                <span class="font-semibold text-lg">{{ $report->game->titleWithOtherNames() }}</span>
                                 <span class="bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded text-sm">
                                     <i class="fas fa-gamepad mr-1"></i> {{ \App\Models\Report::GameKindLabels[$report->kind] ?? $report->kind }}
                                 </span>
@@ -55,7 +55,7 @@
                             @endif
                         @else
                             <div class="flex items-center gap-3 mb-2">
-                                <span class="font-semibold text-lg">{{ $report->translation->game->name }}</span>
+                                <span class="font-semibold text-lg">{{ $report->translation->game->titleWithOtherNames() }}</span>
                                 <span class="bg-blue-900 text-blue-200 px-2 py-0.5 rounded text-sm">
                                     @langflag($report->translation->source_language) {{ $report->translation->source_language }} → @langflag($report->translation->target_language) {{ $report->translation->target_language }}
                                 </span>

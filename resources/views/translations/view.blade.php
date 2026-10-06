@@ -4,7 +4,7 @@
      See the note on data-no-glitch in layouts/app.blade.php. --}}
 @section('quiet-screen', true)
 
-@section('title', __('translation.view_title', ['game' => $translation->game->name]))
+@section('title', __('translation.view_title', ['game' => $translation->game->titleWithOtherNames()]))
 
 @push('head')
     {{-- noindex, decided deliberately. The file has always been downloadable by anyone, so this
@@ -22,7 +22,7 @@
          translations do I take? --}}
     <div class="mb-6">
         <a href="{{ route('games.show', $translation->game) }}" class="text-purple-400 hover:text-purple-300 text-sm">
-            <i class="fas fa-arrow-left mr-1"></i>{{ $translation->game->name }}
+            <i class="fas fa-arrow-left mr-1"></i>{{ $translation->game->titleWithOtherNames() }}
         </a>
 
         <div class="mt-2 flex flex-wrap items-start justify-between gap-4">

@@ -266,11 +266,7 @@
                     </div>
                     <div class="p-3">
                         <h2 class="font-semibold text-sm truncate group-hover:text-purple-400 transition">{{ $game->name }}</h2>
-                        {{-- Its names in the other stores, under the title: the card a search for
-                             侠影录 found is "Legacy of Shadows" here (Game::otherNames). --}}
-                        @if($otherNames = $game->otherNames())
-                            <p class="text-xs text-gray-400 truncate" title="{{ implode(' / ', $otherNames) }}">{{ implode(' / ', $otherNames) }}</p>
-                        @endif
+                        <x-game-other-names :game="$game" />
                     </div>
                 </a>
             @endforeach

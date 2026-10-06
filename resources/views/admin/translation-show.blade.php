@@ -35,7 +35,7 @@
             <div class="flex-1">
                 <h2 class="text-2xl font-semibold mb-2 flex items-center gap-3">
                     <a href="{{ route('games.show', $translation->game) }}" class="hover:text-purple-400">
-                        {{ $translation->game->name }}
+                        {{ $translation->game->titleWithOtherNames() }}
                     </a>
                     {{-- Said outright: a branch is not published, and reading one here is a
                          moderation act rather than ordinary browsing. --}}

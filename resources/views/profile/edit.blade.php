@@ -380,7 +380,7 @@
                     @foreach($ownTranslations as $own)
                         <li class="flex items-center justify-between gap-3 px-3 py-2">
                             <span class="text-gray-300 truncate">
-                                {{ $own->game->name ?? '—' }}
+                                {{ $own->game?->titleWithOtherNames() ?? '—' }}
                                 <span class="text-gray-500">· {{ $own->target_language }}</span>
                             </span>
                             {{-- The one component that says a role: the same word and the same

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('dashboard.title') . ' - ' . $translation->game->name)
+@section('title', __('dashboard.title') . ' - ' . $translation->game->titleWithOtherNames())
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
@@ -21,6 +21,7 @@
             @endif
             <div>
                 <h1 class="text-2xl font-bold text-white">{{ $translation->game->name }}</h1>
+                <x-game-other-names :game="$translation->game" :truncate="false" class="text-gray-300" />
                 <p class="text-gray-400">
                     @langflag($translation->source_language) {{ $translation->source_language }}
                     <i class="fas fa-arrow-right text-xs mx-1"></i>
