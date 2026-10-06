@@ -65,7 +65,7 @@ class UserController extends Controller
         // downloading it, writes updated_at — so the list of your own work reordered itself
         // around what other people did to it rather than what you last changed.
         $translations = $user->translations()
-            ->with('game:id,name,slug,steam_id')
+            ->with('game:id,name,other_names,slug,steam_id')
             ->orderByRaw('COALESCE(content_updated_at, updated_at) desc')
             ->get();
 
@@ -113,6 +113,8 @@ class UserController extends Controller
                         'name' => $t->game->name,
                         'slug' => $t->game->slug,
                         'steam_id' => $t->game->steam_id,
+                        // Additive: shown with the title (Game::otherNames).
+                        'other_names' => $t->game->otherNames(),
                     ],
                     // The lineage identifier: what a local translations.json calls _uuid, and the
                     // only way a client can tell that a file on disk is this very row.

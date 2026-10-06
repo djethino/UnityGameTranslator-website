@@ -325,6 +325,7 @@ class StoreProposalsTest extends TestCase
         $this->assertSame('Legacy of Shadows (侠影录)', $game->titleWithOtherNames());
         $this->assertSame([$game->id], Game::titleMatches('侠影录')->pluck('id')->all(), 'found by the other store\'s name');
         $this->assertSame([$game->id], Game::titleMatches('xia ying')->pluck('id')->all(), 'and by its latin handle');
+        $this->assertSame(['侠影录'], $game->lineageBlock()['other_names'], 'the mod and the Manager are told them with the lineage\'s game');
 
         // A store silent the next time takes no name away.
         $this->mock(GameSearchService::class, function ($mock) {

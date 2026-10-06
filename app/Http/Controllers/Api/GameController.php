@@ -86,6 +86,8 @@ class GameController extends Controller
                     'slug' => $game->slug,
                     'steam_id' => $game->steam_id,
                     'image_url' => $game->image_url,
+                    // Additive: shown with the title (Game::otherNames).
+                    'other_names' => $game->otherNames(),
                     'translations_count' => $game->translations_count,
                 ];
             }),
@@ -255,6 +257,7 @@ class GameController extends Controller
                 'name' => $game->name,
                 'slug' => $game->slug,
                 'steam_id' => $game->steam_id,
+                'other_names' => $game->otherNames(),
                 'image_url' => $game->image_url,
             ],
             'available_languages' => $languages,

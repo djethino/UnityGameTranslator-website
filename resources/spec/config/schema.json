@@ -38,7 +38,8 @@
       "properties": {
         "source": { "type": "string", "enum": ["local", "steam", "igdb", "rawg"], "description": "Where the answer came from: `local` is a card of the site." },
         "id": { "type": "string", "pattern": "^[0-9]{1,20}$", "description": "The id in that source." },
-        "name": { "type": "string", "description": "The title shown for it." }
+        "name": { "type": "string", "description": "The title shown for it." },
+        "other_names": { "type": "array", "items": { "type": "string" }, "description": "Optional. The names the stores give the game besides its title, shown after it in brackets (common GameCandidates.TitleWithOtherNames). Display only; refreshed when the site files the translation under the same game." }
       }
     },
     "ai_unload_on_exit": { "type": "boolean", "default": true, "x-writer": "mod", "description": "Closing the game asks a server on this machine or network to unload the model the session used — Ollama, LM Studio or llama.cpp's router, each by its own route (src/ModelMemory.cs); vLLM has none that is safe to call. Otherwise the server keeps it on the graphics card, taken from the next game started." },

@@ -81,6 +81,8 @@ class Game extends Model
             'steam_id' => $this->steam_id,
             'igdb_id' => $this->igdb_id !== null ? (int) $this->igdb_id : null,
             'rawg_id' => $this->rawg_id !== null ? (int) $this->rawg_id : null,
+            // Additive: shown with the title, never compared (common GameChoices.WithNamesOf).
+            'other_names' => $this->otherNames(),
         ];
     }
 

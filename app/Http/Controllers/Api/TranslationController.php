@@ -82,7 +82,7 @@ class TranslationController extends Controller
         // The relation has no foreign key on purpose (a credit outlives the account it names), so
         // it simply resolves to null when the account is gone — which is a state the payload says.
         $query = Translation::with([
-            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
+            'game:id,name,other_names,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
 
@@ -294,6 +294,8 @@ class TranslationController extends Controller
                     'name' => $game->name,
                     'slug' => $game->slug,
                     'steam_id' => $game->steam_id,
+                    // Additive: shown with the title (Game::otherNames).
+                    'other_names' => $game->otherNames(),
                     'image_url' => $game->image_url,
                 ],
                 'total' => $rows->count(),
@@ -470,7 +472,7 @@ class TranslationController extends Controller
         $gameIds = $bySteam->flatten()->merge($byName->flatten())->merge($byCard->values())->pluck('id')->unique()->values();
 
         $rows = $gameIds->isEmpty() ? collect() : Translation::with([
-            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
+            'game:id,name,other_names,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
             // Same reason as the search above: the ranking reads `parent` through `fork_bonus`.
@@ -496,7 +498,7 @@ class TranslationController extends Controller
         // 🔴 Le raisonnement disait une chose et le compteur en disait une autre. Ne pas
         // « nettoyer » ce préchargement sans le remesurer.
         $matching = $uuids->isEmpty() ? collect() : Translation::with([
-            'game:id,name,slug,steam_id,igdb_id,rawg_id,image_url',
+            'game:id,name,other_names,slug,steam_id,igdb_id,rawg_id,image_url',
             'user:id,name',
             'originAuthor:id,name',
             'parent',
@@ -584,6 +586,8 @@ class TranslationController extends Controller
                         // player confirmed, however that one was picked (common GameChoices).
                         'igdb_id' => $t->game->igdb_id !== null ? (int) $t->game->igdb_id : null,
                         'rawg_id' => $t->game->rawg_id !== null ? (int) $t->game->rawg_id : null,
+                        // Additive: shown with the title (Game::otherNames).
+                        'other_names' => $t->game->otherNames(),
                         'image_url' => $t->game->image_url,
                     ],
                     'uploader' => $t->user->name,

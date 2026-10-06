@@ -675,8 +675,14 @@
           "steam_id": { "type": ["string", "null"] },
           "igdb_id": { "type": ["integer", "null"], "description": "Additive. The IGDB id the card holds." },
           "rawg_id": { "type": ["integer", "null"], "description": "Additive. The RAWG id the card holds." },
+          "other_names": { "$ref": "#/components/schemas/OtherNames" },
           "image_url": { "type": ["string", "null"] }
         }
+      },
+      "OtherNames": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Additive. The names the stores give the game besides its title (侠影录 on Steam for a card titled after IGDB), never the title itself. Shown after the title in brackets or under it (common GameCandidates.TitleWithOtherNames); display only — a game is never identified by them."
       },
       "Origin": {
         "type": ["object", "null"],
@@ -893,7 +899,8 @@
           "name": { "type": "string" },
           "steam_id": { "type": ["string", "null"] },
           "igdb_id": { "type": ["integer", "null"] },
-          "rawg_id": { "type": ["integer", "null"] }
+          "rawg_id": { "type": ["integer", "null"] },
+          "other_names": { "$ref": "#/components/schemas/OtherNames" }
         }
       },
       "SyncStateResponse": {
@@ -1109,6 +1116,7 @@
             "properties": {
               "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" },
               "steam_id": { "type": ["string", "null"] }, "image_url": { "type": ["string", "null"] },
+              "other_names": { "$ref": "#/components/schemas/OtherNames" },
               "translations_count": { "type": "integer", "description": "The translations the catalogue lists: public, never a branch, and holding a translated line once past the grace period an empty file is given." }
             }
           } }
@@ -1133,7 +1141,7 @@
               "translations_count": { "type": "integer", "description": "`local` hits only; counted as the catalogue counts (see /games)." },
               "igdb_id": { "type": ["integer", "null"], "description": "`local` hits: the IGDB id the card holds." },
               "rawg_id": { "type": ["integer", "null"], "description": "`local` hits: the RAWG id the card holds." },
-              "other_names": { "type": "array", "items": { "type": "string" }, "description": "Additive, `local` hits: the names the stores give the game besides its title (侠影录 on Steam for a card titled after IGDB). For display only — what made a search for one of them find this card." },
+              "other_names": { "$ref": "#/components/schemas/OtherNames" },
               "ids": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Every id this game answers to, by source (`local`, `steam`, `igdb`, `rawg`) — its own and those of the other hits for the same game folded into it. For a person to tell homonyms apart; the pick is still `source` and `id`." },
               "year": { "type": ["integer", "null"], "description": "Release year, when the source gives one. For display only." },
               "developers": { "type": "array", "items": { "type": "string" }, "description": "When the source names them, often none. For display only." },
@@ -1195,7 +1203,7 @@
             "required": ["id", "game", "file_uuid", "role", "branches_count", "branches_with_work", "lines_available", "lines_waiting", "main_missing", "main_abandoned", "accepts_branches", "branch_frozen", "source_language", "target_language", "line_count", "type", "status", "vote_count", "download_count", "file_hash", "updated_at"],
             "properties": {
               "id": { "type": "integer" },
-              "game": { "type": "object", "required": ["id", "name", "slug", "steam_id"], "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" }, "steam_id": { "type": ["string", "null"] } } },
+              "game": { "type": "object", "required": ["id", "name", "slug", "steam_id"], "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "slug": { "type": "string" }, "steam_id": { "type": ["string", "null"] }, "other_names": { "$ref": "#/components/schemas/OtherNames" } } },
               "file_uuid": { "$ref": "#/components/schemas/Uuid" },
               "role": { "type": "string", "enum": ["main", "branch"] },
               "branches_count": { "type": ["integer", "null"], "description": "Main: how many contribute. Null on a branch." },
