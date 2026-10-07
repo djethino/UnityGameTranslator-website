@@ -267,7 +267,7 @@
               { "kind": "label", "name": "ContextHint", "text": "Helps the AI understand game vocabulary", "role": "Hint" },
               { "kind": "spacer", "name": "LLMGap2", "height": 5 },
               { "kind": "checkbox", "name": "StrictSourceToggle", "text": " Strict source language detection", "tone": "Secondary",
-                "help": "Skip texts that are not in the source language, so foreign or already-translated text is left alone. AI backend only." },
+                "help": "Skip texts that are not in the source language, so foreign or already-translated text is left alone. Text in another writing system is skipped with every method. The AI model also checks the rest." },
               { "kind": "label", "name": "StrictHint", "text": "Skip texts not matching source language (LLM only)", "role": "Hint" },
               { "kind": "spacer", "name": "LLMGap3", "height": 8 },
               { "kind": "checkbox", "name": "UnloadOnExitToggle", "text": " Unload the model when the game closes", "tone": "Secondary",
