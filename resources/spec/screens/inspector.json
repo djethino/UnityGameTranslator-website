@@ -71,7 +71,7 @@
         { "kind": "label", "name": "Key", "gameText": "source", "text": { "bind": "key" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall" }
       ] },
       { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
-      { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "minHeight": 40, "richText": false },
+      { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 40, "richText": false },
       { "kind": "label", "name": "Preview", "gameText": "target", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
       { "kind": "row", "name": "BtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
         { "kind": "button", "name": "SaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "policy": "Excluded", "act": "save" },
