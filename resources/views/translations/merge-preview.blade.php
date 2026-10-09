@@ -678,6 +678,7 @@ document.addEventListener('alpine:init', () => {
     // window.UGT is set by app.js (deferred module): it exists by the time
     // Alpine fires alpine:init, but NOT during the initial HTML parse
     const normalizeLineEndings = window.UGT.normalizeLineEndings;
+const isLineEntry = window.UGT.isLineEntry;
     Alpine.data('mergePreview', () => window.UGT.composeEditor({
         // ⚠ One view whichever way it runs: the two directions show the same two columns and answer
         // the same question, only the target swaps. What must not be shared is the SITTING, and the
@@ -898,7 +899,7 @@ document.addEventListener('alpine:init', () => {
             this.onlineMetadata = {};
             const rawOnline = {};
             for (const [key, value] of Object.entries(onlineContent)) {
-                if (key.startsWith('_')) {
+                if (!isLineEntry(key, value)) {
                     this.onlineMetadata[key] = value;
                 } else {
                     rawOnline[key] = value;
@@ -910,10 +911,10 @@ document.addEventListener('alpine:init', () => {
             this.localData = {};
             const localMetadata = {};
             for (const [key, value] of Object.entries(content)) {
-                if (key.startsWith('_')) {
+                if (!isLineEntry(key, value)) {
                     localMetadata[key] = value;
                 }
-                if (!key.startsWith('_')) {
+                if (isLineEntry(key, value)) {
                     const normalizedKey = normalizeLineEndings(key);
                     let normalizedValue = value;
                     if (typeof value === 'object' && value !== null && 'v' in value) {
@@ -928,7 +929,7 @@ document.addEventListener('alpine:init', () => {
             // Filter online data too and normalize
             const filteredOnline = {};
             for (const [key, value] of Object.entries(this.onlineData)) {
-                if (!key.startsWith('_')) {
+                if (isLineEntry(key, value)) {
                     const normalizedKey = normalizeLineEndings(key);
                     let normalizedValue = value;
                     if (typeof value === 'object' && value !== null && 'v' in value) {

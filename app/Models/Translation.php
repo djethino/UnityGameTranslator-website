@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\TranslationService;
 use App\Support\Placeholders;
+use App\Support\TranslationFileKeys;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -244,7 +245,7 @@ class Translation extends Model
         // Exclude other metadata like _game, _local_changes, etc.
         $hashData = [];
         foreach ($data as $key => $value) {
-            if (!str_starts_with($key, '_')) {
+            if (TranslationFileKeys::isLineEntry($key, $value)) {
                 // Only v/t are content — the ordering index "i" must not
                 // affect the hash (see TranslationService::hashableEntry)
                 $hashData[$key] = TranslationService::hashableEntry($value);
@@ -828,8 +829,8 @@ class Translation extends Model
 
         return array_filter(
             $decoded,
-            fn ($key) => str_starts_with((string) $key, '_'),
-            ARRAY_FILTER_USE_KEY
+            fn ($value, $key) => !TranslationFileKeys::isLineEntry($key, $value),
+            ARRAY_FILTER_USE_BOTH
         );
     }
 
@@ -860,8 +861,8 @@ class Translation extends Model
 
         return array_filter(
             $decoded,
-            fn ($key) => !str_starts_with((string) $key, '_'),
-            ARRAY_FILTER_USE_KEY
+            fn ($value, $key) => TranslationFileKeys::isLineEntry($key, $value),
+            ARRAY_FILTER_USE_BOTH
         );
     }
 
@@ -1133,8 +1134,8 @@ class Translation extends Model
         $broken = 0;
 
         foreach ($json as $key => $value) {
-            // Skip metadata keys
-            if (str_starts_with($key, '_')) {
+            // Skip what is not a line (TranslationFileKeys)
+            if (!TranslationFileKeys::isLineEntry($key, $value)) {
                 continue;
             }
 

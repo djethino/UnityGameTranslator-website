@@ -1,0 +1,42 @@
+{
+  "rule": "translation_file_keys",
+  "classes": ["TranslationFileKeys"],
+  "note": "Which keys of a translations.json are metadata, which are lines, which are neither. Until 2026-10-09 every product said 'a key starting with an underscore is metadata', and a game text beginning with one — a signature line drawn with underscores, a label found in a published translation — was skipped by every reader: the mod sent it to the model again at every launch, the site never counted, showed or published it. Metadata is now the closed list of names in spec/translation-file/schema.json; another underscore name is a line when its value has the shape of one, and left alone otherwise — the tolerance an older reader owes a newer writer's metadata.",
+  "operations": {
+    "is_metadata_key": { "in": { "key": "string" }, "out": "bool: one of the names the tools write about a file" },
+    "is_line": { "in": { "key": "string", "line_shaped": "bool: the value is a JSON object with a 'v' member" }, "out": "bool: a line of the game's text" }
+  },
+  "cases": [
+    { "id": "translation_file_keys/is_metadata_key/uuid", "op": "is_metadata_key", "in": { "key": "_uuid" }, "out": true,
+      "why": "a name of the contract is metadata — the properties of spec/translation-file/schema.json" },
+    { "id": "translation_file_keys/is_metadata_key/settings-section", "op": "is_metadata_key", "in": { "key": "_font_overrides" }, "out": true,
+      "why": "the settings sections are metadata too" },
+    { "id": "translation_file_keys/is_metadata_key/text-is-not", "op": "is_metadata_key", "in": { "key": "Hello" }, "out": false,
+      "why": "a key the game showed is not metadata" },
+    { "id": "translation_file_keys/is_metadata_key/underscore-inside", "op": "is_metadata_key", "in": { "key": "snake_case" }, "out": false,
+      "why": "an underscore inside a key says nothing" },
+    { "id": "translation_file_keys/is_metadata_key/leading-underscore-text", "op": "is_metadata_key", "in": { "key": "_One-quarter Brick Triangular Wall" }, "out": false,
+      "why": "a game's text can begin with an underscore — found in a published translation" },
+    { "id": "translation_file_keys/is_metadata_key/unknown-name", "op": "is_metadata_key", "in": { "key": "_notes" }, "out": false,
+      "why": "the list is CLOSED: a name the contract does not hold is not metadata — a new one enters the schema and the list together" },
+    { "id": "translation_file_keys/is_metadata_key/case-matters", "op": "is_metadata_key", "in": { "key": "_UUID" }, "out": false,
+      "why": "names are compared exactly, as JSON compares them" },
+    { "id": "translation_file_keys/is_metadata_key/empty", "op": "is_metadata_key", "in": { "key": "" }, "out": false,
+      "why": "an empty key is not metadata" },
+
+    { "id": "translation_file_keys/is_line/text", "op": "is_line", "in": { "key": "Hello", "line_shaped": true }, "out": true,
+      "why": "a key the game showed is a line" },
+    { "id": "translation_file_keys/is_line/text-whatever-its-value", "op": "is_line", "in": { "key": "Hello", "line_shaped": false }, "out": true,
+      "why": "a name without a leading underscore is a line whatever its value — a reader still takes the bare string of the first format" },
+    { "id": "translation_file_keys/is_line/metadata-never", "op": "is_line", "in": { "key": "_uuid", "line_shaped": true }, "out": false,
+      "why": "a metadata name is never a line, even holding a {v} — a forged one must not reach the lineage" },
+    { "id": "translation_file_keys/is_line/leading-underscore-text", "op": "is_line", "in": { "key": "_One-quarter Brick Triangular Wall", "line_shaped": true }, "out": true,
+      "why": "an underscore name holding a {v, t} is a line of the game: it is counted, shown, hashed and published like any other" },
+    { "id": "translation_file_keys/is_line/underscore-drawn-signature", "op": "is_line", "in": { "key": "____     ____\nDoctor     Registrar Officer", "line_shaped": true }, "out": true,
+      "why": "a signature line drawn with underscores — read as metadata, it went to the model again at every launch" },
+    { "id": "translation_file_keys/is_line/newer-metadata-left-alone", "op": "is_line", "in": { "key": "_something_newer", "line_shaped": false }, "out": false,
+      "why": "an underscore name the contract does not know, holding anything but a line, is a NEWER writer's metadata: left alone, neither a section nor an empty line" },
+    { "id": "translation_file_keys/is_line/empty-key", "op": "is_line", "in": { "key": "", "line_shaped": true }, "out": true,
+      "why": "an empty key stays what it always was: a line (nothing writes one)" }
+  ]
+}

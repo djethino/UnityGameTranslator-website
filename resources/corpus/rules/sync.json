@@ -4,7 +4,6 @@
   "note": "The content_hash vectors are FROZEN, and they do not come from the C# in src/. They were produced by a reference implementation of Translation::computeHash — the website's — and that implementation was itself checked against reality first: run over a real 690-line published translation sitting on disk, it reproduced the file_hash the server had issued for that file. So these are not 'what our code does', they are what the server does. A hash that only agrees with itself would pass every check and make every translation in existence look permanently out of sync.",
   "operations": {
     "content_hash": { "in": { "lines": "object keyed by the game's text, each a line in the file's form", "uuid": "string" }, "out": "64 lowercase hex, the sha-256 of the canonical document" },
-    "is_metadata_key": { "in": { "key": "string" }, "out": "bool: a key the tools write about a file, not a line of it" },
     "decide": { "in": { "local_content": "hash of what is on disk", "server_content": "file_hash the server reports, or null when unknown", "last_synced": "the server hash this file was last in step with, or null when never synced", "has_local_changes": "bool" }, "out": "InSync | Download | Upload | Merge" },
     "name": { "in": { "direction": "InSync | Download | Upload | Merge" }, "out": "the two or three words a player reads" },
     "explain": { "in": { "direction": "InSync | Download | Upload | Merge" }, "out": "what follows from it, in one sentence" }
@@ -59,6 +58,10 @@
       "in": { "lines": { "Hello": { "v": "Bonjour", "t": "H" }, "_local_changes": { "v": "9", "t": "A" } }, "uuid": "abc-123" },
       "out": "4716ae6801436c85be8347fc0f13d852f96014f02d0c0a2e9efc9fd325957a7e",
       "why": "metadata keys are excluded — a counter must not change a file's identity" },
+    { "id": "sync/content_hash/leading-underscore-line-counts", "op": "content_hash",
+      "in": { "lines": { "Hello": { "v": "Bonjour", "t": "H" }, "_One-quarter Brick Triangular Wall": { "v": "Mur triangulaire d'un quart de brique", "t": "A" } }, "uuid": "abc-123" },
+      "out": "84fa441fa63f88b0327010aa9b433143db67263ce643dc3953a800e2535c216d",
+      "why": "a line whose text begins with an underscore is content: it changes the file's identity like any other line" },
     { "id": "sync/content_hash/arrival-order-irrelevant", "op": "content_hash",
       "in": { "lines": { "b": { "v": "2", "t": "A" }, "a": { "v": "1", "t": "A" } }, "uuid": "u" },
       "out": { "same_as": "sync/content_hash/arrival-order-reference" },
@@ -85,14 +88,6 @@
       "out": "564754a6f7d13ce8454cf5b8b9fc01571ff8197f9fb4699328752b5c932c4106",
       "why": "and the two forms coexist in one file, which is what an old file looks like" },
 
-    { "id": "sync/is_metadata_key/underscore-is-metadata", "op": "is_metadata_key", "in": { "key": "_uuid" }, "out": true,
-      "why": "everything the tools write about a file starts with an underscore — the mod's convention, and the website's" },
-    { "id": "sync/is_metadata_key/text-is-a-line", "op": "is_metadata_key", "in": { "key": "Hello" }, "out": false,
-      "why": "a key the game showed is a line" },
-    { "id": "sync/is_metadata_key/underscore-inside-is-a-line", "op": "is_metadata_key", "in": { "key": "snake_case" }, "out": false,
-      "why": "only a LEADING underscore marks metadata" },
-    { "id": "sync/is_metadata_key/empty-is-not-metadata", "op": "is_metadata_key", "in": { "key": "" }, "out": false,
-      "why": "an empty key is nothing, not metadata" },
 
     { "id": "sync/decide/identical-is-in-sync", "op": "decide",
       "in": { "local_content": "same", "server_content": "same", "last_synced": null, "has_local_changes": true }, "out": "InSync",

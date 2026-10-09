@@ -598,7 +598,52 @@
           }
         }
       },
-      "why": "a Core does not invent metadata; a reader leaves a key it does not know alone — neither a section nor a line — and the site skips every underscore key"
+      "why": "a Core does not invent metadata; a reader leaves an underscore key it does not know alone when its value is not shaped like a line — neither a section nor a line: a newer writer's metadata — and so does the site"
+    },
+    {
+      "id": "translation-file/line/leading-underscore-is-a-line",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_One-quarter Brick Triangular Wall": {
+          "v": "Mur triangulaire d'un quart de brique",
+          "t": "A"
+        },
+        "____     ____\nDoctor     Registrar Officer": {
+          "v": "____     ____\nDocteur     Officier des registres",
+          "t": "H"
+        },
+        "Play": {
+          "v": "Jouer",
+          "t": "A"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 3,
+        "tag_counts": {
+          "human": 1,
+          "ai": 2
+        }
+      },
+      "read": {
+        "lines": {
+          "_One-quarter Brick Triangular Wall": {
+            "v": "Mur triangulaire d'un quart de brique",
+            "t": "A"
+          },
+          "____     ____\nDoctor     Registrar Officer": {
+            "v": "____     ____\nDocteur     Officier des registres",
+            "t": "H"
+          },
+          "Play": {
+            "v": "Jouer",
+            "t": "A"
+          }
+        },
+        "rewrite": false
+      },
+      "why": "a game's text can begin with an underscore — a label found in a published translation, a signature line drawn with them. Metadata is the names of the schema and no other: read as metadata, such a line was written by the mod, dropped at the next load and sent to the model again at every launch, and never counted or published by the site"
     },
     {
       "id": "translation-file/metadata/auto-is-not-a-language",

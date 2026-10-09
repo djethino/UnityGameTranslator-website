@@ -12,6 +12,7 @@ use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use App\Rules\ResourcesLink;
 use App\Support\OwnerTranslations;
+use App\Support\TranslationFileKeys;
 use App\Support\TranslationFlows;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -926,8 +927,8 @@ class TranslationController extends Controller
         }
 
         // Filter out metadata keys
-        $mainKeys = array_filter(array_keys($mainContent), fn($k) => !str_starts_with($k, '_'));
-        $branchKeys = array_filter(array_keys($branchContent), fn($k) => !str_starts_with($k, '_'));
+        $mainKeys = TranslationFileKeys::lineKeys($mainContent);
+        $branchKeys = TranslationFileKeys::lineKeys($branchContent);
 
         $allKeys = array_unique(array_merge($mainKeys, $branchKeys));
 
@@ -1415,7 +1416,7 @@ class TranslationController extends Controller
             $key = $service->normalizeContent($sel['key']);
             // Metadata keys are never written through selections — same guard as the edit
             // session: a forged {v,t} object there would corrupt the file's lineage
-            if (str_starts_with($key, '_')) {
+            if (!TranslationFileKeys::writable($key, $result)) {
                 continue;
             }
 
@@ -1435,7 +1436,7 @@ class TranslationController extends Controller
 
         foreach ($request->input('deletions', []) as $delKey) {
             $delKey = $service->normalizeContent($delKey);
-            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $result)) {
+            if (array_key_exists($delKey, $result) && TranslationFileKeys::isLineEntry($delKey, $result[$delKey])) {
                 unset($result[$delKey]);
             }
         }
@@ -1457,10 +1458,7 @@ class TranslationController extends Controller
         SsePublisher::mergeCompleted($token->token, [
             'translation_id' => $translation->id,
             'destination' => MergePreviewToken::DESTINATION_LOCAL,
-            'line_count' => count(array_filter(
-                array_keys($result),
-                fn ($k) => !str_starts_with($k, '_')
-            )),
+            'line_count' => count(TranslationFileKeys::lineKeys($result)),
         ]);
 
         return $this->finishMergePreviewSession(__('merge_preview.local_apply_success'));
@@ -1543,7 +1541,7 @@ class TranslationController extends Controller
         $deletedCount = 0;
         foreach ($request->input('deletions', []) as $delKey) {
             $delKey = $service->normalizeContent($delKey);
-            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $content)) {
+            if (array_key_exists($delKey, $content) && TranslationFileKeys::isLineEntry($delKey, $content[$delKey])) {
                 unset($content[$delKey]);
                 $deletedCount++;
             }
@@ -1577,10 +1575,7 @@ class TranslationController extends Controller
         $translation->capture_count = $tagCounts['capture_count'];
         $translation->skipped_count = $tagCounts['skipped_count'];
         $translation->broken_placeholder_count = $tagCounts['broken_placeholder_count'];
-        $translation->line_count = count(array_filter(
-            array_keys($content),
-            fn($k) => !str_starts_with($k, '_')
-        ));
+        $translation->line_count = count(TranslationFileKeys::lineKeys($content));
         $translation->save();
 
         // The published lines changed without an upload: the author compared their game's file

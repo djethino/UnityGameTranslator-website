@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as placeholders from './placeholders.js';
+import { isMetadataKey, isLine } from './translation-file.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const corpus = path.resolve(here, '..', '..', 'corpus');
@@ -20,6 +21,8 @@ const read = (relative) => JSON.parse(fs.readFileSync(path.join(corpus, relative
 
 /** rule/op → what the EDITOR answers. One line per operation, calling the rule and nothing else. */
 const held = {
+    'translation_file_keys/is_metadata_key': (i) => isMetadataKey(i.key ?? ''),
+    'translation_file_keys/is_line': (i) => isLine(i.key ?? '', i.line_shaped === true),
     'placeholders/frozen_sequences': (i) => placeholders.frozenSequences(i.source ?? ''),
     'placeholders/accepts_edit': (i) => placeholders.acceptsEdit(i.source ?? '', i.edited ?? ''),
     'placeholders/tokens': (i) => placeholders.tokens(i.text ?? ''),

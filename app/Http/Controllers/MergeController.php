@@ -8,6 +8,7 @@ use App\Notifications\BranchMerged;
 use App\Rules\ResourcesLink;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
+use App\Support\TranslationFileKeys;
 use App\Support\TranslationFlows;
 use Illuminate\Http\Request;
 
@@ -388,7 +389,7 @@ class MergeController extends Controller
                 // Normalize line endings: \r\n -> \n
                 $key = $this->translationService->normalizeContent($key);
                 // Only delete non-metadata keys that exist
-                if (!str_starts_with($key, '_') && isset($content[$key])) {
+                if (isset($content[$key]) && TranslationFileKeys::isLineEntry($key, $content[$key])) {
                     unset($content[$key]);
                     $deletedCount++;
                 }
@@ -405,7 +406,7 @@ class MergeController extends Controller
                 $value = $this->translationService->normalizeContent($change['value']);
 
                 // Only process non-metadata keys that exist
-                if (!str_starts_with($key, '_') && isset($content[$key])) {
+                if (isset($content[$key]) && TranslationFileKeys::isLineEntry($key, $content[$key])) {
                     // Get current value
                     $currentValue = is_array($content[$key])
                         ? ($content[$key]['v'] ?? '')
@@ -476,10 +477,7 @@ class MergeController extends Controller
         $main->capture_count = $tagCounts['capture_count'];
         $main->skipped_count = $tagCounts['skipped_count'];
         $main->broken_placeholder_count = $tagCounts['broken_placeholder_count'];
-        $main->line_count = count(array_filter(
-            array_keys($content),
-            fn($k) => !str_starts_with($k, '_')
-        ));
+        $main->line_count = count(TranslationFileKeys::lineKeys($content));
 
         // ⚠ Two fields and no more. `status` is deliberately absent: whether a translation is
         // finished descends from the Main to its contributions, never the other way, and every
@@ -684,11 +682,11 @@ class MergeController extends Controller
             return [];
         }
 
-        // Filter out metadata keys (starting with _)
+        // Filter out metadata keys (TranslationFileKeys)
         return array_filter(
             $content,
-            fn($k) => !str_starts_with($k, '_'),
-            ARRAY_FILTER_USE_KEY
+            fn($v, $k) => TranslationFileKeys::isLineEntry($k, $v),
+            ARRAY_FILTER_USE_BOTH
         );
     }
 

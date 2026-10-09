@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Translation;
 use App\Services\TranslationService;
 use App\Support\Placeholders;
+use App\Support\TranslationFileKeys;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -35,6 +36,8 @@ class CorpusTest extends TestCase
         return [
             'sync/content_hash' => fn (array $in) => (new TranslationService())
                 ->computeHash(($in['lines'] ?? []) + ['_uuid' => $in['uuid'] ?? '']),
+            'translation_file_keys/is_metadata_key' => fn (array $in) => TranslationFileKeys::isMetadata($in['key'] ?? ''),
+            'translation_file_keys/is_line' => fn (array $in) => TranslationFileKeys::isLine($in['key'] ?? '', (bool) ($in['line_shaped'] ?? false)),
             'settings/all' => fn (array $in) => Translation::SETTINGS_SECTIONS,
             'settings/json_key' => fn (array $in) => TranslationService::sectionKey($in['section']),
             'settings/section_of' => fn (array $in) => TranslationService::sectionOf($in['json_key']),

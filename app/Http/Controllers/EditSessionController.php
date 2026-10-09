@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EditSessionToken;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
+use App\Support\TranslationFileKeys;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
@@ -188,7 +189,7 @@ class EditSessionController extends Controller
 
         $key = $request->input('key');
         // Metadata keys are never translatable content
-        if (str_starts_with($key, '_')) {
+        if (TranslationFileKeys::isMetadata($key)) {
             return response()->json(['error' => 'Invalid key.'], 422);
         }
 
@@ -319,7 +320,7 @@ class EditSessionController extends Controller
             // through selections: the mod reloads this file verbatim and a
             // forged {v,t} object there would corrupt its lineage/sync state.
             // The page filters them out on load — enforce it server-side too.
-            if (str_starts_with($key, '_')) {
+            if (!TranslationFileKeys::writable($key, $content)) {
                 continue;
             }
 
@@ -341,7 +342,7 @@ class EditSessionController extends Controller
         $deletedCount = 0;
         foreach ($request->input('deletions', []) as $delKey) {
             $delKey = $service->normalizeContent($delKey);
-            if (!str_starts_with($delKey, '_') && array_key_exists($delKey, $content)) {
+            if (array_key_exists($delKey, $content) && TranslationFileKeys::isLineEntry($delKey, $content[$delKey])) {
                 unset($content[$delKey]);
                 $deletedCount++;
             }
@@ -363,10 +364,7 @@ class EditSessionController extends Controller
         // collection of abandoned sessions.
         $session->addPendingChanges($modifiedCount + $deletedCount);
 
-        $lineCount = count(array_filter(
-            array_keys($content),
-            fn($k) => !str_starts_with($k, '_')
-        ));
+        $lineCount = count(TranslationFileKeys::lineKeys($content));
 
         SsePublisher::editSessionSaved($session->mod_key, [
             'content_hash' => $contentHash,

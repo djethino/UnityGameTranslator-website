@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Translation;
+use App\Support\TranslationFileKeys;
 use App\Support\TranslationFlows;
 use Illuminate\Support\Facades\Storage;
 
@@ -157,8 +158,8 @@ class TranslationService
         $errors = [];
 
         foreach ($json as $key => $value) {
-            // Skip metadata keys
-            if (str_starts_with($key, '_')) {
+            // Skip what is not a line: metadata, and a newer writer's metadata (TranslationFileKeys)
+            if (!TranslationFileKeys::isLineEntry($key, $value)) {
                 continue;
             }
 
@@ -205,10 +206,7 @@ class TranslationService
      */
     public function countLines(array $json): int
     {
-        return count(array_filter(
-            array_keys($json),
-            fn($k) => !str_starts_with($k, '_')
-        ));
+        return count(TranslationFileKeys::lineKeys($json));
     }
 
     /**
@@ -755,8 +753,8 @@ class TranslationService
         $offered = [];
 
         foreach ($branch as $key => $entry) {
-            // Underscore keys are metadata (_uuid, _game, _fonts…), not translated lines.
-            if (str_starts_with((string) $key, '_')) {
+            // Metadata (_uuid, _game, _fonts…), not translated lines.
+            if (!TranslationFileKeys::isLineEntry($key, $entry)) {
                 continue;
             }
 
@@ -871,7 +869,7 @@ class TranslationService
                 }
 
                 foreach ($content as $key => $entry) {
-                    if (str_starts_with((string) $key, '_')) {
+                    if (!TranslationFileKeys::isLineEntry($key, $entry)) {
                         continue;
                     }
 
@@ -1359,7 +1357,7 @@ class TranslationService
         $hashData = [];
         foreach ($json as $key => $value) {
             // Translation keys only — the uuid is written below, at the value this call asks for.
-            if (!str_starts_with($key, '_')) {
+            if (TranslationFileKeys::isLineEntry($key, $value)) {
                 // Normalize keys for cross-platform consistency
                 $normalizedKey = $this->normalizeLineEndings($key);
 

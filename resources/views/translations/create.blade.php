@@ -363,7 +363,7 @@ async function handleFileSelect(file) {
         // Extract _game metadata for auto-detection
         fileGameMetadata = json._game || null;
 
-        const lines = Object.keys(json).filter(k => !k.startsWith('_')).length;
+        const lines = Object.entries(json).filter(([k, v]) => window.UGT.isLineEntry(k, v)).length;
         lineCount.textContent = `${lines.toLocaleString()} translation lines`;
 
         // Calculate HVASM composition stats from file
@@ -619,7 +619,7 @@ function calculateFileStats(json) {
     let human = 0, validated = 0, ai = 0;
 
     for (const [key, value] of Object.entries(json)) {
-        if (key.startsWith('_')) continue; // Skip metadata
+        if (!window.UGT.isLineEntry(key, value)) continue; // Skip what is not a line
 
         // Entry can be string (old format) or object with tag
         let tag = null;

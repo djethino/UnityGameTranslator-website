@@ -9,6 +9,8 @@
  * entries that actually changed (or the full content on first load).
  */
 
+import { isLineEntry } from '../rules/translation-file.js';
+
 let cache = null;
 
 function normalizeLineEndings(text) {
@@ -40,7 +42,7 @@ self.onmessage = async (event) => {
         // Normalize + strip metadata keys, same rules as the page had
         const fresh = {};
         for (const [key, value] of Object.entries(payload.content || {})) {
-            if (key.startsWith('_')) continue;
+            if (!isLineEntry(key, value)) continue;
             const normalizedKey = normalizeLineEndings(key);
             let normalizedValue = value;
             if (typeof value === 'object' && value !== null && 'v' in value) {

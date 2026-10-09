@@ -1,14 +1,16 @@
 {
   "schema_version": 1,
-  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card"],
+  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card", "translation_file_keys"],
   "sides": {
     "site": {
       "sync": ["content_hash"],
+      "translation_file_keys": ["is_metadata_key", "is_line"],
       "settings": ["all", "json_key", "section_of"],
       "merge": ["priority_of"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
     },
     "editor": {
+      "translation_file_keys": ["is_metadata_key", "is_line"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
     }
   }
