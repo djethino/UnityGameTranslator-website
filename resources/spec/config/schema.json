@@ -93,6 +93,7 @@
     "toggle_images_hotkey": { "type": "string", "default": "", "x-writer": "both" },
     "toggle_fonts_hotkey": { "type": "string", "default": "", "x-writer": "both" },
     "toggle_overlay_hotkey": { "type": "string", "default": "", "x-writer": "both" },
+    "toggle_cursor_hotkey": { "type": "string", "default": "", "x-writer": "both", "description": "Takes the cursor from the game, as an open window does (same capture options), and gives back at the second press exactly what the game had: a game with its own cursor keeps it. For games with no cursor outside their pause menu, whose notifications could not be clicked." },
     "open_inspector_hotkey": { "type": "string", "default": "", "x-writer": "both" },
     "open_upload_hotkey": { "type": "string", "default": "", "x-writer": "both" },
     "open_exclusion_mode_hotkey": { "type": "string", "default": "", "x-writer": "both" },

@@ -14,7 +14,7 @@
         "enable_image_replacement": true, "enable_font_replacement": true, "capture_keyboard": true, "capture_keyboard_focus_only": true,
         "capture_game_menus": false, "capture_game_clicks": false, "capture_mouse_axes": false, "pause_game": false,
         "panel_opacity_focused": 1.0, "panel_opacity_unfocused": 0.75, "max_font_atlas_size": 0, "settings_hotkey": "Shift+F10",
-        "toggle_translations_hotkey": "", "toggle_ai_hotkey": "", "toggle_images_hotkey": "", "toggle_fonts_hotkey": "", "toggle_overlay_hotkey": "",
+        "toggle_translations_hotkey": "", "toggle_ai_hotkey": "", "toggle_images_hotkey": "", "toggle_fonts_hotkey": "", "toggle_overlay_hotkey": "", "toggle_cursor_hotkey": "",
         "open_inspector_hotkey": "", "open_upload_hotkey": "", "open_exclusion_mode_hotkey": "", "open_text_editor_hotkey": "", "force_scan_hotkey": "",
         "api_token": null, "api_user": null, "api_token_server": null, "api_base_url": null, "website_base_url": null, "sse_base_url": null,
         "proxy_mode": "default", "proxy_url": null, "proxy_username": null, "proxy_password": null, "proxy_bypass_local": true,
