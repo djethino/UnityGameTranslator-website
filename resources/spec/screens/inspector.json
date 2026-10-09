@@ -8,28 +8,22 @@
     { "kind": "card", "name": "InspectorCard", "stretch": true, "children": [
       { "kind": "label", "name": "InstructionsLabel", "text": "Instructions", "role": "SectionTitle" },
       { "kind": "label", "name": "InstructionsHint", "text": "Hover over any UI element to preview it. Click to select.", "role": "Hint" },
-      { "kind": "spacer", "name": "InstructionsGap", "height": 8 },
       { "kind": "label", "name": "CameraLabel", "text": "Target", "role": "SectionTitle" },
       { "kind": "dropdown", "name": "CameraTarget", "options": "code", "popupHeight": 150, "width": 400, "stretch": true, "act": "cameraChanged",
         "help": "'UI Only' picks on-screen interface text. Choose a camera to pick objects in the game world instead." },
-      { "kind": "spacer", "name": "CameraGap", "height": 8 },
       { "kind": "label", "name": "HoverSectionLabel", "text": "Hovered", "role": "SectionTitle" },
       { "kind": "section", "name": "HoverBox", "children": [
         { "kind": "label", "name": "HoverPathValue", "gameText": "names", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
-      { "kind": "spacer", "name": "HoverGap", "height": 8 },
       { "kind": "label", "name": "SelectedSectionLabel", "text": "Selected", "role": "SectionTitle" },
       { "kind": "section", "name": "SelectedBox", "children": [
         { "kind": "label", "name": "SelectedPathValue", "gameText": "names", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
       ] },
-      { "kind": "spacer", "name": "SelectedGap", "height": 8 },
       { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
         "help": "The image the game draws on the selected element. This is what Export Original saves." },
       { "kind": "row", "name": "SlotStrip", "spacing": 4, "visible": false,
         "help": "This object carries several images. Click one to work on it" },
-      { "kind": "spacer", "name": "PreviewGap", "height": 4 },
       { "kind": "label", "name": "SpriteInfo", "text": { "bind": "spriteInfo" }, "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
-      { "kind": "spacer", "name": "SpriteGap", "height": 4 },
       { "kind": "label", "name": "ActionsLabel", "text": "Actions", "role": "SectionTitle" },
       { "kind": "row", "name": "ExclusionActionRow", "spacing": 5, "minHeight": "ButtonHeight", "children": [
         { "kind": "button", "name": "ExcludeThisBtn", "text": "Exclude This Element", "tone": "Primary", "fill": "Stretch", "act": "excludeThis",
@@ -45,20 +39,17 @@
       ] },
       { "kind": "stack", "name": "TextEditRow", "spacing": 4, "fillHeight": true, "visible": false, "children": [
         { "kind": "label", "name": "TextEditCount", "text": { "bind": "textEditCount" }, "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
-        { "kind": "list", "name": "TextEditScroll", "minHeight": 260, "preferredHeight": 260 },
+        { "kind": "list", "name": "TextEditScroll", "minHeight": 120, "preferredHeight": 260 },
         { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
-      { "kind": "row", "name": "ActionRow2", "spacing": 5, "minHeight": "ButtonHeight", "children": [
-        { "kind": "button", "name": "ParentBtn", "text": "Select Parent", "fill": "Stretch", "act": "selectParent",
-          "help": "Select the element that contains this one, to act on all of its texts at once." },
-        { "kind": "button", "name": "CancelBtn", "text": "Clear Selection", "fill": "Stretch", "act": "clearSelection",
-          "help": "Deselect the current element and keep inspecting. Nothing is changed." }
-      ] },
-      { "kind": "spacer", "name": "StatusGap", "height": 5 },
       { "kind": "label", "name": "Status", "text": { "bind": "status" }, "role": "Small", "tone": "Plain", "minHeight": "RowHeightSmall" }
     ] }
   ],
   "footer": [
+    { "kind": "button", "name": "ParentBtn", "text": "Select Parent", "act": "selectParent",
+      "help": "Select the element that contains this one, to act on all of its texts at once." },
+    { "kind": "button", "name": "CancelBtn", "text": "Clear Selection", "act": "clearSelection",
+      "help": "Deselect the current element and keep inspecting. Nothing is changed." },
     { "kind": "button", "name": "StopBtn", "text": "Stop Inspecting", "tone": "Primary", "act": "stop",
       "help": "Leave inspect mode and close this window. Element picking stops." }
   ],
@@ -67,13 +58,15 @@
       { "kind": "image", "name": "SlotImage", "height": 44 },
       { "kind": "label", "name": "SlotName", "text": { "bind": "slotName" }, "policy": "Excluded", "role": "Caption", "centred": true, "wrap": false, "minHeight": "RowHeightSmall" }
     ] },
-    { "kind": "stack", "name": "TextEditEntry", "spacing": 3, "surface": "Card", "children": [
+    { "kind": "stack", "name": "TextEditEntry", "spacing": 3, "pad": 6, "surface": "Card", "children": [
       { "kind": "row", "name": "KeyRow", "spacing": 6, "placement": "TopLeft", "minHeight": "RowHeightSmall", "fill": "Stretch", "children": [
         { "kind": "chip", "name": "Tag" },
-        { "kind": "label", "name": "Key", "gameText": "source", "text": { "bind": "key" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall" }
+        { "kind": "label", "name": "SourceCaption", "text": "Source", "role": "Caption", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" }
       ] },
+      { "kind": "field", "name": "Key", "gameText": "source", "input": "Multiline", "scroll": true, "readOnly": true, "richText": false, "minHeight": 40, "fill": "Stretch",
+        "help": "The game's text. Select any part of it to copy — a placeholder the translation has to keep, for instance. It cannot be typed into." },
       { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
-      { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 40, "richText": false },
+      { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 40, "fill": "Stretch", "richText": false },
       { "kind": "label", "name": "Preview", "gameText": "target", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
       { "kind": "row", "name": "BtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
         { "kind": "button", "name": "SaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "policy": "Excluded", "act": "save" },

@@ -231,6 +231,13 @@
             ] },
             { "kind": "spacer", "name": "FontsGap3", "height": 10 },
             { "kind": "label", "name": "FontsListLabel", "text": "Detected Fonts:", "role": "Small" },
+            { "kind": "row", "name": "RtlAllRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+              { "kind": "label", "name": "RtlAllLabel", "text": "Mirror alignment:", "role": "Small" },
+              { "kind": "button", "name": "RtlAllBtn", "text": "All", "size": "Compact", "minWidth": 50, "act": "rtlAll",
+                "help": "Ticks Mirror alignment for every detected font. Applied on Apply." },
+              { "kind": "button", "name": "RtlNoneBtn", "text": "None", "size": "Compact", "minWidth": 50, "act": "rtlNone",
+                "help": "Unticks Mirror alignment for every detected font, to keep the game's own alignment. Applied on Apply." }
+            ] },
             { "kind": "list", "name": "FontsScroll", "minHeight": 180, "preferredHeight": 180, "empty": "No fonts detected yet. Play the game to detect fonts." }
           ] }
         ] },
@@ -339,7 +346,7 @@
           "help": "Sets the size back to 100%. Applied on Apply." }
       ] },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
-        { "kind": "label", "name": "RtlLabel", "text": "RTL alignment:", "role": "Small", "policy": "Excluded", "minWidth": 95 },
+        { "kind": "label", "name": "RtlLabel", "text": "Alignment:", "role": "Small", "policy": "Excluded", "minWidth": 95 },
         { "kind": "dropdown", "name": "OverrideRtl", "options": "code", "width": 150, "act": "rtlChanged" }
       ] }
     ] },
@@ -353,8 +360,8 @@
       { "kind": "label", "name": "MissingChars", "text": { "bind": "missingChars" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
       { "kind": "label", "name": "NoDecorations", "text": { "bind": "noDecorations" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
-        { "kind": "checkbox", "name": "RtlMirrorToggle", "text": "Mirror alignment (RTL)", "act": "rtlChanged",
-          "help": "Aligns right-to-left text to the right. In a right-to-left translation, every text in this font, Latin words and numbers too. Turn off to keep the game's alignment. An override rule can change one place." }
+        { "kind": "checkbox", "name": "RtlMirrorToggle", "text": "Mirror alignment", "act": "rtlChanged",
+          "help": "Swaps left and right alignment when the translation reads in the other direction from the game's text. In a right-to-left translation, every text in this font, Latin words and numbers too. Turn off to keep the game's alignment. An override rule can change one place." }
       ] },
       { "kind": "row", "name": "FallbackRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "label", "name": "FallbackLabel", "text": "Fallback:", "role": "Small", "policy": "Excluded", "minWidth": 55 },
