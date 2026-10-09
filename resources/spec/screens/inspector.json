@@ -49,6 +49,8 @@
         { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
       { "kind": "row", "name": "ActionRow2", "spacing": 5, "minHeight": "ButtonHeight", "children": [
+        { "kind": "button", "name": "ParentBtn", "text": "Select Parent", "fill": "Stretch", "act": "selectParent",
+          "help": "Select the element that contains this one, to act on all of its texts at once." },
         { "kind": "button", "name": "CancelBtn", "text": "Clear Selection", "fill": "Stretch", "act": "clearSelection",
           "help": "Deselect the current element and keep inspecting. Nothing is changed." }
       ] },
