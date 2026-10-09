@@ -66,6 +66,7 @@
         "kind": { "type": "string", "enum": ["card", "stack", "row", "spacer", "label", "button", "status", "section", "field", "dropdown", "list", "tabs", "tab", "callout", "collapsible", "title", "checkbox", "toast", "slider", "choice", "chip", "splitter", "image", "progress"] },
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$", "description": "Unique in the document; how the code reaches the piece." },
         "visible": { "type": "boolean", "default": true, "description": "Hidden at first when false: the code shows it when its moment comes (a code row before a code exists)." },
+        "reserve": { "type": "boolean", "default": false, "description": "Hidden keeps its room: not drawn, not reachable, but its neighbours do not move. Only for a piece that comes and goes beside a control the pointer is on — an Undo beside a slider, which otherwise shrinks the slider under the pointer at the first touch." },
         "help": { "type": "string", "minLength": 1, "description": "What the help bar says while this piece is hovered. Only on a screen whose chrome declares a help bar; a sentence, in the interface's register." }
       },
       "allOf": [

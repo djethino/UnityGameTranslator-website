@@ -333,9 +333,9 @@
       ] },
       { "kind": "row", "name": "SizeRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
         { "kind": "slider", "name": "OverrideSize", "caption": "Size:", "min": 0, "max": 3, "format": "PercentOrDefault", "captionWidth": 35, "act": "sizeChanged" },
-        { "kind": "button", "name": "SizeUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "sizeUndo", "visible": false,
+        { "kind": "button", "name": "SizeUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "sizeUndo", "visible": false, "reserve": true,
           "help": "Back to the size saved for this rule." },
-        { "kind": "button", "name": "SizeDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "sizeDefault", "visible": false,
+        { "kind": "button", "name": "SizeDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "sizeDefault", "visible": false, "reserve": true,
           "help": "Sets the size back to 100%. Applied on Apply." }
       ] },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
@@ -364,9 +364,9 @@
       { "kind": "label", "name": "NoFallbackLabel", "text": "Fallback not supported for this font type", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false },
       { "kind": "row", "name": "ScaleRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
         { "kind": "slider", "name": "Scale", "caption": "Size:", "min": 0.01, "max": 2, "format": "Percent", "captionWidth": 55, "act": "scaleChanged" },
-        { "kind": "button", "name": "ScaleUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "scaleUndo", "visible": false,
+        { "kind": "button", "name": "ScaleUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "scaleUndo", "visible": false, "reserve": true,
           "help": "Back to the size saved for this font." },
-        { "kind": "button", "name": "ScaleDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "scaleDefault", "visible": false,
+        { "kind": "button", "name": "ScaleDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "scaleDefault", "visible": false, "reserve": true,
           "help": "Sets the size back to 100%. Applied on Apply." },
         { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false }
       ] }
