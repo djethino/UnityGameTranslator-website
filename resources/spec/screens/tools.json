@@ -355,6 +355,8 @@
         { "kind": "label", "name": "FontLabel", "text": { "bind": "font" }, "policy": "Excluded", "tone": "Plain", "fill": "Stretch" },
         { "kind": "label", "name": "SceneCount", "text": { "bind": "sceneCount" }, "policy": "Excluded", "role": "Small", "minWidth": 70, "visible": false },
         { "kind": "button", "name": "IdentifyBtn", "text": "?", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "identify" },
+        { "kind": "button", "name": "ExtractBtn", "text": "Extract", "size": "Compact", "minWidth": 60, "act": "extract",
+          "help": "Saves this font's file from the game into the fonts folder. It then appears among the Custom fonts." },
         { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged" }
       ] },
       { "kind": "label", "name": "MissingChars", "text": { "bind": "missingChars" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
