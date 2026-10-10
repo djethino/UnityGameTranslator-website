@@ -225,6 +225,8 @@
             ] },
             { "kind": "spacer", "name": "FontsGap2", "height": 10 },
             { "kind": "row", "name": "RefreshRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
+              { "kind": "button", "name": "FontsOpenFolderBtn", "text": "Open folder", "minWidth": 90, "act": "openFontsFolder",
+                "help": "Opens the fonts folder: the Custom fonts, and the fonts extracted from the game." },
               { "kind": "button", "name": "RefreshFontsBtn", "text": "Refresh List", "minWidth": 100, "act": "refreshFonts",
                 "help": "Rescans the fonts the game uses and the fonts folder. A font file added now works right away." },
               { "kind": "label", "name": "FontsStatus", "text": { "bind": "fontsStatus" }, "role": "Small", "fill": "Stretch" }
