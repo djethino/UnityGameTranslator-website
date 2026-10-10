@@ -450,7 +450,7 @@
           { "kind": "label", "name": "ThanksWhat", "text": "None of these owes us anything. Please consider supporting them.", "role": "Small", "tone": "Secondary" },
           { "kind": "spacer", "name": "AboutGap7", "height": 6 },
           { "kind": "label", "name": "ThanksList", "role": "Small", "tone": "Secondary",
-            "text": "BepInEx (LGPL-2.1) and MelonLoader (Apache-2.0) — the mod loaders that let this run inside a game.\nUniverseLib (LGPL-2.1) — the in-game interface you are looking at.\nHarmony (MIT) — how the game's own text reaches us.\nNewtonsoft.Json (MIT) — reads and writes the translation files.\nRichTextKit (Apache-2.0), ICU and the Unicode Character Database — how text is shaped and split into words in every script." },
+            "text": "BepInEx (LGPL-2.1) and MelonLoader (Apache-2.0) — the mod loaders that let this run inside a game.\nUniverseLib (LGPL-2.1) — the in-game interface you are looking at.\nHarmony (MIT) — how the game's own text reaches us.\nNewtonsoft.Json (MIT) — reads and writes the translation files.\nRichTextKit (Apache-2.0), ICU and the Unicode Character Database — how text is shaped and split into words in every script.\nAssetRipper Tpk (MIT) and the LZMA SDK (public domain) — how a game's own fonts are read from its files." },
           { "kind": "spacer", "name": "AboutGap8", "height": 16 },
 
           { "kind": "image", "name": "PublisherLogo", "height": 52,
