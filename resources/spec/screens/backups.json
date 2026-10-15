@@ -36,7 +36,8 @@
       { "kind": "label", "name": "Facts", "text": { "bind": "facts" }, "policy": "Excluded", "fill": "Stretch", "minHeight": "RowHeightSmall" },
       { "kind": "row", "name": "Languages", "spacing": 4, "minHeight": "RowHeightSmall", "visible": false, "children": [
         { "kind": "stack", "name": "From", "fill": "Content", "visible": false },
-        { "kind": "label", "name": "To", "text": "→", "role": "Caption", "tone": "Secondary", "policy": "Excluded" },
+        { "kind": "label", "name": "FromAuto", "text": { "bind": "fromAuto" }, "role": "Caption", "policy": "Excluded", "visible": false },
+        { "kind": "label", "name": "To", "text": "→", "role": "Caption", "tone": "Secondary", "policy": "Excluded", "visible": false },
         { "kind": "stack", "name": "Into", "fill": "Content", "visible": false }
       ] },
       { "kind": "label", "name": "Foreign", "text": { "bind": "foreign" }, "role": "Caption", "tone": "Warning", "fill": "Stretch", "visible": false },
