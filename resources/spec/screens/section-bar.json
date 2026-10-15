@@ -1,0 +1,17 @@
+{
+  "$comment": "The bar of sections of the one window (config `window_layout` = one, 2026-10-14): at the left edge of whichever section is up — This game (the main screen, named as the Manager names a game's own tab), Translation Tools, Mod Options — as tall as it, never dragged on its own, so the two read as one window. The code keeps the rules: which section is up and so pressed, the count of unapplied choices after a section's name ('Mod Options (3)'), the bar folded to its pictures (the name then shown beside the picture under the pointer) or open on its words, the picture of each verb. The words are the screens' own titles. The head row is the window's title bar continued — its height and its colour (lighter while the window has the keyboard) are copied from the section's own title bar by the code, the fold button dressed like that bar's close button; the section up is lit as a chosen row is everywhere in the mod (tint and accent edge).",
+  "name": "SectionBar",
+  "size": { "width": 176, "height": 400, "minWidth": 100, "minHeight": 120 },
+  "chrome": { "backdrop": false, "persist": false, "titleBar": false, "pinned": false },
+  "body": [
+    { "kind": "row", "name": "HeadRow", "padX": 8, "placement": "MiddleRight", "children": [
+      { "kind": "button", "name": "FoldBtn", "text": { "bind": "fold" }, "policy": "Excluded", "size": "Compact", "act": "fold" }
+    ] },
+    { "kind": "stack", "name": "BarStack", "spacing": 2, "pad": 6, "fill": "Stretch", "children": [
+      { "kind": "button", "name": "TranslationBtn", "text": { "bind": "translation" }, "policy": "Excluded", "minWidth": 30, "fill": "Stretch", "act": "showTranslation" },
+      { "kind": "button", "name": "ToolsBtn", "text": { "bind": "tools" }, "policy": "Excluded", "minWidth": 30, "fill": "Stretch", "act": "showTools" },
+      { "kind": "button", "name": "OptionsBtn", "text": { "bind": "options" }, "policy": "Excluded", "minWidth": 30, "fill": "Stretch", "act": "showOptions" }
+    ] }
+  ],
+  "footer": []
+}

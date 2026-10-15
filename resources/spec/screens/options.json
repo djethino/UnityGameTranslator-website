@@ -42,12 +42,12 @@
               "help": "Which screen corner the notification overlay appears in." }
           ] },
           { "kind": "spacer", "name": "GeneralGap3", "height": 10 },
-          { "kind": "label", "name": "AdvancedLabel", "text": "Advanced", "role": "SectionTitle" },
+          { "kind": "label", "name": "AdvancedLabel", "text": "Advanced (Debug)", "role": "SectionTitle" },
           { "kind": "checkbox", "name": "DebugLoggingToggle", "text": " Debug logging", "tone": "Secondary", "act": "debugLoggingChanged",
             "help": "Write detailed logs to the mod log file. Turn on when reporting an issue, then share the log. Off by default." },
           { "kind": "checkbox", "name": "DebugAiToggle", "text": " Debug AI translation", "tone": "Secondary", "act": "debugAiChanged",
             "help": "Log every AI request and response (prompts, raw output, placeholder handling). Verbose — use only to diagnose translation quality." },
-          { "kind": "checkbox", "name": "TextTraceToggle", "text": " Record text writes", "tone": "Secondary", "act": "textTraceChanged",
+          { "kind": "checkbox", "name": "TextTraceToggle", "text": " Debug text trace", "tone": "Secondary", "act": "textTraceChanged",
             "help": "Save every text the game writes, and what the mod shows instead, to a file in the mod folder. Stays on this computer. Turn on to report a text that shows wrong, then share the file." },
           { "kind": "spacer", "name": "GeneralGap4", "height": 10 },
           { "kind": "stack", "name": "LanguagesEditableSection", "children": [
@@ -80,6 +80,12 @@
           ] },
           { "kind": "spacer", "name": "GeneralGap5", "height": 15 },
           { "kind": "label", "name": "InterfaceLabel", "text": "Interface", "role": "SectionTitle" },
+          { "kind": "row", "name": "WindowLayoutRow", "spacing": 5, "minHeight": "RowHeightMedium", "children": [
+            { "kind": "label", "name": "WindowLayoutLabel", "text": "Windows:", "role": "Info", "minWidth": 60 },
+            { "kind": "choice", "name": "WindowLayout", "options": ["One window", "Separate windows"], "spacing": 5, "minWidth": 120, "act": "windowLayoutChanged" }
+          ] },
+          { "kind": "label", "name": "WindowLayoutHint", "text": "One window: This game, Translation Tools and Mod Options are sections of the same window, picked on its left. It opens on the section shown last.", "role": "Small", "tone": "Secondary" },
+          { "kind": "spacer", "name": "WindowLayoutGap", "height": 8 },
           { "kind": "label", "name": "OpacityLabel", "text": "Window opacity", "role": "SectionTitle" },
           { "kind": "slider", "name": "OpacityFocused", "caption": "Focused:", "min": 0.4, "max": 1, "format": "Percent", "captionWidth": 70, "act": "opacityFocusedChanged",
             "help": "How solid the window you are working in is. Lower it to see the game through the one you are using." },

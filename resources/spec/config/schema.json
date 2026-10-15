@@ -86,6 +86,7 @@
     "pause_game": { "type": "boolean", "default": false, "x-writer": "mod" },
     "panel_opacity_focused": { "type": "number", "default": 1, "x-writer": "mod" },
     "panel_opacity_unfocused": { "type": "number", "default": 0.75, "x-writer": "mod" },
+    "window_layout": { "type": "string", "enum": ["one", "separate"], "default": "one", "x-writer": "mod", "description": "How the mod's three main windows are shown: `one` = This game (the main window), Translation Tools and Mod Options as sections of one window, a bar of sections on its left, the window coming back on the section last shown; `separate` = each its own window, as before 2026-10. Any other value reads as `one`. Written by the mod alone, like the windows' opacity." },
     "max_font_atlas_size": { "type": "integer", "default": 0, "x-writer": "mod", "description": "0 = automatic: what a 4096 atlas allows, up to an 8192 atlas for a font with many glyphs (96 px/em). A value is the atlas side the font may use, capped by the GPU." },
     "settings_hotkey": { "type": "string", "default": "Shift+F10", "x-writer": "both", "description": "Opens the mod's panel. A key name with optional modifiers (`Ctrl+Alt+F10`). Default Shift+F10 on every system (common/Hotkeys.Default): Ctrl+F10 is taken by KDE Plasma, Alt+F10 by GNOME and NVIDIA's overlay. The Manager writes only UNIVERSAL keys (common/BindableKeys): what a KeyCode designates depends on a per-project Unity setting no runtime reports, and a key that prints a character means different things in different games. Written on a fresh config, and afterwards only on demand." },
     "toggle_translations_hotkey": { "type": "string", "default": "", "x-writer": "both", "description": "Empty = no shortcut. Like every shortcut below: the Manager writes only UNIVERSAL keys, fills an empty one from Mod defaults (a key set in the game is kept), and replaces one only when it was set for that game on the game's page." },
@@ -134,7 +135,8 @@
       "properties": {
         "screenWidth": { "type": "integer" },
         "screenHeight": { "type": "integer" },
-        "panels": { "type": "object", "additionalProperties": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" }, "hasPosition": { "type": "boolean" }, "userResized": { "type": "boolean" } } } }
+        "sectionBarFolded": { "type": "boolean", "default": false, "description": "The one window's bar of sections folded to its pictures." },
+        "panels": { "type": "object", "additionalProperties": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" }, "hasPosition": { "type": "boolean" }, "userResized": { "type": "boolean" }, "screenWidth": { "type": "integer", "description": "The screen this place and size were saved on; read on another, they are dropped and the window opens at its default. Absent on a save older than this: judged by the screen saved last (screenWidth beside panels)." }, "screenHeight": { "type": "integer" } } } }
       }
     }
   }

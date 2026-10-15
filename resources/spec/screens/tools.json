@@ -349,17 +349,20 @@
       ] },
       { "kind": "row", "name": "RtlRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "label", "name": "RtlLabel", "text": "Alignment:", "role": "Small", "policy": "Excluded", "minWidth": 95 },
-        { "kind": "dropdown", "name": "OverrideRtl", "options": "code", "width": 150, "act": "rtlChanged" }
+        { "kind": "dropdown", "name": "OverrideRtl", "options": "code", "width": 150, "act": "rtlChanged",
+          "help": "How the texts this override matches are aligned in a right-to-left translation: as their font's Mirror alignment says, mirrored, or as the game aligns them. Applied on Apply." }
       ] }
     ] },
     { "kind": "stack", "name": "FontRow", "spacing": 3, "pad": 5, "surface": "Card", "minHeight": 55, "children": [
       { "kind": "row", "name": "HeaderRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
         { "kind": "label", "name": "FontLabel", "text": { "bind": "font" }, "policy": "Excluded", "tone": "Plain", "fill": "Stretch" },
         { "kind": "label", "name": "SceneCount", "text": { "bind": "sceneCount" }, "policy": "Excluded", "role": "Small", "minWidth": 70, "visible": false },
-        { "kind": "button", "name": "IdentifyBtn", "text": "?", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "identify" },
+        { "kind": "button", "name": "IdentifyBtn", "text": "?", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "identify",
+          "help": "Shows in the game which texts use this font: they turn bright and the others dim. Click again (X) to stop." },
         { "kind": "button", "name": "ExtractBtn", "text": "Extract", "size": "Compact", "minWidth": 60, "act": "extract",
           "help": "Saves this font's file from the game into the fonts folder. It then appears among the Custom fonts." },
-        { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged" }
+        { "kind": "checkbox", "name": "EnableToggle", "text": "Translate", "act": "enabledChanged",
+          "help": "Translates the texts written in this font. Turn off for a font that can only draw the game's own letters, such as a font made of pictures: its texts then stay in the game's language. Applied on Apply." }
       ] },
       { "kind": "label", "name": "MissingChars", "text": { "bind": "missingChars" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
       { "kind": "label", "name": "NoDecorations", "text": { "bind": "noDecorations" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "autoHeight": true, "visible": false },
@@ -369,17 +372,24 @@
       ] },
       { "kind": "row", "name": "FallbackRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
         { "kind": "label", "name": "FallbackLabel", "text": "Fallback:", "role": "Small", "policy": "Excluded", "minWidth": 55 },
-        { "kind": "dropdown", "name": "Fallback", "options": "code", "width": 350, "popupHeight": 250, "act": "fallbackChanged" },
+        { "kind": "dropdown", "name": "Fallback", "options": "code", "width": 350, "popupHeight": 250, "act": "fallbackChanged",
+          "help": "The font that draws this font's texts. Choose one that has the letters of your language. (None) keeps the game's font. Applied on Apply." },
         { "kind": "label", "name": "NoFontsLabel", "text": "(no fonts available)", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false }
       ] },
       { "kind": "label", "name": "NoFallbackLabel", "text": "Fallback not supported for this font type", "role": "Small", "tone": "Muted", "policy": "Excluded", "visible": false },
       { "kind": "row", "name": "ScaleRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
-        { "kind": "slider", "name": "Scale", "caption": "Size:", "min": 0.01, "max": 2, "format": "Percent", "captionWidth": 55, "act": "scaleChanged" },
+        { "kind": "slider", "name": "Scale", "caption": "Size:", "min": 0.01, "max": 2, "format": "Percent", "captionWidth": 55, "act": "scaleChanged",
+          "help": "The size of this font's texts, in percent of the size the game gives them. Applied on Apply." },
         { "kind": "button", "name": "ScaleUndoBtn", "text": "Undo", "size": "Compact", "minWidth": 50, "act": "scaleUndo", "visible": false, "reserve": true,
           "help": "Back to the size saved for this font." },
         { "kind": "button", "name": "ScaleDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "scaleDefault", "visible": false, "reserve": true,
           "help": "Sets the size back to 100%. Applied on Apply." },
-        { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false }
+        { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false,
+          "help": "Draws the replacement font as big as the game drew its own, then applies the percentage on top. Turn off to start from the replacement font's own size. Only acts while a replacement font is chosen. Applied on Apply." }
+      ] },
+      { "kind": "row", "name": "LinesRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+        { "kind": "checkbox", "name": "KeepLines", "text": "Keep the game's lines", "act": "keepLinesChanged",
+          "help": "Keeps every line of text in this font where the game puts it, at any size and with any replacement font. Turn on when a menu pointer, a frame or a bar no longer lines up with the text. A font with much taller letters than the game's can then look tight." }
       ] }
     ] },
     { "kind": "row", "name": "ImageRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "children": [
