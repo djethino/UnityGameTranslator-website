@@ -1501,7 +1501,7 @@
                     <img src="{{ asset('images/screenshots/ModToolsPanel.webp') }}"
                          alt="{{ __('docs.editing.mod_tools_alt') }}"
                          class="doc-img doc-img-tall mx-auto"
-                         width="751" height="1132"
+                         width="1408" height="1170"
                          loading="lazy"
                          data-zoomable>
                     <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.editing.mod_tools_caption') }}</figcaption>
@@ -1578,7 +1578,7 @@
                         <img src="{{ asset('images/screenshots/ModBrowserSessionActive.webp') }}"
                              alt="{{ __('docs.editing.session_active_alt') }}"
                              class="doc-img doc-img-tall mx-auto"
-                             width="821" height="1078"
+                             width="1408" height="1170"
                              loading="lazy"
                              data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.editing.session_active_caption') }}</figcaption>
@@ -1820,7 +1820,7 @@
                         <img src="{{ asset('images/screenshots/ModConnect.webp') }}"
                              alt="{{ __('docs.sync.mod_connect_alt') }}"
                              class="doc-img doc-img-mod mx-auto"
-                             width="761" height="732"
+                             width="1408" height="1170"
                              loading="lazy"
                              data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.sync.mod_connect_caption') }}</figcaption>
@@ -2120,7 +2120,7 @@ c = 0.8 → 1.0</pre>
                         <img src="{{ asset('images/screenshots/ModOptionsTranslationAi.webp') }}"
                              alt="{{ __('docs.config.gui_ai_alt') }}"
                              class="doc-img doc-img-tall mx-auto"
-                             width="579" height="916"
+                             width="1408" height="1170"
                              loading="lazy"
                              data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.config.gui_ai_caption') }}</figcaption>
@@ -2129,7 +2129,7 @@ c = 0.8 → 1.0</pre>
                         <img src="{{ asset('images/screenshots/ModOptionsTranslationTools.webp') }}"
                              alt="{{ __('docs.config.gui_tools_alt') }}"
                              class="doc-img doc-img-tall mx-auto"
-                             width="575" height="673"
+                             width="1408" height="620"
                              loading="lazy"
                              data-zoomable>
                         <figcaption class="text-sm text-gray-400 mt-2 text-center">{{ __('docs.config.gui_tools_caption') }}</figcaption>
