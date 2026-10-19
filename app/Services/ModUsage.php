@@ -223,6 +223,65 @@ final class ModUsage
         return $days;
     }
 
+    /** What a row of usage_daily or usage_monthly is about — everything but the counts and dates. */
+    public const KEY_COLUMNS = ['product', 'act', 'game_id', 'steam_id', 'game_name', 'language', 'translation_id', 'outcome', 'signed_in'];
+
+    /**
+     * Fold every month older than the boundary of analytics_games (AnalyticsGame::foldedBefore) into
+     * `usage_monthly`, and delete its days. Returns how many day rows were folded.
+     *
+     * 🔴 **One boundary for the whole admin**: the games of Analytics and the usage of the mod fold at
+     * the same age, so a span reaching back reads "per month" from the same day on both screens.
+     *
+     * ⚠ **One transaction per month, merged with what the month already holds**, read and rewritten
+     * whole: a month is never half in days and half in months — which is what lets the report add
+     * the two tables — and a late day folded after its month joins it instead of being lost. Merged
+     * in PHP because the key holds nullable columns, which SQL would match differently per engine.
+     */
+    public static function foldOldDays(): int
+    {
+        $before = \App\Models\AnalyticsGame::foldedBefore()->toDateString();
+        $folded = 0;
+
+        $months = DB::table('usage_daily')->where('date', '<', $before)->pluck('date')
+            ->map(fn ($d) => substr((string) $d, 0, 7) . '-01')
+            ->unique();
+
+        foreach ($months as $month) {
+            DB::transaction(function () use ($month, &$folded) {
+                $end = \Carbon\Carbon::parse($month)->endOfMonth()->toDateString();
+                $merged = [];
+                $add = function (object $row, int $sessions, string $first, string $last) use (&$merged) {
+                    $key = json_encode(array_map(fn ($c) => $row->{$c} === null ? null : (string) $row->{$c}, self::KEY_COLUMNS));
+                    if (!isset($merged[$key])) {
+                        $merged[$key] = array_combine(self::KEY_COLUMNS, array_map(fn ($c) => $row->{$c}, self::KEY_COLUMNS))
+                            + ['sessions' => 0, 'first_day' => $first, 'last_day' => $last];
+                    }
+                    $merged[$key]['sessions'] += $sessions;
+                    $merged[$key]['first_day'] = min($merged[$key]['first_day'], $first);
+                    $merged[$key]['last_day'] = max($merged[$key]['last_day'], $last);
+                };
+
+                foreach (DB::table('usage_monthly')->where('month', $month)->get() as $row) {
+                    $add($row, (int) $row->sessions, substr((string) $row->first_day, 0, 10), substr((string) $row->last_day, 0, 10));
+                }
+                $days = DB::table('usage_daily')->whereBetween('date', [$month, $end]);
+                foreach ((clone $days)->get() as $row) {
+                    $day = substr((string) $row->date, 0, 10);
+                    $add($row, (int) $row->sessions, $day, $day);
+                }
+
+                DB::table('usage_monthly')->where('month', $month)->delete();
+                foreach (array_chunk(array_values($merged), 500) as $chunk) {
+                    DB::table('usage_monthly')->insert(array_map(fn ($r) => ['month' => $month] + $r, $chunk));
+                }
+                $folded += $days->delete();
+            });
+        }
+
+        return $folded;
+    }
+
     /**
      * Write one day of `usage_seen` into `usage_daily`, whole — the night's count, and today's,
      * counted again each time the screen is opened (ModUsageReport). Rewriting rather than adding

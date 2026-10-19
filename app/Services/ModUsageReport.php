@@ -10,7 +10,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
- * What the admin "Mod usage" screen shows: `usage_daily` over a span (ModUsage writes it).
+ * What the admin "Mod usage" screen shows: `usage_daily` over a span, and `usage_monthly` for the
+ * months already folded (ModUsage writes both).
  *
  * ⚠ **A session is one copy on one day, and a span ADDS days**: a copy playing every day of a week
  * is seven sessions. Distinct copies over a span cannot be had — the fingerprint that would tell
@@ -35,12 +36,33 @@ final class ModUsageReport
         return max(1, (int) CarbonImmutable::parse(ModUsage::COUNTING_STARTED)->diffInDays(now()) + 1);
     }
 
+    /**
+     * Every counted row of the span, days and folded months together, as `u` — the one source every
+     * figure below reads, so none can forget the months (ModUsage::foldOldDays).
+     *
+     * ⚠ A folded month counts WHOLE once the span touches it, as on the Analytics screen: its days
+     * no longer exist. The screen says when a span reaches folded months (AnalyticsGame::foldedBefore).
+     * A row is in one table or the other, never both, so adding them counts nothing twice.
+     */
+    private function source()
+    {
+        $days = DB::table('usage_daily')
+            ->select(ModUsage::KEY_COLUMNS)
+            ->addSelect('sessions')
+            ->selectRaw('date as first_day, date as last_day')
+            ->whereBetween('date', [$this->span->from->toDateString(), $this->span->to->toDateString()]);
+        $months = DB::table('usage_monthly')
+            ->select(ModUsage::KEY_COLUMNS)
+            ->addSelect('sessions', 'first_day', 'last_day')
+            ->whereBetween('month', [$this->span->from->startOfMonth()->toDateString(), $this->span->to->toDateString()]);
+
+        return DB::query()->fromSub($days->unionAll($months), 'u');
+    }
+
     /** The span's rows of one act. */
     private function rows(string $act)
     {
-        return DB::table('usage_daily')
-            ->where('act', $act)
-            ->whereBetween('date', [$this->span->from->toDateString(), $this->span->to->toDateString()]);
+        return $this->source()->where('act', $act);
     }
 
     /**
@@ -103,6 +125,8 @@ final class ModUsageReport
     /**
      * One stacked bar per day, a band per outcome — the shape the Flows chart draws
      * (`admin-charts.js`, stackedBars).
+     *
+     * ⚠ Days only: a folded month has no days left to draw. The screen says it.
      */
     public function daily(): array
     {
@@ -110,7 +134,11 @@ final class ModUsageReport
         $buckets = array_fill_keys($days, 0);
 
         $byOutcome = [];
-        foreach ($this->rows(ModUsage::SESSION)->selectRaw('date, outcome, SUM(sessions) as n')->groupBy('date', 'outcome')->get() as $row) {
+        $rows = DB::table('usage_daily')
+            ->where('act', ModUsage::SESSION)
+            ->whereBetween('date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
+            ->selectRaw('date, outcome, SUM(sessions) as n')->groupBy('date', 'outcome')->get();
+        foreach ($rows as $row) {
             $byOutcome[$row->outcome][substr((string) $row->date, 0, 10)] = (int) $row->n;
         }
 
@@ -150,13 +178,12 @@ final class ModUsageReport
     public function wanted(string $sort, string $dir, string $pageName): LengthAwarePaginator
     {
         $found = ModUsage::FOUND;
-        $query = DB::table('usage_daily as u')
+        $query = $this->source()
             ->leftJoin('games', 'games.id', '=', 'u.game_id')
             ->where('u.act', ModUsage::LOOK)
-            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
             ->select('u.game_id', 'u.steam_id', 'u.game_name', 'u.language')
             ->selectRaw('MAX(games.name) as card_name')
-            ->selectRaw('MIN(u.date) as first_day, MAX(u.date) as last_day')
+            ->selectRaw('MIN(u.first_day) as first_at, MAX(u.last_day) as last_at')
             ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN 0 ELSE u.sessions END) as without', [$found])
             ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as found', [$found])
             ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as other_languages', [ModUsage::OTHER_LANGUAGES])
@@ -164,12 +191,12 @@ final class ModUsageReport
             ->havingRaw('SUM(CASE WHEN u.outcome = ? THEN 0 ELSE u.sessions END) > 0', [$found]);
 
         match ($sort) {
-            'first' => $query->orderBy('first_day', $dir),
+            'first' => $query->orderBy('first_at', $dir),
             'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
             'language' => $query->orderBy('u.language', $dir),
             'without' => $query->orderBy('without', $dir),
             'found' => $query->orderBy('found', $dir),
-            default => $query->orderBy('last_day', $dir),
+            default => $query->orderBy('last_at', $dir),
         };
         // The same order on every page: ties broken by the demand, then by the row itself.
         $query->orderByDesc('without')->orderBy('u.game_id')->orderBy('u.steam_id')->orderBy('u.game_name')->orderBy('u.language');
@@ -189,8 +216,8 @@ final class ModUsageReport
             'steam_id' => $r->steam_id,
             'game_name' => $r->game_name,
             'language' => $r->language,
-            'first' => substr((string) $r->first_day, 0, 10),
-            'last' => substr((string) $r->last_day, 0, 10),
+            'first' => substr((string) $r->first_at, 0, 10),
+            'last' => substr((string) $r->last_at, 0, 10),
             'without' => (int) $r->without,
             'found' => (int) $r->found,
             'other_languages' => (int) $r->other_languages > 0,
@@ -213,12 +240,11 @@ final class ModUsageReport
     {
         $sumOf = fn (string $outcome, string $as) => ["SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as {$as}", [$outcome]];
 
-        $query = DB::table('usage_daily as u')
+        $query = $this->source()
             ->leftJoin('games', 'games.id', '=', 'u.game_id')
             ->where('u.act', ModUsage::HELD)
-            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
             ->select('u.game_id', 'u.steam_id', 'u.game_name')
-            ->selectRaw('MAX(games.name) as card_name, MIN(u.date) as first_day, MAX(u.date) as last_day')
+            ->selectRaw('MAX(games.name) as card_name, MIN(u.first_day) as first_at, MAX(u.last_day) as last_at')
             ->selectRaw('SUM(u.sessions) as seen')
             ->selectRaw(...$sumOf(ModUsage::LOCAL_ONLY, 'local'))
             ->selectRaw(...$sumOf(ModUsage::ON_SITE, 'site'))
@@ -227,10 +253,10 @@ final class ModUsageReport
             ->groupBy('u.game_id', 'u.steam_id', 'u.game_name');
 
         match ($sort) {
-            'first' => $query->orderBy('first_day', $dir),
+            'first' => $query->orderBy('first_at', $dir),
             'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
             'seen', 'local', 'site', 'nofile' => $query->orderBy($sort, $dir),
-            default => $query->orderBy('last_day', $dir),
+            default => $query->orderBy('last_at', $dir),
         };
         $query->orderByDesc('seen')->orderBy('u.game_id')->orderBy('u.steam_id')->orderBy('u.game_name');
 
@@ -242,8 +268,8 @@ final class ModUsageReport
             'steam_id' => $r->steam_id,
             'game_name' => $r->game_name,
             'translation_id' => $r->translation_id !== null ? (int) $r->translation_id : null,
-            'first' => substr((string) $r->first_day, 0, 10),
-            'last' => substr((string) $r->last_day, 0, 10),
+            'first' => substr((string) $r->first_at, 0, 10),
+            'last' => substr((string) $r->last_at, 0, 10),
             'seen' => (int) $r->seen,
             'local' => (int) $r->local,
             'site' => (int) $r->site,
@@ -266,13 +292,12 @@ final class ModUsageReport
     {
         $sumOf = fn (string $outcome, string $as) => ["SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as {$as}", [$outcome]];
 
-        $query = DB::table('usage_daily as u')
+        $query = $this->source()
             ->leftJoin('games', 'games.id', '=', 'u.game_id')
             ->whereIn('u.act', [ModUsage::PLAY, ModUsage::TAKE])
             ->whereNotNull('u.translation_id')
-            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
             ->select('u.translation_id')
-            ->selectRaw('MAX(games.name) as card_name, MAX(u.language) as played_language, MAX(u.date) as last_day')
+            ->selectRaw('MAX(games.name) as card_name, MAX(u.language) as played_language, MAX(u.last_day) as last_at')
             ->selectRaw('SUM(CASE WHEN u.act = ? THEN u.sessions ELSE 0 END) as n', [ModUsage::PLAY])
             ->selectRaw('SUM(CASE WHEN u.act = ? AND u.product = ? THEN u.sessions ELSE 0 END) as taken', [ModUsage::TAKE, \App\Support\ClientAgent::MOD])
             ->selectRaw('SUM(CASE WHEN u.act = ? AND u.product = ? THEN u.sessions ELSE 0 END) as installed', [ModUsage::TAKE, \App\Support\ClientAgent::MANAGER])
@@ -288,7 +313,7 @@ final class ModUsageReport
             'language' => $query->orderBy('played_language', $dir),
             'sessions' => $query->orderBy('n', $dir),
             'taken', 'installed', 'same', 'differs', 'own', 'signed' => $query->orderBy($sort, $dir),
-            default => $query->orderBy('last_day', $dir),
+            default => $query->orderBy('last_at', $dir),
         };
         $query->orderByDesc('n')->orderBy('u.translation_id');
 
@@ -302,7 +327,7 @@ final class ModUsageReport
             'exists' => $existing->has($r->translation_id),
             'game' => $r->card_name,
             'language' => $r->played_language,
-            'last' => substr((string) $r->last_day, 0, 10),
+            'last' => substr((string) $r->last_at, 0, 10),
             'sessions' => (int) $r->n,
             'taken' => (int) $r->taken,
             'installed' => (int) $r->installed,

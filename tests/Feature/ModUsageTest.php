@@ -301,6 +301,48 @@ class ModUsageTest extends TestCase
             ->assertSee('Steam app 400602')->assertDontSee('Untouched Game')->assertDontSee('Some Library Game');
     }
 
+    /**
+     * 🔴 Old days become months — merged with what the month holds, their first and last day kept —
+     * and the screen still reads them.
+     */
+    public function test_old_days_fold_into_months_and_are_still_read(): void
+    {
+        $game = $this->game('Old Game', '400700');
+        $month = \App\Models\AnalyticsGame::foldedBefore()->subMonths(2);
+        $row = fn (string $day, int $sessions) => [
+            'date' => $day, 'product' => 'mod', 'act' => ModUsage::LOOK, 'game_id' => $game->id,
+            'steam_id' => null, 'game_name' => null, 'language' => 'French', 'translation_id' => null,
+            'outcome' => ModUsage::NONE, 'signed_in' => false, 'sessions' => $sessions,
+        ];
+        DB::table('usage_daily')->insert([
+            $row($month->copy()->addDays(4)->toDateString(), 2),
+            $row($month->copy()->addDays(9)->toDateString(), 3),
+        ]);
+        // A month already folded once: the late days join it.
+        DB::table('usage_monthly')->insert(array_diff_key($row('', 1), ['date' => 0]) + [
+            'month' => $month->toDateString(),
+            'first_day' => $month->copy()->addDay()->toDateString(),
+            'last_day' => $month->copy()->addDay()->toDateString(),
+        ]);
+        $recent = $row(now()->subDay()->toDateString(), 1);
+        DB::table('usage_daily')->insert($recent);
+
+        $this->assertSame(2, ModUsage::foldOldDays());
+
+        $folded = DB::table('usage_monthly')->sole();
+        $this->assertSame(6, (int) $folded->sessions);
+        $this->assertSame($month->copy()->addDay()->toDateString(), substr((string) $folded->first_day, 0, 10));
+        $this->assertSame($month->copy()->addDays(9)->toDateString(), substr((string) $folded->last_day, 0, 10));
+        $this->assertSame(1, DB::table('usage_daily')->count(), 'the recent day stays a day');
+
+        $span = \App\Support\Span::fromRequest(\Illuminate\Http\Request::create('/', 'GET', [
+            'from' => $month->toDateString(), 'to' => now()->toDateString(),
+        ]), 100000);
+        $wanted = (new \App\Services\ModUsageReport($span))->wanted('last', 'desc', 'wpage')->items();
+        $this->assertSame(7, $wanted[0]['without'], 'six folded and one day');
+        $this->assertSame($month->copy()->addDay()->toDateString(), $wanted[0]['first']);
+    }
+
     /** Each table sorts on its own parameters, over every row of the span — never a top N. */
     public function test_the_wanted_table_sorts_on_its_own_parameters(): void
     {

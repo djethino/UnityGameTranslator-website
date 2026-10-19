@@ -39,6 +39,11 @@
     :title="$span->label()"
     :note="$span->includesToday() ? 'today counted up to now' : null" />
 
+{{-- The same boundary and words as the Analytics screen (ModUsage::foldOldDays). --}}
+@if($span->from->lessThan(\App\Models\AnalyticsGame::foldedBefore()))
+    <p class="text-xs text-gray-500 mb-4">Before {{ \App\Models\AnalyticsGame::foldedBefore()->toDateString() }}, counted per whole month — and not drawn per day.</p>
+@endif
+
 {{-- What each session did at most, best first. The first tile is the whole they are part of. --}}
 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">

@@ -54,6 +54,11 @@ class AggregateAnalytics extends Command
         if ($usageDays !== []) {
             $this->info('  Mod usage counted and its sessions forgotten for ' . implode(', ', $usageDays));
         }
+        // Then its old days become months, at the same age as the games above.
+        $usageFolded = \App\Services\ModUsage::foldOldDays();
+        if ($usageFolded > 0) {
+            $this->info("  Folded {$usageFolded} mod usage day row(s) into months");
+        }
 
         // 🔴 **After the counting, never before.** The fingerprint answers COUNT(DISTINCT) for the
         // day just aggregated; once that number is in analytics_daily it has no further use, and it
