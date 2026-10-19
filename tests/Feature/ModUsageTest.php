@@ -173,22 +173,40 @@ class ModUsageTest extends TestCase
         $this->assertSame(2, (int) $this->counted(ModUsage::TAKE)->sum('sessions'));
     }
 
-    public function test_the_relay_is_not_counted_and_an_author_plays_their_own(): void
+    public function test_the_relay_is_not_counted_and_a_signed_in_player_is(): void
     {
-        $author = User::factory()->create()->refresh();
-        $token = ApiToken::createForUser($author)->plain_token;
-        $translation = $this->translation($this->game('Authored Game'), 'French', $author);
+        $player = User::factory()->create()->refresh();
+        $token = ApiToken::createForUser($player)->plain_token;
+        $translation = $this->translation($this->game('Followed Game'));
 
         $this->asCopy(1, 'UnityGameTranslator-SSE/1.0')->withHeader('Authorization', 'Bearer ' . $token)
             ->getJson('/api/v1/sync/state?uuid=' . $translation->file_uuid)->assertOk();
         $this->assertSame(0, DB::table('usage_seen')->count(), 'the relay asks on behalf of a stream, under its own name');
 
         $this->asCopy(1)->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/sync/state?uuid=' . $translation->file_uuid)->assertOk();
+            ->getJson('/api/v1/sync/state?uuid=' . $translation->file_uuid . '&hash=' . str_repeat('a', 64))->assertOk();
 
         $play = $this->counted(ModUsage::PLAY)->sole();
-        $this->assertSame(ModUsage::OWN, $play->outcome);
+        $this->assertSame(ModUsage::SAME, $play->outcome);
         $this->assertTrue((bool) $play->signed_in);
+    }
+
+    /**
+     * 🔴 An author playing their own translation leaves nothing: the row would name the day a known
+     * account played a known game. Neither through the stream's state nor through the public check.
+     */
+    public function test_an_author_playing_their_own_translation_is_not_recorded(): void
+    {
+        $author = User::factory()->create()->refresh();
+        $token = ApiToken::createForUser($author)->plain_token;
+        $translation = $this->translation($this->game('Authored Game'), 'French', $author);
+
+        $this->asCopy(1)->withHeader('Authorization', 'Bearer ' . $token)
+            ->getJson('/api/v1/sync/state?uuid=' . $translation->file_uuid)->assertOk();
+        $this->asCopy(1)->withHeader('Authorization', 'Bearer ' . $token)
+            ->getJson("/api/v1/translations/{$translation->id}/check")->assertOk();
+
+        $this->assertSame(0, DB::table('usage_seen')->count());
     }
 
     /** 🔴 Counted, then forgotten — every pending day, never today, never a day already gone. */

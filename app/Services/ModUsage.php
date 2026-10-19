@@ -63,8 +63,6 @@ final class ModUsage
     public const SAME = 'same';
     /** play: the copy differs — edited by its player, or older than the published one. */
     public const DIFFERS = 'differs';
-    /** play: the player is its author. */
-    public const OWN = 'own';
     /** session: plays a translation from the site. */
     public const PLAYS = 'plays';
     /** session: took one that day, not yet seen in use. */
@@ -175,18 +173,19 @@ final class ModUsage
     }
 
     /**
-     * What a copy holding `$translation` is to it — its author's, or the published file, or not.
+     * What a player's copy is to the published file — the same, or not.
+     *
+     * 🔴 **Never asked for its author's own copy, which is not recorded at all** (user, 2026-10-20).
+     * An author is a public account: "translation #X played by its author on that day" tracks a
+     * named person, and without the translation the figure would say nothing worth keeping. Their
+     * activity is already public on Translation flows. The callers skip the note.
      *
      * ⚠ `differs` cannot say WHICH: the site keeps only the current hash, so a copy its player
      * translated further and a copy older than the last publication look the same. The screen says
      * both.
      */
-    public static function playOutcome(bool $byItsAuthor, ?string $publishedHash, ?string $clientHash): string
+    public static function playOutcome(?string $publishedHash, ?string $clientHash): string
     {
-        if ($byItsAuthor) {
-            return self::OWN;
-        }
-
         if ($clientHash === null || $clientHash === '' || $publishedHash === null) {
             return '';
         }

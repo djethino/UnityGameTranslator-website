@@ -158,7 +158,7 @@ final class ModUsageReport
 
     /** How each table may be sorted — the column keys its headers send (x-admin.sortable-th). */
     public const WANTED_SORTS = ['last', 'first', 'game', 'language', 'without', 'found'];
-    public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'taken', 'installed', 'same', 'differs', 'own', 'signed'];
+    public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'taken', 'installed', 'same', 'differs', 'signed'];
 
     /** Rows per page of the two tables, like the other admin lists. */
     public const PER_PAGE = 20;
@@ -303,7 +303,6 @@ final class ModUsageReport
             ->selectRaw('SUM(CASE WHEN u.act = ? AND u.product = ? THEN u.sessions ELSE 0 END) as installed', [ModUsage::TAKE, \App\Support\ClientAgent::MANAGER])
             ->selectRaw(...$sumOf(ModUsage::SAME, 'same'))
             ->selectRaw(...$sumOf(ModUsage::DIFFERS, 'differs'))
-            ->selectRaw(...$sumOf(ModUsage::OWN, 'own'))
             ->selectRaw('SUM(CASE WHEN u.act = ? AND u.signed_in = 1 THEN u.sessions ELSE 0 END) as signed', [ModUsage::PLAY])
             ->groupBy('u.translation_id');
 
@@ -312,7 +311,7 @@ final class ModUsageReport
             'game' => $query->orderBy('card_name', $dir),
             'language' => $query->orderBy('played_language', $dir),
             'sessions' => $query->orderBy('n', $dir),
-            'taken', 'installed', 'same', 'differs', 'own', 'signed' => $query->orderBy($sort, $dir),
+            'taken', 'installed', 'same', 'differs', 'signed' => $query->orderBy($sort, $dir),
             default => $query->orderBy('last_at', $dir),
         };
         $query->orderByDesc('n')->orderBy('u.translation_id');
@@ -333,7 +332,6 @@ final class ModUsageReport
             'installed' => (int) $r->installed,
             'same' => (int) $r->same,
             'differs' => (int) $r->differs,
-            'own' => (int) $r->own,
             'signed_in' => (int) $r->signed,
         ]);
     }

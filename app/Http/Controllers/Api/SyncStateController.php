@@ -62,18 +62,19 @@ class SyncStateController extends Controller
 
         $state = $this->buildSyncState($uuid, $request->user(), $clientHash, $withLineage);
 
-        // The translation this game plays with, for the admin "Mod usage" screen: the account's own
-        // line when it has one, the Main otherwise. Read off the answer rather than queried again.
+        // The Main this game plays with, for the admin "Mod usage" screen. Read off the answer
+        // rather than queried again.
+        // ⚠ Not when the account has a line of its own in the lineage — a Main or a branch it wrote:
+        // its author playing it would track a named person (ModUsage::playOutcome).
         // ⚠ Only a mod's own call counts: the live stream's relay asks this too, under its own
         // User-Agent, and ModUsage ignores it.
-        $own = $state['role'] !== 'none';
-        $played = $own ? $state['translation'] : $state['main'];
+        $played = $state['role'] === 'none' ? $state['main'] : null;
         if ($played !== null) {
             ModUsage::note($request, ModUsage::PLAY, [
                 'translation_id' => $played['id'],
                 'game_id' => $state['game']['id'] ?? null,
                 'language' => $played['target_language'],
-                'outcome' => ModUsage::playOutcome($own, $played['file_hash'], $clientHash),
+                'outcome' => ModUsage::playOutcome($played['file_hash'], $clientHash),
             ]);
         }
 

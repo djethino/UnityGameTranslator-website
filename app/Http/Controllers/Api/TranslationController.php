@@ -766,17 +766,16 @@ class TranslationController extends Controller
         }
 
         // A mod holding this translation is playing with it — kept for the admin "Mod usage"
-        // screen before the 304 below, which answers the same copy just as well.
-        ModUsage::note($request, ModUsage::PLAY, [
-            'translation_id' => $translation->id,
-            'game_id' => $translation->game_id,
-            'language' => $translation->target_language,
-            'outcome' => ModUsage::playOutcome(
-                $request->user() !== null && $request->user()->id === $translation->user_id,
-                $translation->file_hash,
-                $request->query('hash')
-            ),
-        ]);
+        // screen before the 304 below, which answers the same copy just as well. Never its
+        // author's own copy: that would track a named person (ModUsage::playOutcome).
+        if ($request->user()?->id !== $translation->user_id) {
+            ModUsage::note($request, ModUsage::PLAY, [
+                'translation_id' => $translation->id,
+                'game_id' => $translation->game_id,
+                'language' => $translation->target_language,
+                'outcome' => ModUsage::playOutcome($translation->file_hash, $request->query('hash')),
+            ]);
+        }
 
         // ⚠ Covers everything this endpoint ANSWERS, not just the file. An ETag built on
         // file_hash alone — which is what stood here — replies 304 while the caller's copy of

@@ -255,8 +255,8 @@
 <p class="text-xs text-gray-500 mb-3">
     <strong>Taken</strong>: by the mod, in the game. <strong>Via Manager</strong>: written into a game where
     the Manager installed the mod. <strong>Sessions</strong>: playing it. <strong>Same</strong>: the copy is the published file. <strong>Differs</strong>:
-    edited by its player, or older than the published one — the site cannot tell which.
-    <strong>Author</strong>: played by the account that published it.
+    edited by its player, or older than the published one — the site cannot tell which. Its author
+    playing it is not counted.
 </p>
 @if($inUse->isNotEmpty())
     <x-admin.scroll-table>
@@ -271,7 +271,6 @@
                     <x-admin.sortable-th column="sessions" label="Sessions" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="same" label="Same" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="differs" label="Differs" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="own" label="Author" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="signed" label="Signed in" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
                 </tr>
@@ -293,7 +292,6 @@
                         <td class="py-2 px-4 text-right">{{ number_format($row['sessions']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['same']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['differs']) }}</td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['own']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['signed_in']) }}</td>
                         <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
                     </tr>
