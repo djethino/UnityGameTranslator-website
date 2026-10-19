@@ -26,6 +26,12 @@ use Illuminate\Support\Facades\DB;
  */
 final class ModUsage
 {
+    /**
+     * The day this started being written (deployed 2026-10-19). Before it, a copy's calls were never
+     * looked at — not "called for nothing" (ModUsageReport::copies).
+     */
+    public const COUNTING_STARTED = '2026-10-19';
+
     public const LOOK = 'look';
     public const TAKE = 'take';
     public const PLAY = 'play';

@@ -28,12 +28,11 @@ final class ModUsageReport
         }
     }
 
-    /** Days since the first counted day — the ceiling of the span (AnalyticsPeriods). */
+    /** Days since counting began — the ceiling of the span (AnalyticsPeriods). */
     public static function daysStored(): int
     {
-        $oldest = DB::table('usage_daily')->min('date');
-
-        return $oldest ? max(1, (int) CarbonImmutable::parse($oldest)->diffInDays(now()) + 1) : 1;
+        // From the day counting began, like copies(): one beginning for the whole screen.
+        return max(1, (int) CarbonImmutable::parse(ModUsage::COUNTING_STARTED)->diffInDays(now()) + 1);
     }
 
     /** The span's rows of one act. */
@@ -52,13 +51,13 @@ final class ModUsageReport
     public function copies(): int
     {
         // 🔴 **Only over the days usage was counted.** Copies are counted since 2026-08-20, usage
-        // since 2026-10-19: over a span reaching before, the copies of days nobody looked at would
-        // all read as "called for something else only" — a measurement of something never measured.
-        $first = DB::table('usage_daily')->min('date');
-        if ($first === null) {
-            return 0;
-        }
-        $from = max($this->span->from->toDateString(), substr((string) $first, 0, 10));
+        // since ModUsage::COUNTING_STARTED: over a span reaching before, the copies of days nobody
+        // looked at would all read as "called for something else only" — a measurement of something
+        // never measured.
+        //
+        // ⚠ A fixed date, not the first row of `usage_daily`: before any act is counted that table is
+        // empty, and this tile read 0 while the dashboard — reading the same copies — said 1.
+        $from = max($this->span->from->toDateString(), ModUsage::COUNTING_STARTED);
 
         return (int) DB::table('client_usage_daily')
             ->where('product', \App\Support\ClientAgent::MOD)

@@ -214,6 +214,17 @@ class ModUsageTest extends TestCase
         $this->assertSame(2, (int) DB::table('usage_daily')->where('act', ModUsage::LOOK)->sum('sessions'));
     }
 
+    /** The first tile and the dashboard read the same copies — before any act is counted too. */
+    public function test_a_copy_that_only_called_for_something_else_is_still_a_session(): void
+    {
+        $this->asCopy(1)->getJson('/api/v1/games')->assertOk();
+
+        $report = new \App\Services\ModUsageReport(\App\Support\Span::lastDays(1));
+
+        $this->assertSame(1, $report->copies());
+        $this->assertSame(0, DB::table('usage_daily')->count());
+    }
+
     public function test_the_screen_shows_what_was_looked_for_and_what_is_played(): void
     {
         $this->game('Lonely Game', '400100');
