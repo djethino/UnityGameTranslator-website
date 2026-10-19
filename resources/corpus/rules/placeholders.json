@@ -141,6 +141,18 @@
     { "id": "placeholders/accepts/reordered-values-are-not-judged", "op": "accepts",
       "in": { "source": "[!v*0]/[!v*1]G", "translation": "G [!v*1]/[!v*0]" }, "out": { "accepted": true, "errors": [] },
       "why": "once the two values no longer follow each other, what lies between them says something the rule has no opinion about" },
+    { "id": "placeholders/accepts/words-between-values-dropped-to-a-space", "op": "accepts",
+      "in": { "source": "[!v*0]年[!v*1]月[!v*2]日", "translation": "[!v*2] [!v*1] [!v*0]" },
+      "out": { "accepted": false, "errors": [
+        "between [!v*0] and [!v*1] the source has the word \"年\": \" \" leaves the two values side by side — keep a word between them",
+        "between [!v*1] and [!v*2] the source has the word \"月\": \" \" leaves the two values side by side — keep a word between them" ] },
+      "why": "seen in a real file: a save's date (year, month, day) shown as \"3 1 1\" — three numbers nobody can tell apart" },
+    { "id": "placeholders/accepts/a-date-with-its-words-moved", "op": "accepts",
+      "in": { "source": "[!v*0]年[!v*1]月[!v*2]日", "translation": "jour [!v*2], mois [!v*1], an [!v*0]" }, "out": { "accepted": true, "errors": [] },
+      "why": "the words may move and the values be reordered: what matters is that something still tells them apart" },
+    { "id": "placeholders/accepts/a-separator-still-tells-the-values-apart", "op": "accepts",
+      "in": { "source": "[!v*0]年[!v*1]月", "translation": "[!v*1]/[!v*0]" }, "out": { "accepted": true, "errors": [] },
+      "why": "a sign between the values is the language's choice of separator, not a word dropped to nothing" },
 
     { "id": "placeholders/accepts_edit/the-language-moves-the-words-around-it", "op": "accepts_edit",
       "in": { "source": "boltcutters ([!v*0] off)", "edited": "coupe-boulons (Promo [!v*0])" }, "out": { "accepted": true, "errors": [] },
