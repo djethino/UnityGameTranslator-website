@@ -6,7 +6,7 @@ use App\Models\Game;
 use App\Models\Translation;
 use App\Support\Span;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -118,81 +118,128 @@ final class ModUsageReport
         ];
     }
 
+    /** How each table may be sorted — the column keys its headers send (x-admin.sortable-th). */
+    public const WANTED_SORTS = ['last', 'first', 'game', 'language', 'without', 'found'];
+    public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'same', 'differs', 'own', 'signed'];
+
+    /** Rows per page of the two tables, like the other admin lists. */
+    public const PER_PAGE = 20;
+
     /**
-     * The games looked for with nothing in the language asked — what to translate next.
+     * The games looked for with nothing in the language asked — which translations players want,
+     * over the span (user, 2026-10-19: "quelles traductions intéressent le plus les joueurs sur des
+     * périodes"). Every row, paged and sorted by the server; the most recently asked first.
      *
      * Each row also counts the sessions that DID find one for that game and language in the span: a
      * translation published since shows up beside the demand it answers. And whether one is listed
      * now, which no past day can say.
      *
-     * @return list<array{game: ?Game, steam_id: ?string, game_name: ?string, language: string, without: int, found: int, other_languages: bool, available_now: bool}>
+     * ⚠ Sorted on what the columns SHOW: the game by the name on screen — the card's, else the name
+     * or Steam id the mod sent — and the days as the first and last the span holds.
      */
-    public function wanted(int $limit): array
+    public function wanted(string $sort, string $dir, string $pageName): LengthAwarePaginator
     {
-        $rows = $this->rows(ModUsage::LOOK)
-            ->select('game_id', 'steam_id', 'game_name', 'language')
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN 0 ELSE sessions END) as without', [ModUsage::FOUND])
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN sessions ELSE 0 END) as found', [ModUsage::FOUND])
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN sessions ELSE 0 END) as other_languages', [ModUsage::OTHER_LANGUAGES])
-            ->groupBy('game_id', 'steam_id', 'game_name', 'language')
-            ->havingRaw('SUM(CASE WHEN outcome = ? THEN 0 ELSE sessions END) > 0', [ModUsage::FOUND])
-            ->orderByDesc('without')
-            ->limit($limit)
-            ->get();
+        $found = ModUsage::FOUND;
+        $query = DB::table('usage_daily as u')
+            ->leftJoin('games', 'games.id', '=', 'u.game_id')
+            ->where('u.act', ModUsage::LOOK)
+            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
+            ->select('u.game_id', 'u.steam_id', 'u.game_name', 'u.language')
+            ->selectRaw('MAX(games.name) as card_name')
+            ->selectRaw('MIN(u.date) as first_day, MAX(u.date) as last_day')
+            ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN 0 ELSE u.sessions END) as without', [$found])
+            ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as found', [$found])
+            ->selectRaw('SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as other_languages', [ModUsage::OTHER_LANGUAGES])
+            ->groupBy('u.game_id', 'u.steam_id', 'u.game_name', 'u.language')
+            ->havingRaw('SUM(CASE WHEN u.outcome = ? THEN 0 ELSE u.sessions END) > 0', [$found]);
 
-        $gameIds = $rows->pluck('game_id')->filter()->unique()->values();
+        match ($sort) {
+            'first' => $query->orderBy('first_day', $dir),
+            'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
+            'language' => $query->orderBy('u.language', $dir),
+            'without' => $query->orderBy('without', $dir),
+            'found' => $query->orderBy('found', $dir),
+            default => $query->orderBy('last_day', $dir),
+        };
+        // The same order on every page: ties broken by the demand, then by the row itself.
+        $query->orderByDesc('without')->orderBy('u.game_id')->orderBy('u.steam_id')->orderBy('u.game_name')->orderBy('u.language');
+
+        $page = $query->paginate(self::PER_PAGE, ['*'], $pageName)->withQueryString();
+
+        $gameIds = collect($page->items())->pluck('game_id')->filter()->unique()->values();
         $games = Game::whereIn('id', $gameIds)->get()->keyBy('id');
-        // Listed today, as game|language — one query for the rows shown.
+        // Listed today, as game|language — one query for the page shown.
         $listed = Translation::publiclyListed()->whereIn('game_id', $gameIds)
             ->distinct()->get(['game_id', 'target_language'])
             ->map(fn ($t) => $t->game_id . '|' . $t->target_language)
             ->flip();
 
-        return $rows->map(fn ($r) => [
+        return $page->through(fn ($r) => [
             'game' => $r->game_id ? $games->get($r->game_id) : null,
             'steam_id' => $r->steam_id,
             'game_name' => $r->game_name,
             'language' => $r->language,
+            'first' => substr((string) $r->first_day, 0, 10),
+            'last' => substr((string) $r->last_day, 0, 10),
             'without' => (int) $r->without,
             'found' => (int) $r->found,
             'other_languages' => (int) $r->other_languages > 0,
             'available_now' => $listed->has($r->game_id . '|' . $r->language),
-        ])->all();
+        ]);
     }
 
     /**
-     * The translations of the site in use, most played first, with what the copies are to them.
+     * The translations of the site in use, with what the copies are to them — every one played in
+     * the span, paged and sorted by the server; the most recently played first.
      *
-     * @return list<array{id: int, translation: ?Translation, sessions: int, same: int, differs: int, own: int, unknown: int, signed_in: int}>
+     * ⚠ The game and the language are read from the rows (ModUsage keeps them with each play), so a
+     * translation deleted since still says what it was.
      */
-    public function inUse(int $limit): array
+    public function inUse(string $sort, string $dir, string $pageName): LengthAwarePaginator
     {
-        $rows = $this->rows(ModUsage::PLAY)
-            ->whereNotNull('translation_id')
-            ->select('translation_id')
-            ->selectRaw('SUM(sessions) as n')
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN sessions ELSE 0 END) as same', [ModUsage::SAME])
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN sessions ELSE 0 END) as differs', [ModUsage::DIFFERS])
-            ->selectRaw('SUM(CASE WHEN outcome = ? THEN sessions ELSE 0 END) as own', [ModUsage::OWN])
-            ->selectRaw('SUM(CASE WHEN signed_in = 1 THEN sessions ELSE 0 END) as signed')
-            ->groupBy('translation_id')
-            ->orderByDesc('n')
-            ->limit($limit)
-            ->get();
+        $sumOf = fn (string $outcome, string $as) => ["SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as {$as}", [$outcome]];
 
-        // A deleted translation is still named by its number: it was played, whatever became of it.
-        $translations = Translation::with('game:id,name')->whereIn('id', $rows->pluck('translation_id'))->get()->keyBy('id');
+        $query = DB::table('usage_daily as u')
+            ->leftJoin('games', 'games.id', '=', 'u.game_id')
+            ->where('u.act', ModUsage::PLAY)
+            ->whereNotNull('u.translation_id')
+            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
+            ->select('u.translation_id')
+            ->selectRaw('MAX(games.name) as card_name, MAX(u.language) as played_language, MAX(u.date) as last_day')
+            ->selectRaw('SUM(u.sessions) as n')
+            ->selectRaw(...$sumOf(ModUsage::SAME, 'same'))
+            ->selectRaw(...$sumOf(ModUsage::DIFFERS, 'differs'))
+            ->selectRaw(...$sumOf(ModUsage::OWN, 'own'))
+            ->selectRaw('SUM(CASE WHEN u.signed_in = 1 THEN u.sessions ELSE 0 END) as signed')
+            ->groupBy('u.translation_id');
 
-        return $rows->map(fn ($r) => [
+        match ($sort) {
+            'translation' => $query->orderBy('u.translation_id', $dir),
+            'game' => $query->orderBy('card_name', $dir),
+            'language' => $query->orderBy('played_language', $dir),
+            'sessions' => $query->orderBy('n', $dir),
+            'same', 'differs', 'own', 'signed' => $query->orderBy($sort, $dir),
+            default => $query->orderBy('last_day', $dir),
+        };
+        $query->orderByDesc('n')->orderBy('u.translation_id');
+
+        $page = $query->paginate(self::PER_PAGE, ['*'], $pageName)->withQueryString();
+
+        // Linked only while it exists: a deleted one is named by its number.
+        $existing = Translation::whereIn('id', collect($page->items())->pluck('translation_id'))->pluck('id')->flip();
+
+        return $page->through(fn ($r) => [
             'id' => (int) $r->translation_id,
-            'translation' => $translations->get($r->translation_id),
+            'exists' => $existing->has($r->translation_id),
+            'game' => $r->card_name,
+            'language' => $r->played_language,
+            'last' => substr((string) $r->last_day, 0, 10),
             'sessions' => (int) $r->n,
             'same' => (int) $r->same,
             'differs' => (int) $r->differs,
             'own' => (int) $r->own,
-            'unknown' => (int) $r->n - (int) $r->same - (int) $r->differs - (int) $r->own,
             'signed_in' => (int) $r->signed,
-        ])->all();
+        ]);
     }
 
     /**

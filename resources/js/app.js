@@ -22,6 +22,11 @@ Alpine.data('adminTableScroll', () => ({
     },
 }));
 
+// A link that reloads the same screen (a span, a sort, a page of a table) keeps the reader where
+// they were — any element carrying data-keeps-scroll.
+import { keepScroll } from './components/keep-scroll.js';
+keepScroll();
+
 // Locally-generated avatars (DiceBear "thumbs", CC0): the SVG is built in
 // the browser from a seed — no upload, no external request, no PII.
 // Placeholders: <span data-dicebear-seed="..." data-dicebear-size="32">

@@ -9,8 +9,8 @@
      ⚠ `keep` is what the screen's other filters carry along: touching the span must not silently
      reset them. An offer drops the two dates and the dates drop the offer — one span at a time.
 
-     ⚠ Links carry `data-keeps-scroll`: a screen that remembers where the reader was (Analytics)
-     listens for it; the others ignore it. --}}
+     ⚠ Links carry `data-keeps-scroll`: the reader stays where they were across the reload, on every
+     screen (components/keep-scroll.js). --}}
 @php
     $today = now()->toDateString();
     $oldest = now()->subDays(max(1, $daysStored) - 1)->toDateString();

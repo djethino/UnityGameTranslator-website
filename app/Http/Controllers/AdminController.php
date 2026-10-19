@@ -897,6 +897,11 @@ class AdminController extends Controller
         $span = Span::fromRequest($request, $daysStored);
         $report = new ModUsageReport($span);
 
+        // Two sortable tables on one screen: each sorts and pages on its own parameters
+        // (x-admin.sortable-th), the most recent first by default.
+        $sortOf = fn (string $param, array $allowed) => in_array($request->get($param), $allowed, true) ? $request->get($param) : 'last';
+        $dirOf = fn (string $param) => $request->get($param) === 'asc' ? 'asc' : 'desc';
+
         return view('admin.usage', [
             'span' => $span,
             'daysStored' => $daysStored,
@@ -904,8 +909,8 @@ class AdminController extends Controller
             'sessions' => $report->sessions(),
             'takes' => $report->takes(),
             'daily' => $report->daily(),
-            'wanted' => $report->wanted(self::TOP_ROWS),
-            'inUse' => $report->inUse(self::TOP_ROWS),
+            'wanted' => $report->wanted($sortOf('wsort', ModUsageReport::WANTED_SORTS), $dirOf('wdir'), 'wpage'),
+            'inUse' => $report->inUse($sortOf('usort', ModUsageReport::IN_USE_SORTS), $dirOf('udir'), 'upage'),
             'languages' => $report->languages(),
             'topRows' => ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS],
         ]);

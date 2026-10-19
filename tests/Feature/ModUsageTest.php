@@ -246,4 +246,26 @@ class ModUsageTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Mod usage');
     }
+
+    /** Each table sorts on its own parameters, over every row of the span — never a top N. */
+    public function test_the_wanted_table_sorts_on_its_own_parameters(): void
+    {
+        $this->game('Rarely Asked', '400401');
+        $this->game('Often Asked', '400402');
+
+        $this->asCopy(1)->getJson('/api/v1/translations?steam_id=400401&lang=French')->assertOk();
+        foreach ([2, 3, 4] as $copy) {
+            $this->asCopy($copy)->getJson('/api/v1/translations?steam_id=400402&lang=French')->assertOk();
+        }
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get(route('admin.usage', ['wsort' => 'without', 'wdir' => 'desc', 'usort' => 'game']))
+            ->assertOk()->assertSeeInOrder(['Often Asked', 'Rarely Asked']);
+        $this->actingAs($admin)->get(route('admin.usage', ['wsort' => 'without', 'wdir' => 'asc']))
+            ->assertOk()->assertSeeInOrder(['Rarely Asked', 'Often Asked']);
+        // An unknown key falls back to the most recent, never to an error.
+        $this->actingAs($admin)->get(route('admin.usage', ['wsort' => 'drop table', 'usort' => 'x']))->assertOk();
+    }
 }
