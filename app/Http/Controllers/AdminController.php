@@ -88,11 +88,7 @@ class AdminController extends Controller
             now()->subDays($fromDaysAgo)->toDateString(), now()->subDays($toDaysAgo)->toDateString(),
         ])->sum('unique_visitors');
         $visitorsWeek = $sumVisitors(7, 1);
-        $visitorsWeekBefore = $sumVisitors(14, 8);
-        // No change is said when the week before holds nothing: a percentage of zero is not one.
-        $visitorsTrend = $visitorsWeekBefore > 0
-            ? (int) round(($visitorsWeek - $visitorsWeekBefore) * 100 / $visitorsWeekBefore)
-            : null;
+        $visitorsTrend = self::change($visitorsWeek, $sumVisitors(14, 8));
 
         // What waits on the games screen: the store proposals nobody has decided yet — the same
         // count its own header shows.
@@ -105,11 +101,19 @@ class AdminController extends Controller
             ->where('created_at', '>=', $since)
             ->selectRaw('action, COUNT(*) as n')->groupBy('action')->pluck('n', 'action');
         $lastDay = $flowsOver(now()->subDays(1));
+        $flowsWeek = (int) $flowsOver($weekAgo)->sum();
+        // The 7 days before, for the change beside the figure — as the visitors' card.
+        $flowsWeekBefore = (int) AuditLog::whereIn('action', TranslationFlows::actions())
+            ->where('created_at', '>=', now()->subDays(14))->where('created_at', '<', $weekAgo)->count();
         $flowsSummary = [
-            'week' => (int) $flowsOver($weekAgo)->sum(),
+            'week' => $flowsWeek,
+            'trend' => self::change($flowsWeek, $flowsWeekBefore),
             'refused' => (int) ($lastDay[TranslationFlows::REFUSED] ?? 0),
             'deleted' => (int) ($lastDay[TranslationFlows::DELETED] ?? 0),
         ];
+
+        // Game cards created this week: a new card is a game whose first translation just arrived.
+        $newGamesWeek = Game::where('created_at', '>=', $weekAgo)->count();
 
         // Copies of the mod that called today — the first tile of the Mod usage screen.
         $modSessionsToday = (int) DB::table('client_usage_daily')
@@ -127,8 +131,17 @@ class AdminController extends Controller
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
             'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsSummary', 'modSessionsToday',
-            'topGames', 'translationsWeek', 'newUsersWeek', 'visitorsWeek', 'visitorsTrend'
+            'topGames', 'translationsWeek', 'newUsersWeek', 'visitorsWeek', 'visitorsTrend', 'newGamesWeek'
         ));
+    }
+
+    /**
+     * The change from one week to the next, in whole percent — the figure beside a card's number.
+     * Null when the week before holds nothing: a percentage of zero is not one.
+     */
+    private static function change(int $now, int $before): ?int
+    {
+        return $before > 0 ? (int) round(($now - $before) * 100 / $before) : null;
     }
 
     /**

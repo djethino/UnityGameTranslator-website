@@ -168,7 +168,8 @@ class TranslationFlowsTest extends TestCase
         $this->actingAs($admin)->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Translation flows')
-            ->assertSeeInOrder(['3', 'events in 7 days', '1 deleted in the last 24 h'])
+            // 3 this week against 1 the week before.
+            ->assertSeeInOrder(['3', '+200 %', 'events in 7 days', '1 deleted in the last 24 h'])
             ->assertSee(route('admin.flows', ['period' => 7]), false)
             ->assertSee(route('admin.flows', ['period' => 1]), false);
     }

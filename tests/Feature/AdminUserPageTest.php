@@ -204,6 +204,8 @@ class AdminUserPageTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('1 proposal waiting')
+            // The card created just now is this week's.
+            ->assertSee('title="New in 7 days">+1</span>', false)
             ->assertSee(route('admin.games', ['proposals' => 'pending']), false)
             ->assertSeeInOrder(['Visitors, 7 days', 'Games', 'Pending Reports', 'Translations', 'Translation flows', 'Mod usage', 'Users', 'Announcements']);
     }

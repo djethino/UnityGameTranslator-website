@@ -27,10 +27,7 @@
                 <p class="text-gray-200 font-semibold">Visitors, 7 days</p>
                 <p class="text-3xl font-bold text-purple-400">
                     {{ number_format($visitorsWeek) }}
-                    @if($visitorsTrend !== null)
-                        <span class="text-base font-semibold {{ $visitorsTrend >= 0 ? 'text-green-400' : 'text-red-400' }}"
-                              title="Against the 7 days before">{{ $visitorsTrend >= 0 ? '+' : '' }}{{ $visitorsTrend }} %</span>
-                    @endif
+                    <x-admin.card-delta :percent="$visitorsTrend" />
                 </p>
                 <p class="text-sm text-gray-500 mt-1">{{ number_format($visitorsToday) }} today · {{ number_format($pageViewsToday) }} {{ Str::plural('page view', $pageViewsToday) }}</p>
             </div>
@@ -49,7 +46,12 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">{{ __('nav.games') }}</p>
-                <p class="text-3xl font-bold text-yellow-400">{{ $totalGames }}</p>
+                {{-- With the cards created this week: a new card is a game whose first translation
+                     just arrived. --}}
+                <p class="text-3xl font-bold text-yellow-400">
+                    {{ number_format($totalGames) }}
+                    <x-admin.card-delta :added="$newGamesWeek" tone="text-yellow-300" />
+                </p>
                 {{-- Leads straight to the games that have something to decide, as Check stores does. --}}
                 @if($pendingProposals > 0)
                     <a href="{{ route('admin.games', ['proposals' => 'pending']) }}"
@@ -88,9 +90,7 @@
                 <p class="text-gray-200 font-semibold">{{ __('admin.translations') }}</p>
                 <p class="text-3xl font-bold text-green-400">
                     {{ number_format($totalTranslations) }}
-                    @if($translationsWeek['new'] > 0)
-                        <span class="text-base font-semibold text-green-300" title="New in 7 days">+{{ number_format($translationsWeek['new']) }}</span>
-                    @endif
+                    <x-admin.card-delta :added="$translationsWeek['new']" tone="text-green-300" />
                 </p>
                 <p class="text-sm text-gray-500 mt-1">{{ number_format($translationsWeek['changed']) }} published or updated in 7 days</p>
                 @if($translationsWeek['hidden'] > 0)
@@ -115,7 +115,10 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">Translation flows</p>
-                <p class="text-3xl font-bold {{ $flowsSummary['week'] > 0 ? 'text-cyan-400' : 'text-gray-500' }}">{{ number_format($flowsSummary['week']) }}</p>
+                <p class="text-3xl font-bold {{ $flowsSummary['week'] > 0 ? 'text-cyan-400' : 'text-gray-500' }}">
+                    {{ number_format($flowsSummary['week']) }}
+                    <x-admin.card-delta :percent="$flowsSummary['trend']" />
+                </p>
                 <p class="text-sm text-gray-500 mt-1">{{ $flowsSummary['week'] === 1 ? 'event in 7 days' : 'events in 7 days' }}</p>
                 @if($flowsSummary['refused'] > 0 || $flowsSummary['deleted'] > 0)
                     <a href="{{ route('admin.flows', ['period' => 1]) }}" class="text-sm text-orange-300 hover:text-orange-200 underline decoration-dotted mt-1 inline-block">
@@ -172,9 +175,7 @@
                 {{-- The total, large, with the week's new accounts beside it — as Translations. --}}
                 <p class="text-3xl font-bold text-blue-400">
                     {{ number_format($totalUsers) }}
-                    @if($newUsersWeek > 0)
-                        <span class="text-base font-semibold text-blue-300" title="New in 7 days">+{{ number_format($newUsersWeek) }}</span>
-                    @endif
+                    <x-admin.card-delta :added="$newUsersWeek" tone="text-blue-300" />
                 </p>
                 <p class="text-sm text-gray-500 mt-1">{{ number_format($newUsersWeek) }} new in 7 days</p>
                 @if($bannedUsers > 0)
