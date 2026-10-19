@@ -39,7 +39,8 @@ class AdminController extends Controller
     {
         // 🔴 **Each card answers "do I need to open this?"** (user, 2026-10-20: "une vue rapide pour
         // voir si on doit aller voir le détail"). A total that only ever climbs answers nothing; what
-        // moved this week, and what waits, does. Totals stay, small, for scale.
+        // moved this week, and what waits, does. The totals of translations and users stay large —
+        // still worth a glance (user, 2026-10-20) — with the week's new ones beside them.
         $pendingReports = Report::where('status', 'pending')->count();
         $totalTranslations = Translation::count();
         $totalUsers = User::count();

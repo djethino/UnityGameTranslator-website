@@ -79,21 +79,26 @@
         </a>
     </div>
 
-    {{-- What moved this week, and the one state worth a look: published but out of the listings for
-         holding nothing translated. The total stays, small, for scale. --}}
+    {{-- The total, large — still worth knowing at a glance (user, 2026-10-20) — with what is new this
+         week beside it, as the visitors' change; what moved below; and the one state worth a look:
+         published but out of the listings for holding nothing translated. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">{{ __('admin.translations') }}</p>
-                <p class="text-3xl font-bold {{ $translationsWeek['changed'] > 0 ? 'text-green-400' : 'text-gray-500' }}">{{ number_format($translationsWeek['changed']) }}</p>
-                <p class="text-sm text-gray-500 mt-1">published or updated in 7 days · {{ number_format($translationsWeek['new']) }} new</p>
+                <p class="text-3xl font-bold text-green-400">
+                    {{ number_format($totalTranslations) }}
+                    @if($translationsWeek['new'] > 0)
+                        <span class="text-base font-semibold text-green-300" title="New in 7 days">+{{ number_format($translationsWeek['new']) }}</span>
+                    @endif
+                </p>
+                <p class="text-sm text-gray-500 mt-1">{{ number_format($translationsWeek['changed']) }} published or updated in 7 days</p>
                 @if($translationsWeek['hidden'] > 0)
                     <a href="{{ route('admin.translations.index', ['listing' => 'hidden']) }}"
                        class="text-sm text-orange-300 hover:text-orange-200 underline decoration-dotted mt-1 inline-block">
                         {{ number_format($translationsWeek['hidden']) }} hidden from listings: nothing translated
                     </a>
                 @endif
-                <p class="text-xs text-gray-500 mt-1">{{ number_format($totalTranslations) }} in all</p>
             </div>
             <i class="fas fa-file-alt text-4xl text-green-400 opacity-50"></i>
         </div>
@@ -164,8 +169,14 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">{{ __('admin.users') }}</p>
-                <p class="text-3xl font-bold {{ $newUsersWeek > 0 ? 'text-blue-400' : 'text-gray-500' }}">{{ number_format($newUsersWeek) }}</p>
-                <p class="text-sm text-gray-500 mt-1">new in 7 days · {{ number_format($totalUsers) }} in all</p>
+                {{-- The total, large, with the week's new accounts beside it — as Translations. --}}
+                <p class="text-3xl font-bold text-blue-400">
+                    {{ number_format($totalUsers) }}
+                    @if($newUsersWeek > 0)
+                        <span class="text-base font-semibold text-blue-300" title="New in 7 days">+{{ number_format($newUsersWeek) }}</span>
+                    @endif
+                </p>
+                <p class="text-sm text-gray-500 mt-1">{{ number_format($newUsersWeek) }} new in 7 days</p>
                 @if($bannedUsers > 0)
                     <p class="text-sm text-red-400 mt-1">{{ trans_choice('admin.banned', $bannedUsers, ['count' => $bannedUsers]) }}</p>
                 @endif
