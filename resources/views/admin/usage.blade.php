@@ -6,8 +6,8 @@
      English only, like the rest of what is added to the admin.
 
      🔴 Only what the mod's calls already said (user, 2026-10-19: "on ne piste pas nos
-     utilisateurs"): no call was added for this screen, the Manager counts only for the translations it
-     writes into a game (never its list of games), and a session
+     utilisateurs"): no call was added for this screen, the Manager counts only for the games where the
+     mod is installed (never the rest of its list of games), and a session
      cannot be followed past its day. What it cannot know is said in the notes at the bottom.
 
      ⚠ Built from the Flows screen's pieces — the span bar, the tiles, the cards, "Show more", the
@@ -174,6 +174,75 @@
     <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm mb-6">Every game looked for had a translation in the language asked.</div>
 @endif
 
+{{-- ─── Where the mod is installed and used, as the Manager reports it ───────
+     Only games whose translation file or confirmed card the Manager read in the mod's own files
+     (ModUsage::HELD) — never the rest of its library. Its own parameters (hsort, hdir, hpage). --}}
+<h2 class="text-lg font-semibold mb-1"><i class="fas fa-box-open mr-2 text-cyan-400"></i> Games with the mod, seen by the Manager
+    <span class="text-sm font-normal text-gray-500 ml-1">{{ number_format($held->total()) }} {{ Str::plural('game', $held->total()) }}</span>
+</h2>
+<p class="text-xs text-gray-500 mb-3">
+    Games where the mod has run, reported by the Manager. <strong>Seen</strong>: Manager copies, one per day — not
+    game launches. <strong>Local only</strong>: a translation made in the game and never published.
+    <strong>On the site</strong>: its translation is a lineage the site has. <strong>No file</strong>: a game
+    confirmed, nothing translated yet. No language: the Manager does not send it.
+</p>
+@if($held->isNotEmpty())
+    <div class="mb-6">
+    <x-admin.scroll-table>
+        <table class="w-full text-sm">
+            <thead class="text-gray-400 text-left">
+                <tr>
+                    <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <th class="py-3 px-4">Translation</th>
+                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="site" label="On the site" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="nofile" label="No file" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="first" label="First seen" default="last" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($held as $row)
+                    <tr class="border-t border-gray-700">
+                        <td class="py-2 px-4">
+                            @if($row['game'])
+                                <a href="{{ route('games.show', $row['game']) }}" class="hover:text-purple-400">{{ $row['game']->name }}</a>
+                            @elseif($row['steam_id'])
+                                <a href="{{ \App\Support\StoreLinks::steam($row['steam_id']) }}" target="_blank" rel="noopener" class="hover:text-purple-400"
+                                   title="Not on the site">Steam app {{ $row['steam_id'] }}</a>
+                            @else
+                                <span title="Not on the site, or the name matches several games">{{ $row['game_name'] }}</span>
+                            @endif
+                        </td>
+                        <td class="py-2 px-4">
+                            @if($row['translation_id'])
+                                <a href="{{ route('admin.translations.show', $row['translation_id']) }}" class="text-purple-400 hover:text-purple-300">#{{ $row['translation_id'] }}</a>
+                            @else
+                                <span class="text-gray-600">—</span>
+                            @endif
+                        </td>
+                        <td class="py-2 px-4 text-right">{{ number_format($row['seen']) }}</td>
+                        <td class="py-2 px-4 text-right {{ $row['local'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['local']) }}</td>
+                        <td class="py-2 px-4 text-right {{ $row['site'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['site']) }}</td>
+                        <td class="py-2 px-4 text-right {{ $row['nofile'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['nofile']) }}</td>
+                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['first'] }}</td>
+                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @if($held->hasPages())
+            <x-slot:below>
+                <div class="px-6 py-4 border-t border-gray-700" data-keeps-scroll>{{ $held->links() }}</div>
+            </x-slot:below>
+        @endif
+    </x-admin.scroll-table>
+    </div>
+@else
+    <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm mb-6">No game with the mod reported by a Manager in this period.</div>
+@endif
+
 {{-- ─── The translations of the site taken and in use ─────────────────────── --}}
 <h2 class="text-lg font-semibold mb-1"><i class="fas fa-play mr-2 text-green-400"></i> Translations taken and played
     <span class="text-sm font-normal text-gray-500 ml-1">{{ number_format($inUse->total()) }} {{ Str::plural('translation', $inUse->total()) }}</span>
@@ -241,8 +310,9 @@
         <i class="fas fa-clock mr-2"></i>
         <strong>Where the figures come from.</strong>
         Only calls the mod already makes: looking for its game's translations (first launch, or when its
-        window opens), taking one, and checking the one it holds. From the Manager, only the translations
-        it writes into a game where it installed the mod — never its list of games. Recorded since 2026-10-19.
+        window opens), taking one, and checking the one it holds. From the Manager, only what concerns a game
+        where the mod is installed — the translations it writes there, and the games where the mod has run
+        (it read a translation file or a confirmed game in the mod's files) — never the rest of its list of games. Recorded since 2026-10-19.
     </p>
     <p>
         <i class="fas fa-eye-slash mr-2"></i>

@@ -911,6 +911,7 @@ class AdminController extends Controller
             'daily' => $report->daily(),
             'wanted' => $report->wanted($sortOf('wsort', ModUsageReport::WANTED_SORTS), $dirOf('wdir'), 'wpage'),
             'inUse' => $report->inUse($sortOf('usort', ModUsageReport::IN_USE_SORTS), $dirOf('udir'), 'upage'),
+            'held' => $report->held($sortOf('hsort', ModUsageReport::HELD_SORTS), $dirOf('hdir'), 'hpage'),
             'languages' => $report->languages(),
             'topRows' => ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS],
         ]);

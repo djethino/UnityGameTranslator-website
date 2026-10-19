@@ -272,6 +272,35 @@ class ModUsageTest extends TestCase
             ->assertSee('Installed Game')->assertSee('1 installed by the Manager');
     }
 
+    /**
+     * From a Manager's batch, only the games where the mod has run — a translation file or a
+     * confirmed card. A game of the library with neither leaves nothing.
+     */
+    public function test_a_manager_batch_reports_only_the_games_where_the_mod_has_run(): void
+    {
+        $published = $this->translation($this->game('Published Game', '400601'));
+        $this->game('Untouched Game', '400603');
+
+        $this->asCopy(1, 'UnityGameTranslatorManager/0.5.1')->postJson('/api/v1/translations/for-games', ['games' => [
+            ['steam_id' => '400601', 'uuid' => $published->file_uuid],
+            ['steam_id' => '400602', 'uuid' => 'never-published-lineage'],
+            ['steam_id' => '400603'],
+            ['name' => 'Some Library Game'],
+        ]])->assertOk();
+
+        $held = $this->counted(ModUsage::HELD)->keyBy(fn ($r) => $r->game_id ?? $r->steam_id);
+        $this->assertCount(2, $held, 'the two games without a file or a card leave nothing');
+        $this->assertSame(ModUsage::ON_SITE, $held[$published->game_id]->outcome);
+        $this->assertSame($published->id, (int) $held[$published->game_id]->translation_id);
+        $this->assertSame(ModUsage::LOCAL_ONLY, $held['400602']->outcome);
+        $this->assertSame(0, DB::table('usage_daily')->where('act', ModUsage::SESSION)->count(), 'a Manager is not a session of the mod');
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $this->actingAs($admin)->get(route('admin.usage'))->assertOk()
+            ->assertSee('Steam app 400602')->assertDontSee('Untouched Game')->assertDontSee('Some Library Game');
+    }
+
     /** Each table sorts on its own parameters, over every row of the span — never a top N. */
     public function test_the_wanted_table_sorts_on_its_own_parameters(): void
     {

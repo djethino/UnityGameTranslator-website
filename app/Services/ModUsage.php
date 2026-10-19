@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\DB;
  * ModUsageReport for the admin "Mod usage" screen; analysis in analyse/statistiques-usages.md.
  *
  * 🔴 **Only what the calls already say.** From the mod: looking for its game's translations
- * (`look`), taking one (`take`), checking the one it holds (`play`). From the Manager, its takes
- * alone — a translation written into a game where it installed the mod; its lookups are about a
- * whole library, and a game installed is not a game played. No call was added to either for this.
+ * (`look`), taking one (`take`), checking the one it holds (`play`). From the Manager, only what
+ * concerns a game where the mod is installed: a translation it writes there (`take`), and a game
+ * whose translation file or confirmed card it read in the mod's files (`held`). The rest of its
+ * library leaves no trace — a game installed is not a game played. No call was added to either.
  *
  * ⚠ **A session is one copy on one day**: the site's daily fingerprint
  * (AnalyticsEvent::visitorFingerprints), the same one `client_usage_daily` counts copies with, so
@@ -35,6 +36,20 @@ final class ModUsage
     public const LOOK = 'look';
     public const TAKE = 'take';
     public const PLAY = 'play';
+    /**
+     * The Manager reports a game where the mod has been used — its batch carries the game's
+     * translation file or confirmed card, both read in the mod's own files (Api TranslationController
+     * noteHeld). Not a session of the mod: it says the mod is installed and has run, not that the
+     * game was launched that day.
+     */
+    public const HELD = 'held';
+    /** held: the game's translation file is a lineage the site has. */
+    public const ON_SITE = 'on_site';
+    /** held: a translation file the site has never seen — made in that game, never published. */
+    public const LOCAL_ONLY = 'local_only';
+    /** held: a card confirmed, no translation file yet. */
+    public const NO_FILE = 'no_file';
+
     /** The act `usage_daily` gives to what each session did at most that day (countDay). */
     public const SESSION = 'session';
 
@@ -82,60 +97,81 @@ final class ModUsage
      */
     public static function note(Request $request, string $act, array $what): void
     {
-        // 🔴 The mod for every act; the Manager for a TAKE only (user, 2026-10-19). A take by the
-        // Manager is a translation written into a game where it installed the mod — never its whole
-        // library, which is what its lookups are about and what is not wanted here.
+        self::noteMany($request, $act, [$what]);
+    }
+
+    /**
+     * Keep several acts of one call — a Manager batch names many games — in ONE upsert, so a
+     * hundred games never cost a hundred statements.
+     *
+     * @param list<array{game_id?: ?int, steam_id?: ?string, game_name?: ?string, language?: ?string, translation_id?: ?int, outcome?: string}> $whats
+     */
+    public static function noteMany(Request $request, string $act, array $whats): void
+    {
+        // 🔴 The mod for every act; the Manager for what touches a game where it installed the mod
+        // only (user, 2026-10-19) — never its whole library, which is what its lookups are about.
         $client = ClientAgent::ours($request->userAgent());
         if ($client === null || !self::counts($client['kind'], $act)) {
             return;
         }
 
         try {
-            $row = [
-                'product' => $client['kind'],
-                'game_id' => $what['game_id'] ?? null,
-                'steam_id' => self::steamId($what['steam_id'] ?? null),
-                'game_name' => self::gameName($what['game_name'] ?? null),
-                'language' => self::language($what['language'] ?? null),
-                'translation_id' => $what['translation_id'] ?? null,
-                'outcome' => $what['outcome'] ?? '',
-            ];
+            $session = AnalyticsEvent::visitorFingerprints(
+                $request->ip() ?? '0.0.0.0',
+                (string) $request->userAgent()
+            )['visitor_hash'];
 
-            // ⚠ An act about nothing nameable is not kept: a look with no card, no well-formed
-            // Steam id and no usable name would be counted under a game nobody can read.
-            if ($row['game_id'] === null && $row['steam_id'] === null && $row['game_name'] === null
-                && $row['translation_id'] === null) {
-                return;
-            }
+            $rows = [];
+            foreach ($whats as $what) {
+                $row = [
+                    'product' => $client['kind'],
+                    'game_id' => $what['game_id'] ?? null,
+                    'steam_id' => self::steamId($what['steam_id'] ?? null),
+                    'game_name' => self::gameName($what['game_name'] ?? null),
+                    'language' => self::language($what['language'] ?? null),
+                    'translation_id' => $what['translation_id'] ?? null,
+                    'outcome' => $what['outcome'] ?? '',
+                ];
 
-            $subject = hash('sha256', json_encode([
-                $row['translation_id'], $row['game_id'], $row['steam_id'],
-                $row['game_name'] === null ? null : mb_strtolower($row['game_name']), $row['language'],
-            ]));
+                // ⚠ An act about nothing nameable is not kept: a look with no card, no well-formed
+                // Steam id and no usable name would be counted under a game nobody can read.
+                if ($row['game_id'] === null && $row['steam_id'] === null && $row['game_name'] === null
+                    && $row['translation_id'] === null) {
+                    continue;
+                }
 
-            DB::table('usage_seen')->upsert(
-                [[
+                $subject = hash('sha256', json_encode([
+                    $row['translation_id'], $row['game_id'], $row['steam_id'],
+                    $row['game_name'] === null ? null : mb_strtolower($row['game_name']), $row['language'],
+                ]));
+
+                // Keyed by subject: one batch naming the same game twice is one row, not a
+                // duplicate key inside a single statement.
+                $rows[$subject] = [
                     'date' => now()->toDateString(),
-                    'session' => AnalyticsEvent::visitorFingerprints(
-                        $request->ip() ?? '0.0.0.0',
-                        (string) $request->userAgent()
-                    )['visitor_hash'],
+                    'session' => $session,
                     'act' => $act,
                     'subject' => $subject,
                     'signed_in' => $request->user() !== null,
-                ] + $row],
-                ['date', 'session', 'act', 'subject'],
-                ['outcome', 'signed_in']
-            );
+                ] + $row;
+            }
+
+            if ($rows !== []) {
+                DB::table('usage_seen')->upsert(array_values($rows), ['date', 'session', 'act', 'subject'], ['outcome', 'signed_in']);
+            }
         } catch (\Throwable $e) {
             report($e);
         }
     }
 
-    /** Whether this program's act is counted: every act of the mod, a take by the Manager. */
+    /**
+     * Whether this program's act is counted: every act of the mod; of the Manager, a take and a
+     * game it reports the mod used in.
+     */
     private static function counts(string $product, string $act): bool
     {
-        return $product === ClientAgent::MOD || ($product === ClientAgent::MANAGER && $act === self::TAKE);
+        return $product === ClientAgent::MOD
+            || ($product === ClientAgent::MANAGER && in_array($act, [self::TAKE, self::HELD], true));
     }
 
     /**

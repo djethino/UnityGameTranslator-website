@@ -605,7 +605,61 @@ class TranslationController extends Controller
             ];
         })->values();
 
+        $this->noteHeld($request, $asked, $bySteam, $byName, $byCard, $matching);
+
         return response()->json(['results' => $results]);
+    }
+
+    /**
+     * Keep, for the admin "Mod usage" screen, the games of this batch where the mod has been used
+     * (user, 2026-10-19).
+     *
+     * 🔴 **Only the entries that carry a `uuid` or a `game_id`** — both are read by the Manager in
+     * the mod's own files (a translation file exists; a card was confirmed in the game), so they
+     * exist only where the mod is installed and has run. Every other game of the library leaves no
+     * trace: a game installed is not a game played.
+     *
+     * ⚠ The batch holds no language. A lineage the site knows gives its translation and language; one
+     * it does not know is a translation of its own, never published — the case no mod call can name
+     * the game of.
+     */
+    private function noteHeld(Request $request, $asked, $bySteam, $byName, $byCard, $matching): void
+    {
+        $held = $asked->filter(fn ($e) => !empty($e['uuid']) || !empty($e['game_id']))->values();
+        if ($held->isEmpty()) {
+            return;
+        }
+
+        // Every lineage of the batch the site holds in any form — a branch is on the site too.
+        $known = Translation::whereIn('file_uuid', $held->pluck('uuid')->filter()->unique()->values())
+            ->pluck('file_uuid')->flip();
+
+        ModUsage::noteMany($request, ModUsage::HELD, $held->map(function ($entry) use ($bySteam, $byName, $byCard, $matching, $known) {
+            $uuid = $entry['uuid'] ?? null;
+            $published = $uuid !== null ? $matching->get($uuid) : null;
+            $card = isset($entry['game_id']) ? $byCard->get((int) $entry['game_id']) : null;
+            $steamId = $entry['steam_id'] ?? null;
+            $name = isset($entry['name']) ? mb_strtolower(trim($entry['name'])) : null;
+            $candidates = $steamId !== null && $bySteam->has($steamId) ? $bySteam->get($steamId)
+                : ($name !== null && $byName->has($name) ? $byName->get($name) : collect());
+
+            // The game: the card confirmed, else the published lineage's, else a single candidate.
+            $gameId = $card?->id ?? $published?->game_id ?? ($candidates->count() === 1 ? $candidates->first()->id : null);
+
+            return [
+                'game_id' => $gameId,
+                // Only when no card is left: beside one they would be a second identity.
+                'steam_id' => $gameId === null ? $steamId : null,
+                'game_name' => $gameId === null && $steamId === null ? ($entry['name'] ?? null) : null,
+                'translation_id' => $published?->id,
+                'language' => $published?->target_language,
+                'outcome' => match (true) {
+                    $uuid === null => ModUsage::NO_FILE,
+                    $known->has($uuid) => ModUsage::ON_SITE,
+                    default => ModUsage::LOCAL_ONLY,
+                },
+            ];
+        })->all());
     }
 
     /**

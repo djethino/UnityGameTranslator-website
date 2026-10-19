@@ -198,6 +198,59 @@ final class ModUsageReport
         ]);
     }
 
+    public const HELD_SORTS = ['last', 'first', 'game', 'seen', 'local', 'site', 'nofile'];
+
+    /**
+     * The games where the mod has been used, as the Manager reports them — every one in the span,
+     * paged and sorted by the server; the most recently seen first (ModUsage::HELD).
+     *
+     * ⚠ **"Seen" counts Manager copies per day**, not launches of the game: a Manager opened every day
+     * for a week on a machine where the mod sits in a game is seven. What it answers is "where is the
+     * mod installed and used", including the translations made locally and never published — the
+     * one case no call of the mod can name the game of.
+     */
+    public function held(string $sort, string $dir, string $pageName): LengthAwarePaginator
+    {
+        $sumOf = fn (string $outcome, string $as) => ["SUM(CASE WHEN u.outcome = ? THEN u.sessions ELSE 0 END) as {$as}", [$outcome]];
+
+        $query = DB::table('usage_daily as u')
+            ->leftJoin('games', 'games.id', '=', 'u.game_id')
+            ->where('u.act', ModUsage::HELD)
+            ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
+            ->select('u.game_id', 'u.steam_id', 'u.game_name')
+            ->selectRaw('MAX(games.name) as card_name, MIN(u.date) as first_day, MAX(u.date) as last_day')
+            ->selectRaw('SUM(u.sessions) as seen')
+            ->selectRaw(...$sumOf(ModUsage::LOCAL_ONLY, 'local'))
+            ->selectRaw(...$sumOf(ModUsage::ON_SITE, 'site'))
+            ->selectRaw(...$sumOf(ModUsage::NO_FILE, 'nofile'))
+            ->selectRaw('MAX(u.translation_id) as translation_id')
+            ->groupBy('u.game_id', 'u.steam_id', 'u.game_name');
+
+        match ($sort) {
+            'first' => $query->orderBy('first_day', $dir),
+            'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
+            'seen', 'local', 'site', 'nofile' => $query->orderBy($sort, $dir),
+            default => $query->orderBy('last_day', $dir),
+        };
+        $query->orderByDesc('seen')->orderBy('u.game_id')->orderBy('u.steam_id')->orderBy('u.game_name');
+
+        $page = $query->paginate(self::PER_PAGE, ['*'], $pageName)->withQueryString();
+        $games = Game::whereIn('id', collect($page->items())->pluck('game_id')->filter()->unique())->get()->keyBy('id');
+
+        return $page->through(fn ($r) => [
+            'game' => $r->game_id ? $games->get($r->game_id) : null,
+            'steam_id' => $r->steam_id,
+            'game_name' => $r->game_name,
+            'translation_id' => $r->translation_id !== null ? (int) $r->translation_id : null,
+            'first' => substr((string) $r->first_day, 0, 10),
+            'last' => substr((string) $r->last_day, 0, 10),
+            'seen' => (int) $r->seen,
+            'local' => (int) $r->local,
+            'site' => (int) $r->site,
+            'nofile' => (int) $r->nofile,
+        ]);
+    }
+
     /**
      * The translations of the site taken and in use, with what the copies are to them — every one
      * taken or played in the span, paged and sorted by the server; the most recent first.
