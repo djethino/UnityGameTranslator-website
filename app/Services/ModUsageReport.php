@@ -84,10 +84,20 @@ final class ModUsageReport
         ])->all();
     }
 
-    /** Sessions that took a translation — a session taking two counts twice. */
-    public function takes(): int
+    /**
+     * Translations taken, by program — in the game by the mod, or written into it by the Manager. A
+     * session taking two counts twice.
+     *
+     * @return array{mod: int, manager: int}
+     */
+    public function takes(): array
     {
-        return (int) $this->rows(ModUsage::TAKE)->sum('sessions');
+        $by = $this->rows(ModUsage::TAKE)->selectRaw('product, SUM(sessions) as n')->groupBy('product')->pluck('n', 'product');
+
+        return [
+            'mod' => (int) ($by[\App\Support\ClientAgent::MOD] ?? 0),
+            'manager' => (int) ($by[\App\Support\ClientAgent::MANAGER] ?? 0),
+        ];
     }
 
     /**
@@ -120,7 +130,7 @@ final class ModUsageReport
 
     /** How each table may be sorted — the column keys its headers send (x-admin.sortable-th). */
     public const WANTED_SORTS = ['last', 'first', 'game', 'language', 'without', 'found'];
-    public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'same', 'differs', 'own', 'signed'];
+    public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'taken', 'installed', 'same', 'differs', 'own', 'signed'];
 
     /** Rows per page of the two tables, like the other admin lists. */
     public const PER_PAGE = 20;
@@ -189,10 +199,14 @@ final class ModUsageReport
     }
 
     /**
-     * The translations of the site in use, with what the copies are to them — every one played in
-     * the span, paged and sorted by the server; the most recently played first.
+     * The translations of the site taken and in use, with what the copies are to them — every one
+     * taken or played in the span, paged and sorted by the server; the most recent first.
      *
-     * ⚠ The game and the language are read from the rows (ModUsage keeps them with each play), so a
+     * ⚠ Taken and played side by side: a translation the Manager wrote into a game today is not
+     * played until that game is launched, and it must already be on the list — the game is one where
+     * the mod is installed.
+     *
+     * ⚠ The game and the language are read from the rows (ModUsage keeps them with each act), so a
      * translation deleted since still says what it was.
      */
     public function inUse(string $sort, string $dir, string $pageName): LengthAwarePaginator
@@ -201,16 +215,18 @@ final class ModUsageReport
 
         $query = DB::table('usage_daily as u')
             ->leftJoin('games', 'games.id', '=', 'u.game_id')
-            ->where('u.act', ModUsage::PLAY)
+            ->whereIn('u.act', [ModUsage::PLAY, ModUsage::TAKE])
             ->whereNotNull('u.translation_id')
             ->whereBetween('u.date', [$this->span->from->toDateString(), $this->span->to->toDateString()])
             ->select('u.translation_id')
             ->selectRaw('MAX(games.name) as card_name, MAX(u.language) as played_language, MAX(u.date) as last_day')
-            ->selectRaw('SUM(u.sessions) as n')
+            ->selectRaw('SUM(CASE WHEN u.act = ? THEN u.sessions ELSE 0 END) as n', [ModUsage::PLAY])
+            ->selectRaw('SUM(CASE WHEN u.act = ? AND u.product = ? THEN u.sessions ELSE 0 END) as taken', [ModUsage::TAKE, \App\Support\ClientAgent::MOD])
+            ->selectRaw('SUM(CASE WHEN u.act = ? AND u.product = ? THEN u.sessions ELSE 0 END) as installed', [ModUsage::TAKE, \App\Support\ClientAgent::MANAGER])
             ->selectRaw(...$sumOf(ModUsage::SAME, 'same'))
             ->selectRaw(...$sumOf(ModUsage::DIFFERS, 'differs'))
             ->selectRaw(...$sumOf(ModUsage::OWN, 'own'))
-            ->selectRaw('SUM(CASE WHEN u.signed_in = 1 THEN u.sessions ELSE 0 END) as signed')
+            ->selectRaw('SUM(CASE WHEN u.act = ? AND u.signed_in = 1 THEN u.sessions ELSE 0 END) as signed', [ModUsage::PLAY])
             ->groupBy('u.translation_id');
 
         match ($sort) {
@@ -218,7 +234,7 @@ final class ModUsageReport
             'game' => $query->orderBy('card_name', $dir),
             'language' => $query->orderBy('played_language', $dir),
             'sessions' => $query->orderBy('n', $dir),
-            'same', 'differs', 'own', 'signed' => $query->orderBy($sort, $dir),
+            'taken', 'installed', 'same', 'differs', 'own', 'signed' => $query->orderBy($sort, $dir),
             default => $query->orderBy('last_day', $dir),
         };
         $query->orderByDesc('n')->orderBy('u.translation_id');
@@ -235,6 +251,8 @@ final class ModUsageReport
             'language' => $r->played_language,
             'last' => substr((string) $r->last_day, 0, 10),
             'sessions' => (int) $r->n,
+            'taken' => (int) $r->taken,
+            'installed' => (int) $r->installed,
             'same' => (int) $r->same,
             'differs' => (int) $r->differs,
             'own' => (int) $r->own,

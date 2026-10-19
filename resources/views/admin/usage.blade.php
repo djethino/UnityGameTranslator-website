@@ -6,7 +6,8 @@
      English only, like the rest of what is added to the admin.
 
      🔴 Only what the mod's calls already said (user, 2026-10-19: "on ne piste pas nos
-     utilisateurs"): no call was added for this screen, the Manager is not counted, and a session
+     utilisateurs"): no call was added for this screen, the Manager counts only for the translations it
+     writes into a game (never its list of games), and a session
      cannot be followed past its day. What it cannot know is said in the notes at the bottom.
 
      ⚠ Built from the Flows screen's pieces — the span bar, the tiles, the cards, "Show more", the
@@ -66,7 +67,8 @@
                 {{ number_format($counted) }} {{ Str::plural('session', $counted) }} about a game ·
                 {{ number_format($counted - $signedIn) }} without an account ·
                 {{ number_format($signedIn) }} signed in ·
-                {{ number_format($takes) }} {{ Str::plural('translation', $takes) }} taken
+                {{ number_format($takes['mod']) }} taken in game ·
+                {{ number_format($takes['manager']) }} installed by the Manager
             </p>
         </div>
         @if(count($daily['datasets']) > 0)
@@ -172,12 +174,13 @@
     <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm mb-6">Every game looked for had a translation in the language asked.</div>
 @endif
 
-{{-- ─── The translations of the site in use ───────────────────────────────── --}}
-<h2 class="text-lg font-semibold mb-1"><i class="fas fa-play mr-2 text-green-400"></i> Translations in use
+{{-- ─── The translations of the site taken and in use ─────────────────────── --}}
+<h2 class="text-lg font-semibold mb-1"><i class="fas fa-play mr-2 text-green-400"></i> Translations taken and played
     <span class="text-sm font-normal text-gray-500 ml-1">{{ number_format($inUse->total()) }} {{ Str::plural('translation', $inUse->total()) }}</span>
 </h2>
 <p class="text-xs text-gray-500 mb-3">
-    Sessions playing each one. <strong>Same</strong>: the copy is the published file. <strong>Differs</strong>:
+    <strong>Taken</strong>: by the mod, in the game. <strong>Via Manager</strong>: written into a game where
+    the Manager installed the mod. <strong>Sessions</strong>: playing it. <strong>Same</strong>: the copy is the published file. <strong>Differs</strong>:
     edited by its player, or older than the published one — the site cannot tell which.
     <strong>Author</strong>: played by the account that published it.
 </p>
@@ -189,12 +192,14 @@
                     <x-admin.sortable-th column="translation" label="Translation" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="language" label="Language" default="last" first="asc" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="sessions" label="Sessions" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="same" label="Same" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="differs" label="Differs" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="own" label="Author" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="signed" label="Signed in" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="last" label="Last played" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
                 </tr>
             </thead>
             <tbody>
@@ -209,6 +214,8 @@
                         </td>
                         <td class="py-2 px-4">{{ $row['game'] ?? '—' }}</td>
                         <td class="py-2 px-4">{{ $row['language'] !== '' ? $row['language'] : '—' }}</td>
+                        <td class="py-2 px-4 text-right {{ $row['taken'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['taken']) }}</td>
+                        <td class="py-2 px-4 text-right {{ $row['installed'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['installed']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['sessions']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['same']) }}</td>
                         <td class="py-2 px-4 text-right">{{ number_format($row['differs']) }}</td>
@@ -226,7 +233,7 @@
         @endif
     </x-admin.scroll-table>
 @else
-    <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm">No translation of the site played in this period.</div>
+    <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm">No translation of the site taken or played in this period.</div>
 @endif
 
 <div class="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm text-gray-400 space-y-2">
@@ -234,8 +241,8 @@
         <i class="fas fa-clock mr-2"></i>
         <strong>Where the figures come from.</strong>
         Only calls the mod already makes: looking for its game's translations (first launch, or when its
-        window opens), taking one, and checking the one it holds. Recorded since 2026-10-19. The Manager
-        is not counted.
+        window opens), taking one, and checking the one it holds. From the Manager, only the translations
+        it writes into a game where it installed the mod — never its list of games. Recorded since 2026-10-19.
     </p>
     <p>
         <i class="fas fa-eye-slash mr-2"></i>

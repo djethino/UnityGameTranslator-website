@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\DB;
  * How the mod is used, kept from the calls it already makes (user, 2026-10-19). Read by
  * ModUsageReport for the admin "Mod usage" screen; analysis in analyse/statistiques-usages.md.
  *
- * 🔴 **Only what the calls already say, only from the mod.** Looking for its game's translations
- * (`look`), taking one (`take`), checking the one it holds (`play`). No call was added to the mod
- * for this, and the Manager is not counted: it asks about a whole library, and a game installed is
- * not a game played.
+ * 🔴 **Only what the calls already say.** From the mod: looking for its game's translations
+ * (`look`), taking one (`take`), checking the one it holds (`play`). From the Manager, its takes
+ * alone — a translation written into a game where it installed the mod; its lookups are about a
+ * whole library, and a game installed is not a game played. No call was added to either for this.
  *
  * ⚠ **A session is one copy on one day**: the site's daily fingerprint
  * (AnalyticsEvent::visitorFingerprints), the same one `client_usage_daily` counts copies with, so
@@ -82,13 +82,17 @@ final class ModUsage
      */
     public static function note(Request $request, string $act, array $what): void
     {
+        // 🔴 The mod for every act; the Manager for a TAKE only (user, 2026-10-19). A take by the
+        // Manager is a translation written into a game where it installed the mod — never its whole
+        // library, which is what its lookups are about and what is not wanted here.
         $client = ClientAgent::ours($request->userAgent());
-        if ($client === null || $client['kind'] !== ClientAgent::MOD) {
+        if ($client === null || !self::counts($client['kind'], $act)) {
             return;
         }
 
         try {
             $row = [
+                'product' => $client['kind'],
                 'game_id' => $what['game_id'] ?? null,
                 'steam_id' => self::steamId($what['steam_id'] ?? null),
                 'game_name' => self::gameName($what['game_name'] ?? null),
@@ -126,6 +130,12 @@ final class ModUsage
         } catch (\Throwable $e) {
             report($e);
         }
+    }
+
+    /** Whether this program's act is counted: every act of the mod, a take by the Manager. */
+    private static function counts(string $product, string $act): bool
+    {
+        return $product === ClientAgent::MOD || ($product === ClientAgent::MANAGER && $act === self::TAKE);
     }
 
     /**
@@ -186,7 +196,7 @@ final class ModUsage
     {
         DB::table('usage_daily')->where('date', $date)->delete();
 
-        $columns = ['act', 'game_id', 'steam_id', 'game_name', 'language', 'translation_id', 'outcome', 'signed_in'];
+        $columns = ['product', 'act', 'game_id', 'steam_id', 'game_name', 'language', 'translation_id', 'outcome', 'signed_in'];
 
         $acts = DB::table('usage_seen')
             ->where('date', $date)
@@ -198,11 +208,14 @@ final class ModUsage
         $rows = $acts->map(fn ($r) => ['date' => $date, 'sessions' => (int) $r->sessions]
             + array_intersect_key((array) $r, array_flip($columns)))->all();
 
-        // What each session did at most. Read session by session in PHP: "the best of its acts" is
-        // an ordering of our own, which SQL would spell differently on MariaDB and SQLite.
+        // What each session OF THE MOD did at most — a Manager's take is counted above as a take, but
+        // a Manager is not a copy of the mod playing a game. Read session by session in PHP: "the
+        // best of its acts" is an ordering of our own, which SQL would spell differently on MariaDB
+        // and SQLite.
         $best = [];
         $signedIn = [];
-        foreach (DB::table('usage_seen')->where('date', $date)->select('session', 'act', 'outcome', 'signed_in')->cursor() as $seen) {
+        foreach (DB::table('usage_seen')->where('date', $date)->where('product', ClientAgent::MOD)
+                     ->select('session', 'act', 'outcome', 'signed_in')->cursor() as $seen) {
             $rank = match ($seen->act) {
                 self::PLAY => 0,
                 self::TAKE => 1,
@@ -221,7 +234,7 @@ final class ModUsage
         foreach ($tally as $key => $sessions) {
             [$outcome, $signed] = explode('|', $key);
             $rows[] = [
-                'date' => $date, 'act' => self::SESSION, 'game_id' => null, 'steam_id' => null,
+                'date' => $date, 'product' => ClientAgent::MOD, 'act' => self::SESSION, 'game_id' => null, 'steam_id' => null,
                 'game_name' => null, 'language' => '', 'translation_id' => null,
                 'outcome' => $outcome, 'signed_in' => (bool) $signed, 'sessions' => $sessions,
             ];

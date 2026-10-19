@@ -94,7 +94,7 @@ class ModUsageTest extends TestCase
         $this->assertSame(ModUsage::NONE, $this->counted(ModUsage::SESSION)->sole()->outcome);
     }
 
-    public function test_a_browser_and_the_manager_are_not_counted(): void
+    public function test_a_browser_and_a_manager_lookup_are_not_counted(): void
     {
         $this->game('Lonely Game', '400100');
 
@@ -245,6 +245,31 @@ class ModUsageTest extends TestCase
             ->assertSee('Played Game');
 
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Mod usage');
+    }
+
+    /**
+     * The Manager counts for what it writes into a game — never for its library lookups — and a
+     * Manager is not a session of the mod.
+     */
+    public function test_a_manager_take_is_counted_apart_and_its_lookups_are_not(): void
+    {
+        $translation = $this->translation($this->game('Installed Game', '400500'));
+        $manager = 'UnityGameTranslatorManager/0.5.1';
+
+        $this->asCopy(1, $manager)->getJson('/api/v1/translations?steam_id=400500&lang=French')->assertOk();
+        $this->asCopy(1, $manager)->get("/api/v1/translations/{$translation->id}/download")->assertOk();
+        // Comparing a copy the game already holds is not a take.
+        $this->asCopy(1, $manager)->get("/api/v1/translations/{$translation->id}/download?update=1")->assertOk();
+
+        $take = $this->counted(ModUsage::TAKE)->sole();
+        $this->assertSame('manager', $take->product);
+        $this->assertSame(0, DB::table('usage_daily')->where('act', '!=', ModUsage::TAKE)->count(),
+            'no look from the Manager, and no session of the mod');
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $this->actingAs($admin)->get(route('admin.usage'))->assertOk()
+            ->assertSee('Installed Game')->assertSee('1 installed by the Manager');
     }
 
     /** Each table sorts on its own parameters, over every row of the span — never a top N. */
