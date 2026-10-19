@@ -121,7 +121,8 @@
     <strong>Interest</strong>: sessions that looked for it, plus sessions playing a translation of it.
     <strong>Without / With</strong>: looks that found no translation in their language / found one.
     <strong>Seen</strong>: Manager copies per day with the mod in it, of which <strong>Local only</strong> hold a
-    translation never published. <strong>Listed</strong>: translations on the site now.
+    translation never published. <strong>Listed</strong>: translations on the site now (languages on hover).
+    The first day seen is on hover of the last.
 </p>
 @if($gamesTable->isNotEmpty())
     <div class="mb-6">
@@ -130,37 +131,38 @@
             <thead class="text-gray-400 text-left">
                 <tr>
                     <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="interest" label="Interest" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="looked" label="Looked for" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="without" label="Without" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="found" label="With" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="playing" label="Playing" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="listed" label="Listed" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="first" label="First seen" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
-                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="interest" label="Interest" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="looked" label="Looked for" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="without" label="Without" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="found" label="With" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="playing" label="Playing" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="listed" label="Listed" default="last" align="right" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" pad="px-2" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
                 </tr>
             </thead>
             <tbody>
+                {{-- ⚠ Fitted to the screen (user, 2026-10-20: horizontal scrolling "pas pratique"):
+                     the listed languages and the first day ride in tooltips — this table is the
+                     overview, and the tables below carry both in full. --}}
                 @foreach($gamesTable as $row)
                     <tr class="border-t border-gray-700">
-                        {{-- A minimum width: thirteen columns would otherwise fold the name on three lines. --}}
-                        <td class="py-2 px-4 min-w-48">@include('admin.partials.usage-game', ['row' => $row])</td>
+                        {{-- A minimum width: twelve columns would otherwise fold the name on three lines. --}}
+                        <td class="py-2 px-4 min-w-32">@include('admin.partials.usage-game', ['row' => $row])</td>
                         @foreach(['interest', 'looked', 'without', 'found', 'playing', 'taken', 'installed', 'seen', 'local'] as $count)
-                            <td class="py-2 px-4 text-right {{ $row[$count] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row[$count]) }}</td>
+                            <td class="py-2 px-2 text-right {{ $row[$count] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row[$count]) }}</td>
                         @endforeach
-                        <td class="py-2 px-4 whitespace-nowrap">
+                        <td class="py-2 px-2 text-right">
                             @if($row['listed'] > 0)
-                                <span title="{{ implode(', ', $row['languages']) }}">{{ $row['listed'] }} · {{ Str::limit(implode(', ', $row['languages']), 40) }}</span>
+                                <span title="{{ implode(', ', $row['languages']) }}" class="underline decoration-dotted decoration-gray-500">{{ $row['listed'] }}</span>
                             @else
-                                <span class="text-gray-600">{{ $row['game'] ? 'None' : 'Not on the site' }}</span>
+                                <span class="text-gray-600" title="{{ $row['game'] ? 'No translation listed' : 'Not on the site' }}">—</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['first'] }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap" title="First seen {{ $row['first'] }}">{{ $row['last'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -196,10 +198,10 @@
                     <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
                     <x-admin.sortable-th column="language" label="Language" default="last" first="asc" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
                     <th class="py-3 px-4">Now</th>
-                    <x-admin.sortable-th column="without" label="Without" default="last" align="right" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
-                    <x-admin.sortable-th column="found" label="With" default="last" align="right" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
-                    <x-admin.sortable-th column="first" label="First asked" default="last" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
-                    <x-admin.sortable-th column="last" label="Last asked" default="last" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
+                    <x-admin.sortable-th column="without" label="Without" default="last" align="right" pad="px-2" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
+                    <x-admin.sortable-th column="found" label="With" default="last" align="right" pad="px-2" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
+                    <x-admin.sortable-th column="first" label="First asked" default="last" pad="px-2" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
+                    <x-admin.sortable-th column="last" label="Last asked" default="last" pad="px-2" sortParam="wsort" dirParam="wdir" pageParam="wpage" />
                 </tr>
             </thead>
             <tbody>
@@ -220,10 +222,10 @@
                                 <span class="text-gray-500">None</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['without']) }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['found'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['found']) }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['first'] }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['without']) }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['found'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['found']) }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap">{{ $row['first'] }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap">{{ $row['last'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -259,12 +261,12 @@
                 <tr>
                     <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
                     <th class="py-3 px-4">Translation</th>
-                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
-                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
-                    <x-admin.sortable-th column="site" label="On the site" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
-                    <x-admin.sortable-th column="nofile" label="No file" default="last" align="right" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
-                    <x-admin.sortable-th column="first" label="First seen" default="last" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
-                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="site" label="On the site" default="last" align="right" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="nofile" label="No file" default="last" align="right" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="first" label="First seen" default="last" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" pad="px-2" sortParam="hsort" dirParam="hdir" pageParam="hpage" />
                 </tr>
             </thead>
             <tbody>
@@ -280,12 +282,12 @@
                                 <span class="text-gray-600">—</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['seen']) }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['local'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['local']) }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['site'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['site']) }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['nofile'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['nofile']) }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['first'] }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['seen']) }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['local'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['local']) }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['site'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['site']) }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['nofile'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['nofile']) }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap">{{ $row['first'] }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap">{{ $row['last'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -319,13 +321,13 @@
                     <x-admin.sortable-th column="translation" label="Translation" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="usort" dirParam="udir" pageParam="upage" />
                     <x-admin.sortable-th column="language" label="Language" default="last" first="asc" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="sessions" label="Sessions" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="same" label="Same" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="differs" label="Differs" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="signed" label="Signed in" default="last" align="right" sortParam="usort" dirParam="udir" pageParam="upage" />
-                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="sessions" label="Sessions" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="same" label="Same" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="differs" label="Differs" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="signed" label="Signed in" default="last" align="right" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" pad="px-2" sortParam="usort" dirParam="udir" pageParam="upage" />
                 </tr>
             </thead>
             <tbody>
@@ -340,13 +342,13 @@
                         </td>
                         <td class="py-2 px-4">{{ $row['game'] ?? '—' }}</td>
                         <td class="py-2 px-4">{{ $row['language'] !== '' ? $row['language'] : '—' }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['taken'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['taken']) }}</td>
-                        <td class="py-2 px-4 text-right {{ $row['installed'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['installed']) }}</td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['sessions']) }}</td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['same']) }}</td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['differs']) }}</td>
-                        <td class="py-2 px-4 text-right">{{ number_format($row['signed_in']) }}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['taken'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['taken']) }}</td>
+                        <td class="py-2 px-2 text-right {{ $row['installed'] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row['installed']) }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['sessions']) }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['same']) }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['differs']) }}</td>
+                        <td class="py-2 px-2 text-right">{{ number_format($row['signed_in']) }}</td>
+                        <td class="py-2 px-2 whitespace-nowrap">{{ $row['last'] }}</td>
                     </tr>
                 @endforeach
             </tbody>

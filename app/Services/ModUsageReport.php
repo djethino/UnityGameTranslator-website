@@ -163,7 +163,8 @@ final class ModUsageReport
     /** Rows per page of the tables, like the other admin lists. */
     public const PER_PAGE = 20;
 
-    public const GAMES_SORTS = ['last', 'first', 'game', 'interest', 'looked', 'without', 'found', 'playing',
+    // No `first`: the overview shows it on hover only, so it is no column to sort by.
+    public const GAMES_SORTS = ['last', 'game', 'interest', 'looked', 'without', 'found', 'playing',
                                 'taken', 'installed', 'seen', 'local', 'listed'];
 
     /**
@@ -203,7 +204,6 @@ final class ModUsageReport
             ->groupBy('u.game_id', 'u.steam_id', 'u.game_name');
 
         match ($sort) {
-            'first' => $query->orderBy('first_at', $dir),
             'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
             'listed' => $query->orderByRaw('COALESCE(MAX(tc.n), 0) ' . $dir),
             'interest', 'looked', 'without', 'found', 'playing', 'taken', 'installed', 'seen', 'local' => $query->orderBy($sort, $dir),

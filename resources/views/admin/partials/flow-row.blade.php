@@ -10,7 +10,9 @@
 @endphp
 <tr class="align-top {{ $nested ? 'bg-gray-900/40 text-gray-400' : 'border-t border-gray-700' }}"
     @if($nested) x-show="open" x-cloak @endif>
-    <td class="py-2 px-4 whitespace-nowrap text-gray-400 {{ $nested ? 'pl-8' : '' }}">{{ $when }}</td>
+    {{-- A run's span may fold at its arrow, never inside a date: on one line it was the widest
+         column of the table and pushed it past the screen. --}}
+    <td class="py-2 px-4 text-gray-400 {{ $nested ? 'pl-8' : '' }}">{!! collect(explode(' → ', $when))->map(fn ($part) => '<span class="whitespace-nowrap">' . e($part) . '</span>')->implode(' → ') !!}</td>
     <td class="py-2 px-4 whitespace-nowrap">
         <i class="fas {{ $style['icon'] }} {{ $style['class'] }} mr-1"></i> {{ $style['label'] }}
     </td>
@@ -42,7 +44,8 @@
             <span class="text-gray-600">—</span>
         @endif
     </td>
-    <td class="py-2 px-4 whitespace-nowrap">
+    {{-- A long account name may fold: one line each, it widened the whole table. --}}
+    <td class="py-2 px-4 break-words">
         <x-admin.user-link :user="$event->user" />
         @if($event->user_id)
             <a href="{{ $link(['user' => $event->user_id]) }}" class="text-gray-600 hover:text-gray-300 ml-1" title="Only this account">

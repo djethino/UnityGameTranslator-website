@@ -1,5 +1,5 @@
 @props(['column', 'label', 'default' => 'created_at', 'align' => 'left', 'first' => 'desc',
-         'sortParam' => 'sort', 'dirParam' => 'dir', 'pageParam' => 'page'])
+         'sortParam' => 'sort', 'dirParam' => 'dir', 'pageParam' => 'page', 'pad' => 'px-4'])
 @php
     // `first` is the direction a column opens on — what somebody clicking it wants to see first
     // (asked 2026-09-30). A date or a count opens on the latest or the most, "Adults only" on the
@@ -23,7 +23,9 @@
     $params = array_merge(request()->query(), [$sortParam => $column, $dirParam => $nextDir]);
     unset($params[$pageParam]);
 @endphp
-<th class="text-{{ $align }} py-3 px-4">
+{{-- `pad`: a column of short figures takes `px-2` — a table of many of them must fit the screen
+     before it scrolls (x-admin.scroll-table: making it fit is the first answer). --}}
+<th class="text-{{ $align }} py-3 {{ $pad }}">
     {{-- data-keeps-scroll: the page reloads sorted, and the reader stays on the table they sorted
          (components/keep-scroll.js) rather than being thrown back to the top. --}}
     <a href="?{{ http_build_query($params) }}" data-keeps-scroll
