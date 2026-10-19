@@ -19,16 +19,24 @@
      Each card of the first row says what WAITS, not only how much there is: proposals to decide on
      Games, reports to review — and the Reports card stands out only when it has one. --}}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    {{-- The last 7 whole days against the 7 before (user, 2026-10-20): today alone is small every
+         morning by construction. Today stays below, small. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-200 font-semibold">{{ __('admin.visitors_today') }}</p>
-                <p class="text-3xl font-bold text-purple-400">{{ number_format($visitorsToday) }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ trans_choice('admin.page_views', $pageViewsToday, ['count' => number_format($pageViewsToday)]) }}</p>
+                <p class="text-gray-200 font-semibold">Visitors, 7 days</p>
+                <p class="text-3xl font-bold text-purple-400">
+                    {{ number_format($visitorsWeek) }}
+                    @if($visitorsTrend !== null)
+                        <span class="text-base font-semibold {{ $visitorsTrend >= 0 ? 'text-green-400' : 'text-red-400' }}"
+                              title="Against the 7 days before">{{ $visitorsTrend >= 0 ? '+' : '' }}{{ $visitorsTrend }} %</span>
+                    @endif
+                </p>
+                <p class="text-sm text-gray-500 mt-1">{{ number_format($visitorsToday) }} today · {{ number_format($pageViewsToday) }} {{ Str::plural('page view', $pageViewsToday) }}</p>
             </div>
             <i class="fas fa-chart-line text-4xl text-purple-400 opacity-50"></i>
         </div>
-        <a href="{{ route('admin.analytics') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+        <a href="{{ route('admin.analytics', ['period' => 7]) }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
             {{ __('admin.view_analytics') }} <i class="fas fa-arrow-right ml-1"></i>
         </a>
     </div>
@@ -71,11 +79,21 @@
         </a>
     </div>
 
+    {{-- What moved this week, and the one state worth a look: published but out of the listings for
+         holding nothing translated. The total stays, small, for scale. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-200 font-semibold">{{ __('admin.total_translations') }}</p>
-                <p class="text-3xl font-bold text-green-400">{{ $totalTranslations }}</p>
+                <p class="text-gray-200 font-semibold">{{ __('admin.translations') }}</p>
+                <p class="text-3xl font-bold {{ $translationsWeek['changed'] > 0 ? 'text-green-400' : 'text-gray-500' }}">{{ number_format($translationsWeek['changed']) }}</p>
+                <p class="text-sm text-gray-500 mt-1">published or updated in 7 days · {{ number_format($translationsWeek['new']) }} new</p>
+                @if($translationsWeek['hidden'] > 0)
+                    <a href="{{ route('admin.translations.index', ['listing' => 'hidden']) }}"
+                       class="text-sm text-orange-300 hover:text-orange-200 underline decoration-dotted mt-1 inline-block">
+                        {{ number_format($translationsWeek['hidden']) }} hidden from listings: nothing translated
+                    </a>
+                @endif
+                <p class="text-xs text-gray-500 mt-1">{{ number_format($totalTranslations) }} in all</p>
             </div>
             <i class="fas fa-file-alt text-4xl text-green-400 opacity-50"></i>
         </div>
@@ -84,27 +102,28 @@
         </a>
     </div>
 
-    {{-- What happened to translations in the last 24 h (the Flows screen, English only like the rest of what
-         is added to the admin). Beside Translations: the same subject, as it stands and as it moves.
-         The refusals and deletions are named when there are any — what is worth a look. --}}
+    {{-- What happened to translations (the Flows screen, English only like the rest of what is added
+         to the admin). Beside Translations: the same subject, as it stands and as it moves.
+         The volume over 7 days; the refusals and deletions of the last 24 h apart, in orange, with
+         their own link — what is worth a look as soon as it happens. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">Translation flows</p>
-                <p class="text-3xl font-bold {{ $flowsLastDay['events'] > 0 ? 'text-cyan-400' : 'text-gray-500' }}">{{ $flowsLastDay['events'] }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ $flowsLastDay['events'] === 1 ? 'event in the last 24 h' : 'events in the last 24 h' }}</p>
-                @if($flowsLastDay['refused'] > 0 || $flowsLastDay['deleted'] > 0)
-                    <p class="text-sm text-orange-300 mt-1">
+                <p class="text-3xl font-bold {{ $flowsSummary['week'] > 0 ? 'text-cyan-400' : 'text-gray-500' }}">{{ number_format($flowsSummary['week']) }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ $flowsSummary['week'] === 1 ? 'event in 7 days' : 'events in 7 days' }}</p>
+                @if($flowsSummary['refused'] > 0 || $flowsSummary['deleted'] > 0)
+                    <a href="{{ route('admin.flows', ['period' => 1]) }}" class="text-sm text-orange-300 hover:text-orange-200 underline decoration-dotted mt-1 inline-block">
                         {{ collect([
-                            $flowsLastDay['refused'] > 0 ? $flowsLastDay['refused'] . ' refused' : null,
-                            $flowsLastDay['deleted'] > 0 ? $flowsLastDay['deleted'] . ' deleted' : null,
-                        ])->filter()->implode(' · ') }}
-                    </p>
+                            $flowsSummary['refused'] > 0 ? $flowsSummary['refused'] . ' refused' : null,
+                            $flowsSummary['deleted'] > 0 ? $flowsSummary['deleted'] . ' deleted' : null,
+                        ])->filter()->implode(' · ') }} in the last 24 h
+                    </a>
                 @endif
             </div>
             <i class="fas fa-code-branch text-4xl text-cyan-400 opacity-50"></i>
         </div>
-        <a href="{{ route('admin.flows', ['period' => 1]) }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+        <a href="{{ route('admin.flows', ['period' => 7]) }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
             View flows <i class="fas fa-arrow-right ml-1"></i>
         </a>
     </div>
@@ -145,7 +164,8 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-200 font-semibold">{{ __('admin.users') }}</p>
-                <p class="text-3xl font-bold text-blue-400">{{ $totalUsers }}</p>
+                <p class="text-3xl font-bold {{ $newUsersWeek > 0 ? 'text-blue-400' : 'text-gray-500' }}">{{ number_format($newUsersWeek) }}</p>
+                <p class="text-sm text-gray-500 mt-1">new in 7 days · {{ number_format($totalUsers) }} in all</p>
                 @if($bannedUsers > 0)
                     <p class="text-sm text-red-400 mt-1">{{ trans_choice('admin.banned', $bannedUsers, ['count' => $bannedUsers]) }}</p>
                 @endif

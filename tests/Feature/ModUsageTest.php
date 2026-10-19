@@ -396,6 +396,37 @@ class ModUsageTest extends TestCase
             ->assertSeeInOrder(['Games', 'Wanted Game', 'Busy Game']);
     }
 
+    /**
+     * The dashboard's other cards say what moved this week, and the translations card leads to the
+     * ones out of the listings — the same filter the translations screen applies.
+     */
+    public function test_the_dashboard_cards_say_the_week_and_lead_to_what_waits(): void
+    {
+        // Told apart by their authors: every game is in the screen's game picker anyway.
+        $this->translation($this->game('Listed Game'), 'French', User::factory()->create(['name' => 'ListedAuthor']));
+        // Published 40 days ago and still holding nothing translated: out of the listings.
+        $empty = $this->translation($this->game('Empty Game'), 'French', User::factory()->create(['name' => 'EmptyAuthor']));
+        $empty->forceFill(['ai_count' => 0, 'human_count' => 0, 'validated_count' => 0, 'capture_count' => 5,
+            'created_at' => now()->subDays(40), 'content_updated_at' => now()->subDays(40)])->save();
+
+        DB::table('analytics_daily')->insert([
+            ['date' => now()->subDays(3)->toDateString(), 'unique_visitors' => 30, 'page_views' => 50, 'created_at' => now(), 'updated_at' => now()],
+            ['date' => now()->subDays(10)->toDateString(), 'unique_visitors' => 20, 'page_views' => 40, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()
+            ->assertSeeInOrder(['Visitors, 7 days', '30', '+50 %'])
+            ->assertSee('published or updated in 7 days')
+            ->assertSee('1 hidden from listings')
+            ->assertSee('new in 7 days');
+
+        $this->actingAs($admin)->get(route('admin.translations.index', ['listing' => 'hidden']))->assertOk()
+            ->assertSee('EmptyAuthor')->assertDontSee('ListedAuthor');
+    }
+
     /** Each table sorts on its own parameters, over every row of the span — never a top N. */
     public function test_the_wanted_table_sorts_on_its_own_parameters(): void
     {

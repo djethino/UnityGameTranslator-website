@@ -15,6 +15,7 @@
     <form action="{{ route('admin.translations.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
         @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
         @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
+        @if(request('listing') === 'hidden')<input type="hidden" name="listing" value="hidden">@endif
         <div class="flex-1 min-w-[200px]">
             <label class="block text-sm text-gray-400 mb-1">{{ __('common.search') }}</label>
             <input type="text" name="search" value="{{ request('search') }}"
@@ -61,12 +62,24 @@
         <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
             <i class="fas fa-search mr-1"></i> {{ __('common.search') }}
         </button>
-        @if(request()->hasAny(['search', 'game_id', 'language', 'status', 'visibility']))
+        @if(request()->hasAny(['search', 'game_id', 'language', 'status', 'visibility', 'listing']))
             <a href="{{ route('admin.translations.index') }}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg">
                 <i class="fas fa-times mr-1"></i> {{ __('common.cancel') }}
             </a>
         @endif
     </form>
+    {{-- Reached from the dashboard's Translations card. A chip rather than a field: it is a state
+         the dashboard points at, not a criterion one types. English, like what is added to the admin. --}}
+    @if(request('listing') === 'hidden')
+        <div class="flex items-center gap-2 mt-3">
+            <a href="{{ route('admin.translations.index', request()->except(['listing', 'page'])) }}"
+               class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 rounded-full px-3 py-1 text-sm"
+               title="Remove this filter">
+                Hidden from listings: nothing translated after {{ \App\Models\Translation::EMPTY_GRACE_DAYS }} days
+                <i class="fas fa-xmark text-gray-400"></i>
+            </a>
+        </div>
+    @endif
 </div>
 
 <!-- Results -->

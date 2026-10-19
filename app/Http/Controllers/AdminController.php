@@ -37,9 +37,26 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
+        // 🔴 **Each card answers "do I need to open this?"** (user, 2026-10-20: "une vue rapide pour
+        // voir si on doit aller voir le détail"). A total that only ever climbs answers nothing; what
+        // moved this week, and what waits, does. Totals stay, small, for scale.
         $pendingReports = Report::where('status', 'pending')->count();
         $totalTranslations = Translation::count();
         $totalUsers = User::count();
+        $weekAgo = now()->subDays(7);
+
+        // Translations published or updated in 7 days — created OR content changed, the reading of
+        // the Analytics uploads card (a Main maintained every week is alive, not "uploaded once").
+        $translationsWeek = [
+            'changed' => Translation::where(fn ($q) => $q->where('created_at', '>=', $weekAgo)
+                ->orWhere('content_updated_at', '>=', $weekAgo))->count(),
+            'new' => Translation::where('created_at', '>=', $weekAgo)->count(),
+            // Published but out of the listings for holding no translated line past the grace
+            // (Translation::scopePubliclyListed) — the one state of a translation worth a look.
+            'hidden' => self::hiddenFromListings(Translation::query())->count(),
+        ];
+
+        $newUsersWeek = User::where('created_at', '>=', $weekAgo)->whereNull('account_deleted_at')->count();
 
         // Counted whole, unlike the analytics figure below: this card leads to the screen where a
         // game is REPAIRED, and a game with no translation yet is exactly one that may be waiting
@@ -63,19 +80,34 @@ class AdminController extends Controller
         $pageViewsToday = AnalyticsEvent::whereDate('created_at', $today)->count();
         $banner = Announcement::currentBanner();
 
+        // Visitors over the last 7 WHOLE days against the 7 before — "today" alone is small every
+        // morning by construction (it starts at midnight UTC) and said nothing about a trend. Read
+        // from the nightly days, summed as the Analytics screen sums them (a visitor per day).
+        $sumVisitors = fn (int $fromDaysAgo, int $toDaysAgo) => (int) AnalyticsDaily::whereBetween('date', [
+            now()->subDays($fromDaysAgo)->toDateString(), now()->subDays($toDaysAgo)->toDateString(),
+        ])->sum('unique_visitors');
+        $visitorsWeek = $sumVisitors(7, 1);
+        $visitorsWeekBefore = $sumVisitors(14, 8);
+        // No change is said when the week before holds nothing: a percentage of zero is not one.
+        $visitorsTrend = $visitorsWeekBefore > 0
+            ? (int) round(($visitorsWeek - $visitorsWeekBefore) * 100 / $visitorsWeekBefore)
+            : null;
+
         // What waits on the games screen: the store proposals nobody has decided yet — the same
         // count its own header shows.
         $pendingProposals = GameProposal::pending()->count();
 
-        // What happened to translations in the last 24 h — the span the card's link opens the Flows
-        // screen on, so the two figures are the same — with the two kinds worth a look.
-        $flows = AuditLog::whereIn('action', TranslationFlows::actions())
-            ->where('created_at', '>=', now()->subDays(1))
+        // What happened to translations over 7 days — on a site this size, 24 h read 0 most days —
+        // and, apart, the two kinds worth a look as soon as they happen: refused and deleted in the
+        // last 24 h. Each figure's link opens Flows on its own span, so the screen says the same.
+        $flowsOver = fn ($since) => AuditLog::whereIn('action', TranslationFlows::actions())
+            ->where('created_at', '>=', $since)
             ->selectRaw('action, COUNT(*) as n')->groupBy('action')->pluck('n', 'action');
-        $flowsLastDay = [
-            'events' => (int) $flows->sum(),
-            'refused' => (int) ($flows[TranslationFlows::REFUSED] ?? 0),
-            'deleted' => (int) ($flows[TranslationFlows::DELETED] ?? 0),
+        $lastDay = $flowsOver(now()->subDays(1));
+        $flowsSummary = [
+            'week' => (int) $flowsOver($weekAgo)->sum(),
+            'refused' => (int) ($lastDay[TranslationFlows::REFUSED] ?? 0),
+            'deleted' => (int) ($lastDay[TranslationFlows::DELETED] ?? 0),
         ];
 
         // Copies of the mod that called today — the first tile of the Mod usage screen.
@@ -93,9 +125,19 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
-            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay', 'modSessionsToday',
-            'topGames'
+            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsSummary', 'modSessionsToday',
+            'topGames', 'translationsWeek', 'newUsersWeek', 'visitorsWeek', 'visitorsTrend'
         ));
+    }
+
+    /**
+     * Published translations kept out of the listings for holding no translated line past the grace
+     * (Translation::scopePubliclyListed) — the dashboard's count and the translations screen's
+     * filter, so the two can never disagree.
+     */
+    private static function hiddenFromListings($query)
+    {
+        return $query->where('visibility', 'public')->whereNot(fn ($q) => $q->publiclyListed());
     }
 
     public function announcements()
@@ -679,6 +721,11 @@ class AdminController extends Controller
         // Filter by visibility (public / branch)
         if ($request->filled('visibility')) {
             $query->where('visibility', $request->visibility);
+        }
+
+        // Out of the listings for holding nothing translated — where the dashboard's count leads.
+        if ($request->get('listing') === 'hidden') {
+            self::hiddenFromListings($query);
         }
 
         // Sorting (whitelisted columns to prevent SQL injection)

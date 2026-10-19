@@ -205,7 +205,7 @@ class AdminUserPageTest extends TestCase
             ->assertOk()
             ->assertSee('1 proposal waiting')
             ->assertSee(route('admin.games', ['proposals' => 'pending']), false)
-            ->assertSeeInOrder(['Visitors today', 'Games', 'Pending Reports', 'Total Translations', 'Users', 'Announcements']);
+            ->assertSeeInOrder(['Visitors, 7 days', 'Games', 'Pending Reports', 'Translations', 'Translation flows', 'Mod usage', 'Users', 'Announcements']);
     }
 
     public function test_an_igdb_id_opens_the_games_igdb_page(): void
