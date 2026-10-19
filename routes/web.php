@@ -280,6 +280,8 @@ Route::get('/translations/{uuid}/merge/state', [MergeController::class, 'state']
         Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
         // What happens to translations: published, edited, moved, deleted, refused (TranslationFlows).
         Route::get('/flows', [AdminController::class, 'flows'])->name('flows');
+        // How the mod is used, from the calls it already makes (ModUsage) — no call added for it.
+        Route::get('/usage', [AdminController::class, 'usage'])->name('usage');
 
         // Fetch the shared catalogues now instead of waiting for the nightly run.
         //

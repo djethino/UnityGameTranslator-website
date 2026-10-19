@@ -48,6 +48,13 @@ class AggregateAnalytics extends Command
         // The month the day belongs to — recounted every night, never waiting for its end.
         $this->aggregateMonth($date);
 
+        // How the mod was used: every day still held, counted then forgotten (ModUsage). Not tied
+        // to `--date` — a day whose sessions are already forgotten cannot be counted again.
+        $usageDays = \App\Services\ModUsage::countPending();
+        if ($usageDays !== []) {
+            $this->info('  Mod usage counted and its sessions forgotten for ' . implode(', ', $usageDays));
+        }
+
         // 🔴 **After the counting, never before.** The fingerprint answers COUNT(DISTINCT) for the
         // day just aggregated; once that number is in analytics_daily it has no further use, and it
         // used to sit in the table for ninety days regardless. Clearing it here bounds its life to

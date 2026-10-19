@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\BranchSubmitted;
 use App\Services\CatalogStore;
 use App\Services\GameSearchService;
+use App\Services\ModUsage;
 use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use App\Rules\ResourcesLink;
@@ -228,6 +229,13 @@ class TranslationController extends Controller
                 ->pluck('value', 'translation_id')
             : collect();
 
+        $tallies = $gameIds === null ? null : $this->languageTallies($gameIds);
+        $games = $gameIds === null ? null : Game::whereIn('id', $gameIds)->get();
+
+        if ($gameIds !== null) {
+            $this->noteLook($request, $gameIds, $games, $ranked, $tallies);
+        }
+
         return response()->json([
             // ── What every published mod reads. Unchanged, on purpose. ────────────────────────
             'count' => $translations->count(),
@@ -238,11 +246,47 @@ class TranslationController extends Controller
             // Absent when no game filter was given: there is no "per game" to be complete about,
             // and a caller must never be handed a shape that implies exhaustiveness we cannot give.
             ...($gameIds === null ? [] : [
-                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes,
-                                               $this->languageTallies($gameIds),
-                                               Game::whereIn('id', $gameIds)->get()),
+                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games),
                 'games_total' => $gamesTotal,
             ]),
+        ]);
+    }
+
+    /**
+     * Keep what this search told a mod about its game — the admin "Mod usage" screen (ModUsage).
+     *
+     * 🔴 **What the player was SHOWN, decided as the mod decides it.** A name search can answer
+     * about several games; the mod keeps the one whose display name is exactly the name it asked
+     * with, or all of them when none is (common/GameNames.Which). The same choice is made here, so
+     * "found one" means a translation was on the player's screen — not that a namesake had one.
+     * Kept under the game when that leaves one, under the name asked otherwise.
+     */
+    private function noteLook(Request $request, $gameIds, $games, $ranked, $tallies): void
+    {
+        $shown = collect($gameIds);
+
+        if ($request->filled('q') && $shown->count() > 1) {
+            $asked = mb_strtolower(trim((string) $request->q));
+            $exact = $games->filter(fn (Game $g) => mb_strtolower(trim((string) $g->name)) === $asked)->pluck('id');
+            if ($exact->isNotEmpty()) {
+                $shown = $exact;
+            }
+        }
+
+        $outcome = match (true) {
+            $ranked->whereIn('game_id', $shown->all())->isNotEmpty() => ModUsage::FOUND,
+            $shown->contains(fn ($id) => $tallies->has($id)) => ModUsage::OTHER_LANGUAGES,
+            default => ModUsage::NONE,
+        };
+
+        // The Steam id and the name only when no single game is left: beside a card they would be
+        // a second identity for the same game, and the screen would count it twice.
+        ModUsage::note($request, ModUsage::LOOK, [
+            'game_id' => $shown->count() === 1 ? (int) $shown->first() : null,
+            'steam_id' => $shown->count() === 1 ? null : $request->steam_id,
+            'game_name' => $shown->count() === 1 ? null : $request->q,
+            'language' => $request->lang,
+            'outcome' => $outcome,
         ]);
     }
 
@@ -667,6 +711,19 @@ class TranslationController extends Controller
             $translation->updateHash();
         }
 
+        // A mod holding this translation is playing with it — kept for the admin "Mod usage"
+        // screen before the 304 below, which answers the same copy just as well.
+        ModUsage::note($request, ModUsage::PLAY, [
+            'translation_id' => $translation->id,
+            'game_id' => $translation->game_id,
+            'language' => $translation->target_language,
+            'outcome' => ModUsage::playOutcome(
+                $request->user() !== null && $request->user()->id === $translation->user_id,
+                $translation->file_hash,
+                $request->query('hash')
+            ),
+        ]);
+
         // ⚠ Covers everything this endpoint ANSWERS, not just the file. An ETag built on
         // file_hash alone — which is what stood here — replies 304 while the caller's copy of
         // the vote count or the uploader's name is stale, because neither of those touches a
@@ -990,6 +1047,14 @@ class TranslationController extends Controller
 
         if (!$ownWork && !$refresh) {
             $translation->incrementDownloads();
+
+            // The same take, for the admin "Mod usage" screen — a refresh is a copy already in
+            // use, which its checks say.
+            ModUsage::note($request, ModUsage::TAKE, [
+                'translation_id' => $translation->id,
+                'game_id' => $translation->game_id,
+                'language' => $translation->target_language,
+            ]);
         }
 
         // Track it for analytics: a take on the download route, a refresh on its own.

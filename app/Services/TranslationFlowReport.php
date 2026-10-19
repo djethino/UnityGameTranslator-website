@@ -72,10 +72,12 @@ class TranslationFlowReport
         $hourly = $this->span->dayCount() <= self::HOURLY_UP_TO_DAYS;
         $keyOf = fn (Carbon $at) => $hourly ? $at->format('Y-m-d H') : $at->toDateString();
 
-        $buckets = [];
-        $start = Carbon::instance($hourly ? $this->span->from->startOfHour() : $this->span->from->startOfDay());
-        for ($at = $start; $at->lte($this->span->to); $hourly ? $at->addHour() : $at->addDay()) {
-            $buckets[$keyOf($at)] = 0;
+        // Days are the span's own (Span::days, which the Mod usage chart reads too); hours only here.
+        $buckets = $hourly ? [] : array_fill_keys($this->span->days(), 0);
+        if ($hourly) {
+            for ($at = Carbon::instance($this->span->from->startOfHour()); $at->lte($this->span->to); $at->addHour()) {
+                $buckets[$keyOf($at)] = 0;
+            }
         }
 
         $byAction = [];

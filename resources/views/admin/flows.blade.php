@@ -328,11 +328,11 @@
 </div>
 
 <script nonce="{{ $cspNonce }}">
-    window.__flowsData = {
-        hasData: {{ count($daily['datasets']) > 0 ? 'true' : 'false' }},
+    window.__stackedBars = [{
+        canvas: 'flowsChart',
         labels: @json($daily['labels']),
         datasets: @json($daily['datasets']),
-    };
+    }];
 </script>
 @vite('resources/js/admin-charts.js')
 @endsection

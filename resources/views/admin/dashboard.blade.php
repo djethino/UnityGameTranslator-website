@@ -109,6 +109,22 @@
         </a>
     </div>
 
+    {{-- How the mod is used (the Mod usage screen, English only). Beside Flows: what players do with
+         the translations, where Flows is what happens to them. --}}
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-200 font-semibold">Mod usage</p>
+                <p class="text-3xl font-bold {{ $modSessionsToday > 0 ? 'text-green-400' : 'text-gray-500' }}">{{ number_format($modSessionsToday) }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ $modSessionsToday === 1 ? 'mod session today' : 'mod sessions today' }}</p>
+            </div>
+            <i class="fas fa-gamepad text-4xl text-green-400 opacity-50"></i>
+        </div>
+        <a href="{{ route('admin.usage') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+            View usage <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
             <div>

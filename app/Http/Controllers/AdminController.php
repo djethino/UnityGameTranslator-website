@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\CatalogStore;
 use App\Services\KnownReleases;
 use App\Services\Lineages;
+use App\Services\ModUsageReport;
 use App\Services\LiveEditCapacity;
 use App\Services\StoreProposals;
 use App\Services\TranslationFlowReport;
@@ -77,9 +78,16 @@ class AdminController extends Controller
             'deleted' => (int) ($flows[TranslationFlows::DELETED] ?? 0),
         ];
 
+        // Copies of the mod that called today — the first tile of the Mod usage screen, read where
+        // it is written (client_usage_daily), so opening the dashboard counts nothing.
+        $modSessionsToday = (int) DB::table('client_usage_daily')
+            ->where('product', \App\Support\ClientAgent::MOD)
+            ->where('date', $today)
+            ->sum('installs');
+
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
-            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay'
+            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay', 'modSessionsToday'
         ));
     }
 
@@ -880,6 +888,30 @@ class AdminController extends Controller
     }
 
     /**
+     * How the mod is used — from the calls it already makes, never a call made for this
+     * (ModUsage, ModUsageReport; user, 2026-10-19). Same span, cards and chart as Flows.
+     */
+    public function usage(Request $request)
+    {
+        $daysStored = ModUsageReport::daysStored();
+        $span = Span::fromRequest($request, $daysStored);
+        $report = new ModUsageReport($span);
+
+        return view('admin.usage', [
+            'span' => $span,
+            'daysStored' => $daysStored,
+            'copies' => $report->copies(),
+            'sessions' => $report->sessions(),
+            'takes' => $report->takes(),
+            'daily' => $report->daily(),
+            'wanted' => $report->wanted(self::TOP_ROWS),
+            'inUse' => $report->inUse(self::TOP_ROWS),
+            'languages' => $report->languages(),
+            'topRows' => ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS],
+        ]);
+    }
+
+    /**
      * Analytics dashboard
      */
     public function analytics(Request $request)
@@ -950,74 +982,16 @@ class AdminController extends Controller
         $chartVisitors = $dailyStats->pluck('unique_visitors')->toArray();
         $chartDownloads = $dailyStats->pluck('downloads')->toArray();
 
-        // Aggregate countries from all days
-        $allCountries = [];
-        foreach ($dailyStats as $day) {
-            if ($day->countries) {
-                foreach ($day->countries as $country => $count) {
-                    if ($country !== '' && $country !== null) {
-                        $allCountries[$country] = ($allCountries[$country] ?? 0) + $count;
-                    }
-                }
-            }
-        }
-        // Add today's countries
-        foreach ($todayBreakdown('country', 50) as $country => $count) {
-            $allCountries[$country] = ($allCountries[$country] ?? 0) + $count;
-        }
-        arsort($allCountries);
-        $topCountries = array_slice($allCountries, 0, 10, true);
-
-        // Aggregate referrers
-        $allReferrers = [];
-        foreach ($dailyStats as $day) {
-            if ($day->referrers) {
-                foreach ($day->referrers as $ref => $count) {
-                    if ($ref !== '' && $ref !== null) {
-                        $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $count;
-                    }
-                }
-            }
-        }
-        foreach ($todayBreakdown('referrer_domain', 20) as $ref => $count) {
-            $allReferrers[$ref] = ($allReferrers[$ref] ?? 0) + $count;
-        }
-        arsort($allReferrers);
-        $topReferrers = array_slice($allReferrers, 0, 10, true);
-
-        // Aggregate devices
-        $allDevices = ['desktop' => 0, 'mobile' => 0, 'tablet' => 0];
-        foreach ($dailyStats as $day) {
-            if ($day->devices) {
-                foreach ($day->devices as $device => $count) {
-                    $allDevices[$device] = ($allDevices[$device] ?? 0) + $count;
-                }
-            }
-        }
-        foreach ($todayBreakdown('device') as $device => $count) {
-            $allDevices[$device] = ($allDevices[$device] ?? 0) + $count;
-        }
-
-        // Aggregate browsers
-        $allBrowsers = [];
-        foreach ($dailyStats as $day) {
-            if ($day->browsers) {
-                foreach ($day->browsers as $browser => $count) {
-                    $allBrowsers[$browser] = ($allBrowsers[$browser] ?? 0) + $count;
-                }
-            }
-        }
-        foreach ($todayBreakdown('browser', 10) as $browser => $count) {
-            $allBrowsers[$browser] = ($allBrowsers[$browser] ?? 0) + $count;
-        }
-        arsort($allBrowsers);
-
-        // What is kept beyond the 90 days of raw events since 2026-10-05: which pages, in which of
-        // the site's languages, and which languages translations are taken into. Summed over the
-        // period like the countries above, today counted live. Days aggregated before that date
-        // carry none of them — the cards say so rather than reading as "nobody".
-        $sumOver = function (string $column, array $today) use ($dailyStats): array {
-            $sum = [];
+        // Every breakdown kept per day — countries, referrers, devices, browsers, and since 2026-10-05
+        // the pages, the site's languages and the languages translations are taken into — summed
+        // over the period the same way, today counted live, biggest first. One sum for all of them:
+        // they were five copies of the same loop. Days aggregated before a breakdown existed carry
+        // none of it — the cards say so rather than reading as "nobody".
+        //
+        // ⚠ An empty key is no answer (a visit whose country is unknown), never a row of its own.
+        // `$start` names the keys a chart reads even at zero.
+        $sumOver = function (string $column, array $today, array $start = []) use ($dailyStats): array {
+            $sum = $start;
             foreach ($dailyStats as $day) {
                 foreach ($day->{$column} ?? [] as $key => $count) {
                     $sum[$key] = ($sum[$key] ?? 0) + $count;
@@ -1026,9 +1000,14 @@ class AdminController extends Controller
             foreach ($today as $key => $count) {
                 $sum[$key] = ($sum[$key] ?? 0) + $count;
             }
+            unset($sum['']);
             arsort($sum);
             return $sum;
         };
+        $topCountries = array_slice($sumOver('countries', $todayBreakdown('country', 50)), 0, 10, true);
+        $topReferrers = array_slice($sumOver('referrers', $todayBreakdown('referrer_domain', 20)), 0, 10, true);
+        $allDevices = $sumOver('devices', $todayBreakdown('device'), ['desktop' => 0, 'mobile' => 0, 'tablet' => 0]);
+        $allBrowsers = $sumOver('browsers', $todayBreakdown('browser', 10));
         $pages = $sumOver('routes', $todayBreakdown('route'));
         $siteLocales = $sumOver('locales', $todayBreakdown('locale'));
         $downloadLanguages = $sumOver('download_languages', $live ? AnalyticsEvent::downloadBreakdownFor($today, 'target_language') : []);

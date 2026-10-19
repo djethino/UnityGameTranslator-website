@@ -1,11 +1,12 @@
 import Chart from 'chart.js/auto';
 
-// Two admin screens draw with this file, each handing its figures over in its own global: the
-// analytics page (`__analyticsData`) and the translation flows page (`__flowsData`). The colours and
-// axes are shared so the two read alike.
+// The admin screens that draw charts all use this file: the analytics page hands its figures over in
+// `__analyticsData`; the screens that draw one stacked bar per day — Translation flows, Mod usage —
+// list theirs in `__stackedBars`, one entry per canvas. The colours and axes are shared so they all
+// read alike.
 const data = window.__analyticsData;
-const flows = window.__flowsData;
-if (!data && !flows) {
+const stackedBars = window.__stackedBars ?? [];
+if (!data && stackedBars.length === 0) {
     console.error('Chart data not found');
 } else {
     const colors = {
@@ -205,14 +206,16 @@ if (!data && !flows) {
         });
     }
 
-    // Translation flows — one stacked bar per day, one colour per kind of event (the colours are
-    // the screen's own, sent with the figures, so a tile and its bar always match).
-    if (flows?.hasData) {
-        new Chart(document.getElementById('flowsChart'), {
+    // One stacked bar per day (or hour), one colour per kind — the colours are the screen's own, sent
+    // with the figures, so a tile and its bar always match. A canvas with no data is not drawn: the
+    // screen shows its own "nothing" in its place.
+    for (const bars of stackedBars) {
+        if (bars.datasets.length === 0) continue;
+        new Chart(document.getElementById(bars.canvas), {
             type: 'bar',
             data: {
-                labels: flows.labels,
-                datasets: flows.datasets.map((set) => ({
+                labels: bars.labels,
+                datasets: bars.datasets.map((set) => ({
                     label: set.label,
                     data: set.data,
                     backgroundColor: `rgba(${set.rgb}, 0.8)`,
@@ -226,7 +229,7 @@ if (!data && !flows) {
                         ...lineBarOptions.scales.y,
                         stacked: true,
                         beginAtZero: true,
-                        // Half an upload does not exist.
+                        // Half an upload — or half a session — does not exist.
                         ticks: { ...lineBarOptions.scales.y.ticks, precision: 0 }
                     }
                 }

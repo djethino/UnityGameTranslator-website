@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Translation;
+use App\Services\ModUsage;
 use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,6 +61,21 @@ class SyncStateController extends Controller
         $withLineage = $request->query('lineage') !== '0';
 
         $state = $this->buildSyncState($uuid, $request->user(), $clientHash, $withLineage);
+
+        // The translation this game plays with, for the admin "Mod usage" screen: the account's own
+        // line when it has one, the Main otherwise. Read off the answer rather than queried again.
+        // ⚠ Only a mod's own call counts: the live stream's relay asks this too, under its own
+        // User-Agent, and ModUsage ignores it.
+        $own = $state['role'] !== 'none';
+        $played = $own ? $state['translation'] : $state['main'];
+        if ($played !== null) {
+            ModUsage::note($request, ModUsage::PLAY, [
+                'translation_id' => $played['id'],
+                'game_id' => $state['game']['id'] ?? null,
+                'language' => $played['target_language'],
+                'outcome' => ModUsage::playOutcome($own, $played['file_hash'], $clientHash),
+            ]);
+        }
 
         return response()->json($state);
     }

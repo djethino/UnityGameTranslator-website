@@ -83,6 +83,22 @@ final class Span
         return (int) $this->from->startOfDay()->diffInDays($this->to->startOfDay()) + 1;
     }
 
+    /**
+     * Every calendar day it touches, oldest first, as Y-m-d — the buckets of a per-day chart, an
+     * empty day included.
+     *
+     * @return list<string>
+     */
+    public function days(): array
+    {
+        $days = [];
+        for ($day = $this->from->startOfDay(); $day->lte($this->to); $day = $day->addDay()) {
+            $days[] = $day->toDateString();
+        }
+
+        return $days;
+    }
+
     /** How the screen names it: "Last 30 days", or "2027-03-01 → 2027-03-31". */
     public function label(): string
     {
