@@ -361,6 +361,41 @@ class ModUsageTest extends TestCase
         $this->assertSame($month->copy()->addDay()->toDateString(), $wanted[0]['first']);
     }
 
+    /**
+     * One row per game, whatever was done with it — and the dashboard names the top of it, on the
+     * sort its link opens.
+     */
+    public function test_the_games_table_gathers_every_act_of_a_game(): void
+    {
+        $played = $this->game('Busy Game', '400801');
+        $translation = $this->translation($played);
+        $this->game('Wanted Game', '400802');
+
+        // Busy Game: two looks that find it, one copy playing it, one Manager install.
+        $this->asCopy(1)->getJson('/api/v1/translations?steam_id=400801&lang=French')->assertOk();
+        $this->asCopy(2)->getJson('/api/v1/translations?steam_id=400801&lang=French')->assertOk();
+        $this->asCopy(3)->getJson("/api/v1/translations/{$translation->id}/check")->assertOk();
+        $this->asCopy(4, 'UnityGameTranslatorManager/0.5.1')->get("/api/v1/translations/{$translation->id}/download")->assertOk();
+        // Wanted Game: one look that finds nothing.
+        $this->asCopy(5)->getJson('/api/v1/translations?steam_id=400802&lang=French')->assertOk();
+
+        $rows = collect((new \App\Services\ModUsageReport(\App\Support\Span::lastDays(7)))
+            ->games('interest', 'desc', 'gpage')->items());
+
+        $busy = $rows->first();
+        $this->assertSame($played->id, $busy['game']->id, 'the most looked for or played first');
+        $this->assertSame([3, 2, 2, 0, 1, 1, 1], [$busy['interest'], $busy['looked'], $busy['found'], $busy['without'], $busy['playing'], $busy['installed'], $busy['listed']]);
+        $this->assertSame(['French'], $busy['languages']);
+        $this->assertSame([1, 1, 0], [$rows[1]['interest'], $rows[1]['without'], $rows[1]['listed']]);
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()
+            ->assertSeeInOrder(['Most looked for or played', 'Busy Game', 'Wanted Game']);
+        $this->actingAs($admin)->get(route('admin.usage', ['gsort' => 'without', 'gdir' => 'desc']))->assertOk()
+            ->assertSeeInOrder(['Games', 'Wanted Game', 'Busy Game']);
+    }
+
     /** Each table sorts on its own parameters, over every row of the span — never a top N. */
     public function test_the_wanted_table_sorts_on_its_own_parameters(): void
     {

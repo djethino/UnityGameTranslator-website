@@ -110,17 +110,33 @@
     </div>
 
     {{-- How the mod is used (the Mod usage screen, English only). Beside Flows: what players do with
-         the translations, where Flows is what happens to them. --}}
+         the translations, where Flows is what happens to them.
+         🔴 Names the games most looked for or played this week, with or without a translation (user,
+         2026-10-20) — the top of the screen's Games table, and the link opens it on the same sort. A
+         count of sessions alone said how busy, never what to look at. --}}
     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col">
         <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-200 font-semibold">Mod usage</p>
-                <p class="text-3xl font-bold {{ $modSessionsToday > 0 ? 'text-green-400' : 'text-gray-500' }}">{{ number_format($modSessionsToday) }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ $modSessionsToday === 1 ? 'mod session today' : 'mod sessions today' }}</p>
-            </div>
+            <p class="text-gray-200 font-semibold">Mod usage</p>
             <i class="fas fa-gamepad text-4xl text-green-400 opacity-50"></i>
         </div>
-        <a href="{{ route('admin.usage') }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
+        <p class="text-sm text-gray-500">Most looked for or played, 7 days</p>
+        @if($topGames)
+            <div class="space-y-1 mt-2 text-sm">
+                @foreach($topGames as $row)
+                    <div class="flex justify-between gap-3">
+                        <span class="truncate">@include('admin.partials.usage-game', ['row' => $row])</span>
+                        <span class="whitespace-nowrap {{ $row['listed'] > 0 ? 'text-gray-400' : 'text-orange-300' }}"
+                              title="Interest — {{ $row['listed'] > 0 ? $row['listed'] . ' listed' : 'no translation listed' }}">
+                            {{ number_format($row['interest']) }}{{ $row['listed'] > 0 ? '' : ' · none' }}
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <p class="text-sm text-gray-500 mt-2">No game this week.</p>
+        @endif
+        <p class="text-xs text-gray-500 mt-2">{{ number_format($modSessionsToday) }} {{ $modSessionsToday === 1 ? 'mod session' : 'mod sessions' }} today</p>
+        <a href="{{ route('admin.usage', ['period' => 7, 'gsort' => 'interest', 'gdir' => 'desc']) }}" class="text-purple-400 hover:text-purple-300 text-sm mt-auto pt-4 self-start">
             View usage <i class="fas fa-arrow-right ml-1"></i>
         </a>
     </div>

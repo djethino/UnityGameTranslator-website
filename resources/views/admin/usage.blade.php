@@ -109,6 +109,73 @@
     </div>
 </div>
 
+{{-- ─── Every game, one row each ───────────────────────────────────────────
+     The overview (user, 2026-10-20: "les jeux les plus joués et/ou demandés avec ou sans trad"): one
+     row per game with all the page knows of it, so each new question is a sort. The tables below
+     stay for the detail — per language, per translation, per Manager. Parameters gsort, gdir, gpage;
+     the dashboard's card opens it on `interest`. --}}
+<h2 class="text-lg font-semibold mb-1"><i class="fas fa-gamepad mr-2 text-purple-400"></i> Games
+    <span class="text-sm font-normal text-gray-500 ml-1">{{ number_format($gamesTable->total()) }} {{ Str::plural('game', $gamesTable->total()) }}</span>
+</h2>
+<p class="text-xs text-gray-500 mb-3">
+    <strong>Interest</strong>: sessions that looked for it, plus sessions playing a translation of it.
+    <strong>Without / With</strong>: looks that found no translation in their language / found one.
+    <strong>Seen</strong>: Manager copies per day with the mod in it, of which <strong>Local only</strong> hold a
+    translation never published. <strong>Listed</strong>: translations on the site now.
+</p>
+@if($gamesTable->isNotEmpty())
+    <div class="mb-6">
+    <x-admin.scroll-table>
+        <table class="w-full text-sm">
+            <thead class="text-gray-400 text-left">
+                <tr>
+                    <x-admin.sortable-th column="game" label="Game" default="last" first="asc" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="interest" label="Interest" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="looked" label="Looked for" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="without" label="Without" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="found" label="With" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="playing" label="Playing" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="taken" label="Taken" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="installed" label="Via Manager" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="seen" label="Seen" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="local" label="Local only" default="last" align="right" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="listed" label="Listed" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="first" label="First seen" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                    <x-admin.sortable-th column="last" label="Last seen" default="last" sortParam="gsort" dirParam="gdir" pageParam="gpage" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($gamesTable as $row)
+                    <tr class="border-t border-gray-700">
+                        {{-- A minimum width: thirteen columns would otherwise fold the name on three lines. --}}
+                        <td class="py-2 px-4 min-w-48">@include('admin.partials.usage-game', ['row' => $row])</td>
+                        @foreach(['interest', 'looked', 'without', 'found', 'playing', 'taken', 'installed', 'seen', 'local'] as $count)
+                            <td class="py-2 px-4 text-right {{ $row[$count] > 0 ? '' : 'text-gray-600' }}">{{ number_format($row[$count]) }}</td>
+                        @endforeach
+                        <td class="py-2 px-4 whitespace-nowrap">
+                            @if($row['listed'] > 0)
+                                <span title="{{ implode(', ', $row['languages']) }}">{{ $row['listed'] }} · {{ Str::limit(implode(', ', $row['languages']), 40) }}</span>
+                            @else
+                                <span class="text-gray-600">{{ $row['game'] ? 'None' : 'Not on the site' }}</span>
+                            @endif
+                        </td>
+                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['first'] }}</td>
+                        <td class="py-2 px-4 whitespace-nowrap">{{ $row['last'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @if($gamesTable->hasPages())
+            <x-slot:below>
+                <div class="px-6 py-4 border-t border-gray-700" data-keeps-scroll>{{ $gamesTable->links() }}</div>
+            </x-slot:below>
+        @endif
+    </x-admin.scroll-table>
+    </div>
+@else
+    <div class="bg-gray-800 rounded-lg border border-gray-700 px-6 py-6 text-gray-500 text-sm mb-6">No game in this period.</div>
+@endif
+
 {{-- ─── Which translations players want ─────────────────────────────────────
      Every game and language looked for without an answer over the span, as a table: the demand is
      read over periods (user, 2026-10-19), sorted and paged by the server like every admin list.
@@ -139,14 +206,7 @@
                 @foreach($wanted as $row)
                     <tr class="border-t border-gray-700">
                         <td class="py-2 px-4">
-                            @if($row['game'])
-                                <a href="{{ route('games.show', $row['game']) }}" class="hover:text-purple-400">{{ $row['game']->name }}</a>
-                            @elseif($row['steam_id'])
-                                <a href="{{ \App\Support\StoreLinks::steam($row['steam_id']) }}" target="_blank" rel="noopener" class="hover:text-purple-400"
-                                   title="Not on the site">Steam app {{ $row['steam_id'] }}</a>
-                            @else
-                                <span title="Not on the site, or the name matches several games">{{ $row['game_name'] }}</span>
-                            @endif
+                            @include('admin.partials.usage-game', ['row' => $row])
                         </td>
                         <td class="py-2 px-4">{{ $row['language'] !== '' ? $row['language'] : '—' }}</td>
                         <td class="py-2 px-4 whitespace-nowrap">
@@ -211,14 +271,7 @@
                 @foreach($held as $row)
                     <tr class="border-t border-gray-700">
                         <td class="py-2 px-4">
-                            @if($row['game'])
-                                <a href="{{ route('games.show', $row['game']) }}" class="hover:text-purple-400">{{ $row['game']->name }}</a>
-                            @elseif($row['steam_id'])
-                                <a href="{{ \App\Support\StoreLinks::steam($row['steam_id']) }}" target="_blank" rel="noopener" class="hover:text-purple-400"
-                                   title="Not on the site">Steam app {{ $row['steam_id'] }}</a>
-                            @else
-                                <span title="Not on the site, or the name matches several games">{{ $row['game_name'] }}</span>
-                            @endif
+                            @include('admin.partials.usage-game', ['row' => $row])
                         </td>
                         <td class="py-2 px-4">
                             @if($row['translation_id'])

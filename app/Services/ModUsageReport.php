@@ -160,8 +160,85 @@ final class ModUsageReport
     public const WANTED_SORTS = ['last', 'first', 'game', 'language', 'without', 'found'];
     public const IN_USE_SORTS = ['last', 'translation', 'game', 'language', 'sessions', 'taken', 'installed', 'same', 'differs', 'signed'];
 
-    /** Rows per page of the two tables, like the other admin lists. */
+    /** Rows per page of the tables, like the other admin lists. */
     public const PER_PAGE = 20;
+
+    public const GAMES_SORTS = ['last', 'first', 'game', 'interest', 'looked', 'without', 'found', 'playing',
+                                'taken', 'installed', 'seen', 'local', 'listed'];
+
+    /**
+     * Every game the span says something about, one row each — what it was looked for, played,
+     * taken and seen with the mod (user, 2026-10-20: "les jeux les plus joués et/ou demandés avec ou
+     * sans trad", after the questions kept moving). One table whose sorts answer the next question,
+     * rather than one more table per question. The other tables stay for the detail.
+     *
+     * ⚠ **Interest = sessions that looked for it + sessions playing a translation of it**: the two
+     * counts in the mod's own unit. A session doing both the same day counts twice — telling them
+     * apart would need the sessions, which are forgotten every night. The Manager's "seen" is another
+     * unit (its copies per day) and stays its own column.
+     *
+     * ⚠ "Listed" is what the site holds NOW, not over the span.
+     */
+    public function games(string $sort, string $dir, string $pageName, int $perPage = self::PER_PAGE): LengthAwarePaginator
+    {
+        $sumWhen = fn (string $as, string $condition, array $bindings) => ["SUM(CASE WHEN {$condition} THEN u.sessions ELSE 0 END) as {$as}", $bindings];
+        $listed = Translation::publiclyListed()->selectRaw('game_id, COUNT(*) as n')->groupBy('game_id')->toBase();
+
+        $query = $this->source()
+            ->leftJoin('games', 'games.id', '=', 'u.game_id')
+            ->leftJoinSub($listed, 'tc', 'tc.game_id', '=', 'u.game_id')
+            ->whereIn('u.act', [ModUsage::LOOK, ModUsage::PLAY, ModUsage::TAKE, ModUsage::HELD])
+            ->select('u.game_id', 'u.steam_id', 'u.game_name')
+            ->selectRaw('MAX(games.name) as card_name, MAX(tc.n) as listed')
+            ->selectRaw('MIN(u.first_day) as first_at, MAX(u.last_day) as last_at')
+            ->selectRaw(...$sumWhen('looked', 'u.act = ?', [ModUsage::LOOK]))
+            ->selectRaw(...$sumWhen('without', 'u.act = ? AND u.outcome <> ?', [ModUsage::LOOK, ModUsage::FOUND]))
+            ->selectRaw(...$sumWhen('found', 'u.act = ? AND u.outcome = ?', [ModUsage::LOOK, ModUsage::FOUND]))
+            ->selectRaw(...$sumWhen('playing', 'u.act = ?', [ModUsage::PLAY]))
+            ->selectRaw(...$sumWhen('interest', 'u.act IN (?, ?)', [ModUsage::LOOK, ModUsage::PLAY]))
+            ->selectRaw(...$sumWhen('taken', 'u.act = ? AND u.product = ?', [ModUsage::TAKE, \App\Support\ClientAgent::MOD]))
+            ->selectRaw(...$sumWhen('installed', 'u.act = ? AND u.product = ?', [ModUsage::TAKE, \App\Support\ClientAgent::MANAGER]))
+            ->selectRaw(...$sumWhen('seen', 'u.act = ?', [ModUsage::HELD]))
+            ->selectRaw(...$sumWhen('local', 'u.act = ? AND u.outcome = ?', [ModUsage::HELD, ModUsage::LOCAL_ONLY]))
+            ->groupBy('u.game_id', 'u.steam_id', 'u.game_name');
+
+        match ($sort) {
+            'first' => $query->orderBy('first_at', $dir),
+            'game' => $query->orderByRaw('COALESCE(MAX(games.name), u.game_name, u.steam_id) ' . $dir),
+            'listed' => $query->orderByRaw('COALESCE(MAX(tc.n), 0) ' . $dir),
+            'interest', 'looked', 'without', 'found', 'playing', 'taken', 'installed', 'seen', 'local' => $query->orderBy($sort, $dir),
+            default => $query->orderBy('last_at', $dir),
+        };
+        $query->orderByDesc('interest')->orderBy('u.game_id')->orderBy('u.steam_id')->orderBy('u.game_name');
+
+        $page = $query->paginate($perPage, ['*'], $pageName)->withQueryString();
+
+        $gameIds = collect($page->items())->pluck('game_id')->filter()->unique()->values();
+        $games = Game::whereIn('id', $gameIds)->get()->keyBy('id');
+        // The languages listed now, per game of the page — one query.
+        $languages = Translation::publiclyListed()->whereIn('game_id', $gameIds)
+            ->distinct()->orderBy('target_language')->get(['game_id', 'target_language'])
+            ->groupBy('game_id')->map(fn ($rows) => $rows->pluck('target_language')->all());
+
+        return $page->through(fn ($r) => [
+            'game' => $r->game_id ? $games->get($r->game_id) : null,
+            'steam_id' => $r->steam_id,
+            'game_name' => $r->game_name,
+            'first' => substr((string) $r->first_at, 0, 10),
+            'last' => substr((string) $r->last_at, 0, 10),
+            'interest' => (int) $r->interest,
+            'looked' => (int) $r->looked,
+            'without' => (int) $r->without,
+            'found' => (int) $r->found,
+            'playing' => (int) $r->playing,
+            'taken' => (int) $r->taken,
+            'installed' => (int) $r->installed,
+            'seen' => (int) $r->seen,
+            'local' => (int) $r->local,
+            'listed' => (int) ($r->listed ?? 0),
+            'languages' => $r->game_id ? ($languages[$r->game_id] ?? []) : [],
+        ]);
+    }
 
     /**
      * The games looked for with nothing in the language asked — which translations players want,

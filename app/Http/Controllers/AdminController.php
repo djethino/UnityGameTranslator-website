@@ -78,16 +78,23 @@ class AdminController extends Controller
             'deleted' => (int) ($flows[TranslationFlows::DELETED] ?? 0),
         ];
 
-        // Copies of the mod that called today — the first tile of the Mod usage screen, read where
-        // it is written (client_usage_daily), so opening the dashboard counts nothing.
+        // Copies of the mod that called today — the first tile of the Mod usage screen.
         $modSessionsToday = (int) DB::table('client_usage_daily')
             ->where('product', \App\Support\ClientAgent::MOD)
             ->where('date', $today)
             ->sum('installs');
 
+        // 🔴 The figure worth opening Mod usage for (user, 2026-10-20): the games most looked for or
+        // played over the week — the top of its Games table, read by the same report and on the
+        // same sort the card's link opens, so the card and the screen say the same thing. The
+        // report counts today as the screen does (ModUsage::countDay, idempotent).
+        $topGames = (new ModUsageReport(Span::lastDays(7)))
+            ->games('interest', 'desc', 'gpage', self::DASHBOARD_TOP_GAMES)->items();
+
         return view('admin.dashboard', compact(
             'pendingReports', 'totalTranslations', 'totalUsers', 'totalGames', 'bannedUsers', 'recentReports',
-            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay', 'modSessionsToday'
+            'visitorsToday', 'pageViewsToday', 'banner', 'pendingProposals', 'flowsLastDay', 'modSessionsToday',
+            'topGames'
         ));
     }
 
@@ -795,6 +802,9 @@ class AdminController extends Controller
     private const TOP_ROWS = 10;
     private const TOP_ROWS_VISIBLE = 5;
 
+    /** Games named on the dashboard's Mod usage card — a card is glanced at, the table is below. */
+    private const DASHBOARD_TOP_GAMES = 3;
+
     /**
      * Fetch the shared catalogues now rather than waiting for the nightly run.
      *
@@ -912,6 +922,7 @@ class AdminController extends Controller
             'wanted' => $report->wanted($sortOf('wsort', ModUsageReport::WANTED_SORTS), $dirOf('wdir'), 'wpage'),
             'inUse' => $report->inUse($sortOf('usort', ModUsageReport::IN_USE_SORTS), $dirOf('udir'), 'upage'),
             'held' => $report->held($sortOf('hsort', ModUsageReport::HELD_SORTS), $dirOf('hdir'), 'hpage'),
+            'gamesTable' => $report->games($sortOf('gsort', ModUsageReport::GAMES_SORTS), $dirOf('gdir'), 'gpage'),
             'languages' => $report->languages(),
             'topRows' => ['visible' => self::TOP_ROWS_VISIBLE, 'max' => self::TOP_ROWS],
         ]);
