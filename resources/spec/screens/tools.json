@@ -338,6 +338,10 @@
       { "kind": "row", "name": "TopRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
         { "kind": "label", "name": "MatchLabel", "text": "Match:", "role": "Small", "policy": "Excluded", "minWidth": 45 },
         { "kind": "field", "name": "MatchInput", "placeholder": "path:*Pattern*", "act": "matchChanged" },
+        { "kind": "button", "name": "MoveUpBtn", "text": "↑", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "moveUp",
+          "help": "Moves this rule up. When two rules match the same text, the higher one applies. A more precise path rule always stays above a less precise one." },
+        { "kind": "button", "name": "MoveDownBtn", "text": "↓", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "moveDown",
+          "help": "Moves this rule down. When two rules match the same text, the higher one applies. A more precise path rule always stays above a less precise one." },
         { "kind": "button", "name": "DeleteBtn", "text": "X", "tone": "Danger", "size": "Compact", "minWidth": 28, "policy": "Excluded", "act": "delete" }
       ] },
       { "kind": "row", "name": "SizeRow", "spacing": 5, "minHeight": "RowHeightNormal", "children": [
