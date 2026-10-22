@@ -33,6 +33,8 @@
                          nothing of a Fork, so somebody leading a lineage they started from
                          another's work was shown the same badge as somebody who started alone. --}}
                     <x-translation-role :translation="$translation" />
+                    {{-- What the file is, beside whose it is — not among the quality figures. --}}
+                    <x-translation-format :translation="$translation" />
                 </div>
 
                 {{-- Where it came from, when it came from somebody. Its own line rather than a
@@ -126,7 +128,6 @@
             <div class="flex items-center gap-2">
                 {{-- The stage component says "Capture only" itself on a file with nothing translated. --}}
                 <x-review-stage :translation="$translation" />
-                <x-translation-format :translation="$translation" />
                 @if($translation->effective_lines > 0)
                     @if($translation->ai_count > 0)
                         <span class="text-xs text-gray-400">

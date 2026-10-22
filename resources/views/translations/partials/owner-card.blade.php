@@ -72,6 +72,7 @@
                              matched the admin screens or the dashboard — and the words were in
                              English only, hard-coded, on a page translated into nineteen. --}}
                         <x-translation-role :translation="$translation" plain :hide-main="$hideMain" />
+                        <x-translation-format :translation="$translation" plain />
                     </div>
                     @php
                         $forkCount = $translation->forks->where('visibility', 'public')->count();

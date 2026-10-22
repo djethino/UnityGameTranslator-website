@@ -40,6 +40,7 @@
                     {{-- Said outright: a branch is not published, and reading one here is a
                          moderation act rather than ordinary browsing. --}}
                     <x-translation-role :translation="$translation" />
+                    <x-translation-format :translation="$translation" />
                 </h2>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
