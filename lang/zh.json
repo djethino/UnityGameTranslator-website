@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+人工",
     "translation.complete": "完成",
     "translation.in_progress": "进行中",
+    "translation.format_hint": "翻译文件格式：:format。较新的格式需要新版 UGT Mod。",
     "translation.lines": ":count 行",
     "translation.published_on": ":date 发布",
     "translation.updated_on": ":date 更新",

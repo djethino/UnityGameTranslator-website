@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "IA+Humano",
     "translation.complete": "Terminada",
     "translation.in_progress": "En curso",
+    "translation.format_hint": "Formato del archivo de traducción: :format. Un formato más reciente requiere actualizar UGT Mod.",
     "translation.lines": ":count línea|:count líneas",
     "translation.published_on": "Publicado el :date",
     "translation.updated_on": "Actualizado el :date",

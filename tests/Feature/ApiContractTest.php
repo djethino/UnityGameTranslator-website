@@ -196,6 +196,10 @@ class ApiContractTest extends TestCase
 
         foreach ($setup['translations'] ?? [] as $ref => $spec) {
             $json = array_merge(['_uuid' => $spec['uuid']], $spec['lines']);
+            // A file past the format 1 says so itself, as a newer client writes it.
+            if (($spec['format_version'] ?? 1) > 1) {
+                $json = array_merge(['_engine_version' => $spec['format_version']], $json);
+            }
             $path = 'translations/contract-' . $ref . '-' . uniqid() . '.json';
             Storage::disk('local')->put($path, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             $this->files[] = $path;
@@ -224,6 +228,8 @@ class ApiContractTest extends TestCase
                 'content_hash' => $service->computeContentHash($json),
                 'line_count' => $service->countLines($json),
                 'vote_count' => $spec['vote_count'] ?? 0,
+                'format_version' => $spec['format_version'] ?? 1,
+                'older_format_hashes' => $spec['older_format_hashes'] ?? null,
             ], Translation::extractTagCounts($json)))->save();
 
             $this->refs["translations.$ref.id"] = $translation->id;

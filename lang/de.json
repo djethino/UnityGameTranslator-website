@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "KI+Mensch",
     "translation.complete": "Vollständig",
     "translation.in_progress": "In Bearbeitung",
+    "translation.format_hint": "Format der Übersetzungsdatei: :format. Ein neueres Format erfordert eine aktuelle Version von UGT Mod.",
     "translation.lines": ":count Zeile|:count Zeilen",
     "translation.published_on": "Veröffentlicht am :date",
     "translation.updated_on": "Aktualisiert am :date",

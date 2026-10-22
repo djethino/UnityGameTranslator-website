@@ -40,6 +40,7 @@
                  not depend on which page you meet it. --}}
             <div class="flex flex-wrap gap-1 mt-2">
                 <x-translation-badges :translation="$translation" />
+                <x-translation-format :translation="$translation" />
             </div>
             <div class="mt-2">
                 <x-progress-bar :translation="$translation" />

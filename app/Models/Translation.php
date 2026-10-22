@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\TranslationService;
 use App\Support\Placeholders;
 use App\Support\TranslationFileKeys;
+use App\Support\TranslationFormat;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -51,6 +52,9 @@ class Translation extends Model
         // The same content without the lineage identifier — see computeContentHash().
         'content_hash',
         'merged_main_hash',
+        // The file's format (its _engine_version) — see the migration that added it.
+        'format_version',
+        'older_format_hashes',
         'font_config',
         'settings_summary',
     ];
@@ -83,6 +87,8 @@ class Translation extends Model
         'game_pick' => 'array',
         'game_switch_pending' => 'boolean',
         'content_updated_at' => 'datetime',
+        'format_version' => 'integer',
+        'older_format_hashes' => 'array',
     ];
 
     /**
@@ -983,6 +989,63 @@ class Translation extends Model
      * Use it wherever the site LISTS translations. Never where it resolves one: a Main is still
      * the Main of its lineage while delisted, and a mod syncing against it must find it.
      */
+    /**
+     * The format a translation file is written in, from its own `_engine_version`
+     * (App\Support\TranslationFormat::ofFile). What every write of a file stores in `format_version`.
+     */
+    public static function formatOf(array $json): int
+    {
+        $version = $json['_engine_version'] ?? null;
+
+        return TranslationFormat::ofFile(is_int($version) ? $version : null);
+    }
+
+    /**
+     * What a client reading up to `$format` can use — everything at or below it
+     * (App\Support\TranslationFormat). Applied wherever the site lists, announces or serves a
+     * translation to a client, so one beyond what it reads never reaches it.
+     */
+    /**
+     * The hash a client reading up to `$format` is told about this translation: its own when it
+     * reads this file, else the last version written in a format it reads (`older_format_hashes`),
+     * else null — a translation born beyond it, which does not exist for that client.
+     *
+     * 🔴 Used wherever the site tells a client the hash of what it HOLDS (check, sync state, the
+     * lineage it runs), so an older mod is told of no update it could never take.
+     */
+    public function hashFor(int $format): ?string
+    {
+        if ($this->format_version <= $format) {
+            return $this->file_hash;
+        }
+        $best = null;
+        foreach ((array) $this->older_format_hashes as $older => $hash) {
+            if ((int) $older <= $format && ($best === null || (int) $older > $best[0])) {
+                $best = [(int) $older, $hash];
+            }
+        }
+
+        return $best[1] ?? null;
+    }
+
+    /**
+     * Before a new file replaces this one: when it raises the format, the hash of the version being
+     * left is kept for the clients that read no further (hashFor).
+     */
+    public function rememberFormatLeft(int $newFormat): void
+    {
+        if ($newFormat > $this->format_version && $this->file_hash) {
+            $kept = (array) $this->older_format_hashes;
+            $kept[(string) $this->format_version] = $this->file_hash;
+            $this->older_format_hashes = $kept;
+        }
+    }
+
+    public function scopeReadableIn($query, int $format)
+    {
+        return $query->where('format_version', '<=', $format);
+    }
+
     public function scopePubliclyListed($query)
     {
         return $query->where('visibility', 'public')

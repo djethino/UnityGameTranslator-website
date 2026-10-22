@@ -59,6 +59,7 @@
                 <div class="flex items-center gap-2 flex-wrap mt-2">
                     <x-translation-role :translation="$translation" />
                     <x-contributions-badge :translation="$translation" />
+                    <x-translation-format :translation="$translation" />
                 </div>
 
                 {{-- Where it came from, when it came from somewhere --}}

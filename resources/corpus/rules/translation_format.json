@@ -1,0 +1,150 @@
+{
+  "rule": "translation_format",
+  "classes": [
+    "TranslationFormat"
+  ],
+  "note": "Which format of translation file a client reads. No table of versions: every client released before this rule says nothing and reads the format 1; from it on, each client says what it reads (X-UGT-Format, or ?format= on a stream), and the site does not list, announce or serve a translation beyond it.",
+  "operations": {
+    "announced": {
+      "in": {
+        "value": "string or null: the header's (or the parameter's) value"
+      },
+      "out": "int: the format the client reads"
+    },
+    "of_file": {
+      "in": {
+        "engine_version": "int or null: the file's _engine_version"
+      },
+      "out": "int: the file's format"
+    },
+    "reads": {
+      "in": {
+        "reads_up_to": "int",
+        "file_format": "int"
+      },
+      "out": "bool"
+    }
+  },
+  "cases": [
+    {
+      "id": "translation_format/announced/silence-is-one",
+      "op": "announced",
+      "in": {
+        "value": null
+      },
+      "out": 1,
+      "why": "🔴 every mod and Manager released before this rule says nothing and reads the format 1 — the whole reason no table is needed"
+    },
+    {
+      "id": "translation_format/announced/blank-is-silence",
+      "op": "announced",
+      "in": {
+        "value": "  "
+      },
+      "out": 1,
+      "why": "an empty header is no announcement"
+    },
+    {
+      "id": "translation_format/announced/a-number",
+      "op": "announced",
+      "in": {
+        "value": "2"
+      },
+      "out": 2,
+      "why": "what the client says it reads"
+    },
+    {
+      "id": "translation_format/announced/spaces-around",
+      "op": "announced",
+      "in": {
+        "value": " 3 "
+      },
+      "out": 3,
+      "why": "a header value may carry the spaces of its transport"
+    },
+    {
+      "id": "translation_format/announced/nonsense-is-silence",
+      "op": "announced",
+      "in": {
+        "value": "two"
+      },
+      "out": 1,
+      "why": "an unreadable claim is read as no claim: the format every client reads, never a format nobody does"
+    },
+    {
+      "id": "translation_format/announced/no-zero",
+      "op": "announced",
+      "in": {
+        "value": "0"
+      },
+      "out": 1,
+      "why": "nothing reads less than 1 — 0 is the old [vN] form, which every reader migrates"
+    },
+    {
+      "id": "translation_format/announced/no-sign",
+      "op": "announced",
+      "in": {
+        "value": "+2"
+      },
+      "out": 1,
+      "why": "a whole number, digits only, as the site's port reads it too"
+    },
+    {
+      "id": "translation_format/of_file/absent-is-one",
+      "op": "of_file",
+      "in": {
+        "engine_version": null
+      },
+      "out": 1,
+      "why": "a file that never said is a format-1 file: the format did not exist before it"
+    },
+    {
+      "id": "translation_format/of_file/zero-is-one",
+      "op": "of_file",
+      "in": {
+        "engine_version": 0
+      },
+      "out": 1,
+      "why": "the old [vN] placeholders, migrated on load by every reader"
+    },
+    {
+      "id": "translation_format/of_file/two",
+      "op": "of_file",
+      "in": {
+        "engine_version": 2
+      },
+      "out": 2,
+      "why": "the file's own word"
+    },
+    {
+      "id": "translation_format/reads/same",
+      "op": "reads",
+      "in": {
+        "reads_up_to": 1,
+        "file_format": 1
+      },
+      "out": true,
+      "why": "the ordinary case"
+    },
+    {
+      "id": "translation_format/reads/older",
+      "op": "reads",
+      "in": {
+        "reads_up_to": 2,
+        "file_format": 1
+      },
+      "out": true,
+      "why": "a newer client reads every older format (it migrates on load)"
+    },
+    {
+      "id": "translation_format/reads/newer",
+      "op": "reads",
+      "in": {
+        "reads_up_to": 1,
+        "file_format": 2
+      },
+      "out": false,
+      "why": "🔴 the case this rule exists for: loaded anyway, a format-1 client wrote the file back as format 1 and damaged it in silence"
+    }
+  ]
+}

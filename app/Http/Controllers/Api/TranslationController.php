@@ -17,6 +17,7 @@ use App\Services\SsePublisher;
 use App\Services\TranslationService;
 use App\Rules\ResourcesLink;
 use App\Support\TranslationFlows;
+use App\Support\TranslationFormat;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -92,6 +93,12 @@ class TranslationController extends Controller
             // same thing about the same accessor; the API had simply never been told.
             'parent',
         ])->publiclyListed();
+
+        // 🔴 **What this client reads, and nothing past it** (App\Support\TranslationFormat): a mod
+        // released before the rule says nothing and reads the format 1; offered a newer file, it
+        // could not take it, and would not say why.
+        $format = TranslationFormat::of($request);
+        $query->readableIn($format);
 
         // 🔴 **Which GAMES first, translations second.** The filters used to be `whereHas` on the
         // translation query, so nothing ever knew how many games were involved — which is exactly
@@ -229,7 +236,7 @@ class TranslationController extends Controller
                 ->pluck('value', 'translation_id')
             : collect();
 
-        $tallies = $gameIds === null ? null : $this->languageTallies($gameIds);
+        $tallies = $gameIds === null ? null : $this->languageTallies($gameIds, $format);
         $games = $gameIds === null ? null : Game::whereIn('id', $gameIds)->get();
 
         if ($gameIds !== null) {
@@ -239,14 +246,14 @@ class TranslationController extends Controller
         return response()->json([
             // ── What every published mod reads. Unchanged, on purpose. ────────────────────────
             'count' => $translations->count(),
-            'translations' => $translations->map(fn ($t) => $this->listingRow($t, $userVotes)),
+            'translations' => $translations->map(fn ($t) => $this->listingRow($t, $userVotes, $format)),
 
             // ── The truth, per game, complete. ───────────────────────────────────────────────
             //
             // Absent when no game filter was given: there is no "per game" to be complete about,
             // and a caller must never be handed a shape that implies exhaustiveness we cannot give.
             ...($gameIds === null ? [] : [
-                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games),
+                'games' => $this->groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games, $format),
                 'games_total' => $gamesTotal,
             ]),
         ]);
@@ -303,10 +310,13 @@ class TranslationController extends Controller
      * you asked" and "this game exists in 12 languages" are what a screen says side by side.
      */
     /// <summary>The language tallies for a set of games, in ONE query.</summary>
-    private function languageTallies($gameIds)
+    private function languageTallies($gameIds, int $format)
     {
+        // Counted over what the client can have, like the rows beside them: « 3 in French » with
+        // two of them out of its reach would be a promise the list then breaks.
         return Translation::whereIn('game_id', $gameIds)
             ->publiclyListed()
+            ->readableIn($format)
             ->groupBy('game_id', 'target_language')
             ->selectRaw('game_id, target_language, COUNT(*) as n')
             ->get()
@@ -320,7 +330,7 @@ class TranslationController extends Controller
      * multiplying work by the size of a library; doing it in SQL instead of in HTTP would have been
      * the same fault one floor down.
      */
-    private function groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games): array
+    private function groupsByGame($ranked, $gameIds, $userVotes, $tallies, $games, int $format): array
     {
         $byGame = $ranked->groupBy('game_id');
 
@@ -329,7 +339,7 @@ class TranslationController extends Controller
         return $games->whereIn('id', $gameIds instanceof \Illuminate\Support\Collection
                 ? $gameIds->all()
                 : $gameIds)
-            ->map(function (Game $game) use ($byGame, $tallies, $userVotes) {
+            ->map(function (Game $game) use ($byGame, $tallies, $userVotes, $format) {
             $rows = $byGame->get($game->id, collect());
 
             return [
@@ -346,7 +356,7 @@ class TranslationController extends Controller
                 'languages' => $tallies->get($game->id, collect())
                     ->mapWithKeys(fn ($row) => [$row->target_language => (int) $row->n])
                     ->toArray(),
-                'translations' => $rows->map(fn ($t) => $this->listingRow($t, $userVotes))->values(),
+                'translations' => $rows->map(fn ($t) => $this->listingRow($t, $userVotes, $format))->values(),
             ];
         })->values()->toArray();
     }
@@ -395,6 +405,8 @@ class TranslationController extends Controller
         ]);
 
         $asked = collect($request->input('games'));
+        // What this client reads (App\Support\TranslationFormat) — see search().
+        $format = TranslationFormat::of($request);
 
         // 🔴 **The game its player confirmed comes first** (2026-10-05): a client that knows which
         // card this game is asks by it, and the Steam id or the name read on disk — which can be
@@ -521,7 +533,7 @@ class TranslationController extends Controller
             'originAuthor:id,name',
             // Same reason as the search above: the ranking reads `parent` through `fork_bonus`.
             'parent',
-        ])->publiclyListed()->whereIn('game_id', $gameIds)->get();
+        ])->publiclyListed()->readableIn($format)->whereIn('game_id', $gameIds)->get();
 
         $gameMaxes = Translation::maxResolvedLinesByGame($gameIds);
         foreach ($rows as $row) {
@@ -546,7 +558,11 @@ class TranslationController extends Controller
             'user:id,name',
             'originAuthor:id,name',
             'parent',
-        ])->public()->whereIn('file_uuid', $uuids)->get()->keyBy('file_uuid');
+        ])->public()->whereIn('file_uuid', $uuids)->get()
+            // The lineage it runs, as far as it can read it: a Main born past its format does not
+            // exist for it, and one that moved past it is answered with the last version it reads.
+            ->filter(fn (Translation $t) => $t->hashFor($format) !== null)
+            ->keyBy('file_uuid');
 
         foreach ($matching as $row) {
             $row->gameMaxHint = $gameMaxes[$row->game_id]
@@ -564,7 +580,7 @@ class TranslationController extends Controller
         // Both of these used to be made inside the per-entry composition below: seventeen games
         // cost 47 queries, a hundred would have cost 200. Saving a hundred HTTP requests only to
         // spend two hundred SQL ones is the same fault moved one floor down.
-        $tallies = $gameIds->isEmpty() ? collect() : $this->languageTallies($gameIds);
+        $tallies = $gameIds->isEmpty() ? collect() : $this->languageTallies($gameIds, $format);
         $games = $gameIds->isEmpty() ? collect() : Game::whereIn('id', $gameIds)->get();
 
         // ── One result per entry ASKED, in the order asked ────────────────────────────────────
@@ -572,7 +588,7 @@ class TranslationController extends Controller
         // ⚠ Including the ones that found nothing. A missing key reads as "not asked about", and a
         // caller cannot tell that apart from "no translation exists" — the distinction the whole
         // sweep already keeps (`OnlineCatalogCache` never caches a failure as an empty catalogue).
-        $results = $asked->map(function ($entry) use ($bySteam, $byName, $byCard, $ranked, $userVotes, $matching, $tallies, $games) {
+        $results = $asked->map(function ($entry) use ($bySteam, $byName, $byCard, $ranked, $userVotes, $matching, $tallies, $games, $format) {
             $steamId = $entry['steam_id'] ?? null;
             $name = isset($entry['name']) ? mb_strtolower(trim($entry['name'])) : null;
 
@@ -597,10 +613,10 @@ class TranslationController extends Controller
                 ], fn ($v) => $v !== null),
                 'games' => $ids->isEmpty()
                     ? []
-                    : $this->groupsByGame($ranked, $ids, $userVotes, $tallies, $games),
+                    : $this->groupsByGame($ranked, $ids, $userVotes, $tallies, $games, $format),
                 'games_total' => $games->count(),
                 'matching' => $uuid !== null && $matching->has($uuid)
-                    ? $this->listingRow($matching->get($uuid), $userVotes)
+                    ? $this->listingRow($matching->get($uuid), $userVotes, $format)
                     : null,
             ];
         })->values();
@@ -670,7 +686,7 @@ class TranslationController extends Controller
      * before — a field added to one and forgotten in the other is invisible until somebody reports
      * that the same file reads differently in two windows.
      */
-    private function listingRow(Translation $t, $userVotes): array
+    private function listingRow(Translation $t, $userVotes, int $format): array
     {
         return [
                     'id' => $t->id,
@@ -734,7 +750,11 @@ class TranslationController extends Controller
                     // The mod flags a newcomer from it — being noticed is a newcomer's one
                     // advantage over a translation that has had months to gather downloads.
                     'created_at' => $t->created_at->toIso8601String(),
-                    'file_hash' => $t->file_hash,
+                    // What a client reading up to `$format` is told it can have (Translation::hashFor):
+                    // an older mod holding a translation that moved past what it reads sees no update.
+                    'file_hash' => $t->hashFor($format),
+                    // Additive (App\Support\TranslationFormat): the file's format, for the chip.
+                    'format_version' => $t->format_version,
                     'file_uuid' => $t->file_uuid,
                     // Kept for mods that already read it, but it moves on a vote
                     // or a download — content_updated_at is the honest one
@@ -765,6 +785,20 @@ class TranslationController extends Controller
             $translation->updateHash();
         }
 
+        // 🔴 **What this client can have, not what the site holds** (App\Support\TranslationFormat;
+        // decided 2026-10-22). A mod reading no further than an older format is told the hash of
+        // the last version written in one it reads — the one it holds, so no update is announced
+        // that it could never take. Born past its format, the translation does not exist for it.
+        $format = TranslationFormat::of($request);
+        $readableHash = $translation->hashFor($format);
+        if ($readableHash === null) {
+            return response()->json([
+                'error' => 'FormatTooNew',
+                'message' => TranslationFormat::TOO_NEW,
+                'format_version' => $translation->format_version,
+            ], 404);
+        }
+
         // A mod holding this translation is playing with it — kept for the admin "Mod usage"
         // screen before the 304 below, which answers the same copy just as well. Never its
         // author's own copy: that would track a named person (ModUsage::playOutcome).
@@ -789,7 +823,7 @@ class TranslationController extends Controller
         $uploader = $translation->user?->name ?? '';
 
         $etag = '"' . substr(hash('sha256', implode('|', [
-            $translation->file_hash,
+            $readableHash,
             $translation->line_count,
             $translation->vote_count,
             $uploader,
@@ -807,7 +841,9 @@ class TranslationController extends Controller
 
         $response = [
             'id' => $translation->id,
-            'file_hash' => $translation->file_hash,
+            'file_hash' => $readableHash,
+            // Additive: the format of the file the site holds now (App\Support\TranslationFormat).
+            'format_version' => $translation->format_version,
             // 🔴 The game this translation is filed under — to anybody holding it, account or not
             // (2026-10-05). A client compares it with the game its player confirmed and says a
             // difference under the game's name; a move by its owner is never followed in silence.
@@ -833,7 +869,7 @@ class TranslationController extends Controller
 
         // If client sent their current hash, indicate if update is available
         if ($request->filled('hash')) {
-            $response['has_update'] = $translation->file_hash !== $request->hash;
+            $response['has_update'] = $readableHash !== $request->hash;
         }
 
         return response()
@@ -863,6 +899,8 @@ class TranslationController extends Controller
         $uuid = $request->uuid;
         $user = $request->user();
         $userId = $user->id;
+        // What this client reads (App\Support\TranslationFormat) — the hash of its own row below.
+        $format = TranslationFormat::of($request);
 
         // The published translation of this lineage — the one the ranking ranks, and the one
         // the mod's current-translation card lets a player vote on. Resolved for BOTH branches
@@ -996,7 +1034,8 @@ class TranslationController extends Controller
                     // a client that does not know this field behaves exactly as before.
                     'resources_url_own' => $ownTranslation->resources_url,
                     'line_count' => $ownTranslation->line_count,
-                    'file_hash' => $ownTranslation->file_hash,
+                    'file_hash' => $ownTranslation->hashFor($format),
+                    'format_version' => $ownTranslation->format_version,
                     'updated_at' => $ownTranslation->updated_at->toIso8601String(),
                     'content_updated_at' => $ownTranslation->contentChangedAt()->toIso8601String(),
                 ],
@@ -1077,6 +1116,17 @@ class TranslationController extends Controller
         // Compute hash if not stored
         if (!$translation->file_hash) {
             $translation->updateHash();
+        }
+
+        // 🔴 **Never a file the client cannot read** (App\Support\TranslationFormat): a mod
+        // released before the rule would load it, read its placeholders wrong and write it back in
+        // its own format. Its lists no longer offer such a file; this is the door behind them.
+        if (!TranslationFormat::reads(TranslationFormat::of($request), $translation->format_version)) {
+            return response()->json([
+                'error' => 'FormatTooNew',
+                'message' => TranslationFormat::TOO_NEW,
+                'format_version' => $translation->format_version,
+            ], 409);
         }
 
         $etag = '"' . $translation->file_hash . '"';
@@ -1558,6 +1608,8 @@ class TranslationController extends Controller
             // game_id intentionally omitted — see resolution block above. The translation's
             // game is fixed at creation; the payload's _game metadata is treated as
             // informational on subsequent uploads.
+            // A format left behind keeps its last hash for the clients that read no further.
+            $existingTranslation->rememberFormatLeft($parsed['format_version']);
             $existingTranslation->update([
                 // The installation it was sent from this time — kept when the client says nothing.
                 'game_read' => $this->gameRead($request) ?? $existingTranslation->game_read,
@@ -1584,6 +1636,8 @@ class TranslationController extends Controller
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'content_hash' => $parsed['content_hash'],
+                'format_version' => $parsed['format_version'],
+                'older_format_hashes' => $existingTranslation->older_format_hashes,
                 'merged_main_hash' => $parsed['merged_main_hash'],
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
@@ -1598,6 +1652,8 @@ class TranslationController extends Controller
             // Signal SSE via Redis pub/sub — Node.js relays to connected mods
             SsePublisher::translationUpdated($existingTranslation->id, [
                 'file_hash' => $existingTranslation->file_hash,
+                // The relay holds it back from a stream that reads no further (App\Support\TranslationFormat).
+                'format_version' => $existingTranslation->format_version,
                 'line_count' => $existingTranslation->line_count,
                 'vote_count' => $existingTranslation->vote_count,
                 'updated_at' => $existingTranslation->updated_at->toIso8601String(),
@@ -1657,6 +1713,7 @@ class TranslationController extends Controller
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
             'content_hash' => $parsed['content_hash'],
+            'format_version' => $parsed['format_version'],
             'merged_main_hash' => $parsed['merged_main_hash'],
             'font_config' => $parsed['font_config'],
             'settings_summary' => $parsed['settings_summary'],
@@ -1685,6 +1742,8 @@ class TranslationController extends Controller
         // Signal SSE via Redis pub/sub — Node.js relays to connected mods
         SsePublisher::translationUpdated($translation->id, [
             'file_hash' => $translation->file_hash,
+            // The relay holds it back from a stream that reads no further (App\Support\TranslationFormat).
+            'format_version' => $translation->format_version,
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count ?? 0,
             'updated_at' => $translation->updated_at->toIso8601String(),

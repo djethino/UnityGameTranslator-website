@@ -127,6 +127,7 @@
                                          like a public Main. Moderating one is not the same act
                                          as moderating the other. --}}
                                     <x-translation-role :translation="$translation" class="mt-1" />
+                                    <x-translation-format :translation="$translation" class="mt-1" />
                                 </div>
                             </div>
                         </td>

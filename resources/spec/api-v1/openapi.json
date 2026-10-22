@@ -64,7 +64,8 @@
           { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Name as read off the game folder (`unity_name`, exact) or a loose match on the display name." },
           { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Target language." },
           { "name": "source_lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Source language." },
-          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return translations of games marked for adults only. Applies ONLY to a call with no game filter, which is a browse; a call carrying `steam_id`, `game` or `q` names the game the caller already has and is never filtered." }
+          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return translations of games marked for adults only. Applies ONLY to a call with no game filter, which is a browse; a call carrying `steam_id`, `game` or `q` names the game the caller already has and is never filtered." },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
@@ -101,6 +102,9 @@
         "x-auth": "optional — with a valid token, `user_vote` is filled",
         "x-throttle": "20/min per IP",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ForGamesBody" } } } },
+        "parameters": [
+          { "$ref": "#/components/parameters/ClientFormat" }
+        ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ForGamesResponse" } } } },
           "422": { "$ref": "#/components/responses/ValidationFailed" },
@@ -117,7 +121,8 @@
         "security": [{ "bearer": [] }],
         "x-throttle": "60/min per token",
         "parameters": [
-          { "name": "uuid", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 36 }, "description": "The file's `_uuid`." }
+          { "name": "uuid", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 36 }, "description": "The file's `_uuid`." },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckUuidResponse" } } } },
@@ -140,7 +145,8 @@
         "parameters": [
           { "$ref": "#/components/parameters/TranslationId" },
           { "name": "hash", "in": "query", "schema": { "$ref": "#/components/schemas/FileHash" }, "description": "The `file_hash` the caller holds." },
-          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "The ETag of the last answer, verbatim." }
+          { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "The ETag of the last answer, verbatim." },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "OK", "headers": { "ETag": { "$ref": "#/components/headers/CheckETag" }, "Cache-Control": { "description": "Written `private, must-revalidate`; the framework serialises the directives in its own order.", "schema": { "type": "string", "const": "must-revalidate, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckResponse" } } } },
@@ -163,13 +169,15 @@
         "parameters": [
           { "$ref": "#/components/parameters/TranslationId" },
           { "name": "If-None-Match", "in": "header", "schema": { "type": "string" }, "description": "`\"<file_hash>\"` of the copy held." },
-          { "name": "update", "in": "query", "schema": { "type": "string", "enum": ["1"] }, "description": "The caller already holds this lineage and is refreshing its copy: not counted as a download. Absent on a first take, and on clients that predate it — counted as before." }
+          { "name": "update", "in": "query", "schema": { "type": "string", "enum": ["1"] }, "description": "The caller already holds this lineage and is refreshing its copy: not counted as a download. Absent on a first take, and on clients that predate it — counted as before." },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "The file.", "headers": { "ETag": { "$ref": "#/components/headers/FileETag" }, "Content-Disposition": { "schema": { "type": "string", "const": "attachment; filename=\"translations.json\"" } }, "Cache-Control": { "description": "Written `private, max-age=3600`; serialised in the framework's order.", "schema": { "type": "string", "const": "max-age=3600, private" } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationFile" } } } },
           "304": { "description": "The copy held is the published one.", "headers": { "ETag": { "$ref": "#/components/headers/FileETag" } } },
           "403": { "$ref": "#/components/responses/BranchForbidden" },
           "404": { "description": "No such translation, or its file is missing on the server (`{error: \"File not found\"}`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "409": { "description": "FormatTooNew: the file is written in a format past what the client reads (X-UGT-Format). Loaded anyway, it would be read wrong and written back in the client's format.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
           "429": { "$ref": "#/components/responses/TooMany" }
         }
       }
@@ -245,7 +253,8 @@
           { "name": "steam_id", "in": "query", "schema": { "type": "string" } },
           { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Loose match on the display name or its latin handle." },
           { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" }, "description": "Only games with a published translation into this language." },
-          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return games marked for adults only. Applies ONLY to a browse; a call carrying `steam_id` names the game the caller already has and is never filtered." }
+          { "name": "include_adult", "in": "query", "schema": { "type": "boolean" }, "description": "Also return games marked for adults only. Applies ONLY to a browse; a call carrying `steam_id` names the game the caller already has and is never filtered." },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GamesResponse" } } } },
@@ -307,7 +316,8 @@
         "x-throttle": "60/min per IP",
         "parameters": [
           { "name": "game", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The game's slug (`Game::getRouteKeyName`), as listed by `/games` — never its numeric id." },
-          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" } }
+          { "name": "lang", "in": "query", "schema": { "$ref": "#/components/schemas/LanguageName" } },
+          { "$ref": "#/components/parameters/ClientFormat" }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameShowResponse" } } } },
@@ -327,7 +337,9 @@
         "parameters": [
           { "name": "uuid", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 36 } },
           { "name": "hash", "in": "query", "schema": { "type": "string", "maxLength": 100 }, "description": "The `file_hash` the caller holds." },
-          { "name": "lineage", "in": "query", "schema": { "type": "string", "enum": ["0", "1"] }, "description": "`0`: own row only. Default: the lineage too." }
+          { "name": "lineage", "in": "query", "schema": { "type": "string", "enum": ["0", "1"] }, "description": "`0`: own row only. Default: the lineage too." },
+          { "$ref": "#/components/parameters/ClientFormat" },
+          { "$ref": "#/components/parameters/ClientFormatQuery" }
         ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SyncStateResponse" } } } },
@@ -362,6 +374,9 @@
         "description": "Ordered on the content date. Per row: `role`, and the fields that only make sense on one side, null on the other (`branches_count`, `branches_with_work`, `lines_available`, `lines_waiting` on a branch; `main_missing`, `main_abandoned`, `branch_frozen` on a Main). `accepts_branches` is the lineage's decision on either side.",
         "security": [{ "bearer": [] }],
         "x-throttle": "60/min per token",
+        "parameters": [
+          { "$ref": "#/components/parameters/ClientFormat" }
+        ],
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MyTranslationsResponse" } } } },
           "401": { "$ref": "#/components/responses/Unauthorized" },
@@ -615,6 +630,8 @@
     },
     "parameters": {
       "TranslationId": { "name": "translation", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1 }, "description": "The translation's numeric id (`site_id` in the file's `_source`)." },
+      "ClientFormat": { "name": "X-UGT-Format", "in": "header", "schema": { "type": "string", "pattern": "^[0-9]+$" }, "description": "The format of translation file the client reads (common/TranslationFormat). Absent, or not a whole number of at least 1: 1 — what every client released before this header reads. A translation past it is not listed, is answered by the hash of the last version written in a format the client reads (the one it holds: no update it could never take), and is not served (409 FormatTooNew)." },
+      "ClientFormatQuery": { "name": "format", "in": "query", "schema": { "type": "string", "pattern": "^[0-9]+$" }, "description": "The same as the X-UGT-Format header, for the sync stream's relay, which asks this route on the client's behalf. The header wins when both are sent." },
       "ModKey": { "name": "modKey", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SessionKey" }, "description": "The 64-character key `edit-session/init` answered." },
       "SessionToken": { "name": "token", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SessionKey" }, "description": "The 64-character token `merge-preview/init` answered." }
     },
@@ -722,6 +739,7 @@
           "completeness": { "type": ["number", "null"], "description": "Additive. Share of what the file met in game that is translated, 0–1." },
           "created_at": { "$ref": "#/components/schemas/Iso8601" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "file_uuid": { "$ref": "#/components/schemas/Uuid" },
           "updated_at": { "$ref": "#/components/schemas/Iso8601", "description": "Moves on a vote or a download too — `content_updated_at` is the honest one." },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601", "description": "Additive. When the translation itself last changed." }
@@ -815,6 +833,7 @@
           "resources_url_own": { "type": ["string", "null"], "description": "Additive. To EDIT: this row's own, never inherited — prefilling an edit from the effective value makes a branch adopt its Main's link." },
           "line_count": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where this row came from when it is a fork of somebody else's work — the same block the listing carries; null when it started from nobody's. Absent on an older site." },
@@ -832,6 +851,7 @@
           "target_language": { "$ref": "#/components/schemas/LanguageName" },
           "line_count": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash", "description": "On `sync/state`; not on `check-uuid`." },
+          "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "origin": { "$ref": "#/components/schemas/Origin", "description": "Additive. Where the Main came from, as the listing says it — the file a holder runs IS this Main. Absent on an older site." }
@@ -941,6 +961,7 @@
           "resources_url": { "type": ["string", "null"] },
           "line_count": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "vote_count": { "type": "integer" },
           "updated_at": { "$ref": "#/components/schemas/Iso8601" },
           "content_updated_at": { "$ref": "#/components/schemas/Iso8601" },
@@ -956,6 +977,7 @@
         "properties": {
           "id": { "type": "integer" },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
+          "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "game": { "$ref": "#/components/schemas/LineageGame" },
           "uploader": { "type": "string", "description": "Who published it — the one place somebody with no account learns whose work they installed. Empty string when the account is gone." },
           "line_count": { "type": "integer" },
@@ -1178,6 +1200,7 @@
               "line_count": { "type": "integer" }, "type": { "$ref": "#/components/schemas/TranslationType" },
               "vote_count": { "type": "integer" }, "download_count": { "type": "integer" },
               "file_hash": { "$ref": "#/components/schemas/FileHash" },
+              "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
               "updated_at": { "$ref": "#/components/schemas/Iso8601" }, "content_updated_at": { "$ref": "#/components/schemas/Iso8601" }
             }
           } }
@@ -1223,6 +1246,7 @@
               "vote_count": { "type": "integer" },
               "download_count": { "type": "integer" },
               "file_hash": { "$ref": "#/components/schemas/FileHash" },
+              "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
               "updated_at": { "$ref": "#/components/schemas/Iso8601" }
             }
           } }

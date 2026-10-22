@@ -71,6 +71,8 @@
             <x-language-mark :language="$main->source_language" named /> {{ $main->source_language }}
             <i class="fas fa-arrow-right text-xs"></i>
             <x-language-mark :language="$main->target_language" named /> {{ $main->target_language }}
+            {{-- The Main's file format, beside each branch's below: merging is where two of them meet. --}}
+            <x-translation-format :translation="$main" class="ml-2" />
         </p>
     </div>
 
@@ -181,6 +183,7 @@
                             {{ $selectedBranches->contains('id', $branch->id) ? 'checked' : '' }}>
                         <x-user-mention :user="$branch->user" class="text-gray-300" />
                         <span class="text-xs text-gray-500">({{ $branch->line_count }})</span>
+                        <x-translation-format :translation="$branch" class="!px-1 !py-0" />
                     </label>
 
                     {{-- What a Main wants to know about a contribution they have already been

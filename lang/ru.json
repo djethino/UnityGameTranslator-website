@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "ИИ+Человек",
     "translation.complete": "Завершён",
     "translation.in_progress": "В процессе",
+    "translation.format_hint": "Формат файла перевода: :format. Для более нового формата нужно обновить UGT Mod.",
     "translation.lines": ":count строка|:count строки|:count строк",
     "translation.published_on": "Опубликовано :date",
     "translation.updated_on": "Обновлено :date",

@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+Manusia",
     "translation.complete": "Lengkap",
     "translation.in_progress": "Dalam Proses",
+    "translation.format_hint": "Format file terjemahan: :format. Format yang lebih baru memerlukan UGT Mod versi terbaru.",
     "translation.lines": ":count baris",
     "translation.published_on": "Diterbitkan :date",
     "translation.updated_on": "Diperbarui :date",

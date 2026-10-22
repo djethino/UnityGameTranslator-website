@@ -6,6 +6,7 @@ use App\Models\Translation;
 use App\Services\TranslationService;
 use App\Support\Placeholders;
 use App\Support\TranslationFileKeys;
+use App\Support\TranslationFormat;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -47,6 +48,9 @@ class CorpusTest extends TestCase
             'placeholders/tokens' => fn (array $in) => Placeholders::tokens($in['text'] ?? ''),
             'placeholders/invented' => fn (array $in) => Placeholders::invented($in['source'] ?? '', $in['translation'] ?? null),
             'placeholders/tally' => fn (array $in) => Placeholders::tally($in['text'] ?? ''),
+            'translation_format/announced' => fn (array $in) => TranslationFormat::announced($in['value'] ?? null),
+            'translation_format/of_file' => fn (array $in) => TranslationFormat::ofFile($in['engine_version'] ?? null),
+            'translation_format/reads' => fn (array $in) => TranslationFormat::reads($in['reads_up_to'], $in['file_format']),
         ];
     }
 

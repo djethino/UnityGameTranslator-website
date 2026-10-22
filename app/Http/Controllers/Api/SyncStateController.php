@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Translation;
 use App\Services\ModUsage;
 use App\Services\TranslationService;
+use App\Support\TranslationFormat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,6 +50,12 @@ class SyncStateController extends Controller
         $uuid = $request->query('uuid');
         $clientHash = $request->query('hash');
 
+        // 🔴 **What this client can have** (App\Support\TranslationFormat; decided 2026-10-22): a
+        // row past the format it reads is told by the hash of the last version it can read — the
+        // one it holds — so no update is announced that it could never take. The relay passes the
+        // stream's format on as the header.
+        $format = TranslationFormat::of($request);
+
         // 🔴 **`lineage=0` asks only about the caller's OWN line.** What other people are doing —
         // contributions received, a Main that moved — is weighed against their files, and a stream
         // re-asks this on every push anybody makes to the lineage. A Main whose contributor
@@ -60,7 +67,7 @@ class SyncStateController extends Controller
         // asked not to be told has not been told there is nothing.
         $withLineage = $request->query('lineage') !== '0';
 
-        $state = $this->buildSyncState($uuid, $request->user(), $clientHash, $withLineage);
+        $state = $this->buildSyncState($uuid, $request->user(), $clientHash, $withLineage, $format);
 
         // The Main this game plays with, for the admin "Mod usage" screen. Read off the answer
         // rather than queried again.
@@ -86,7 +93,7 @@ class SyncStateController extends Controller
      * Extracted from SseController for reuse as REST endpoint.
      */
     private function buildSyncState(string $uuid, \App\Models\User $user, ?string $clientHash,
-                                    bool $withLineage = true): array
+                                    bool $withLineage = true, int $format = TranslationFormat::UNANNOUNCED): array
     {
         $state = [
             'exists' => false,
@@ -151,7 +158,8 @@ class SyncStateController extends Controller
                 'notes' => $ownTranslation->notes,
                 'resources_url' => $ownTranslation->getEffectiveResourcesUrl(),
                 'line_count' => $ownTranslation->line_count,
-                'file_hash' => $ownTranslation->file_hash,
+                'file_hash' => $ownTranslation->hashFor($format),
+                'format_version' => $ownTranslation->format_version,
                 'vote_count' => $ownTranslation->vote_count,
                 // Where a fork came from, as the listing says it (Translation::originBlock).
                 'origin' => $ownTranslation->originBlock(),
@@ -246,7 +254,8 @@ class SyncStateController extends Controller
                         'source_language' => $main->source_language,
                         'target_language' => $main->target_language,
                         'line_count' => $main->line_count,
-                        'file_hash' => $main->file_hash,
+                        'file_hash' => $main->hashFor($format),
+                        'format_version' => $main->format_version,
                         'updated_at' => $main->updated_at->toIso8601String(),
                         'content_updated_at' => $main->contentChangedAt()->toIso8601String(),
                     ];
@@ -254,7 +263,7 @@ class SyncStateController extends Controller
             }
 
             if ($clientHash) {
-                $state['has_update'] = $ownTranslation->file_hash !== $clientHash;
+                $state['has_update'] = $ownTranslation->hashFor($format) !== $clientHash;
             }
 
             // 🔴 **Absent, not zero.** branches_count is initialised to 0 in the skeleton above, so
@@ -288,13 +297,14 @@ class SyncStateController extends Controller
                 'source_language' => $mainTranslation->source_language,
                 'target_language' => $mainTranslation->target_language,
                 'line_count' => $mainTranslation->line_count,
-                'file_hash' => $mainTranslation->file_hash,
+                'file_hash' => $mainTranslation->hashFor($format),
+                'format_version' => $mainTranslation->format_version,
                 'updated_at' => $mainTranslation->updated_at->toIso8601String(),
                 'content_updated_at' => $mainTranslation->contentChangedAt()->toIso8601String(),
             ];
 
             if ($clientHash) {
-                $state['has_update'] = $mainTranslation->file_hash !== $clientHash;
+                $state['has_update'] = $mainTranslation->hashFor($format) !== $clientHash;
             }
         }
 

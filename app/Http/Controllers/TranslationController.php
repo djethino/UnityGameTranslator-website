@@ -195,6 +195,8 @@ class TranslationController extends Controller
 
             // game_id intentionally omitted — see resolution block above. The translation's
             // game is fixed at creation; subsequent uploads cannot change it via this path.
+            // A format left behind keeps its last hash for the clients that read no further.
+            $existingTranslation->rememberFormatLeft($parsed['format_version']);
             $existingTranslation->update([
                 'line_count' => $parsed['line_count'],
                 'human_count' => $parsed['tag_counts']['human_count'],
@@ -208,6 +210,8 @@ class TranslationController extends Controller
                 'file_path' => $fileName,
                 'file_hash' => $parsed['file_hash'],
                 'content_hash' => $parsed['content_hash'],
+                'format_version' => $parsed['format_version'],
+                'older_format_hashes' => $existingTranslation->older_format_hashes,
                 'font_config' => $parsed['font_config'],
                 'settings_summary' => $parsed['settings_summary'],
 
@@ -261,6 +265,7 @@ class TranslationController extends Controller
             'file_uuid' => $fileUuid,
             'file_hash' => $parsed['file_hash'],
             'content_hash' => $parsed['content_hash'],
+            'format_version' => $parsed['format_version'],
             'font_config' => $parsed['font_config'],
             'settings_summary' => $parsed['settings_summary'],
         ]);
@@ -899,6 +904,8 @@ class TranslationController extends Controller
         // Both hashes, from the file that was just written.
         $fork->file_hash = $fork->computeHash();
         $fork->content_hash = $fork->computeContentHash();
+        // The same file, so the same format.
+        $fork->format_version = $translation->format_version;
         $fork->save();
 
         // Logged on the NEW row: it is the one that exists from now on. The branch it came from
@@ -1568,6 +1575,8 @@ class TranslationController extends Controller
         // Recalculate counters and hash — both, see MergeController.
         $translation->file_hash = $translation->computeHash();
         $translation->content_hash = $translation->computeContentHash();
+        $translation->rememberFormatLeft(Translation::formatOf($content));
+        $translation->format_version = Translation::formatOf($content);
         $tagCounts = Translation::extractTagCounts($content);
         $translation->human_count = $tagCounts['human_count'];
         $translation->validated_count = $tagCounts['validated_count'];
@@ -1601,6 +1610,8 @@ class TranslationController extends Controller
         }
         SsePublisher::translationUpdated($translation->id, [
             'file_hash' => $translation->file_hash,
+            // The relay holds it back from a stream that reads no further (App\Support\TranslationFormat).
+            'format_version' => $translation->format_version,
             'line_count' => $translation->line_count,
             'vote_count' => $translation->vote_count,
             'updated_at' => $translation->updated_at->toIso8601String(),

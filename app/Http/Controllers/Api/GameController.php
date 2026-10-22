@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use App\Support\TranslationFormat;
 use App\Services\GameSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,8 +39,10 @@ class GameController extends Controller
         // ⚠ And LISTED, not merely public (Translation::scopePubliclyListed): a file with no
         // translated line leaves the catalogue after its grace period, and the site's own
         // catalogue already counted it out while this still counted it in.
-        $query = Game::withCount(['translations' => fn ($q) => $q->publiclyListed()])
-            ->whereHas('translations', fn ($q) => $q->publiclyListed());
+        // Counted and kept on what this client reads (App\Support\TranslationFormat).
+        $format = TranslationFormat::of($request);
+        $query = Game::withCount(['translations' => fn ($q) => $q->publiclyListed()->readableIn($format)])
+            ->whereHas('translations', fn ($q) => $q->publiclyListed()->readableIn($format));
 
         // Games marked for adults only are left out of BROWSING, never out of a lookup.
         //
@@ -67,7 +70,8 @@ class GameController extends Controller
 
         // Filter by games that have translations in a specific language
         if ($request->filled('lang')) {
-            $query->whereHas('translations', function ($q) use ($request) {
+            $query->whereHas('translations', function ($q) use ($request, $format) {
+                $q->readableIn($format);
                 $q->publiclyListed()->where('target_language', $request->lang);
             });
         }
@@ -227,8 +231,11 @@ class GameController extends Controller
         // serve, and a branch is a proposal between two people, not a catalogue entry.
         // Listed, same as index(): this is a LIST of what the game offers, not the resolution of
         // one lineage — a mod syncing against a delisted Main finds it through its own routes.
+        // Only what this client reads (App\Support\TranslationFormat), here and in the languages.
+        $format = TranslationFormat::of($request);
         $translationsQuery = $game->translations()
             ->publiclyListed()
+            ->readableIn($format)
             ->with('user:id,name')
             ->where('status', 'complete');
 
@@ -245,6 +252,7 @@ class GameController extends Controller
         // Get available languages for this game
         $languages = $game->translations()
             ->publiclyListed()
+            ->readableIn($format)
             ->where('status', 'complete')
             ->distinct()
             ->pluck('target_language')
@@ -272,6 +280,8 @@ class GameController extends Controller
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
                     'file_hash' => $t->file_hash,
+                    // Additive (App\Support\TranslationFormat).
+                    'format_version' => $t->format_version,
                     'updated_at' => $t->updated_at->toIso8601String(),
                     'content_updated_at' => $t->contentChangedAt()->toIso8601String(),
                 ];

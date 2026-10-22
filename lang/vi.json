@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+Người",
     "translation.complete": "Hoàn thành",
     "translation.in_progress": "Đang tiến hành",
+    "translation.format_hint": "Định dạng file bản dịch: :format. Định dạng mới hơn cần bản UGT Mod mới hơn.",
     "translation.lines": ":count dòng",
     "translation.published_on": "Đăng ngày :date",
     "translation.updated_on": "Cập nhật ngày :date",

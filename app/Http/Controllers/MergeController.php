@@ -470,6 +470,7 @@ class MergeController extends Controller
         //    somebody else's, and one left behind by a write is a check reading old content.
         $main->file_hash = $main->computeHash();
         $main->content_hash = $main->computeContentHash();
+        $main->format_version = Translation::formatOf($content);
         $tagCounts = Translation::extractTagCounts($content);
         $main->human_count = $tagCounts['human_count'];
         $main->validated_count = $tagCounts['validated_count'];
@@ -612,6 +613,8 @@ class MergeController extends Controller
         }
         SsePublisher::translationUpdated($main->id, [
             'file_hash' => $main->file_hash,
+            // The relay holds it back from a stream that reads no further (App\Support\TranslationFormat).
+            'format_version' => $main->format_version,
             'line_count' => $main->line_count,
             'vote_count' => $main->vote_count,
             'updated_at' => $main->updated_at->toIso8601String(),
