@@ -571,6 +571,7 @@
       "setup": "format2",
       "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520" }, "headers": { "X-UGT-Format": "2" } },
       "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "format_version": 2 } ] } },
+      "read": { "reader": "search_by_steam_id", "expects": { "Count": 1, "Translations.0.FormatVersion": 2 } },
       "why": "the format travels with the row, for the chip `vN`"
     },
     {
