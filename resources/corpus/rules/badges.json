@@ -30,6 +30,13 @@
         "yours_is_main": "true when the reader leads this lineage, false when they hold a branch of it, null when they hold nothing in it or the site has not said yet"
       },
       "out": "the row's chips about the reader, in order: [{kind, text, tone, tip}] — installed first, then their side"
+    },
+    "format": {
+      "in": {
+        "file_format": "int: the translation's format (translation_format/of_file)",
+        "reads_up_to": "int or null: what the client looking at it reads; null where nobody in particular looks (a public page)"
+      },
+      "out": "[{kind, text, tone, tip}]: the one chip"
     }
   },
   "cases": [
@@ -620,6 +627,24 @@
           "tip": "You hold a contribution to this translation. Its author decides what they keep." }
       ],
       "why": "a reader may contribute to several translations of one game; the row of a lineage they contribute to says so even when another one is installed — Attention, as the Branch chip is everywhere, because it is the one worth spotting"
+    },
+    {
+      "id": "badges/format/read-is-quiet", "op": "format",
+      "in": { "file_format": 1, "reads_up_to": 1 },
+      "out": [ { "kind": "Format", "text": "v1", "tone": "Quiet", "tip": "Translation file format 1." } ],
+      "why": "always shown, so the number is a known sight before the day it matters (user, 2026-10-22) — and quiet while it changes nothing"
+    },
+    {
+      "id": "badges/format/too-new-says-update", "op": "format",
+      "in": { "file_format": 2, "reads_up_to": 1 },
+      "out": [ { "kind": "Format", "text": "v2", "tone": "Wrong", "tip": "Made for a newer UGT Mod. Update UGT Mod to use it." } ],
+      "why": "the one case the chip asks something of the reader: no version number, the one thing to do is update"
+    },
+    {
+      "id": "badges/format/nobody-in-particular", "op": "format",
+      "in": { "file_format": 2, "reads_up_to": null },
+      "out": [ { "kind": "Format", "text": "v2", "tone": "Quiet", "tip": "Translation file format 2." } ],
+      "why": "a public page has no client to judge against: the fact, not a verdict"
     }
   ]
 }

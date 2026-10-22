@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Translation;
+use App\Support\TranslationFormat;
 use App\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,6 +70,12 @@ class UserController extends Controller
             ->orderByRaw('COALESCE(content_updated_at, updated_at) desc')
             ->get();
 
+        // 🔴 One's own work, as far as this client reads it (App\Support\TranslationFormat): a
+        // row moved past its format is told by the last version it can read — no update it could
+        // never take; a row born past it does not exist for it.
+        $format = TranslationFormat::of($request);
+        $translations = $translations->filter(fn (Translation $t) => $t->hashFor($format) !== null)->values();
+
         // Two grouped queries rather than two per translation: a prolific author has hundreds of
         // rows, and this endpoint is called on every refresh.
         $uuids = $translations->pluck('file_uuid')->filter()->unique();
@@ -103,7 +110,7 @@ class UserController extends Controller
 
         return response()->json([
             'count' => $translations->count(),
-            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain, $mains, $abandoned) {
+            'translations' => $translations->map(function ($t) use ($branchCounts, $withMain, $mains, $abandoned, $format) {
                 $role = $t->lineageRole();
 
                 return [
@@ -173,7 +180,9 @@ class UserController extends Controller
                     'status' => $t->status,
                     'vote_count' => $t->vote_count,
                     'download_count' => $t->download_count,
-                    'file_hash' => $t->file_hash,
+                    'file_hash' => $t->hashFor($format),
+                    // Additive (App\Support\TranslationFormat).
+                    'format_version' => $t->format_version,
                     'updated_at' => $t->updated_at->toIso8601String(),
                 ];
             }),

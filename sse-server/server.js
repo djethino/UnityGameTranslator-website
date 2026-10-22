@@ -305,6 +305,18 @@ function createSubscriber() {
 }
 
 /**
+ * The format of translation file a stream's client reads (App\Support\TranslationFormat on the
+ * site, common/TranslationFormat in the clients): its `X-UGT-Format` header, else `?format=`, else 1
+ * — what every client released before the rule reads. Digits only, at least 1.
+ */
+function streamFormat(req, parsedUrl) {
+    const announced = (req.headers['x-ugt-format'] || parsedUrl.searchParams.get('format') || '').trim();
+    if (!/^[0-9]+$/.test(announced)) return 1;
+    const n = parseInt(announced, 10);
+    return n >= 1 ? n : 1;
+}
+
+/**
  * Forward an HTTP request to the Laravel API.
  * Used for auth validation (GET /me) and state fetching (GET /sync/state).
  */
@@ -466,7 +478,9 @@ function lineageParam(lineage) {
     return lineage === '0' ? '&lineage=0' : '';
 }
 
-async function handleSync(req, res, uuid, clientHash, lineage) {
+async function handleSync(req, res, uuid, clientHash, lineage, format) {
+    // Asked of the site with the client's format: it answers what that client can have.
+    const formatParam = `&format=${format}`;
     // Extract Bearer token
     const authHeader = req.headers['authorization'] || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -508,7 +522,7 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
     try {
         const hashParam = clientHash ? `&hash=${encodeURIComponent(clientHash)}` : '';
         const stateResult = await fetchFromLaravel(
-            `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}`,
+            `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}${formatParam}`,
             bearerToken
         );
         if (stateResult.status !== 200) {
@@ -586,7 +600,7 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
                 // avoid, arriving through the back door.
                 const hashParam = clientHash ? `&hash=${encodeURIComponent(clientHash)}` : '';
                 const stateResult = await fetchFromLaravel(
-                    `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}`,
+                    `/sync/state?uuid=${encodeURIComponent(uuid)}${hashParam}${lineageParam(lineage)}${formatParam}`,
                     bearerToken
                 );
                 if (stateResult.status === 401 || stateResult.status === 403) {
@@ -602,6 +616,10 @@ async function handleSync(req, res, uuid, clientHash, lineage) {
                     emitEvent(res, ++eventId, 'state', stateResult.body);
                 }
             } else if (parsed.event === 'translation_updated') {
+                // 🔴 **Never a file this client cannot read** (decided 2026-10-22): an update past
+                // its format is one it could never take, and announcing it is a download refused
+                // in silence. What it can have has not moved, so nothing is said.
+                if (Number(parsed.data?.format_version || 1) > format) return;
                 // Same translation updated — emit lightweight update
                 emitEvent(res, ++eventId, 'translation_updated', parsed.data);
             }
@@ -950,7 +968,7 @@ const server = http.createServer(async (req, res) => {
         // ⚠ Relayed verbatim rather than forced here: the client decides what it wants, and an
         // older mod that sends nothing goes on receiving the full payload it has always received.
         const lineage = parsedUrl.searchParams.get('lineage') === '0' ? '0' : null;
-        await handleSync(req, res, uuid, hash, lineage);
+        await handleSync(req, res, uuid, hash, lineage, streamFormat(req, parsedUrl));
         return;
     }
 

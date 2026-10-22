@@ -128,6 +128,8 @@ class TranslationService
             'tag_counts' => Translation::extractTagCounts($json),
             'file_hash' => $this->computeHash($json),
             'content_hash' => $this->computeContentHash($json),
+            // The format its lines are written in (App\Support\TranslationFormat).
+            'format_version' => Translation::formatOf($json),
 
             // 🔴 **Where a branch stood against its Main when it was sent** — `_source.main_hash`,
             // written by the mod at every merge from the Main and carried inside the file, so no

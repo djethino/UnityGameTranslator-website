@@ -1,7 +1,7 @@
 {
   "$comment": "The contract cases of API v1. The site REPLAYS each one (tests/Feature/ApiContractTest.php: build `setup`, send `request`, compare `response`); the mod READS each response body (Core.Checks: feed `response.body` to the reader named in `read`, compare what it derives); check-spec.py holds every request and response body to openapi.json. One file, three executors — see spec/README.md.",
   "conventions": {
-    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, origin?, origin_lines?, status?, accepts_branches?, game_switch_pending?, notes?, resources_url?, file_hash, lines, vote_count?}} (`game_switch_pending`: a branch held since its Main moved to another game; `origin` names the row a fork was taken from — the site fills origin_* and leaves parent_id null, as its two fork paths do), votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
+    "setup": "A fixture name from `fixtures`, or an inline object of the same shape: users {ref: {name, deleted?, banned?}}, games {ref: {name, slug, steam_id?}}, translations {ref: {game, user, uuid, visibility, parent?, origin?, origin_lines?, status?, accepts_branches?, game_switch_pending?, notes?, resources_url?, file_hash, lines, vote_count?, format_version?, older_format_hashes?}} (`format_version`: the file's format, written as its `_engine_version`, 1 when absent; `older_format_hashes`: {format: hash} of the last version written in each format the row has left; `game_switch_pending`: a branch held since its Main moved to another game; `origin` names the row a fork was taken from — the site fills origin_* and leaves parent_id null, as its two fork paths do), votes [{user, translation, value}]. The site creates the rows; the mod ignores it.",
     "request": "{method, path, as?, query?, headers?, body?, body_encoding?}. `as` names a user of the setup: the site sends a fresh token of theirs. `{{a.b.c}}` in path, query and header strings is a setup value (`translations.main.id`) or a `capture` of the prelude. In a body, {\"$ref\": \"translations.main.id\"} is the same thing as a JSON value and {\"$json\": {...}} is that object serialised as a string (the upload's `content`).",
     "prelude": "Requests sent before the one under test, in order; `capture: {name: \"header:ETag\" | \"body:token\"}` keeps a value for `{{name}}`. Site only.",
     "request_valid": "false when the request body is one the route must REFUSE: check-spec.py then requires the schema to refuse it too.",
@@ -9,6 +9,19 @@
     "read": "{reader, expects}: which reader of the mod's ApiReaders takes this body, and the values it must derive, as dotted paths of the result (`Vote.CanVote`). Absent when the mod does not read this route."
   },
   "fixtures": {
+    "format2": {
+      "users": { "alice": { "name": "alice" } },
+      "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
+      "translations": {
+        "main": {
+          "game": "g", "user": "alice", "uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "visibility": "public",
+          "status": "complete", "accepts_branches": true,
+          "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "format_version": 2, "older_format_hashes": { "1": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" },
+          "lines": { "Shop": { "v": "Boutique", "t": "H" } }
+        }
+      }
+    },
     "lineage": {
       "users": { "alice": { "name": "alice" }, "bob": { "name": "bob" }, "carol": { "name": "carol" } },
       "games": { "g": { "name": "Sample Game", "slug": "sample-game", "steam_id": "367520" } },
@@ -517,6 +530,48 @@
         "body": { "_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "Shop": { "v": "Boutique", "t": "H" } }
       },
       "why": "the same file, and not a download: the player already took this lineage and is only bringing their copy up to date — 'downloads' on the site counts players who took it, not the times they refreshed"
+    },
+    {
+      "id": "api-v1/download/past-the-format-is-refused",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/download" },
+      "response": { "status": 409, "body": { "error": "FormatTooNew", "format_version": 2 } },
+      "why": "🔴 a client that says nothing reads the format 1 — every mod released before the rule; loaded anyway, the file would be read wrong and written back as format 1. Its lists no longer offer it; this is the door behind them"
+    },
+    {
+      "id": "api-v1/download/read-when-announced",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/download", "headers": { "X-UGT-Format": "2" } },
+      "response": { "status": 200, "headers": { "ETag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"" } },
+      "why": "a client that reads the format is served as before"
+    },
+    {
+      "id": "api-v1/check/past-the-format-answers-what-is-held",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/check", "query": { "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } },
+      "response": { "status": 200, "body": { "file_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "format_version": 2, "has_update": false } },
+      "why": "🔴 decided 2026-10-22, « pas de mise à jour »: an older mod is told the hash of the last version it can read — the one it holds — so no update is announced that it could never take"
+    },
+    {
+      "id": "api-v1/check/announced-sees-the-update",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations/{{translations.main.id}}/check", "query": { "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, "headers": { "X-UGT-Format": "2" } },
+      "response": { "status": 200, "body": { "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "format_version": 2, "has_update": true } },
+      "why": "a client reading the format is told of the new version, like any update"
+    },
+    {
+      "id": "api-v1/search/past-the-format-is-not-listed",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520" } },
+      "response": { "status": 200, "body": { "count": 0, "translations": [] } },
+      "why": "decided 2026-10-22: a translation a client could not take is not offered to it — a Download that fails in silence is worse than no row"
+    },
+    {
+      "id": "api-v1/search/announced-lists-it-with-its-format",
+      "setup": "format2",
+      "request": { "method": "GET", "path": "/translations", "query": { "steam_id": "367520" }, "headers": { "X-UGT-Format": "2" } },
+      "response": { "status": 200, "body": { "count": 1, "translations": [ { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "format_version": 2 } ] } },
+      "why": "the format travels with the row, for the chip `vN`"
     },
     {
       "id": "api-v1/download/branch-refused-to-a-stranger",
