@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+มนุษย์",
     "translation.complete": "สมบูรณ์",
     "translation.in_progress": "อยู่ระหว่างดำเนินการ",
+    "translation.format_hint": "รูปแบบไฟล์การแปล: :format รูปแบบที่ใหม่กว่าต้องใช้ UGT Mod รุ่นใหม่กว่า",
     "translation.lines": ":count บรรทัด",
     "translation.published_on": "เผยแพร่ :date",
     "translation.updated_on": "อัปเดต :date",

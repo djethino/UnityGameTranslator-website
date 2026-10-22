@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+Mens",
     "translation.complete": "Compleet",
     "translation.in_progress": "In uitvoering",
+    "translation.format_hint": "Formaat van het vertaalbestand: :format. Een nieuwer formaat vereist een bijgewerkte UGT Mod.",
     "translation.lines": ":count regel|:count regels",
     "translation.published_on": "Gepubliceerd op :date",
     "translation.updated_on": "Bijgewerkt op :date",

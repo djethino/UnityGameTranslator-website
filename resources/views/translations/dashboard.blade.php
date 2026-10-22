@@ -126,6 +126,7 @@
             <div class="flex items-center gap-2">
                 {{-- The stage component says "Capture only" itself on a file with nothing translated. --}}
                 <x-review-stage :translation="$translation" />
+                <x-translation-format :translation="$translation" />
                 @if($translation->effective_lines > 0)
                     @if($translation->ai_count > 0)
                         <span class="text-xs text-gray-400">

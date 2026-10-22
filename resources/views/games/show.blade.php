@@ -321,6 +321,8 @@
                                 <x-translation-badges :translation="$translation"
                                     :game-max="$gameMaxResolved" :peer-count="$publicTranslationCount" />
 
+                                <x-translation-format :translation="$translation" />
+
                                 @if($translation->isComplete())
                                     <span class="bg-green-900 text-green-200 px-2 py-1 rounded text-xs">
                                         <i class="fas fa-check"></i> {{ __('translation.complete') }}

@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "آلي+بشري",
     "translation.complete": "مكتمل",
     "translation.in_progress": "قيد التقدم",
+    "translation.format_hint": "صيغة ملف الترجمة: :format. تتطلب الصيغة الأحدث إصدارًا أحدث من UGT Mod.",
     "translation.lines": "لا أسطر|سطر واحد|سطران|:count أسطر|:count سطرًا|:count سطر",
     "translation.published_on": "نُشر في :date",
     "translation.updated_on": "حُدّث في :date",

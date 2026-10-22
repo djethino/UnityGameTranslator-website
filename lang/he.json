@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+אנושי",
     "translation.complete": "מושלם",
     "translation.in_progress": "בתהליך",
+    "translation.format_hint": "פורמט קובץ התרגום: :format. פורמט חדש יותר דורש גרסה עדכנית של UGT Mod.",
     "translation.lines": "שורה אחת|:count שורות",
     "translation.published_on": "פורסם ב-:date",
     "translation.updated_on": "עודכן ב-:date",

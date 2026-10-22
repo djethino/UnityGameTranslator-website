@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+मानव",
     "translation.complete": "पूर्ण",
     "translation.in_progress": "प्रगति में",
+    "translation.format_hint": "अनुवाद फ़ाइल का फॉर्मेट: :format। नए फॉर्मेट के लिए UGT Mod का नया संस्करण चाहिए।",
     "translation.lines": ":count पंक्ति|:count पंक्तियाँ",
     "translation.published_on": ":date को प्रकाशित",
     "translation.updated_on": ":date को अपडेट",

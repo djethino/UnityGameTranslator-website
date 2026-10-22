@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "YZ+İnsan",
     "translation.complete": "Tamamlandı",
     "translation.in_progress": "Devam ediyor",
+    "translation.format_hint": "Çeviri dosyası formatı: :format. Daha yeni bir format için UGT Mod'un güncellenmesi gerekir.",
     "translation.lines": ":count satır",
     "translation.published_on": ":date tarihinde yayımlandı",
     "translation.updated_on": ":date tarihinde güncellendi",

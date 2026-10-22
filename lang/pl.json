@@ -117,6 +117,7 @@
     "translation.type.ai_corrected_short": "AI+Ręczne",
     "translation.complete": "Ukończone",
     "translation.in_progress": "W trakcie",
+    "translation.format_hint": "Format pliku tłumaczenia: :format. Nowszy format wymaga aktualizacji UGT Mod.",
     "translation.lines": ":count wiersz|:count wiersze|:count wierszy",
     "translation.published_on": "Opublikowano :date",
     "translation.updated_on": "Zaktualizowano :date",
