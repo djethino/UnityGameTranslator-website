@@ -136,6 +136,7 @@
         "screenWidth": { "type": "integer" },
         "screenHeight": { "type": "integer" },
         "sectionBarFolded": { "type": "boolean", "default": false, "description": "The one window's bar of sections folded to its pictures." },
+        "inspectorCameras": { "type": "object", "additionalProperties": { "type": "string" }, "description": "The camera each inspector last picked through, by inspector (exclusion, image, font, text), as its Target list names it. Absent = UI Only. A camera the scene does not hold leaves the inspector on UI Only, the answer kept for the scene that has it." },
         "panels": { "type": "object", "additionalProperties": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" }, "hasPosition": { "type": "boolean" }, "userResized": { "type": "boolean" }, "screenWidth": { "type": "integer", "description": "The screen this place and size were saved on; read on another, they are dropped and the window opens at its default. Absent on a save older than this: judged by the screen saved last (screenWidth beside panels)." }, "screenHeight": { "type": "integer" } } } }
       }
     }

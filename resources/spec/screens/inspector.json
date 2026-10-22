@@ -13,11 +13,15 @@
         "help": "'UI Only' picks on-screen interface text. Choose a camera to pick objects in the game world instead." },
       { "kind": "label", "name": "HoverSectionLabel", "text": "Hovered", "role": "SectionTitle" },
       { "kind": "section", "name": "HoverBox", "children": [
-        { "kind": "label", "name": "HoverPathValue", "gameText": "names", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "HoverPathValue", "gameText": "names", "text": { "bind": "hoverPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" },
+        { "kind": "label", "name": "HoverTextValue", "gameText": "source", "text": { "bind": "hoverText" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
+        { "kind": "label", "name": "HoverShownValue", "gameText": "target", "text": { "bind": "hoverShown" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
       { "kind": "label", "name": "SelectedSectionLabel", "text": "Selected", "role": "SectionTitle" },
       { "kind": "section", "name": "SelectedBox", "children": [
-        { "kind": "label", "name": "SelectedPathValue", "gameText": "names", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" }
+        { "kind": "label", "name": "SelectedPathValue", "gameText": "names", "text": { "bind": "selectedPath" }, "role": "Small", "tone": "Muted", "italic": true, "fill": "Stretch", "minHeight": "RowHeightNormal" },
+        { "kind": "label", "name": "SelectedTextValue", "gameText": "source", "text": { "bind": "selectedText" }, "policy": "Excluded", "role": "Small", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
+        { "kind": "label", "name": "SelectedShownValue", "gameText": "target", "text": { "bind": "selectedShown" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
       { "kind": "image", "name": "ImagePreview", "height": 120, "visible": false,
         "help": "The image the game draws on the selected element. This is what Export Original saves." },
@@ -30,6 +34,10 @@
           "help": "Never translate this exact element (only this one)" },
         { "kind": "button", "name": "ExcludePatternBtn", "text": "Exclude Pattern", "fill": "Stretch", "act": "excludePattern",
           "help": "Never translate ANY element with this name, anywhere in the game (e.g. every chat line)" }
+      ] },
+      { "kind": "row", "name": "FontOverrideActionRow", "spacing": 5, "minHeight": "ButtonHeight", "visible": false, "children": [
+        { "kind": "button", "name": "AddOverrideBtn", "text": "Add Override", "tone": "Primary", "fill": "Stretch", "act": "addOverride",
+          "help": "Opens the Fonts tab with a new override for this exact element. Select Parent first to cover everything it contains." }
       ] },
       { "kind": "row", "name": "ImageActionRow", "spacing": 5, "minHeight": "ButtonHeight", "visible": false, "children": [
         { "kind": "button", "name": "ExportOriginalBtn", "text": "Export Original", "tone": "Primary", "fill": "Stretch", "act": "exportOriginal",

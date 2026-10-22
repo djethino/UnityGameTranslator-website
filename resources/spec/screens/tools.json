@@ -249,8 +249,8 @@
             { "kind": "label", "name": "OverridesHint", "text": "Override font size for specific UI elements. Use inspector, search, or manual pattern.", "role": "Hint" },
             { "kind": "spacer", "name": "OverridesGap1", "height": 5 },
             { "kind": "button", "name": "FontOverrideInspectorBtn", "text": "Inspect Element", "tone": "Primary", "minWidth": 500, "act": "overrideInspector",
-              "help": "Closes this panel so you can click a UI element in-game to create a font override for it." },
-            { "kind": "label", "name": "OverrideInspectorHint", "text": "Click on a UI element to create an override for it", "role": "Hint" },
+              "help": "Closes this panel so you can select a UI element in-game, see its text, and create a font override for it." },
+            { "kind": "label", "name": "OverrideInspectorHint", "text": "Select a UI element, then click Add Override", "role": "Hint" },
             { "kind": "spacer", "name": "OverridesGap2", "height": 5 },
             { "kind": "label", "name": "OverrideFindLabel", "text": "Find by text content:", "role": "Small" },
             { "kind": "row", "name": "FindOverrideRow", "spacing": 5, "minHeight": "InputHeight", "children": [
