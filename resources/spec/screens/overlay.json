@@ -4,6 +4,13 @@
   "chrome": { "backdrop": false, "persist": false, "titleBar": false, "pinned": true },
   "body": [
     { "kind": "stack", "name": "OverlayStack", "spacing": 5, "pad": 5, "children": [
+      { "kind": "callout", "name": "FileBox", "tone": "Error", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
+        { "kind": "label", "name": "FileTitle", "text": { "bind": "fileTitle" }, "bold": true, "autoHeight": true },
+        { "kind": "label", "name": "FileCause", "text": { "bind": "fileCause" }, "policy": "Excluded", "role": "Small", "autoHeight": true },
+        { "kind": "row", "name": "FileBtnRow", "spacing": 3, "children": [
+          { "kind": "button", "name": "FileDismissBtn", "text": "Dismiss", "size": "Compact", "minWidth": 70, "act": "fileDismiss" }
+        ] }
+      ] },
       { "kind": "callout", "name": "ModUpdateBox", "tone": "Success", "direction": "Stack", "padX": 8, "padY": 5, "visible": false, "children": [
         { "kind": "label", "name": "ModUpdateLabel", "text": { "bind": "modUpdate" }, "policy": "Excluded", "bold": true },
         { "kind": "label", "name": "ModManagerHint", "text": "Or let the Manager keep it up to date", "role": "Small" },
