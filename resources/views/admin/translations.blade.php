@@ -96,11 +96,11 @@
                     {{-- Every header names the controller's default (last updated first): the
                          component lights the column that is sorted when nothing was asked, and
                          each header decides that for itself. --}}
-                    <x-admin.sortable-th column="line_count" :label="__('my_translations.lines')" default="content_updated_at" />
-                    <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" default="content_updated_at" />
-                    <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" default="content_updated_at" />
-                    <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" default="content_updated_at" />
-                    <x-admin.sortable-th column="content_updated_at" :label="__('admin.updated_at')" default="content_updated_at" />
+                    <x-admin.sortable-th column="line_count" :label="__('my_translations.lines')" default="content_updated_at" pad="px-2" />
+                    <x-admin.sortable-th column="vote_count" :label="__('admin.votes')" default="content_updated_at" pad="px-2" />
+                    <x-admin.sortable-th column="download_count" :label="__('my_translations.downloads')" default="content_updated_at" pad="px-2" />
+                    <x-admin.sortable-th column="created_at" :label="__('admin.created_at')" default="content_updated_at" pad="px-2" />
+                    <x-admin.sortable-th column="content_updated_at" :label="__('admin.updated_at')" default="content_updated_at" pad="px-2" />
                     <th class="text-right py-3 px-4">{{ __('admin.actions') }}</th>
                 </tr>
             </thead>
@@ -127,7 +127,6 @@
                                          like a public Main. Moderating one is not the same act
                                          as moderating the other. --}}
                                     <x-translation-role :translation="$translation" class="mt-1" />
-                                    <x-translation-format :translation="$translation" class="mt-1" />
                                 </div>
                             </div>
                         </td>
@@ -158,23 +157,25 @@
                                 <span class="text-gray-600 text-sm">—</span>
                             @endif
                         </td>
-                        <td class="py-3 px-4 text-gray-400">
+                        {{-- Figures and dates on the narrow padding, as in Flows and Mod usage: on
+                             the wide one the table ran past the screen in French. --}}
+                        <td class="py-3 px-2 text-gray-400">
                             {{ number_format($translation->line_count) }}
                         </td>
-                        <td class="py-3 px-4 text-gray-400">
+                        <td class="py-3 px-2 text-gray-400">
                             {{ number_format($translation->vote_count) }}
                         </td>
-                        <td class="py-3 px-4 text-gray-400">
+                        <td class="py-3 px-2 text-gray-400">
                             {{ number_format($translation->download_count) }}
                         </td>
-                        <td class="py-3 px-4 text-gray-400 text-sm">
+                        <td class="py-3 px-2 text-gray-400 text-sm">
                             {{ $translation->created_at->format('M d, Y') }}
                         </td>
                         {{-- contentChangedAt, never updated_at: a vote or a download writes
                              updated_at, so this column reported activity that was not the
                              author's. It falls back to updated_at only for rows written before
                              the content column existed. --}}
-                        <td class="py-3 px-4 text-gray-400 text-sm">
+                        <td class="py-3 px-2 text-gray-400 text-sm">
                             {{ $translation->contentChangedAt()->format('M d, Y') }}
                         </td>
                         <td class="py-3 px-4 text-right">
