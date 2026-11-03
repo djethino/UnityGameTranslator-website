@@ -27,6 +27,10 @@ class UploadUuidShapeTest extends TestCase
     {
         $token = ApiToken::createForUser(User::factory()->create(), 'test')->plain_token;
 
+        // The game exists already: a game nothing identifies is refused (GameFiling::cardFor),
+        // and without its card this test would ask the real stores for "Shape Game".
+        \App\Models\Game::firstOrCreate(['name' => 'Shape Game']);
+
         return $this->withHeaders(['Authorization' => 'Bearer ' . $token])
             ->postJson('/api/v1/translations', [
                 'game_name' => 'Shape Game',
